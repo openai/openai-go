@@ -8,21 +8,14 @@ import (
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/shared"
 )
 
 func TestJSONRoute(t *testing.T) {
 	chatCompletionParams := openai.ChatCompletionNewParams{
 		Model: openai.F(openai.ChatModel("arbitraryDeployment")),
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.ChatCompletionAssistantMessageParam{
-				Role:    openai.F(openai.ChatCompletionAssistantMessageParamRoleAssistant),
-				Content: openai.F[openai.ChatCompletionAssistantMessageParamContentUnion](shared.UnionString("You are a helpful assistant")),
-			},
-			openai.ChatCompletionUserMessageParam{
-				Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-				Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Can you tell me another word for the universe?")),
-			},
+			openai.AssistantMessage("You are a helpful assistant"),
+			openai.UserMessage("Can you tell me another word for the universe?"),
 		}),
 	}
 
@@ -95,14 +88,8 @@ func TestNoRouteChangeNeeded(t *testing.T) {
 	chatCompletionParams := openai.ChatCompletionNewParams{
 		Model: openai.F(openai.ChatModel("arbitraryDeployment")),
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.ChatCompletionAssistantMessageParam{
-				Role:    openai.F(openai.ChatCompletionAssistantMessageParamRoleAssistant),
-				Content: openai.F[openai.ChatCompletionAssistantMessageParamContentUnion](shared.UnionString("You are a helpful assistant")),
-			},
-			openai.ChatCompletionUserMessageParam{
-				Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-				Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Can you tell me another word for the universe?")),
-			},
+			openai.AssistantMessage("You are a helpful assistant"),
+			openai.UserMessage("Can you tell me another word for the universe?"),
 		}),
 	}
 

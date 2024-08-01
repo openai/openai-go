@@ -21,13 +21,15 @@ func main() {
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(question),
 		}),
-		Seed:  openai.Int(0),
+		Seed:  openai.Int(1),
 		Model: openai.F(openai.ChatModelGPT4o),
 	})
 
 	for stream.Next() {
 		evt := stream.Current()
-		print(evt.Choices[0].Delta.Content)
+		if len(evt.Choices) > 0 {
+			print(evt.Choices[0].Delta.Content)
+		}
 	}
 	println()
 

@@ -50,10 +50,9 @@ func main() {
 		option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("OPENAI_API_KEY")
 	)
 	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
-		}}),
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			 openai.UserMessage("Say this is a test"),
+		}),
 		Model: openai.F(openai.ChatModelGPT4o),
 	})
 	if err != nil {
@@ -236,10 +235,9 @@ defer cancel()
 client.Chat.Completions.New(
 	ctx,
 	openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
-		}}),
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			 openai.UserMessage("Say this is a test"),
+		}),
 		Model: openai.F(openai.ChatModelGPT4o),
 	},
 	// This sets the per-retry timeout
@@ -299,10 +297,9 @@ client := openai.NewClient(
 client.Chat.Completions.New(
 	context.TODO(),
 	openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
-		}}),
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			 openai.UserMessage("Say this is a test"),
+		}),
 		Model: openai.F(openai.ChatModelGPT4o),
 	},
 	option.WithMaxRetries(5),
