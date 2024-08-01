@@ -51,10 +51,9 @@ func main() {
 		option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("OPENAI_API_KEY")
 	)
 	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-		}}),
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			 openai.UserMessage("Say this is a test"),
+		}),
 		Model: openai.F(openai.ChatModelGPT4o),
 	})
 	if err != nil {
@@ -237,10 +236,9 @@ defer cancel()
 client.Chat.Completions.New(
 	ctx,
 	openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("How can I list all files in a directory using Python?")),
-		}}),
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			 openai.UserMessage("Say this is a test"),
+		}),
 		Model: openai.F(openai.ChatModelGPT4o),
 	},
 	// This sets the per-retry timeout
@@ -300,10 +298,9 @@ client := openai.NewClient(
 client.Chat.Completions.New(
 	context.TODO(),
 	openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("How can I get the name of the current day in Node.js?")),
-		}}),
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			 openai.UserMessage("Say this is a test"),
+		}),
 		Model: openai.F(openai.ChatModelGPT4o),
 	},
 	option.WithMaxRetries(5),
@@ -395,6 +392,44 @@ You may also replace the default `http.Client` with
 `option.WithHTTPClient(client)`. Only one http client is
 accepted (this overwrites any previous client) and receives requests after any
 middleware has been applied.
+
+## Microsoft Azure OpenAI
+
+To use this library with [Azure OpenAI](https://learn.microsoft.com/azure/ai-services/openai/overview), use the option.RequestOption functions in the `azure` package.
+
+```go
+package main
+
+import (
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/azure"
+	"github.com/openai/openai-go/option"
+)
+
+func main() {
+	const azureOpenAIEndpoint = "https://<azure-openai-resource>.openai.azure.com"
+
+	// The latest API versions, including previews, can be found here:
+	// https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning
+	const azureOpenAIAPIVersion = "2024-06-01"
+
+	tokenCredential, err := azidentity.NewDefaultAzureCredential(nil)
+
+	if err != nil {
+		fmt.Printf("Failed to create the DefaultAzureCredential: %s", err)
+		os.Exit(1)
+	}
+
+	client := openai.NewClient(
+		azure.WithEndpoint(azureOpenAIEndpoint, azureOpenAIAPIVersion),
+
+		// Choose between authenticating using a TokenCredential or an API Key
+		azure.WithTokenCredential(tokenCredential),
+		// or azure.WithAPIKey(azureOpenAIAPIKey),
+	)
+}
+```
 
 ## Semantic versioning
 
