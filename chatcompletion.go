@@ -12,72 +12,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/ssestream"
 	"github.com/openai/openai-go/shared"
-	"github.com/tidwall/sjson"
 )
-
-func UserMessage(content string) ChatCompletionMessageParamUnion {
-	return ChatCompletionUserMessageParam{
-		Role: F(ChatCompletionUserMessageParamRoleUser),
-		Content: F[ChatCompletionUserMessageParamContentUnion](
-			shared.UnionString(content),
-		),
-	}
-}
-
-func UserMessageBlocks(blocks ...ChatCompletionContentPartUnionParam) ChatCompletionMessageParamUnion {
-	return ChatCompletionUserMessageParam{
-		Role: F(ChatCompletionUserMessageParamRoleUser),
-		Content: F[ChatCompletionUserMessageParamContentUnion](
-			ChatCompletionUserMessageParamContentArrayOfContentParts(blocks),
-		),
-	}
-}
-
-func UserMessageTextBlock(content string) ChatCompletionContentPartUnionParam {
-	return ChatCompletionContentPartTextParam{
-		Type: F(ChatCompletionContentPartTextTypeText),
-		Text: F(content),
-	}
-}
-
-func UserMessageImageBlock(url string) ChatCompletionContentPartUnionParam {
-	return ChatCompletionContentPartImageParam{
-		Type: F(ChatCompletionContentPartImageTypeImageURL),
-		ImageURL: F(ChatCompletionContentPartImageImageURLParam{
-			URL: F(url),
-		}),
-	}
-}
-
-func AssistantMessage(content string) ChatCompletionMessageParamUnion {
-	return ChatCompletionAssistantMessageParam{
-		Role:    F(ChatCompletionAssistantMessageParamRoleAssistant),
-		Content: F(content),
-	}
-}
-
-func ToolMessage(toolCallID, content string) ChatCompletionMessageParamUnion {
-	return ChatCompletionToolMessageParam{
-		Role:       F(ChatCompletionToolMessageParamRoleTool),
-		ToolCallID: F(toolCallID),
-		Content:    F(content),
-	}
-}
-
-func SystemMessage(content string) ChatCompletionMessageParamUnion {
-	return ChatCompletionSystemMessageParam{
-		Role:    F(ChatCompletionSystemMessageParamRoleSystem),
-		Content: F(content),
-	}
-}
-
-func FunctionMessage(name, content string) ChatCompletionMessageParamUnion {
-	return ChatCompletionFunctionMessageParam{
-		Role:    F(ChatCompletionFunctionMessageParamRoleFunction),
-		Name:    F(name),
-		Content: F(content),
-	}
-}
 
 // ChatCompletionService contains methods and other services that help with
 // interacting with the openai API.
@@ -850,34 +785,9 @@ func (r *ChatCompletionMessage) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r ChatCompletionMessage) MarshalJSON() (data []byte, err error) {
-	s := ""
-	s, _ = sjson.Set(s, "role", r.Role)
-
-	if r.FunctionCall.Name != "" {
-		b, err := apijson.Marshal(r.FunctionCall)
-		if err != nil {
-			return nil, err
-		}
-		s, _ = sjson.SetRaw(s, "function_call", string(b))
-	} else if len(r.ToolCalls) > 0 {
-		b, err := apijson.Marshal(r.ToolCalls)
-		if err != nil {
-			return nil, err
-		}
-		s, _ = sjson.SetRaw(s, "tool_calls", string(b))
-	} else {
-		s, _ = sjson.Set(s, "content", r.Content)
-	}
-
-	return []byte(s), nil
-}
-
 func (r chatCompletionMessageJSON) RawJSON() string {
 	return r.raw
 }
-
-func (r ChatCompletionMessage) implementsChatCompletionMessageParamUnion() {}
 
 // The role of the author of this message.
 type ChatCompletionMessageRole string
@@ -947,8 +857,6 @@ func (r ChatCompletionMessageParam) implementsChatCompletionMessageParamUnion() 
 // [ChatCompletionUserMessageParam], [ChatCompletionAssistantMessageParam],
 // [ChatCompletionToolMessageParam], [ChatCompletionFunctionMessageParam],
 // [ChatCompletionMessageParam].
-//
-// This union is additionally satisfied by the return types [ChatCompletionMessage]
 type ChatCompletionMessageParamUnion interface {
 	implementsChatCompletionMessageParamUnion()
 }
