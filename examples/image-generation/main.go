@@ -23,7 +23,7 @@ func main() {
 
 	image, err := client.Images.Generate(ctx, openai.ImageGenerateParams{
 		Prompt:         openai.String(prompt),
-		Model:          openai.F(openai.ImageGenerateParamsModelDallE3),
+		Model:          openai.F(openai.ImageModelDallE3),
 		ResponseFormat: openai.F(openai.ImageGenerateParamsResponseFormatURL),
 		N:              openai.Int(1),
 	})
@@ -38,7 +38,7 @@ func main() {
 
 	image, err = client.Images.Generate(ctx, openai.ImageGenerateParams{
 		Prompt:         openai.String(prompt),
-		Model:          openai.F(openai.ImageGenerateParamsModelDallE3),
+		Model:          openai.F(openai.ImageModelDallE3),
 		ResponseFormat: openai.F(openai.ImageGenerateParamsResponseFormatB64JSON),
 		N:              openai.Int(1),
 	})

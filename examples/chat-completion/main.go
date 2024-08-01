@@ -21,7 +21,7 @@ func main() {
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(question),
 		}),
-		Seed:  openai.Int(0),
+		Seed:  openai.Int(1),
 		Model: openai.F(openai.ChatModelGPT4o),
 	})
 	if err != nil {

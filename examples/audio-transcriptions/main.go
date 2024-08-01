@@ -18,7 +18,7 @@ func main() {
 	}
 
 	transcription, err := client.Audio.Transcriptions.New(ctx, openai.AudioTranscriptionNewParams{
-		Model: openai.F(openai.AudioTranscriptionNewParamsModelWhisper1),
+		Model: openai.F(openai.AudioModelWhisper1),
 		File:  openai.F[io.Reader](file),
 	})
 	if err != nil {
