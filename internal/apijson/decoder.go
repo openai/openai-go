@@ -214,15 +214,29 @@ func (d *decoderBuilder) newUnionDecoder(t reflect.Type) decoderFunc {
 		decoders = append(decoders, decoder)
 	}
 	return func(n gjson.Result, v reflect.Value, state *decoderState) error {
-		// Set bestExactness to worse than loose
-		bestExactness := loose - 1
-
+		// If there is a discriminator match, circumvent the exactness logic entirely
 		for idx, variant := range unionEntry.variants {
 			decoder := decoders[idx]
 			if variant.TypeFilter != n.Type {
 				continue
 			}
-			if len(unionEntry.discriminatorKey) != 0 && n.Get(unionEntry.discriminatorKey).Value() != variant.DiscriminatorValue {
+
+			if len(unionEntry.discriminatorKey) != 0 {
+				discriminatorValue := n.Get(unionEntry.discriminatorKey).Value()
+				if discriminatorValue == variant.DiscriminatorValue {
+					inner := reflect.New(variant.Type).Elem()
+					err := decoder(n, inner, state)
+					v.Set(inner)
+					return err
+				}
+			}
+		}
+
+		// Set bestExactness to worse than loose
+		bestExactness := loose - 1
+		for idx, variant := range unionEntry.variants {
+			decoder := decoders[idx]
+			if variant.TypeFilter != n.Type {
 				continue
 			}
 			sub := decoderState{strict: state.strict, exactness: exact}
@@ -325,68 +339,69 @@ func (d *decoderBuilder) newArrayTypeDecoder(t reflect.Type) decoderFunc {
 func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 	// map of json field name to struct field decoders
 	decoderFields := map[string]decoderField{}
+	anonymousDecoders := []decoderField{}
 	extraDecoder := (*decoderField)(nil)
 	inlineDecoder := (*decoderField)(nil)
 
-	// This helper allows us to recursively collect field encoders into a flat
-	// array. The parameter `index` keeps track of the access patterns necessary
-	// to get to some field.
-	var collectFieldDecoders func(r reflect.Type, index []int)
-	collectFieldDecoders = func(r reflect.Type, index []int) {
-		for i := 0; i < r.NumField(); i++ {
-			idx := append(index, i)
-			field := t.FieldByIndex(idx)
-			if !field.IsExported() {
-				continue
-			}
-			// If this is an embedded struct, traverse one level deeper to extract
-			// the fields and get their encoders as well.
-			if field.Anonymous {
-				collectFieldDecoders(field.Type, idx)
-				continue
-			}
-			// If json tag is not present, then we skip, which is intentionally
-			// different behavior from the stdlib.
-			ptag, ok := parseJSONStructTag(field)
-			if !ok {
-				continue
-			}
-			// We only want to support unexported fields if they're tagged with
-			// `extras` because that field shouldn't be part of the public API. We
-			// also want to only keep the top level extras
-			if ptag.extras && len(index) == 0 {
-				extraDecoder = &decoderField{ptag, d.typeDecoder(field.Type.Elem()), idx, field.Name}
-				continue
-			}
-			if ptag.inline && len(index) == 0 {
-				inlineDecoder = &decoderField{ptag, d.typeDecoder(field.Type), idx, field.Name}
-				continue
-			}
-			if ptag.metadata {
-				continue
-			}
-
-			oldFormat := d.dateFormat
-			dateFormat, ok := parseFormatStructTag(field)
-			if ok {
-				switch dateFormat {
-				case "date-time":
-					d.dateFormat = time.RFC3339
-				case "date":
-					d.dateFormat = "2006-01-02"
-				}
-			}
-			decoderFields[ptag.name] = decoderField{ptag, d.typeDecoder(field.Type), idx, field.Name}
-			d.dateFormat = oldFormat
+	for i := 0; i < t.NumField(); i++ {
+		idx := []int{i}
+		field := t.FieldByIndex(idx)
+		if !field.IsExported() {
+			continue
 		}
+		// If this is an embedded struct, traverse one level deeper to extract
+		// the fields and get their encoders as well.
+		if field.Anonymous {
+			anonymousDecoders = append(anonymousDecoders, decoderField{
+				fn:  d.typeDecoder(field.Type),
+				idx: idx[:],
+			})
+			continue
+		}
+		// If json tag is not present, then we skip, which is intentionally
+		// different behavior from the stdlib.
+		ptag, ok := parseJSONStructTag(field)
+		if !ok {
+			continue
+		}
+		// We only want to support unexported fields if they're tagged with
+		// `extras` because that field shouldn't be part of the public API.
+		if ptag.extras {
+			extraDecoder = &decoderField{ptag, d.typeDecoder(field.Type.Elem()), idx, field.Name}
+			continue
+		}
+		if ptag.inline {
+			inlineDecoder = &decoderField{ptag, d.typeDecoder(field.Type), idx, field.Name}
+			continue
+		}
+		if ptag.metadata {
+			continue
+		}
+
+		oldFormat := d.dateFormat
+		dateFormat, ok := parseFormatStructTag(field)
+		if ok {
+			switch dateFormat {
+			case "date-time":
+				d.dateFormat = time.RFC3339
+			case "date":
+				d.dateFormat = "2006-01-02"
+			}
+		}
+		decoderFields[ptag.name] = decoderField{ptag, d.typeDecoder(field.Type), idx, field.Name}
+		d.dateFormat = oldFormat
 	}
-	collectFieldDecoders(t, []int{})
 
 	return func(node gjson.Result, value reflect.Value, state *decoderState) (err error) {
 		if field := value.FieldByName("JSON"); field.IsValid() {
 			if raw := field.FieldByName("raw"); raw.IsValid() {
 				setUnexportedField(raw, node.Raw)
 			}
+		}
+
+		for _, decoder := range anonymousDecoders {
+			// ignore errors
+			decoder.fn(node, value.FieldByIndex(decoder.idx), state)
 		}
 
 		if inlineDecoder != nil {
