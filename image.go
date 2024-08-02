@@ -89,20 +89,12 @@ func (r imageJSON) RawJSON() string {
 	return r.raw
 }
 
-type ImageModel string
+type ImageModel = string
 
 const (
 	ImageModelDallE2 ImageModel = "dall-e-2"
 	ImageModelDallE3 ImageModel = "dall-e-3"
 )
-
-func (r ImageModel) IsKnown() bool {
-	switch r {
-	case ImageModelDallE2, ImageModelDallE3:
-		return true
-	}
-	return false
-}
 
 type ImagesResponse struct {
 	Created int64              `json:"created,required"`
