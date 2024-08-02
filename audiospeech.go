@@ -40,20 +40,12 @@ func (r *AudioSpeechService) New(ctx context.Context, body AudioSpeechNewParams,
 	return
 }
 
-type SpeechModel string
+type SpeechModel = string
 
 const (
 	SpeechModelTTS1   SpeechModel = "tts-1"
 	SpeechModelTTS1HD SpeechModel = "tts-1-hd"
 )
-
-func (r SpeechModel) IsKnown() bool {
-	switch r {
-	case SpeechModelTTS1, SpeechModelTTS1HD:
-		return true
-	}
-	return false
-}
 
 type AudioSpeechNewParams struct {
 	// The text to generate audio for. The maximum length is 4096 characters.
