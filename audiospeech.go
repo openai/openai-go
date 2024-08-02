@@ -40,12 +40,27 @@ func (r *AudioSpeechService) New(ctx context.Context, body AudioSpeechNewParams,
 	return
 }
 
+type SpeechModel string
+
+const (
+	SpeechModelTTS1   SpeechModel = "tts-1"
+	SpeechModelTTS1HD SpeechModel = "tts-1-hd"
+)
+
+func (r SpeechModel) IsKnown() bool {
+	switch r {
+	case SpeechModelTTS1, SpeechModelTTS1HD:
+		return true
+	}
+	return false
+}
+
 type AudioSpeechNewParams struct {
 	// The text to generate audio for. The maximum length is 4096 characters.
 	Input param.Field[string] `json:"input,required"`
 	// One of the available [TTS models](https://platform.openai.com/docs/models/tts):
 	// `tts-1` or `tts-1-hd`
-	Model param.Field[AudioSpeechNewParamsModel] `json:"model,required"`
+	Model param.Field[SpeechModel] `json:"model,required"`
 	// The voice to use when generating the audio. Supported voices are `alloy`,
 	// `echo`, `fable`, `onyx`, `nova`, and `shimmer`. Previews of the voices are
 	// available in the
@@ -61,21 +76,6 @@ type AudioSpeechNewParams struct {
 
 func (r AudioSpeechNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-type AudioSpeechNewParamsModel string
-
-const (
-	AudioSpeechNewParamsModelTTS1   AudioSpeechNewParamsModel = "tts-1"
-	AudioSpeechNewParamsModelTTS1HD AudioSpeechNewParamsModel = "tts-1-hd"
-)
-
-func (r AudioSpeechNewParamsModel) IsKnown() bool {
-	switch r {
-	case AudioSpeechNewParamsModelTTS1, AudioSpeechNewParamsModelTTS1HD:
-		return true
-	}
-	return false
 }
 
 // The voice to use when generating the audio. Supported voices are `alloy`,

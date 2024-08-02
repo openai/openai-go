@@ -89,6 +89,21 @@ func (r imageJSON) RawJSON() string {
 	return r.raw
 }
 
+type ImageModel string
+
+const (
+	ImageModelDallE2 ImageModel = "dall-e-2"
+	ImageModelDallE3 ImageModel = "dall-e-3"
+)
+
+func (r ImageModel) IsKnown() bool {
+	switch r {
+	case ImageModelDallE2, ImageModelDallE3:
+		return true
+	}
+	return false
+}
+
 type ImagesResponse struct {
 	Created int64              `json:"created,required"`
 	Data    []Image            `json:"data,required"`
@@ -117,7 +132,7 @@ type ImageNewVariationParams struct {
 	Image param.Field[io.Reader] `json:"image,required" format:"binary"`
 	// The model to use for image generation. Only `dall-e-2` is supported at this
 	// time.
-	Model param.Field[ImageNewVariationParamsModel] `json:"model"`
+	Model param.Field[ImageModel] `json:"model"`
 	// The number of images to generate. Must be between 1 and 10. For `dall-e-3`, only
 	// `n=1` is supported.
 	N param.Field[int64] `json:"n"`
@@ -147,20 +162,6 @@ func (r ImageNewVariationParams) MarshalMultipart() (data []byte, contentType st
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
-}
-
-type ImageNewVariationParamsModel string
-
-const (
-	ImageNewVariationParamsModelDallE2 ImageNewVariationParamsModel = "dall-e-2"
-)
-
-func (r ImageNewVariationParamsModel) IsKnown() bool {
-	switch r {
-	case ImageNewVariationParamsModelDallE2:
-		return true
-	}
-	return false
 }
 
 // The format in which the generated images are returned. Must be one of `url` or
@@ -212,7 +213,7 @@ type ImageEditParams struct {
 	Mask param.Field[io.Reader] `json:"mask" format:"binary"`
 	// The model to use for image generation. Only `dall-e-2` is supported at this
 	// time.
-	Model param.Field[ImageEditParamsModel] `json:"model"`
+	Model param.Field[ImageModel] `json:"model"`
 	// The number of images to generate. Must be between 1 and 10.
 	N param.Field[int64] `json:"n"`
 	// The format in which the generated images are returned. Must be one of `url` or
@@ -241,20 +242,6 @@ func (r ImageEditParams) MarshalMultipart() (data []byte, contentType string, er
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
-}
-
-type ImageEditParamsModel string
-
-const (
-	ImageEditParamsModelDallE2 ImageEditParamsModel = "dall-e-2"
-)
-
-func (r ImageEditParamsModel) IsKnown() bool {
-	switch r {
-	case ImageEditParamsModelDallE2:
-		return true
-	}
-	return false
 }
 
 // The format in which the generated images are returned. Must be one of `url` or
@@ -298,7 +285,7 @@ type ImageGenerateParams struct {
 	// characters for `dall-e-2` and 4000 characters for `dall-e-3`.
 	Prompt param.Field[string] `json:"prompt,required"`
 	// The model to use for image generation.
-	Model param.Field[ImageGenerateParamsModel] `json:"model"`
+	Model param.Field[ImageModel] `json:"model"`
 	// The number of images to generate. Must be between 1 and 10. For `dall-e-3`, only
 	// `n=1` is supported.
 	N param.Field[int64] `json:"n"`
@@ -327,21 +314,6 @@ type ImageGenerateParams struct {
 
 func (r ImageGenerateParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-type ImageGenerateParamsModel string
-
-const (
-	ImageGenerateParamsModelDallE2 ImageGenerateParamsModel = "dall-e-2"
-	ImageGenerateParamsModelDallE3 ImageGenerateParamsModel = "dall-e-3"
-)
-
-func (r ImageGenerateParamsModel) IsKnown() bool {
-	switch r {
-	case ImageGenerateParamsModelDallE2, ImageGenerateParamsModelDallE3:
-		return true
-	}
-	return false
 }
 
 // The quality of the image that will be generated. `hd` creates images with finer

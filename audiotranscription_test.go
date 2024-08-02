@@ -29,7 +29,7 @@ func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Audio.Transcriptions.New(context.TODO(), openai.AudioTranscriptionNewParams{
 		File:                   openai.F(io.Reader(bytes.NewBuffer([]byte("some file contents")))),
-		Model:                  openai.F(openai.AudioTranscriptionNewParamsModelWhisper1),
+		Model:                  openai.F(openai.AudioModelWhisper1),
 		Language:               openai.F("language"),
 		Prompt:                 openai.F("prompt"),
 		ResponseFormat:         openai.F(openai.AudioTranscriptionNewParamsResponseFormatJSON),
