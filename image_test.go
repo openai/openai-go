@@ -29,7 +29,7 @@ func TestImageNewVariationWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Images.NewVariation(context.TODO(), openai.ImageNewVariationParams{
 		Image:          openai.F(io.Reader(bytes.NewBuffer([]byte("some file contents")))),
-		Model:          openai.F(openai.ImageNewVariationParamsModelDallE2),
+		Model:          openai.F(openai.ImageModelDallE2),
 		N:              openai.F(int64(1)),
 		ResponseFormat: openai.F(openai.ImageNewVariationParamsResponseFormatURL),
 		Size:           openai.F(openai.ImageNewVariationParamsSize1024x1024),
@@ -60,7 +60,7 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 		Image:          openai.F(io.Reader(bytes.NewBuffer([]byte("some file contents")))),
 		Prompt:         openai.F("A cute baby sea otter wearing a beret"),
 		Mask:           openai.F(io.Reader(bytes.NewBuffer([]byte("some file contents")))),
-		Model:          openai.F(openai.ImageEditParamsModelDallE2),
+		Model:          openai.F(openai.ImageModelDallE2),
 		N:              openai.F(int64(1)),
 		ResponseFormat: openai.F(openai.ImageEditParamsResponseFormatURL),
 		Size:           openai.F(openai.ImageEditParamsSize1024x1024),
@@ -89,7 +89,7 @@ func TestImageGenerateWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Images.Generate(context.TODO(), openai.ImageGenerateParams{
 		Prompt:         openai.F("A cute baby sea otter"),
-		Model:          openai.F(openai.ImageGenerateParamsModelDallE2),
+		Model:          openai.F(openai.ImageModelDallE2),
 		N:              openai.F(int64(1)),
 		Quality:        openai.F(openai.ImageGenerateParamsQualityStandard),
 		ResponseFormat: openai.F(openai.ImageGenerateParamsResponseFormatURL),

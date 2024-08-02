@@ -30,3 +30,17 @@ func NewAudioService(opts ...option.RequestOption) (r *AudioService) {
 	r.Speech = NewAudioSpeechService(opts...)
 	return
 }
+
+type AudioModel string
+
+const (
+	AudioModelWhisper1 AudioModel = "whisper-1"
+)
+
+func (r AudioModel) IsKnown() bool {
+	switch r {
+	case AudioModelWhisper1:
+		return true
+	}
+	return false
+}

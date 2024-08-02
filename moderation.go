@@ -185,6 +185,21 @@ func (r moderationCategoryScoresJSON) RawJSON() string {
 	return r.raw
 }
 
+type ModerationModel string
+
+const (
+	ModerationModelTextModerationLatest ModerationModel = "text-moderation-latest"
+	ModerationModelTextModerationStable ModerationModel = "text-moderation-stable"
+)
+
+func (r ModerationModel) IsKnown() bool {
+	switch r {
+	case ModerationModelTextModerationLatest, ModerationModelTextModerationStable:
+		return true
+	}
+	return false
+}
+
 // Represents if a given text input is potentially harmful.
 type ModerationNewResponse struct {
 	// The unique identifier for the moderation request.
@@ -225,7 +240,7 @@ type ModerationNewParams struct {
 	// `text-moderation-stable`, we will provide advanced notice before updating the
 	// model. Accuracy of `text-moderation-stable` may be slightly lower than for
 	// `text-moderation-latest`.
-	Model param.Field[ModerationNewParamsModel] `json:"model"`
+	Model param.Field[ModerationModel] `json:"model"`
 }
 
 func (r ModerationNewParams) MarshalJSON() (data []byte, err error) {
@@ -242,18 +257,3 @@ type ModerationNewParamsInputUnion interface {
 type ModerationNewParamsInputArray []string
 
 func (r ModerationNewParamsInputArray) ImplementsModerationNewParamsInputUnion() {}
-
-type ModerationNewParamsModel string
-
-const (
-	ModerationNewParamsModelTextModerationLatest ModerationNewParamsModel = "text-moderation-latest"
-	ModerationNewParamsModelTextModerationStable ModerationNewParamsModel = "text-moderation-stable"
-)
-
-func (r ModerationNewParamsModel) IsKnown() bool {
-	switch r {
-	case ModerationNewParamsModelTextModerationLatest, ModerationNewParamsModelTextModerationStable:
-		return true
-	}
-	return false
-}
