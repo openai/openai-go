@@ -27,7 +27,7 @@ func NewChatService(opts ...option.RequestOption) (r *ChatService) {
 	return
 }
 
-type ChatModel string
+type ChatModel = string
 
 const (
 	ChatModelGPT4o               ChatModel = "gpt-4o"
@@ -54,11 +54,3 @@ const (
 	ChatModelGPT3_5Turbo0125     ChatModel = "gpt-3.5-turbo-0125"
 	ChatModelGPT3_5Turbo16k0613  ChatModel = "gpt-3.5-turbo-16k-0613"
 )
-
-func (r ChatModel) IsKnown() bool {
-	switch r {
-	case ChatModelGPT4o, ChatModelGPT4o2024_05_13, ChatModelGPT4oMini, ChatModelGPT4oMini2024_07_18, ChatModelGPT4Turbo, ChatModelGPT4Turbo2024_04_09, ChatModelGPT4_0125Preview, ChatModelGPT4TurboPreview, ChatModelGPT4_1106Preview, ChatModelGPT4VisionPreview, ChatModelGPT4, ChatModelGPT4_0314, ChatModelGPT4_0613, ChatModelGPT4_32k, ChatModelGPT4_32k0314, ChatModelGPT4_32k0613, ChatModelGPT3_5Turbo, ChatModelGPT3_5Turbo16k, ChatModelGPT3_5Turbo0301, ChatModelGPT3_5Turbo0613, ChatModelGPT3_5Turbo1106, ChatModelGPT3_5Turbo0125, ChatModelGPT3_5Turbo16k0613:
-		return true
-	}
-	return false
-}

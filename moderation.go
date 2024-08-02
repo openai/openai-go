@@ -185,20 +185,12 @@ func (r moderationCategoryScoresJSON) RawJSON() string {
 	return r.raw
 }
 
-type ModerationModel string
+type ModerationModel = string
 
 const (
 	ModerationModelTextModerationLatest ModerationModel = "text-moderation-latest"
 	ModerationModelTextModerationStable ModerationModel = "text-moderation-stable"
 )
-
-func (r ModerationModel) IsKnown() bool {
-	switch r {
-	case ModerationModelTextModerationLatest, ModerationModelTextModerationStable:
-		return true
-	}
-	return false
-}
 
 // Represents if a given text input is potentially harmful.
 type ModerationNewResponse struct {
