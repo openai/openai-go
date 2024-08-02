@@ -972,7 +972,7 @@ type BetaThreadNewAndRunParams struct {
 	// be used to execute this run. If a value is provided here, it will override the
 	// model associated with the assistant. If not, the model associated with the
 	// assistant will be used.
-	Model param.Field[BetaThreadNewAndRunParamsModel] `json:"model"`
+	Model param.Field[ChatModel] `json:"model"`
 	// Whether to enable
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling)
 	// during tool use.
@@ -1028,41 +1028,6 @@ type BetaThreadNewAndRunParams struct {
 
 func (r BetaThreadNewAndRunParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-type BetaThreadNewAndRunParamsModel string
-
-const (
-	BetaThreadNewAndRunParamsModelGPT4o               BetaThreadNewAndRunParamsModel = "gpt-4o"
-	BetaThreadNewAndRunParamsModelGPT4o2024_05_13     BetaThreadNewAndRunParamsModel = "gpt-4o-2024-05-13"
-	BetaThreadNewAndRunParamsModelGPT4oMini           BetaThreadNewAndRunParamsModel = "gpt-4o-mini"
-	BetaThreadNewAndRunParamsModelGPT4oMini2024_07_18 BetaThreadNewAndRunParamsModel = "gpt-4o-mini-2024-07-18"
-	BetaThreadNewAndRunParamsModelGPT4Turbo           BetaThreadNewAndRunParamsModel = "gpt-4-turbo"
-	BetaThreadNewAndRunParamsModelGPT4Turbo2024_04_09 BetaThreadNewAndRunParamsModel = "gpt-4-turbo-2024-04-09"
-	BetaThreadNewAndRunParamsModelGPT4_0125Preview    BetaThreadNewAndRunParamsModel = "gpt-4-0125-preview"
-	BetaThreadNewAndRunParamsModelGPT4TurboPreview    BetaThreadNewAndRunParamsModel = "gpt-4-turbo-preview"
-	BetaThreadNewAndRunParamsModelGPT4_1106Preview    BetaThreadNewAndRunParamsModel = "gpt-4-1106-preview"
-	BetaThreadNewAndRunParamsModelGPT4VisionPreview   BetaThreadNewAndRunParamsModel = "gpt-4-vision-preview"
-	BetaThreadNewAndRunParamsModelGPT4                BetaThreadNewAndRunParamsModel = "gpt-4"
-	BetaThreadNewAndRunParamsModelGPT4_0314           BetaThreadNewAndRunParamsModel = "gpt-4-0314"
-	BetaThreadNewAndRunParamsModelGPT4_0613           BetaThreadNewAndRunParamsModel = "gpt-4-0613"
-	BetaThreadNewAndRunParamsModelGPT4_32k            BetaThreadNewAndRunParamsModel = "gpt-4-32k"
-	BetaThreadNewAndRunParamsModelGPT4_32k0314        BetaThreadNewAndRunParamsModel = "gpt-4-32k-0314"
-	BetaThreadNewAndRunParamsModelGPT4_32k0613        BetaThreadNewAndRunParamsModel = "gpt-4-32k-0613"
-	BetaThreadNewAndRunParamsModelGPT3_5Turbo         BetaThreadNewAndRunParamsModel = "gpt-3.5-turbo"
-	BetaThreadNewAndRunParamsModelGPT3_5Turbo16k      BetaThreadNewAndRunParamsModel = "gpt-3.5-turbo-16k"
-	BetaThreadNewAndRunParamsModelGPT3_5Turbo0613     BetaThreadNewAndRunParamsModel = "gpt-3.5-turbo-0613"
-	BetaThreadNewAndRunParamsModelGPT3_5Turbo1106     BetaThreadNewAndRunParamsModel = "gpt-3.5-turbo-1106"
-	BetaThreadNewAndRunParamsModelGPT3_5Turbo0125     BetaThreadNewAndRunParamsModel = "gpt-3.5-turbo-0125"
-	BetaThreadNewAndRunParamsModelGPT3_5Turbo16k0613  BetaThreadNewAndRunParamsModel = "gpt-3.5-turbo-16k-0613"
-)
-
-func (r BetaThreadNewAndRunParamsModel) IsKnown() bool {
-	switch r {
-	case BetaThreadNewAndRunParamsModelGPT4o, BetaThreadNewAndRunParamsModelGPT4o2024_05_13, BetaThreadNewAndRunParamsModelGPT4oMini, BetaThreadNewAndRunParamsModelGPT4oMini2024_07_18, BetaThreadNewAndRunParamsModelGPT4Turbo, BetaThreadNewAndRunParamsModelGPT4Turbo2024_04_09, BetaThreadNewAndRunParamsModelGPT4_0125Preview, BetaThreadNewAndRunParamsModelGPT4TurboPreview, BetaThreadNewAndRunParamsModelGPT4_1106Preview, BetaThreadNewAndRunParamsModelGPT4VisionPreview, BetaThreadNewAndRunParamsModelGPT4, BetaThreadNewAndRunParamsModelGPT4_0314, BetaThreadNewAndRunParamsModelGPT4_0613, BetaThreadNewAndRunParamsModelGPT4_32k, BetaThreadNewAndRunParamsModelGPT4_32k0314, BetaThreadNewAndRunParamsModelGPT4_32k0613, BetaThreadNewAndRunParamsModelGPT3_5Turbo, BetaThreadNewAndRunParamsModelGPT3_5Turbo16k, BetaThreadNewAndRunParamsModelGPT3_5Turbo0613, BetaThreadNewAndRunParamsModelGPT3_5Turbo1106, BetaThreadNewAndRunParamsModelGPT3_5Turbo0125, BetaThreadNewAndRunParamsModelGPT3_5Turbo16k0613:
-		return true
-	}
-	return false
 }
 
 // If no thread is provided, an empty thread will be created.

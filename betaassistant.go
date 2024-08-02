@@ -1988,7 +1988,7 @@ type BetaAssistantNewParams struct {
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models/overview) for
 	// descriptions of them.
-	Model param.Field[BetaAssistantNewParamsModel] `json:"model,required"`
+	Model param.Field[ChatModel] `json:"model,required"`
 	// The description of the assistant. The maximum length is 512 characters.
 	Description param.Field[string] `json:"description"`
 	// The system instructions that the assistant uses. The maximum length is 256,000
@@ -2040,41 +2040,6 @@ type BetaAssistantNewParams struct {
 
 func (r BetaAssistantNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-type BetaAssistantNewParamsModel string
-
-const (
-	BetaAssistantNewParamsModelGPT4o               BetaAssistantNewParamsModel = "gpt-4o"
-	BetaAssistantNewParamsModelGPT4o2024_05_13     BetaAssistantNewParamsModel = "gpt-4o-2024-05-13"
-	BetaAssistantNewParamsModelGPT4oMini           BetaAssistantNewParamsModel = "gpt-4o-mini"
-	BetaAssistantNewParamsModelGPT4oMini2024_07_18 BetaAssistantNewParamsModel = "gpt-4o-mini-2024-07-18"
-	BetaAssistantNewParamsModelGPT4Turbo           BetaAssistantNewParamsModel = "gpt-4-turbo"
-	BetaAssistantNewParamsModelGPT4Turbo2024_04_09 BetaAssistantNewParamsModel = "gpt-4-turbo-2024-04-09"
-	BetaAssistantNewParamsModelGPT4_0125Preview    BetaAssistantNewParamsModel = "gpt-4-0125-preview"
-	BetaAssistantNewParamsModelGPT4TurboPreview    BetaAssistantNewParamsModel = "gpt-4-turbo-preview"
-	BetaAssistantNewParamsModelGPT4_1106Preview    BetaAssistantNewParamsModel = "gpt-4-1106-preview"
-	BetaAssistantNewParamsModelGPT4VisionPreview   BetaAssistantNewParamsModel = "gpt-4-vision-preview"
-	BetaAssistantNewParamsModelGPT4                BetaAssistantNewParamsModel = "gpt-4"
-	BetaAssistantNewParamsModelGPT4_0314           BetaAssistantNewParamsModel = "gpt-4-0314"
-	BetaAssistantNewParamsModelGPT4_0613           BetaAssistantNewParamsModel = "gpt-4-0613"
-	BetaAssistantNewParamsModelGPT4_32k            BetaAssistantNewParamsModel = "gpt-4-32k"
-	BetaAssistantNewParamsModelGPT4_32k0314        BetaAssistantNewParamsModel = "gpt-4-32k-0314"
-	BetaAssistantNewParamsModelGPT4_32k0613        BetaAssistantNewParamsModel = "gpt-4-32k-0613"
-	BetaAssistantNewParamsModelGPT3_5Turbo         BetaAssistantNewParamsModel = "gpt-3.5-turbo"
-	BetaAssistantNewParamsModelGPT3_5Turbo16k      BetaAssistantNewParamsModel = "gpt-3.5-turbo-16k"
-	BetaAssistantNewParamsModelGPT3_5Turbo0613     BetaAssistantNewParamsModel = "gpt-3.5-turbo-0613"
-	BetaAssistantNewParamsModelGPT3_5Turbo1106     BetaAssistantNewParamsModel = "gpt-3.5-turbo-1106"
-	BetaAssistantNewParamsModelGPT3_5Turbo0125     BetaAssistantNewParamsModel = "gpt-3.5-turbo-0125"
-	BetaAssistantNewParamsModelGPT3_5Turbo16k0613  BetaAssistantNewParamsModel = "gpt-3.5-turbo-16k-0613"
-)
-
-func (r BetaAssistantNewParamsModel) IsKnown() bool {
-	switch r {
-	case BetaAssistantNewParamsModelGPT4o, BetaAssistantNewParamsModelGPT4o2024_05_13, BetaAssistantNewParamsModelGPT4oMini, BetaAssistantNewParamsModelGPT4oMini2024_07_18, BetaAssistantNewParamsModelGPT4Turbo, BetaAssistantNewParamsModelGPT4Turbo2024_04_09, BetaAssistantNewParamsModelGPT4_0125Preview, BetaAssistantNewParamsModelGPT4TurboPreview, BetaAssistantNewParamsModelGPT4_1106Preview, BetaAssistantNewParamsModelGPT4VisionPreview, BetaAssistantNewParamsModelGPT4, BetaAssistantNewParamsModelGPT4_0314, BetaAssistantNewParamsModelGPT4_0613, BetaAssistantNewParamsModelGPT4_32k, BetaAssistantNewParamsModelGPT4_32k0314, BetaAssistantNewParamsModelGPT4_32k0613, BetaAssistantNewParamsModelGPT3_5Turbo, BetaAssistantNewParamsModelGPT3_5Turbo16k, BetaAssistantNewParamsModelGPT3_5Turbo0613, BetaAssistantNewParamsModelGPT3_5Turbo1106, BetaAssistantNewParamsModelGPT3_5Turbo0125, BetaAssistantNewParamsModelGPT3_5Turbo16k0613:
-		return true
-	}
-	return false
 }
 
 // A set of resources that are used by the assistant's tools. The resources are

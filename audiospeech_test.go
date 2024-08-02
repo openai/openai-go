@@ -28,7 +28,7 @@ func TestAudioSpeechNewWithOptionalParams(t *testing.T) {
 	)
 	resp, err := client.Audio.Speech.New(context.TODO(), openai.AudioSpeechNewParams{
 		Input:          openai.F("input"),
-		Model:          openai.F(openai.AudioSpeechNewParamsModelTTS1),
+		Model:          openai.F(openai.SpeechModelTTS1),
 		Voice:          openai.F(openai.AudioSpeechNewParamsVoiceAlloy),
 		ResponseFormat: openai.F(openai.AudioSpeechNewParamsResponseFormatMP3),
 		Speed:          openai.F(0.250000),
