@@ -69,7 +69,7 @@ type AudioTranslationNewParams struct {
 	File param.Field[io.Reader] `json:"file,required" format:"binary"`
 	// ID of the model to use. Only `whisper-1` (which is powered by our open source
 	// Whisper V2 model) is currently available.
-	Model param.Field[AudioTranslationNewParamsModel] `json:"model,required"`
+	Model param.Field[AudioModel] `json:"model,required"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. The
 	// [prompt](https://platform.openai.com/docs/guides/speech-to-text/prompting)
@@ -99,18 +99,4 @@ func (r AudioTranslationNewParams) MarshalMultipart() (data []byte, contentType 
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
-}
-
-type AudioTranslationNewParamsModel string
-
-const (
-	AudioTranslationNewParamsModelWhisper1 AudioTranslationNewParamsModel = "whisper-1"
-)
-
-func (r AudioTranslationNewParamsModel) IsKnown() bool {
-	switch r {
-	case AudioTranslationNewParamsModelWhisper1:
-		return true
-	}
-	return false
 }

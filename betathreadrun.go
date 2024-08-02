@@ -708,7 +708,7 @@ type BetaThreadRunNewParams struct {
 	// be used to execute this run. If a value is provided here, it will override the
 	// model associated with the assistant. If not, the model associated with the
 	// assistant will be used.
-	Model param.Field[BetaThreadRunNewParamsModel] `json:"model"`
+	Model param.Field[ChatModel] `json:"model"`
 	// Whether to enable
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling)
 	// during tool use.
@@ -884,41 +884,6 @@ const (
 func (r BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolsType) IsKnown() bool {
 	switch r {
 	case BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolsTypeCodeInterpreter, BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolsTypeFileSearch:
-		return true
-	}
-	return false
-}
-
-type BetaThreadRunNewParamsModel string
-
-const (
-	BetaThreadRunNewParamsModelGPT4o               BetaThreadRunNewParamsModel = "gpt-4o"
-	BetaThreadRunNewParamsModelGPT4o2024_05_13     BetaThreadRunNewParamsModel = "gpt-4o-2024-05-13"
-	BetaThreadRunNewParamsModelGPT4oMini           BetaThreadRunNewParamsModel = "gpt-4o-mini"
-	BetaThreadRunNewParamsModelGPT4oMini2024_07_18 BetaThreadRunNewParamsModel = "gpt-4o-mini-2024-07-18"
-	BetaThreadRunNewParamsModelGPT4Turbo           BetaThreadRunNewParamsModel = "gpt-4-turbo"
-	BetaThreadRunNewParamsModelGPT4Turbo2024_04_09 BetaThreadRunNewParamsModel = "gpt-4-turbo-2024-04-09"
-	BetaThreadRunNewParamsModelGPT4_0125Preview    BetaThreadRunNewParamsModel = "gpt-4-0125-preview"
-	BetaThreadRunNewParamsModelGPT4TurboPreview    BetaThreadRunNewParamsModel = "gpt-4-turbo-preview"
-	BetaThreadRunNewParamsModelGPT4_1106Preview    BetaThreadRunNewParamsModel = "gpt-4-1106-preview"
-	BetaThreadRunNewParamsModelGPT4VisionPreview   BetaThreadRunNewParamsModel = "gpt-4-vision-preview"
-	BetaThreadRunNewParamsModelGPT4                BetaThreadRunNewParamsModel = "gpt-4"
-	BetaThreadRunNewParamsModelGPT4_0314           BetaThreadRunNewParamsModel = "gpt-4-0314"
-	BetaThreadRunNewParamsModelGPT4_0613           BetaThreadRunNewParamsModel = "gpt-4-0613"
-	BetaThreadRunNewParamsModelGPT4_32k            BetaThreadRunNewParamsModel = "gpt-4-32k"
-	BetaThreadRunNewParamsModelGPT4_32k0314        BetaThreadRunNewParamsModel = "gpt-4-32k-0314"
-	BetaThreadRunNewParamsModelGPT4_32k0613        BetaThreadRunNewParamsModel = "gpt-4-32k-0613"
-	BetaThreadRunNewParamsModelGPT3_5Turbo         BetaThreadRunNewParamsModel = "gpt-3.5-turbo"
-	BetaThreadRunNewParamsModelGPT3_5Turbo16k      BetaThreadRunNewParamsModel = "gpt-3.5-turbo-16k"
-	BetaThreadRunNewParamsModelGPT3_5Turbo0613     BetaThreadRunNewParamsModel = "gpt-3.5-turbo-0613"
-	BetaThreadRunNewParamsModelGPT3_5Turbo1106     BetaThreadRunNewParamsModel = "gpt-3.5-turbo-1106"
-	BetaThreadRunNewParamsModelGPT3_5Turbo0125     BetaThreadRunNewParamsModel = "gpt-3.5-turbo-0125"
-	BetaThreadRunNewParamsModelGPT3_5Turbo16k0613  BetaThreadRunNewParamsModel = "gpt-3.5-turbo-16k-0613"
-)
-
-func (r BetaThreadRunNewParamsModel) IsKnown() bool {
-	switch r {
-	case BetaThreadRunNewParamsModelGPT4o, BetaThreadRunNewParamsModelGPT4o2024_05_13, BetaThreadRunNewParamsModelGPT4oMini, BetaThreadRunNewParamsModelGPT4oMini2024_07_18, BetaThreadRunNewParamsModelGPT4Turbo, BetaThreadRunNewParamsModelGPT4Turbo2024_04_09, BetaThreadRunNewParamsModelGPT4_0125Preview, BetaThreadRunNewParamsModelGPT4TurboPreview, BetaThreadRunNewParamsModelGPT4_1106Preview, BetaThreadRunNewParamsModelGPT4VisionPreview, BetaThreadRunNewParamsModelGPT4, BetaThreadRunNewParamsModelGPT4_0314, BetaThreadRunNewParamsModelGPT4_0613, BetaThreadRunNewParamsModelGPT4_32k, BetaThreadRunNewParamsModelGPT4_32k0314, BetaThreadRunNewParamsModelGPT4_32k0613, BetaThreadRunNewParamsModelGPT3_5Turbo, BetaThreadRunNewParamsModelGPT3_5Turbo16k, BetaThreadRunNewParamsModelGPT3_5Turbo0613, BetaThreadRunNewParamsModelGPT3_5Turbo1106, BetaThreadRunNewParamsModelGPT3_5Turbo0125, BetaThreadRunNewParamsModelGPT3_5Turbo16k0613:
 		return true
 	}
 	return false

@@ -72,7 +72,7 @@ type AudioTranscriptionNewParams struct {
 	File param.Field[io.Reader] `json:"file,required" format:"binary"`
 	// ID of the model to use. Only `whisper-1` (which is powered by our open source
 	// Whisper V2 model) is currently available.
-	Model param.Field[AudioTranscriptionNewParamsModel] `json:"model,required"`
+	Model param.Field[AudioModel] `json:"model,required"`
 	// The language of the input audio. Supplying the input language in
 	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) format will
 	// improve accuracy and latency.
@@ -112,20 +112,6 @@ func (r AudioTranscriptionNewParams) MarshalMultipart() (data []byte, contentTyp
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
-}
-
-type AudioTranscriptionNewParamsModel string
-
-const (
-	AudioTranscriptionNewParamsModelWhisper1 AudioTranscriptionNewParamsModel = "whisper-1"
-)
-
-func (r AudioTranscriptionNewParamsModel) IsKnown() bool {
-	switch r {
-	case AudioTranscriptionNewParamsModelWhisper1:
-		return true
-	}
-	return false
 }
 
 // The format of the transcript output, in one of these options: `json`, `text`,
