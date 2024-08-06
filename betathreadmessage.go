@@ -1333,6 +1333,7 @@ type MessageContent struct {
 	ImageFile ImageFile          `json:"image_file"`
 	ImageURL  ImageURL           `json:"image_url"`
 	Text      Text               `json:"text"`
+	Refusal   string             `json:"refusal"`
 	JSON      messageContentJSON `json:"-"`
 	union     MessageContentUnion
 }
@@ -1343,6 +1344,7 @@ type messageContentJSON struct {
 	ImageFile   apijson.Field
 	ImageURL    apijson.Field
 	Text        apijson.Field
+	Refusal     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -1364,7 +1366,7 @@ func (r *MessageContent) UnmarshalJSON(data []byte) (err error) {
 // specific types for more type safety.
 //
 // Possible runtime types of the union are [ImageFileContentBlock],
-// [ImageURLContentBlock], [TextContentBlock].
+// [ImageURLContentBlock], [TextContentBlock], [RefusalContentBlock].
 func (r MessageContent) AsUnion() MessageContentUnion {
 	return r.union
 }
@@ -1372,8 +1374,8 @@ func (r MessageContent) AsUnion() MessageContentUnion {
 // References an image [File](https://platform.openai.com/docs/api-reference/files)
 // in the content of a message.
 //
-// Union satisfied by [ImageFileContentBlock], [ImageURLContentBlock] or
-// [TextContentBlock].
+// Union satisfied by [ImageFileContentBlock], [ImageURLContentBlock],
+// [TextContentBlock] or [RefusalContentBlock].
 type MessageContentUnion interface {
 	implementsMessageContent()
 }
@@ -1397,6 +1399,11 @@ func init() {
 			Type:               reflect.TypeOf(TextContentBlock{}),
 			DiscriminatorValue: "text",
 		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(RefusalContentBlock{}),
+			DiscriminatorValue: "refusal",
+		},
 	)
 }
 
@@ -1407,11 +1414,12 @@ const (
 	MessageContentTypeImageFile MessageContentType = "image_file"
 	MessageContentTypeImageURL  MessageContentType = "image_url"
 	MessageContentTypeText      MessageContentType = "text"
+	MessageContentTypeRefusal   MessageContentType = "refusal"
 )
 
 func (r MessageContentType) IsKnown() bool {
 	switch r {
-	case MessageContentTypeImageFile, MessageContentTypeImageURL, MessageContentTypeText:
+	case MessageContentTypeImageFile, MessageContentTypeImageURL, MessageContentTypeText, MessageContentTypeRefusal:
 		return true
 	}
 	return false
@@ -1426,6 +1434,7 @@ type MessageContentDelta struct {
 	Type      MessageContentDeltaType `json:"type,required"`
 	ImageFile ImageFileDelta          `json:"image_file"`
 	Text      TextDelta               `json:"text"`
+	Refusal   string                  `json:"refusal"`
 	ImageURL  ImageURLDelta           `json:"image_url"`
 	JSON      messageContentDeltaJSON `json:"-"`
 	union     MessageContentDeltaUnion
@@ -1438,6 +1447,7 @@ type messageContentDeltaJSON struct {
 	Type        apijson.Field
 	ImageFile   apijson.Field
 	Text        apijson.Field
+	Refusal     apijson.Field
 	ImageURL    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -1460,7 +1470,7 @@ func (r *MessageContentDelta) UnmarshalJSON(data []byte) (err error) {
 // specific types for more type safety.
 //
 // Possible runtime types of the union are [ImageFileDeltaBlock], [TextDeltaBlock],
-// [ImageURLDeltaBlock].
+// [RefusalDeltaBlock], [ImageURLDeltaBlock].
 func (r MessageContentDelta) AsUnion() MessageContentDeltaUnion {
 	return r.union
 }
@@ -1468,8 +1478,8 @@ func (r MessageContentDelta) AsUnion() MessageContentDeltaUnion {
 // References an image [File](https://platform.openai.com/docs/api-reference/files)
 // in the content of a message.
 //
-// Union satisfied by [ImageFileDeltaBlock], [TextDeltaBlock] or
-// [ImageURLDeltaBlock].
+// Union satisfied by [ImageFileDeltaBlock], [TextDeltaBlock], [RefusalDeltaBlock]
+// or [ImageURLDeltaBlock].
 type MessageContentDeltaUnion interface {
 	implementsMessageContentDelta()
 }
@@ -1490,6 +1500,11 @@ func init() {
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(RefusalDeltaBlock{}),
+			DiscriminatorValue: "refusal",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
 			Type:               reflect.TypeOf(ImageURLDeltaBlock{}),
 			DiscriminatorValue: "image_url",
 		},
@@ -1502,12 +1517,13 @@ type MessageContentDeltaType string
 const (
 	MessageContentDeltaTypeImageFile MessageContentDeltaType = "image_file"
 	MessageContentDeltaTypeText      MessageContentDeltaType = "text"
+	MessageContentDeltaTypeRefusal   MessageContentDeltaType = "refusal"
 	MessageContentDeltaTypeImageURL  MessageContentDeltaType = "image_url"
 )
 
 func (r MessageContentDeltaType) IsKnown() bool {
 	switch r {
-	case MessageContentDeltaTypeImageFile, MessageContentDeltaTypeText, MessageContentDeltaTypeImageURL:
+	case MessageContentDeltaTypeImageFile, MessageContentDeltaTypeText, MessageContentDeltaTypeRefusal, MessageContentDeltaTypeImageURL:
 		return true
 	}
 	return false
@@ -1675,6 +1691,93 @@ const (
 func (r MessageDeltaEventObject) IsKnown() bool {
 	switch r {
 	case MessageDeltaEventObjectThreadMessageDelta:
+		return true
+	}
+	return false
+}
+
+// The refusal content generated by the assistant.
+type RefusalContentBlock struct {
+	Refusal string `json:"refusal,required"`
+	// Always `refusal`.
+	Type RefusalContentBlockType `json:"type,required"`
+	JSON refusalContentBlockJSON `json:"-"`
+}
+
+// refusalContentBlockJSON contains the JSON metadata for the struct
+// [RefusalContentBlock]
+type refusalContentBlockJSON struct {
+	Refusal     apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *RefusalContentBlock) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r refusalContentBlockJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r RefusalContentBlock) implementsMessageContent() {}
+
+// Always `refusal`.
+type RefusalContentBlockType string
+
+const (
+	RefusalContentBlockTypeRefusal RefusalContentBlockType = "refusal"
+)
+
+func (r RefusalContentBlockType) IsKnown() bool {
+	switch r {
+	case RefusalContentBlockTypeRefusal:
+		return true
+	}
+	return false
+}
+
+// The refusal content that is part of a message.
+type RefusalDeltaBlock struct {
+	// The index of the refusal part in the message.
+	Index int64 `json:"index,required"`
+	// Always `refusal`.
+	Type    RefusalDeltaBlockType `json:"type,required"`
+	Refusal string                `json:"refusal"`
+	JSON    refusalDeltaBlockJSON `json:"-"`
+}
+
+// refusalDeltaBlockJSON contains the JSON metadata for the struct
+// [RefusalDeltaBlock]
+type refusalDeltaBlockJSON struct {
+	Index       apijson.Field
+	Type        apijson.Field
+	Refusal     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *RefusalDeltaBlock) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r refusalDeltaBlockJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r RefusalDeltaBlock) implementsMessageContentDelta() {}
+
+// Always `refusal`.
+type RefusalDeltaBlockType string
+
+const (
+	RefusalDeltaBlockTypeRefusal RefusalDeltaBlockType = "refusal"
+)
+
+func (r RefusalDeltaBlockType) IsKnown() bool {
+	switch r {
+	case RefusalDeltaBlockTypeRefusal:
 		return true
 	}
 	return false
@@ -2008,7 +2111,7 @@ type BetaThreadMessageListParams struct {
 // `url.Values`.
 func (r BetaThreadMessageListParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }

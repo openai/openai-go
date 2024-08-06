@@ -374,7 +374,7 @@ type BetaVectorStoreFileBatchListFilesParams struct {
 // as `url.Values`.
 func (r BetaVectorStoreFileBatchListFilesParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }
