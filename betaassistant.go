@@ -136,22 +136,6 @@ type Assistant struct {
 	// assistant. Tools can be of types `code_interpreter`, `file_search`, or
 	// `function`.
 	Tools []AssistantTool `json:"tools,required"`
-	// Specifies the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
-	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
-	//
-	// Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
-	// message the model generates is valid JSON.
-	//
-	// **Important:** when using JSON mode, you **must** also instruct the model to
-	// produce JSON yourself via a system or user message. Without this, the model may
-	// generate an unending stream of whitespace until the generation reaches the token
-	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
-	// the message content may be partially cut off if `finish_reason="length"`, which
-	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
-	// max context length.
-	ResponseFormat AssistantResponseFormatOptionUnion `json:"response_format,nullable"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -172,21 +156,20 @@ type Assistant struct {
 
 // assistantJSON contains the JSON metadata for the struct [Assistant]
 type assistantJSON struct {
-	ID             apijson.Field
-	CreatedAt      apijson.Field
-	Description    apijson.Field
-	Instructions   apijson.Field
-	Metadata       apijson.Field
-	Model          apijson.Field
-	Name           apijson.Field
-	Object         apijson.Field
-	Tools          apijson.Field
-	ResponseFormat apijson.Field
-	Temperature    apijson.Field
-	ToolResources  apijson.Field
-	TopP           apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
+	ID            apijson.Field
+	CreatedAt     apijson.Field
+	Description   apijson.Field
+	Instructions  apijson.Field
+	Metadata      apijson.Field
+	Model         apijson.Field
+	Name          apijson.Field
+	Object        apijson.Field
+	Tools         apijson.Field
+	Temperature   apijson.Field
+	ToolResources apijson.Field
+	TopP          apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
 }
 
 func (r *Assistant) UnmarshalJSON(data []byte) (err error) {
@@ -1869,8 +1852,8 @@ func (r FileSearchToolType) IsKnown() bool {
 // Overrides for the file search tool.
 type FileSearchToolFileSearch struct {
 	// The maximum number of results the file search tool should output. The default is
-	// 20 for gpt-4\* models and 5 for gpt-3.5-turbo. This number should be between 1
-	// and 50 inclusive.
+	// 20 for `gpt-4*` models and 5 for `gpt-3.5-turbo`. This number should be between
+	// 1 and 50 inclusive.
 	//
 	// Note that the file search tool may output fewer than `max_num_results` results.
 	// See the
@@ -1914,8 +1897,8 @@ func (r FileSearchToolParam) implementsBetaThreadNewAndRunParamsToolUnion() {}
 // Overrides for the file search tool.
 type FileSearchToolFileSearchParam struct {
 	// The maximum number of results the file search tool should output. The default is
-	// 20 for gpt-4\* models and 5 for gpt-3.5-turbo. This number should be between 1
-	// and 50 inclusive.
+	// 20 for `gpt-4*` models and 5 for `gpt-3.5-turbo`. This number should be between
+	// 1 and 50 inclusive.
 	//
 	// Note that the file search tool may output fewer than `max_num_results` results.
 	// See the
@@ -2001,22 +1984,6 @@ type BetaAssistantNewParams struct {
 	Metadata param.Field[interface{}] `json:"metadata"`
 	// The name of the assistant. The maximum length is 256 characters.
 	Name param.Field[string] `json:"name"`
-	// Specifies the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
-	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
-	//
-	// Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
-	// message the model generates is valid JSON.
-	//
-	// **Important:** when using JSON mode, you **must** also instruct the model to
-	// produce JSON yourself via a system or user message. Without this, the model may
-	// generate an unending stream of whitespace until the generation reaches the token
-	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
-	// the message content may be partially cut off if `finish_reason="length"`, which
-	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
-	// max context length.
-	ResponseFormat param.Field[AssistantResponseFormatOptionUnionParam] `json:"response_format"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -2234,22 +2201,6 @@ type BetaAssistantUpdateParams struct {
 	Model param.Field[string] `json:"model"`
 	// The name of the assistant. The maximum length is 256 characters.
 	Name param.Field[string] `json:"name"`
-	// Specifies the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
-	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
-	//
-	// Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
-	// message the model generates is valid JSON.
-	//
-	// **Important:** when using JSON mode, you **must** also instruct the model to
-	// produce JSON yourself via a system or user message. Without this, the model may
-	// generate an unending stream of whitespace until the generation reaches the token
-	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
-	// the message content may be partially cut off if `finish_reason="length"`, which
-	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
-	// max context length.
-	ResponseFormat param.Field[AssistantResponseFormatOptionUnionParam] `json:"response_format"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -2335,7 +2286,7 @@ type BetaAssistantListParams struct {
 // `url.Values`.
 func (r BetaAssistantListParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }

@@ -6,7 +6,10 @@ type UnionString string
 
 func (UnionString) ImplementsCompletionNewParamsPromptUnion()                       {}
 func (UnionString) ImplementsCompletionNewParamsStopUnion()                         {}
+func (UnionString) ImplementsChatCompletionAssistantMessageParamContentUnion()      {}
+func (UnionString) ImplementsChatCompletionSystemMessageParamContentUnion()         {}
 func (UnionString) ImplementsChatCompletionUserMessageParamContentUnion()           {}
+func (UnionString) ImplementsChatCompletionToolMessageParamContentUnion()           {}
 func (UnionString) ImplementsChatCompletionNewParamsStopUnion()                     {}
 func (UnionString) ImplementsEmbeddingNewParamsInputUnion()                         {}
 func (UnionString) ImplementsModerationNewParamsInputUnion()                        {}

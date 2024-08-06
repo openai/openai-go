@@ -28,7 +28,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionSystemMessageParam{
-			Content: openai.F("content"),
+			Content: openai.F[openai.ChatCompletionSystemMessageParamContentUnion](shared.UnionString("string")),
 			Role:    openai.F(openai.ChatCompletionSystemMessageParamRoleSystem),
 			Name:    openai.F("name"),
 		}}),
@@ -50,8 +50,8 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		N:                 openai.F(int64(1)),
 		ParallelToolCalls: openai.F(true),
 		PresencePenalty:   openai.F(-2.000000),
-		ResponseFormat: openai.F(openai.ChatCompletionNewParamsResponseFormat{
-			Type: openai.F(openai.ChatCompletionNewParamsResponseFormatTypeJSONObject),
+		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](shared.ResponseFormatTextParam{
+			Type: openai.F(shared.ResponseFormatTextTypeText),
 		}),
 		Seed:        openai.F(int64(-9007199254740991)),
 		ServiceTier: openai.F(openai.ChatCompletionNewParamsServiceTierAuto),
@@ -69,6 +69,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 				Parameters: openai.F(shared.FunctionParameters{
 					"foo": "bar",
 				}),
+				Strict: openai.F(true),
 			}),
 		}, {
 			Type: openai.F(openai.ChatCompletionToolTypeFunction),
@@ -78,6 +79,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 				Parameters: openai.F(shared.FunctionParameters{
 					"foo": "bar",
 				}),
+				Strict: openai.F(true),
 			}),
 		}, {
 			Type: openai.F(openai.ChatCompletionToolTypeFunction),
@@ -87,6 +89,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 				Parameters: openai.F(shared.FunctionParameters{
 					"foo": "bar",
 				}),
+				Strict: openai.F(true),
 			}),
 		}}),
 		TopLogprobs: openai.F(int64(0)),
