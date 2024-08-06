@@ -313,22 +313,6 @@ type Run struct {
 	// Details on the action required to continue the run. Will be `null` if no action
 	// is required.
 	RequiredAction RunRequiredAction `json:"required_action,required,nullable"`
-	// Specifies the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
-	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
-	//
-	// Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
-	// message the model generates is valid JSON.
-	//
-	// **Important:** when using JSON mode, you **must** also instruct the model to
-	// produce JSON yourself via a system or user message. Without this, the model may
-	// generate an unending stream of whitespace until the generation reaches the token
-	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
-	// the message content may be partially cut off if `finish_reason="length"`, which
-	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
-	// max context length.
-	ResponseFormat AssistantResponseFormatOptionUnion `json:"response_format,required,nullable"`
 	// The Unix timestamp (in seconds) for when the run was started.
 	StartedAt int64 `json:"started_at,required,nullable"`
 	// The status of the run, which can be either `queued`, `in_progress`,
@@ -382,7 +366,6 @@ type runJSON struct {
 	Object              apijson.Field
 	ParallelToolCalls   apijson.Field
 	RequiredAction      apijson.Field
-	ResponseFormat      apijson.Field
 	StartedAt           apijson.Field
 	Status              apijson.Field
 	ThreadID            apijson.Field
@@ -713,22 +696,6 @@ type BetaThreadRunNewParams struct {
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Field[bool] `json:"parallel_tool_calls"`
-	// Specifies the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4),
-	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
-	//
-	// Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
-	// message the model generates is valid JSON.
-	//
-	// **Important:** when using JSON mode, you **must** also instruct the model to
-	// produce JSON yourself via a system or user message. Without this, the model may
-	// generate an unending stream of whitespace until the generation reaches the token
-	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
-	// the message content may be partially cut off if `finish_reason="length"`, which
-	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
-	// max context length.
-	ResponseFormat param.Field[AssistantResponseFormatOptionUnionParam] `json:"response_format"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -960,7 +927,7 @@ type BetaThreadRunListParams struct {
 // `url.Values`.
 func (r BetaThreadRunListParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }

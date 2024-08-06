@@ -250,7 +250,6 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 		Metadata:            openai.F[any](map[string]interface{}{}),
 		Model:               openai.F(openai.ChatModelGPT4o),
 		ParallelToolCalls:   openai.F(true),
-		ResponseFormat:      openai.F[openai.AssistantResponseFormatOptionUnionParam](openai.AssistantResponseFormatOptionString(openai.AssistantResponseFormatOptionStringNone)),
 		Temperature:         openai.F(1.000000),
 		Thread: openai.F(openai.BetaThreadNewAndRunParamsThread{
 			Messages: openai.F([]openai.BetaThreadNewAndRunParamsThreadMessage{{
