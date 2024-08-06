@@ -195,15 +195,14 @@ func (r vectorStoreFileLastErrorJSON) RawJSON() string {
 type VectorStoreFileLastErrorCode string
 
 const (
-	VectorStoreFileLastErrorCodeInternalError     VectorStoreFileLastErrorCode = "internal_error"
-	VectorStoreFileLastErrorCodeFileNotFound      VectorStoreFileLastErrorCode = "file_not_found"
-	VectorStoreFileLastErrorCodeParsingError      VectorStoreFileLastErrorCode = "parsing_error"
-	VectorStoreFileLastErrorCodeUnhandledMimeType VectorStoreFileLastErrorCode = "unhandled_mime_type"
+	VectorStoreFileLastErrorCodeServerError     VectorStoreFileLastErrorCode = "server_error"
+	VectorStoreFileLastErrorCodeUnsupportedFile VectorStoreFileLastErrorCode = "unsupported_file"
+	VectorStoreFileLastErrorCodeInvalidFile     VectorStoreFileLastErrorCode = "invalid_file"
 )
 
 func (r VectorStoreFileLastErrorCode) IsKnown() bool {
 	switch r {
-	case VectorStoreFileLastErrorCodeInternalError, VectorStoreFileLastErrorCodeFileNotFound, VectorStoreFileLastErrorCodeParsingError, VectorStoreFileLastErrorCodeUnhandledMimeType:
+	case VectorStoreFileLastErrorCodeServerError, VectorStoreFileLastErrorCodeUnsupportedFile, VectorStoreFileLastErrorCodeInvalidFile:
 		return true
 	}
 	return false
@@ -629,7 +628,7 @@ type BetaVectorStoreFileListParams struct {
 // `url.Values`.
 func (r BetaVectorStoreFileListParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }

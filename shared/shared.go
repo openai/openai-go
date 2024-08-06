@@ -47,8 +47,14 @@ type FunctionDefinition struct {
 	// documentation about the format.
 	//
 	// Omitting `parameters` defines a function with an empty parameter list.
-	Parameters FunctionParameters     `json:"parameters"`
-	JSON       functionDefinitionJSON `json:"-"`
+	Parameters FunctionParameters `json:"parameters"`
+	// Whether to enable strict schema adherence when generating the function call. If
+	// set to true, the model will follow the exact schema defined in the `parameters`
+	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
+	// more about Structured Outputs in the
+	// [function calling guide](docs/guides/function-calling).
+	Strict bool                   `json:"strict,nullable"`
+	JSON   functionDefinitionJSON `json:"-"`
 }
 
 // functionDefinitionJSON contains the JSON metadata for the struct
@@ -57,6 +63,7 @@ type functionDefinitionJSON struct {
 	Name        apijson.Field
 	Description apijson.Field
 	Parameters  apijson.Field
+	Strict      apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -84,6 +91,12 @@ type FunctionDefinitionParam struct {
 	//
 	// Omitting `parameters` defines a function with an empty parameter list.
 	Parameters param.Field[FunctionParameters] `json:"parameters"`
+	// Whether to enable strict schema adherence when generating the function call. If
+	// set to true, the model will follow the exact schema defined in the `parameters`
+	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
+	// more about Structured Outputs in the
+	// [function calling guide](docs/guides/function-calling).
+	Strict param.Field[bool] `json:"strict"`
 }
 
 func (r FunctionDefinitionParam) MarshalJSON() (data []byte, err error) {
@@ -91,3 +104,103 @@ func (r FunctionDefinitionParam) MarshalJSON() (data []byte, err error) {
 }
 
 type FunctionParameters map[string]interface{}
+
+type ResponseFormatJSONObjectParam struct {
+	// The type of response format being defined: `json_object`
+	Type param.Field[ResponseFormatJSONObjectType] `json:"type,required"`
+}
+
+func (r ResponseFormatJSONObjectParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ResponseFormatJSONObjectParam) ImplementsChatCompletionNewParamsResponseFormatUnion() {}
+
+// The type of response format being defined: `json_object`
+type ResponseFormatJSONObjectType string
+
+const (
+	ResponseFormatJSONObjectTypeJSONObject ResponseFormatJSONObjectType = "json_object"
+)
+
+func (r ResponseFormatJSONObjectType) IsKnown() bool {
+	switch r {
+	case ResponseFormatJSONObjectTypeJSONObject:
+		return true
+	}
+	return false
+}
+
+type ResponseFormatJSONSchemaParam struct {
+	JSONSchema param.Field[ResponseFormatJSONSchemaJSONSchemaParam] `json:"json_schema,required"`
+	// The type of response format being defined: `json_schema`
+	Type param.Field[ResponseFormatJSONSchemaType] `json:"type,required"`
+}
+
+func (r ResponseFormatJSONSchemaParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ResponseFormatJSONSchemaParam) ImplementsChatCompletionNewParamsResponseFormatUnion() {}
+
+type ResponseFormatJSONSchemaJSONSchemaParam struct {
+	// The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores
+	// and dashes, with a maximum length of 64.
+	Name param.Field[string] `json:"name,required"`
+	// A description of what the response format is for, used by the model to determine
+	// how to respond in the format.
+	Description param.Field[string] `json:"description"`
+	// The schema for the response format, described as a JSON Schema object.
+	Schema param.Field[map[string]interface{}] `json:"schema"`
+	// Whether to enable strict schema adherence when generating the output. If set to
+	// true, the model will always follow the exact schema defined in the `schema`
+	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
+	// learn more, read the
+	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	Strict param.Field[bool] `json:"strict"`
+}
+
+func (r ResponseFormatJSONSchemaJSONSchemaParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// The type of response format being defined: `json_schema`
+type ResponseFormatJSONSchemaType string
+
+const (
+	ResponseFormatJSONSchemaTypeJSONSchema ResponseFormatJSONSchemaType = "json_schema"
+)
+
+func (r ResponseFormatJSONSchemaType) IsKnown() bool {
+	switch r {
+	case ResponseFormatJSONSchemaTypeJSONSchema:
+		return true
+	}
+	return false
+}
+
+type ResponseFormatTextParam struct {
+	// The type of response format being defined: `text`
+	Type param.Field[ResponseFormatTextType] `json:"type,required"`
+}
+
+func (r ResponseFormatTextParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ResponseFormatTextParam) ImplementsChatCompletionNewParamsResponseFormatUnion() {}
+
+// The type of response format being defined: `text`
+type ResponseFormatTextType string
+
+const (
+	ResponseFormatTextTypeText ResponseFormatTextType = "text"
+)
+
+func (r ResponseFormatTextType) IsKnown() bool {
+	switch r {
+	case ResponseFormatTextTypeText:
+		return true
+	}
+	return false
+}

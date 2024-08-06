@@ -368,7 +368,7 @@ type BatchListParams struct {
 // URLQuery serializes [BatchListParams]'s query parameters as `url.Values`.
 func (r BatchListParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }

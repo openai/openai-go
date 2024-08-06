@@ -498,7 +498,7 @@ func (r fineTuningJobWandbIntegrationJSON) RawJSON() string {
 
 type FineTuningJobNewParams struct {
 	// The name of the model to fine-tune. You can select one of the
-	// [supported models](https://platform.openai.com/docs/guides/fine-tuning/what-models-can-be-fine-tuned).
+	// [supported models](https://platform.openai.com/docs/guides/fine-tuning/which-models-can-be-fine-tuned).
 	Model param.Field[FineTuningJobNewParamsModel] `json:"model,required"`
 	// The ID of an uploaded file that contains training data.
 	//
@@ -528,7 +528,7 @@ type FineTuningJobNewParams struct {
 	// name.
 	//
 	// For example, a `suffix` of "custom-model-name" would produce a model name like
-	// `ft:gpt-3.5-turbo:openai:custom-model-name:7p4lURel`.
+	// `ft:gpt-4o-mini:openai:custom-model-name:7p4lURel`.
 	Suffix param.Field[string] `json:"suffix"`
 	// The ID of an uploaded file that contains validation data.
 	//
@@ -555,11 +555,12 @@ const (
 	FineTuningJobNewParamsModelBabbage002  FineTuningJobNewParamsModel = "babbage-002"
 	FineTuningJobNewParamsModelDavinci002  FineTuningJobNewParamsModel = "davinci-002"
 	FineTuningJobNewParamsModelGPT3_5Turbo FineTuningJobNewParamsModel = "gpt-3.5-turbo"
+	FineTuningJobNewParamsModelGPT4oMini   FineTuningJobNewParamsModel = "gpt-4o-mini"
 )
 
 func (r FineTuningJobNewParamsModel) IsKnown() bool {
 	switch r {
-	case FineTuningJobNewParamsModelBabbage002, FineTuningJobNewParamsModelDavinci002, FineTuningJobNewParamsModelGPT3_5Turbo:
+	case FineTuningJobNewParamsModelBabbage002, FineTuningJobNewParamsModelDavinci002, FineTuningJobNewParamsModelGPT3_5Turbo, FineTuningJobNewParamsModelGPT4oMini:
 		return true
 	}
 	return false
@@ -727,7 +728,7 @@ type FineTuningJobListParams struct {
 // `url.Values`.
 func (r FineTuningJobListParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }
@@ -743,7 +744,7 @@ type FineTuningJobListEventsParams struct {
 // `url.Values`.
 func (r FineTuningJobListEventsParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }
