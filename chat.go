@@ -31,8 +31,8 @@ type ChatModel = string
 
 const (
 	ChatModelGPT4o               ChatModel = "gpt-4o"
-	ChatModelGPT4o2024_08_06     ChatModel = "gpt-4o-2024-08-06"
 	ChatModelGPT4o2024_05_13     ChatModel = "gpt-4o-2024-05-13"
+	ChatModelGPT4o2024_08_06     ChatModel = "gpt-4o-2024-08-06"
 	ChatModelGPT4oMini           ChatModel = "gpt-4o-mini"
 	ChatModelGPT4oMini2024_07_18 ChatModel = "gpt-4o-mini-2024-07-18"
 	ChatModelGPT4Turbo           ChatModel = "gpt-4-turbo"
