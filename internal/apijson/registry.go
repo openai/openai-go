@@ -13,6 +13,7 @@ type UnionVariant struct {
 }
 
 var unionRegistry = map[reflect.Type]unionEntry{}
+var unionVariants = map[reflect.Type]interface{}{}
 
 type unionEntry struct {
 	discriminatorKey string
@@ -23,5 +24,8 @@ func RegisterUnion(typ reflect.Type, discriminator string, variants ...UnionVari
 	unionRegistry[typ] = unionEntry{
 		discriminatorKey: discriminator,
 		variants:         variants,
+	}
+	for _, variant := range variants {
+		unionVariants[variant.Type] = typ
 	}
 }

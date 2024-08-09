@@ -261,6 +261,59 @@ func init() {
 	)
 }
 
+type MarshallingUnionStruct struct {
+	Union MarshallingUnion
+}
+
+func (r *MarshallingUnionStruct) UnmarshalJSON(data []byte) (err error) {
+	*r = MarshallingUnionStruct{}
+	err = UnmarshalRoot(data, &r.Union)
+	return
+}
+
+func (r MarshallingUnionStruct) MarshalJSON() (data []byte, err error) {
+	return MarshalRoot(r.Union)
+}
+
+type MarshallingUnion interface {
+	marshallingUnion()
+}
+
+type MarshallingUnionA struct {
+	Boo string `json:"boo"`
+}
+
+func (MarshallingUnionA) marshallingUnion() {}
+
+func (r *MarshallingUnionA) UnmarshalJSON(data []byte) (err error) {
+	return UnmarshalRoot(data, r)
+}
+
+type MarshallingUnionB struct {
+	Foo string `json:"foo"`
+}
+
+func (MarshallingUnionB) marshallingUnion() {}
+
+func (r *MarshallingUnionB) UnmarshalJSON(data []byte) (err error) {
+	return UnmarshalRoot(data, r)
+}
+
+func init() {
+	RegisterUnion(
+		reflect.TypeOf((*MarshallingUnion)(nil)).Elem(),
+		"",
+		UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(MarshallingUnionA{}),
+		},
+		UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(MarshallingUnionB{}),
+		},
+	)
+}
+
 var tests = map[string]struct {
 	buf string
 	val interface{}
@@ -487,6 +540,15 @@ var tests = map[string]struct {
 	"complex_union_type_b": {
 		`{"union":{"baz":12,"type":"b"}}`,
 		ComplexUnionStruct{Union: ComplexUnionTypeB{Baz: 12, Type: TypeB("b")}},
+	},
+
+	"marshalling_union_a": {
+		`{"boo":"hello"}`,
+		MarshallingUnionStruct{Union: MarshallingUnionA{Boo: "hello"}},
+	},
+	"marshalling_union_b": {
+		`{"foo":"hi"}`,
+		MarshallingUnionStruct{Union: MarshallingUnionB{Foo: "hi"}},
 	},
 
 	"unmarshal": {
