@@ -143,7 +143,9 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 		return unmarshalerDecoder
 	}
 	if !d.root && reflect.PointerTo(t).Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {
-		return indirectUnmarshalerDecoder
+		if _, ok := unionVariants[t]; !ok {
+			return indirectUnmarshalerDecoder
+		}
 	}
 	d.root = false
 
