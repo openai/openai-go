@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.3 (2024-08-12)
+
+Full Changelog: [v0.1.0-alpha.2...v0.1.0-alpha.3](https://github.com/openai/openai-go/compare/v0.1.0-alpha.2...v0.1.0-alpha.3)
+
+### Chores
+
+* bump Go to v1.21 ([#12](https://github.com/openai/openai-go/issues/12)) ([db5efda](https://github.com/openai/openai-go/commit/db5efdaad3848b8f130f279e6760d9d525e02bda))
+
 ## 0.1.0-alpha.2 (2024-08-10)
 
 Full Changelog: [v0.1.0-alpha.1...v0.1.0-alpha.2](https://github.com/openai/openai-go/compare/v0.1.0-alpha.1...v0.1.0-alpha.2)
