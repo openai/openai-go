@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.7 (2024-08-12)
+
+Full Changelog: [v0.1.0-alpha.6...v0.1.0-alpha.7](https://github.com/openai/openai-go/compare/v0.1.0-alpha.6...v0.1.0-alpha.7)
+
+### Chores
+
+* add back custom code that was reverted ([2557bd8](https://github.com/openai/openai-go/commit/2557bd8b5f1748adf67d9208ceaeea3250d93b14))
+
 ## 0.1.0-alpha.6 (2024-08-12)
 
 Full Changelog: [v0.1.0-alpha.5...v0.1.0-alpha.6](https://github.com/openai/openai-go/compare/v0.1.0-alpha.5...v0.1.0-alpha.6)
