@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.5 (2024-08-12)
+
+Full Changelog: [v0.1.0-alpha.4...v0.1.0-alpha.5](https://github.com/openai/openai-go/compare/v0.1.0-alpha.4...v0.1.0-alpha.5)
+
+### Features
+
+* simplify content union ([#18](https://github.com/openai/openai-go/issues/18)) ([51877bf](https://github.com/openai/openai-go/commit/51877bf8f16e348a531aa54f0f49e9d71390a485))
+
 ## 0.1.0-alpha.4 (2024-08-12)
 
 Full Changelog: [v0.1.0-alpha.3...v0.1.0-alpha.4](https://github.com/openai/openai-go/compare/v0.1.0-alpha.3...v0.1.0-alpha.4)
