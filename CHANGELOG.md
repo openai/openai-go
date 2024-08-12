@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.4 (2024-08-12)
+
+Full Changelog: [v0.1.0-alpha.3...v0.1.0-alpha.4](https://github.com/openai/openai-go/compare/v0.1.0-alpha.3...v0.1.0-alpha.4)
+
+### Chores
+
+* **examples:** minor formatting changes ([#14](https://github.com/openai/openai-go/issues/14)) ([8d4490b](https://github.com/openai/openai-go/commit/8d4490b78dcc0edee3264448e3fa3f3781d04258))
+
 ## 0.1.0-alpha.3 (2024-08-12)
 
 Full Changelog: [v0.1.0-alpha.2...v0.1.0-alpha.3](https://github.com/openai/openai-go/compare/v0.1.0-alpha.2...v0.1.0-alpha.3)

@@ -22,7 +22,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go@v0.1.0-alpha.3'
+go get -u 'github.com/openai/openai-go@v0.1.0-alpha.4'
 ```
 
 <!-- x-release-please-end -->
