@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.6 (2024-08-12)
+
+Full Changelog: [v0.1.0-alpha.5...v0.1.0-alpha.6](https://github.com/openai/openai-go/compare/v0.1.0-alpha.5...v0.1.0-alpha.6)
+
+### Features
+
+* Adding in Azure support ([3225b7c](https://github.com/openai/openai-go/commit/3225b7c6028c0c5ab9420416b6bb8b31a5383218))
+
 ## 0.1.0-alpha.5 (2024-08-12)
 
 Full Changelog: [v0.1.0-alpha.4...v0.1.0-alpha.5](https://github.com/openai/openai-go/compare/v0.1.0-alpha.4...v0.1.0-alpha.5)
