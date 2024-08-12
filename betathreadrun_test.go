@@ -11,7 +11,6 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
 )
 
 func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
@@ -33,7 +32,7 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 			AssistantID:            openai.F("assistant_id"),
 			AdditionalInstructions: openai.F("additional_instructions"),
 			AdditionalMessages: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessage{{
-				Content: openai.F[openai.BetaThreadRunNewParamsAdditionalMessagesContentUnion](shared.UnionString("string")),
+				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
 				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
 				Attachments: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachment{{
 					FileID: openai.F("file_id"),
@@ -65,7 +64,7 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 				}}),
 				Metadata: openai.F[any](map[string]interface{}{}),
 			}, {
-				Content: openai.F[openai.BetaThreadRunNewParamsAdditionalMessagesContentUnion](shared.UnionString("string")),
+				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
 				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
 				Attachments: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachment{{
 					FileID: openai.F("file_id"),
@@ -97,7 +96,7 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 				}}),
 				Metadata: openai.F[any](map[string]interface{}{}),
 			}, {
-				Content: openai.F[openai.BetaThreadRunNewParamsAdditionalMessagesContentUnion](shared.UnionString("string")),
+				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
 				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
 				Attachments: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachment{{
 					FileID: openai.F("file_id"),

@@ -4,19 +4,11 @@ package shared
 
 type UnionString string
 
-func (UnionString) ImplementsCompletionNewParamsPromptUnion()                       {}
-func (UnionString) ImplementsCompletionNewParamsStopUnion()                         {}
-func (UnionString) ImplementsChatCompletionAssistantMessageParamContentUnion()      {}
-func (UnionString) ImplementsChatCompletionSystemMessageParamContentUnion()         {}
-func (UnionString) ImplementsChatCompletionUserMessageParamContentUnion()           {}
-func (UnionString) ImplementsChatCompletionToolMessageParamContentUnion()           {}
-func (UnionString) ImplementsChatCompletionNewParamsStopUnion()                     {}
-func (UnionString) ImplementsEmbeddingNewParamsInputUnion()                         {}
-func (UnionString) ImplementsModerationNewParamsInputUnion()                        {}
-func (UnionString) ImplementsBetaThreadNewParamsMessagesContentUnion()              {}
-func (UnionString) ImplementsBetaThreadNewAndRunParamsThreadMessagesContentUnion()  {}
-func (UnionString) ImplementsBetaThreadRunNewParamsAdditionalMessagesContentUnion() {}
-func (UnionString) ImplementsBetaThreadMessageNewParamsContentUnion()               {}
+func (UnionString) ImplementsCompletionNewParamsPromptUnion()   {}
+func (UnionString) ImplementsCompletionNewParamsStopUnion()     {}
+func (UnionString) ImplementsChatCompletionNewParamsStopUnion() {}
+func (UnionString) ImplementsEmbeddingNewParamsInputUnion()     {}
+func (UnionString) ImplementsModerationNewParamsInputUnion()    {}
 
 type UnionInt int64
 

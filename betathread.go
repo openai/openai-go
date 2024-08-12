@@ -452,8 +452,11 @@ func (r BetaThreadNewParams) MarshalJSON() (data []byte, err error) {
 }
 
 type BetaThreadNewParamsMessage struct {
-	// The text contents of the message.
-	Content param.Field[BetaThreadNewParamsMessagesContentUnion] `json:"content,required"`
+	// An array of content parts with a defined type, each can be of type `text` or
+	// images can be passed with `image_url` or `image_file`. Image types are only
+	// supported on
+	// [Vision-compatible models](https://platform.openai.com/docs/models/overview).
+	Content param.Field[[]MessageContentPartParamUnion] `json:"content,required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
 	//   - `user`: Indicates the message is sent by an actual user and should be used in
@@ -472,19 +475,6 @@ type BetaThreadNewParamsMessage struct {
 
 func (r BetaThreadNewParamsMessage) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The text contents of the message.
-//
-// Satisfied by [shared.UnionString],
-// [BetaThreadNewParamsMessagesContentArrayOfContentParts].
-type BetaThreadNewParamsMessagesContentUnion interface {
-	ImplementsBetaThreadNewParamsMessagesContentUnion()
-}
-
-type BetaThreadNewParamsMessagesContentArrayOfContentParts []MessageContentPartParamUnion
-
-func (r BetaThreadNewParamsMessagesContentArrayOfContentParts) ImplementsBetaThreadNewParamsMessagesContentUnion() {
 }
 
 // The role of the entity that is creating the message. Allowed values include:
@@ -900,8 +890,11 @@ func (r BetaThreadNewAndRunParamsThread) MarshalJSON() (data []byte, err error) 
 }
 
 type BetaThreadNewAndRunParamsThreadMessage struct {
-	// The text contents of the message.
-	Content param.Field[BetaThreadNewAndRunParamsThreadMessagesContentUnion] `json:"content,required"`
+	// An array of content parts with a defined type, each can be of type `text` or
+	// images can be passed with `image_url` or `image_file`. Image types are only
+	// supported on
+	// [Vision-compatible models](https://platform.openai.com/docs/models/overview).
+	Content param.Field[[]MessageContentPartParamUnion] `json:"content,required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
 	//   - `user`: Indicates the message is sent by an actual user and should be used in
@@ -920,19 +913,6 @@ type BetaThreadNewAndRunParamsThreadMessage struct {
 
 func (r BetaThreadNewAndRunParamsThreadMessage) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The text contents of the message.
-//
-// Satisfied by [shared.UnionString],
-// [BetaThreadNewAndRunParamsThreadMessagesContentArrayOfContentParts].
-type BetaThreadNewAndRunParamsThreadMessagesContentUnion interface {
-	ImplementsBetaThreadNewAndRunParamsThreadMessagesContentUnion()
-}
-
-type BetaThreadNewAndRunParamsThreadMessagesContentArrayOfContentParts []MessageContentPartParamUnion
-
-func (r BetaThreadNewAndRunParamsThreadMessagesContentArrayOfContentParts) ImplementsBetaThreadNewAndRunParamsThreadMessagesContentUnion() {
 }
 
 // The role of the entity that is creating the message. Allowed values include:
