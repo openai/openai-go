@@ -395,6 +395,43 @@ You may also replace the default `http.Client` with
 accepted (this overwrites any previous client) and receives requests after any
 middleware has been applied.
 
+## Microsoft Azure OpenAI
+
+To use this library with [Azure OpenAI](https://learn.microsoft.com/azure/ai-services/openai/overview), use the option.RequestOption functions in the `azure` package.
+
+```go
+package main
+
+import (
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/azure"
+)
+
+func main() {
+	const azureOpenAIEndpoint = "https://<azure-openai-resource>.openai.azure.com"
+
+	// The latest API versions, including previews, can be found here:
+	// https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning
+	const azureOpenAIAPIVersion = "2024-06-01"
+
+	tokenCredential, err := azidentity.NewDefaultAzureCredential(nil)
+
+	if err != nil {
+		fmt.Printf("Failed to create the DefaultAzureCredential: %s", err)
+		os.Exit(1)
+	}
+
+	client := openai.NewClient(
+		azure.WithEndpoint(azureOpenAIEndpoint, azureOpenAIAPIVersion),
+
+		// Choose between authenticating using a TokenCredential or an API Key
+		azure.WithTokenCredential(tokenCredential),
+		// or azure.WithAPIKey(azureOpenAIAPIKey),
+	)
+}
+```
+
 ## Semantic versioning
 
 This package generally follows [SemVer](https://semver.org/spec/v2.0.0.html) conventions, though certain backwards-incompatible changes may be released as minor versions:
