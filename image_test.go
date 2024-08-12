@@ -32,7 +32,7 @@ func TestImageNewVariationWithOptionalParams(t *testing.T) {
 		Model:          openai.F(openai.ImageModelDallE2),
 		N:              openai.F(int64(1)),
 		ResponseFormat: openai.F(openai.ImageNewVariationParamsResponseFormatURL),
-		Size:           openai.F(openai.ImageNewVariationParamsSize1024x1024),
+		Size:           openai.F(openai.ImageNewVariationParamsSize256x256),
 		User:           openai.F("user-1234"),
 	})
 	if err != nil {
@@ -63,7 +63,7 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 		Model:          openai.F(openai.ImageModelDallE2),
 		N:              openai.F(int64(1)),
 		ResponseFormat: openai.F(openai.ImageEditParamsResponseFormatURL),
-		Size:           openai.F(openai.ImageEditParamsSize1024x1024),
+		Size:           openai.F(openai.ImageEditParamsSize256x256),
 		User:           openai.F("user-1234"),
 	})
 	if err != nil {
@@ -93,7 +93,7 @@ func TestImageGenerateWithOptionalParams(t *testing.T) {
 		N:              openai.F(int64(1)),
 		Quality:        openai.F(openai.ImageGenerateParamsQualityStandard),
 		ResponseFormat: openai.F(openai.ImageGenerateParamsResponseFormatURL),
-		Size:           openai.F(openai.ImageGenerateParamsSize1024x1024),
+		Size:           openai.F(openai.ImageGenerateParamsSize256x256),
 		Style:          openai.F(openai.ImageGenerateParamsStyleVivid),
 		User:           openai.F("user-1234"),
 	})

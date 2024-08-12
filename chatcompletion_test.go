@@ -36,8 +36,8 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		FrequencyPenalty: openai.F(-2.000000),
 		FunctionCall:     openai.F[openai.ChatCompletionNewParamsFunctionCallUnion](openai.ChatCompletionNewParamsFunctionCallString(openai.ChatCompletionNewParamsFunctionCallStringNone)),
 		Functions: openai.F([]openai.ChatCompletionNewParamsFunction{{
-			Description: openai.F("description"),
 			Name:        openai.F("name"),
+			Description: openai.F("description"),
 			Parameters: openai.F(shared.FunctionParameters{
 				"foo": "bar",
 			}),
@@ -62,35 +62,35 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Temperature: openai.F(1.000000),
 		ToolChoice:  openai.F[openai.ChatCompletionToolChoiceOptionUnionParam](openai.ChatCompletionToolChoiceOptionString(openai.ChatCompletionToolChoiceOptionStringNone)),
 		Tools: openai.F([]openai.ChatCompletionToolParam{{
-			Type: openai.F(openai.ChatCompletionToolTypeFunction),
 			Function: openai.F(shared.FunctionDefinitionParam{
-				Description: openai.F("description"),
 				Name:        openai.F("name"),
+				Description: openai.F("description"),
 				Parameters: openai.F(shared.FunctionParameters{
 					"foo": "bar",
 				}),
 				Strict: openai.F(true),
 			}),
+			Type: openai.F(openai.ChatCompletionToolTypeFunction),
 		}, {
-			Type: openai.F(openai.ChatCompletionToolTypeFunction),
 			Function: openai.F(shared.FunctionDefinitionParam{
-				Description: openai.F("description"),
 				Name:        openai.F("name"),
+				Description: openai.F("description"),
 				Parameters: openai.F(shared.FunctionParameters{
 					"foo": "bar",
 				}),
 				Strict: openai.F(true),
 			}),
+			Type: openai.F(openai.ChatCompletionToolTypeFunction),
 		}, {
-			Type: openai.F(openai.ChatCompletionToolTypeFunction),
 			Function: openai.F(shared.FunctionDefinitionParam{
-				Description: openai.F("description"),
 				Name:        openai.F("name"),
+				Description: openai.F("description"),
 				Parameters: openai.F(shared.FunctionParameters{
 					"foo": "bar",
 				}),
 				Strict: openai.F(true),
 			}),
+			Type: openai.F(openai.ChatCompletionToolTypeFunction),
 		}}),
 		TopLogprobs: openai.F(int64(0)),
 		TopP:        openai.F(1.000000),

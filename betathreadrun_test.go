@@ -33,8 +33,8 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 			AssistantID:            openai.F("assistant_id"),
 			AdditionalInstructions: openai.F("additional_instructions"),
 			AdditionalMessages: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessage{{
-				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
 				Content: openai.F[openai.BetaThreadRunNewParamsAdditionalMessagesContentUnion](shared.UnionString("string")),
+				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
 				Attachments: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachment{{
 					FileID: openai.F("file_id"),
 					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
@@ -65,8 +65,8 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 				}}),
 				Metadata: openai.F[any](map[string]interface{}{}),
 			}, {
-				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
 				Content: openai.F[openai.BetaThreadRunNewParamsAdditionalMessagesContentUnion](shared.UnionString("string")),
+				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
 				Attachments: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachment{{
 					FileID: openai.F("file_id"),
 					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
@@ -97,8 +97,8 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 				}}),
 				Metadata: openai.F[any](map[string]interface{}{}),
 			}, {
-				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
 				Content: openai.F[openai.BetaThreadRunNewParamsAdditionalMessagesContentUnion](shared.UnionString("string")),
+				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
 				Attachments: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachment{{
 					FileID: openai.F("file_id"),
 					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
@@ -290,14 +290,14 @@ func TestBetaThreadRunSubmitToolOutputsWithOptionalParams(t *testing.T) {
 		"run_id",
 		openai.BetaThreadRunSubmitToolOutputsParams{
 			ToolOutputs: openai.F([]openai.BetaThreadRunSubmitToolOutputsParamsToolOutput{{
-				ToolCallID: openai.F("tool_call_id"),
 				Output:     openai.F("output"),
+				ToolCallID: openai.F("tool_call_id"),
 			}, {
-				ToolCallID: openai.F("tool_call_id"),
 				Output:     openai.F("output"),
+				ToolCallID: openai.F("tool_call_id"),
 			}, {
-				ToolCallID: openai.F("tool_call_id"),
 				Output:     openai.F("output"),
+				ToolCallID: openai.F("tool_call_id"),
 			}}),
 		},
 	)
