@@ -37,24 +37,24 @@ func TestFineTuningJobNewWithOptionalParams(t *testing.T) {
 			Type: openai.F(openai.FineTuningJobNewParamsIntegrationsTypeWandb),
 			Wandb: openai.F(openai.FineTuningJobNewParamsIntegrationsWandb{
 				Project: openai.F("my-wandb-project"),
-				Name:    openai.F("name"),
 				Entity:  openai.F("entity"),
+				Name:    openai.F("name"),
 				Tags:    openai.F([]string{"custom-tag", "custom-tag", "custom-tag"}),
 			}),
 		}, {
 			Type: openai.F(openai.FineTuningJobNewParamsIntegrationsTypeWandb),
 			Wandb: openai.F(openai.FineTuningJobNewParamsIntegrationsWandb{
 				Project: openai.F("my-wandb-project"),
-				Name:    openai.F("name"),
 				Entity:  openai.F("entity"),
+				Name:    openai.F("name"),
 				Tags:    openai.F([]string{"custom-tag", "custom-tag", "custom-tag"}),
 			}),
 		}, {
 			Type: openai.F(openai.FineTuningJobNewParamsIntegrationsTypeWandb),
 			Wandb: openai.F(openai.FineTuningJobNewParamsIntegrationsWandb{
 				Project: openai.F("my-wandb-project"),
-				Name:    openai.F("name"),
 				Entity:  openai.F("entity"),
+				Name:    openai.F("name"),
 				Tags:    openai.F([]string{"custom-tag", "custom-tag", "custom-tag"}),
 			}),
 		}}),
