@@ -727,8 +727,11 @@ func (r BetaThreadRunNewParams) MarshalJSON() (data []byte, err error) {
 }
 
 type BetaThreadRunNewParamsAdditionalMessage struct {
-	// The text contents of the message.
-	Content param.Field[BetaThreadRunNewParamsAdditionalMessagesContentUnion] `json:"content,required"`
+	// An array of content parts with a defined type, each can be of type `text` or
+	// images can be passed with `image_url` or `image_file`. Image types are only
+	// supported on
+	// [Vision-compatible models](https://platform.openai.com/docs/models/overview).
+	Content param.Field[[]MessageContentPartParamUnion] `json:"content,required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
 	//   - `user`: Indicates the message is sent by an actual user and should be used in
@@ -747,19 +750,6 @@ type BetaThreadRunNewParamsAdditionalMessage struct {
 
 func (r BetaThreadRunNewParamsAdditionalMessage) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The text contents of the message.
-//
-// Satisfied by [shared.UnionString],
-// [BetaThreadRunNewParamsAdditionalMessagesContentArrayOfContentParts].
-type BetaThreadRunNewParamsAdditionalMessagesContentUnion interface {
-	ImplementsBetaThreadRunNewParamsAdditionalMessagesContentUnion()
-}
-
-type BetaThreadRunNewParamsAdditionalMessagesContentArrayOfContentParts []MessageContentPartParamUnion
-
-func (r BetaThreadRunNewParamsAdditionalMessagesContentArrayOfContentParts) ImplementsBetaThreadRunNewParamsAdditionalMessagesContentUnion() {
 }
 
 // The role of the entity that is creating the message. Allowed values include:
