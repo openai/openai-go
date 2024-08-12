@@ -19,6 +19,8 @@ jobs:
 
       - name: Setup go
         uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
 
       - name: Run lints
         run: ./scripts/lint
@@ -32,6 +34,8 @@ jobs:
 
       - name: Setup go
         uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
 
       - name: Bootstrap
         run: ./scripts/bootstrap
