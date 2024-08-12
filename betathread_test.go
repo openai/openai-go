@@ -11,7 +11,6 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
 )
 
 func TestBetaThreadNewWithOptionalParams(t *testing.T) {
@@ -28,7 +27,7 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Beta.Threads.New(context.TODO(), openai.BetaThreadNewParams{
 		Messages: openai.F([]openai.BetaThreadNewParamsMessage{{
-			Content: openai.F[openai.BetaThreadNewParamsMessagesContentUnion](shared.UnionString("string")),
+			Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
 			Role:    openai.F(openai.BetaThreadNewParamsMessagesRoleUser),
 			Attachments: openai.F([]openai.BetaThreadNewParamsMessagesAttachment{{
 				FileID: openai.F("file_id"),
@@ -60,7 +59,7 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 			}}),
 			Metadata: openai.F[any](map[string]interface{}{}),
 		}, {
-			Content: openai.F[openai.BetaThreadNewParamsMessagesContentUnion](shared.UnionString("string")),
+			Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
 			Role:    openai.F(openai.BetaThreadNewParamsMessagesRoleUser),
 			Attachments: openai.F([]openai.BetaThreadNewParamsMessagesAttachment{{
 				FileID: openai.F("file_id"),
@@ -92,7 +91,7 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 			}}),
 			Metadata: openai.F[any](map[string]interface{}{}),
 		}, {
-			Content: openai.F[openai.BetaThreadNewParamsMessagesContentUnion](shared.UnionString("string")),
+			Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
 			Role:    openai.F(openai.BetaThreadNewParamsMessagesRoleUser),
 			Attachments: openai.F([]openai.BetaThreadNewParamsMessagesAttachment{{
 				FileID: openai.F("file_id"),
@@ -253,7 +252,7 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 		Temperature:         openai.F(1.000000),
 		Thread: openai.F(openai.BetaThreadNewAndRunParamsThread{
 			Messages: openai.F([]openai.BetaThreadNewAndRunParamsThreadMessage{{
-				Content: openai.F[openai.BetaThreadNewAndRunParamsThreadMessagesContentUnion](shared.UnionString("string")),
+				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
 				Role:    openai.F(openai.BetaThreadNewAndRunParamsThreadMessagesRoleUser),
 				Attachments: openai.F([]openai.BetaThreadNewAndRunParamsThreadMessagesAttachment{{
 					FileID: openai.F("file_id"),
@@ -285,7 +284,7 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 				}}),
 				Metadata: openai.F[any](map[string]interface{}{}),
 			}, {
-				Content: openai.F[openai.BetaThreadNewAndRunParamsThreadMessagesContentUnion](shared.UnionString("string")),
+				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
 				Role:    openai.F(openai.BetaThreadNewAndRunParamsThreadMessagesRoleUser),
 				Attachments: openai.F([]openai.BetaThreadNewAndRunParamsThreadMessagesAttachment{{
 					FileID: openai.F("file_id"),
@@ -317,7 +316,7 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 				}}),
 				Metadata: openai.F[any](map[string]interface{}{}),
 			}, {
-				Content: openai.F[openai.BetaThreadNewAndRunParamsThreadMessagesContentUnion](shared.UnionString("string")),
+				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
 				Role:    openai.F(openai.BetaThreadNewAndRunParamsThreadMessagesRoleUser),
 				Attachments: openai.F([]openai.BetaThreadNewAndRunParamsThreadMessagesAttachment{{
 					FileID: openai.F("file_id"),
