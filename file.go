@@ -269,6 +269,31 @@ func (r FileObjectStatus) IsKnown() bool {
 	return false
 }
 
+// The intended purpose of the uploaded file.
+//
+// Use "assistants" for
+// [Assistants](https://platform.openai.com/docs/api-reference/assistants) and
+// [Message](https://platform.openai.com/docs/api-reference/messages) files,
+// "vision" for Assistants image file inputs, "batch" for
+// [Batch API](https://platform.openai.com/docs/guides/batch), and "fine-tune" for
+// [Fine-tuning](https://platform.openai.com/docs/api-reference/fine-tuning).
+type FilePurpose string
+
+const (
+	FilePurposeAssistants FilePurpose = "assistants"
+	FilePurposeBatch      FilePurpose = "batch"
+	FilePurposeFineTune   FilePurpose = "fine-tune"
+	FilePurposeVision     FilePurpose = "vision"
+)
+
+func (r FilePurpose) IsKnown() bool {
+	switch r {
+	case FilePurposeAssistants, FilePurposeBatch, FilePurposeFineTune, FilePurposeVision:
+		return true
+	}
+	return false
+}
+
 type FileNewParams struct {
 	// The File object (not file name) to be uploaded.
 	File param.Field[io.Reader] `json:"file,required" format:"binary"`
@@ -280,7 +305,7 @@ type FileNewParams struct {
 	// "vision" for Assistants image file inputs, "batch" for
 	// [Batch API](https://platform.openai.com/docs/guides/batch), and "fine-tune" for
 	// [Fine-tuning](https://platform.openai.com/docs/api-reference/fine-tuning).
-	Purpose param.Field[FileNewParamsPurpose] `json:"purpose,required"`
+	Purpose param.Field[FilePurpose] `json:"purpose,required"`
 }
 
 func (r FileNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
@@ -296,31 +321,6 @@ func (r FileNewParams) MarshalMultipart() (data []byte, contentType string, err 
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
-}
-
-// The intended purpose of the uploaded file.
-//
-// Use "assistants" for
-// [Assistants](https://platform.openai.com/docs/api-reference/assistants) and
-// [Message](https://platform.openai.com/docs/api-reference/messages) files,
-// "vision" for Assistants image file inputs, "batch" for
-// [Batch API](https://platform.openai.com/docs/guides/batch), and "fine-tune" for
-// [Fine-tuning](https://platform.openai.com/docs/api-reference/fine-tuning).
-type FileNewParamsPurpose string
-
-const (
-	FileNewParamsPurposeAssistants FileNewParamsPurpose = "assistants"
-	FileNewParamsPurposeBatch      FileNewParamsPurpose = "batch"
-	FileNewParamsPurposeFineTune   FileNewParamsPurpose = "fine-tune"
-	FileNewParamsPurposeVision     FileNewParamsPurpose = "vision"
-)
-
-func (r FileNewParamsPurpose) IsKnown() bool {
-	switch r {
-	case FileNewParamsPurposeAssistants, FileNewParamsPurposeBatch, FileNewParamsPurposeFineTune, FileNewParamsPurposeVision:
-		return true
-	}
-	return false
 }
 
 type FileListParams struct {

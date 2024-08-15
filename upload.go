@@ -193,32 +193,11 @@ type UploadNewParams struct {
 	//
 	// See the
 	// [documentation on File purposes](https://platform.openai.com/docs/api-reference/files/create#files-create-purpose).
-	Purpose param.Field[UploadNewParamsPurpose] `json:"purpose,required"`
+	Purpose param.Field[FilePurpose] `json:"purpose,required"`
 }
 
 func (r UploadNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The intended purpose of the uploaded file.
-//
-// See the
-// [documentation on File purposes](https://platform.openai.com/docs/api-reference/files/create#files-create-purpose).
-type UploadNewParamsPurpose string
-
-const (
-	UploadNewParamsPurposeAssistants UploadNewParamsPurpose = "assistants"
-	UploadNewParamsPurposeBatch      UploadNewParamsPurpose = "batch"
-	UploadNewParamsPurposeFineTune   UploadNewParamsPurpose = "fine-tune"
-	UploadNewParamsPurposeVision     UploadNewParamsPurpose = "vision"
-)
-
-func (r UploadNewParamsPurpose) IsKnown() bool {
-	switch r {
-	case UploadNewParamsPurposeAssistants, UploadNewParamsPurposeBatch, UploadNewParamsPurposeFineTune, UploadNewParamsPurposeVision:
-		return true
-	}
-	return false
 }
 
 type UploadCompleteParams struct {
