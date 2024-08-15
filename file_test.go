@@ -31,7 +31,7 @@ func TestFileNew(t *testing.T) {
 	)
 	_, err := client.Files.New(context.TODO(), openai.FileNewParams{
 		File:    openai.F(io.Reader(bytes.NewBuffer([]byte("some file contents")))),
-		Purpose: openai.F(openai.FileNewParamsPurposeAssistants),
+		Purpose: openai.F(openai.FilePurposeAssistants),
 	})
 	if err != nil {
 		var apierr *openai.Error
