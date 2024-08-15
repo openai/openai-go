@@ -29,7 +29,7 @@ func TestUploadNew(t *testing.T) {
 		Bytes:    openai.F(int64(0)),
 		Filename: openai.F("filename"),
 		MimeType: openai.F("mime_type"),
-		Purpose:  openai.F(openai.UploadNewParamsPurposeAssistants),
+		Purpose:  openai.F(openai.FilePurposeAssistants),
 	})
 	if err != nil {
 		var apierr *openai.Error
