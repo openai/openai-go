@@ -263,19 +263,19 @@ which can be used to wrap any `io.Reader` with the appropriate file name and con
 file, err := os.Open("input.jsonl")
 openai.FileNewParams{
 	File:    openai.F[io.Reader](file),
-	Purpose: openai.F(openai.FileNewParamsPurposeFineTune),
+	Purpose: openai.F(openai.FilePurposeFineTune),
 }
 
 // A file from a string
 openai.FileNewParams{
 	File:    openai.F[io.Reader](strings.NewReader("my file contents")),
-	Purpose: openai.F(openai.FileNewParamsPurposeFineTune),
+	Purpose: openai.F(openai.FilePurposeFineTune),
 }
 
 // With a custom filename and contentType
 openai.FileNewParams{
 	File:    openai.FileParam(strings.NewReader(`{"hello": "foo"}`), "file.go", "application/json"),
-	Purpose: openai.F(openai.FileNewParamsPurposeFineTune),
+	Purpose: openai.F(openai.FilePurposeFineTune),
 }
 ```
 
