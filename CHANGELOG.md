@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.8 (2024-08-15)
+
+Full Changelog: [v0.1.0-alpha.7...v0.1.0-alpha.8](https://github.com/openai/openai-go/compare/v0.1.0-alpha.7...v0.1.0-alpha.8)
+
+### Chores
+
+* **types:** define FilePurpose enum ([#22](https://github.com/openai/openai-go/issues/22)) ([2a7c699](https://github.com/openai/openai-go/commit/2a7c699e4fb21f848aa5d260da9d2a5c471866d1))
+
 ## 0.1.0-alpha.7 (2024-08-12)
 
 Full Changelog: [v0.1.0-alpha.6...v0.1.0-alpha.7](https://github.com/openai/openai-go/compare/v0.1.0-alpha.6...v0.1.0-alpha.7)
