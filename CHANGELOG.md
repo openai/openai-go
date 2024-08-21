@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.10 (2024-08-21)
+
+Full Changelog: [v0.1.0-alpha.9...v0.1.0-alpha.10](https://github.com/openai/openai-go/compare/v0.1.0-alpha.9...v0.1.0-alpha.10)
+
+### Documentation
+
+* **readme:** add an alpha warning ([#27](https://github.com/openai/openai-go/issues/27)) ([3f1cc3b](https://github.com/openai/openai-go/commit/3f1cc3bbf19daa48e83aacb6906b9776726d7154))
+
 ## 0.1.0-alpha.9 (2024-08-16)
 
 Full Changelog: [v0.1.0-alpha.8...v0.1.0-alpha.9](https://github.com/openai/openai-go/compare/v0.1.0-alpha.8...v0.1.0-alpha.9)
