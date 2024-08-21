@@ -2,6 +2,9 @@
 
 <a href="https://pkg.go.dev/github.com/openai/openai-go"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
 
+> [!WARNING]
+> **This release is currently in alpha**. Minor breaking changes may occur.
+
 The OpenAI Go library provides convenient access to [the OpenAI REST
 API](https://platform.openai.com/docs) from applications written in Go. The full API of this library can be found in [api.md](api.md).
 
