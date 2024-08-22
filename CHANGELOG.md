@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.11 (2024-08-22)
+
+Full Changelog: [v0.1.0-alpha.10...v0.1.0-alpha.11](https://github.com/openai/openai-go/compare/v0.1.0-alpha.10...v0.1.0-alpha.11)
+
+### Features
+
+* add support for error property in stream ([#29](https://github.com/openai/openai-go/issues/29)) ([73f9342](https://github.com/openai/openai-go/commit/73f93429e1319387f1a95208166b3e871ce4e03a))
+
 ## 0.1.0-alpha.10 (2024-08-21)
 
 Full Changelog: [v0.1.0-alpha.9...v0.1.0-alpha.10](https://github.com/openai/openai-go/compare/v0.1.0-alpha.9...v0.1.0-alpha.10)
