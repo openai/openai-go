@@ -6,9 +6,12 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/tidwall/gjson"
 )
 
 type Decoder interface {
@@ -144,6 +147,11 @@ func (s *Stream[T]) Next() bool {
 		}
 
 		if s.decoder.Event().Type == "" {
+			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
+			if ep.Exists() {
+				s.err = fmt.Errorf("received error while streaming: %s", ep.String())
+				return false
+			}
 			s.err = json.Unmarshal(s.decoder.Event().Data, &s.cur)
 			if s.err != nil {
 				return false
