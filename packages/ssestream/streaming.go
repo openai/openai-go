@@ -157,6 +157,17 @@ func (s *Stream[T]) Next() bool {
 				return false
 			}
 			return true
+		} else {
+			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
+			if ep.Exists() {
+				s.err = fmt.Errorf("received error while streaming: %s", ep.String())
+				return false
+			}
+			s.err = json.Unmarshal([]byte(fmt.Sprintf(`{ "event": %q, "data": %s }`, s.decoder.Event().Type, s.decoder.Event().Data)), &s.cur)
+			if s.err != nil {
+				return false
+			}
+			return true
 		}
 	}
 
