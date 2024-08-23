@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.12 (2024-08-23)
+
+Full Changelog: [v0.1.0-alpha.11...v0.1.0-alpha.12](https://github.com/openai/openai-go/compare/v0.1.0-alpha.11...v0.1.0-alpha.12)
+
+### Features
+
+* support assistants stream ([0647f03](https://github.com/openai/openai-go/commit/0647f03c55fe8ec654f6a8fd98d77384d9df6b9d))
+
 ## 0.1.0-alpha.11 (2024-08-22)
 
 Full Changelog: [v0.1.0-alpha.10...v0.1.0-alpha.11](https://github.com/openai/openai-go/compare/v0.1.0-alpha.10...v0.1.0-alpha.11)
