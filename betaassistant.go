@@ -1040,8 +1040,8 @@ func (r AssistantStreamEventThreadRunExpiredEvent) IsKnown() bool {
 }
 
 // Occurs when a
-// [run step](https://platform.openai.com/docs/api-reference/runs/step-object) is
-// created.
+// [run step](https://platform.openai.com/docs/api-reference/run-steps/step-object)
+// is created.
 type AssistantStreamEventThreadRunStepCreated struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                                       `json:"data,required"`
@@ -1083,7 +1083,7 @@ func (r AssistantStreamEventThreadRunStepCreatedEvent) IsKnown() bool {
 }
 
 // Occurs when a
-// [run step](https://platform.openai.com/docs/api-reference/runs/step-object)
+// [run step](https://platform.openai.com/docs/api-reference/run-steps/step-object)
 // moves to an `in_progress` state.
 type AssistantStreamEventThreadRunStepInProgress struct {
 	// Represents a step in execution of a run.
@@ -1126,8 +1126,8 @@ func (r AssistantStreamEventThreadRunStepInProgressEvent) IsKnown() bool {
 }
 
 // Occurs when parts of a
-// [run step](https://platform.openai.com/docs/api-reference/runs/step-object) are
-// being streamed.
+// [run step](https://platform.openai.com/docs/api-reference/run-steps/step-object)
+// are being streamed.
 type AssistantStreamEventThreadRunStepDelta struct {
 	// Represents a run step delta i.e. any changed fields on a run step during
 	// streaming.
@@ -1170,8 +1170,8 @@ func (r AssistantStreamEventThreadRunStepDeltaEvent) IsKnown() bool {
 }
 
 // Occurs when a
-// [run step](https://platform.openai.com/docs/api-reference/runs/step-object) is
-// completed.
+// [run step](https://platform.openai.com/docs/api-reference/run-steps/step-object)
+// is completed.
 type AssistantStreamEventThreadRunStepCompleted struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                                         `json:"data,required"`
@@ -1213,7 +1213,7 @@ func (r AssistantStreamEventThreadRunStepCompletedEvent) IsKnown() bool {
 }
 
 // Occurs when a
-// [run step](https://platform.openai.com/docs/api-reference/runs/step-object)
+// [run step](https://platform.openai.com/docs/api-reference/run-steps/step-object)
 // fails.
 type AssistantStreamEventThreadRunStepFailed struct {
 	// Represents a step in execution of a run.
@@ -1256,8 +1256,8 @@ func (r AssistantStreamEventThreadRunStepFailedEvent) IsKnown() bool {
 }
 
 // Occurs when a
-// [run step](https://platform.openai.com/docs/api-reference/runs/step-object) is
-// cancelled.
+// [run step](https://platform.openai.com/docs/api-reference/run-steps/step-object)
+// is cancelled.
 type AssistantStreamEventThreadRunStepCancelled struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                                         `json:"data,required"`
@@ -1299,7 +1299,7 @@ func (r AssistantStreamEventThreadRunStepCancelledEvent) IsKnown() bool {
 }
 
 // Occurs when a
-// [run step](https://platform.openai.com/docs/api-reference/runs/step-object)
+// [run step](https://platform.openai.com/docs/api-reference/run-steps/step-object)
 // expires.
 type AssistantStreamEventThreadRunStepExpired struct {
 	// Represents a step in execution of a run.
@@ -1857,18 +1857,25 @@ type FileSearchToolFileSearch struct {
 	//
 	// Note that the file search tool may output fewer than `max_num_results` results.
 	// See the
-	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/number-of-chunks-returned)
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
 	// for more information.
-	MaxNumResults int64                        `json:"max_num_results"`
-	JSON          fileSearchToolFileSearchJSON `json:"-"`
+	MaxNumResults int64 `json:"max_num_results"`
+	// The ranking options for the file search.
+	//
+	// See the
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+	// for more information.
+	RankingOptions FileSearchToolFileSearchRankingOptions `json:"ranking_options"`
+	JSON           fileSearchToolFileSearchJSON           `json:"-"`
 }
 
 // fileSearchToolFileSearchJSON contains the JSON metadata for the struct
 // [FileSearchToolFileSearch]
 type fileSearchToolFileSearchJSON struct {
-	MaxNumResults apijson.Field
-	raw           string
-	ExtraFields   map[string]apijson.Field
+	MaxNumResults  apijson.Field
+	RankingOptions apijson.Field
+	raw            string
+	ExtraFields    map[string]apijson.Field
 }
 
 func (r *FileSearchToolFileSearch) UnmarshalJSON(data []byte) (err error) {
@@ -1877,6 +1884,55 @@ func (r *FileSearchToolFileSearch) UnmarshalJSON(data []byte) (err error) {
 
 func (r fileSearchToolFileSearchJSON) RawJSON() string {
 	return r.raw
+}
+
+// The ranking options for the file search.
+//
+// See the
+// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+// for more information.
+type FileSearchToolFileSearchRankingOptions struct {
+	// The ranker to use for the file search. If not specified will use the `auto`
+	// ranker.
+	Ranker FileSearchToolFileSearchRankingOptionsRanker `json:"ranker"`
+	// The score threshold for the file search. All values must be a floating point
+	// number between 0 and 1.
+	ScoreThreshold float64                                    `json:"score_threshold"`
+	JSON           fileSearchToolFileSearchRankingOptionsJSON `json:"-"`
+}
+
+// fileSearchToolFileSearchRankingOptionsJSON contains the JSON metadata for the
+// struct [FileSearchToolFileSearchRankingOptions]
+type fileSearchToolFileSearchRankingOptionsJSON struct {
+	Ranker         apijson.Field
+	ScoreThreshold apijson.Field
+	raw            string
+	ExtraFields    map[string]apijson.Field
+}
+
+func (r *FileSearchToolFileSearchRankingOptions) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r fileSearchToolFileSearchRankingOptionsJSON) RawJSON() string {
+	return r.raw
+}
+
+// The ranker to use for the file search. If not specified will use the `auto`
+// ranker.
+type FileSearchToolFileSearchRankingOptionsRanker string
+
+const (
+	FileSearchToolFileSearchRankingOptionsRankerAuto              FileSearchToolFileSearchRankingOptionsRanker = "auto"
+	FileSearchToolFileSearchRankingOptionsRankerDefault2024_08_21 FileSearchToolFileSearchRankingOptionsRanker = "default_2024_08_21"
+)
+
+func (r FileSearchToolFileSearchRankingOptionsRanker) IsKnown() bool {
+	switch r {
+	case FileSearchToolFileSearchRankingOptionsRankerAuto, FileSearchToolFileSearchRankingOptionsRankerDefault2024_08_21:
+		return true
+	}
+	return false
 }
 
 type FileSearchToolParam struct {
@@ -1902,12 +1958,36 @@ type FileSearchToolFileSearchParam struct {
 	//
 	// Note that the file search tool may output fewer than `max_num_results` results.
 	// See the
-	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/number-of-chunks-returned)
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
 	// for more information.
 	MaxNumResults param.Field[int64] `json:"max_num_results"`
+	// The ranking options for the file search.
+	//
+	// See the
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+	// for more information.
+	RankingOptions param.Field[FileSearchToolFileSearchRankingOptionsParam] `json:"ranking_options"`
 }
 
 func (r FileSearchToolFileSearchParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// The ranking options for the file search.
+//
+// See the
+// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+// for more information.
+type FileSearchToolFileSearchRankingOptionsParam struct {
+	// The ranker to use for the file search. If not specified will use the `auto`
+	// ranker.
+	Ranker param.Field[FileSearchToolFileSearchRankingOptionsRanker] `json:"ranker"`
+	// The score threshold for the file search. All values must be a floating point
+	// number between 0 and 1.
+	ScoreThreshold param.Field[float64] `json:"score_threshold"`
+}
+
+func (r FileSearchToolFileSearchRankingOptionsParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 

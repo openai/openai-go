@@ -30,6 +30,7 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 		"thread_id",
 		openai.BetaThreadRunNewParams{
 			AssistantID:            openai.F("assistant_id"),
+			Include:                openai.F([]openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent}),
 			AdditionalInstructions: openai.F("additional_instructions"),
 			AdditionalMessages: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessage{{
 				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),

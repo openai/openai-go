@@ -39,7 +39,7 @@ func NewBetaThreadRunStepService(opts ...option.RequestOption) (r *BetaThreadRun
 }
 
 // Retrieves a run step.
-func (r *BetaThreadRunStepService) Get(ctx context.Context, threadID string, runID string, stepID string, opts ...option.RequestOption) (res *RunStep, err error) {
+func (r *BetaThreadRunStepService) Get(ctx context.Context, threadID string, runID string, stepID string, query BetaThreadRunStepGetParams, opts ...option.RequestOption) (res *RunStep, err error) {
 	opts = append(r.Options[:], opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -54,7 +54,7 @@ func (r *BetaThreadRunStepService) Get(ctx context.Context, threadID string, run
 		return
 	}
 	path := fmt.Sprintf("threads/%s/runs/%s/steps/%s", threadID, runID, stepID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
 }
 
@@ -645,7 +645,7 @@ type FileSearchToolCall struct {
 	// The ID of the tool call object.
 	ID string `json:"id,required"`
 	// For now, this is always going to be an empty object.
-	FileSearch interface{} `json:"file_search,required"`
+	FileSearch FileSearchToolCallFileSearch `json:"file_search,required"`
 	// The type of tool call. This is always going to be `file_search` for this type of
 	// tool call.
 	Type FileSearchToolCallType `json:"type,required"`
@@ -671,6 +671,148 @@ func (r fileSearchToolCallJSON) RawJSON() string {
 }
 
 func (r FileSearchToolCall) implementsToolCall() {}
+
+// For now, this is always going to be an empty object.
+type FileSearchToolCallFileSearch struct {
+	// The ranking options for the file search.
+	RankingOptions FileSearchToolCallFileSearchRankingOptions `json:"ranking_options"`
+	// The results of the file search.
+	Results []FileSearchToolCallFileSearchResult `json:"results"`
+	JSON    fileSearchToolCallFileSearchJSON     `json:"-"`
+}
+
+// fileSearchToolCallFileSearchJSON contains the JSON metadata for the struct
+// [FileSearchToolCallFileSearch]
+type fileSearchToolCallFileSearchJSON struct {
+	RankingOptions apijson.Field
+	Results        apijson.Field
+	raw            string
+	ExtraFields    map[string]apijson.Field
+}
+
+func (r *FileSearchToolCallFileSearch) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r fileSearchToolCallFileSearchJSON) RawJSON() string {
+	return r.raw
+}
+
+// The ranking options for the file search.
+type FileSearchToolCallFileSearchRankingOptions struct {
+	// The ranker used for the file search.
+	Ranker FileSearchToolCallFileSearchRankingOptionsRanker `json:"ranker,required"`
+	// The score threshold for the file search. All values must be a floating point
+	// number between 0 and 1.
+	ScoreThreshold float64                                        `json:"score_threshold,required"`
+	JSON           fileSearchToolCallFileSearchRankingOptionsJSON `json:"-"`
+}
+
+// fileSearchToolCallFileSearchRankingOptionsJSON contains the JSON metadata for
+// the struct [FileSearchToolCallFileSearchRankingOptions]
+type fileSearchToolCallFileSearchRankingOptionsJSON struct {
+	Ranker         apijson.Field
+	ScoreThreshold apijson.Field
+	raw            string
+	ExtraFields    map[string]apijson.Field
+}
+
+func (r *FileSearchToolCallFileSearchRankingOptions) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r fileSearchToolCallFileSearchRankingOptionsJSON) RawJSON() string {
+	return r.raw
+}
+
+// The ranker used for the file search.
+type FileSearchToolCallFileSearchRankingOptionsRanker string
+
+const (
+	FileSearchToolCallFileSearchRankingOptionsRankerDefault2024_08_21 FileSearchToolCallFileSearchRankingOptionsRanker = "default_2024_08_21"
+)
+
+func (r FileSearchToolCallFileSearchRankingOptionsRanker) IsKnown() bool {
+	switch r {
+	case FileSearchToolCallFileSearchRankingOptionsRankerDefault2024_08_21:
+		return true
+	}
+	return false
+}
+
+// A result instance of the file search.
+type FileSearchToolCallFileSearchResult struct {
+	// The ID of the file that result was found in.
+	FileID string `json:"file_id,required"`
+	// The name of the file that result was found in.
+	FileName string `json:"file_name,required"`
+	// The score of the result. All values must be a floating point number between 0
+	// and 1.
+	Score float64 `json:"score,required"`
+	// The content of the result that was found. The content is only included if
+	// requested via the include query parameter.
+	Content []FileSearchToolCallFileSearchResultsContent `json:"content"`
+	JSON    fileSearchToolCallFileSearchResultJSON       `json:"-"`
+}
+
+// fileSearchToolCallFileSearchResultJSON contains the JSON metadata for the struct
+// [FileSearchToolCallFileSearchResult]
+type fileSearchToolCallFileSearchResultJSON struct {
+	FileID      apijson.Field
+	FileName    apijson.Field
+	Score       apijson.Field
+	Content     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *FileSearchToolCallFileSearchResult) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r fileSearchToolCallFileSearchResultJSON) RawJSON() string {
+	return r.raw
+}
+
+type FileSearchToolCallFileSearchResultsContent struct {
+	// The text content of the file.
+	Text string `json:"text"`
+	// The type of the content.
+	Type FileSearchToolCallFileSearchResultsContentType `json:"type"`
+	JSON fileSearchToolCallFileSearchResultsContentJSON `json:"-"`
+}
+
+// fileSearchToolCallFileSearchResultsContentJSON contains the JSON metadata for
+// the struct [FileSearchToolCallFileSearchResultsContent]
+type fileSearchToolCallFileSearchResultsContentJSON struct {
+	Text        apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *FileSearchToolCallFileSearchResultsContent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r fileSearchToolCallFileSearchResultsContentJSON) RawJSON() string {
+	return r.raw
+}
+
+// The type of the content.
+type FileSearchToolCallFileSearchResultsContentType string
+
+const (
+	FileSearchToolCallFileSearchResultsContentTypeText FileSearchToolCallFileSearchResultsContentType = "text"
+)
+
+func (r FileSearchToolCallFileSearchResultsContentType) IsKnown() bool {
+	switch r {
+	case FileSearchToolCallFileSearchResultsContentTypeText:
+		return true
+	}
+	return false
+}
 
 // The type of tool call. This is always going to be `file_search` for this type of
 // tool call.
@@ -1463,6 +1605,20 @@ func (r runStepDeltaMessageDeltaMessageCreationJSON) RawJSON() string {
 	return r.raw
 }
 
+type RunStepInclude string
+
+const (
+	RunStepIncludeStepDetailsToolCallsFileSearchResultsContent RunStepInclude = "step_details.tool_calls[*].file_search.results[*].content"
+)
+
+func (r RunStepInclude) IsKnown() bool {
+	switch r {
+	case RunStepIncludeStepDetailsToolCallsFileSearchResultsContent:
+		return true
+	}
+	return false
+}
+
 // Details of the Code Interpreter tool call the run step was involved in.
 type ToolCall struct {
 	// The ID of the tool call.
@@ -1473,7 +1629,7 @@ type ToolCall struct {
 	// This field can have the runtime type of
 	// [CodeInterpreterToolCallCodeInterpreter].
 	CodeInterpreter interface{} `json:"code_interpreter,required"`
-	// This field can have the runtime type of [interface{}].
+	// This field can have the runtime type of [FileSearchToolCallFileSearch].
 	FileSearch interface{} `json:"file_search,required"`
 	// This field can have the runtime type of [FunctionToolCallFunction].
 	Function interface{}  `json:"function,required"`
@@ -1754,6 +1910,26 @@ func (r ToolCallsStepDetailsType) IsKnown() bool {
 	return false
 }
 
+type BetaThreadRunStepGetParams struct {
+	// A list of additional fields to include in the response. Currently the only
+	// supported value is `step_details.tool_calls[*].file_search.results[*].content`
+	// to fetch the file search result content.
+	//
+	// See the
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+	// for more information.
+	Include param.Field[[]RunStepInclude] `query:"include"`
+}
+
+// URLQuery serializes [BetaThreadRunStepGetParams]'s query parameters as
+// `url.Values`.
+func (r BetaThreadRunStepGetParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
 type BetaThreadRunStepListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
@@ -1765,6 +1941,14 @@ type BetaThreadRunStepListParams struct {
 	// ending with obj_foo, your subsequent call can include before=obj_foo in order to
 	// fetch the previous page of the list.
 	Before param.Field[string] `query:"before"`
+	// A list of additional fields to include in the response. Currently the only
+	// supported value is `step_details.tool_calls[*].file_search.results[*].content`
+	// to fetch the file search result content.
+	//
+	// See the
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+	// for more information.
+	Include param.Field[[]RunStepInclude] `query:"include"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
 	Limit param.Field[int64] `query:"limit"`
