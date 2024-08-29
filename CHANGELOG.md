@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.13 (2024-08-29)
+
+Full Changelog: [v0.1.0-alpha.12...v0.1.0-alpha.13](https://github.com/openai/openai-go/compare/v0.1.0-alpha.12...v0.1.0-alpha.13)
+
+### Features
+
+* **api:** add file search result details to run steps ([#32](https://github.com/openai/openai-go/issues/32)) ([f6a1f12](https://github.com/openai/openai-go/commit/f6a1f12acbaf158af8009debcc2019d1b9e19104))
+
 ## 0.1.0-alpha.12 (2024-08-23)
 
 Full Changelog: [v0.1.0-alpha.11...v0.1.0-alpha.12](https://github.com/openai/openai-go/compare/v0.1.0-alpha.11...v0.1.0-alpha.12)
