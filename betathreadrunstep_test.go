@@ -13,7 +13,7 @@ import (
 	"github.com/openai/openai-go/option"
 )
 
-func TestBetaThreadRunStepGet(t *testing.T) {
+func TestBetaThreadRunStepGetWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -30,6 +30,9 @@ func TestBetaThreadRunStepGet(t *testing.T) {
 		"thread_id",
 		"run_id",
 		"step_id",
+		openai.BetaThreadRunStepGetParams{
+			Include: openai.F([]openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent}),
+		},
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -57,10 +60,11 @@ func TestBetaThreadRunStepListWithOptionalParams(t *testing.T) {
 		"thread_id",
 		"run_id",
 		openai.BetaThreadRunStepListParams{
-			After:  openai.F("after"),
-			Before: openai.F("before"),
-			Limit:  openai.F(int64(0)),
-			Order:  openai.F(openai.BetaThreadRunStepListParamsOrderAsc),
+			After:   openai.F("after"),
+			Before:  openai.F("before"),
+			Include: openai.F([]openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent}),
+			Limit:   openai.F(int64(0)),
+			Order:   openai.F(openai.BetaThreadRunStepListParamsOrderAsc),
 		},
 	)
 	if err != nil {

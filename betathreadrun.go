@@ -40,19 +40,19 @@ func NewBetaThreadRunService(opts ...option.RequestOption) (r *BetaThreadRunServ
 }
 
 // Create a run.
-func (r *BetaThreadRunService) New(ctx context.Context, threadID string, body BetaThreadRunNewParams, opts ...option.RequestOption) (res *Run, err error) {
+func (r *BetaThreadRunService) New(ctx context.Context, threadID string, params BetaThreadRunNewParams, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
 	}
 	path := fmt.Sprintf("threads/%s/runs", threadID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return
 }
 
 // Create a run.
-func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string, body BetaThreadRunNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[AssistantStreamEvent]) {
+func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string, params BetaThreadRunNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[AssistantStreamEvent]) {
 	var (
 		raw *http.Response
 		err error
@@ -64,7 +64,7 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 		return
 	}
 	path := fmt.Sprintf("threads/%s/runs", threadID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &raw, opts...)
 	return ssestream.NewStream[AssistantStreamEvent](ssestream.NewDecoder(raw), err)
 }
 
@@ -660,6 +660,14 @@ type BetaThreadRunNewParams struct {
 	// [assistant](https://platform.openai.com/docs/api-reference/assistants) to use to
 	// execute this run.
 	AssistantID param.Field[string] `json:"assistant_id,required"`
+	// A list of additional fields to include in the response. Currently the only
+	// supported value is `step_details.tool_calls[*].file_search.results[*].content`
+	// to fetch the file search result content.
+	//
+	// See the
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+	// for more information.
+	Include param.Field[[]RunStepInclude] `query:"include"`
 	// Appends additional instructions at the end of the instructions for the run. This
 	// is useful for modifying the behavior on a per-run basis without overriding other
 	// instructions.
@@ -724,6 +732,14 @@ type BetaThreadRunNewParams struct {
 
 func (r BetaThreadRunNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// URLQuery serializes [BetaThreadRunNewParams]'s query parameters as `url.Values`.
+func (r BetaThreadRunNewParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
 }
 
 type BetaThreadRunNewParamsAdditionalMessage struct {
