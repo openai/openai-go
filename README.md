@@ -68,96 +68,79 @@ func main() {
 <summary>Conversations</summary>
 
 ```go
-messages := openai.F([]openai.ChatCompletionMessageParamUnion{
-	openai.UserMessage("What kind of houseplant is easy to take care of?"),
-})
-
-completion, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-	Messages: messages,
+param := openai.ChatCompletionNewParams{
+	Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		openai.UserMessage("What kind of houseplant is easy to take care of?"),
+  }),
 	Seed:     openai.Int(1),
 	Model:    openai.F(openai.ChatModelGPT4o),
-})
+}
 
-messages.Value = append(messages.Value, completion.Choices[0].Message)
-messages.Value = append(messages.Value, openai.UserMessage("How big are they?"))
+completion, err := client.Chat.Completions.New(ctx, params)
 
-completion, err = client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-	Messages: messages,
-	Seed:     openai.Int(1),
-	Model:    openai.F(openai.ChatModelGPT4o),
-})
+param.Messages.Value = append(param.Messages.Value, completion.Choices[0].Message)
+param.Messages.Value = append(param.Messages.Value, openai.UserMessage("How big are those?"))
+
+completion, err = client.Chat.Completions.New(ctx, param)
 ```
 </details>
 
 <details>
 <summary>Streaming responses</summary>
-	
+
 ```go
-package main
+question := "Write an epic"
 
-import (
-	"context"
+stream := client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
+	Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		openai.UserMessage(question),
+	}),
+	Seed:  openai.Int(0),
+	Model: openai.F(openai.ChatModelGPT4o),
+})
 
-	"github.com/openai/openai-go"
-)
+// optionally, an accumulator helper can be used
+acc := openai.ChatCompletionAccumulator{}
 
-func main() {
-	client := openai.NewClient()
-	ctx := context.Background()
+for stream.Next() {
+	chunk := stream.Current()
+	acc.AddChunk(chunk)
 
-	question := "Write a modern epic"
-
-	stream := client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage(question),
-		}),
-		Seed:  openai.Int(0),
-		Model: openai.F(openai.ChatModelGPT4o),
-	})
-
-	// optionally, an accumulator helper can be used
-	acc := openai.ChatCompletionAccumulator{}
-
-	for stream.Next() {
-		chunk := stream.Current()
-		acc.AddChunk(chunk)
-
-		if content, ok := acc.JustFinishedContent(); ok {
-			println("Content stream finished:", content)
-			println()
-		}
-
-		// if using tool calls
-		if tool, ok := acc.JustFinishedToolCall(); ok {
-			println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
-			println()
-		}
-
-		if refusal, ok := acc.JustFinishedRefusal(); ok {
-			println("Refusal stream finished:", refusal)
-			println()
-		}
-
-		// it's best to use chunks after handling JustFinished events
-		if len(chunk.Choices) > 0 {
-			println(chunk.Choices[0].Delta.Content)
-		}
+	if content, ok := acc.JustFinishedContent(); ok {
+		println("Content stream finished:", content)
+		println()
 	}
 
-	if err := stream.Err(); err != nil {
-		panic(err)
+	// if using tool calls
+	if tool, ok := acc.JustFinishedToolCall(); ok {
+		println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
+		println()
 	}
 
-	// After the stream is finished, acc can be used like a ChatCompletion
-	_ = acc.Choices[0].Message.Content
+	if refusal, ok := acc.JustFinishedRefusal(); ok {
+		println("Refusal stream finished:", refusal)
+		println()
+	}
+
+	// it's best to use chunks after handling JustFinished events
+	if len(chunk.Choices) > 0 {
+		println(chunk.Choices[0].Delta.Content)
+	}
 }
+
+if err := stream.Err(); err != nil {
+	panic(err)
+}
+
+// After the stream is finished, acc can be used like a ChatCompletion
+_ = acc.Choices[0].Message.Content
 ```
 
 </details>
 
 <details>
 <summary>Tool calling</summary>
-	
+
 ```go
 package main
 
@@ -208,9 +191,6 @@ func main() {
 
 	// Make initial chat completion request
 	completion, err := client.Chat.Completions.New(ctx, params)
-	if err != nil {
-		panic(err)
-	}
 
 	toolCalls := completion.Choices[0].Message.ToolCalls
 
@@ -238,9 +218,6 @@ func main() {
 	}
 
 	completion, err = client.Chat.Completions.New(ctx, params)
-	if err != nil {
-		panic(err)
-	}
 
 	println(completion.Choices[0].Message.Content)
 }
@@ -250,7 +227,7 @@ func main() {
 
 <details>
 <summary>Structured outputs</summary>
-	
+
 ```go
 package main
 
@@ -277,8 +254,6 @@ type Origin struct {
 }
 
 func GenerateSchema[T any]() interface{} {
-	// Structured Outputs uses a subset of JSON schema
-	// These flags are necessary to comply with the subset
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
 		DoNotReference:            true,
@@ -297,9 +272,6 @@ func main() {
 
 	question := "What computer ran the first neural network?"
 
-	print("> ")
-	println(question)
-
 	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
 		Name:        openai.F("biography"),
 		Description: openai.F("Notable information about a person"),
@@ -307,7 +279,6 @@ func main() {
 		Strict:      openai.Bool(true),
 	}
 
-	// Query the Chat Completions API
 	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(question),
@@ -318,22 +289,14 @@ func main() {
 				JSONSchema: openai.F(schemaParam),
 			},
 		),
-		// Only certain models can perform structured outputs
+		// only certain models can perform structured outputs
 		Model: openai.F(openai.ChatModelGPT4o2024_08_06),
 	})
 
-	if err != nil {
-		panic(err.Error())
-	}
-
-	// The model responds with a JSON string, so parse it into a struct
 	historicalComputer := HistoricalComputer{}
+	// extract into a well-typed struct
 	err = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &historicalComputer)
-	if err != nil {
-		panic(err.Error())
-	}
 
-	// Use the model's structured response with a native Go struct
 	fmt.Printf("Name: %v\n", historicalComputer.Name)
 	fmt.Printf("Year: %v\n", historicalComputer.Origin.YearBuilt)
 	fmt.Printf("Org: %v\n", historicalComputer.Origin.Organization)
