@@ -64,6 +64,251 @@ func main() {
 }
 
 ```
+<details>
+<summary>Conversations</summary>
+
+```go
+param := openai.ChatCompletionNewParams{
+	Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		openai.UserMessage("What kind of houseplant is easy to take care of?"),
+  }),
+	Seed:     openai.Int(1),
+	Model:    openai.F(openai.ChatModelGPT4o),
+}
+
+completion, err := client.Chat.Completions.New(ctx, params)
+
+param.Messages.Value = append(param.Messages.Value, completion.Choices[0].Message)
+param.Messages.Value = append(param.Messages.Value, openai.UserMessage("How big are those?"))
+
+completion, err = client.Chat.Completions.New(ctx, param)
+```
+</details>
+
+<details>
+<summary>Streaming responses</summary>
+
+```go
+question := "Write an epic"
+
+stream := client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
+	Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		openai.UserMessage(question),
+	}),
+	Seed:  openai.Int(0),
+	Model: openai.F(openai.ChatModelGPT4o),
+})
+
+// optionally, an accumulator helper can be used
+acc := openai.ChatCompletionAccumulator{}
+
+for stream.Next() {
+	chunk := stream.Current()
+	acc.AddChunk(chunk)
+
+	if content, ok := acc.JustFinishedContent(); ok {
+		println("Content stream finished:", content)
+		println()
+	}
+
+	// if using tool calls
+	if tool, ok := acc.JustFinishedToolCall(); ok {
+		println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
+		println()
+	}
+
+	if refusal, ok := acc.JustFinishedRefusal(); ok {
+		println("Refusal stream finished:", refusal)
+		println()
+	}
+
+	// it's best to use chunks after handling JustFinished events
+	if len(chunk.Choices) > 0 {
+		println(chunk.Choices[0].Delta.Content)
+	}
+}
+
+if err := stream.Err(); err != nil {
+	panic(err)
+}
+
+// After the stream is finished, acc can be used like a ChatCompletion
+_ = acc.Choices[0].Message.Content
+```
+
+</details>
+
+<details>
+<summary>Tool calling</summary>
+
+```go
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/openai/openai-go"
+)
+
+// Mock function to simulate weather data retrieval
+func getWeather(location string) string {
+	// In a real implementation, this function would call a weather API
+	return "Sunny, 25°C"
+}
+
+func main() {
+	client := openai.NewClient()
+	ctx := context.Background()
+
+	question := "What is the weather in New York City?"
+
+	params := openai.ChatCompletionNewParams{
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage(question),
+		}),
+		Tools: openai.F([]openai.ChatCompletionToolParam{
+			{
+				Type: openai.F(openai.ChatCompletionToolTypeFunction),
+				Function: openai.F(openai.FunctionDefinitionParam{
+					Name:        openai.String("get_weather"),
+					Description: openai.String("Get weather at the given location"),
+					Parameters: openai.F(openai.FunctionParameters{
+						"type": "object",
+						"properties": map[string]interface{}{
+							"location": map[string]string{
+								"type": "string",
+							},
+						},
+						"required": []string{"location"},
+					}),
+				}),
+			},
+		}),
+		Model: openai.F(openai.ChatModelGPT4o),
+	}
+
+	// Make initial chat completion request
+	completion, err := client.Chat.Completions.New(ctx, params)
+
+	toolCalls := completion.Choices[0].Message.ToolCalls
+
+	if len(toolCalls) == 0 {
+		fmt.Printf("No function call")
+		return
+	}
+
+	// If there is a was a function call, continue the conversation
+	params.Messages.Value = append(params.Messages.Value, completion.Choices[0].Message)
+	for _, toolCall := range toolCalls {
+		if toolCall.Function.Name == "get_weather" {
+			// Extract the location from the function call arguments
+			var args map[string]interface{}
+			if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args); err != nil {
+				panic(err)
+			}
+			location := args["location"].(string)
+
+			// Simulate getting weather data
+			weatherData := getWeather(location)
+
+			params.Messages.Value = append(params.Messages.Value, openai.ToolMessage(toolCall.ID, weatherData))
+		}
+	}
+
+	completion, err = client.Chat.Completions.New(ctx, params)
+
+	println(completion.Choices[0].Message.Content)
+}
+```
+
+</details>
+
+<details>
+<summary>Structured outputs</summary>
+
+```go
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/invopop/jsonschema"
+	"github.com/openai/openai-go"
+)
+
+// A struct that will be converted to a Structured Outputs response schema
+type HistoricalComputer struct {
+	Origin       Origin   `json:"origin" jsonschema_description:"The origin of the computer"`
+	Name         string   `json:"full_name" jsonschema_description:"The name of the device model"`
+	Legacy       string   `json:"legacy" jsonschema:"enum=positive,enum=neutral,enum=negative" jsonschema_description:"Its influence on the field of computing"`
+	NotableFacts []string `json:"notable_facts" jsonschema_description:"A few key facts about the computer"`
+}
+
+type Origin struct {
+	YearBuilt    int64  `json:"year_of_construction" jsonschema_description:"The year it was made"`
+	Organization string `json:"organization" jsonschema_description:"The organization that was in charge of its development"`
+}
+
+func GenerateSchema[T any]() interface{} {
+	reflector := jsonschema.Reflector{
+		AllowAdditionalProperties: false,
+		DoNotReference:            true,
+	}
+	var v T
+	schema := reflector.Reflect(v)
+	return schema
+}
+
+// Generate the JSON schema at initialization time
+var HistoricalComputerResponseSchema = GenerateSchema[HistoricalComputer]()
+
+func main() {
+	client := openai.NewClient()
+	ctx := context.Background()
+
+	question := "What computer ran the first neural network?"
+
+	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
+		Name:        openai.F("biography"),
+		Description: openai.F("Notable information about a person"),
+		Schema:      openai.F(HistoricalComputerResponseSchema),
+		Strict:      openai.Bool(true),
+	}
+
+	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage(question),
+		}),
+		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](
+			openai.ResponseFormatJSONSchemaParam{
+				Type:       openai.F(openai.ResponseFormatJSONSchemaTypeJSONSchema),
+				JSONSchema: openai.F(schemaParam),
+			},
+		),
+		// only certain models can perform structured outputs
+		Model: openai.F(openai.ChatModelGPT4o2024_08_06),
+	})
+
+	historicalComputer := HistoricalComputer{}
+	// extract into a well-typed struct
+	err = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &historicalComputer)
+
+	fmt.Printf("Name: %v\n", historicalComputer.Name)
+	fmt.Printf("Year: %v\n", historicalComputer.Origin.YearBuilt)
+	fmt.Printf("Org: %v\n", historicalComputer.Origin.Organization)
+	fmt.Printf("Legacy: %v\n", historicalComputer.Legacy)
+	fmt.Printf("Facts:\n")
+	for i, fact := range historicalComputer.NotableFacts {
+		fmt.Printf("%v. %v\n", i+1, fact)
+	}
+}
+```
+
+</details>
 
 ### Request fields
 
