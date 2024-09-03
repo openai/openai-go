@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.0-alpha.14 (2024-09-03)
+
+Full Changelog: [v0.1.0-alpha.13...v0.1.0-alpha.14](https://github.com/openai/openai-go/compare/v0.1.0-alpha.13...v0.1.0-alpha.14)
+
+### Features
+
+* **examples/structure-outputs:** created an example for using structured outputs ([7d1e71e](https://github.com/openai/openai-go/commit/7d1e71e72b8c55d5b7228b72d967e4cae8165280))
+* **stream-accumulators:** added streaming accumulator helpers and example ([29e80e7](https://github.com/openai/openai-go/commit/29e80e7dfb4571e93e616981ddc950e3058b6203))
+
+
+### Bug Fixes
+
+* **examples/fine-tuning:** used an old constant name ([#34](https://github.com/openai/openai-go/issues/34)) ([5d9ec26](https://github.com/openai/openai-go/commit/5d9ec26407b15c7effceb999bba3dfbeefc0adf2))
+
+
+### Documentation
+
+* **readme:** added some examples to readme ([#39](https://github.com/openai/openai-go/issues/39)) ([2dbfa62](https://github.com/openai/openai-go/commit/2dbfa62ffc89ead88e0fed586684a6b757836752))
+
 ## 0.1.0-alpha.13 (2024-08-29)
 
 Full Changelog: [v0.1.0-alpha.12...v0.1.0-alpha.13](https://github.com/openai/openai-go/compare/v0.1.0-alpha.12...v0.1.0-alpha.13)
