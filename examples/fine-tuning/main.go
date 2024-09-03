@@ -19,7 +19,7 @@ func main() {
 	data, err := os.Open("./fine-tuning-data.jsonl")
 	file, err := client.Files.New(ctx, openai.FileNewParams{
 		File:    openai.F[io.Reader](data),
-		Purpose: openai.F(openai.FileNewParamsPurposeFineTune),
+		Purpose: openai.F(openai.FilePurposeFineTune),
 	})
 	if err != nil {
 		panic(err)
