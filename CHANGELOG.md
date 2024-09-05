@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.15 (2024-09-05)
+
+Full Changelog: [v0.1.0-alpha.14...v0.1.0-alpha.15](https://github.com/openai/openai-go/compare/v0.1.0-alpha.14...v0.1.0-alpha.15)
+
+### Features
+
+* **vector store:** improve chunking strategy type names ([#40](https://github.com/openai/openai-go/issues/40)) ([4932cca](https://github.com/openai/openai-go/commit/4932ccac47b4b7976366244aab5810fa44292350))
+
 ## 0.1.0-alpha.14 (2024-09-03)
 
 Full Changelog: [v0.1.0-alpha.13...v0.1.0-alpha.14](https://github.com/openai/openai-go/compare/v0.1.0-alpha.13...v0.1.0-alpha.14)
