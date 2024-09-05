@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -15,6 +16,7 @@ import (
 	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
+	"github.com/tidwall/gjson"
 )
 
 // BetaVectorStoreService contains methods and other services that help with
@@ -105,6 +107,279 @@ func (r *BetaVectorStoreService) Delete(ctx context.Context, vectorStoreID strin
 	path := fmt.Sprintf("vector_stores/%s", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return
+}
+
+// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
+// `800` and `chunk_overlap_tokens` of `400`.
+type AutoFileChunkingStrategyParam struct {
+	// Always `auto`.
+	Type param.Field[AutoFileChunkingStrategyParamType] `json:"type,required"`
+}
+
+func (r AutoFileChunkingStrategyParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r AutoFileChunkingStrategyParam) implementsFileChunkingStrategyParamUnion() {}
+
+// Always `auto`.
+type AutoFileChunkingStrategyParamType string
+
+const (
+	AutoFileChunkingStrategyParamTypeAuto AutoFileChunkingStrategyParamType = "auto"
+)
+
+func (r AutoFileChunkingStrategyParamType) IsKnown() bool {
+	switch r {
+	case AutoFileChunkingStrategyParamTypeAuto:
+		return true
+	}
+	return false
+}
+
+// The strategy used to chunk the file.
+type FileChunkingStrategy struct {
+	// Always `static`.
+	Type   FileChunkingStrategyType   `json:"type,required"`
+	Static StaticFileChunkingStrategy `json:"static"`
+	JSON   fileChunkingStrategyJSON   `json:"-"`
+	union  FileChunkingStrategyUnion
+}
+
+// fileChunkingStrategyJSON contains the JSON metadata for the struct
+// [FileChunkingStrategy]
+type fileChunkingStrategyJSON struct {
+	Type        apijson.Field
+	Static      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r fileChunkingStrategyJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *FileChunkingStrategy) UnmarshalJSON(data []byte) (err error) {
+	*r = FileChunkingStrategy{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [FileChunkingStrategyUnion] interface which you can cast to
+// the specific types for more type safety.
+//
+// Possible runtime types of the union are [StaticFileChunkingStrategyObject],
+// [OtherFileChunkingStrategyObject].
+func (r FileChunkingStrategy) AsUnion() FileChunkingStrategyUnion {
+	return r.union
+}
+
+// The strategy used to chunk the file.
+//
+// Union satisfied by [StaticFileChunkingStrategyObject] or
+// [OtherFileChunkingStrategyObject].
+type FileChunkingStrategyUnion interface {
+	implementsFileChunkingStrategy()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*FileChunkingStrategyUnion)(nil)).Elem(),
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(StaticFileChunkingStrategyObject{}),
+			DiscriminatorValue: "static",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(OtherFileChunkingStrategyObject{}),
+			DiscriminatorValue: "other",
+		},
+	)
+}
+
+// Always `static`.
+type FileChunkingStrategyType string
+
+const (
+	FileChunkingStrategyTypeStatic FileChunkingStrategyType = "static"
+	FileChunkingStrategyTypeOther  FileChunkingStrategyType = "other"
+)
+
+func (r FileChunkingStrategyType) IsKnown() bool {
+	switch r {
+	case FileChunkingStrategyTypeStatic, FileChunkingStrategyTypeOther:
+		return true
+	}
+	return false
+}
+
+// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
+// strategy. Only applicable if `file_ids` is non-empty.
+type FileChunkingStrategyParam struct {
+	// Always `auto`.
+	Type   param.Field[FileChunkingStrategyParamType]   `json:"type,required"`
+	Static param.Field[StaticFileChunkingStrategyParam] `json:"static"`
+}
+
+func (r FileChunkingStrategyParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r FileChunkingStrategyParam) implementsFileChunkingStrategyParamUnion() {}
+
+// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
+// strategy. Only applicable if `file_ids` is non-empty.
+//
+// Satisfied by [AutoFileChunkingStrategyParam], [StaticFileChunkingStrategyParam],
+// [FileChunkingStrategyParam].
+type FileChunkingStrategyParamUnion interface {
+	implementsFileChunkingStrategyParamUnion()
+}
+
+// Always `auto`.
+type FileChunkingStrategyParamType string
+
+const (
+	FileChunkingStrategyParamTypeAuto   FileChunkingStrategyParamType = "auto"
+	FileChunkingStrategyParamTypeStatic FileChunkingStrategyParamType = "static"
+)
+
+func (r FileChunkingStrategyParamType) IsKnown() bool {
+	switch r {
+	case FileChunkingStrategyParamTypeAuto, FileChunkingStrategyParamTypeStatic:
+		return true
+	}
+	return false
+}
+
+// This is returned when the chunking strategy is unknown. Typically, this is
+// because the file was indexed before the `chunking_strategy` concept was
+// introduced in the API.
+type OtherFileChunkingStrategyObject struct {
+	// Always `other`.
+	Type OtherFileChunkingStrategyObjectType `json:"type,required"`
+	JSON otherFileChunkingStrategyObjectJSON `json:"-"`
+}
+
+// otherFileChunkingStrategyObjectJSON contains the JSON metadata for the struct
+// [OtherFileChunkingStrategyObject]
+type otherFileChunkingStrategyObjectJSON struct {
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *OtherFileChunkingStrategyObject) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r otherFileChunkingStrategyObjectJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r OtherFileChunkingStrategyObject) implementsFileChunkingStrategy() {}
+
+// Always `other`.
+type OtherFileChunkingStrategyObjectType string
+
+const (
+	OtherFileChunkingStrategyObjectTypeOther OtherFileChunkingStrategyObjectType = "other"
+)
+
+func (r OtherFileChunkingStrategyObjectType) IsKnown() bool {
+	switch r {
+	case OtherFileChunkingStrategyObjectTypeOther:
+		return true
+	}
+	return false
+}
+
+type StaticFileChunkingStrategy struct {
+	// The number of tokens that overlap between chunks. The default value is `400`.
+	//
+	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
+	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens,required"`
+	// The maximum number of tokens in each chunk. The default value is `800`. The
+	// minimum value is `100` and the maximum value is `4096`.
+	MaxChunkSizeTokens int64                          `json:"max_chunk_size_tokens,required"`
+	JSON               staticFileChunkingStrategyJSON `json:"-"`
+}
+
+// staticFileChunkingStrategyJSON contains the JSON metadata for the struct
+// [StaticFileChunkingStrategy]
+type staticFileChunkingStrategyJSON struct {
+	ChunkOverlapTokens apijson.Field
+	MaxChunkSizeTokens apijson.Field
+	raw                string
+	ExtraFields        map[string]apijson.Field
+}
+
+func (r *StaticFileChunkingStrategy) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r staticFileChunkingStrategyJSON) RawJSON() string {
+	return r.raw
+}
+
+type StaticFileChunkingStrategyParam struct {
+	// The number of tokens that overlap between chunks. The default value is `400`.
+	//
+	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
+	ChunkOverlapTokens param.Field[int64] `json:"chunk_overlap_tokens,required"`
+	// The maximum number of tokens in each chunk. The default value is `800`. The
+	// minimum value is `100` and the maximum value is `4096`.
+	MaxChunkSizeTokens param.Field[int64] `json:"max_chunk_size_tokens,required"`
+}
+
+func (r StaticFileChunkingStrategyParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type StaticFileChunkingStrategyObject struct {
+	Static StaticFileChunkingStrategy `json:"static,required"`
+	// Always `static`.
+	Type StaticFileChunkingStrategyObjectType `json:"type,required"`
+	JSON staticFileChunkingStrategyObjectJSON `json:"-"`
+}
+
+// staticFileChunkingStrategyObjectJSON contains the JSON metadata for the struct
+// [StaticFileChunkingStrategyObject]
+type staticFileChunkingStrategyObjectJSON struct {
+	Static      apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *StaticFileChunkingStrategyObject) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r staticFileChunkingStrategyObjectJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r StaticFileChunkingStrategyObject) implementsFileChunkingStrategy() {}
+
+// Always `static`.
+type StaticFileChunkingStrategyObjectType string
+
+const (
+	StaticFileChunkingStrategyObjectTypeStatic StaticFileChunkingStrategyObjectType = "static"
+)
+
+func (r StaticFileChunkingStrategyObjectType) IsKnown() bool {
+	switch r {
+	case StaticFileChunkingStrategyObjectTypeStatic:
+		return true
+	}
+	return false
 }
 
 // A vector store is a collection of processed files can be used by the
@@ -317,7 +592,7 @@ func (r VectorStoreDeletedObject) IsKnown() bool {
 type BetaVectorStoreNewParams struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
-	ChunkingStrategy param.Field[BetaVectorStoreNewParamsChunkingStrategyUnion] `json:"chunking_strategy"`
+	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
 	// The expiration policy for a vector store.
 	ExpiresAfter param.Field[BetaVectorStoreNewParamsExpiresAfter] `json:"expires_after"`
 	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
@@ -335,118 +610,6 @@ type BetaVectorStoreNewParams struct {
 
 func (r BetaVectorStoreNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy. Only applicable if `file_ids` is non-empty.
-type BetaVectorStoreNewParamsChunkingStrategy struct {
-	// Always `auto`.
-	Type   param.Field[BetaVectorStoreNewParamsChunkingStrategyType] `json:"type,required"`
-	Static param.Field[interface{}]                                  `json:"static,required"`
-}
-
-func (r BetaVectorStoreNewParamsChunkingStrategy) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaVectorStoreNewParamsChunkingStrategy) implementsBetaVectorStoreNewParamsChunkingStrategyUnion() {
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy. Only applicable if `file_ids` is non-empty.
-//
-// Satisfied by [BetaVectorStoreNewParamsChunkingStrategyAuto],
-// [BetaVectorStoreNewParamsChunkingStrategyStatic],
-// [BetaVectorStoreNewParamsChunkingStrategy].
-type BetaVectorStoreNewParamsChunkingStrategyUnion interface {
-	implementsBetaVectorStoreNewParamsChunkingStrategyUnion()
-}
-
-// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
-// `800` and `chunk_overlap_tokens` of `400`.
-type BetaVectorStoreNewParamsChunkingStrategyAuto struct {
-	// Always `auto`.
-	Type param.Field[BetaVectorStoreNewParamsChunkingStrategyAutoType] `json:"type,required"`
-}
-
-func (r BetaVectorStoreNewParamsChunkingStrategyAuto) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaVectorStoreNewParamsChunkingStrategyAuto) implementsBetaVectorStoreNewParamsChunkingStrategyUnion() {
-}
-
-// Always `auto`.
-type BetaVectorStoreNewParamsChunkingStrategyAutoType string
-
-const (
-	BetaVectorStoreNewParamsChunkingStrategyAutoTypeAuto BetaVectorStoreNewParamsChunkingStrategyAutoType = "auto"
-)
-
-func (r BetaVectorStoreNewParamsChunkingStrategyAutoType) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreNewParamsChunkingStrategyAutoTypeAuto:
-		return true
-	}
-	return false
-}
-
-type BetaVectorStoreNewParamsChunkingStrategyStatic struct {
-	Static param.Field[BetaVectorStoreNewParamsChunkingStrategyStaticStatic] `json:"static,required"`
-	// Always `static`.
-	Type param.Field[BetaVectorStoreNewParamsChunkingStrategyStaticType] `json:"type,required"`
-}
-
-func (r BetaVectorStoreNewParamsChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaVectorStoreNewParamsChunkingStrategyStatic) implementsBetaVectorStoreNewParamsChunkingStrategyUnion() {
-}
-
-type BetaVectorStoreNewParamsChunkingStrategyStaticStatic struct {
-	// The number of tokens that overlap between chunks. The default value is `400`.
-	//
-	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens param.Field[int64] `json:"chunk_overlap_tokens,required"`
-	// The maximum number of tokens in each chunk. The default value is `800`. The
-	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens param.Field[int64] `json:"max_chunk_size_tokens,required"`
-}
-
-func (r BetaVectorStoreNewParamsChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// Always `static`.
-type BetaVectorStoreNewParamsChunkingStrategyStaticType string
-
-const (
-	BetaVectorStoreNewParamsChunkingStrategyStaticTypeStatic BetaVectorStoreNewParamsChunkingStrategyStaticType = "static"
-)
-
-func (r BetaVectorStoreNewParamsChunkingStrategyStaticType) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreNewParamsChunkingStrategyStaticTypeStatic:
-		return true
-	}
-	return false
-}
-
-// Always `auto`.
-type BetaVectorStoreNewParamsChunkingStrategyType string
-
-const (
-	BetaVectorStoreNewParamsChunkingStrategyTypeAuto   BetaVectorStoreNewParamsChunkingStrategyType = "auto"
-	BetaVectorStoreNewParamsChunkingStrategyTypeStatic BetaVectorStoreNewParamsChunkingStrategyType = "static"
-)
-
-func (r BetaVectorStoreNewParamsChunkingStrategyType) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreNewParamsChunkingStrategyTypeAuto, BetaVectorStoreNewParamsChunkingStrategyTypeStatic:
-		return true
-	}
-	return false
 }
 
 // The expiration policy for a vector store.

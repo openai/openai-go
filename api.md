@@ -207,8 +207,19 @@ Methods:
 
 ## VectorStores
 
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AutoFileChunkingStrategyParam">AutoFileChunkingStrategyParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileChunkingStrategyParamUnion">FileChunkingStrategyParamUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#StaticFileChunkingStrategyParam">StaticFileChunkingStrategyParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#StaticFileChunkingStrategyParam">StaticFileChunkingStrategyParam</a>
+
 Response Types:
 
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileChunkingStrategy">FileChunkingStrategy</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#OtherFileChunkingStrategyObject">OtherFileChunkingStrategyObject</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#StaticFileChunkingStrategy">StaticFileChunkingStrategy</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#StaticFileChunkingStrategyObject">StaticFileChunkingStrategyObject</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#VectorStore">VectorStore</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#VectorStoreDeleted">VectorStoreDeleted</a>
 

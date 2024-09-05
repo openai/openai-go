@@ -39,8 +39,8 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 			FileSearch: openai.F(openai.BetaAssistantNewParamsToolResourcesFileSearch{
 				VectorStoreIDs: openai.F([]string{"string"}),
 				VectorStores: openai.F([]openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStore{{
-					ChunkingStrategy: openai.F[openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion](openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto{
-						Type: openai.F(openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto),
+					ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
+						Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
 					}),
 					FileIDs:  openai.F([]string{"string", "string", "string"}),
 					Metadata: openai.F[any](map[string]interface{}{}),

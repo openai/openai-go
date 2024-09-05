@@ -614,8 +614,8 @@ func (r BetaThreadNewParamsToolResourcesFileSearch) MarshalJSON() (data []byte, 
 
 type BetaThreadNewParamsToolResourcesFileSearchVectorStore struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-	// strategy.
-	ChunkingStrategy param.Field[BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion] `json:"chunking_strategy"`
+	// strategy. Only applicable if `file_ids` is non-empty.
+	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to
 	// add to the vector store. There can be a maximum of 10000 files in a vector
 	// store.
@@ -629,119 +629,6 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStore struct {
 
 func (r BetaThreadNewParamsToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy.
-type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy struct {
-	// Always `auto`.
-	Type   param.Field[BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType] `json:"type,required"`
-	Static param.Field[interface{}]                                                                `json:"static,required"`
-}
-
-func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy) implementsBetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy.
-//
-// Satisfied by
-// [BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto],
-// [BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic],
-// [BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy].
-type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion interface {
-	implementsBetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion()
-}
-
-// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
-// `800` and `chunk_overlap_tokens` of `400`.
-type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto struct {
-	// Always `auto`.
-	Type param.Field[BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType] `json:"type,required"`
-}
-
-func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto) implementsBetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
-}
-
-// Always `auto`.
-type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType string
-
-const (
-	BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType = "auto"
-)
-
-func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType) IsKnown() bool {
-	switch r {
-	case BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto:
-		return true
-	}
-	return false
-}
-
-type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic struct {
-	Static param.Field[BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic] `json:"static,required"`
-	// Always `static`.
-	Type param.Field[BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType] `json:"type,required"`
-}
-
-func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic) implementsBetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
-}
-
-type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic struct {
-	// The number of tokens that overlap between chunks. The default value is `400`.
-	//
-	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens param.Field[int64] `json:"chunk_overlap_tokens,required"`
-	// The maximum number of tokens in each chunk. The default value is `800`. The
-	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens param.Field[int64] `json:"max_chunk_size_tokens,required"`
-}
-
-func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// Always `static`.
-type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType string
-
-const (
-	BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType = "static"
-)
-
-func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType) IsKnown() bool {
-	switch r {
-	case BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic:
-		return true
-	}
-	return false
-}
-
-// Always `auto`.
-type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType string
-
-const (
-	BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto   BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType = "auto"
-	BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType = "static"
-)
-
-func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType) IsKnown() bool {
-	switch r {
-	case BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto, BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic:
-		return true
-	}
-	return false
 }
 
 type BetaThreadUpdateParams struct {
@@ -1052,8 +939,8 @@ func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearch) MarshalJSON() (d
 
 type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-	// strategy.
-	ChunkingStrategy param.Field[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion] `json:"chunking_strategy"`
+	// strategy. Only applicable if `file_ids` is non-empty.
+	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to
 	// add to the vector store. There can be a maximum of 10000 files in a vector
 	// store.
@@ -1067,119 +954,6 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore struct {
 
 func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy.
-type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategy struct {
-	// Always `auto`.
-	Type   param.Field[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyType] `json:"type,required"`
-	Static param.Field[interface{}]                                                                            `json:"static,required"`
-}
-
-func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategy) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategy) implementsBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy.
-//
-// Satisfied by
-// [BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAuto],
-// [BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStatic],
-// [BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategy].
-type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion interface {
-	implementsBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion()
-}
-
-// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
-// `800` and `chunk_overlap_tokens` of `400`.
-type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAuto struct {
-	// Always `auto`.
-	Type param.Field[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoType] `json:"type,required"`
-}
-
-func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAuto) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAuto) implementsBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
-}
-
-// Always `auto`.
-type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoType string
-
-const (
-	BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoType = "auto"
-)
-
-func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoType) IsKnown() bool {
-	switch r {
-	case BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto:
-		return true
-	}
-	return false
-}
-
-type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStatic struct {
-	Static param.Field[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic] `json:"static,required"`
-	// Always `static`.
-	Type param.Field[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticType] `json:"type,required"`
-}
-
-func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStatic) implementsBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
-}
-
-type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic struct {
-	// The number of tokens that overlap between chunks. The default value is `400`.
-	//
-	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens param.Field[int64] `json:"chunk_overlap_tokens,required"`
-	// The maximum number of tokens in each chunk. The default value is `800`. The
-	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens param.Field[int64] `json:"max_chunk_size_tokens,required"`
-}
-
-func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// Always `static`.
-type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticType string
-
-const (
-	BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticType = "static"
-)
-
-func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticType) IsKnown() bool {
-	switch r {
-	case BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic:
-		return true
-	}
-	return false
-}
-
-// Always `auto`.
-type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyType string
-
-const (
-	BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto   BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyType = "auto"
-	BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyType = "static"
-)
-
-func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyType) IsKnown() bool {
-	switch r {
-	case BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto, BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic:
-		return true
-	}
-	return false
 }
 
 // A set of resources that are used by the assistant's tools. The resources are
