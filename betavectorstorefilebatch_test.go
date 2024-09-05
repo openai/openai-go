@@ -30,8 +30,8 @@ func TestBetaVectorStoreFileBatchNewWithOptionalParams(t *testing.T) {
 		"vs_abc123",
 		openai.BetaVectorStoreFileBatchNewParams{
 			FileIDs: openai.F([]string{"string"}),
-			ChunkingStrategy: openai.F[openai.BetaVectorStoreFileBatchNewParamsChunkingStrategyUnion](openai.BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParam{
-				Type: openai.F(openai.BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParamTypeAuto),
+			ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
+				Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
 			}),
 		},
 	)
