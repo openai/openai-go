@@ -131,8 +131,8 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 			FileSearch: openai.F(openai.BetaThreadNewParamsToolResourcesFileSearch{
 				VectorStoreIDs: openai.F([]string{"string"}),
 				VectorStores: openai.F([]openai.BetaThreadNewParamsToolResourcesFileSearchVectorStore{{
-					ChunkingStrategy: openai.F[openai.BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion](openai.BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto{
-						Type: openai.F(openai.BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto),
+					ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
+						Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
 					}),
 					FileIDs:  openai.F([]string{"string", "string", "string"}),
 					Metadata: openai.F[any](map[string]interface{}{}),
@@ -356,8 +356,8 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 				FileSearch: openai.F(openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearch{
 					VectorStoreIDs: openai.F([]string{"string"}),
 					VectorStores: openai.F([]openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore{{
-						ChunkingStrategy: openai.F[openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion](openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAuto{
-							Type: openai.F(openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto),
+						ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
+							Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
 						}),
 						FileIDs:  openai.F([]string{"string", "string", "string"}),
 						Metadata: openai.F[any](map[string]interface{}{}),

@@ -26,8 +26,8 @@ func TestBetaVectorStoreNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.VectorStores.New(context.TODO(), openai.BetaVectorStoreNewParams{
-		ChunkingStrategy: openai.F[openai.BetaVectorStoreNewParamsChunkingStrategyUnion](openai.BetaVectorStoreNewParamsChunkingStrategyAuto{
-			Type: openai.F(openai.BetaVectorStoreNewParamsChunkingStrategyAutoTypeAuto),
+		ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
+			Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
 		}),
 		ExpiresAfter: openai.F(openai.BetaVectorStoreNewParamsExpiresAfter{
 			Anchor: openai.F(openai.BetaVectorStoreNewParamsExpiresAfterAnchorLastActiveAt),

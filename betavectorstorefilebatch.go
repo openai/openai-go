@@ -228,125 +228,12 @@ type BetaVectorStoreFileBatchNewParams struct {
 	// files.
 	FileIDs param.Field[[]string] `json:"file_ids,required"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-	// strategy.
-	ChunkingStrategy param.Field[BetaVectorStoreFileBatchNewParamsChunkingStrategyUnion] `json:"chunking_strategy"`
+	// strategy. Only applicable if `file_ids` is non-empty.
+	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
 }
 
 func (r BetaVectorStoreFileBatchNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy.
-type BetaVectorStoreFileBatchNewParamsChunkingStrategy struct {
-	// Always `auto`.
-	Type   param.Field[BetaVectorStoreFileBatchNewParamsChunkingStrategyType] `json:"type,required"`
-	Static param.Field[interface{}]                                           `json:"static,required"`
-}
-
-func (r BetaVectorStoreFileBatchNewParamsChunkingStrategy) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaVectorStoreFileBatchNewParamsChunkingStrategy) implementsBetaVectorStoreFileBatchNewParamsChunkingStrategyUnion() {
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy.
-//
-// Satisfied by
-// [BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParam],
-// [BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParam],
-// [BetaVectorStoreFileBatchNewParamsChunkingStrategy].
-type BetaVectorStoreFileBatchNewParamsChunkingStrategyUnion interface {
-	implementsBetaVectorStoreFileBatchNewParamsChunkingStrategyUnion()
-}
-
-// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
-// `800` and `chunk_overlap_tokens` of `400`.
-type BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParam struct {
-	// Always `auto`.
-	Type param.Field[BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParamType] `json:"type,required"`
-}
-
-func (r BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParam) implementsBetaVectorStoreFileBatchNewParamsChunkingStrategyUnion() {
-}
-
-// Always `auto`.
-type BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParamType string
-
-const (
-	BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParamTypeAuto BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParamType = "auto"
-)
-
-func (r BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParamType) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreFileBatchNewParamsChunkingStrategyAutoChunkingStrategyRequestParamTypeAuto:
-		return true
-	}
-	return false
-}
-
-type BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParam struct {
-	Static param.Field[BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParamStatic] `json:"static,required"`
-	// Always `static`.
-	Type param.Field[BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParamType] `json:"type,required"`
-}
-
-func (r BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParam) implementsBetaVectorStoreFileBatchNewParamsChunkingStrategyUnion() {
-}
-
-type BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParamStatic struct {
-	// The number of tokens that overlap between chunks. The default value is `400`.
-	//
-	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens param.Field[int64] `json:"chunk_overlap_tokens,required"`
-	// The maximum number of tokens in each chunk. The default value is `800`. The
-	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens param.Field[int64] `json:"max_chunk_size_tokens,required"`
-}
-
-func (r BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParamStatic) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// Always `static`.
-type BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParamType string
-
-const (
-	BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParamTypeStatic BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParamType = "static"
-)
-
-func (r BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParamType) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreFileBatchNewParamsChunkingStrategyStaticChunkingStrategyRequestParamTypeStatic:
-		return true
-	}
-	return false
-}
-
-// Always `auto`.
-type BetaVectorStoreFileBatchNewParamsChunkingStrategyType string
-
-const (
-	BetaVectorStoreFileBatchNewParamsChunkingStrategyTypeAuto   BetaVectorStoreFileBatchNewParamsChunkingStrategyType = "auto"
-	BetaVectorStoreFileBatchNewParamsChunkingStrategyTypeStatic BetaVectorStoreFileBatchNewParamsChunkingStrategyType = "static"
-)
-
-func (r BetaVectorStoreFileBatchNewParamsChunkingStrategyType) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreFileBatchNewParamsChunkingStrategyTypeAuto, BetaVectorStoreFileBatchNewParamsChunkingStrategyTypeStatic:
-		return true
-	}
-	return false
 }
 
 type BetaVectorStoreFileBatchListFilesParams struct {

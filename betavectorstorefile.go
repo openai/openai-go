@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -16,7 +15,6 @@ import (
 	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
-	"github.com/tidwall/gjson"
 )
 
 // BetaVectorStoreFileService contains methods and other services that help with
@@ -138,8 +136,8 @@ type VectorStoreFile struct {
 	// attached to.
 	VectorStoreID string `json:"vector_store_id,required"`
 	// The strategy used to chunk the file.
-	ChunkingStrategy VectorStoreFileChunkingStrategy `json:"chunking_strategy"`
-	JSON             vectorStoreFileJSON             `json:"-"`
+	ChunkingStrategy FileChunkingStrategy `json:"chunking_strategy"`
+	JSON             vectorStoreFileJSON  `json:"-"`
 }
 
 // vectorStoreFileJSON contains the JSON metadata for the struct [VectorStoreFile]
@@ -243,200 +241,6 @@ func (r VectorStoreFileStatus) IsKnown() bool {
 	return false
 }
 
-// The strategy used to chunk the file.
-type VectorStoreFileChunkingStrategy struct {
-	// Always `static`.
-	Type VectorStoreFileChunkingStrategyType `json:"type,required"`
-	// This field can have the runtime type of
-	// [VectorStoreFileChunkingStrategyStaticStatic].
-	Static interface{}                         `json:"static,required"`
-	JSON   vectorStoreFileChunkingStrategyJSON `json:"-"`
-	union  VectorStoreFileChunkingStrategyUnion
-}
-
-// vectorStoreFileChunkingStrategyJSON contains the JSON metadata for the struct
-// [VectorStoreFileChunkingStrategy]
-type vectorStoreFileChunkingStrategyJSON struct {
-	Type        apijson.Field
-	Static      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r vectorStoreFileChunkingStrategyJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *VectorStoreFileChunkingStrategy) UnmarshalJSON(data []byte) (err error) {
-	*r = VectorStoreFileChunkingStrategy{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [VectorStoreFileChunkingStrategyUnion] interface which you can
-// cast to the specific types for more type safety.
-//
-// Possible runtime types of the union are [VectorStoreFileChunkingStrategyStatic],
-// [VectorStoreFileChunkingStrategyOther].
-func (r VectorStoreFileChunkingStrategy) AsUnion() VectorStoreFileChunkingStrategyUnion {
-	return r.union
-}
-
-// The strategy used to chunk the file.
-//
-// Union satisfied by [VectorStoreFileChunkingStrategyStatic] or
-// [VectorStoreFileChunkingStrategyOther].
-type VectorStoreFileChunkingStrategyUnion interface {
-	implementsVectorStoreFileChunkingStrategy()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*VectorStoreFileChunkingStrategyUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(VectorStoreFileChunkingStrategyStatic{}),
-			DiscriminatorValue: "static",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(VectorStoreFileChunkingStrategyOther{}),
-			DiscriminatorValue: "other",
-		},
-	)
-}
-
-type VectorStoreFileChunkingStrategyStatic struct {
-	Static VectorStoreFileChunkingStrategyStaticStatic `json:"static,required"`
-	// Always `static`.
-	Type VectorStoreFileChunkingStrategyStaticType `json:"type,required"`
-	JSON vectorStoreFileChunkingStrategyStaticJSON `json:"-"`
-}
-
-// vectorStoreFileChunkingStrategyStaticJSON contains the JSON metadata for the
-// struct [VectorStoreFileChunkingStrategyStatic]
-type vectorStoreFileChunkingStrategyStaticJSON struct {
-	Static      apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *VectorStoreFileChunkingStrategyStatic) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileChunkingStrategyStaticJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r VectorStoreFileChunkingStrategyStatic) implementsVectorStoreFileChunkingStrategy() {}
-
-type VectorStoreFileChunkingStrategyStaticStatic struct {
-	// The number of tokens that overlap between chunks. The default value is `400`.
-	//
-	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens,required"`
-	// The maximum number of tokens in each chunk. The default value is `800`. The
-	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens int64                                           `json:"max_chunk_size_tokens,required"`
-	JSON               vectorStoreFileChunkingStrategyStaticStaticJSON `json:"-"`
-}
-
-// vectorStoreFileChunkingStrategyStaticStaticJSON contains the JSON metadata for
-// the struct [VectorStoreFileChunkingStrategyStaticStatic]
-type vectorStoreFileChunkingStrategyStaticStaticJSON struct {
-	ChunkOverlapTokens apijson.Field
-	MaxChunkSizeTokens apijson.Field
-	raw                string
-	ExtraFields        map[string]apijson.Field
-}
-
-func (r *VectorStoreFileChunkingStrategyStaticStatic) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileChunkingStrategyStaticStaticJSON) RawJSON() string {
-	return r.raw
-}
-
-// Always `static`.
-type VectorStoreFileChunkingStrategyStaticType string
-
-const (
-	VectorStoreFileChunkingStrategyStaticTypeStatic VectorStoreFileChunkingStrategyStaticType = "static"
-)
-
-func (r VectorStoreFileChunkingStrategyStaticType) IsKnown() bool {
-	switch r {
-	case VectorStoreFileChunkingStrategyStaticTypeStatic:
-		return true
-	}
-	return false
-}
-
-// This is returned when the chunking strategy is unknown. Typically, this is
-// because the file was indexed before the `chunking_strategy` concept was
-// introduced in the API.
-type VectorStoreFileChunkingStrategyOther struct {
-	// Always `other`.
-	Type VectorStoreFileChunkingStrategyOtherType `json:"type,required"`
-	JSON vectorStoreFileChunkingStrategyOtherJSON `json:"-"`
-}
-
-// vectorStoreFileChunkingStrategyOtherJSON contains the JSON metadata for the
-// struct [VectorStoreFileChunkingStrategyOther]
-type vectorStoreFileChunkingStrategyOtherJSON struct {
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *VectorStoreFileChunkingStrategyOther) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileChunkingStrategyOtherJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r VectorStoreFileChunkingStrategyOther) implementsVectorStoreFileChunkingStrategy() {}
-
-// Always `other`.
-type VectorStoreFileChunkingStrategyOtherType string
-
-const (
-	VectorStoreFileChunkingStrategyOtherTypeOther VectorStoreFileChunkingStrategyOtherType = "other"
-)
-
-func (r VectorStoreFileChunkingStrategyOtherType) IsKnown() bool {
-	switch r {
-	case VectorStoreFileChunkingStrategyOtherTypeOther:
-		return true
-	}
-	return false
-}
-
-// Always `static`.
-type VectorStoreFileChunkingStrategyType string
-
-const (
-	VectorStoreFileChunkingStrategyTypeStatic VectorStoreFileChunkingStrategyType = "static"
-	VectorStoreFileChunkingStrategyTypeOther  VectorStoreFileChunkingStrategyType = "other"
-)
-
-func (r VectorStoreFileChunkingStrategyType) IsKnown() bool {
-	switch r {
-	case VectorStoreFileChunkingStrategyTypeStatic, VectorStoreFileChunkingStrategyTypeOther:
-		return true
-	}
-	return false
-}
-
 type VectorStoreFileDeleted struct {
 	ID      string                       `json:"id,required"`
 	Deleted bool                         `json:"deleted,required"`
@@ -482,125 +286,12 @@ type BetaVectorStoreFileNewParams struct {
 	// files.
 	FileID param.Field[string] `json:"file_id,required"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-	// strategy.
-	ChunkingStrategy param.Field[BetaVectorStoreFileNewParamsChunkingStrategyUnion] `json:"chunking_strategy"`
+	// strategy. Only applicable if `file_ids` is non-empty.
+	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
 }
 
 func (r BetaVectorStoreFileNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy.
-type BetaVectorStoreFileNewParamsChunkingStrategy struct {
-	// Always `auto`.
-	Type   param.Field[BetaVectorStoreFileNewParamsChunkingStrategyType] `json:"type,required"`
-	Static param.Field[interface{}]                                      `json:"static,required"`
-}
-
-func (r BetaVectorStoreFileNewParamsChunkingStrategy) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaVectorStoreFileNewParamsChunkingStrategy) implementsBetaVectorStoreFileNewParamsChunkingStrategyUnion() {
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy.
-//
-// Satisfied by
-// [BetaVectorStoreFileNewParamsChunkingStrategyAutoChunkingStrategyRequestParam],
-// [BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParam],
-// [BetaVectorStoreFileNewParamsChunkingStrategy].
-type BetaVectorStoreFileNewParamsChunkingStrategyUnion interface {
-	implementsBetaVectorStoreFileNewParamsChunkingStrategyUnion()
-}
-
-// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
-// `800` and `chunk_overlap_tokens` of `400`.
-type BetaVectorStoreFileNewParamsChunkingStrategyAutoChunkingStrategyRequestParam struct {
-	// Always `auto`.
-	Type param.Field[BetaVectorStoreFileNewParamsChunkingStrategyAutoChunkingStrategyRequestParamType] `json:"type,required"`
-}
-
-func (r BetaVectorStoreFileNewParamsChunkingStrategyAutoChunkingStrategyRequestParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaVectorStoreFileNewParamsChunkingStrategyAutoChunkingStrategyRequestParam) implementsBetaVectorStoreFileNewParamsChunkingStrategyUnion() {
-}
-
-// Always `auto`.
-type BetaVectorStoreFileNewParamsChunkingStrategyAutoChunkingStrategyRequestParamType string
-
-const (
-	BetaVectorStoreFileNewParamsChunkingStrategyAutoChunkingStrategyRequestParamTypeAuto BetaVectorStoreFileNewParamsChunkingStrategyAutoChunkingStrategyRequestParamType = "auto"
-)
-
-func (r BetaVectorStoreFileNewParamsChunkingStrategyAutoChunkingStrategyRequestParamType) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreFileNewParamsChunkingStrategyAutoChunkingStrategyRequestParamTypeAuto:
-		return true
-	}
-	return false
-}
-
-type BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParam struct {
-	Static param.Field[BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParamStatic] `json:"static,required"`
-	// Always `static`.
-	Type param.Field[BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParamType] `json:"type,required"`
-}
-
-func (r BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParam) implementsBetaVectorStoreFileNewParamsChunkingStrategyUnion() {
-}
-
-type BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParamStatic struct {
-	// The number of tokens that overlap between chunks. The default value is `400`.
-	//
-	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens param.Field[int64] `json:"chunk_overlap_tokens,required"`
-	// The maximum number of tokens in each chunk. The default value is `800`. The
-	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens param.Field[int64] `json:"max_chunk_size_tokens,required"`
-}
-
-func (r BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParamStatic) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// Always `static`.
-type BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParamType string
-
-const (
-	BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParamTypeStatic BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParamType = "static"
-)
-
-func (r BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParamType) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreFileNewParamsChunkingStrategyStaticChunkingStrategyRequestParamTypeStatic:
-		return true
-	}
-	return false
-}
-
-// Always `auto`.
-type BetaVectorStoreFileNewParamsChunkingStrategyType string
-
-const (
-	BetaVectorStoreFileNewParamsChunkingStrategyTypeAuto   BetaVectorStoreFileNewParamsChunkingStrategyType = "auto"
-	BetaVectorStoreFileNewParamsChunkingStrategyTypeStatic BetaVectorStoreFileNewParamsChunkingStrategyType = "static"
-)
-
-func (r BetaVectorStoreFileNewParamsChunkingStrategyType) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreFileNewParamsChunkingStrategyTypeAuto, BetaVectorStoreFileNewParamsChunkingStrategyTypeStatic:
-		return true
-	}
-	return false
 }
 
 type BetaVectorStoreFileListParams struct {
