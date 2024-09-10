@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.16 (2024-09-10)
+
+Full Changelog: [v0.1.0-alpha.15...v0.1.0-alpha.16](https://github.com/openai/openai-go/compare/v0.1.0-alpha.15...v0.1.0-alpha.16)
+
+### Bug Fixes
+
+* **requestconfig:** copy over more fields when cloning ([#44](https://github.com/openai/openai-go/issues/44)) ([6e02130](https://github.com/openai/openai-go/commit/6e02130c086c21e7f0895d18d6ed98fefb56f4d0))
+
 ## 0.1.0-alpha.15 (2024-09-05)
 
 Full Changelog: [v0.1.0-alpha.14...v0.1.0-alpha.15](https://github.com/openai/openai-go/compare/v0.1.0-alpha.14...v0.1.0-alpha.15)
