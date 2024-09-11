@@ -38,6 +38,8 @@ This library requires Go 1.18+.
 
 The full API of this library can be found in [api.md](api.md).
 
+See the [examples](./examples/) directory for complete and runnable examples.
+
 ```go
 package main
 
@@ -64,6 +66,8 @@ func main() {
 }
 
 ```
+
+
 <details>
 <summary>Conversations</summary>
 
@@ -81,8 +85,10 @@ completion, err := client.Chat.Completions.New(ctx, params)
 param.Messages.Value = append(param.Messages.Value, completion.Choices[0].Message)
 param.Messages.Value = append(param.Messages.Value, openai.UserMessage("How big are those?"))
 
+// continue the conversation
 completion, err = client.Chat.Completions.New(ctx, param)
 ```
+
 </details>
 
 <details>
@@ -108,18 +114,15 @@ for stream.Next() {
 
 	if content, ok := acc.JustFinishedContent(); ok {
 		println("Content stream finished:", content)
-		println()
 	}
 
 	// if using tool calls
 	if tool, ok := acc.JustFinishedToolCall(); ok {
 		println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
-		println()
 	}
 
 	if refusal, ok := acc.JustFinishedRefusal(); ok {
 		println("Refusal stream finished:", refusal)
-		println()
 	}
 
 	// it's best to use chunks after handling JustFinished events
@@ -136,92 +139,67 @@ if err := stream.Err(); err != nil {
 _ = acc.Choices[0].Message.Content
 ```
 
+> See the [full streaming and accumulation example](./examples/chat-completion-accumulating/main.go)
+
 </details>
 
 <details>
 <summary>Tool calling</summary>
 
 ```go
-package main
-
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-
-	"github.com/openai/openai-go"
+	// ...
 )
 
-// Mock function to simulate weather data retrieval
-func getWeather(location string) string {
-	// In a real implementation, this function would call a weather API
-	return "Sunny, 25°C"
-}
+// ...
 
-func main() {
-	client := openai.NewClient()
-	ctx := context.Background()
+question := "What is the weather in New York City?"
 
-	question := "What is the weather in New York City?"
-
-	params := openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage(question),
-		}),
-		Tools: openai.F([]openai.ChatCompletionToolParam{
-			{
-				Type: openai.F(openai.ChatCompletionToolTypeFunction),
-				Function: openai.F(openai.FunctionDefinitionParam{
-					Name:        openai.String("get_weather"),
-					Description: openai.String("Get weather at the given location"),
-					Parameters: openai.F(openai.FunctionParameters{
-						"type": "object",
-						"properties": map[string]interface{}{
-							"location": map[string]string{
-								"type": "string",
-							},
+params := openai.ChatCompletionNewParams{
+	Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		openai.UserMessage(question),
+	}),
+	Tools: openai.F([]openai.ChatCompletionToolParam{
+		{
+			Type: openai.F(openai.ChatCompletionToolTypeFunction),
+			Function: openai.F(openai.FunctionDefinitionParam{
+				Name:        openai.String("get_weather"),
+				Description: openai.String("Get weather at the given location"),
+				Parameters: openai.F(openai.FunctionParameters{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"location": map[string]string{
+							"type": "string",
 						},
-						"required": []string{"location"},
-					}),
+					},
+					"required": []string{"location"},
 				}),
-			},
-		}),
-		Model: openai.F(openai.ChatModelGPT4o),
-	}
-
-	// Make initial chat completion request
-	completion, err := client.Chat.Completions.New(ctx, params)
-
-	toolCalls := completion.Choices[0].Message.ToolCalls
-
-	if len(toolCalls) == 0 {
-		fmt.Printf("No function call")
-		return
-	}
-
-	// If there is a was a function call, continue the conversation
-	params.Messages.Value = append(params.Messages.Value, completion.Choices[0].Message)
-	for _, toolCall := range toolCalls {
-		if toolCall.Function.Name == "get_weather" {
-			// Extract the location from the function call arguments
-			var args map[string]interface{}
-			if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args); err != nil {
-				panic(err)
-			}
-			location := args["location"].(string)
-
-			// Simulate getting weather data
-			weatherData := getWeather(location)
-
-			params.Messages.Value = append(params.Messages.Value, openai.ToolMessage(toolCall.ID, weatherData))
-		}
-	}
-
-	completion, err = client.Chat.Completions.New(ctx, params)
-
-	println(completion.Choices[0].Message.Content)
+			}),
+		},
+	}),
+	Model: openai.F(openai.ChatModelGPT4o),
 }
+
+// chat completion request with tool calls
+completion, _ := client.Chat.Completions.New(ctx, params)
+
+for _, toolCall := range completion.Choices[0].Message.ToolCalls {
+	if toolCall.Function.Name == "get_weather" {
+		// extract the location from the function call arguments
+		var args map[string]interface{}
+		_ := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+
+		// call a weather API with the arguments requested by the model
+		weatherData := getWeather(args["location"].(string))
+		params.Messages.Value = append(params.Messages.Value, openai.ToolMessage(toolCall.ID, weatherData))
+	}
+}
+
+// ... continue the conversation with the information provided by the tool
 ```
+
+> See the [full tool calling example](./examples/chat-completion-tool-calling/main.go)
 
 </details>
 
@@ -229,22 +207,16 @@ func main() {
 <summary>Structured outputs</summary>
 
 ```go
-package main
-
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-
 	"github.com/invopop/jsonschema"
-	"github.com/openai/openai-go"
+	// ...
 )
 
 // A struct that will be converted to a Structured Outputs response schema
 type HistoricalComputer struct {
 	Origin       Origin   `json:"origin" jsonschema_description:"The origin of the computer"`
 	Name         string   `json:"full_name" jsonschema_description:"The name of the device model"`
-	Legacy       string   `json:"legacy" jsonschema:"enum=positive,enum=neutral,enum=negative" jsonschema_description:"Its influence on the field of computing"`
 	NotableFacts []string `json:"notable_facts" jsonschema_description:"A few key facts about the computer"`
 }
 
@@ -267,8 +239,8 @@ func GenerateSchema[T any]() interface{} {
 var HistoricalComputerResponseSchema = GenerateSchema[HistoricalComputer]()
 
 func main() {
-	client := openai.NewClient()
-	ctx := context.Background()
+
+	// ...
 
 	question := "What computer ran the first neural network?"
 
@@ -279,10 +251,8 @@ func main() {
 		Strict:      openai.Bool(true),
 	}
 
-	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage(question),
-		}),
+	chat, _ := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		// ...
 		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](
 			openai.ResponseFormatJSONSchemaParam{
 				Type:       openai.F(openai.ResponseFormatJSONSchemaTypeJSONSchema),
@@ -293,20 +263,20 @@ func main() {
 		Model: openai.F(openai.ChatModelGPT4o2024_08_06),
 	})
 
-	historicalComputer := HistoricalComputer{}
 	// extract into a well-typed struct
-	err = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &historicalComputer)
+	historicalComputer := HistoricalComputer{}
+	_ = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &historicalComputer)
 
-	fmt.Printf("Name: %v\n", historicalComputer.Name)
-	fmt.Printf("Year: %v\n", historicalComputer.Origin.YearBuilt)
-	fmt.Printf("Org: %v\n", historicalComputer.Origin.Organization)
-	fmt.Printf("Legacy: %v\n", historicalComputer.Legacy)
-	fmt.Printf("Facts:\n")
+	historicalComputer.Name
+	historicalComputer.Origin.YearBuilt
+	historicalComputer.Origin.Organization
 	for i, fact := range historicalComputer.NotableFacts {
-		fmt.Printf("%v. %v\n", i+1, fact)
+		// ...
 	}
 }
 ```
+
+> See the [full structured outputs example](./examples/structured-outputs/main.go)
 
 </details>
 
