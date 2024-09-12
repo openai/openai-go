@@ -29,7 +29,7 @@ func TestUsage(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelGPT4o),
+		Model: openai.F(openai.ChatModelO1Preview),
 	})
 	if err != nil {
 		t.Error(err)

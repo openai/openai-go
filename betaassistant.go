@@ -1860,7 +1860,8 @@ type FileSearchToolFileSearch struct {
 	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
 	// for more information.
 	MaxNumResults int64 `json:"max_num_results"`
-	// The ranking options for the file search.
+	// The ranking options for the file search. If not specified, the file search tool
+	// will use the `auto` ranker and a score_threshold of 0.
 	//
 	// See the
 	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
@@ -1886,26 +1887,27 @@ func (r fileSearchToolFileSearchJSON) RawJSON() string {
 	return r.raw
 }
 
-// The ranking options for the file search.
+// The ranking options for the file search. If not specified, the file search tool
+// will use the `auto` ranker and a score_threshold of 0.
 //
 // See the
 // [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
 // for more information.
 type FileSearchToolFileSearchRankingOptions struct {
+	// The score threshold for the file search. All values must be a floating point
+	// number between 0 and 1.
+	ScoreThreshold float64 `json:"score_threshold,required"`
 	// The ranker to use for the file search. If not specified will use the `auto`
 	// ranker.
 	Ranker FileSearchToolFileSearchRankingOptionsRanker `json:"ranker"`
-	// The score threshold for the file search. All values must be a floating point
-	// number between 0 and 1.
-	ScoreThreshold float64                                    `json:"score_threshold"`
-	JSON           fileSearchToolFileSearchRankingOptionsJSON `json:"-"`
+	JSON   fileSearchToolFileSearchRankingOptionsJSON   `json:"-"`
 }
 
 // fileSearchToolFileSearchRankingOptionsJSON contains the JSON metadata for the
 // struct [FileSearchToolFileSearchRankingOptions]
 type fileSearchToolFileSearchRankingOptionsJSON struct {
-	Ranker         apijson.Field
 	ScoreThreshold apijson.Field
+	Ranker         apijson.Field
 	raw            string
 	ExtraFields    map[string]apijson.Field
 }
@@ -1961,7 +1963,8 @@ type FileSearchToolFileSearchParam struct {
 	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
 	// for more information.
 	MaxNumResults param.Field[int64] `json:"max_num_results"`
-	// The ranking options for the file search.
+	// The ranking options for the file search. If not specified, the file search tool
+	// will use the `auto` ranker and a score_threshold of 0.
 	//
 	// See the
 	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
@@ -1973,18 +1976,19 @@ func (r FileSearchToolFileSearchParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-// The ranking options for the file search.
+// The ranking options for the file search. If not specified, the file search tool
+// will use the `auto` ranker and a score_threshold of 0.
 //
 // See the
 // [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
 // for more information.
 type FileSearchToolFileSearchRankingOptionsParam struct {
+	// The score threshold for the file search. All values must be a floating point
+	// number between 0 and 1.
+	ScoreThreshold param.Field[float64] `json:"score_threshold,required"`
 	// The ranker to use for the file search. If not specified will use the `auto`
 	// ranker.
 	Ranker param.Field[FileSearchToolFileSearchRankingOptionsRanker] `json:"ranker"`
-	// The score threshold for the file search. All values must be a floating point
-	// number between 0 and 1.
-	ScoreThreshold param.Field[float64] `json:"score_threshold"`
 }
 
 func (r FileSearchToolFileSearchRankingOptionsParam) MarshalJSON() (data []byte, err error) {
