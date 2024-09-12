@@ -32,7 +32,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionSystemMessageParamRoleSystem),
 			Name:    openai.F("name"),
 		}}),
-		Model:            openai.F(openai.ChatModelGPT4o),
+		Model:            openai.F(openai.ChatModelO1Preview),
 		FrequencyPenalty: openai.F(-2.000000),
 		FunctionCall:     openai.F[openai.ChatCompletionNewParamsFunctionCallUnion](openai.ChatCompletionNewParamsFunctionCallString(openai.ChatCompletionNewParamsFunctionCallStringNone)),
 		Functions: openai.F([]openai.ChatCompletionNewParamsFunction{{
@@ -45,11 +45,12 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		LogitBias: openai.F(map[string]int64{
 			"foo": int64(0),
 		}),
-		Logprobs:          openai.F(true),
-		MaxTokens:         openai.F(int64(0)),
-		N:                 openai.F(int64(1)),
-		ParallelToolCalls: openai.F(true),
-		PresencePenalty:   openai.F(-2.000000),
+		Logprobs:            openai.F(true),
+		MaxCompletionTokens: openai.F(int64(0)),
+		MaxTokens:           openai.F(int64(0)),
+		N:                   openai.F(int64(1)),
+		ParallelToolCalls:   openai.F(true),
+		PresencePenalty:     openai.F(-2.000000),
 		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](shared.ResponseFormatTextParam{
 			Type: openai.F(shared.ResponseFormatTextTypeText),
 		}),
