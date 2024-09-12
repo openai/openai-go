@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.17 (2024-09-12)
+
+Full Changelog: [v0.1.0-alpha.16...v0.1.0-alpha.17](https://github.com/openai/openai-go/compare/v0.1.0-alpha.16...v0.1.0-alpha.17)
+
+### Features
+
+* **api:** add o1 models ([#49](https://github.com/openai/openai-go/issues/49)) ([37d160c](https://github.com/openai/openai-go/commit/37d160cef58d3aca3f8dfc8c50b0eb8b516c1bcb))
+
+
+### Documentation
+
+* **readme:** smaller readme snippets with links to examples ([#46](https://github.com/openai/openai-go/issues/46)) ([dcea342](https://github.com/openai/openai-go/commit/dcea34213655ce8f9d84979d2f3d9dfa1f7459a3))
+
 ## 0.1.0-alpha.16 (2024-09-10)
 
 Full Changelog: [v0.1.0-alpha.15...v0.1.0-alpha.16](https://github.com/openai/openai-go/compare/v0.1.0-alpha.15...v0.1.0-alpha.16)
