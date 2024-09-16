@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.18 (2024-09-16)
+
+Full Changelog: [v0.1.0-alpha.17...v0.1.0-alpha.18](https://github.com/openai/openai-go/compare/v0.1.0-alpha.17...v0.1.0-alpha.18)
+
+### Chores
+
+* **internal:** update spec link ([#53](https://github.com/openai/openai-go/issues/53)) ([0fefed1](https://github.com/openai/openai-go/commit/0fefed1b392ea99ce2fa68e22a9ee53f60476037))
+
+
+### Documentation
+
+* update CONTRIBUTING.md ([#51](https://github.com/openai/openai-go/issues/51)) ([fe2d656](https://github.com/openai/openai-go/commit/fe2d656eaee480a87c4bf00eb5937fb167018ec9))
+
 ## 0.1.0-alpha.17 (2024-09-12)
 
 Full Changelog: [v0.1.0-alpha.16...v0.1.0-alpha.17](https://github.com/openai/openai-go/compare/v0.1.0-alpha.16...v0.1.0-alpha.17)
