@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sync"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -57,6 +58,47 @@ func (r *BetaVectorStoreFileBatchService) NewAndPoll(ctx context.Context, vector
 		return nil, err
 	}
 	return r.PollStatus(ctx, vectorStoreId, batch.ID, pollIntervalMs, opts...)
+}
+
+// Concurrently uploads files
+func (r *BetaVectorStoreFileBatchService) UploadAndPoll(ctx context.Context, vectorStoreID string, files []FileNewParams, fileIDs []string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFileBatch, error) {
+	if len(files) <= 0 {
+		return nil, errors.New("No `files` provided to process. If you've already uploaded files you should use `.NewAndPoll()` instead")
+	}
+
+	fileService := NewFileService(opts...)
+
+	uploadedFileIDs := make(chan string, len(files))
+	fileUploadErrors := make(chan error, len(files))
+
+	wg := sync.WaitGroup{}
+
+	for _, file := range files {
+		wg.Add(1)
+		go func(file FileNewParams) {
+			defer wg.Done()
+			fileObj, err := fileService.New(ctx, file)
+			if err != nil {
+				fileUploadErrors <- err
+				return
+			}
+			uploadedFileIDs <- fileObj.ID
+		}(file)
+	}
+	wg.Wait()
+
+	// TODO - rethink error handling semantics wrt. partially successful batch uploads
+	for err := range fileUploadErrors {
+		return nil, err
+	}
+
+	for id := range uploadedFileIDs {
+		fileIDs = append(fileIDs, id)
+	}
+
+	return r.NewAndPoll(ctx, vectorStoreID, BetaVectorStoreFileBatchNewParams{
+		FileIDs: F(fileIDs),
+	}, pollIntervalMs, opts...)
 }
 
 // Retrieves a vector store file batch.
