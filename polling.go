@@ -11,38 +11,40 @@ import (
 	"github.com/openai/openai-go/option"
 )
 
-func pollingOptions(pollIntervalMs int, raw *http.Response) (headers []option.RequestOption) {
-	headers = []option.RequestOption{
+func mkPollingOptions(pollIntervalMs int) []option.RequestOption {
+	options := []option.RequestOption{
 		option.WithHeader("X-Stainless-Poll-Helper", "true"),
-		option.WithResponseInto(&raw),
 	}
 	if pollIntervalMs > 0 {
-		headers = append(headers, option.WithHeader("X-Stainless-Poll-Interval", fmt.Sprintf("%d", pollIntervalMs)))
+		options = append(options, option.WithHeader("X-Stainless-Poll-Interval", fmt.Sprintf("%d", pollIntervalMs)))
 	}
-	return headers
+	return options
 }
 
-func sleepInterval(pollIntervalMs int, raw *http.Response) {
-	if pollIntervalMs <= 0 {
-		if ms, err := strconv.Atoi(raw.Header.Get("openai-poll-after-ms")); err == nil {
-			pollIntervalMs = ms
-		}
-		pollIntervalMs = 1000
+func getPollInterval(raw *http.Response) (ms int) {
+	if ms, err := strconv.Atoi(raw.Header.Get("openai-poll-after-ms")); err == nil {
+		return ms
 	}
-	time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
+	return 2000
 }
 
+// PollStatus waits until a VectorStoreFile is no longer in an incomplete state and returns it.
+// Uses a default polling interval of 2 seconds
 func (r *BetaVectorStoreFileService) PollStatus(ctx context.Context, vectorStoreID string, fileID string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFile, error) {
 	var raw *http.Response
-	opts = append(opts, pollingOptions(pollIntervalMs, raw)...)
+	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
+	opts = append(opts, option.WithResponseInto(&raw))
 	for true {
 		file, err := r.Get(ctx, vectorStoreID, fileID, opts...)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("vector store file poll: received %w", err)
 		}
 		switch file.Status {
 		case VectorStoreFileStatusInProgress:
-			sleepInterval(pollIntervalMs, raw)
+			if pollIntervalMs <= 0 {
+				pollIntervalMs = getPollInterval(raw)
+			}
+			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
 		case VectorStoreFileStatusCancelled:
 		case VectorStoreFileStatusCompleted:
 		case VectorStoreFileStatusFailed:
@@ -51,21 +53,27 @@ func (r *BetaVectorStoreFileService) PollStatus(ctx context.Context, vectorStore
 			break
 		}
 	}
-	return nil, errors.New("Invalid vector store file status during polling")
+	return nil, errors.New("invalid vector store file status during polling")
 }
 
+// PollStatus waits until a BetaVectorStoreFileBatch is no longer in an incomplete state and returns it.
+// Uses a default polling interval of 2 seconds
 func (r *BetaVectorStoreFileBatchService) PollStatus(ctx context.Context, vectorStoreID string, batchID string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFileBatch, error) {
 	var raw *http.Response
-	opts = append(opts, pollingOptions(pollIntervalMs, raw)...)
+	opts = append(opts, option.WithResponseInto(&raw))
+	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
 	for true {
 		batch, err := r.Get(ctx, vectorStoreID, batchID, opts...)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("vector store file batch poll: received %w", err)
 		}
 
 		switch batch.Status {
 		case VectorStoreFileBatchStatusInProgress:
-			sleepInterval(pollIntervalMs, raw)
+			if pollIntervalMs <= 0 {
+				pollIntervalMs = getPollInterval(raw)
+			}
+			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
 		case VectorStoreFileBatchStatusCancelled:
 		case VectorStoreFileBatchStatusCompleted:
 		case VectorStoreFileBatchStatusFailed:
@@ -74,16 +82,19 @@ func (r *BetaVectorStoreFileBatchService) PollStatus(ctx context.Context, vector
 			break
 		}
 	}
-	return nil, errors.New("Invalid vector store file batch status during polling")
+	return nil, errors.New("invalid vector store file batch status during polling")
 }
 
+// PollStatus waits until a Run is no longer in an incomplete state and returns it.
+// Uses a default polling interval of 2 seconds
 func (r *BetaThreadRunService) PollStatus(ctx context.Context, threadID string, runID string, pollIntervalMs int, opts ...option.RequestOption) (res *Run, err error) {
 	var raw *http.Response
-	opts = append(opts, pollingOptions(pollIntervalMs, raw)...)
+	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
+	opts = append(opts, option.WithResponseInto(&raw))
 	for true {
 		run, err := r.Get(ctx, threadID, runID, opts...)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("thread run poll: received %w", err)
 		}
 
 		switch run.Status {
@@ -96,10 +107,13 @@ func (r *BetaThreadRunService) PollStatus(ctx context.Context, threadID string, 
 			return run, nil
 		case RunStatusInProgress:
 		case RunStatusQueued:
-			sleepInterval(pollIntervalMs, raw)
+			if pollIntervalMs <= 0 {
+				pollIntervalMs = getPollInterval(raw)
+			}
+			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
 		default:
 			break
 		}
 	}
-	return nil, errors.New("Invalid vector store file batch status during polling")
+	return nil, errors.New("invalid vector store file batch status during polling")
 }
