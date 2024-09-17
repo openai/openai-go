@@ -50,6 +50,19 @@ func (r *BetaVectorStoreFileService) New(ctx context.Context, vectorStoreID stri
 	return
 }
 
+// Create a vector store file by attaching a
+// [File](https://platform.openai.com/docs/api-reference/files) to a
+// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object).
+//
+// Polls the API and blocks until the task is complete. // Default polling interval is 1 second.
+func (r *BetaVectorStoreFileService) NewAndPoll(ctx context.Context, vectorStoreId string, body BetaVectorStoreFileNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
+	file, err := r.New(ctx, vectorStoreId, body, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return r.PollStatus(ctx, vectorStoreId, file.ID, pollIntervalMs, opts...)
+}
+
 // Retrieves a vector store file.
 func (r *BetaVectorStoreFileService) Get(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
 	opts = append(r.Options[:], opts...)

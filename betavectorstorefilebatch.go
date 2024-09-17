@@ -48,6 +48,17 @@ func (r *BetaVectorStoreFileBatchService) New(ctx context.Context, vectorStoreID
 	return
 }
 
+// Create a vector store file batch and polls the API until the task is complete.
+//
+// Default polling interval is 1 second.
+func (r *BetaVectorStoreFileBatchService) NewAndPoll(ctx context.Context, vectorStoreId string, body BetaVectorStoreFileBatchNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
+	batch, err := r.New(ctx, vectorStoreId, body, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return r.PollStatus(ctx, vectorStoreId, batch.ID, pollIntervalMs, opts...)
+}
+
 // Retrieves a vector store file batch.
 func (r *BetaVectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	opts = append(r.Options[:], opts...)
