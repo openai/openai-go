@@ -2,7 +2,6 @@ package openai
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -27,18 +26,16 @@ func getPollInterval(raw *http.Response) (ms int) {
 }
 
 // PollStatus waits until a VectorStoreFile is no longer in an incomplete state and returns it.
-// Uses a default polling interval of 2 seconds
+// Pass 0 as pollIntervalMs to use the default polling interval of 1 second.
 func (r *BetaVectorStoreFileService) PollStatus(ctx context.Context, vectorStoreID string, fileID string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFile, error) {
 	var raw *http.Response
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
 	opts = append(opts, option.WithResponseInto(&raw))
-	for true {
-		println("Polling...")
+	for {
 		file, err := r.Get(ctx, vectorStoreID, fileID, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("vector store file poll: received %w", err)
 		}
-		println("Status", file.Status)
 
 		switch file.Status {
 		case VectorStoreFileStatusInProgress:
@@ -51,26 +48,25 @@ func (r *BetaVectorStoreFileService) PollStatus(ctx context.Context, vectorStore
 			VectorStoreFileStatusFailed:
 			return file, nil
 		default:
-			break
+			return nil, fmt.Errorf("invalid vector store file status during polling: received %s", file.Status)
 		}
 
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			break
+
 		}
 	}
-	return nil, errors.New("invalid vector store file status during polling")
 }
 
 // PollStatus waits until a BetaVectorStoreFileBatch is no longer in an incomplete state and returns it.
-// Uses a default polling interval of 2 seconds
+// Pass 0 as pollIntervalMs to use the default polling interval of 1 second.
 func (r *BetaVectorStoreFileBatchService) PollStatus(ctx context.Context, vectorStoreID string, batchID string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFileBatch, error) {
 	var raw *http.Response
 	opts = append(opts, option.WithResponseInto(&raw))
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
-	for true {
+	for {
 		batch, err := r.Get(ctx, vectorStoreID, batchID, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("vector store file batch poll: received %w", err)
@@ -87,26 +83,24 @@ func (r *BetaVectorStoreFileBatchService) PollStatus(ctx context.Context, vector
 			VectorStoreFileBatchStatusFailed:
 			return batch, nil
 		default:
-			break
+			return nil, fmt.Errorf("invalid vector store file batch status during polling: received %s", batch.Status)
 		}
 
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			break
 		}
 	}
-	return nil, errors.New("invalid vector store file batch status during polling")
 }
 
 // PollStatus waits until a Run is no longer in an incomplete state and returns it.
-// Uses a default polling interval of 2 seconds
+// Pass 0 as pollIntervalMs to use the default polling interval of 1 second.
 func (r *BetaThreadRunService) PollStatus(ctx context.Context, threadID string, runID string, pollIntervalMs int, opts ...option.RequestOption) (res *Run, err error) {
 	var raw *http.Response
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
 	opts = append(opts, option.WithResponseInto(&raw))
-	for true {
+	for {
 		run, err := r.Get(ctx, threadID, runID, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("thread run poll: received %w", err)
@@ -127,7 +121,7 @@ func (r *BetaThreadRunService) PollStatus(ctx context.Context, threadID string, 
 			RunStatusIncomplete:
 			return run, nil
 		default:
-			break
+			return nil, fmt.Errorf("invalid thread run status during polling: received %s", run.Status)
 		}
 
 		select {
@@ -137,5 +131,4 @@ func (r *BetaThreadRunService) PollStatus(ctx context.Context, threadID string, 
 			break
 		}
 	}
-	return nil, errors.New("invalid thread run status during polling")
 }

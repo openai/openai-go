@@ -76,13 +76,13 @@ func (r *BetaVectorStoreFileService) Upload(ctx context.Context, vectorStoreID s
 		return nil, err
 	}
 
-	// NEEDSREVIEW -- opts passed again? is it a problem if opts continues to grow?
 	return r.New(ctx, vectorStoreID, BetaVectorStoreFileNewParams{
 		FileID: F(fileObj.ID),
 	}, opts...)
 }
 
 // Add a file to a vector store and poll until processing is complete.
+// Default polling interval is 1 second.
 func (r *BetaVectorStoreFileService) UploadAndPoll(ctx context.Context, vectorStoreID string, body FileNewParams, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFile, error) {
 	res, err := r.Upload(ctx, vectorStoreID, body, opts...)
 	if err != nil {

@@ -10,6 +10,33 @@ import (
 
 func main() {
 
+	fileParams := []openai.FileNewParams{}
+
+	if len(os.Args) < 3 || os.Args[1] != "--" {
+		panic("usage: go run ./main.go -- <file1> <file2>\n")
+	}
+
+	// get files from the command line
+	for _, arg := range os.Args[2:] {
+		println("File to upload:", arg)
+		rdr, err := os.Open(arg)
+		defer rdr.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+
+		fileParams = append(fileParams, openai.FileNewParams{
+			File:    openai.F[io.Reader](rdr),
+			Purpose: openai.F(openai.FilePurposeAssistants),
+		})
+
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+
+	println("Creating a new vector store and uploading files")
+
 	ctx := context.Background()
 	client := openai.NewClient()
 
@@ -28,36 +55,18 @@ func main() {
 		panic(err.Error())
 	}
 
-	chatRdr, err := os.Open("./chat.go")
-	defer chatRdr.Close()
+	// 0 uses default polling interval
+	batch, err := client.Beta.VectorStores.FileBatches.UploadAndPoll(ctx, vectorStore.ID, fileParams,
+		[]string{}, 0)
 
 	if err != nil {
 		panic(err.Error())
 	}
 
-	audioRdr, err := os.Open("./audio.go")
-	defer audioRdr.Close()
+	println("Listing the files from the vector store")
 
-	if err != nil {
-		panic(err.Error())
-	}
-
-	batch, err := client.Beta.VectorStores.FileBatches.UploadAndPoll(ctx, vectorStore.ID, []openai.FileNewParams{
-		{
-			Purpose: openai.F(openai.FilePurposeAssistants),
-			File:    openai.F[io.Reader](chatRdr),
-		},
-		{
-			Purpose: openai.F(openai.FilePurposeAssistants),
-			File:    openai.F[io.Reader](audioRdr),
-		},
-	}, []string{}, 0)
-
-	if err != nil {
-		panic(err.Error())
-	}
-
-	filesCursor, err := client.Beta.VectorStores.FileBatches.ListFiles(ctx, vectorStore.ID, batch.ID, openai.BetaVectorStoreFileBatchListFilesParams{})
+	filesCursor, err := client.Beta.VectorStores.FileBatches.ListFiles(ctx, vectorStore.ID, batch.ID,
+		openai.BetaVectorStoreFileBatchListFilesParams{})
 
 	if err != nil {
 		panic(err.Error())

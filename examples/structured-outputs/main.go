@@ -37,7 +37,7 @@ func GenerateSchema[T any]() interface{} {
 // Generate the JSON schema at initialization time
 var HistoricalComputerResponseSchema = GenerateSchema[HistoricalComputer]()
 
-func main() {
+func main_() {
 	client := openai.NewClient()
 	ctx := context.Background()
 
@@ -47,8 +47,8 @@ func main() {
 	println(question)
 
 	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
-		Name:        openai.F("biography"),
-		Description: openai.F("Notable information about a person"),
+		Name:        openai.String("biography"),
+		Description: openai.String("Notable information about a person"),
 		Schema:      openai.F(HistoricalComputerResponseSchema),
 		Strict:      openai.Bool(true),
 	}

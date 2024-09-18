@@ -22,16 +22,18 @@ func main() {
 
 	println("Created and assistant with id", assistant.ID)
 
+	prompt := "I need to solve the equation 3x + 11 = 14. Can you help me?"
+
 	thread, err := client.Beta.Threads.New(ctx, openai.BetaThreadNewParams{
 		Messages: openai.F([]openai.BetaThreadNewParamsMessage{
 			{
-				Role: openai.F(openai.BetaThreadNewParamsMessagesRoleUser),
 				Content: openai.F([]openai.MessageContentPartParamUnion{
 					openai.TextContentBlockParam{
-						Text: openai.String(`"I need to solve the equation 3x + 11 = 14. Can you help me?"`),
+						Text: openai.String(prompt),
 						Type: openai.F(openai.TextContentBlockParamTypeText),
 					},
 				}),
+				Role: openai.F(openai.BetaThreadNewParamsMessagesRoleUser),
 			},
 		}),
 	})
@@ -42,7 +44,7 @@ func main() {
 
 	println("Created thread with id", thread.ID)
 
-	// passes 0 to use default polling interval
+	// pollIntervalMs of 0 uses default polling interval.
 	run, err := client.Beta.Threads.Runs.NewAndPoll(ctx, thread.ID, openai.BetaThreadRunNewParams{
 		AssistantID:            openai.F(assistant.ID),
 		AdditionalInstructions: openai.String("Please address the user as Jane Doe. The user has a premium account."),

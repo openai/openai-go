@@ -69,7 +69,8 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 	return ssestream.NewStream[AssistantStreamEvent](ssestream.NewDecoder(raw), err)
 }
 
-// Create a run and poll until task is completed
+// Create a run and poll until task is completed.
+// Pass 0 to pollIntervalMs to use the default polling interval.
 func (r *BetaThreadRunService) NewAndPoll(ctx context.Context, threadID string, params BetaThreadRunNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *Run, err error) {
 	run, err := r.New(ctx, threadID, params, opts...)
 	if err != nil {
@@ -176,10 +177,10 @@ func (r *BetaThreadRunService) SubmitToolOutputs(ctx context.Context, threadID s
 	return
 }
 
-// When a run has the `status: "requires_action"` and `required_action.type` is
-// `submit_tool_outputs`, this endpoint can be used to submit the outputs from the
-// tool calls once they're all completed. All outputs must be submitted in a single
-// request.
+// A helper to submit a tool output to a run and poll for a terminal run state.
+// Pass 0 to pollIntervalMs to use the default polling interval.
+// More information on Run lifecycles can be found here:
+// https://platform.openai.com/docs/assistants/how-it-works/runs-and-run-steps
 func (r *BetaThreadRunService) SubmitToolOutputsAndPoll(ctx context.Context, threadID string, runID string, body BetaThreadRunSubmitToolOutputsParams, pollIntervalMs int, opts ...option.RequestOption) (*Run, error) {
 	run, err := r.SubmitToolOutputs(ctx, threadID, runID, body, opts...)
 	if err != nil {
