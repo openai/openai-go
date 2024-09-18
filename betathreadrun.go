@@ -70,7 +70,7 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 
 // Create a run and poll until task is completed
 func (r *BetaThreadRunService) NewAndPoll(ctx context.Context, threadID string, params BetaThreadRunNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *Run, err error) {
-	run, err := r.New(ctx, threadID, params)
+	run, err := r.New(ctx, threadID, params, opts...)
 	if err != nil {
 		return nil, err
 	}

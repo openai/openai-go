@@ -66,28 +66,30 @@ func (r *BetaVectorStoreFileBatchService) UploadAndPoll(ctx context.Context, vec
 		return nil, errors.New("No `files` provided to process. If you've already uploaded files you should use `.NewAndPoll()` instead")
 	}
 
-	fileService := NewFileService(opts...)
+	filesService := NewFileService(r.Options...)
 
 	uploadedFileIDs := make(chan string, len(files))
 	fileUploadErrors := make(chan error, len(files))
-
 	wg := sync.WaitGroup{}
 
-	for _, file := range files {
+	for i, file := range files {
 		wg.Add(1)
-		go func(file FileNewParams) {
+		go func(file FileNewParams, i int) {
 			defer wg.Done()
-			fileObj, err := fileService.New(ctx, file)
+			fileObj, err := filesService.New(ctx, file, opts...)
 			if err != nil {
 				fileUploadErrors <- err
 				return
 			}
 			uploadedFileIDs <- fileObj.ID
-		}(file)
+		}(file, i)
 	}
-	wg.Wait()
 
-	// TODO - rethink error handling semantics wrt. partially successful batch uploads
+	wg.Wait()
+	close(uploadedFileIDs)
+	close(fileUploadErrors)
+
+	// NEEDSREVIEW - rethink error handling semantics wrt. partially successful batch uploads
 	for err := range fileUploadErrors {
 		return nil, err
 	}

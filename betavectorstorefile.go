@@ -68,14 +68,16 @@ func (r *BetaVectorStoreFileService) NewAndPoll(ctx context.Context, vectorStore
 //
 // Note the file will be asynchronously processed (you can use the alternative
 // polling helper method to wait for processing to complete).
-func (r *BetaVectorStoreFileService) Upload(ctx context.Context, vectorStoreID string, body FileNewParams, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
-	fileService := NewFileService()
-	file, err := fileService.New(ctx, body, opts...)
+func (r *BetaVectorStoreFileService) Upload(ctx context.Context, vectorStoreID string, body FileNewParams, opts ...option.RequestOption) (*VectorStoreFile, error) {
+	filesService := NewFileService(r.Options...)
+	fileObj, err := filesService.New(ctx, body, opts...)
 	if err != nil {
 		return nil, err
 	}
+
+	// NEEDSREVIEW -- opts passed again? is it a problem if opts continues to grow?
 	return r.New(ctx, vectorStoreID, BetaVectorStoreFileNewParams{
-		FileID: F(file.ID),
+		FileID: F(fileObj.ID),
 	}, opts...)
 }
 

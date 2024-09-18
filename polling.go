@@ -12,9 +12,7 @@ import (
 )
 
 func mkPollingOptions(pollIntervalMs int) []option.RequestOption {
-	options := []option.RequestOption{
-		option.WithHeader("X-Stainless-Poll-Helper", "true"),
-	}
+	options := []option.RequestOption{option.WithHeader("X-Stainless-Poll-Helper", "true")}
 	if pollIntervalMs > 0 {
 		options = append(options, option.WithHeader("X-Stainless-Poll-Interval", fmt.Sprintf("%d", pollIntervalMs)))
 	}
@@ -25,7 +23,7 @@ func getPollInterval(raw *http.Response) (ms int) {
 	if ms, err := strconv.Atoi(raw.Header.Get("openai-poll-after-ms")); err == nil {
 		return ms
 	}
-	return 2000
+	return 1000
 }
 
 // PollStatus waits until a VectorStoreFile is no longer in an incomplete state and returns it.
@@ -35,20 +33,30 @@ func (r *BetaVectorStoreFileService) PollStatus(ctx context.Context, vectorStore
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
 	opts = append(opts, option.WithResponseInto(&raw))
 	for true {
+		println("Polling...")
 		file, err := r.Get(ctx, vectorStoreID, fileID, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("vector store file poll: received %w", err)
 		}
+		println("Status", file.Status)
+
 		switch file.Status {
 		case VectorStoreFileStatusInProgress:
 			if pollIntervalMs <= 0 {
 				pollIntervalMs = getPollInterval(raw)
 			}
 			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
-		case VectorStoreFileStatusCancelled:
-		case VectorStoreFileStatusCompleted:
-		case VectorStoreFileStatusFailed:
+		case VectorStoreFileStatusCancelled,
+			VectorStoreFileStatusCompleted,
+			VectorStoreFileStatusFailed:
 			return file, nil
+		default:
+			break
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		default:
 			break
 		}
@@ -74,10 +82,17 @@ func (r *BetaVectorStoreFileBatchService) PollStatus(ctx context.Context, vector
 				pollIntervalMs = getPollInterval(raw)
 			}
 			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
-		case VectorStoreFileBatchStatusCancelled:
-		case VectorStoreFileBatchStatusCompleted:
-		case VectorStoreFileBatchStatusFailed:
+		case VectorStoreFileBatchStatusCancelled,
+			VectorStoreFileBatchStatusCompleted,
+			VectorStoreFileBatchStatusFailed:
 			return batch, nil
+		default:
+			break
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		default:
 			break
 		}
@@ -98,22 +113,29 @@ func (r *BetaThreadRunService) PollStatus(ctx context.Context, threadID string, 
 		}
 
 		switch run.Status {
-		case RunStatusRequiresAction:
-		case RunStatusCancelled:
-		case RunStatusCompleted:
-		case RunStatusFailed:
-		case RunStatusExpired:
-		case RunStatusIncomplete:
-			return run, nil
-		case RunStatusInProgress:
-		case RunStatusQueued:
+		case RunStatusInProgress,
+			RunStatusQueued:
 			if pollIntervalMs <= 0 {
 				pollIntervalMs = getPollInterval(raw)
 			}
 			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
+		case RunStatusRequiresAction,
+			RunStatusCancelled,
+			RunStatusCompleted,
+			RunStatusFailed,
+			RunStatusExpired,
+			RunStatusIncomplete:
+			return run, nil
+		default:
+			break
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		default:
 			break
 		}
 	}
-	return nil, errors.New("invalid vector store file batch status during polling")
+	return nil, errors.New("invalid thread run status during polling")
 }
