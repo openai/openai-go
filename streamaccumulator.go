@@ -110,6 +110,10 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 		choice.Index = delta.Index
 		choice.FinishReason = ChatCompletionChoicesFinishReason(delta.FinishReason)
 
+		if delta.Delta.Role != "" {
+			choice.Message.Role = ChatCompletionMessageRole(delta.Delta.Role)
+		}
+
 		choice.Message.Content += delta.Delta.Content
 		choice.Message.Refusal += delta.Delta.Refusal
 
@@ -119,8 +123,12 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 			choice.Message.ToolCalls = expandToFit(choice.Message.ToolCalls, int(deltaTool.Index))
 			tool := &choice.Message.ToolCalls[deltaTool.Index]
 
-			tool.ID = deltaTool.ID
-			tool.Type = ChatCompletionMessageToolCallType(deltaTool.Type)
+			if deltaTool.ID != "" {
+				tool.ID = deltaTool.ID
+			}
+			if deltaTool.Type != "" {
+				tool.Type = ChatCompletionMessageToolCallType(deltaTool.Type)
+			}
 			tool.Function.Name += deltaTool.Function.Name
 			tool.Function.Arguments += deltaTool.Function.Arguments
 		}
