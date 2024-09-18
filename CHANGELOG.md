@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.19 (2024-09-18)
+
+Full Changelog: [v0.1.0-alpha.18...v0.1.0-alpha.19](https://github.com/openai/openai-go/compare/v0.1.0-alpha.18...v0.1.0-alpha.19)
+
+### Features
+
+* fix(streaming): correctly accumulate tool calls and roles ([#55](https://github.com/openai/openai-go/issues/55)) ([89651e4](https://github.com/openai/openai-go/commit/89651e4ebb80179b2fcc92d3c573679683a39201))
+
 ## 0.1.0-alpha.18 (2024-09-16)
 
 Full Changelog: [v0.1.0-alpha.17...v0.1.0-alpha.18](https://github.com/openai/openai-go/compare/v0.1.0-alpha.17...v0.1.0-alpha.18)
