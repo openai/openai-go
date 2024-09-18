@@ -42,7 +42,7 @@ func main() {
 
 	println("Created thread with id", thread.ID)
 
-	// passes 0 to use default polling interval
+	// pollIntervalMs of 0 uses default polling interval.
 	run, err := client.Beta.Threads.Runs.NewAndPoll(ctx, thread.ID, openai.BetaThreadRunNewParams{
 		AssistantID:            openai.F(assistant.ID),
 		AdditionalInstructions: openai.String("Please address the user as Jane Doe. The user has a premium account."),
