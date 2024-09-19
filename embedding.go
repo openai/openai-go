@@ -156,6 +156,14 @@ func (r EmbeddingObject) IsKnown() bool {
 	return false
 }
 
+type EmbeddingModel = string
+
+const (
+	EmbeddingModelTextEmbeddingAda002 EmbeddingModel = "text-embedding-ada-002"
+	EmbeddingModelTextEmbedding3Small EmbeddingModel = "text-embedding-3-small"
+	EmbeddingModelTextEmbedding3Large EmbeddingModel = "text-embedding-3-large"
+)
+
 type EmbeddingNewParams struct {
 	// Input text to embed, encoded as a string or array of tokens. To embed multiple
 	// inputs in a single request, pass an array of strings or array of token arrays.
@@ -170,7 +178,7 @@ type EmbeddingNewParams struct {
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models/overview) for
 	// descriptions of them.
-	Model param.Field[EmbeddingNewParamsModel] `json:"model,required"`
+	Model param.Field[EmbeddingModel] `json:"model,required"`
 	// The number of dimensions the resulting output embeddings should have. Only
 	// supported in `text-embedding-3` and later models.
 	Dimensions param.Field[int64] `json:"dimensions"`
@@ -213,22 +221,6 @@ func (r EmbeddingNewParamsInputArrayOfTokens) ImplementsEmbeddingNewParamsInputU
 type EmbeddingNewParamsInputArrayOfTokenArrays [][]int64
 
 func (r EmbeddingNewParamsInputArrayOfTokenArrays) ImplementsEmbeddingNewParamsInputUnion() {}
-
-type EmbeddingNewParamsModel string
-
-const (
-	EmbeddingNewParamsModelTextEmbeddingAda002 EmbeddingNewParamsModel = "text-embedding-ada-002"
-	EmbeddingNewParamsModelTextEmbedding3Small EmbeddingNewParamsModel = "text-embedding-3-small"
-	EmbeddingNewParamsModelTextEmbedding3Large EmbeddingNewParamsModel = "text-embedding-3-large"
-)
-
-func (r EmbeddingNewParamsModel) IsKnown() bool {
-	switch r {
-	case EmbeddingNewParamsModelTextEmbeddingAda002, EmbeddingNewParamsModelTextEmbedding3Small, EmbeddingNewParamsModelTextEmbedding3Large:
-		return true
-	}
-	return false
-}
 
 // The format to return the embeddings in. Can be either `float` or
 // [`base64`](https://pypi.org/project/pybase64/).
