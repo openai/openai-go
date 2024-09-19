@@ -65,6 +65,10 @@ Methods:
 
 # Embeddings
 
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#EmbeddingModel">EmbeddingModel</a>
+
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#CreateEmbeddingResponse">CreateEmbeddingResponse</a>
