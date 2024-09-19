@@ -28,7 +28,7 @@ func TestEmbeddingNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Embeddings.New(context.TODO(), openai.EmbeddingNewParams{
 		Input:          openai.F[openai.EmbeddingNewParamsInputUnion](shared.UnionString("The quick brown fox jumped over the lazy dog")),
-		Model:          openai.F(openai.EmbeddingNewParamsModelTextEmbeddingAda002),
+		Model:          openai.F(openai.EmbeddingModelTextEmbeddingAda002),
 		Dimensions:     openai.F(int64(1)),
 		EncodingFormat: openai.F(openai.EmbeddingNewParamsEncodingFormatFloat),
 		User:           openai.F("user-1234"),
