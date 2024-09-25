@@ -32,7 +32,7 @@ func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {
 		Model:                  openai.F(openai.AudioModelWhisper1),
 		Language:               openai.F("language"),
 		Prompt:                 openai.F("prompt"),
-		ResponseFormat:         openai.F(openai.AudioTranscriptionNewParamsResponseFormatJSON),
+		ResponseFormat:         openai.F(openai.AudioResponseFormatJSON),
 		Temperature:            openai.F(0.000000),
 		TimestampGranularities: openai.F([]openai.AudioTranscriptionNewParamsTimestampGranularity{openai.AudioTranscriptionNewParamsTimestampGranularityWord, openai.AudioTranscriptionNewParamsTimestampGranularitySegment}),
 	})

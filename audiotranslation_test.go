@@ -31,7 +31,7 @@ func TestAudioTranslationNewWithOptionalParams(t *testing.T) {
 		File:           openai.F(io.Reader(bytes.NewBuffer([]byte("some file contents")))),
 		Model:          openai.F(openai.AudioModelWhisper1),
 		Prompt:         openai.F("prompt"),
-		ResponseFormat: openai.F("response_format"),
+		ResponseFormat: openai.F(openai.AudioResponseFormatJSON),
 		Temperature:    openai.F(0.000000),
 	})
 	if err != nil {

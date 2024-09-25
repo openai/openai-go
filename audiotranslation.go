@@ -75,9 +75,9 @@ type AudioTranslationNewParams struct {
 	// [prompt](https://platform.openai.com/docs/guides/speech-to-text/prompting)
 	// should be in English.
 	Prompt param.Field[string] `json:"prompt"`
-	// The format of the transcript output, in one of these options: `json`, `text`,
-	// `srt`, `verbose_json`, or `vtt`.
-	ResponseFormat param.Field[string] `json:"response_format"`
+	// The format of the output, in one of these options: `json`, `text`, `srt`,
+	// `verbose_json`, or `vtt`.
+	ResponseFormat param.Field[AudioResponseFormat] `json:"response_format"`
 	// The sampling temperature, between 0 and 1. Higher values like 0.8 will make the
 	// output more random, while lower values like 0.2 will make it more focused and
 	// deterministic. If set to 0, the model will use
