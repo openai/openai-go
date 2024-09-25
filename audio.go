@@ -36,3 +36,23 @@ type AudioModel = string
 const (
 	AudioModelWhisper1 AudioModel = "whisper-1"
 )
+
+// The format of the output, in one of these options: `json`, `text`, `srt`,
+// `verbose_json`, or `vtt`.
+type AudioResponseFormat string
+
+const (
+	AudioResponseFormatJSON        AudioResponseFormat = "json"
+	AudioResponseFormatText        AudioResponseFormat = "text"
+	AudioResponseFormatSRT         AudioResponseFormat = "srt"
+	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json"
+	AudioResponseFormatVTT         AudioResponseFormat = "vtt"
+)
+
+func (r AudioResponseFormat) IsKnown() bool {
+	switch r {
+	case AudioResponseFormatJSON, AudioResponseFormatText, AudioResponseFormatSRT, AudioResponseFormatVerboseJSON, AudioResponseFormatVTT:
+		return true
+	}
+	return false
+}
