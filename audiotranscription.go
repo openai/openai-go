@@ -82,9 +82,9 @@ type AudioTranscriptionNewParams struct {
 	// [prompt](https://platform.openai.com/docs/guides/speech-to-text/prompting)
 	// should match the audio language.
 	Prompt param.Field[string] `json:"prompt"`
-	// The format of the transcript output, in one of these options: `json`, `text`,
-	// `srt`, `verbose_json`, or `vtt`.
-	ResponseFormat param.Field[AudioTranscriptionNewParamsResponseFormat] `json:"response_format"`
+	// The format of the output, in one of these options: `json`, `text`, `srt`,
+	// `verbose_json`, or `vtt`.
+	ResponseFormat param.Field[AudioResponseFormat] `json:"response_format"`
 	// The sampling temperature, between 0 and 1. Higher values like 0.8 will make the
 	// output more random, while lower values like 0.2 will make it more focused and
 	// deterministic. If set to 0, the model will use
@@ -112,26 +112,6 @@ func (r AudioTranscriptionNewParams) MarshalMultipart() (data []byte, contentTyp
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
-}
-
-// The format of the transcript output, in one of these options: `json`, `text`,
-// `srt`, `verbose_json`, or `vtt`.
-type AudioTranscriptionNewParamsResponseFormat string
-
-const (
-	AudioTranscriptionNewParamsResponseFormatJSON        AudioTranscriptionNewParamsResponseFormat = "json"
-	AudioTranscriptionNewParamsResponseFormatText        AudioTranscriptionNewParamsResponseFormat = "text"
-	AudioTranscriptionNewParamsResponseFormatSRT         AudioTranscriptionNewParamsResponseFormat = "srt"
-	AudioTranscriptionNewParamsResponseFormatVerboseJSON AudioTranscriptionNewParamsResponseFormat = "verbose_json"
-	AudioTranscriptionNewParamsResponseFormatVTT         AudioTranscriptionNewParamsResponseFormat = "vtt"
-)
-
-func (r AudioTranscriptionNewParamsResponseFormat) IsKnown() bool {
-	switch r {
-	case AudioTranscriptionNewParamsResponseFormatJSON, AudioTranscriptionNewParamsResponseFormatText, AudioTranscriptionNewParamsResponseFormatSRT, AudioTranscriptionNewParamsResponseFormatVerboseJSON, AudioTranscriptionNewParamsResponseFormatVTT:
-		return true
-	}
-	return false
 }
 
 type AudioTranscriptionNewParamsTimestampGranularity string
