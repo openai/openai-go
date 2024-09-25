@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.21 (2024-09-25)
+
+Full Changelog: [v0.1.0-alpha.20...v0.1.0-alpha.21](https://github.com/openai/openai-go/compare/v0.1.0-alpha.20...v0.1.0-alpha.21)
+
+### Features
+
+* **client:** send retry count header ([#60](https://github.com/openai/openai-go/issues/60)) ([8797500](https://github.com/openai/openai-go/commit/87975004c4917be6b59c34b1252b6a393412a754))
+
+
+### Bug Fixes
+
+* **audio:** correct response_format translations type ([#62](https://github.com/openai/openai-go/issues/62)) ([4b8df65](https://github.com/openai/openai-go/commit/4b8df6595d2d416c3589d6a270ebdf247bbe18af))
+
 ## 0.1.0-alpha.20 (2024-09-20)
 
 Full Changelog: [v0.1.0-alpha.19...v0.1.0-alpha.20](https://github.com/openai/openai-go/compare/v0.1.0-alpha.19...v0.1.0-alpha.20)
