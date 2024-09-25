@@ -119,6 +119,7 @@ Methods:
 Params Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AudioModel">AudioModel</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AudioResponseFormat">AudioResponseFormat</a>
 
 ## Transcriptions
 
