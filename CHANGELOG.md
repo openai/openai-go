@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.22 (2024-09-26)
+
+Full Changelog: [v0.1.0-alpha.21...v0.1.0-alpha.22](https://github.com/openai/openai-go/compare/v0.1.0-alpha.21...v0.1.0-alpha.22)
+
+### Features
+
+* **api:** add omni-moderation model ([#63](https://github.com/openai/openai-go/issues/63)) ([9ca9ebb](https://github.com/openai/openai-go/commit/9ca9ebb1f40c056642d987445ea0cc8d60a1d15f))
+
 ## 0.1.0-alpha.21 (2024-09-25)
 
 Full Changelog: [v0.1.0-alpha.20...v0.1.0-alpha.21](https://github.com/openai/openai-go/compare/v0.1.0-alpha.20...v0.1.0-alpha.21)
