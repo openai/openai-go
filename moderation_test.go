@@ -28,7 +28,7 @@ func TestModerationNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Moderations.New(context.TODO(), openai.ModerationNewParams{
 		Input: openai.F[openai.ModerationNewParamsInputUnion](shared.UnionString("I want to kill them.")),
-		Model: openai.F(openai.ModerationModelTextModerationLatest),
+		Model: openai.F(openai.ModerationModelOmniModerationLatest),
 	})
 	if err != nil {
 		var apierr *openai.Error
