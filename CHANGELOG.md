@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.23 (2024-09-29)
+
+Full Changelog: [v0.1.0-alpha.22...v0.1.0-alpha.23](https://github.com/openai/openai-go/compare/v0.1.0-alpha.22...v0.1.0-alpha.23)
+
+### Chores
+
+* **docs:** remove some duplicative api.md entries ([#65](https://github.com/openai/openai-go/issues/65)) ([13a1ca2](https://github.com/openai/openai-go/commit/13a1ca2eb6320c797d6e278bfe258e1e7f27e031))
+
 ## 0.1.0-alpha.22 (2024-09-26)
 
 Full Changelog: [v0.1.0-alpha.21...v0.1.0-alpha.22](https://github.com/openai/openai-go/compare/v0.1.0-alpha.21...v0.1.0-alpha.22)
