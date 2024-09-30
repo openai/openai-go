@@ -119,7 +119,7 @@ type Assistant struct {
 	Instructions string `json:"instructions,required,nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maxium of 512
+	// can be a maximum of 64 characters long and values can be a maximum of 512
 	// characters long.
 	Metadata interface{} `json:"metadata,required,nullable"`
 	// ID of the model to use. You can use the
@@ -2063,7 +2063,7 @@ type BetaAssistantNewParams struct {
 	Instructions param.Field[string] `json:"instructions"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maxium of 512
+	// can be a maximum of 64 characters long and values can be a maximum of 512
 	// characters long.
 	Metadata param.Field[interface{}] `json:"metadata"`
 	// The name of the assistant. The maximum length is 256 characters.
@@ -2144,7 +2144,7 @@ type BetaAssistantNewParamsToolResourcesFileSearchVectorStore struct {
 	FileIDs param.Field[[]string] `json:"file_ids"`
 	// Set of 16 key-value pairs that can be attached to a vector store. This can be
 	// useful for storing additional information about the vector store in a structured
-	// format. Keys can be a maximum of 64 characters long and values can be a maxium
+	// format. Keys can be a maximum of 64 characters long and values can be a maximum
 	// of 512 characters long.
 	Metadata param.Field[interface{}] `json:"metadata"`
 }
@@ -2161,7 +2161,7 @@ type BetaAssistantUpdateParams struct {
 	Instructions param.Field[string] `json:"instructions"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maxium of 512
+	// can be a maximum of 64 characters long and values can be a maximum of 512
 	// characters long.
 	Metadata param.Field[interface{}] `json:"metadata"`
 	// ID of the model to use. You can use the

@@ -394,7 +394,7 @@ type VectorStore struct {
 	LastActiveAt int64 `json:"last_active_at,required,nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maxium of 512
+	// can be a maximum of 64 characters long and values can be a maximum of 512
 	// characters long.
 	Metadata interface{} `json:"metadata,required,nullable"`
 	// The name of the vector store.
@@ -601,7 +601,7 @@ type BetaVectorStoreNewParams struct {
 	FileIDs param.Field[[]string] `json:"file_ids"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maxium of 512
+	// can be a maximum of 64 characters long and values can be a maximum of 512
 	// characters long.
 	Metadata param.Field[interface{}] `json:"metadata"`
 	// The name of the vector store.
@@ -646,7 +646,7 @@ type BetaVectorStoreUpdateParams struct {
 	ExpiresAfter param.Field[BetaVectorStoreUpdateParamsExpiresAfter] `json:"expires_after"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maxium of 512
+	// can be a maximum of 64 characters long and values can be a maximum of 512
 	// characters long.
 	Metadata param.Field[interface{}] `json:"metadata"`
 	// The name of the vector store.
