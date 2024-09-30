@@ -297,7 +297,7 @@ type Run struct {
 	MaxPromptTokens int64 `json:"max_prompt_tokens,required,nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maxium of 512
+	// can be a maximum of 64 characters long and values can be a maximum of 512
 	// characters long.
 	Metadata interface{} `json:"metadata,required,nullable"`
 	// The model that the
@@ -692,7 +692,7 @@ type BetaThreadRunNewParams struct {
 	MaxPromptTokens param.Field[int64] `json:"max_prompt_tokens"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maxium of 512
+	// can be a maximum of 64 characters long and values can be a maximum of 512
 	// characters long.
 	Metadata param.Field[interface{}] `json:"metadata"`
 	// The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
@@ -759,7 +759,7 @@ type BetaThreadRunNewParamsAdditionalMessage struct {
 	Attachments param.Field[[]BetaThreadRunNewParamsAdditionalMessagesAttachment] `json:"attachments"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maxium of 512
+	// can be a maximum of 64 characters long and values can be a maximum of 512
 	// characters long.
 	Metadata param.Field[interface{}] `json:"metadata"`
 }
@@ -901,7 +901,7 @@ func (r BetaThreadRunNewParamsTruncationStrategyType) IsKnown() bool {
 type BetaThreadRunUpdateParams struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maxium of 512
+	// can be a maximum of 64 characters long and values can be a maximum of 512
 	// characters long.
 	Metadata param.Field[interface{}] `json:"metadata"`
 }
