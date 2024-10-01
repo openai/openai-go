@@ -1442,8 +1442,12 @@ func (r ChatCompletionUserMessageParamRole) IsKnown() bool {
 }
 
 type ChatCompletionNewParams struct {
-	// A list of messages comprising the conversation so far.
-	// [Example Python code](https://cookbook.openai.com/examples/how_to_format_inputs_to_chatgpt_models).
+	// A list of messages comprising the conversation so far. Depending on the
+	// [model](https://platform.openai.com/docs/models) you use, different message
+	// types (modalities) are supported, like
+	// [text](https://platform.openai.com/docs/guides/text-generation),
+	// [images](https://platform.openai.com/docs/guides/vision), and
+	// [audio](https://platform.openai.com/docs/guides/audio).
 	Messages param.Field[[]ChatCompletionMessageParamUnion] `json:"messages,required"`
 	// ID of the model to use. See the
 	// [model endpoint compatibility](https://platform.openai.com/docs/models/model-endpoint-compatibility)
@@ -1495,6 +1499,9 @@ type ChatCompletionNewParams struct {
 	// compatible with
 	// [o1 series models](https://platform.openai.com/docs/guides/reasoning).
 	MaxTokens param.Field[int64] `json:"max_tokens"`
+	// Developer-defined tags and values used for filtering completions in the
+	// [dashboard](https://platform.openai.com/completions).
+	Metadata param.Field[map[string]string] `json:"metadata"`
 	// How many chat completion choices to generate for each input message. Note that
 	// you will be charged based on the number of generated tokens across all of the
 	// choices. Keep `n` as `1` to minimize costs.
@@ -1554,6 +1561,9 @@ type ChatCompletionNewParams struct {
 	ServiceTier param.Field[ChatCompletionNewParamsServiceTier] `json:"service_tier"`
 	// Up to 4 sequences where the API will stop generating further tokens.
 	Stop param.Field[ChatCompletionNewParamsStopUnion] `json:"stop"`
+	// Whether or not to store the output of this completion request for traffic
+	// logging in the [dashboard](https://platform.openai.com/completions).
+	Store param.Field[bool] `json:"store"`
 	// Options for streaming response. Only set this when you set `stream: true`.
 	StreamOptions param.Field[ChatCompletionStreamOptionsParam] `json:"stream_options"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will

@@ -48,15 +48,19 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Logprobs:            openai.F(true),
 		MaxCompletionTokens: openai.F(int64(0)),
 		MaxTokens:           openai.F(int64(0)),
-		N:                   openai.F(int64(1)),
-		ParallelToolCalls:   openai.F(true),
-		PresencePenalty:     openai.F(-2.000000),
+		Metadata: openai.F(map[string]string{
+			"foo": "string",
+		}),
+		N:                 openai.F(int64(1)),
+		ParallelToolCalls: openai.F(true),
+		PresencePenalty:   openai.F(-2.000000),
 		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](shared.ResponseFormatTextParam{
 			Type: openai.F(shared.ResponseFormatTextTypeText),
 		}),
 		Seed:        openai.F(int64(-9007199254740991)),
 		ServiceTier: openai.F(openai.ChatCompletionNewParamsServiceTierAuto),
 		Stop:        openai.F[openai.ChatCompletionNewParamsStopUnion](shared.UnionString("string")),
+		Store:       openai.F(true),
 		StreamOptions: openai.F(openai.ChatCompletionStreamOptionsParam{
 			IncludeUsage: openai.F(true),
 		}),
