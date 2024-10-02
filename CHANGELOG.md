@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.25 (2024-10-02)
+
+Full Changelog: [v0.1.0-alpha.24...v0.1.0-alpha.25](https://github.com/openai/openai-go/compare/v0.1.0-alpha.24...v0.1.0-alpha.25)
+
+### Documentation
+
+* improve and reference contributing documentation ([#73](https://github.com/openai/openai-go/issues/73)) ([03a8261](https://github.com/openai/openai-go/commit/03a8261970011b2be7e101ec095a0eb93b361a04))
+
 ## 0.1.0-alpha.24 (2024-10-01)
 
 Full Changelog: [v0.1.0-alpha.23...v0.1.0-alpha.24](https://github.com/openai/openai-go/compare/v0.1.0-alpha.23...v0.1.0-alpha.24)
