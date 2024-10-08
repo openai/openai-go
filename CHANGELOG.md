@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.26 (2024-10-08)
+
+Full Changelog: [v0.1.0-alpha.25...v0.1.0-alpha.26](https://github.com/openai/openai-go/compare/v0.1.0-alpha.25...v0.1.0-alpha.26)
+
+### Bug Fixes
+
+* **beta:** pass beta header by default ([#75](https://github.com/openai/openai-go/issues/75)) ([cb66b47](https://github.com/openai/openai-go/commit/cb66b474fb86646501314456fce6acc4b31a2026))
+
 ## 0.1.0-alpha.25 (2024-10-02)
 
 Full Changelog: [v0.1.0-alpha.24...v0.1.0-alpha.25](https://github.com/openai/openai-go/compare/v0.1.0-alpha.24...v0.1.0-alpha.25)
