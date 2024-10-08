@@ -39,6 +39,7 @@ func NewBetaVectorStoreFileBatchService(opts ...option.RequestOption) (r *BetaVe
 // Create a vector store file batch.
 func (r *BetaVectorStoreFileBatchService) New(ctx context.Context, vectorStoreID string, body BetaVectorStoreFileBatchNewParams, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	opts = append(r.Options[:], opts...)
+	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
 		return
@@ -51,6 +52,7 @@ func (r *BetaVectorStoreFileBatchService) New(ctx context.Context, vectorStoreID
 // Retrieves a vector store file batch.
 func (r *BetaVectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	opts = append(r.Options[:], opts...)
+	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
 		return
@@ -68,6 +70,7 @@ func (r *BetaVectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID
 // files in this batch as soon as possible.
 func (r *BetaVectorStoreFileBatchService) Cancel(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	opts = append(r.Options[:], opts...)
+	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
 		return
@@ -85,7 +88,7 @@ func (r *BetaVectorStoreFileBatchService) Cancel(ctx context.Context, vectorStor
 func (r *BetaVectorStoreFileBatchService) ListFiles(ctx context.Context, vectorStoreID string, batchID string, query BetaVectorStoreFileBatchListFilesParams, opts ...option.RequestOption) (res *pagination.CursorPage[VectorStoreFile], err error) {
 	var raw *http.Response
 	opts = append(r.Options[:], opts...)
-	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
+	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
 		return
