@@ -35,9 +35,9 @@ func (r pageJSON) RawJSON() string {
 	return r.raw
 }
 
-// NextPage returns the next page as defined by this pagination style. When there
-// is no next page, this function will return a 'nil' for the page value, but will
-// not return an error
+// GetNextPage returns the next page as defined by this pagination style. When
+// there is no next page, this function will return a 'nil' for the page value, but
+// will not return an error
 func (r *Page[T]) GetNextPage() (res *Page[T], err error) {
 	// This page represents a response that isn't actually paginated at the API level
 	// so there will never be a next page.
@@ -130,9 +130,9 @@ func (r cursorPageJSON) RawJSON() string {
 	return r.raw
 }
 
-// NextPage returns the next page as defined by this pagination style. When there
-// is no next page, this function will return a 'nil' for the page value, but will
-// not return an error
+// GetNextPage returns the next page as defined by this pagination style. When
+// there is no next page, this function will return a 'nil' for the page value, but
+// will not return an error
 func (r *CursorPage[T]) GetNextPage() (res *CursorPage[T], err error) {
 	items := r.Data
 	if items == nil || len(items) == 0 {
