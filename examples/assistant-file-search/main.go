@@ -59,7 +59,7 @@ func main() {
 		Do not give information outside the document or repeat your findings.`
 
 	assistant, err := client.Beta.Assistants.New(ctx, openai.BetaAssistantNewParams{
-		Name:         openai.String("Frog Buddy"),
+		Name:         openai.String("Helpful Assistant"),
 		Instructions: openai.String(INSTRUCTIONS),
 		Tools: openai.F([]openai.AssistantToolUnionParam{
 			openai.FileSearchToolParam{Type: openai.F(openai.FileSearchToolTypeFileSearch)},
