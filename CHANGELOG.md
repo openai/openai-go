@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.27 (2024-10-14)
+
+Full Changelog: [v0.1.0-alpha.26...v0.1.0-alpha.27](https://github.com/openai/openai-go/compare/v0.1.0-alpha.26...v0.1.0-alpha.27)
+
+### Chores
+
+* fix GetNextPage docstring ([#78](https://github.com/openai/openai-go/issues/78)) ([490f8f0](https://github.com/openai/openai-go/commit/490f8f0ae34cc6769a7555cf77fef0192963ad06))
+
 ## 0.1.0-alpha.26 (2024-10-08)
 
 Full Changelog: [v0.1.0-alpha.25...v0.1.0-alpha.26](https://github.com/openai/openai-go/compare/v0.1.0-alpha.25...v0.1.0-alpha.26)
