@@ -45,9 +45,7 @@ func NewClient(opts ...option.RequestOption) (r *Client) {
 	if o, ok := os.LookupEnv("OPENAI_PROJECT_ID"); ok {
 		defaults = append(defaults, option.WithProject(o))
 	}
-
 	opts = append(defaults, opts...)
-	betaOpts := append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 
 	r = &Client{Options: opts}
 
@@ -60,7 +58,7 @@ func NewClient(opts ...option.RequestOption) (r *Client) {
 	r.Moderations = NewModerationService(opts...)
 	r.Models = NewModelService(opts...)
 	r.FineTuning = NewFineTuningService(opts...)
-	r.Beta = NewBetaService(betaOpts...)
+	r.Beta = NewBetaService(opts...)
 	r.Batches = NewBatchService(opts...)
 	r.Uploads = NewUploadService(opts...)
 
