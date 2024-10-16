@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.28 (2024-10-16)
+
+Full Changelog: [v0.1.0-alpha.27...v0.1.0-alpha.28](https://github.com/openai/openai-go/compare/v0.1.0-alpha.27...v0.1.0-alpha.28)
+
+### Features
+
+* move pagination package from internal to packages ([#81](https://github.com/openai/openai-go/issues/81)) ([8875bdc](https://github.com/openai/openai-go/commit/8875bdc847467b322bd9b6c54c027d97a79c5f16))
+
 ## 0.1.0-alpha.27 (2024-10-14)
 
 Full Changelog: [v0.1.0-alpha.26...v0.1.0-alpha.27](https://github.com/openai/openai-go/compare/v0.1.0-alpha.26...v0.1.0-alpha.27)
