@@ -22,17 +22,13 @@ func main() {
 		rdr, err := os.Open(arg)
 		defer rdr.Close()
 		if err != nil {
-			panic(err.Error())
+			panic("file open failed:" + err.Error())
 		}
 
 		fileParams = append(fileParams, openai.FileNewParams{
 			File:    openai.F[io.Reader](rdr),
 			Purpose: openai.F(openai.FilePurposeAssistants),
 		})
-
-		if err != nil {
-			panic(err.Error())
-		}
 	}
 
 	println("Creating a new vector store and uploading files")
@@ -52,7 +48,7 @@ func main() {
 	)
 
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
 	// 0 uses default polling interval
@@ -60,7 +56,7 @@ func main() {
 		[]string{}, 0)
 
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
 	println("Listing the files from the vector store")
@@ -69,7 +65,7 @@ func main() {
 		openai.BetaVectorStoreFileBatchListFilesParams{})
 
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
 	for filesCursor != nil {
@@ -78,7 +74,7 @@ func main() {
 		}
 		filesCursor, err = filesCursor.GetNextPage()
 		if err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 	}
 }
