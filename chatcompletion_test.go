@@ -32,7 +32,11 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionSystemMessageParamRoleSystem),
 			Name:    openai.F("name"),
 		}}),
-		Model:            openai.F(openai.ChatModelO1Preview),
+		Model: openai.F(openai.ChatModelO1Preview),
+		Audio: openai.F(openai.ChatCompletionAudioParam{
+			Format: openai.F(openai.ChatCompletionAudioParamFormatWAV),
+			Voice:  openai.F(openai.ChatCompletionAudioParamVoiceAlloy),
+		}),
 		FrequencyPenalty: openai.F(-2.000000),
 		FunctionCall:     openai.F[openai.ChatCompletionNewParamsFunctionCallUnion](openai.ChatCompletionNewParamsFunctionCallString(openai.ChatCompletionNewParamsFunctionCallStringNone)),
 		Functions: openai.F([]openai.ChatCompletionNewParamsFunction{{
@@ -51,6 +55,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Metadata: openai.F(map[string]string{
 			"foo": "string",
 		}),
+		Modalities:        openai.F([]openai.ChatCompletionModality{openai.ChatCompletionModalityText, openai.ChatCompletionModalityAudio}),
 		N:                 openai.F(int64(1)),
 		ParallelToolCalls: openai.F(true),
 		PresencePenalty:   openai.F(-2.000000),
