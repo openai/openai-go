@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.29 (2024-10-17)
+
+Full Changelog: [v0.1.0-alpha.28...v0.1.0-alpha.29](https://github.com/openai/openai-go/compare/v0.1.0-alpha.28...v0.1.0-alpha.29)
+
+### Features
+
+* **api:** add gpt-4o-audio-preview model for chat completions ([#88](https://github.com/openai/openai-go/issues/88)) ([03da9c9](https://github.com/openai/openai-go/commit/03da9c984e6b0fdb0d8da7a8e4fde29fc45b784d))
+* **assistants:** add polling helpers and examples ([#84](https://github.com/openai/openai-go/issues/84)) ([eab25dd](https://github.com/openai/openai-go/commit/eab25dde95f7dd50b712326714ce55e93432b4dc))
+
+
+### Bug Fixes
+
+* **example:** use correct model ([#86](https://github.com/openai/openai-go/issues/86)) ([6dad9b2](https://github.com/openai/openai-go/commit/6dad9b256b86b069ec9445ae86bfb2f2c3764b66))
+
 ## 0.1.0-alpha.28 (2024-10-16)
 
 Full Changelog: [v0.1.0-alpha.27...v0.1.0-alpha.28](https://github.com/openai/openai-go/compare/v0.1.0-alpha.27...v0.1.0-alpha.28)
