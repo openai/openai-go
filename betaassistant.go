@@ -335,7 +335,9 @@ func (r AssistantDeletedObject) IsKnown() bool {
 // [Assistants API quickstart](https://platform.openai.com/docs/assistants/overview)
 // to learn how to integrate the Assistants API with streaming.
 type AssistantStreamEvent struct {
-	Event AssistantStreamEventEvent `json:"event,required"`
+	// Whether to enable input audio transcription.
+	Enabled bool                      `json:"enabled"`
+	Event   AssistantStreamEventEvent `json:"event,required"`
 	// This field can have the runtime type of [Thread], [Run], [RunStep],
 	// [RunStepDeltaEvent], [Message], [MessageDeltaEvent], [shared.ErrorObject].
 	Data  interface{}              `json:"data"`
@@ -346,6 +348,7 @@ type AssistantStreamEvent struct {
 // assistantStreamEventJSON contains the JSON metadata for the struct
 // [AssistantStreamEvent]
 type assistantStreamEventJSON struct {
+	Enabled     apijson.Field
 	Event       apijson.Field
 	Data        apijson.Field
 	raw         string
@@ -577,7 +580,9 @@ type AssistantStreamEventThreadCreated struct {
 	// [messages](https://platform.openai.com/docs/api-reference/messages).
 	Data  Thread                                 `json:"data,required"`
 	Event AssistantStreamEventThreadCreatedEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadCreatedJSON  `json:"-"`
+	// Whether to enable input audio transcription.
+	Enabled bool                                  `json:"enabled"`
+	JSON    assistantStreamEventThreadCreatedJSON `json:"-"`
 }
 
 // assistantStreamEventThreadCreatedJSON contains the JSON metadata for the struct
@@ -585,6 +590,7 @@ type AssistantStreamEventThreadCreated struct {
 type assistantStreamEventThreadCreatedJSON struct {
 	Data        apijson.Field
 	Event       apijson.Field
+	Enabled     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
