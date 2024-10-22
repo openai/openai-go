@@ -279,7 +279,7 @@ func (r fineTuningJobHyperparametersJSON) RawJSON() string {
 // on the size of the dataset. If setting the number manually, we support any
 // number between 1 and 50 epochs.
 //
-// Union satisfied by [FineTuningJobHyperparametersNEpochsString] or
+// Union satisfied by [FineTuningJobHyperparametersNEpochsBehavior] or
 // [shared.UnionInt].
 type FineTuningJobHyperparametersNEpochsUnion interface {
 	ImplementsFineTuningJobHyperparametersNEpochsUnion()
@@ -291,7 +291,7 @@ func init() {
 		"",
 		apijson.UnionVariant{
 			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(FineTuningJobHyperparametersNEpochsString("")),
+			Type:       reflect.TypeOf(FineTuningJobHyperparametersNEpochsBehavior("")),
 		},
 		apijson.UnionVariant{
 			TypeFilter: gjson.Number,
@@ -300,21 +300,21 @@ func init() {
 	)
 }
 
-type FineTuningJobHyperparametersNEpochsString string
+type FineTuningJobHyperparametersNEpochsBehavior string
 
 const (
-	FineTuningJobHyperparametersNEpochsStringAuto FineTuningJobHyperparametersNEpochsString = "auto"
+	FineTuningJobHyperparametersNEpochsBehaviorAuto FineTuningJobHyperparametersNEpochsBehavior = "auto"
 )
 
-func (r FineTuningJobHyperparametersNEpochsString) IsKnown() bool {
+func (r FineTuningJobHyperparametersNEpochsBehavior) IsKnown() bool {
 	switch r {
-	case FineTuningJobHyperparametersNEpochsStringAuto:
+	case FineTuningJobHyperparametersNEpochsBehaviorAuto:
 		return true
 	}
 	return false
 }
 
-func (r FineTuningJobHyperparametersNEpochsString) ImplementsFineTuningJobHyperparametersNEpochsUnion() {
+func (r FineTuningJobHyperparametersNEpochsBehavior) ImplementsFineTuningJobHyperparametersNEpochsUnion() {
 }
 
 // The object type, which is always "fine_tuning.job".
@@ -586,80 +586,80 @@ func (r FineTuningJobNewParamsHyperparameters) MarshalJSON() (data []byte, err e
 // Number of examples in each batch. A larger batch size means that model
 // parameters are updated less frequently, but with lower variance.
 //
-// Satisfied by [FineTuningJobNewParamsHyperparametersBatchSizeString],
+// Satisfied by [FineTuningJobNewParamsHyperparametersBatchSizeBehavior],
 // [shared.UnionInt].
 type FineTuningJobNewParamsHyperparametersBatchSizeUnion interface {
 	ImplementsFineTuningJobNewParamsHyperparametersBatchSizeUnion()
 }
 
-type FineTuningJobNewParamsHyperparametersBatchSizeString string
+type FineTuningJobNewParamsHyperparametersBatchSizeBehavior string
 
 const (
-	FineTuningJobNewParamsHyperparametersBatchSizeStringAuto FineTuningJobNewParamsHyperparametersBatchSizeString = "auto"
+	FineTuningJobNewParamsHyperparametersBatchSizeBehaviorAuto FineTuningJobNewParamsHyperparametersBatchSizeBehavior = "auto"
 )
 
-func (r FineTuningJobNewParamsHyperparametersBatchSizeString) IsKnown() bool {
+func (r FineTuningJobNewParamsHyperparametersBatchSizeBehavior) IsKnown() bool {
 	switch r {
-	case FineTuningJobNewParamsHyperparametersBatchSizeStringAuto:
+	case FineTuningJobNewParamsHyperparametersBatchSizeBehaviorAuto:
 		return true
 	}
 	return false
 }
 
-func (r FineTuningJobNewParamsHyperparametersBatchSizeString) ImplementsFineTuningJobNewParamsHyperparametersBatchSizeUnion() {
+func (r FineTuningJobNewParamsHyperparametersBatchSizeBehavior) ImplementsFineTuningJobNewParamsHyperparametersBatchSizeUnion() {
 }
 
 // Scaling factor for the learning rate. A smaller learning rate may be useful to
 // avoid overfitting.
 //
 // Satisfied by
-// [FineTuningJobNewParamsHyperparametersLearningRateMultiplierString],
+// [FineTuningJobNewParamsHyperparametersLearningRateMultiplierBehavior],
 // [shared.UnionFloat].
 type FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion interface {
 	ImplementsFineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion()
 }
 
-type FineTuningJobNewParamsHyperparametersLearningRateMultiplierString string
+type FineTuningJobNewParamsHyperparametersLearningRateMultiplierBehavior string
 
 const (
-	FineTuningJobNewParamsHyperparametersLearningRateMultiplierStringAuto FineTuningJobNewParamsHyperparametersLearningRateMultiplierString = "auto"
+	FineTuningJobNewParamsHyperparametersLearningRateMultiplierBehaviorAuto FineTuningJobNewParamsHyperparametersLearningRateMultiplierBehavior = "auto"
 )
 
-func (r FineTuningJobNewParamsHyperparametersLearningRateMultiplierString) IsKnown() bool {
+func (r FineTuningJobNewParamsHyperparametersLearningRateMultiplierBehavior) IsKnown() bool {
 	switch r {
-	case FineTuningJobNewParamsHyperparametersLearningRateMultiplierStringAuto:
+	case FineTuningJobNewParamsHyperparametersLearningRateMultiplierBehaviorAuto:
 		return true
 	}
 	return false
 }
 
-func (r FineTuningJobNewParamsHyperparametersLearningRateMultiplierString) ImplementsFineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion() {
+func (r FineTuningJobNewParamsHyperparametersLearningRateMultiplierBehavior) ImplementsFineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion() {
 }
 
 // The number of epochs to train the model for. An epoch refers to one full cycle
 // through the training dataset.
 //
-// Satisfied by [FineTuningJobNewParamsHyperparametersNEpochsString],
+// Satisfied by [FineTuningJobNewParamsHyperparametersNEpochsBehavior],
 // [shared.UnionInt].
 type FineTuningJobNewParamsHyperparametersNEpochsUnion interface {
 	ImplementsFineTuningJobNewParamsHyperparametersNEpochsUnion()
 }
 
-type FineTuningJobNewParamsHyperparametersNEpochsString string
+type FineTuningJobNewParamsHyperparametersNEpochsBehavior string
 
 const (
-	FineTuningJobNewParamsHyperparametersNEpochsStringAuto FineTuningJobNewParamsHyperparametersNEpochsString = "auto"
+	FineTuningJobNewParamsHyperparametersNEpochsBehaviorAuto FineTuningJobNewParamsHyperparametersNEpochsBehavior = "auto"
 )
 
-func (r FineTuningJobNewParamsHyperparametersNEpochsString) IsKnown() bool {
+func (r FineTuningJobNewParamsHyperparametersNEpochsBehavior) IsKnown() bool {
 	switch r {
-	case FineTuningJobNewParamsHyperparametersNEpochsStringAuto:
+	case FineTuningJobNewParamsHyperparametersNEpochsBehaviorAuto:
 		return true
 	}
 	return false
 }
 
-func (r FineTuningJobNewParamsHyperparametersNEpochsString) ImplementsFineTuningJobNewParamsHyperparametersNEpochsUnion() {
+func (r FineTuningJobNewParamsHyperparametersNEpochsBehavior) ImplementsFineTuningJobNewParamsHyperparametersNEpochsUnion() {
 }
 
 type FineTuningJobNewParamsIntegration struct {
