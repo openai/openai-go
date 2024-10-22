@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.0-alpha.30 (2024-10-22)
+
+Full Changelog: [v0.1.0-alpha.29...v0.1.0-alpha.30](https://github.com/openai/openai-go/compare/v0.1.0-alpha.29...v0.1.0-alpha.30)
+
+### ⚠ BREAKING CHANGES
+
+* **client:** improve naming of some variants ([#89](https://github.com/openai/openai-go/issues/89))
+
+### Features
+
+* **client:** improve naming of some variants ([#89](https://github.com/openai/openai-go/issues/89)) ([12ac070](https://github.com/openai/openai-go/commit/12ac070611061e98ae2aaaeefa8eb661ff7f995f))
+
 ## 0.1.0-alpha.29 (2024-10-17)
 
 Full Changelog: [v0.1.0-alpha.28...v0.1.0-alpha.29](https://github.com/openai/openai-go/compare/v0.1.0-alpha.28...v0.1.0-alpha.29)
