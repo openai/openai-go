@@ -1460,7 +1460,7 @@ func (r ChatCompletionToolType) IsKnown() bool {
 // `none` is the default when no tools are present. `auto` is the default if tools
 // are present.
 //
-// Satisfied by [ChatCompletionToolChoiceOptionString],
+// Satisfied by [ChatCompletionToolChoiceOptionBehavior],
 // [ChatCompletionNamedToolChoiceParam].
 type ChatCompletionToolChoiceOptionUnionParam interface {
 	implementsChatCompletionToolChoiceOptionUnionParam()
@@ -1469,23 +1469,24 @@ type ChatCompletionToolChoiceOptionUnionParam interface {
 // `none` means the model will not call any tool and instead generates a message.
 // `auto` means the model can pick between generating a message or calling one or
 // more tools. `required` means the model must call one or more tools.
-type ChatCompletionToolChoiceOptionString string
+type ChatCompletionToolChoiceOptionBehavior string
 
 const (
-	ChatCompletionToolChoiceOptionStringNone     ChatCompletionToolChoiceOptionString = "none"
-	ChatCompletionToolChoiceOptionStringAuto     ChatCompletionToolChoiceOptionString = "auto"
-	ChatCompletionToolChoiceOptionStringRequired ChatCompletionToolChoiceOptionString = "required"
+	ChatCompletionToolChoiceOptionBehaviorNone     ChatCompletionToolChoiceOptionBehavior = "none"
+	ChatCompletionToolChoiceOptionBehaviorAuto     ChatCompletionToolChoiceOptionBehavior = "auto"
+	ChatCompletionToolChoiceOptionBehaviorRequired ChatCompletionToolChoiceOptionBehavior = "required"
 )
 
-func (r ChatCompletionToolChoiceOptionString) IsKnown() bool {
+func (r ChatCompletionToolChoiceOptionBehavior) IsKnown() bool {
 	switch r {
-	case ChatCompletionToolChoiceOptionStringNone, ChatCompletionToolChoiceOptionStringAuto, ChatCompletionToolChoiceOptionStringRequired:
+	case ChatCompletionToolChoiceOptionBehaviorNone, ChatCompletionToolChoiceOptionBehaviorAuto, ChatCompletionToolChoiceOptionBehaviorRequired:
 		return true
 	}
 	return false
 }
 
-func (r ChatCompletionToolChoiceOptionString) implementsChatCompletionToolChoiceOptionUnionParam() {}
+func (r ChatCompletionToolChoiceOptionBehavior) implementsChatCompletionToolChoiceOptionUnionParam() {
+}
 
 type ChatCompletionToolMessageParam struct {
 	// The contents of the tool message.
@@ -1740,7 +1741,7 @@ func (r ChatCompletionNewParams) MarshalJSON() (data []byte, err error) {
 // `none` is the default when no functions are present. `auto` is the default if
 // functions are present.
 //
-// Satisfied by [ChatCompletionNewParamsFunctionCallString],
+// Satisfied by [ChatCompletionNewParamsFunctionCallBehavior],
 // [ChatCompletionFunctionCallOptionParam].
 type ChatCompletionNewParamsFunctionCallUnion interface {
 	implementsChatCompletionNewParamsFunctionCallUnion()
@@ -1749,22 +1750,22 @@ type ChatCompletionNewParamsFunctionCallUnion interface {
 // `none` means the model will not call a function and instead generates a message.
 // `auto` means the model can pick between generating a message or calling a
 // function.
-type ChatCompletionNewParamsFunctionCallString string
+type ChatCompletionNewParamsFunctionCallBehavior string
 
 const (
-	ChatCompletionNewParamsFunctionCallStringNone ChatCompletionNewParamsFunctionCallString = "none"
-	ChatCompletionNewParamsFunctionCallStringAuto ChatCompletionNewParamsFunctionCallString = "auto"
+	ChatCompletionNewParamsFunctionCallBehaviorNone ChatCompletionNewParamsFunctionCallBehavior = "none"
+	ChatCompletionNewParamsFunctionCallBehaviorAuto ChatCompletionNewParamsFunctionCallBehavior = "auto"
 )
 
-func (r ChatCompletionNewParamsFunctionCallString) IsKnown() bool {
+func (r ChatCompletionNewParamsFunctionCallBehavior) IsKnown() bool {
 	switch r {
-	case ChatCompletionNewParamsFunctionCallStringNone, ChatCompletionNewParamsFunctionCallStringAuto:
+	case ChatCompletionNewParamsFunctionCallBehaviorNone, ChatCompletionNewParamsFunctionCallBehaviorAuto:
 		return true
 	}
 	return false
 }
 
-func (r ChatCompletionNewParamsFunctionCallString) implementsChatCompletionNewParamsFunctionCallUnion() {
+func (r ChatCompletionNewParamsFunctionCallBehavior) implementsChatCompletionNewParamsFunctionCallUnion() {
 }
 
 type ChatCompletionNewParamsFunction struct {
