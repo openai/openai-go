@@ -38,7 +38,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 			Voice:  openai.F(openai.ChatCompletionAudioParamVoiceAlloy),
 		}),
 		FrequencyPenalty: openai.F(-2.000000),
-		FunctionCall:     openai.F[openai.ChatCompletionNewParamsFunctionCallUnion](openai.ChatCompletionNewParamsFunctionCallString(openai.ChatCompletionNewParamsFunctionCallStringNone)),
+		FunctionCall:     openai.F[openai.ChatCompletionNewParamsFunctionCallUnion](openai.ChatCompletionNewParamsFunctionCallBehavior(openai.ChatCompletionNewParamsFunctionCallBehaviorNone)),
 		Functions: openai.F([]openai.ChatCompletionNewParamsFunction{{
 			Name:        openai.F("name"),
 			Description: openai.F("description"),
@@ -70,7 +70,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 			IncludeUsage: openai.F(true),
 		}),
 		Temperature: openai.F(1.000000),
-		ToolChoice:  openai.F[openai.ChatCompletionToolChoiceOptionUnionParam](openai.ChatCompletionToolChoiceOptionString(openai.ChatCompletionToolChoiceOptionStringNone)),
+		ToolChoice:  openai.F[openai.ChatCompletionToolChoiceOptionUnionParam](openai.ChatCompletionToolChoiceOptionBehavior(openai.ChatCompletionToolChoiceOptionBehaviorNone)),
 		Tools: openai.F([]openai.ChatCompletionToolParam{{
 			Function: openai.F(shared.FunctionDefinitionParam{
 				Name:        openai.F("name"),
