@@ -313,7 +313,7 @@ func escapeQuotes(s string) string {
 func (e *encoder) newReaderTypeEncoder() encoderFunc {
 	return func(key string, value reflect.Value, writer *multipart.Writer) error {
 		reader := value.Convert(reflect.TypeOf((*io.Reader)(nil)).Elem()).Interface().(io.Reader)
-		filename := "anonymous_file"
+		filename := "anonymous_file.mp3"
 		contentType := "application/octet-stream"
 		if named, ok := reader.(interface{ Name() string }); ok {
 			filename = path.Base(named.Name())
