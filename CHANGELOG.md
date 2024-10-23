@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.31 (2024-10-23)
+
+Full Changelog: [v0.1.0-alpha.30...v0.1.0-alpha.31](https://github.com/openai/openai-go/compare/v0.1.0-alpha.30...v0.1.0-alpha.31)
+
+### Chores
+
+* **internal:** update spec version ([#95](https://github.com/openai/openai-go/issues/95)) ([0cb6f6a](https://github.com/openai/openai-go/commit/0cb6f6abd428a5bd314902708ab12bc12a1b978f))
+
 ## 0.1.0-alpha.30 (2024-10-22)
 
 Full Changelog: [v0.1.0-alpha.29...v0.1.0-alpha.30](https://github.com/openai/openai-go/compare/v0.1.0-alpha.29...v0.1.0-alpha.30)
