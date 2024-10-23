@@ -47,7 +47,12 @@ func (r *CompletionService) NewStreaming(ctx context.Context, body CompletionNew
 		err error
 	)
 	opts = append(r.Options[:], opts...)
-	opts = append([]option.RequestOption{option.WithJSONSet("stream", true)}, opts...)
+	opts = append(opts,
+		option.WithJSONSet("stream", true),
+		// Streaming response returns a text/event-stream content type. To comply with
+		// the SSE spec, we need to set the Accept header to text/event-stream explicitly.
+		option.WithHeader("Accept", "text/event-stream"),
+	)
 	path := "completions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStream[Completion](ssestream.NewDecoder(raw), err)
