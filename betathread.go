@@ -218,7 +218,7 @@ func (r AssistantToolChoiceFunctionParam) MarshalJSON() (data []byte, err error)
 // `{"type": "function", "function": {"name": "my_function"}}` forces the model to
 // call that tool.
 //
-// Union satisfied by [AssistantToolChoiceOptionString] or [AssistantToolChoice].
+// Union satisfied by [AssistantToolChoiceOptionBehavior] or [AssistantToolChoice].
 type AssistantToolChoiceOptionUnion interface {
 	implementsAssistantToolChoiceOptionUnion()
 }
@@ -229,7 +229,7 @@ func init() {
 		"",
 		apijson.UnionVariant{
 			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(AssistantToolChoiceOptionString("")),
+			Type:       reflect.TypeOf(AssistantToolChoiceOptionBehavior("")),
 		},
 		apijson.UnionVariant{
 			TypeFilter: gjson.JSON,
@@ -242,25 +242,25 @@ func init() {
 // `auto` means the model can pick between generating a message or calling one or
 // more tools. `required` means the model must call one or more tools before
 // responding to the user.
-type AssistantToolChoiceOptionString string
+type AssistantToolChoiceOptionBehavior string
 
 const (
-	AssistantToolChoiceOptionStringNone     AssistantToolChoiceOptionString = "none"
-	AssistantToolChoiceOptionStringAuto     AssistantToolChoiceOptionString = "auto"
-	AssistantToolChoiceOptionStringRequired AssistantToolChoiceOptionString = "required"
+	AssistantToolChoiceOptionBehaviorNone     AssistantToolChoiceOptionBehavior = "none"
+	AssistantToolChoiceOptionBehaviorAuto     AssistantToolChoiceOptionBehavior = "auto"
+	AssistantToolChoiceOptionBehaviorRequired AssistantToolChoiceOptionBehavior = "required"
 )
 
-func (r AssistantToolChoiceOptionString) IsKnown() bool {
+func (r AssistantToolChoiceOptionBehavior) IsKnown() bool {
 	switch r {
-	case AssistantToolChoiceOptionStringNone, AssistantToolChoiceOptionStringAuto, AssistantToolChoiceOptionStringRequired:
+	case AssistantToolChoiceOptionBehaviorNone, AssistantToolChoiceOptionBehaviorAuto, AssistantToolChoiceOptionBehaviorRequired:
 		return true
 	}
 	return false
 }
 
-func (r AssistantToolChoiceOptionString) implementsAssistantToolChoiceOptionUnion() {}
+func (r AssistantToolChoiceOptionBehavior) implementsAssistantToolChoiceOptionUnion() {}
 
-func (r AssistantToolChoiceOptionString) implementsAssistantToolChoiceOptionUnionParam() {}
+func (r AssistantToolChoiceOptionBehavior) implementsAssistantToolChoiceOptionUnionParam() {}
 
 // Controls which (if any) tool is called by the model. `none` means the model will
 // not call any tools and instead generates a message. `auto` is the default value
@@ -270,7 +270,7 @@ func (r AssistantToolChoiceOptionString) implementsAssistantToolChoiceOptionUnio
 // `{"type": "function", "function": {"name": "my_function"}}` forces the model to
 // call that tool.
 //
-// Satisfied by [AssistantToolChoiceOptionString], [AssistantToolChoiceParam].
+// Satisfied by [AssistantToolChoiceOptionBehavior], [AssistantToolChoiceParam].
 type AssistantToolChoiceOptionUnionParam interface {
 	implementsAssistantToolChoiceOptionUnionParam()
 }

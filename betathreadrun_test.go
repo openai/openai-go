@@ -136,7 +136,7 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 			Model:               openai.F(openai.ChatModelGPT4o),
 			ParallelToolCalls:   openai.F(true),
 			Temperature:         openai.F(1.000000),
-			ToolChoice:          openai.F[openai.AssistantToolChoiceOptionUnionParam](openai.AssistantToolChoiceOptionString(openai.AssistantToolChoiceOptionStringNone)),
+			ToolChoice:          openai.F[openai.AssistantToolChoiceOptionUnionParam](openai.AssistantToolChoiceOptionBehavior(openai.AssistantToolChoiceOptionBehaviorNone)),
 			Tools: openai.F([]openai.AssistantToolUnionParam{openai.CodeInterpreterToolParam{
 				Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
 			}, openai.CodeInterpreterToolParam{
