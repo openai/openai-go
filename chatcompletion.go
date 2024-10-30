@@ -383,8 +383,8 @@ type ChatCompletionAudioParam struct {
 	// Specifies the output audio format. Must be one of `wav`, `mp3`, `flac`, `opus`,
 	// or `pcm16`.
 	Format param.Field[ChatCompletionAudioParamFormat] `json:"format,required"`
-	// Specifies the voice type. Supported voices are `alloy`, `echo`, `fable`, `onyx`,
-	// `nova`, and `shimmer`.
+	// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
+	// `ballad`, `coral`, `echo`, `sage`, `shimmer`, and `verse`.
 	Voice param.Field[ChatCompletionAudioParamVoice] `json:"voice,required"`
 }
 
@@ -412,22 +412,24 @@ func (r ChatCompletionAudioParamFormat) IsKnown() bool {
 	return false
 }
 
-// Specifies the voice type. Supported voices are `alloy`, `echo`, `fable`, `onyx`,
-// `nova`, and `shimmer`.
+// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
+// `ballad`, `coral`, `echo`, `sage`, `shimmer`, and `verse`.
 type ChatCompletionAudioParamVoice string
 
 const (
 	ChatCompletionAudioParamVoiceAlloy   ChatCompletionAudioParamVoice = "alloy"
+	ChatCompletionAudioParamVoiceAsh     ChatCompletionAudioParamVoice = "ash"
+	ChatCompletionAudioParamVoiceBallad  ChatCompletionAudioParamVoice = "ballad"
+	ChatCompletionAudioParamVoiceCoral   ChatCompletionAudioParamVoice = "coral"
 	ChatCompletionAudioParamVoiceEcho    ChatCompletionAudioParamVoice = "echo"
-	ChatCompletionAudioParamVoiceFable   ChatCompletionAudioParamVoice = "fable"
-	ChatCompletionAudioParamVoiceOnyx    ChatCompletionAudioParamVoice = "onyx"
-	ChatCompletionAudioParamVoiceNova    ChatCompletionAudioParamVoice = "nova"
+	ChatCompletionAudioParamVoiceSage    ChatCompletionAudioParamVoice = "sage"
 	ChatCompletionAudioParamVoiceShimmer ChatCompletionAudioParamVoice = "shimmer"
+	ChatCompletionAudioParamVoiceVerse   ChatCompletionAudioParamVoice = "verse"
 )
 
 func (r ChatCompletionAudioParamVoice) IsKnown() bool {
 	switch r {
-	case ChatCompletionAudioParamVoiceAlloy, ChatCompletionAudioParamVoiceEcho, ChatCompletionAudioParamVoiceFable, ChatCompletionAudioParamVoiceOnyx, ChatCompletionAudioParamVoiceNova, ChatCompletionAudioParamVoiceShimmer:
+	case ChatCompletionAudioParamVoiceAlloy, ChatCompletionAudioParamVoiceAsh, ChatCompletionAudioParamVoiceBallad, ChatCompletionAudioParamVoiceCoral, ChatCompletionAudioParamVoiceEcho, ChatCompletionAudioParamVoiceSage, ChatCompletionAudioParamVoiceShimmer, ChatCompletionAudioParamVoiceVerse:
 		return true
 	}
 	return false
@@ -460,7 +462,7 @@ type ChatCompletionChunk struct {
 	// `stream_options: {"include_usage": true}` in your request. When present, it
 	// contains a null value except for the last chunk which contains the token usage
 	// statistics for the entire request.
-	Usage CompletionUsage         `json:"usage"`
+	Usage CompletionUsage         `json:"usage,nullable"`
 	JSON  chatCompletionChunkJSON `json:"-"`
 }
 
