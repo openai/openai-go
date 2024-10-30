@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.32 (2024-10-30)
+
+Full Changelog: [v0.1.0-alpha.31...v0.1.0-alpha.32](https://github.com/openai/openai-go/compare/v0.1.0-alpha.31...v0.1.0-alpha.32)
+
+### Features
+
+* **api:** add new, expressive voices for Realtime and Audio in Chat Completions ([#101](https://github.com/openai/openai-go/issues/101)) ([f946acc](https://github.com/openai/openai-go/commit/f946acc71a92f885bed87f0d4e724fb40cae0f14))
+
 ## 0.1.0-alpha.31 (2024-10-23)
 
 Full Changelog: [v0.1.0-alpha.30...v0.1.0-alpha.31](https://github.com/openai/openai-go/compare/v0.1.0-alpha.30...v0.1.0-alpha.31)
