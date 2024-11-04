@@ -498,7 +498,7 @@ func (r fineTuningJobWandbIntegrationJSON) RawJSON() string {
 
 type FineTuningJobNewParams struct {
 	// The name of the model to fine-tune. You can select one of the
-	// [supported models](https://platform.openai.com/docs/guides/fine-tuning/which-models-can-be-fine-tuned).
+	// [supported models](https://platform.openai.com/docs/guides/fine-tuning#which-models-can-be-fine-tuned).
 	Model param.Field[FineTuningJobNewParamsModel] `json:"model,required"`
 	// The ID of an uploaded file that contains training data.
 	//

@@ -137,7 +137,7 @@ type ImageNewVariationParams struct {
 	Size param.Field[ImageNewVariationParamsSize] `json:"size"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids).
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
 	User param.Field[string] `json:"user"`
 }
 
@@ -217,7 +217,7 @@ type ImageEditParams struct {
 	Size param.Field[ImageEditParamsSize] `json:"size"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids).
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
 	User param.Field[string] `json:"user"`
 }
 
@@ -300,7 +300,7 @@ type ImageGenerateParams struct {
 	Style param.Field[ImageGenerateParamsStyle] `json:"style"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids).
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
 	User param.Field[string] `json:"user"`
 }
 
