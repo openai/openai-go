@@ -823,7 +823,7 @@ type ChatCompletionContentPartImageImageURLParam struct {
 	// Either a URL of the image or the base64 encoded image data.
 	URL param.Field[string] `json:"url,required" format:"uri"`
 	// Specifies the detail level of the image. Learn more in the
-	// [Vision guide](https://platform.openai.com/docs/guides/vision/low-or-high-fidelity-image-understanding).
+	// [Vision guide](https://platform.openai.com/docs/guides/vision#low-or-high-fidelity-image-understanding).
 	Detail param.Field[ChatCompletionContentPartImageImageURLDetail] `json:"detail"`
 }
 
@@ -832,7 +832,7 @@ func (r ChatCompletionContentPartImageImageURLParam) MarshalJSON() (data []byte,
 }
 
 // Specifies the detail level of the image. Learn more in the
-// [Vision guide](https://platform.openai.com/docs/guides/vision/low-or-high-fidelity-image-understanding).
+// [Vision guide](https://platform.openai.com/docs/guides/vision#low-or-high-fidelity-image-understanding).
 type ChatCompletionContentPartImageImageURLDetail string
 
 const (
@@ -1312,6 +1312,38 @@ func (r ChatCompletionNamedToolChoiceType) IsKnown() bool {
 	return false
 }
 
+// Static predicted output content, such as the content of a text file that is
+// being regenerated.
+type ChatCompletionPredictionContentParam struct {
+	// The content that should be matched when generating a model response. If
+	// generated tokens would match this content, the entire model response can be
+	// returned much more quickly.
+	Content param.Field[[]ChatCompletionContentPartTextParam] `json:"content,required"`
+	// The type of the predicted content you want to provide. This type is currently
+	// always `content`.
+	Type param.Field[ChatCompletionPredictionContentType] `json:"type,required"`
+}
+
+func (r ChatCompletionPredictionContentParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// The type of the predicted content you want to provide. This type is currently
+// always `content`.
+type ChatCompletionPredictionContentType string
+
+const (
+	ChatCompletionPredictionContentTypeContent ChatCompletionPredictionContentType = "content"
+)
+
+func (r ChatCompletionPredictionContentType) IsKnown() bool {
+	switch r {
+	case ChatCompletionPredictionContentTypeContent:
+		return true
+	}
+	return false
+}
+
 // Options for streaming response. Only set this when you set `stream: true`.
 type ChatCompletionStreamOptionsParam struct {
 	// If set, an additional chunk will be streamed before the `data: [DONE]` message.
@@ -1560,7 +1592,7 @@ type ChatCompletionNewParams struct {
 	// [audio](https://platform.openai.com/docs/guides/audio).
 	Messages param.Field[[]ChatCompletionMessageParamUnion] `json:"messages,required"`
 	// ID of the model to use. See the
-	// [model endpoint compatibility](https://platform.openai.com/docs/models/model-endpoint-compatibility)
+	// [model endpoint compatibility](https://platform.openai.com/docs/models#model-endpoint-compatibility)
 	// table for details on which models work with the Chat API.
 	Model param.Field[ChatModel] `json:"model,required"`
 	// Parameters for audio output. Required when audio output is requested with
@@ -1571,7 +1603,7 @@ type ChatCompletionNewParams struct {
 	// existing frequency in the text so far, decreasing the model's likelihood to
 	// repeat the same line verbatim.
 	//
-	// [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation/parameter-details)
+	// [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation)
 	FrequencyPenalty param.Field[float64] `json:"frequency_penalty"`
 	// Deprecated in favor of `tool_choice`.
 	//
@@ -1632,19 +1664,22 @@ type ChatCompletionNewParams struct {
 	// choices. Keep `n` as `1` to minimize costs.
 	N param.Field[int64] `json:"n"`
 	// Whether to enable
-	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling)
+	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Field[bool] `json:"parallel_tool_calls"`
+	// Static predicted output content, such as the content of a text file that is
+	// being regenerated.
+	Prediction param.Field[ChatCompletionPredictionContentParam] `json:"prediction"`
 	// Number between -2.0 and 2.0. Positive values penalize new tokens based on
 	// whether they appear in the text so far, increasing the model's likelihood to
 	// talk about new topics.
 	//
-	// [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation/parameter-details)
+	// [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation)
 	PresencePenalty param.Field[float64] `json:"presence_penalty"`
 	// An object specifying the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-	// [GPT-4o mini](https://platform.openai.com/docs/models/gpt-4o-mini),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo) and
+	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+	// [GPT-4o mini](https://platform.openai.com/docs/models#gpt-4o-mini),
+	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4) and
 	// all GPT-3.5 Turbo models newer than `gpt-3.5-turbo-1106`.
 	//
 	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
@@ -1724,7 +1759,7 @@ type ChatCompletionNewParams struct {
 	TopP param.Field[float64] `json:"top_p"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices/end-user-ids).
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
 	User param.Field[string] `json:"user"`
 }
 
@@ -1792,9 +1827,9 @@ func (r ChatCompletionNewParamsFunction) MarshalJSON() (data []byte, err error) 
 }
 
 // An object specifying the format that the model must output. Compatible with
-// [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-// [GPT-4o mini](https://platform.openai.com/docs/models/gpt-4o-mini),
-// [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo) and
+// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+// [GPT-4o mini](https://platform.openai.com/docs/models#gpt-4o-mini),
+// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4) and
 // all GPT-3.5 Turbo models newer than `gpt-3.5-turbo-1106`.
 //
 // Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
@@ -1826,9 +1861,9 @@ func (r ChatCompletionNewParamsResponseFormat) ImplementsChatCompletionNewParams
 }
 
 // An object specifying the format that the model must output. Compatible with
-// [GPT-4o](https://platform.openai.com/docs/models/gpt-4o),
-// [GPT-4o mini](https://platform.openai.com/docs/models/gpt-4o-mini),
-// [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo) and
+// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+// [GPT-4o mini](https://platform.openai.com/docs/models#gpt-4o-mini),
+// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4) and
 // all GPT-3.5 Turbo models newer than `gpt-3.5-turbo-1106`.
 //
 // Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured

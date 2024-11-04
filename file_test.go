@@ -77,6 +77,9 @@ func TestFileListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Files.List(context.TODO(), openai.FileListParams{
+		After:   openai.F("after"),
+		Limit:   openai.F(int64(0)),
+		Order:   openai.F(openai.FileListParamsOrderAsc),
 		Purpose: openai.F("purpose"),
 	})
 	if err != nil {
