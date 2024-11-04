@@ -334,7 +334,7 @@ type Run struct {
 	// The object type, which is always `thread.run`.
 	Object RunObject `json:"object,required"`
 	// Whether to enable
-	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling)
+	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls bool `json:"parallel_tool_calls,required"`
 	// Details on the action required to continue the run. Will be `null` if no action
@@ -692,7 +692,7 @@ type BetaThreadRunNewParams struct {
 	// to fetch the file search result content.
 	//
 	// See the
-	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 	// for more information.
 	Include param.Field[[]RunStepInclude] `query:"include"`
 	// Appends additional instructions at the end of the instructions for the run. This
@@ -728,7 +728,7 @@ type BetaThreadRunNewParams struct {
 	// assistant will be used.
 	Model param.Field[ChatModel] `json:"model"`
 	// Whether to enable
-	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling)
+	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Field[bool] `json:"parallel_tool_calls"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
@@ -773,7 +773,7 @@ type BetaThreadRunNewParamsAdditionalMessage struct {
 	// An array of content parts with a defined type, each can be of type `text` or
 	// images can be passed with `image_url` or `image_file`. Image types are only
 	// supported on
-	// [Vision-compatible models](https://platform.openai.com/docs/models/overview).
+	// [Vision-compatible models](https://platform.openai.com/docs/models).
 	Content param.Field[[]MessageContentPartParamUnion] `json:"content,required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
@@ -945,8 +945,8 @@ type BetaThreadRunListParams struct {
 	After param.Field[string] `query:"after"`
 	// A cursor for use in pagination. `before` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
-	// ending with obj_foo, your subsequent call can include before=obj_foo in order to
-	// fetch the previous page of the list.
+	// starting with obj_foo, your subsequent call can include before=obj_foo in order
+	// to fetch the previous page of the list.
 	Before param.Field[string] `query:"before"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.

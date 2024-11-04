@@ -129,8 +129,8 @@ type Assistant struct {
 	// ID of the model to use. You can use the
 	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
 	// see all of your available models, or see our
-	// [Model overview](https://platform.openai.com/docs/models/overview) for
-	// descriptions of them.
+	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
+	// them.
 	Model string `json:"model,required"`
 	// The name of the assistant. The maximum length is 256 characters.
 	Name string `json:"name,required,nullable"`
@@ -1572,7 +1572,7 @@ func (r AssistantStreamEventThreadMessageIncompleteEvent) IsKnown() bool {
 }
 
 // Occurs when an
-// [error](https://platform.openai.com/docs/guides/error-codes/api-errors) occurs.
+// [error](https://platform.openai.com/docs/guides/error-codes#api-errors) occurs.
 // This can happen due to an internal server error or a timeout.
 type AssistantStreamEventErrorEvent struct {
 	Data  shared.ErrorObject                  `json:"data,required"`
@@ -1867,14 +1867,14 @@ type FileSearchToolFileSearch struct {
 	//
 	// Note that the file search tool may output fewer than `max_num_results` results.
 	// See the
-	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 	// for more information.
 	MaxNumResults int64 `json:"max_num_results"`
 	// The ranking options for the file search. If not specified, the file search tool
 	// will use the `auto` ranker and a score_threshold of 0.
 	//
 	// See the
-	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 	// for more information.
 	RankingOptions FileSearchToolFileSearchRankingOptions `json:"ranking_options"`
 	JSON           fileSearchToolFileSearchJSON           `json:"-"`
@@ -1901,7 +1901,7 @@ func (r fileSearchToolFileSearchJSON) RawJSON() string {
 // will use the `auto` ranker and a score_threshold of 0.
 //
 // See the
-// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 // for more information.
 type FileSearchToolFileSearchRankingOptions struct {
 	// The score threshold for the file search. All values must be a floating point
@@ -1970,14 +1970,14 @@ type FileSearchToolFileSearchParam struct {
 	//
 	// Note that the file search tool may output fewer than `max_num_results` results.
 	// See the
-	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 	// for more information.
 	MaxNumResults param.Field[int64] `json:"max_num_results"`
 	// The ranking options for the file search. If not specified, the file search tool
 	// will use the `auto` ranker and a score_threshold of 0.
 	//
 	// See the
-	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 	// for more information.
 	RankingOptions param.Field[FileSearchToolFileSearchRankingOptionsParam] `json:"ranking_options"`
 }
@@ -1990,7 +1990,7 @@ func (r FileSearchToolFileSearchParam) MarshalJSON() (data []byte, err error) {
 // will use the `auto` ranker and a score_threshold of 0.
 //
 // See the
-// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings)
+// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 // for more information.
 type FileSearchToolFileSearchRankingOptionsParam struct {
 	// The score threshold for the file search. All values must be a floating point
@@ -2063,8 +2063,8 @@ type BetaAssistantNewParams struct {
 	// ID of the model to use. You can use the
 	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
 	// see all of your available models, or see our
-	// [Model overview](https://platform.openai.com/docs/models/overview) for
-	// descriptions of them.
+	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
+	// them.
 	Model param.Field[ChatModel] `json:"model,required"`
 	// The description of the assistant. The maximum length is 512 characters.
 	Description param.Field[string] `json:"description"`
@@ -2177,8 +2177,8 @@ type BetaAssistantUpdateParams struct {
 	// ID of the model to use. You can use the
 	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
 	// see all of your available models, or see our
-	// [Model overview](https://platform.openai.com/docs/models/overview) for
-	// descriptions of them.
+	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
+	// them.
 	Model param.Field[string] `json:"model"`
 	// The name of the assistant. The maximum length is 256 characters.
 	Name param.Field[string] `json:"name"`
@@ -2252,8 +2252,8 @@ type BetaAssistantListParams struct {
 	After param.Field[string] `query:"after"`
 	// A cursor for use in pagination. `before` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
-	// ending with obj_foo, your subsequent call can include before=obj_foo in order to
-	// fetch the previous page of the list.
+	// starting with obj_foo, your subsequent call can include before=obj_foo in order
+	// to fetch the previous page of the list.
 	Before param.Field[string] `query:"before"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.

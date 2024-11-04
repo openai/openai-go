@@ -79,7 +79,7 @@ type AudioTranscriptionNewParams struct {
 	Language param.Field[string] `json:"language"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. The
-	// [prompt](https://platform.openai.com/docs/guides/speech-to-text/prompting)
+	// [prompt](https://platform.openai.com/docs/guides/speech-to-text#prompting)
 	// should match the audio language.
 	Prompt param.Field[string] `json:"prompt"`
 	// The format of the output, in one of these options: `json`, `text`, `srt`,

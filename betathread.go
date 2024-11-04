@@ -469,7 +469,7 @@ type BetaThreadNewParamsMessage struct {
 	// An array of content parts with a defined type, each can be of type `text` or
 	// images can be passed with `image_url` or `image_file`. Image types are only
 	// supported on
-	// [Vision-compatible models](https://platform.openai.com/docs/models/overview).
+	// [Vision-compatible models](https://platform.openai.com/docs/models).
 	Content param.Field[[]MessageContentPartParamUnion] `json:"content,required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
@@ -729,7 +729,7 @@ type BetaThreadNewAndRunParams struct {
 	// assistant will be used.
 	Model param.Field[ChatModel] `json:"model"`
 	// Whether to enable
-	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling)
+	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Field[bool] `json:"parallel_tool_calls"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
@@ -794,7 +794,7 @@ type BetaThreadNewAndRunParamsThreadMessage struct {
 	// An array of content parts with a defined type, each can be of type `text` or
 	// images can be passed with `image_url` or `image_file`. Image types are only
 	// supported on
-	// [Vision-compatible models](https://platform.openai.com/docs/models/overview).
+	// [Vision-compatible models](https://platform.openai.com/docs/models).
 	Content param.Field[[]MessageContentPartParamUnion] `json:"content,required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
