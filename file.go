@@ -80,8 +80,8 @@ func (r *FileService) Get(ctx context.Context, fileID string, opts ...option.Req
 	return
 }
 
-// Returns a list of files that belong to the user's organization.
-func (r *FileService) List(ctx context.Context, query FileListParams, opts ...option.RequestOption) (res *pagination.Page[FileObject], err error) {
+// Returns a list of files.
+func (r *FileService) List(ctx context.Context, query FileListParams, opts ...option.RequestOption) (res *pagination.CursorPage[FileObject], err error) {
 	var raw *http.Response
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
@@ -98,9 +98,9 @@ func (r *FileService) List(ctx context.Context, query FileListParams, opts ...op
 	return res, nil
 }
 
-// Returns a list of files that belong to the user's organization.
-func (r *FileService) ListAutoPaging(ctx context.Context, query FileListParams, opts ...option.RequestOption) *pagination.PageAutoPager[FileObject] {
-	return pagination.NewPageAutoPager(r.List(ctx, query, opts...))
+// Returns a list of files.
+func (r *FileService) ListAutoPaging(ctx context.Context, query FileListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[FileObject] {
+	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
 // Delete a file.
@@ -340,6 +340,17 @@ func (r FileNewParams) MarshalMultipart() (data []byte, contentType string, err 
 }
 
 type FileListParams struct {
+	// A cursor for use in pagination. `after` is an object ID that defines your place
+	// in the list. For instance, if you make a list request and receive 100 objects,
+	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
+	// fetch the next page of the list.
+	After param.Field[string] `query:"after"`
+	// A limit on the number of objects to be returned. Limit can range between 1 and
+	// 10,000, and the default is 10,000.
+	Limit param.Field[int64] `query:"limit"`
+	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
+	// order and `desc` for descending order.
+	Order param.Field[FileListParamsOrder] `query:"order"`
 	// Only return files with the given purpose.
 	Purpose param.Field[string] `query:"purpose"`
 }
@@ -350,4 +361,21 @@ func (r FileListParams) URLQuery() (v url.Values) {
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
+}
+
+// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
+// order and `desc` for descending order.
+type FileListParamsOrder string
+
+const (
+	FileListParamsOrderAsc  FileListParamsOrder = "asc"
+	FileListParamsOrderDesc FileListParamsOrder = "desc"
+)
+
+func (r FileListParamsOrder) IsKnown() bool {
+	switch r {
+	case FileListParamsOrderAsc, FileListParamsOrderDesc:
+		return true
+	}
+	return false
 }

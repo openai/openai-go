@@ -72,7 +72,7 @@ type AudioTranslationNewParams struct {
 	Model param.Field[AudioModel] `json:"model,required"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. The
-	// [prompt](https://platform.openai.com/docs/guides/speech-to-text/prompting)
+	// [prompt](https://platform.openai.com/docs/guides/speech-to-text#prompting)
 	// should be in English.
 	Prompt param.Field[string] `json:"prompt"`
 	// The format of the output, in one of these options: `json`, `text`, `srt`,

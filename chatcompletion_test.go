@@ -58,7 +58,11 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Modalities:        openai.F([]openai.ChatCompletionModality{openai.ChatCompletionModalityText, openai.ChatCompletionModalityAudio}),
 		N:                 openai.F(int64(1)),
 		ParallelToolCalls: openai.F(true),
-		PresencePenalty:   openai.F(-2.000000),
+		Prediction: openai.F(openai.ChatCompletionPredictionContentParam{
+			Content: openai.F([]openai.ChatCompletionContentPartTextParam{{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
+			Type:    openai.F(openai.ChatCompletionPredictionContentTypeContent),
+		}),
+		PresencePenalty: openai.F(-2.000000),
 		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](shared.ResponseFormatTextParam{
 			Type: openai.F(shared.ResponseFormatTextTypeText),
 		}),
