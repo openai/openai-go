@@ -63,6 +63,7 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
+	println(chatCompletion.Choices[0].Message.Content)
 }
 
 ```
@@ -75,7 +76,7 @@ func main() {
 param := openai.ChatCompletionNewParams{
 	Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
 		openai.UserMessage("What kind of houseplant is easy to take care of?"),
-  }),
+  	}),
 	Seed:     openai.Int(1),
 	Model:    openai.F(openai.ChatModelGPT4o),
 }
