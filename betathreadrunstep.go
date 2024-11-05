@@ -265,13 +265,13 @@ func (r codeInterpreterToolCallCodeInterpreterJSON) RawJSON() string {
 
 // Text output from the Code Interpreter tool call as part of a run step.
 type CodeInterpreterToolCallCodeInterpreterOutput struct {
+	// This field can have the runtime type of
+	// [CodeInterpreterToolCallCodeInterpreterOutputsImageImage].
+	Image interface{} `json:"image,required"`
 	// Always `logs`.
 	Type CodeInterpreterToolCallCodeInterpreterOutputsType `json:"type,required"`
 	// The text output from the Code Interpreter tool call.
-	Logs string `json:"logs"`
-	// This field can have the runtime type of
-	// [CodeInterpreterToolCallCodeInterpreterOutputsImageImage].
-	Image interface{}                                      `json:"image,required"`
+	Logs  string                                           `json:"logs"`
 	JSON  codeInterpreterToolCallCodeInterpreterOutputJSON `json:"-"`
 	union CodeInterpreterToolCallCodeInterpreterOutputsUnion
 }
@@ -279,9 +279,9 @@ type CodeInterpreterToolCallCodeInterpreterOutput struct {
 // codeInterpreterToolCallCodeInterpreterOutputJSON contains the JSON metadata for
 // the struct [CodeInterpreterToolCallCodeInterpreterOutput]
 type codeInterpreterToolCallCodeInterpreterOutputJSON struct {
+	Image       apijson.Field
 	Type        apijson.Field
 	Logs        apijson.Field
-	Image       apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -557,14 +557,14 @@ func (r codeInterpreterToolCallDeltaCodeInterpreterJSON) RawJSON() string {
 
 // Text output from the Code Interpreter tool call as part of a run step.
 type CodeInterpreterToolCallDeltaCodeInterpreterOutput struct {
+	// This field can have the runtime type of [CodeInterpreterOutputImageImage].
+	Image interface{} `json:"image,required"`
 	// The index of the output in the outputs array.
 	Index int64 `json:"index,required"`
 	// Always `logs`.
 	Type CodeInterpreterToolCallDeltaCodeInterpreterOutputsType `json:"type,required"`
 	// The text output from the Code Interpreter tool call.
-	Logs string `json:"logs"`
-	// This field can have the runtime type of [CodeInterpreterOutputImageImage].
-	Image interface{}                                           `json:"image,required"`
+	Logs  string                                                `json:"logs"`
 	JSON  codeInterpreterToolCallDeltaCodeInterpreterOutputJSON `json:"-"`
 	union CodeInterpreterToolCallDeltaCodeInterpreterOutputsUnion
 }
@@ -572,10 +572,10 @@ type CodeInterpreterToolCallDeltaCodeInterpreterOutput struct {
 // codeInterpreterToolCallDeltaCodeInterpreterOutputJSON contains the JSON metadata
 // for the struct [CodeInterpreterToolCallDeltaCodeInterpreterOutput]
 type codeInterpreterToolCallDeltaCodeInterpreterOutputJSON struct {
+	Image       apijson.Field
 	Index       apijson.Field
 	Type        apijson.Field
 	Logs        apijson.Field
-	Image       apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -1262,23 +1262,23 @@ func (r RunStepStatus) IsKnown() bool {
 
 // The details of the run step.
 type RunStepStepDetails struct {
-	// Always `message_creation`.
-	Type RunStepStepDetailsType `json:"type,required"`
 	// This field can have the runtime type of
 	// [MessageCreationStepDetailsMessageCreation].
 	MessageCreation interface{} `json:"message_creation,required"`
 	// This field can have the runtime type of [[]ToolCall].
-	ToolCalls interface{}            `json:"tool_calls,required"`
-	JSON      runStepStepDetailsJSON `json:"-"`
-	union     RunStepStepDetailsUnion
+	ToolCalls interface{} `json:"tool_calls,required"`
+	// Always `message_creation`.
+	Type  RunStepStepDetailsType `json:"type,required"`
+	JSON  runStepStepDetailsJSON `json:"-"`
+	union RunStepStepDetailsUnion
 }
 
 // runStepStepDetailsJSON contains the JSON metadata for the struct
 // [RunStepStepDetails]
 type runStepStepDetailsJSON struct {
-	Type            apijson.Field
 	MessageCreation apijson.Field
 	ToolCalls       apijson.Field
+	Type            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1414,23 +1414,23 @@ func (r runStepDeltaJSON) RawJSON() string {
 
 // The details of the run step.
 type RunStepDeltaStepDetails struct {
-	// Always `message_creation`.
-	Type RunStepDeltaStepDetailsType `json:"type,required"`
 	// This field can have the runtime type of
 	// [RunStepDeltaMessageDeltaMessageCreation].
 	MessageCreation interface{} `json:"message_creation,required"`
 	// This field can have the runtime type of [[]ToolCallDelta].
-	ToolCalls interface{}                 `json:"tool_calls,required"`
-	JSON      runStepDeltaStepDetailsJSON `json:"-"`
-	union     RunStepDeltaStepDetailsUnion
+	ToolCalls interface{} `json:"tool_calls,required"`
+	// Always `message_creation`.
+	Type  RunStepDeltaStepDetailsType `json:"type,required"`
+	JSON  runStepDeltaStepDetailsJSON `json:"-"`
+	union RunStepDeltaStepDetailsUnion
 }
 
 // runStepDeltaStepDetailsJSON contains the JSON metadata for the struct
 // [RunStepDeltaStepDetails]
 type runStepDeltaStepDetailsJSON struct {
-	Type            apijson.Field
 	MessageCreation apijson.Field
 	ToolCalls       apijson.Field
+	Type            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1624,27 +1624,27 @@ func (r RunStepInclude) IsKnown() bool {
 type ToolCall struct {
 	// The ID of the tool call.
 	ID string `json:"id,required"`
-	// The type of tool call. This is always going to be `code_interpreter` for this
-	// type of tool call.
-	Type ToolCallType `json:"type,required"`
 	// This field can have the runtime type of
 	// [CodeInterpreterToolCallCodeInterpreter].
 	CodeInterpreter interface{} `json:"code_interpreter,required"`
 	// This field can have the runtime type of [FileSearchToolCallFileSearch].
 	FileSearch interface{} `json:"file_search,required"`
 	// This field can have the runtime type of [FunctionToolCallFunction].
-	Function interface{}  `json:"function,required"`
-	JSON     toolCallJSON `json:"-"`
-	union    ToolCallUnion
+	Function interface{} `json:"function,required"`
+	// The type of tool call. This is always going to be `code_interpreter` for this
+	// type of tool call.
+	Type  ToolCallType `json:"type,required"`
+	JSON  toolCallJSON `json:"-"`
+	union ToolCallUnion
 }
 
 // toolCallJSON contains the JSON metadata for the struct [ToolCall]
 type toolCallJSON struct {
 	ID              apijson.Field
-	Type            apijson.Field
 	CodeInterpreter apijson.Field
 	FileSearch      apijson.Field
 	Function        apijson.Field
+	Type            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1721,32 +1721,32 @@ func (r ToolCallType) IsKnown() bool {
 
 // Details of the Code Interpreter tool call the run step was involved in.
 type ToolCallDelta struct {
-	// The index of the tool call in the tool calls array.
-	Index int64 `json:"index,required"`
-	// The ID of the tool call.
-	ID string `json:"id"`
-	// The type of tool call. This is always going to be `code_interpreter` for this
-	// type of tool call.
-	Type ToolCallDeltaType `json:"type,required"`
 	// This field can have the runtime type of
 	// [CodeInterpreterToolCallDeltaCodeInterpreter].
 	CodeInterpreter interface{} `json:"code_interpreter,required"`
 	// This field can have the runtime type of [interface{}].
 	FileSearch interface{} `json:"file_search,required"`
 	// This field can have the runtime type of [FunctionToolCallDeltaFunction].
-	Function interface{}       `json:"function,required"`
-	JSON     toolCallDeltaJSON `json:"-"`
-	union    ToolCallDeltaUnion
+	Function interface{} `json:"function,required"`
+	// The index of the tool call in the tool calls array.
+	Index int64 `json:"index,required"`
+	// The type of tool call. This is always going to be `code_interpreter` for this
+	// type of tool call.
+	Type ToolCallDeltaType `json:"type,required"`
+	// The ID of the tool call.
+	ID    string            `json:"id"`
+	JSON  toolCallDeltaJSON `json:"-"`
+	union ToolCallDeltaUnion
 }
 
 // toolCallDeltaJSON contains the JSON metadata for the struct [ToolCallDelta]
 type toolCallDeltaJSON struct {
-	Index           apijson.Field
-	ID              apijson.Field
-	Type            apijson.Field
 	CodeInterpreter apijson.Field
 	FileSearch      apijson.Field
 	Function        apijson.Field
+	Index           apijson.Field
+	Type            apijson.Field
+	ID              apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
