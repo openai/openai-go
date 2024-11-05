@@ -335,22 +335,22 @@ func (r AssistantDeletedObject) IsKnown() bool {
 // [Assistants API quickstart](https://platform.openai.com/docs/assistants/overview)
 // to learn how to integrate the Assistants API with streaming.
 type AssistantStreamEvent struct {
-	// Whether to enable input audio transcription.
-	Enabled bool                      `json:"enabled"`
-	Event   AssistantStreamEventEvent `json:"event,required"`
+	Event AssistantStreamEventEvent `json:"event,required"`
 	// This field can have the runtime type of [Thread], [Run], [RunStep],
 	// [RunStepDeltaEvent], [Message], [MessageDeltaEvent], [shared.ErrorObject].
-	Data  interface{}              `json:"data"`
-	JSON  assistantStreamEventJSON `json:"-"`
-	union AssistantStreamEventUnion
+	Data interface{} `json:"data"`
+	// Whether to enable input audio transcription.
+	Enabled bool                     `json:"enabled"`
+	JSON    assistantStreamEventJSON `json:"-"`
+	union   AssistantStreamEventUnion
 }
 
 // assistantStreamEventJSON contains the JSON metadata for the struct
 // [AssistantStreamEvent]
 type assistantStreamEventJSON struct {
-	Enabled     apijson.Field
 	Event       apijson.Field
 	Data        apijson.Field
+	Enabled     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -1651,19 +1651,19 @@ func (r AssistantStreamEventEvent) IsKnown() bool {
 }
 
 type AssistantTool struct {
-	// The type of tool being defined: `code_interpreter`
-	Type AssistantToolType `json:"type,required"`
 	// This field can have the runtime type of [FileSearchToolFileSearch].
-	FileSearch interface{}               `json:"file_search,required"`
-	Function   shared.FunctionDefinition `json:"function"`
-	JSON       assistantToolJSON         `json:"-"`
-	union      AssistantToolUnion
+	FileSearch interface{} `json:"file_search,required"`
+	// The type of tool being defined: `code_interpreter`
+	Type     AssistantToolType         `json:"type,required"`
+	Function shared.FunctionDefinition `json:"function"`
+	JSON     assistantToolJSON         `json:"-"`
+	union    AssistantToolUnion
 }
 
 // assistantToolJSON contains the JSON metadata for the struct [AssistantTool]
 type assistantToolJSON struct {
-	Type        apijson.Field
 	FileSearch  apijson.Field
+	Type        apijson.Field
 	Function    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -1736,10 +1736,10 @@ func (r AssistantToolType) IsKnown() bool {
 }
 
 type AssistantToolParam struct {
+	FileSearch param.Field[interface{}] `json:"file_search,required"`
 	// The type of tool being defined: `code_interpreter`
-	Type       param.Field[AssistantToolType]              `json:"type,required"`
-	FileSearch param.Field[interface{}]                    `json:"file_search,required"`
-	Function   param.Field[shared.FunctionDefinitionParam] `json:"function"`
+	Type     param.Field[AssistantToolType]              `json:"type,required"`
+	Function param.Field[shared.FunctionDefinitionParam] `json:"function"`
 }
 
 func (r AssistantToolParam) MarshalJSON() (data []byte, err error) {
