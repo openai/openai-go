@@ -1007,10 +1007,10 @@ func (r BetaThreadNewAndRunParamsToolResourcesFileSearch) MarshalJSON() (data []
 }
 
 type BetaThreadNewAndRunParamsTool struct {
+	FileSearch param.Field[interface{}] `json:"file_search,required"`
 	// The type of tool being defined: `code_interpreter`
-	Type       param.Field[BetaThreadNewAndRunParamsToolsType] `json:"type,required"`
-	FileSearch param.Field[interface{}]                        `json:"file_search,required"`
-	Function   param.Field[shared.FunctionDefinitionParam]     `json:"function"`
+	Type     param.Field[BetaThreadNewAndRunParamsToolsType] `json:"type,required"`
+	Function param.Field[shared.FunctionDefinitionParam]     `json:"function"`
 }
 
 func (r BetaThreadNewAndRunParamsTool) MarshalJSON() (data []byte, err error) {
