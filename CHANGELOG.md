@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.33 (2024-11-05)
+
+Full Changelog: [v0.1.0-alpha.32...v0.1.0-alpha.33](https://github.com/openai/openai-go/compare/v0.1.0-alpha.32...v0.1.0-alpha.33)
+
+### Features
+
+* **api:** add support for predicted outputs ([#110](https://github.com/openai/openai-go/issues/110)) ([ab88fa9](https://github.com/openai/openai-go/commit/ab88fa960917bedd15d2ffdf50d0d7169afd661a))
+
+
+### Refactors
+
+* sort fields for squashed union structs ([#111](https://github.com/openai/openai-go/issues/111)) ([f7e4ac8](https://github.com/openai/openai-go/commit/f7e4ac83cd345e58c824a489a2883bd4ef7717f6))
+
 ## 0.1.0-alpha.32 (2024-10-30)
 
 Full Changelog: [v0.1.0-alpha.31...v0.1.0-alpha.32](https://github.com/openai/openai-go/compare/v0.1.0-alpha.31...v0.1.0-alpha.32)
