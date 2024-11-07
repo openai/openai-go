@@ -549,6 +549,8 @@ func (r FineTuningJobNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
+// The name of the model to fine-tune. You can select one of the
+// [supported models](https://platform.openai.com/docs/guides/fine-tuning#which-models-can-be-fine-tuned).
 type FineTuningJobNewParamsModel string
 
 const (
