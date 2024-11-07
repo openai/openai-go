@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.34 (2024-11-07)
+
+Full Changelog: [v0.1.0-alpha.33...v0.1.0-alpha.34](https://github.com/openai/openai-go/compare/v0.1.0-alpha.33...v0.1.0-alpha.34)
+
+### Documentation
+
+* add missing docs for some enums ([#114](https://github.com/openai/openai-go/issues/114)) ([f01913f](https://github.com/openai/openai-go/commit/f01913f1432a64304de9232bd36624c9506e02ab))
+
 ## 0.1.0-alpha.33 (2024-11-05)
 
 Full Changelog: [v0.1.0-alpha.32...v0.1.0-alpha.33](https://github.com/openai/openai-go/compare/v0.1.0-alpha.32...v0.1.0-alpha.33)
