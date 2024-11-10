@@ -81,7 +81,7 @@ param := openai.ChatCompletionNewParams{
 	Model:    openai.F(openai.ChatModelGPT4o),
 }
 
-completion, err := client.Chat.Completions.New(ctx, params)
+completion, err := client.Chat.Completions.New(ctx, param)
 
 param.Messages.Value = append(param.Messages.Value, completion.Choices[0].Message)
 param.Messages.Value = append(param.Messages.Value, openai.UserMessage("How big are those?"))
