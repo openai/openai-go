@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.35 (2024-11-10)
+
+Full Changelog: [v0.1.0-alpha.34...v0.1.0-alpha.35](https://github.com/openai/openai-go/compare/v0.1.0-alpha.34...v0.1.0-alpha.35)
+
+### Bug Fixes
+
+* **api:** escape key values when encoding maps ([#116](https://github.com/openai/openai-go/issues/116)) ([a2bcd73](https://github.com/openai/openai-go/commit/a2bcd7394f725ea0e653d7d4c145f3f48b36c1c3))
+
 ## 0.1.0-alpha.34 (2024-11-07)
 
 Full Changelog: [v0.1.0-alpha.33...v0.1.0-alpha.34](https://github.com/openai/openai-go/compare/v0.1.0-alpha.33...v0.1.0-alpha.34)
