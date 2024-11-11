@@ -765,10 +765,10 @@ func (r ChatCompletionChunkServiceTier) IsKnown() bool {
 // Learn about
 // [text inputs](https://platform.openai.com/docs/guides/text-generation).
 type ChatCompletionContentPartParam struct {
-	ImageURL   param.Field[interface{}] `json:"image_url,required"`
-	InputAudio param.Field[interface{}] `json:"input_audio,required"`
 	// The type of the content part.
-	Type param.Field[ChatCompletionContentPartType] `json:"type,required"`
+	Type       param.Field[ChatCompletionContentPartType] `json:"type,required"`
+	ImageURL   param.Field[interface{}]                   `json:"image_url"`
+	InputAudio param.Field[interface{}]                   `json:"input_audio"`
 	// The text content.
 	Text param.Field[string] `json:"text"`
 }
@@ -1111,19 +1111,19 @@ func (r chatCompletionMessageFunctionCallJSON) RawJSON() string {
 }
 
 type ChatCompletionMessageParam struct {
-	Audio        param.Field[interface{}] `json:"audio,required"`
-	Content      param.Field[interface{}] `json:"content,required"`
-	FunctionCall param.Field[interface{}] `json:"function_call,required"`
 	// The role of the messages author, in this case `system`.
-	Role      param.Field[ChatCompletionMessageParamRole] `json:"role,required"`
-	ToolCalls param.Field[interface{}]                    `json:"tool_calls,required"`
+	Role         param.Field[ChatCompletionMessageParamRole] `json:"role,required"`
+	Audio        param.Field[interface{}]                    `json:"audio"`
+	Content      param.Field[interface{}]                    `json:"content"`
+	FunctionCall param.Field[interface{}]                    `json:"function_call"`
 	// An optional name for the participant. Provides the model information to
 	// differentiate between participants of the same role.
 	Name param.Field[string] `json:"name"`
 	// The refusal message by the assistant.
 	Refusal param.Field[string] `json:"refusal"`
 	// Tool call that this message is responding to.
-	ToolCallID param.Field[string] `json:"tool_call_id"`
+	ToolCallID param.Field[string]      `json:"tool_call_id"`
+	ToolCalls  param.Field[interface{}] `json:"tool_calls"`
 }
 
 func (r ChatCompletionMessageParam) MarshalJSON() (data []byte, err error) {
@@ -1848,9 +1848,9 @@ func (r ChatCompletionNewParamsFunction) MarshalJSON() (data []byte, err error) 
 // indicates the generation exceeded `max_tokens` or the conversation exceeded the
 // max context length.
 type ChatCompletionNewParamsResponseFormat struct {
-	JSONSchema param.Field[interface{}] `json:"json_schema,required"`
 	// The type of response format being defined: `text`
-	Type param.Field[ChatCompletionNewParamsResponseFormatType] `json:"type,required"`
+	Type       param.Field[ChatCompletionNewParamsResponseFormatType] `json:"type,required"`
+	JSONSchema param.Field[interface{}]                               `json:"json_schema"`
 }
 
 func (r ChatCompletionNewParamsResponseFormat) MarshalJSON() (data []byte, err error) {
