@@ -301,6 +301,10 @@ func retryDelay(res *http.Response, retryCount int) time.Duration {
 }
 
 func (cfg *RequestConfig) Execute() (err error) {
+	if cfg.BaseURL == nil {
+		return fmt.Errorf("requestconfig: base url is not set")
+	}
+
 	cfg.Request.URL, err = cfg.BaseURL.Parse(strings.TrimLeft(cfg.Request.URL.String(), "/"))
 	if err != nil {
 		return err
