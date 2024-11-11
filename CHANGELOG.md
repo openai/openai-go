@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.36 (2024-11-11)
+
+Full Changelog: [v0.1.0-alpha.35...v0.1.0-alpha.36](https://github.com/openai/openai-go/compare/v0.1.0-alpha.35...v0.1.0-alpha.36)
+
+### Bug Fixes
+
+* correct required fields for flattened unions ([#120](https://github.com/openai/openai-go/issues/120)) ([8fe865b](https://github.com/openai/openai-go/commit/8fe865b5cb230bdac498ae295b16a7388cfdde6c))
+
+
+### Documentation
+
+* **readme:** fix example snippet ([#118](https://github.com/openai/openai-go/issues/118)) ([7f1803b](https://github.com/openai/openai-go/commit/7f1803b44183e8796a40eab6dee440cf16813e3c))
+
 ## 0.1.0-alpha.35 (2024-11-10)
 
 Full Changelog: [v0.1.0-alpha.34...v0.1.0-alpha.35](https://github.com/openai/openai-go/compare/v0.1.0-alpha.34...v0.1.0-alpha.35)
