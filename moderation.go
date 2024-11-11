@@ -502,9 +502,9 @@ const (
 
 // An object describing an image to classify.
 type ModerationMultiModalInputParam struct {
-	ImageURL param.Field[interface{}] `json:"image_url,required"`
 	// Always `image_url`.
-	Type param.Field[ModerationMultiModalInputType] `json:"type,required"`
+	Type     param.Field[ModerationMultiModalInputType] `json:"type,required"`
+	ImageURL param.Field[interface{}]                   `json:"image_url"`
 	// A string of text to classify.
 	Text param.Field[string] `json:"text"`
 }
