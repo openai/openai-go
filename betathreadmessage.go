@@ -133,28 +133,28 @@ func (r *BetaThreadMessageService) Delete(ctx context.Context, threadID string, 
 // File associated with the assistant or the message. Generated when the assistant
 // uses the "file_search" tool to search files.
 type Annotation struct {
-	EndIndex int64 `json:"end_index,required"`
-	// This field can have the runtime type of [FileCitationAnnotationFileCitation].
-	FileCitation interface{} `json:"file_citation,required"`
-	// This field can have the runtime type of [FilePathAnnotationFilePath].
-	FilePath   interface{} `json:"file_path,required"`
-	StartIndex int64       `json:"start_index,required"`
+	EndIndex   int64 `json:"end_index,required"`
+	StartIndex int64 `json:"start_index,required"`
 	// The text in the message content that needs to be replaced.
 	Text string `json:"text,required"`
 	// Always `file_citation`.
-	Type  AnnotationType `json:"type,required"`
-	JSON  annotationJSON `json:"-"`
-	union AnnotationUnion
+	Type AnnotationType `json:"type,required"`
+	// This field can have the runtime type of [FileCitationAnnotationFileCitation].
+	FileCitation interface{} `json:"file_citation"`
+	// This field can have the runtime type of [FilePathAnnotationFilePath].
+	FilePath interface{}    `json:"file_path"`
+	JSON     annotationJSON `json:"-"`
+	union    AnnotationUnion
 }
 
 // annotationJSON contains the JSON metadata for the struct [Annotation]
 type annotationJSON struct {
 	EndIndex     apijson.Field
-	FileCitation apijson.Field
-	FilePath     apijson.Field
 	StartIndex   apijson.Field
 	Text         apijson.Field
 	Type         apijson.Field
+	FileCitation apijson.Field
+	FilePath     apijson.Field
 	raw          string
 	ExtraFields  map[string]apijson.Field
 }
@@ -227,17 +227,17 @@ func (r AnnotationType) IsKnown() bool {
 // File associated with the assistant or the message. Generated when the assistant
 // uses the "file_search" tool to search files.
 type AnnotationDelta struct {
-	// This field can have the runtime type of
-	// [FileCitationDeltaAnnotationFileCitation].
-	FileCitation interface{} `json:"file_citation,required"`
-	// This field can have the runtime type of [FilePathDeltaAnnotationFilePath].
-	FilePath interface{} `json:"file_path,required"`
 	// The index of the annotation in the text content part.
 	Index int64 `json:"index,required"`
 	// Always `file_citation`.
-	Type       AnnotationDeltaType `json:"type,required"`
-	EndIndex   int64               `json:"end_index"`
-	StartIndex int64               `json:"start_index"`
+	Type     AnnotationDeltaType `json:"type,required"`
+	EndIndex int64               `json:"end_index"`
+	// This field can have the runtime type of
+	// [FileCitationDeltaAnnotationFileCitation].
+	FileCitation interface{} `json:"file_citation"`
+	// This field can have the runtime type of [FilePathDeltaAnnotationFilePath].
+	FilePath   interface{} `json:"file_path"`
+	StartIndex int64       `json:"start_index"`
 	// The text in the message content that needs to be replaced.
 	Text  string              `json:"text"`
 	JSON  annotationDeltaJSON `json:"-"`
@@ -246,11 +246,11 @@ type AnnotationDelta struct {
 
 // annotationDeltaJSON contains the JSON metadata for the struct [AnnotationDelta]
 type annotationDeltaJSON struct {
-	FileCitation apijson.Field
-	FilePath     apijson.Field
 	Index        apijson.Field
 	Type         apijson.Field
 	EndIndex     apijson.Field
+	FileCitation apijson.Field
+	FilePath     apijson.Field
 	StartIndex   apijson.Field
 	Text         apijson.Field
 	raw          string
