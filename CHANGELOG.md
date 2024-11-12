@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.37 (2024-11-12)
+
+Full Changelog: [v0.1.0-alpha.36...v0.1.0-alpha.37](https://github.com/openai/openai-go/compare/v0.1.0-alpha.36...v0.1.0-alpha.37)
+
+### Bug Fixes
+
+* **client:** no panic on missing BaseURL ([#121](https://github.com/openai/openai-go/issues/121)) ([1a8b841](https://github.com/openai/openai-go/commit/1a8b8415caabf9e4f33fc2b095b31dd926376b47))
+
 ## 0.1.0-alpha.36 (2024-11-11)
 
 Full Changelog: [v0.1.0-alpha.35...v0.1.0-alpha.36](https://github.com/openai/openai-go/compare/v0.1.0-alpha.35...v0.1.0-alpha.36)
