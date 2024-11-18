@@ -35,28 +35,6 @@ func TestBetaThreadMessageNewWithOptionalParams(t *testing.T) {
 				FileID: openai.F("file_id"),
 				Tools: openai.F([]openai.BetaThreadMessageNewParamsAttachmentsToolUnion{openai.CodeInterpreterToolParam{
 					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-				}, openai.CodeInterpreterToolParam{
-					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-				}, openai.CodeInterpreterToolParam{
-					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-				}}),
-			}, {
-				FileID: openai.F("file_id"),
-				Tools: openai.F([]openai.BetaThreadMessageNewParamsAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-				}, openai.CodeInterpreterToolParam{
-					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-				}, openai.CodeInterpreterToolParam{
-					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-				}}),
-			}, {
-				FileID: openai.F("file_id"),
-				Tools: openai.F([]openai.BetaThreadMessageNewParamsAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-				}, openai.CodeInterpreterToolParam{
-					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-				}, openai.CodeInterpreterToolParam{
-					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
 				}}),
 			}}),
 			Metadata: openai.F[any](map[string]interface{}{}),

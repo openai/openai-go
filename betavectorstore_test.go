@@ -33,7 +33,7 @@ func TestBetaVectorStoreNewWithOptionalParams(t *testing.T) {
 			Anchor: openai.F(openai.BetaVectorStoreNewParamsExpiresAfterAnchorLastActiveAt),
 			Days:   openai.F(int64(1)),
 		}),
-		FileIDs:  openai.F([]string{"string", "string", "string"}),
+		FileIDs:  openai.F([]string{"string"}),
 		Metadata: openai.F[any](map[string]interface{}{}),
 		Name:     openai.F("name"),
 	})
