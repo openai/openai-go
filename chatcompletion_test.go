@@ -55,7 +55,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Metadata: openai.F(map[string]string{
 			"foo": "string",
 		}),
-		Modalities:        openai.F([]openai.ChatCompletionModality{openai.ChatCompletionModalityText, openai.ChatCompletionModalityAudio}),
+		Modalities:        openai.F([]openai.ChatCompletionModality{openai.ChatCompletionModalityText}),
 		N:                 openai.F(int64(1)),
 		ParallelToolCalls: openai.F(true),
 		Prediction: openai.F(openai.ChatCompletionPredictionContentParam{
@@ -76,26 +76,6 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Temperature: openai.F(1.000000),
 		ToolChoice:  openai.F[openai.ChatCompletionToolChoiceOptionUnionParam](openai.ChatCompletionToolChoiceOptionBehavior(openai.ChatCompletionToolChoiceOptionBehaviorNone)),
 		Tools: openai.F([]openai.ChatCompletionToolParam{{
-			Function: openai.F(shared.FunctionDefinitionParam{
-				Name:        openai.F("name"),
-				Description: openai.F("description"),
-				Parameters: openai.F(shared.FunctionParameters{
-					"foo": "bar",
-				}),
-				Strict: openai.F(true),
-			}),
-			Type: openai.F(openai.ChatCompletionToolTypeFunction),
-		}, {
-			Function: openai.F(shared.FunctionDefinitionParam{
-				Name:        openai.F("name"),
-				Description: openai.F("description"),
-				Parameters: openai.F(shared.FunctionParameters{
-					"foo": "bar",
-				}),
-				Strict: openai.F(true),
-			}),
-			Type: openai.F(openai.ChatCompletionToolTypeFunction),
-		}, {
 			Function: openai.F(shared.FunctionDefinitionParam{
 				Name:        openai.F("name"),
 				Description: openai.F("description"),

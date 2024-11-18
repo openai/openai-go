@@ -39,92 +39,6 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 					FileID: openai.F("file_id"),
 					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
 						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}}),
-				}, {
-					FileID: openai.F("file_id"),
-					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}}),
-				}, {
-					FileID: openai.F("file_id"),
-					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}}),
-				}}),
-				Metadata: openai.F[any](map[string]interface{}{}),
-			}, {
-				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
-				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
-				Attachments: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachment{{
-					FileID: openai.F("file_id"),
-					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}}),
-				}, {
-					FileID: openai.F("file_id"),
-					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}}),
-				}, {
-					FileID: openai.F("file_id"),
-					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}}),
-				}}),
-				Metadata: openai.F[any](map[string]interface{}{}),
-			}, {
-				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
-				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
-				Attachments: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachment{{
-					FileID: openai.F("file_id"),
-					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}}),
-				}, {
-					FileID: openai.F("file_id"),
-					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}}),
-				}, {
-					FileID: openai.F("file_id"),
-					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}, openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
 					}}),
 				}}),
 				Metadata: openai.F[any](map[string]interface{}{}),
@@ -138,10 +52,6 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 			Temperature:         openai.F(1.000000),
 			ToolChoice:          openai.F[openai.AssistantToolChoiceOptionUnionParam](openai.AssistantToolChoiceOptionBehavior(openai.AssistantToolChoiceOptionBehaviorNone)),
 			Tools: openai.F([]openai.AssistantToolUnionParam{openai.CodeInterpreterToolParam{
-				Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-			}, openai.CodeInterpreterToolParam{
-				Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-			}, openai.CodeInterpreterToolParam{
 				Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
 			}}),
 			TopP: openai.F(1.000000),
@@ -290,12 +200,6 @@ func TestBetaThreadRunSubmitToolOutputsWithOptionalParams(t *testing.T) {
 		"run_id",
 		openai.BetaThreadRunSubmitToolOutputsParams{
 			ToolOutputs: openai.F([]openai.BetaThreadRunSubmitToolOutputsParamsToolOutput{{
-				Output:     openai.F("output"),
-				ToolCallID: openai.F("tool_call_id"),
-			}, {
-				Output:     openai.F("output"),
-				ToolCallID: openai.F("tool_call_id"),
-			}, {
 				Output:     openai.F("output"),
 				ToolCallID: openai.F("tool_call_id"),
 			}}),
