@@ -78,7 +78,7 @@ func TestUploadCompleteWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"upload_abc123",
 		openai.UploadCompleteParams{
-			PartIDs: openai.F([]string{"string", "string", "string"}),
+			PartIDs: openai.F([]string{"string"}),
 			Md5:     openai.F("md5"),
 		},
 	)

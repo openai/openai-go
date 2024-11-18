@@ -34,7 +34,7 @@ func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {
 		Prompt:                 openai.F("prompt"),
 		ResponseFormat:         openai.F(openai.AudioResponseFormatJSON),
 		Temperature:            openai.F(0.000000),
-		TimestampGranularities: openai.F([]openai.AudioTranscriptionNewParamsTimestampGranularity{openai.AudioTranscriptionNewParamsTimestampGranularityWord, openai.AudioTranscriptionNewParamsTimestampGranularitySegment}),
+		TimestampGranularities: openai.F([]openai.AudioTranscriptionNewParamsTimestampGranularity{openai.AudioTranscriptionNewParamsTimestampGranularityWord}),
 	})
 	if err != nil {
 		var apierr *openai.Error

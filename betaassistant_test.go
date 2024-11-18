@@ -34,7 +34,7 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 		Temperature:  openai.F(1.000000),
 		ToolResources: openai.F(openai.BetaAssistantNewParamsToolResources{
 			CodeInterpreter: openai.F(openai.BetaAssistantNewParamsToolResourcesCodeInterpreter{
-				FileIDs: openai.F([]string{"string", "string", "string"}),
+				FileIDs: openai.F([]string{"string"}),
 			}),
 			FileSearch: openai.F(openai.BetaAssistantNewParamsToolResourcesFileSearch{
 				VectorStoreIDs: openai.F([]string{"string"}),
@@ -42,16 +42,12 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 					ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
 						Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
 					}),
-					FileIDs:  openai.F([]string{"string", "string", "string"}),
+					FileIDs:  openai.F([]string{"string"}),
 					Metadata: openai.F[any](map[string]interface{}{}),
 				}}),
 			}),
 		}),
 		Tools: openai.F([]openai.AssistantToolUnionParam{openai.CodeInterpreterToolParam{
-			Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-		}, openai.CodeInterpreterToolParam{
-			Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-		}, openai.CodeInterpreterToolParam{
 			Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
 		}}),
 		TopP: openai.F(1.000000),
@@ -111,17 +107,13 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 			Temperature:  openai.F(1.000000),
 			ToolResources: openai.F(openai.BetaAssistantUpdateParamsToolResources{
 				CodeInterpreter: openai.F(openai.BetaAssistantUpdateParamsToolResourcesCodeInterpreter{
-					FileIDs: openai.F([]string{"string", "string", "string"}),
+					FileIDs: openai.F([]string{"string"}),
 				}),
 				FileSearch: openai.F(openai.BetaAssistantUpdateParamsToolResourcesFileSearch{
 					VectorStoreIDs: openai.F([]string{"string"}),
 				}),
 			}),
 			Tools: openai.F([]openai.AssistantToolUnionParam{openai.CodeInterpreterToolParam{
-				Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-			}, openai.CodeInterpreterToolParam{
-				Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-			}, openai.CodeInterpreterToolParam{
 				Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
 			}}),
 			TopP: openai.F(1.000000),
