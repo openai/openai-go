@@ -383,8 +383,9 @@ type ChatCompletionAudioParam struct {
 	// Specifies the output audio format. Must be one of `wav`, `mp3`, `flac`, `opus`,
 	// or `pcm16`.
 	Format param.Field[ChatCompletionAudioParamFormat] `json:"format,required"`
-	// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
-	// `ballad`, `coral`, `echo`, `sage`, `shimmer`, and `verse`.
+	// The voice the model uses to respond. Supported voices are `ash`, `ballad`,
+	// `coral`, `sage`, and `verse` (also supported but not recommended are `alloy`,
+	// `echo`, and `shimmer`; these voices are less expressive).
 	Voice param.Field[ChatCompletionAudioParamVoice] `json:"voice,required"`
 }
 
@@ -412,8 +413,9 @@ func (r ChatCompletionAudioParamFormat) IsKnown() bool {
 	return false
 }
 
-// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
-// `ballad`, `coral`, `echo`, `sage`, `shimmer`, and `verse`.
+// The voice the model uses to respond. Supported voices are `ash`, `ballad`,
+// `coral`, `sage`, and `verse` (also supported but not recommended are `alloy`,
+// `echo`, and `shimmer`; these voices are less expressive).
 type ChatCompletionAudioParamVoice string
 
 const (
