@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.38 (2024-11-20)
+
+Full Changelog: [v0.1.0-alpha.37...v0.1.0-alpha.38](https://github.com/openai/openai-go/compare/v0.1.0-alpha.37...v0.1.0-alpha.38)
+
+### Features
+
+* **api:** add gpt-4o-2024-11-20 model ([#131](https://github.com/openai/openai-go/issues/131)) ([8dabbd3](https://github.com/openai/openai-go/commit/8dabbd3d3f338986470049c1a3842e47a7194c1e))
+
+
+### Chores
+
+* **internal:** spec update ([#130](https://github.com/openai/openai-go/issues/130)) ([23476d8](https://github.com/openai/openai-go/commit/23476d8131b009e38f7f22024d925fd7fe76e4db))
+* **tests:** limit array example length ([#128](https://github.com/openai/openai-go/issues/128)) ([5560e6b](https://github.com/openai/openai-go/commit/5560e6ba5f77e774d6be40e71628c1b62f8b3005))
+
 ## 0.1.0-alpha.37 (2024-11-12)
 
 Full Changelog: [v0.1.0-alpha.36...v0.1.0-alpha.37](https://github.com/openai/openai-go/compare/v0.1.0-alpha.36...v0.1.0-alpha.37)
