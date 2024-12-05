@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.39 (2024-12-05)
+
+Full Changelog: [v0.1.0-alpha.38...v0.1.0-alpha.39](https://github.com/openai/openai-go/compare/v0.1.0-alpha.38...v0.1.0-alpha.39)
+
+### Features
+
+* **api:** updates ([#138](https://github.com/openai/openai-go/issues/138)) ([67badff](https://github.com/openai/openai-go/commit/67badffd9f6b24979e52a71548437516b8d97e6f))
+
+
+### Chores
+
+* bump openapi url ([#136](https://github.com/openai/openai-go/issues/136)) ([179a1cd](https://github.com/openai/openai-go/commit/179a1cd7104d13c2014fa9fe3b1551e4b8829d71))
+
 ## 0.1.0-alpha.38 (2024-11-20)
 
 Full Changelog: [v0.1.0-alpha.37...v0.1.0-alpha.38](https://github.com/openai/openai-go/compare/v0.1.0-alpha.37...v0.1.0-alpha.38)
