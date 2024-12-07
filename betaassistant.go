@@ -2097,7 +2097,7 @@ type BetaAssistantNewParams struct {
 	//
 	// We generally recommend altering this or temperature but not both.
 	TopP param.Field[float64] `json:"top_p"`
-	ResponseFormat param.Field[BetaAssistantNewParamsResponseType] `json:"response_format"`
+	ResponseFormat param.Field[BetaAssistantNewParamsResponseFormat] `json:"response_format"`
 }
 
 
