@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.40 (2024-12-17)
+
+Full Changelog: [v0.1.0-alpha.39...v0.1.0-alpha.40](https://github.com/openai/openai-go/compare/v0.1.0-alpha.39...v0.1.0-alpha.40)
+
+### Features
+
+* **api:** new o1 and GPT-4o models + preference fine-tuning ([#142](https://github.com/openai/openai-go/issues/142)) ([9207561](https://github.com/openai/openai-go/commit/920756111c0f7725eb5746b22c1393e327dc2990))
+
+
+### Chores
+
+* **internal:** spec update ([#145](https://github.com/openai/openai-go/issues/145)) ([bc0dba4](https://github.com/openai/openai-go/commit/bc0dba40f69294f460b3d448a6a093e487509dca))
+
 ## 0.1.0-alpha.39 (2024-12-05)
 
 Full Changelog: [v0.1.0-alpha.38...v0.1.0-alpha.39](https://github.com/openai/openai-go/compare/v0.1.0-alpha.38...v0.1.0-alpha.39)
