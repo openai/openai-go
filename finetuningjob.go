@@ -147,9 +147,8 @@ type FineTuningJob struct {
 	// The Unix timestamp (in seconds) for when the fine-tuning job was finished. The
 	// value will be null if the fine-tuning job is still running.
 	FinishedAt int64 `json:"finished_at,required,nullable"`
-	// The hyperparameters used for the fine-tuning job. See the
-	// [fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning) for
-	// more details.
+	// The hyperparameters used for the fine-tuning job. This value will only be
+	// returned when running `supervised` jobs.
 	Hyperparameters FineTuningJobHyperparameters `json:"hyperparameters,required"`
 	// The base model that is being fine-tuned.
 	Model string `json:"model,required"`
@@ -181,7 +180,9 @@ type FineTuningJob struct {
 	EstimatedFinish int64 `json:"estimated_finish,nullable"`
 	// A list of integrations to enable for this fine-tuning job.
 	Integrations []FineTuningJobWandbIntegrationObject `json:"integrations,nullable"`
-	JSON         fineTuningJobJSON                     `json:"-"`
+	// The method used for fine-tuning.
+	Method FineTuningJobMethod `json:"method"`
+	JSON   fineTuningJobJSON   `json:"-"`
 }
 
 // fineTuningJobJSON contains the JSON metadata for the struct [FineTuningJob]
@@ -203,6 +204,7 @@ type fineTuningJobJSON struct {
 	ValidationFile  apijson.Field
 	EstimatedFinish apijson.Field
 	Integrations    apijson.Field
+	Method          apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -246,24 +248,29 @@ func (r fineTuningJobErrorJSON) RawJSON() string {
 	return r.raw
 }
 
-// The hyperparameters used for the fine-tuning job. See the
-// [fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning) for
-// more details.
+// The hyperparameters used for the fine-tuning job. This value will only be
+// returned when running `supervised` jobs.
 type FineTuningJobHyperparameters struct {
+	// Number of examples in each batch. A larger batch size means that model
+	// parameters are updated less frequently, but with lower variance.
+	BatchSize FineTuningJobHyperparametersBatchSizeUnion `json:"batch_size"`
+	// Scaling factor for the learning rate. A smaller learning rate may be useful to
+	// avoid overfitting.
+	LearningRateMultiplier FineTuningJobHyperparametersLearningRateMultiplierUnion `json:"learning_rate_multiplier"`
 	// The number of epochs to train the model for. An epoch refers to one full cycle
-	// through the training dataset. "auto" decides the optimal number of epochs based
-	// on the size of the dataset. If setting the number manually, we support any
-	// number between 1 and 50 epochs.
-	NEpochs FineTuningJobHyperparametersNEpochsUnion `json:"n_epochs,required"`
+	// through the training dataset.
+	NEpochs FineTuningJobHyperparametersNEpochsUnion `json:"n_epochs"`
 	JSON    fineTuningJobHyperparametersJSON         `json:"-"`
 }
 
 // fineTuningJobHyperparametersJSON contains the JSON metadata for the struct
 // [FineTuningJobHyperparameters]
 type fineTuningJobHyperparametersJSON struct {
-	NEpochs     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	BatchSize              apijson.Field
+	LearningRateMultiplier apijson.Field
+	NEpochs                apijson.Field
+	raw                    string
+	ExtraFields            map[string]apijson.Field
 }
 
 func (r *FineTuningJobHyperparameters) UnmarshalJSON(data []byte) (err error) {
@@ -274,10 +281,90 @@ func (r fineTuningJobHyperparametersJSON) RawJSON() string {
 	return r.raw
 }
 
+// Number of examples in each batch. A larger batch size means that model
+// parameters are updated less frequently, but with lower variance.
+//
+// Union satisfied by [FineTuningJobHyperparametersBatchSizeAuto] or
+// [shared.UnionInt].
+type FineTuningJobHyperparametersBatchSizeUnion interface {
+	ImplementsFineTuningJobHyperparametersBatchSizeUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*FineTuningJobHyperparametersBatchSizeUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(FineTuningJobHyperparametersBatchSizeAuto("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionInt(0)),
+		},
+	)
+}
+
+type FineTuningJobHyperparametersBatchSizeAuto string
+
+const (
+	FineTuningJobHyperparametersBatchSizeAutoAuto FineTuningJobHyperparametersBatchSizeAuto = "auto"
+)
+
+func (r FineTuningJobHyperparametersBatchSizeAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobHyperparametersBatchSizeAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobHyperparametersBatchSizeAuto) ImplementsFineTuningJobHyperparametersBatchSizeUnion() {
+}
+
+// Scaling factor for the learning rate. A smaller learning rate may be useful to
+// avoid overfitting.
+//
+// Union satisfied by [FineTuningJobHyperparametersLearningRateMultiplierAuto] or
+// [shared.UnionFloat].
+type FineTuningJobHyperparametersLearningRateMultiplierUnion interface {
+	ImplementsFineTuningJobHyperparametersLearningRateMultiplierUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*FineTuningJobHyperparametersLearningRateMultiplierUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(FineTuningJobHyperparametersLearningRateMultiplierAuto("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+	)
+}
+
+type FineTuningJobHyperparametersLearningRateMultiplierAuto string
+
+const (
+	FineTuningJobHyperparametersLearningRateMultiplierAutoAuto FineTuningJobHyperparametersLearningRateMultiplierAuto = "auto"
+)
+
+func (r FineTuningJobHyperparametersLearningRateMultiplierAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobHyperparametersLearningRateMultiplierAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobHyperparametersLearningRateMultiplierAuto) ImplementsFineTuningJobHyperparametersLearningRateMultiplierUnion() {
+}
+
 // The number of epochs to train the model for. An epoch refers to one full cycle
-// through the training dataset. "auto" decides the optimal number of epochs based
-// on the size of the dataset. If setting the number manually, we support any
-// number between 1 and 50 epochs.
+// through the training dataset.
 //
 // Union satisfied by [FineTuningJobHyperparametersNEpochsBehavior] or
 // [shared.UnionInt].
@@ -353,14 +440,471 @@ func (r FineTuningJobStatus) IsKnown() bool {
 	return false
 }
 
+// The method used for fine-tuning.
+type FineTuningJobMethod struct {
+	// Configuration for the DPO fine-tuning method.
+	Dpo FineTuningJobMethodDpo `json:"dpo"`
+	// Configuration for the supervised fine-tuning method.
+	Supervised FineTuningJobMethodSupervised `json:"supervised"`
+	// The type of method. Is either `supervised` or `dpo`.
+	Type FineTuningJobMethodType `json:"type"`
+	JSON fineTuningJobMethodJSON `json:"-"`
+}
+
+// fineTuningJobMethodJSON contains the JSON metadata for the struct
+// [FineTuningJobMethod]
+type fineTuningJobMethodJSON struct {
+	Dpo         apijson.Field
+	Supervised  apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *FineTuningJobMethod) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r fineTuningJobMethodJSON) RawJSON() string {
+	return r.raw
+}
+
+// Configuration for the DPO fine-tuning method.
+type FineTuningJobMethodDpo struct {
+	// The hyperparameters used for the fine-tuning job.
+	Hyperparameters FineTuningJobMethodDpoHyperparameters `json:"hyperparameters"`
+	JSON            fineTuningJobMethodDpoJSON            `json:"-"`
+}
+
+// fineTuningJobMethodDpoJSON contains the JSON metadata for the struct
+// [FineTuningJobMethodDpo]
+type fineTuningJobMethodDpoJSON struct {
+	Hyperparameters apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
+}
+
+func (r *FineTuningJobMethodDpo) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r fineTuningJobMethodDpoJSON) RawJSON() string {
+	return r.raw
+}
+
+// The hyperparameters used for the fine-tuning job.
+type FineTuningJobMethodDpoHyperparameters struct {
+	// Number of examples in each batch. A larger batch size means that model
+	// parameters are updated less frequently, but with lower variance.
+	BatchSize FineTuningJobMethodDpoHyperparametersBatchSizeUnion `json:"batch_size"`
+	// The beta value for the DPO method. A higher beta value will increase the weight
+	// of the penalty between the policy and reference model.
+	Beta FineTuningJobMethodDpoHyperparametersBetaUnion `json:"beta"`
+	// Scaling factor for the learning rate. A smaller learning rate may be useful to
+	// avoid overfitting.
+	LearningRateMultiplier FineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion `json:"learning_rate_multiplier"`
+	// The number of epochs to train the model for. An epoch refers to one full cycle
+	// through the training dataset.
+	NEpochs FineTuningJobMethodDpoHyperparametersNEpochsUnion `json:"n_epochs"`
+	JSON    fineTuningJobMethodDpoHyperparametersJSON         `json:"-"`
+}
+
+// fineTuningJobMethodDpoHyperparametersJSON contains the JSON metadata for the
+// struct [FineTuningJobMethodDpoHyperparameters]
+type fineTuningJobMethodDpoHyperparametersJSON struct {
+	BatchSize              apijson.Field
+	Beta                   apijson.Field
+	LearningRateMultiplier apijson.Field
+	NEpochs                apijson.Field
+	raw                    string
+	ExtraFields            map[string]apijson.Field
+}
+
+func (r *FineTuningJobMethodDpoHyperparameters) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r fineTuningJobMethodDpoHyperparametersJSON) RawJSON() string {
+	return r.raw
+}
+
+// Number of examples in each batch. A larger batch size means that model
+// parameters are updated less frequently, but with lower variance.
+//
+// Union satisfied by [FineTuningJobMethodDpoHyperparametersBatchSizeAuto] or
+// [shared.UnionInt].
+type FineTuningJobMethodDpoHyperparametersBatchSizeUnion interface {
+	ImplementsFineTuningJobMethodDpoHyperparametersBatchSizeUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*FineTuningJobMethodDpoHyperparametersBatchSizeUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(FineTuningJobMethodDpoHyperparametersBatchSizeAuto("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionInt(0)),
+		},
+	)
+}
+
+type FineTuningJobMethodDpoHyperparametersBatchSizeAuto string
+
+const (
+	FineTuningJobMethodDpoHyperparametersBatchSizeAutoAuto FineTuningJobMethodDpoHyperparametersBatchSizeAuto = "auto"
+)
+
+func (r FineTuningJobMethodDpoHyperparametersBatchSizeAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobMethodDpoHyperparametersBatchSizeAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobMethodDpoHyperparametersBatchSizeAuto) ImplementsFineTuningJobMethodDpoHyperparametersBatchSizeUnion() {
+}
+
+// The beta value for the DPO method. A higher beta value will increase the weight
+// of the penalty between the policy and reference model.
+//
+// Union satisfied by [FineTuningJobMethodDpoHyperparametersBetaAuto] or
+// [shared.UnionFloat].
+type FineTuningJobMethodDpoHyperparametersBetaUnion interface {
+	ImplementsFineTuningJobMethodDpoHyperparametersBetaUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*FineTuningJobMethodDpoHyperparametersBetaUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(FineTuningJobMethodDpoHyperparametersBetaAuto("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+	)
+}
+
+type FineTuningJobMethodDpoHyperparametersBetaAuto string
+
+const (
+	FineTuningJobMethodDpoHyperparametersBetaAutoAuto FineTuningJobMethodDpoHyperparametersBetaAuto = "auto"
+)
+
+func (r FineTuningJobMethodDpoHyperparametersBetaAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobMethodDpoHyperparametersBetaAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobMethodDpoHyperparametersBetaAuto) ImplementsFineTuningJobMethodDpoHyperparametersBetaUnion() {
+}
+
+// Scaling factor for the learning rate. A smaller learning rate may be useful to
+// avoid overfitting.
+//
+// Union satisfied by
+// [FineTuningJobMethodDpoHyperparametersLearningRateMultiplierAuto] or
+// [shared.UnionFloat].
+type FineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion interface {
+	ImplementsFineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*FineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(FineTuningJobMethodDpoHyperparametersLearningRateMultiplierAuto("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+	)
+}
+
+type FineTuningJobMethodDpoHyperparametersLearningRateMultiplierAuto string
+
+const (
+	FineTuningJobMethodDpoHyperparametersLearningRateMultiplierAutoAuto FineTuningJobMethodDpoHyperparametersLearningRateMultiplierAuto = "auto"
+)
+
+func (r FineTuningJobMethodDpoHyperparametersLearningRateMultiplierAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobMethodDpoHyperparametersLearningRateMultiplierAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobMethodDpoHyperparametersLearningRateMultiplierAuto) ImplementsFineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion() {
+}
+
+// The number of epochs to train the model for. An epoch refers to one full cycle
+// through the training dataset.
+//
+// Union satisfied by [FineTuningJobMethodDpoHyperparametersNEpochsAuto] or
+// [shared.UnionInt].
+type FineTuningJobMethodDpoHyperparametersNEpochsUnion interface {
+	ImplementsFineTuningJobMethodDpoHyperparametersNEpochsUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*FineTuningJobMethodDpoHyperparametersNEpochsUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(FineTuningJobMethodDpoHyperparametersNEpochsAuto("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionInt(0)),
+		},
+	)
+}
+
+type FineTuningJobMethodDpoHyperparametersNEpochsAuto string
+
+const (
+	FineTuningJobMethodDpoHyperparametersNEpochsAutoAuto FineTuningJobMethodDpoHyperparametersNEpochsAuto = "auto"
+)
+
+func (r FineTuningJobMethodDpoHyperparametersNEpochsAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobMethodDpoHyperparametersNEpochsAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobMethodDpoHyperparametersNEpochsAuto) ImplementsFineTuningJobMethodDpoHyperparametersNEpochsUnion() {
+}
+
+// Configuration for the supervised fine-tuning method.
+type FineTuningJobMethodSupervised struct {
+	// The hyperparameters used for the fine-tuning job.
+	Hyperparameters FineTuningJobMethodSupervisedHyperparameters `json:"hyperparameters"`
+	JSON            fineTuningJobMethodSupervisedJSON            `json:"-"`
+}
+
+// fineTuningJobMethodSupervisedJSON contains the JSON metadata for the struct
+// [FineTuningJobMethodSupervised]
+type fineTuningJobMethodSupervisedJSON struct {
+	Hyperparameters apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
+}
+
+func (r *FineTuningJobMethodSupervised) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r fineTuningJobMethodSupervisedJSON) RawJSON() string {
+	return r.raw
+}
+
+// The hyperparameters used for the fine-tuning job.
+type FineTuningJobMethodSupervisedHyperparameters struct {
+	// Number of examples in each batch. A larger batch size means that model
+	// parameters are updated less frequently, but with lower variance.
+	BatchSize FineTuningJobMethodSupervisedHyperparametersBatchSizeUnion `json:"batch_size"`
+	// Scaling factor for the learning rate. A smaller learning rate may be useful to
+	// avoid overfitting.
+	LearningRateMultiplier FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion `json:"learning_rate_multiplier"`
+	// The number of epochs to train the model for. An epoch refers to one full cycle
+	// through the training dataset.
+	NEpochs FineTuningJobMethodSupervisedHyperparametersNEpochsUnion `json:"n_epochs"`
+	JSON    fineTuningJobMethodSupervisedHyperparametersJSON         `json:"-"`
+}
+
+// fineTuningJobMethodSupervisedHyperparametersJSON contains the JSON metadata for
+// the struct [FineTuningJobMethodSupervisedHyperparameters]
+type fineTuningJobMethodSupervisedHyperparametersJSON struct {
+	BatchSize              apijson.Field
+	LearningRateMultiplier apijson.Field
+	NEpochs                apijson.Field
+	raw                    string
+	ExtraFields            map[string]apijson.Field
+}
+
+func (r *FineTuningJobMethodSupervisedHyperparameters) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r fineTuningJobMethodSupervisedHyperparametersJSON) RawJSON() string {
+	return r.raw
+}
+
+// Number of examples in each batch. A larger batch size means that model
+// parameters are updated less frequently, but with lower variance.
+//
+// Union satisfied by [FineTuningJobMethodSupervisedHyperparametersBatchSizeAuto]
+// or [shared.UnionInt].
+type FineTuningJobMethodSupervisedHyperparametersBatchSizeUnion interface {
+	ImplementsFineTuningJobMethodSupervisedHyperparametersBatchSizeUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*FineTuningJobMethodSupervisedHyperparametersBatchSizeUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(FineTuningJobMethodSupervisedHyperparametersBatchSizeAuto("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionInt(0)),
+		},
+	)
+}
+
+type FineTuningJobMethodSupervisedHyperparametersBatchSizeAuto string
+
+const (
+	FineTuningJobMethodSupervisedHyperparametersBatchSizeAutoAuto FineTuningJobMethodSupervisedHyperparametersBatchSizeAuto = "auto"
+)
+
+func (r FineTuningJobMethodSupervisedHyperparametersBatchSizeAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobMethodSupervisedHyperparametersBatchSizeAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobMethodSupervisedHyperparametersBatchSizeAuto) ImplementsFineTuningJobMethodSupervisedHyperparametersBatchSizeUnion() {
+}
+
+// Scaling factor for the learning rate. A smaller learning rate may be useful to
+// avoid overfitting.
+//
+// Union satisfied by
+// [FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierAuto] or
+// [shared.UnionFloat].
+type FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion interface {
+	ImplementsFineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierAuto("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+	)
+}
+
+type FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierAuto string
+
+const (
+	FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierAutoAuto FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierAuto = "auto"
+)
+
+func (r FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierAuto) ImplementsFineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion() {
+}
+
+// The number of epochs to train the model for. An epoch refers to one full cycle
+// through the training dataset.
+//
+// Union satisfied by [FineTuningJobMethodSupervisedHyperparametersNEpochsAuto] or
+// [shared.UnionInt].
+type FineTuningJobMethodSupervisedHyperparametersNEpochsUnion interface {
+	ImplementsFineTuningJobMethodSupervisedHyperparametersNEpochsUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*FineTuningJobMethodSupervisedHyperparametersNEpochsUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(FineTuningJobMethodSupervisedHyperparametersNEpochsAuto("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionInt(0)),
+		},
+	)
+}
+
+type FineTuningJobMethodSupervisedHyperparametersNEpochsAuto string
+
+const (
+	FineTuningJobMethodSupervisedHyperparametersNEpochsAutoAuto FineTuningJobMethodSupervisedHyperparametersNEpochsAuto = "auto"
+)
+
+func (r FineTuningJobMethodSupervisedHyperparametersNEpochsAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobMethodSupervisedHyperparametersNEpochsAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobMethodSupervisedHyperparametersNEpochsAuto) ImplementsFineTuningJobMethodSupervisedHyperparametersNEpochsUnion() {
+}
+
+// The type of method. Is either `supervised` or `dpo`.
+type FineTuningJobMethodType string
+
+const (
+	FineTuningJobMethodTypeSupervised FineTuningJobMethodType = "supervised"
+	FineTuningJobMethodTypeDpo        FineTuningJobMethodType = "dpo"
+)
+
+func (r FineTuningJobMethodType) IsKnown() bool {
+	switch r {
+	case FineTuningJobMethodTypeSupervised, FineTuningJobMethodTypeDpo:
+		return true
+	}
+	return false
+}
+
 // Fine-tuning job event object
 type FineTuningJobEvent struct {
-	ID        string                   `json:"id,required"`
-	CreatedAt int64                    `json:"created_at,required"`
-	Level     FineTuningJobEventLevel  `json:"level,required"`
-	Message   string                   `json:"message,required"`
-	Object    FineTuningJobEventObject `json:"object,required"`
-	JSON      fineTuningJobEventJSON   `json:"-"`
+	// The object identifier.
+	ID string `json:"id,required"`
+	// The Unix timestamp (in seconds) for when the fine-tuning job was created.
+	CreatedAt int64 `json:"created_at,required"`
+	// The log level of the event.
+	Level FineTuningJobEventLevel `json:"level,required"`
+	// The message of the event.
+	Message string `json:"message,required"`
+	// The object type, which is always "fine_tuning.job.event".
+	Object FineTuningJobEventObject `json:"object,required"`
+	// The data associated with the event.
+	Data interface{} `json:"data"`
+	// The type of event.
+	Type FineTuningJobEventType `json:"type"`
+	JSON fineTuningJobEventJSON `json:"-"`
 }
 
 // fineTuningJobEventJSON contains the JSON metadata for the struct
@@ -371,6 +915,8 @@ type fineTuningJobEventJSON struct {
 	Level       apijson.Field
 	Message     apijson.Field
 	Object      apijson.Field
+	Data        apijson.Field
+	Type        apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -383,6 +929,7 @@ func (r fineTuningJobEventJSON) RawJSON() string {
 	return r.raw
 }
 
+// The log level of the event.
 type FineTuningJobEventLevel string
 
 const (
@@ -399,6 +946,7 @@ func (r FineTuningJobEventLevel) IsKnown() bool {
 	return false
 }
 
+// The object type, which is always "fine_tuning.job.event".
 type FineTuningJobEventObject string
 
 const (
@@ -408,6 +956,22 @@ const (
 func (r FineTuningJobEventObject) IsKnown() bool {
 	switch r {
 	case FineTuningJobEventObjectFineTuningJobEvent:
+		return true
+	}
+	return false
+}
+
+// The type of event.
+type FineTuningJobEventType string
+
+const (
+	FineTuningJobEventTypeMessage FineTuningJobEventType = "message"
+	FineTuningJobEventTypeMetrics FineTuningJobEventType = "metrics"
+)
+
+func (r FineTuningJobEventType) IsKnown() bool {
+	switch r {
+	case FineTuningJobEventTypeMessage, FineTuningJobEventTypeMetrics:
 		return true
 	}
 	return false
@@ -509,17 +1073,22 @@ type FineTuningJobNewParams struct {
 	// your file with the purpose `fine-tune`.
 	//
 	// The contents of the file should differ depending on if the model uses the
-	// [chat](https://platform.openai.com/docs/api-reference/fine-tuning/chat-input) or
+	// [chat](https://platform.openai.com/docs/api-reference/fine-tuning/chat-input),
 	// [completions](https://platform.openai.com/docs/api-reference/fine-tuning/completions-input)
+	// format, or if the fine-tuning method uses the
+	// [preference](https://platform.openai.com/docs/api-reference/fine-tuning/preference-input)
 	// format.
 	//
 	// See the [fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)
 	// for more details.
 	TrainingFile param.Field[string] `json:"training_file,required"`
-	// The hyperparameters used for the fine-tuning job.
+	// The hyperparameters used for the fine-tuning job. This value is now deprecated
+	// in favor of `method`, and should be passed in under the `method` parameter.
 	Hyperparameters param.Field[FineTuningJobNewParamsHyperparameters] `json:"hyperparameters"`
 	// A list of integrations to enable for your fine-tuning job.
 	Integrations param.Field[[]FineTuningJobNewParamsIntegration] `json:"integrations"`
+	// The method used for fine-tuning.
+	Method param.Field[FineTuningJobNewParamsMethod] `json:"method"`
 	// The seed controls the reproducibility of the job. Passing in the same seed and
 	// job parameters should produce the same results, but may differ in rare cases. If
 	// a seed is not specified, one will be generated for you.
@@ -568,7 +1137,8 @@ func (r FineTuningJobNewParamsModel) IsKnown() bool {
 	return false
 }
 
-// The hyperparameters used for the fine-tuning job.
+// The hyperparameters used for the fine-tuning job. This value is now deprecated
+// in favor of `method`, and should be passed in under the `method` parameter.
 type FineTuningJobNewParamsHyperparameters struct {
 	// Number of examples in each batch. A larger batch size means that model
 	// parameters are updated less frequently, but with lower variance.
@@ -717,6 +1287,278 @@ type FineTuningJobNewParamsIntegrationsWandb struct {
 
 func (r FineTuningJobNewParamsIntegrationsWandb) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// The method used for fine-tuning.
+type FineTuningJobNewParamsMethod struct {
+	// Configuration for the DPO fine-tuning method.
+	Dpo param.Field[FineTuningJobNewParamsMethodDpo] `json:"dpo"`
+	// Configuration for the supervised fine-tuning method.
+	Supervised param.Field[FineTuningJobNewParamsMethodSupervised] `json:"supervised"`
+	// The type of method. Is either `supervised` or `dpo`.
+	Type param.Field[FineTuningJobNewParamsMethodType] `json:"type"`
+}
+
+func (r FineTuningJobNewParamsMethod) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Configuration for the DPO fine-tuning method.
+type FineTuningJobNewParamsMethodDpo struct {
+	// The hyperparameters used for the fine-tuning job.
+	Hyperparameters param.Field[FineTuningJobNewParamsMethodDpoHyperparameters] `json:"hyperparameters"`
+}
+
+func (r FineTuningJobNewParamsMethodDpo) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// The hyperparameters used for the fine-tuning job.
+type FineTuningJobNewParamsMethodDpoHyperparameters struct {
+	// Number of examples in each batch. A larger batch size means that model
+	// parameters are updated less frequently, but with lower variance.
+	BatchSize param.Field[FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion] `json:"batch_size"`
+	// The beta value for the DPO method. A higher beta value will increase the weight
+	// of the penalty between the policy and reference model.
+	Beta param.Field[FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion] `json:"beta"`
+	// Scaling factor for the learning rate. A smaller learning rate may be useful to
+	// avoid overfitting.
+	LearningRateMultiplier param.Field[FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion] `json:"learning_rate_multiplier"`
+	// The number of epochs to train the model for. An epoch refers to one full cycle
+	// through the training dataset.
+	NEpochs param.Field[FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion] `json:"n_epochs"`
+}
+
+func (r FineTuningJobNewParamsMethodDpoHyperparameters) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Number of examples in each batch. A larger batch size means that model
+// parameters are updated less frequently, but with lower variance.
+//
+// Satisfied by [FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeAuto],
+// [shared.UnionInt].
+type FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion interface {
+	ImplementsFineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion()
+}
+
+type FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeAuto string
+
+const (
+	FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeAutoAuto FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeAuto = "auto"
+)
+
+func (r FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeAuto) ImplementsFineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion() {
+}
+
+// The beta value for the DPO method. A higher beta value will increase the weight
+// of the penalty between the policy and reference model.
+//
+// Satisfied by [FineTuningJobNewParamsMethodDpoHyperparametersBetaAuto],
+// [shared.UnionFloat].
+type FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion interface {
+	ImplementsFineTuningJobNewParamsMethodDpoHyperparametersBetaUnion()
+}
+
+type FineTuningJobNewParamsMethodDpoHyperparametersBetaAuto string
+
+const (
+	FineTuningJobNewParamsMethodDpoHyperparametersBetaAutoAuto FineTuningJobNewParamsMethodDpoHyperparametersBetaAuto = "auto"
+)
+
+func (r FineTuningJobNewParamsMethodDpoHyperparametersBetaAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobNewParamsMethodDpoHyperparametersBetaAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobNewParamsMethodDpoHyperparametersBetaAuto) ImplementsFineTuningJobNewParamsMethodDpoHyperparametersBetaUnion() {
+}
+
+// Scaling factor for the learning rate. A smaller learning rate may be useful to
+// avoid overfitting.
+//
+// Satisfied by
+// [FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierAuto],
+// [shared.UnionFloat].
+type FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion interface {
+	ImplementsFineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion()
+}
+
+type FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierAuto string
+
+const (
+	FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierAutoAuto FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierAuto = "auto"
+)
+
+func (r FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierAuto) ImplementsFineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion() {
+}
+
+// The number of epochs to train the model for. An epoch refers to one full cycle
+// through the training dataset.
+//
+// Satisfied by [FineTuningJobNewParamsMethodDpoHyperparametersNEpochsAuto],
+// [shared.UnionInt].
+type FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion interface {
+	ImplementsFineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion()
+}
+
+type FineTuningJobNewParamsMethodDpoHyperparametersNEpochsAuto string
+
+const (
+	FineTuningJobNewParamsMethodDpoHyperparametersNEpochsAutoAuto FineTuningJobNewParamsMethodDpoHyperparametersNEpochsAuto = "auto"
+)
+
+func (r FineTuningJobNewParamsMethodDpoHyperparametersNEpochsAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobNewParamsMethodDpoHyperparametersNEpochsAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobNewParamsMethodDpoHyperparametersNEpochsAuto) ImplementsFineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion() {
+}
+
+// Configuration for the supervised fine-tuning method.
+type FineTuningJobNewParamsMethodSupervised struct {
+	// The hyperparameters used for the fine-tuning job.
+	Hyperparameters param.Field[FineTuningJobNewParamsMethodSupervisedHyperparameters] `json:"hyperparameters"`
+}
+
+func (r FineTuningJobNewParamsMethodSupervised) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// The hyperparameters used for the fine-tuning job.
+type FineTuningJobNewParamsMethodSupervisedHyperparameters struct {
+	// Number of examples in each batch. A larger batch size means that model
+	// parameters are updated less frequently, but with lower variance.
+	BatchSize param.Field[FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion] `json:"batch_size"`
+	// Scaling factor for the learning rate. A smaller learning rate may be useful to
+	// avoid overfitting.
+	LearningRateMultiplier param.Field[FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion] `json:"learning_rate_multiplier"`
+	// The number of epochs to train the model for. An epoch refers to one full cycle
+	// through the training dataset.
+	NEpochs param.Field[FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion] `json:"n_epochs"`
+}
+
+func (r FineTuningJobNewParamsMethodSupervisedHyperparameters) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Number of examples in each batch. A larger batch size means that model
+// parameters are updated less frequently, but with lower variance.
+//
+// Satisfied by
+// [FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeAuto],
+// [shared.UnionInt].
+type FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion interface {
+	ImplementsFineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion()
+}
+
+type FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeAuto string
+
+const (
+	FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeAutoAuto FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeAuto = "auto"
+)
+
+func (r FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeAuto) ImplementsFineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion() {
+}
+
+// Scaling factor for the learning rate. A smaller learning rate may be useful to
+// avoid overfitting.
+//
+// Satisfied by
+// [FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierAuto],
+// [shared.UnionFloat].
+type FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion interface {
+	ImplementsFineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion()
+}
+
+type FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierAuto string
+
+const (
+	FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierAutoAuto FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierAuto = "auto"
+)
+
+func (r FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierAuto) ImplementsFineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion() {
+}
+
+// The number of epochs to train the model for. An epoch refers to one full cycle
+// through the training dataset.
+//
+// Satisfied by [FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsAuto],
+// [shared.UnionInt].
+type FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion interface {
+	ImplementsFineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion()
+}
+
+type FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsAuto string
+
+const (
+	FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsAutoAuto FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsAuto = "auto"
+)
+
+func (r FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsAuto) IsKnown() bool {
+	switch r {
+	case FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsAutoAuto:
+		return true
+	}
+	return false
+}
+
+func (r FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsAuto) ImplementsFineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion() {
+}
+
+// The type of method. Is either `supervised` or `dpo`.
+type FineTuningJobNewParamsMethodType string
+
+const (
+	FineTuningJobNewParamsMethodTypeSupervised FineTuningJobNewParamsMethodType = "supervised"
+	FineTuningJobNewParamsMethodTypeDpo        FineTuningJobNewParamsMethodType = "dpo"
+)
+
+func (r FineTuningJobNewParamsMethodType) IsKnown() bool {
+	switch r {
+	case FineTuningJobNewParamsMethodTypeSupervised, FineTuningJobNewParamsMethodTypeDpo:
+		return true
+	}
+	return false
 }
 
 type FineTuningJobListParams struct {

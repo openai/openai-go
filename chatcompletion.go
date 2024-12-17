@@ -108,6 +108,12 @@ func NewChatCompletionService(opts ...option.RequestOption) (r *ChatCompletionSe
 // [text generation](https://platform.openai.com/docs/guides/text-generation),
 // [vision](https://platform.openai.com/docs/guides/vision), and
 // [audio](https://platform.openai.com/docs/guides/audio) guides.
+//
+// Parameter support can differ depending on the model used to generate the
+// response, particularly for newer reasoning models. Parameters that are only
+// supported for reasoning models are noted below. For the current state of
+// unsupported parameters in reasoning models,
+// [refer to the reasoning guide](https://platform.openai.com/docs/guides/reasoning).
 func (r *ChatCompletionService) New(ctx context.Context, body ChatCompletionNewParams, opts ...option.RequestOption) (res *ChatCompletion, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "chat/completions"
@@ -119,6 +125,12 @@ func (r *ChatCompletionService) New(ctx context.Context, body ChatCompletionNewP
 // [text generation](https://platform.openai.com/docs/guides/text-generation),
 // [vision](https://platform.openai.com/docs/guides/vision), and
 // [audio](https://platform.openai.com/docs/guides/audio) guides.
+//
+// Parameter support can differ depending on the model used to generate the
+// response, particularly for newer reasoning models. Parameters that are only
+// supported for reasoning models are noted below. For the current state of
+// unsupported parameters in reasoning models,
+// [refer to the reasoning guide](https://platform.openai.com/docs/guides/reasoning).
 func (r *ChatCompletionService) NewStreaming(ctx context.Context, body ChatCompletionNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[ChatCompletionChunk]) {
 	var (
 		raw *http.Response
@@ -298,6 +310,7 @@ func (r ChatCompletionServiceTier) IsKnown() bool {
 	return false
 }
 
+// Messages sent by the model in response to user messages.
 type ChatCompletionAssistantMessageParam struct {
 	// The role of the messages author, in this case `assistant`.
 	Role param.Field[ChatCompletionAssistantMessageParamRole] `json:"role,required"`
@@ -1054,6 +1067,40 @@ func (r ChatCompletionContentPartTextType) IsKnown() bool {
 	return false
 }
 
+// Developer-provided instructions that the model should follow, regardless of
+// messages sent by the user. With o1 models and newer, `developer` messages
+// replace the previous `system` messages.
+type ChatCompletionDeveloperMessageParam struct {
+	// The contents of the developer message.
+	Content param.Field[[]ChatCompletionContentPartTextParam] `json:"content,required"`
+	// The role of the messages author, in this case `developer`.
+	Role param.Field[ChatCompletionDeveloperMessageParamRole] `json:"role,required"`
+	// An optional name for the participant. Provides the model information to
+	// differentiate between participants of the same role.
+	Name param.Field[string] `json:"name"`
+}
+
+func (r ChatCompletionDeveloperMessageParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ChatCompletionDeveloperMessageParam) implementsChatCompletionMessageParamUnion() {}
+
+// The role of the messages author, in this case `developer`.
+type ChatCompletionDeveloperMessageParamRole string
+
+const (
+	ChatCompletionDeveloperMessageParamRoleDeveloper ChatCompletionDeveloperMessageParamRole = "developer"
+)
+
+func (r ChatCompletionDeveloperMessageParamRole) IsKnown() bool {
+	switch r {
+	case ChatCompletionDeveloperMessageParamRoleDeveloper:
+		return true
+	}
+	return false
+}
+
 // Specifying a particular function via `{"name": "my_function"}` forces the model
 // to call that function.
 type ChatCompletionFunctionCallOptionParam struct {
@@ -1208,8 +1255,11 @@ func (r chatCompletionMessageFunctionCallJSON) RawJSON() string {
 	return r.raw
 }
 
+// Developer-provided instructions that the model should follow, regardless of
+// messages sent by the user. With o1 models and newer, `developer` messages
+// replace the previous `system` messages.
 type ChatCompletionMessageParam struct {
-	// The role of the messages author, in this case `system`.
+	// The role of the messages author, in this case `developer`.
 	Role         param.Field[ChatCompletionMessageParamRole] `json:"role,required"`
 	Audio        param.Field[interface{}]                    `json:"audio"`
 	Content      param.Field[interface{}]                    `json:"content"`
@@ -1230,20 +1280,25 @@ func (r ChatCompletionMessageParam) MarshalJSON() (data []byte, err error) {
 
 func (r ChatCompletionMessageParam) implementsChatCompletionMessageParamUnion() {}
 
-// Satisfied by [ChatCompletionSystemMessageParam],
-// [ChatCompletionUserMessageParam], [ChatCompletionAssistantMessageParam],
-// [ChatCompletionToolMessageParam], [ChatCompletionFunctionMessageParam],
-// [ChatCompletionMessageParam].
+// Developer-provided instructions that the model should follow, regardless of
+// messages sent by the user. With o1 models and newer, `developer` messages
+// replace the previous `system` messages.
+//
+// Satisfied by [ChatCompletionDeveloperMessageParam],
+// [ChatCompletionSystemMessageParam], [ChatCompletionUserMessageParam],
+// [ChatCompletionAssistantMessageParam], [ChatCompletionToolMessageParam],
+// [ChatCompletionFunctionMessageParam], [ChatCompletionMessageParam].
 //
 // This union is additionally satisfied by the return types [ChatCompletionMessage]
 type ChatCompletionMessageParamUnion interface {
 	implementsChatCompletionMessageParamUnion()
 }
 
-// The role of the messages author, in this case `system`.
+// The role of the messages author, in this case `developer`.
 type ChatCompletionMessageParamRole string
 
 const (
+	ChatCompletionMessageParamRoleDeveloper ChatCompletionMessageParamRole = "developer"
 	ChatCompletionMessageParamRoleSystem    ChatCompletionMessageParamRole = "system"
 	ChatCompletionMessageParamRoleUser      ChatCompletionMessageParamRole = "user"
 	ChatCompletionMessageParamRoleAssistant ChatCompletionMessageParamRole = "assistant"
@@ -1253,7 +1308,7 @@ const (
 
 func (r ChatCompletionMessageParamRole) IsKnown() bool {
 	switch r {
-	case ChatCompletionMessageParamRoleSystem, ChatCompletionMessageParamRoleUser, ChatCompletionMessageParamRoleAssistant, ChatCompletionMessageParamRoleTool, ChatCompletionMessageParamRoleFunction:
+	case ChatCompletionMessageParamRoleDeveloper, ChatCompletionMessageParamRoleSystem, ChatCompletionMessageParamRoleUser, ChatCompletionMessageParamRoleAssistant, ChatCompletionMessageParamRoleTool, ChatCompletionMessageParamRoleFunction:
 		return true
 	}
 	return false
@@ -1444,6 +1499,28 @@ func (r ChatCompletionPredictionContentType) IsKnown() bool {
 	return false
 }
 
+// **o1 models only**
+//
+// Constrains effort on reasoning for
+// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+// result in faster responses and fewer tokens used on reasoning in a response.
+type ChatCompletionReasoningEffort string
+
+const (
+	ChatCompletionReasoningEffortLow    ChatCompletionReasoningEffort = "low"
+	ChatCompletionReasoningEffortMedium ChatCompletionReasoningEffort = "medium"
+	ChatCompletionReasoningEffortHigh   ChatCompletionReasoningEffort = "high"
+)
+
+func (r ChatCompletionReasoningEffort) IsKnown() bool {
+	switch r {
+	case ChatCompletionReasoningEffortLow, ChatCompletionReasoningEffortMedium, ChatCompletionReasoningEffortHigh:
+		return true
+	}
+	return false
+}
+
 // Options for streaming response. Only set this when you set `stream: true`.
 type ChatCompletionStreamOptionsParam struct {
 	// If set, an additional chunk will be streamed before the `data: [DONE]` message.
@@ -1457,6 +1534,9 @@ func (r ChatCompletionStreamOptionsParam) MarshalJSON() (data []byte, err error)
 	return apijson.MarshalRoot(r)
 }
 
+// Developer-provided instructions that the model should follow, regardless of
+// messages sent by the user. With o1 models and newer, use `developer` messages
+// for this purpose instead.
 type ChatCompletionSystemMessageParam struct {
 	// The contents of the system message.
 	Content param.Field[[]ChatCompletionContentPartTextParam] `json:"content,required"`
@@ -1652,6 +1732,8 @@ func (r ChatCompletionToolMessageParamRole) IsKnown() bool {
 	return false
 }
 
+// Messages sent by an end user, containing prompts or additional context
+// information.
 type ChatCompletionUserMessageParam struct {
 	// The contents of the user message.
 	Content param.Field[[]ChatCompletionContentPartUnionParam] `json:"content,required"`
@@ -1702,16 +1784,18 @@ type ChatCompletionNewParams struct {
 	// Number between -2.0 and 2.0. Positive values penalize new tokens based on their
 	// existing frequency in the text so far, decreasing the model's likelihood to
 	// repeat the same line verbatim.
-	//
-	// [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation)
 	FrequencyPenalty param.Field[float64] `json:"frequency_penalty"`
 	// Deprecated in favor of `tool_choice`.
 	//
-	// Controls which (if any) function is called by the model. `none` means the model
-	// will not call a function and instead generates a message. `auto` means the model
-	// can pick between generating a message or calling a function. Specifying a
-	// particular function via `{"name": "my_function"}` forces the model to call that
+	// Controls which (if any) function is called by the model.
+	//
+	// `none` means the model will not call a function and instead generates a message.
+	//
+	// `auto` means the model can pick between generating a message or calling a
 	// function.
+	//
+	// Specifying a particular function via `{"name": "my_function"}` forces the model
+	// to call that function.
 	//
 	// `none` is the default when no functions are present. `auto` is the default if
 	// functions are present.
@@ -1773,14 +1857,15 @@ type ChatCompletionNewParams struct {
 	// Number between -2.0 and 2.0. Positive values penalize new tokens based on
 	// whether they appear in the text so far, increasing the model's likelihood to
 	// talk about new topics.
-	//
-	// [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation)
 	PresencePenalty param.Field[float64] `json:"presence_penalty"`
-	// An object specifying the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
-	// [GPT-4o mini](https://platform.openai.com/docs/models#gpt-4o-mini),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4) and
-	// all GPT-3.5 Turbo models newer than `gpt-3.5-turbo-1106`.
+	// **o1 models only**
+	//
+	// Constrains effort on reasoning for
+	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+	// result in faster responses and fewer tokens used on reasoning in a response.
+	ReasoningEffort param.Field[ChatCompletionReasoningEffort] `json:"reasoning_effort"`
+	// An object specifying the format that the model must output.
 	//
 	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
 	// Outputs which ensures the model will match your supplied JSON schema. Learn more
@@ -1829,9 +1914,8 @@ type ChatCompletionNewParams struct {
 	StreamOptions param.Field[ChatCompletionStreamOptionsParam] `json:"stream_options"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
-	// focused and deterministic.
-	//
-	// We generally recommend altering this or `top_p` but not both.
+	// focused and deterministic. We generally recommend altering this or `top_p` but
+	// not both.
 	Temperature param.Field[float64] `json:"temperature"`
 	// Controls which (if any) tool is called by the model. `none` means the model will
 	// not call any tool and instead generates a message. `auto` means the model can
@@ -1869,11 +1953,15 @@ func (r ChatCompletionNewParams) MarshalJSON() (data []byte, err error) {
 
 // Deprecated in favor of `tool_choice`.
 //
-// Controls which (if any) function is called by the model. `none` means the model
-// will not call a function and instead generates a message. `auto` means the model
-// can pick between generating a message or calling a function. Specifying a
-// particular function via `{"name": "my_function"}` forces the model to call that
+// Controls which (if any) function is called by the model.
+//
+// `none` means the model will not call a function and instead generates a message.
+//
+// `auto` means the model can pick between generating a message or calling a
 // function.
+//
+// Specifying a particular function via `{"name": "my_function"}` forces the model
+// to call that function.
 //
 // `none` is the default when no functions are present. `auto` is the default if
 // functions are present.
@@ -1926,11 +2014,7 @@ func (r ChatCompletionNewParamsFunction) MarshalJSON() (data []byte, err error) 
 	return apijson.MarshalRoot(r)
 }
 
-// An object specifying the format that the model must output. Compatible with
-// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
-// [GPT-4o mini](https://platform.openai.com/docs/models#gpt-4o-mini),
-// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4) and
-// all GPT-3.5 Turbo models newer than `gpt-3.5-turbo-1106`.
+// An object specifying the format that the model must output.
 //
 // Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
 // Outputs which ensures the model will match your supplied JSON schema. Learn more
@@ -1960,11 +2044,7 @@ func (r ChatCompletionNewParamsResponseFormat) MarshalJSON() (data []byte, err e
 func (r ChatCompletionNewParamsResponseFormat) ImplementsChatCompletionNewParamsResponseFormatUnion() {
 }
 
-// An object specifying the format that the model must output. Compatible with
-// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
-// [GPT-4o mini](https://platform.openai.com/docs/models#gpt-4o-mini),
-// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4) and
-// all GPT-3.5 Turbo models newer than `gpt-3.5-turbo-1106`.
+// An object specifying the format that the model must output.
 //
 // Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
 // Outputs which ensures the model will match your supplied JSON schema. Learn more

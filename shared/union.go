@@ -12,10 +12,29 @@ func (UnionString) ImplementsModerationNewParamsInputUnion()    {}
 
 type UnionInt int64
 
-func (UnionInt) ImplementsFineTuningJobHyperparametersNEpochsUnion()            {}
-func (UnionInt) ImplementsFineTuningJobNewParamsHyperparametersBatchSizeUnion() {}
-func (UnionInt) ImplementsFineTuningJobNewParamsHyperparametersNEpochsUnion()   {}
+func (UnionInt) ImplementsFineTuningJobHyperparametersBatchSizeUnion()                          {}
+func (UnionInt) ImplementsFineTuningJobHyperparametersNEpochsUnion()                            {}
+func (UnionInt) ImplementsFineTuningJobMethodDpoHyperparametersBatchSizeUnion()                 {}
+func (UnionInt) ImplementsFineTuningJobMethodDpoHyperparametersNEpochsUnion()                   {}
+func (UnionInt) ImplementsFineTuningJobMethodSupervisedHyperparametersBatchSizeUnion()          {}
+func (UnionInt) ImplementsFineTuningJobMethodSupervisedHyperparametersNEpochsUnion()            {}
+func (UnionInt) ImplementsFineTuningJobNewParamsHyperparametersBatchSizeUnion()                 {}
+func (UnionInt) ImplementsFineTuningJobNewParamsHyperparametersNEpochsUnion()                   {}
+func (UnionInt) ImplementsFineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion()        {}
+func (UnionInt) ImplementsFineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion()          {}
+func (UnionInt) ImplementsFineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion() {}
+func (UnionInt) ImplementsFineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion()   {}
 
 type UnionFloat float64
 
+func (UnionFloat) ImplementsFineTuningJobHyperparametersLearningRateMultiplierUnion()          {}
+func (UnionFloat) ImplementsFineTuningJobMethodDpoHyperparametersBetaUnion()                   {}
+func (UnionFloat) ImplementsFineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion() {}
+func (UnionFloat) ImplementsFineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion() {
+}
 func (UnionFloat) ImplementsFineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion() {}
+func (UnionFloat) ImplementsFineTuningJobNewParamsMethodDpoHyperparametersBetaUnion()          {}
+func (UnionFloat) ImplementsFineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion() {
+}
+func (UnionFloat) ImplementsFineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion() {
+}
