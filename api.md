@@ -41,6 +41,7 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionContentPartInputAudioParam">ChatCompletionContentPartInputAudioParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionContentPartRefusalParam">ChatCompletionContentPartRefusalParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionContentPartTextParam">ChatCompletionContentPartTextParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionDeveloperMessageParam">ChatCompletionDeveloperMessageParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionFunctionCallOptionParam">ChatCompletionFunctionCallOptionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionFunctionMessageParam">ChatCompletionFunctionMessageParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionMessageParamUnion">ChatCompletionMessageParamUnion</a>
@@ -48,6 +49,7 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionModality">ChatCompletionModality</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionNamedToolChoiceParam">ChatCompletionNamedToolChoiceParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionPredictionContentParam">ChatCompletionPredictionContentParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionReasoningEffort">ChatCompletionReasoningEffort</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionStreamOptionsParam">ChatCompletionStreamOptionsParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionSystemMessageParam">ChatCompletionSystemMessageParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ChatCompletionToolParam">ChatCompletionToolParam</a>

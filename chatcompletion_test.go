@@ -27,12 +27,12 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionSystemMessageParam{
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionDeveloperMessageParam{
 			Content: openai.F([]openai.ChatCompletionContentPartTextParam{{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
-			Role:    openai.F(openai.ChatCompletionSystemMessageParamRoleSystem),
+			Role:    openai.F(openai.ChatCompletionDeveloperMessageParamRoleDeveloper),
 			Name:    openai.F("name"),
 		}}),
-		Model: openai.F(openai.ChatModelO1Preview),
+		Model: openai.F(openai.ChatModelO1),
 		Audio: openai.F(openai.ChatCompletionAudioParam{
 			Format: openai.F(openai.ChatCompletionAudioParamFormatWAV),
 			Voice:  openai.F(openai.ChatCompletionAudioParamVoiceAlloy),
@@ -63,6 +63,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 			Type:    openai.F(openai.ChatCompletionPredictionContentTypeContent),
 		}),
 		PresencePenalty: openai.F(-2.000000),
+		ReasoningEffort: openai.F(openai.ChatCompletionReasoningEffortLow),
 		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](shared.ResponseFormatTextParam{
 			Type: openai.F(shared.ResponseFormatTextTypeText),
 		}),

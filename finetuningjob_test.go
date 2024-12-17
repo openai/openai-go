@@ -42,6 +42,24 @@ func TestFineTuningJobNewWithOptionalParams(t *testing.T) {
 				Tags:    openai.F([]string{"custom-tag"}),
 			}),
 		}}),
+		Method: openai.F(openai.FineTuningJobNewParamsMethod{
+			Dpo: openai.F(openai.FineTuningJobNewParamsMethodDpo{
+				Hyperparameters: openai.F(openai.FineTuningJobNewParamsMethodDpoHyperparameters{
+					BatchSize:              openai.F[openai.FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion](openai.FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeAuto(openai.FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeAutoAuto)),
+					Beta:                   openai.F[openai.FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion](openai.FineTuningJobNewParamsMethodDpoHyperparametersBetaAuto(openai.FineTuningJobNewParamsMethodDpoHyperparametersBetaAutoAuto)),
+					LearningRateMultiplier: openai.F[openai.FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion](openai.FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierAuto(openai.FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierAutoAuto)),
+					NEpochs:                openai.F[openai.FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion](openai.FineTuningJobNewParamsMethodDpoHyperparametersNEpochsAuto(openai.FineTuningJobNewParamsMethodDpoHyperparametersNEpochsAutoAuto)),
+				}),
+			}),
+			Supervised: openai.F(openai.FineTuningJobNewParamsMethodSupervised{
+				Hyperparameters: openai.F(openai.FineTuningJobNewParamsMethodSupervisedHyperparameters{
+					BatchSize:              openai.F[openai.FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion](openai.FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeAuto(openai.FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeAutoAuto)),
+					LearningRateMultiplier: openai.F[openai.FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion](openai.FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierAuto(openai.FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierAutoAuto)),
+					NEpochs:                openai.F[openai.FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion](openai.FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsAuto(openai.FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsAutoAuto)),
+				}),
+			}),
+			Type: openai.F(openai.FineTuningJobNewParamsMethodTypeSupervised),
+		}),
 		Seed:           openai.F(int64(42)),
 		Suffix:         openai.F("x"),
 		ValidationFile: openai.F("file-abc123"),
