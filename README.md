@@ -54,7 +54,7 @@ func main() {
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO1Preview),
+		Model: openai.F(openai.ChatModelO1),
 	})
 	if err != nil {
 		panic(err.Error())
@@ -240,7 +240,7 @@ client.Chat.Completions.New(
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO1Preview),
+		Model: openai.F(openai.ChatModelO1),
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -303,7 +303,7 @@ client.Chat.Completions.New(
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO1Preview),
+		Model: openai.F(openai.ChatModelO1),
 	},
 	option.WithMaxRetries(5),
 )
