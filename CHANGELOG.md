@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.41 (2024-12-21)
+
+Full Changelog: [v0.1.0-alpha.40...v0.1.0-alpha.41](https://github.com/openai/openai-go/compare/v0.1.0-alpha.40...v0.1.0-alpha.41)
+
+### Chores
+
+* **internal:** spec update ([#146](https://github.com/openai/openai-go/issues/146)) ([a9a67ba](https://github.com/openai/openai-go/commit/a9a67ba2f487d23adc7238c1151cab76a7fd9f01))
+
+
+### Documentation
+
+* **readme:** fix typo ([#148](https://github.com/openai/openai-go/issues/148)) ([1bb2322](https://github.com/openai/openai-go/commit/1bb23222e794c8439a56f765dee0c8d4e0db6eac))
+
 ## 0.1.0-alpha.40 (2024-12-17)
 
 Full Changelog: [v0.1.0-alpha.39...v0.1.0-alpha.40](https://github.com/openai/openai-go/compare/v0.1.0-alpha.39...v0.1.0-alpha.40)
