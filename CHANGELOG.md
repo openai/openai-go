@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.42 (2025-01-02)
+
+Full Changelog: [v0.1.0-alpha.41...v0.1.0-alpha.42](https://github.com/openai/openai-go/compare/v0.1.0-alpha.41...v0.1.0-alpha.42)
+
+### Chores
+
+* bump license year ([#151](https://github.com/openai/openai-go/issues/151)) ([c3e375e](https://github.com/openai/openai-go/commit/c3e375eca1eaece3b73b6918e5c07474717decc5))
+
 ## 0.1.0-alpha.41 (2024-12-21)
 
 Full Changelog: [v0.1.0-alpha.40...v0.1.0-alpha.41](https://github.com/openai/openai-go/compare/v0.1.0-alpha.40...v0.1.0-alpha.41)
