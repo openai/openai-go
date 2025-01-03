@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.43 (2025-01-03)
+
+Full Changelog: [v0.1.0-alpha.42...v0.1.0-alpha.43](https://github.com/openai/openai-go/compare/v0.1.0-alpha.42...v0.1.0-alpha.43)
+
+### Chores
+
+* **api:** bump spec version ([#154](https://github.com/openai/openai-go/issues/154)) ([e55cffe](https://github.com/openai/openai-go/commit/e55cffe979c1e573ca2fe713365f31c62bb00b0e))
+
 ## 0.1.0-alpha.42 (2025-01-02)
 
 Full Changelog: [v0.1.0-alpha.41...v0.1.0-alpha.42](https://github.com/openai/openai-go/compare/v0.1.0-alpha.41...v0.1.0-alpha.42)
