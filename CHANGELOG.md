@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.44 (2025-01-08)
+
+Full Changelog: [v0.1.0-alpha.43...v0.1.0-alpha.44](https://github.com/openai/openai-go/compare/v0.1.0-alpha.43...v0.1.0-alpha.44)
+
+### Documentation
+
+* **readme:** fix misplaced period ([#156](https://github.com/openai/openai-go/issues/156)) ([438fe84](https://github.com/openai/openai-go/commit/438fe84825a5d73a649d72c64ba52bf2f59e8847))
+
 ## 0.1.0-alpha.43 (2025-01-03)
 
 Full Changelog: [v0.1.0-alpha.42...v0.1.0-alpha.43](https://github.com/openai/openai-go/compare/v0.1.0-alpha.42...v0.1.0-alpha.43)
