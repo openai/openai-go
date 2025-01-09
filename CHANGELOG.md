@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.45 (2025-01-09)
+
+Full Changelog: [v0.1.0-alpha.44...v0.1.0-alpha.45](https://github.com/openai/openai-go/compare/v0.1.0-alpha.44...v0.1.0-alpha.45)
+
+### Chores
+
+* **internal:** spec update ([#158](https://github.com/openai/openai-go/issues/158)) ([0ca04bd](https://github.com/openai/openai-go/commit/0ca04bdb233cf8fc5ea9ff497363a466bb95759a))
+
 ## 0.1.0-alpha.44 (2025-01-08)
 
 Full Changelog: [v0.1.0-alpha.43...v0.1.0-alpha.44](https://github.com/openai/openai-go/compare/v0.1.0-alpha.43...v0.1.0-alpha.44)
