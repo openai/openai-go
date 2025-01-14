@@ -239,8 +239,8 @@ func (r FileChunkingStrategyParam) implementsFileChunkingStrategyParamUnion() {}
 // The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 // strategy. Only applicable if `file_ids` is non-empty.
 //
-// Satisfied by [AutoFileChunkingStrategyParam], [StaticFileChunkingStrategyParam],
-// [FileChunkingStrategyParam].
+// Satisfied by [AutoFileChunkingStrategyParam],
+// [StaticFileChunkingStrategyObjectParam], [FileChunkingStrategyParam].
 type FileChunkingStrategyParamUnion interface {
 	implementsFileChunkingStrategyParamUnion()
 }
@@ -381,6 +381,33 @@ const (
 func (r StaticFileChunkingStrategyObjectType) IsKnown() bool {
 	switch r {
 	case StaticFileChunkingStrategyObjectTypeStatic:
+		return true
+	}
+	return false
+}
+
+type StaticFileChunkingStrategyObjectParam struct {
+	Static param.Field[StaticFileChunkingStrategyParam] `json:"static,required"`
+	// Always `static`.
+	Type param.Field[StaticFileChunkingStrategyObjectParamType] `json:"type,required"`
+}
+
+func (r StaticFileChunkingStrategyObjectParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r StaticFileChunkingStrategyObjectParam) implementsFileChunkingStrategyParamUnion() {}
+
+// Always `static`.
+type StaticFileChunkingStrategyObjectParamType string
+
+const (
+	StaticFileChunkingStrategyObjectParamTypeStatic StaticFileChunkingStrategyObjectParamType = "static"
+)
+
+func (r StaticFileChunkingStrategyObjectParamType) IsKnown() bool {
+	switch r {
+	case StaticFileChunkingStrategyObjectParamTypeStatic:
 		return true
 	}
 	return false
