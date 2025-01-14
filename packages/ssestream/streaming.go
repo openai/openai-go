@@ -143,7 +143,7 @@ func (s *Stream[T]) Next() bool {
 
 		if bytes.HasPrefix(s.decoder.Event().Data, []byte("[DONE]")) {
 			s.done = true
-			return false
+			continue
 		}
 
 		if s.decoder.Event().Type == "" {
