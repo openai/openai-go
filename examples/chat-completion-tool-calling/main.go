@@ -59,7 +59,7 @@ func main() {
 	}
 
 	// If there is a was a function call, continue the conversation
-	params.Messages.Value = append(params.Messages.Value, completion.Choices[0].Message)
+	params.Messages.Value = append(params.Messages.Value, openai.AssistantToolCallMessage(toolCalls))
 	for _, toolCall := range toolCalls {
 		if toolCall.Function.Name == "get_weather" {
 			// Extract the location from the function call arguments
