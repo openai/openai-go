@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.46 (2025-01-17)
+
+Full Changelog: [v0.1.0-alpha.45...v0.1.0-alpha.46](https://github.com/openai/openai-go/compare/v0.1.0-alpha.45...v0.1.0-alpha.46)
+
+### Chores
+
+* **internal:** streaming refactors ([#165](https://github.com/openai/openai-go/issues/165)) ([168a030](https://github.com/openai/openai-go/commit/168a0305dc423cb09cefbfe0ad7c9c240a6a41b8))
+* **types:** rename vector store chunking strategy ([#169](https://github.com/openai/openai-go/issues/169)) ([2dc79a6](https://github.com/openai/openai-go/commit/2dc79a62b58e78275a68ee19d85b9be7873a3491))
+
 ## 0.1.0-alpha.45 (2025-01-09)
 
 Full Changelog: [v0.1.0-alpha.44...v0.1.0-alpha.45](https://github.com/openai/openai-go/compare/v0.1.0-alpha.44...v0.1.0-alpha.45)
