@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.47 (2025-01-20)
+
+Full Changelog: [v0.1.0-alpha.46...v0.1.0-alpha.47](https://github.com/openai/openai-go/compare/v0.1.0-alpha.46...v0.1.0-alpha.47)
+
+### Bug Fixes
+
+* flush stream response when done event is sent ([#172](https://github.com/openai/openai-go/issues/172)) ([fa793de](https://github.com/openai/openai-go/commit/fa793de4e849c5e3ba23fbe4d6fd1533f08d9fe6))
+
 ## 0.1.0-alpha.46 (2025-01-17)
 
 Full Changelog: [v0.1.0-alpha.45...v0.1.0-alpha.46](https://github.com/openai/openai-go/compare/v0.1.0-alpha.45...v0.1.0-alpha.46)
