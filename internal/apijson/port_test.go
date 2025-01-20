@@ -97,12 +97,15 @@ type CardMastercardData struct {
 type CommonFields struct {
 	Metadata Metadata `json:"metadata"`
 	Value    string   `json:"value"`
+
+	JSON commonFieldsJSON
 }
 
 type commonFieldsJSON struct {
 	Metadata    Field
 	Value       Field
 	ExtraFields map[string]Field
+	raw         string
 }
 
 type CardEmbedded struct {
@@ -115,7 +118,6 @@ type CardEmbedded struct {
 }
 
 type cardEmbeddedJSON struct {
-	commonFieldsJSON
 	Processor   Field
 	Data        Field
 	IsFoo       Field
@@ -196,6 +198,11 @@ var portTests = map[string]struct {
 					CreatedAt: "Mar 29 2024",
 				},
 				Value: "embedded_value",
+				JSON: commonFieldsJSON{
+					Metadata: Field{raw: `{"created_at":"Mar 29 2024"}`, status: valid},
+					Value:    Field{raw: `"embedded_value"`, status: valid},
+					raw:      `should not matter`,
+				},
 			},
 			Processor: "visa",
 			IsFoo:     true,
@@ -203,11 +210,7 @@ var portTests = map[string]struct {
 				Foo: "embedded_foo",
 			},
 			JSON: cardEmbeddedJSON{
-				commonFieldsJSON: commonFieldsJSON{
-					Metadata: Field{raw: `{"created_at":"Mar 29 2024"}`, status: valid},
-					Value:    Field{raw: `"embedded_value"`, status: valid},
-				},
-				raw:       `{"processor":"visa","is_foo":true,"data":{"foo":"embedded_foo"}}`,
+				raw:       `{"processor":"visa","is_foo":true,"data":{"foo":"embedded_foo"},"metadata":{"created_at":"Mar 29 2024"},"value":"embedded_value"}`,
 				Processor: Field{raw: `"visa"`, status: valid},
 				IsFoo:     Field{raw: `true`, status: valid},
 				Data:      Field{raw: `{"foo":"embedded_foo"}`, status: valid},
@@ -225,7 +228,7 @@ var portTests = map[string]struct {
 			},
 			Value: "embedded_value",
 			JSON: cardJSON{
-				raw:       "{\"processor\":\"visa\",\"is_foo\":true,\"data\":{\"foo\":\"embedded_foo\"}}",
+				raw:       `{"processor":"visa","is_foo":true,"data":{"foo":"embedded_foo"},"metadata":{"created_at":"Mar 29 2024"},"value":"embedded_value"}`,
 				Processor: Field{raw: `"visa"`, status: 0x3},
 				IsFoo:     Field{raw: "true", status: 0x3},
 				Data:      Field{raw: `{"foo":"embedded_foo"}`, status: 0x3},
