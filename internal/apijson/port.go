@@ -34,22 +34,33 @@ func Port(from any, to any) error {
 	fromJSON := fromVal.FieldByName("JSON")
 	toJSON := toVal.FieldByName("JSON")
 
-	// First, iterate through the from fields and load all the "normal" fields in the struct to the map of
-	// string to reflect.Value, as well as their raw .JSON.Foo counterpart.
-	for i := 0; i < fromType.NumField(); i++ {
-		field := fromType.Field(i)
-		ptag, ok := parseJSONStructTag(field)
-		if !ok {
-			continue
+	// Iterate through the fields of v and load all the "normal" fields in the struct to the map of
+	// string to reflect.Value, as well as their raw .JSON.Foo counterpart indicated by j.
+	var getFields func(t reflect.Type, v, j reflect.Value)
+	getFields = func(t reflect.Type, v, j reflect.Value) {
+		// Recurse into anonymous fields first, since the fields on the object should win over the fields in the
+		// embedded object.
+		for i := 0; i < t.NumField(); i++ {
+			field := t.Field(i)
+			if field.Anonymous {
+				getFields(field.Type, v.Field(i), v.FieldByName("JSON"))
+				continue
+			}
 		}
-		if ptag.name == "-" {
-			continue
-		}
-		values[ptag.name] = fromVal.Field(i)
-		if fromJSON.IsValid() {
-			fields[ptag.name] = fromJSON.FieldByName(field.Name)
+
+		for i := 0; i < t.NumField(); i++ {
+			field := t.Field(i)
+			ptag, ok := parseJSONStructTag(field)
+			if !ok || ptag.name == "-" {
+				continue
+			}
+			values[ptag.name] = v.Field(i)
+			if j.IsValid() {
+				fields[ptag.name] = j.FieldByName(field.Name)
+			}
 		}
 	}
+	getFields(fromType, fromVal, fromJSON)
 
 	// Use the values from the previous step to populate the 'to' struct.
 	for i := 0; i < toType.NumField(); i++ {
