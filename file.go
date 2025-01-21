@@ -200,9 +200,13 @@ type FileObject struct {
 	Purpose FileObjectPurpose `json:"purpose,required"`
 	// Deprecated. The current status of the file, which can be either `uploaded`,
 	// `processed`, or `error`.
+	//
+	// Deprecated: deprecated
 	Status FileObjectStatus `json:"status,required"`
 	// Deprecated. For details on why a fine-tuning training file failed validation,
 	// see the `error` field on `fine_tuning.job`.
+	//
+	// Deprecated: deprecated
 	StatusDetails string         `json:"status_details"`
 	JSON          fileObjectJSON `json:"-"`
 }
