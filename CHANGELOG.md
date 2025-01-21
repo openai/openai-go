@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.48 (2025-01-21)
+
+Full Changelog: [v0.1.0-alpha.47...v0.1.0-alpha.48](https://github.com/openai/openai-go/compare/v0.1.0-alpha.47...v0.1.0-alpha.48)
+
+### Bug Fixes
+
+* fix apijson.Port for embedded structs ([#174](https://github.com/openai/openai-go/issues/174)) ([b9bc4bf](https://github.com/openai/openai-go/commit/b9bc4bf94438100057c9c95a199e82ec6a48e12e))
+* fix apijson.Port for embedded structs ([#177](https://github.com/openai/openai-go/issues/177)) ([a85df33](https://github.com/openai/openai-go/commit/a85df33a9fe89dffb5ce00ee297d173bb40018ed))
+
+
+### Chores
+
+* **internal:** rename `streaming.go` ([#176](https://github.com/openai/openai-go/issues/176)) ([8c54a3b](https://github.com/openai/openai-go/commit/8c54a3bfe8ed07346c2eade2cabfff1f6d97a7d8))
+
 ## 0.1.0-alpha.47 (2025-01-20)
 
 Full Changelog: [v0.1.0-alpha.46...v0.1.0-alpha.47](https://github.com/openai/openai-go/compare/v0.1.0-alpha.46...v0.1.0-alpha.47)
