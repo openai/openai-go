@@ -29,9 +29,9 @@ func TestFineTuningJobNewWithOptionalParams(t *testing.T) {
 		Model:        openai.F(openai.FineTuningJobNewParamsModelBabbage002),
 		TrainingFile: openai.F("file-abc123"),
 		Hyperparameters: openai.F(openai.FineTuningJobNewParamsHyperparameters{
-			BatchSize:              openai.F[openai.FineTuningJobNewParamsHyperparametersBatchSizeUnion](openai.FineTuningJobNewParamsHyperparametersBatchSizeBehavior(openai.FineTuningJobNewParamsHyperparametersBatchSizeBehaviorAuto)),
-			LearningRateMultiplier: openai.F[openai.FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion](openai.FineTuningJobNewParamsHyperparametersLearningRateMultiplierBehavior(openai.FineTuningJobNewParamsHyperparametersLearningRateMultiplierBehaviorAuto)),
-			NEpochs:                openai.F[openai.FineTuningJobNewParamsHyperparametersNEpochsUnion](openai.FineTuningJobNewParamsHyperparametersNEpochsBehavior(openai.FineTuningJobNewParamsHyperparametersNEpochsBehaviorAuto)),
+			BatchSize:              openai.F[openai.FineTuningJobNewParamsHyperparametersBatchSizeUnion](openai.FineTuningJobNewParamsHyperparametersBatchSizeAuto(openai.FineTuningJobNewParamsHyperparametersBatchSizeAutoAuto)),
+			LearningRateMultiplier: openai.F[openai.FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion](openai.FineTuningJobNewParamsHyperparametersLearningRateMultiplierAuto(openai.FineTuningJobNewParamsHyperparametersLearningRateMultiplierAutoAuto)),
+			NEpochs:                openai.F[openai.FineTuningJobNewParamsHyperparametersNEpochsUnion](openai.FineTuningJobNewParamsHyperparametersNEpochsAuto(openai.FineTuningJobNewParamsHyperparametersNEpochsAutoAuto)),
 		}),
 		Integrations: openai.F([]openai.FineTuningJobNewParamsIntegration{{
 			Type: openai.F(openai.FineTuningJobNewParamsIntegrationsTypeWandb),

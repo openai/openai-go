@@ -53,9 +53,9 @@ type AudioSpeechNewParams struct {
 	// One of the available [TTS models](https://platform.openai.com/docs/models#tts):
 	// `tts-1` or `tts-1-hd`
 	Model param.Field[SpeechModel] `json:"model,required"`
-	// The voice to use when generating the audio. Supported voices are `alloy`,
-	// `echo`, `fable`, `onyx`, `nova`, and `shimmer`. Previews of the voices are
-	// available in the
+	// The voice to use when generating the audio. Supported voices are `alloy`, `ash`,
+	// `coral`, `echo`, `fable`, `onyx`, `nova`, `sage` and `shimmer`. Previews of the
+	// voices are available in the
 	// [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
 	Voice param.Field[AudioSpeechNewParamsVoice] `json:"voice,required"`
 	// The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,
@@ -70,24 +70,27 @@ func (r AudioSpeechNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-// The voice to use when generating the audio. Supported voices are `alloy`,
-// `echo`, `fable`, `onyx`, `nova`, and `shimmer`. Previews of the voices are
-// available in the
+// The voice to use when generating the audio. Supported voices are `alloy`, `ash`,
+// `coral`, `echo`, `fable`, `onyx`, `nova`, `sage` and `shimmer`. Previews of the
+// voices are available in the
 // [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
 type AudioSpeechNewParamsVoice string
 
 const (
 	AudioSpeechNewParamsVoiceAlloy   AudioSpeechNewParamsVoice = "alloy"
+	AudioSpeechNewParamsVoiceAsh     AudioSpeechNewParamsVoice = "ash"
+	AudioSpeechNewParamsVoiceCoral   AudioSpeechNewParamsVoice = "coral"
 	AudioSpeechNewParamsVoiceEcho    AudioSpeechNewParamsVoice = "echo"
 	AudioSpeechNewParamsVoiceFable   AudioSpeechNewParamsVoice = "fable"
 	AudioSpeechNewParamsVoiceOnyx    AudioSpeechNewParamsVoice = "onyx"
 	AudioSpeechNewParamsVoiceNova    AudioSpeechNewParamsVoice = "nova"
+	AudioSpeechNewParamsVoiceSage    AudioSpeechNewParamsVoice = "sage"
 	AudioSpeechNewParamsVoiceShimmer AudioSpeechNewParamsVoice = "shimmer"
 )
 
 func (r AudioSpeechNewParamsVoice) IsKnown() bool {
 	switch r {
-	case AudioSpeechNewParamsVoiceAlloy, AudioSpeechNewParamsVoiceEcho, AudioSpeechNewParamsVoiceFable, AudioSpeechNewParamsVoiceOnyx, AudioSpeechNewParamsVoiceNova, AudioSpeechNewParamsVoiceShimmer:
+	case AudioSpeechNewParamsVoiceAlloy, AudioSpeechNewParamsVoiceAsh, AudioSpeechNewParamsVoiceCoral, AudioSpeechNewParamsVoiceEcho, AudioSpeechNewParamsVoiceFable, AudioSpeechNewParamsVoiceOnyx, AudioSpeechNewParamsVoiceNova, AudioSpeechNewParamsVoiceSage, AudioSpeechNewParamsVoiceShimmer:
 		return true
 	}
 	return false

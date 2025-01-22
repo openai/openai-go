@@ -193,7 +193,7 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 				}),
 			}),
 		}),
-		ToolChoice: openai.F[openai.AssistantToolChoiceOptionUnionParam](openai.AssistantToolChoiceOptionBehavior(openai.AssistantToolChoiceOptionBehaviorNone)),
+		ToolChoice: openai.F[openai.AssistantToolChoiceOptionUnionParam](openai.AssistantToolChoiceOptionAuto(openai.AssistantToolChoiceOptionAutoNone)),
 		ToolResources: openai.F(openai.BetaThreadNewAndRunParamsToolResources{
 			CodeInterpreter: openai.F(openai.BetaThreadNewAndRunParamsToolResourcesCodeInterpreter{
 				FileIDs: openai.F([]string{"string"}),
