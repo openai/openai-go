@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0-alpha.49 (2025-01-22)
+
+Full Changelog: [v0.1.0-alpha.48...v0.1.0-alpha.49](https://github.com/openai/openai-go/compare/v0.1.0-alpha.48...v0.1.0-alpha.49)
+
+### Features
+
+* **api:** update enum values, comments, and examples ([#181](https://github.com/openai/openai-go/issues/181)) ([a074981](https://github.com/openai/openai-go/commit/a07498136304d74bd706684341fb9dcce6e8075c))
+* Minor text change: Update readme to say beta instead of alpha ([2b766ab](https://github.com/openai/openai-go/commit/2b766ab7054cb649d40db0e7ac50c370e070043f))
+* support deprecated markers ([#178](https://github.com/openai/openai-go/issues/178)) ([3d6f52f](https://github.com/openai/openai-go/commit/3d6f52f0f5b30f1f064cfbba8f61d28c1094bb0a))
+
 ## 0.1.0-alpha.48 (2025-01-21)
 
 Full Changelog: [v0.1.0-alpha.47...v0.1.0-alpha.48](https://github.com/openai/openai-go/compare/v0.1.0-alpha.47...v0.1.0-alpha.48)
