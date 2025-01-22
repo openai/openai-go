@@ -157,8 +157,7 @@ type ChatCompletion struct {
 	Model string `json:"model,required"`
 	// The object type, which is always `chat.completion`.
 	Object ChatCompletionObject `json:"object,required"`
-	// The service tier used for processing the request. This field is only included if
-	// the `service_tier` parameter is specified in the request.
+	// The service tier used for processing the request.
 	ServiceTier ChatCompletionServiceTier `json:"service_tier,nullable"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	//
@@ -293,8 +292,7 @@ func (r ChatCompletionObject) IsKnown() bool {
 	return false
 }
 
-// The service tier used for processing the request. This field is only included if
-// the `service_tier` parameter is specified in the request.
+// The service tier used for processing the request.
 type ChatCompletionServiceTier string
 
 const (
@@ -541,8 +539,7 @@ type ChatCompletionChunk struct {
 	Model string `json:"model,required"`
 	// The object type, which is always `chat.completion.chunk`.
 	Object ChatCompletionChunkObject `json:"object,required"`
-	// The service tier used for processing the request. This field is only included if
-	// the `service_tier` parameter is specified in the request.
+	// The service tier used for processing the request.
 	ServiceTier ChatCompletionChunkServiceTier `json:"service_tier,nullable"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	// Can be used in conjunction with the `seed` request parameter to understand when
@@ -839,8 +836,7 @@ func (r ChatCompletionChunkObject) IsKnown() bool {
 	return false
 }
 
-// The service tier used for processing the request. This field is only included if
-// the `service_tier` parameter is specified in the request.
+// The service tier used for processing the request.
 type ChatCompletionChunkServiceTier string
 
 const (
@@ -1687,7 +1683,7 @@ func (r ChatCompletionToolType) IsKnown() bool {
 // `none` is the default when no tools are present. `auto` is the default if tools
 // are present.
 //
-// Satisfied by [ChatCompletionToolChoiceOptionBehavior],
+// Satisfied by [ChatCompletionToolChoiceOptionAuto],
 // [ChatCompletionNamedToolChoiceParam].
 type ChatCompletionToolChoiceOptionUnionParam interface {
 	implementsChatCompletionToolChoiceOptionUnionParam()
@@ -1696,24 +1692,23 @@ type ChatCompletionToolChoiceOptionUnionParam interface {
 // `none` means the model will not call any tool and instead generates a message.
 // `auto` means the model can pick between generating a message or calling one or
 // more tools. `required` means the model must call one or more tools.
-type ChatCompletionToolChoiceOptionBehavior string
+type ChatCompletionToolChoiceOptionAuto string
 
 const (
-	ChatCompletionToolChoiceOptionBehaviorNone     ChatCompletionToolChoiceOptionBehavior = "none"
-	ChatCompletionToolChoiceOptionBehaviorAuto     ChatCompletionToolChoiceOptionBehavior = "auto"
-	ChatCompletionToolChoiceOptionBehaviorRequired ChatCompletionToolChoiceOptionBehavior = "required"
+	ChatCompletionToolChoiceOptionAutoNone     ChatCompletionToolChoiceOptionAuto = "none"
+	ChatCompletionToolChoiceOptionAutoAuto     ChatCompletionToolChoiceOptionAuto = "auto"
+	ChatCompletionToolChoiceOptionAutoRequired ChatCompletionToolChoiceOptionAuto = "required"
 )
 
-func (r ChatCompletionToolChoiceOptionBehavior) IsKnown() bool {
+func (r ChatCompletionToolChoiceOptionAuto) IsKnown() bool {
 	switch r {
-	case ChatCompletionToolChoiceOptionBehaviorNone, ChatCompletionToolChoiceOptionBehaviorAuto, ChatCompletionToolChoiceOptionBehaviorRequired:
+	case ChatCompletionToolChoiceOptionAutoNone, ChatCompletionToolChoiceOptionAutoAuto, ChatCompletionToolChoiceOptionAutoRequired:
 		return true
 	}
 	return false
 }
 
-func (r ChatCompletionToolChoiceOptionBehavior) implementsChatCompletionToolChoiceOptionUnionParam() {
-}
+func (r ChatCompletionToolChoiceOptionAuto) implementsChatCompletionToolChoiceOptionUnionParam() {}
 
 type ChatCompletionToolMessageParam struct {
 	// The contents of the tool message.
@@ -1913,9 +1908,6 @@ type ChatCompletionNewParams struct {
 	//   - If set to 'default', the request will be processed using the default service
 	//     tier with a lower uptime SLA and no latency guarentee.
 	//   - When not set, the default behavior is 'auto'.
-	//
-	// When this parameter is set, the response body will include the `service_tier`
-	// utilized.
 	ServiceTier param.Field[ChatCompletionNewParamsServiceTier] `json:"service_tier"`
 	// Up to 4 sequences where the API will stop generating further tokens.
 	Stop param.Field[ChatCompletionNewParamsStopUnion] `json:"stop"`
@@ -1979,7 +1971,7 @@ func (r ChatCompletionNewParams) MarshalJSON() (data []byte, err error) {
 // `none` is the default when no functions are present. `auto` is the default if
 // functions are present.
 //
-// Satisfied by [ChatCompletionNewParamsFunctionCallBehavior],
+// Satisfied by [ChatCompletionNewParamsFunctionCallAuto],
 // [ChatCompletionFunctionCallOptionParam].
 //
 // Deprecated: deprecated
@@ -1990,22 +1982,22 @@ type ChatCompletionNewParamsFunctionCallUnion interface {
 // `none` means the model will not call a function and instead generates a message.
 // `auto` means the model can pick between generating a message or calling a
 // function.
-type ChatCompletionNewParamsFunctionCallBehavior string
+type ChatCompletionNewParamsFunctionCallAuto string
 
 const (
-	ChatCompletionNewParamsFunctionCallBehaviorNone ChatCompletionNewParamsFunctionCallBehavior = "none"
-	ChatCompletionNewParamsFunctionCallBehaviorAuto ChatCompletionNewParamsFunctionCallBehavior = "auto"
+	ChatCompletionNewParamsFunctionCallAutoNone ChatCompletionNewParamsFunctionCallAuto = "none"
+	ChatCompletionNewParamsFunctionCallAutoAuto ChatCompletionNewParamsFunctionCallAuto = "auto"
 )
 
-func (r ChatCompletionNewParamsFunctionCallBehavior) IsKnown() bool {
+func (r ChatCompletionNewParamsFunctionCallAuto) IsKnown() bool {
 	switch r {
-	case ChatCompletionNewParamsFunctionCallBehaviorNone, ChatCompletionNewParamsFunctionCallBehaviorAuto:
+	case ChatCompletionNewParamsFunctionCallAutoNone, ChatCompletionNewParamsFunctionCallAutoAuto:
 		return true
 	}
 	return false
 }
 
-func (r ChatCompletionNewParamsFunctionCallBehavior) implementsChatCompletionNewParamsFunctionCallUnion() {
+func (r ChatCompletionNewParamsFunctionCallAuto) implementsChatCompletionNewParamsFunctionCallUnion() {
 }
 
 // Deprecated: deprecated
@@ -2113,9 +2105,6 @@ func (r ChatCompletionNewParamsResponseFormatType) IsKnown() bool {
 //   - If set to 'default', the request will be processed using the default service
 //     tier with a lower uptime SLA and no latency guarentee.
 //   - When not set, the default behavior is 'auto'.
-//
-// When this parameter is set, the response body will include the `service_tier`
-// utilized.
 type ChatCompletionNewParamsServiceTier string
 
 const (

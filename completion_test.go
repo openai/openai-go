@@ -39,7 +39,7 @@ func TestCompletionNewWithOptionalParams(t *testing.T) {
 		MaxTokens:       openai.F(int64(16)),
 		N:               openai.F(int64(1)),
 		PresencePenalty: openai.F(-2.000000),
-		Seed:            openai.F(int64(-9007199254740991)),
+		Seed:            openai.F(int64(0)),
 		Stop:            openai.F[openai.CompletionNewParamsStopUnion](shared.UnionString("\n")),
 		StreamOptions: openai.F(openai.ChatCompletionStreamOptionsParam{
 			IncludeUsage: openai.F(true),
