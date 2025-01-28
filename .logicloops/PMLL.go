@@ -1,6 +1,47 @@
-// PMLL.go
-// Persistent Memory with LRU Cache Implementation
+name: CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - next
 
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    if: github.repository == 'openai/openai-go'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
+
+      - name: Run lints
+        run: ./scripts/lint
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    if: github.repository == 'openai/openai-go'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
+
+      - name: Bootstrap
+        run: ./scripts/bootstrap
+
+      - name: Run tests
+        run: ./scripts/test
 package main
 
 import (
