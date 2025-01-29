@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.50 (2025-01-29)
+
+Full Changelog: [v0.1.0-alpha.49...v0.1.0-alpha.50](https://github.com/openai/openai-go/compare/v0.1.0-alpha.49...v0.1.0-alpha.50)
+
+### Chores
+
+* refactor client tests ([#187](https://github.com/openai/openai-go/issues/187)) ([2752c07](https://github.com/openai/openai-go/commit/2752c076dcc87e7c08d6785ba0a00ec9eba5a0c1))
+
 ## 0.1.0-alpha.49 (2025-01-22)
 
 Full Changelog: [v0.1.0-alpha.48...v0.1.0-alpha.49](https://github.com/openai/openai-go/compare/v0.1.0-alpha.48...v0.1.0-alpha.49)
