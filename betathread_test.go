@@ -161,7 +161,7 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 		MaxCompletionTokens: openai.F(int64(256)),
 		MaxPromptTokens:     openai.F(int64(256)),
 		Metadata:            openai.F[any](map[string]interface{}{}),
-		Model:               openai.F(openai.ChatModelGPT4o),
+		Model:               openai.F(openai.ChatModelO1),
 		ParallelToolCalls:   openai.F(true),
 		Temperature:         openai.F(1.000000),
 		Thread: openai.F(openai.BetaThreadNewAndRunParamsThread{
