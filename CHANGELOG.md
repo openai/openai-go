@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.0-alpha.51 (2025-01-31)
+
+Full Changelog: [v0.1.0-alpha.50...v0.1.0-alpha.51](https://github.com/openai/openai-go/compare/v0.1.0-alpha.50...v0.1.0-alpha.51)
+
+### Features
+
+* **api:** add o3-mini ([#195](https://github.com/openai/openai-go/issues/195)) ([c5689d0](https://github.com/openai/openai-go/commit/c5689d01773a7ac0c10e95c1c8badadde251924e))
+
+
+### Bug Fixes
+
+* fix unicode encoding for json ([#193](https://github.com/openai/openai-go/issues/193)) ([3bd3c60](https://github.com/openai/openai-go/commit/3bd3c60561b1213dc4a5fe8b27c30ddef8234726))
+* **types:** correct metadata type + other fixes ([c5689d0](https://github.com/openai/openai-go/commit/c5689d01773a7ac0c10e95c1c8badadde251924e))
+
 ## 0.1.0-alpha.50 (2025-01-29)
 
 Full Changelog: [v0.1.0-alpha.49...v0.1.0-alpha.50](https://github.com/openai/openai-go/compare/v0.1.0-alpha.49...v0.1.0-alpha.50)
