@@ -1739,9 +1739,13 @@ type ChatCompletionNewParams struct {
 	// compatible with
 	// [o1 series models](https://platform.openai.com/docs/guides/reasoning).
 	MaxTokens param.Field[int64] `json:"max_tokens"`
-	// Developer-defined tags and values used for filtering completions in the
-	// [dashboard](https://platform.openai.com/chat-completions).
-	Metadata param.Field[map[string]string] `json:"metadata"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// Output types that you would like the model to generate for this request. Most
 	// models are capable of generating text, which is the default:
 	//
@@ -1806,9 +1810,9 @@ type ChatCompletionNewParams struct {
 	//     utilize scale tier credits until they are exhausted.
 	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
 	//     be processed using the default service tier with a lower uptime SLA and no
-	//     latency guarentee.
+	//     latency guarantee.
 	//   - If set to 'default', the request will be processed using the default service
-	//     tier with a lower uptime SLA and no latency guarentee.
+	//     tier with a lower uptime SLA and no latency guarantee.
 	//   - When not set, the default behavior is 'auto'.
 	ServiceTier param.Field[ChatCompletionNewParamsServiceTier] `json:"service_tier"`
 	// Up to 4 sequences where the API will stop generating further tokens.
@@ -2003,9 +2007,9 @@ func (r ChatCompletionNewParamsResponseFormatType) IsKnown() bool {
 //     utilize scale tier credits until they are exhausted.
 //   - If set to 'auto', and the Project is not Scale tier enabled, the request will
 //     be processed using the default service tier with a lower uptime SLA and no
-//     latency guarentee.
+//     latency guarantee.
 //   - If set to 'default', the request will be processed using the default service
-//     tier with a lower uptime SLA and no latency guarentee.
+//     tier with a lower uptime SLA and no latency guarantee.
 //   - When not set, the default behavior is 'auto'.
 type ChatCompletionNewParamsServiceTier string
 

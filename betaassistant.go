@@ -122,10 +122,12 @@ type Assistant struct {
 	// characters.
 	Instructions string `json:"instructions,required,nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata interface{} `json:"metadata,required,nullable"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata shared.Metadata `json:"metadata,required,nullable"`
 	// ID of the model to use. You can use the
 	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
 	// see all of your available models, or see our
@@ -2072,10 +2074,12 @@ type BetaAssistantNewParams struct {
 	// characters.
 	Instructions param.Field[string] `json:"instructions"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// The name of the assistant. The maximum length is 256 characters.
 	Name param.Field[string] `json:"name"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
@@ -2152,11 +2156,13 @@ type BetaAssistantNewParamsToolResourcesFileSearchVectorStore struct {
 	// add to the vector store. There can be a maximum of 10000 files in a vector
 	// store.
 	FileIDs param.Field[[]string] `json:"file_ids"`
-	// Set of 16 key-value pairs that can be attached to a vector store. This can be
-	// useful for storing additional information about the vector store in a structured
-	// format. Keys can be a maximum of 64 characters long and values can be a maximum
-	// of 512 characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 }
 
 func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {
@@ -2170,10 +2176,12 @@ type BetaAssistantUpdateParams struct {
 	// characters.
 	Instructions param.Field[string] `json:"instructions"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// ID of the model to use. You can use the
 	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
 	// see all of your available models, or see our

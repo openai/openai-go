@@ -16,6 +16,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/shared"
 	"github.com/tidwall/gjson"
 )
 
@@ -1127,10 +1128,12 @@ type RunStep struct {
 	// errors.
 	LastError RunStepLastError `json:"last_error,required,nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata interface{} `json:"metadata,required,nullable"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata shared.Metadata `json:"metadata,required,nullable"`
 	// The object type, which is always `thread.run.step`.
 	Object RunStepObject `json:"object,required"`
 	// The ID of the [run](https://platform.openai.com/docs/api-reference/runs) that
