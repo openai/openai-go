@@ -11,6 +11,7 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 func TestBetaThreadNewWithOptionalParams(t *testing.T) {
@@ -35,9 +36,13 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
 				}}),
 			}}),
-			Metadata: openai.F[any](map[string]interface{}{}),
+			Metadata: openai.F(shared.MetadataParam{
+				"foo": "string",
+			}),
 		}}),
-		Metadata: openai.F[any](map[string]interface{}{}),
+		Metadata: openai.F(shared.MetadataParam{
+			"foo": "string",
+		}),
 		ToolResources: openai.F(openai.BetaThreadNewParamsToolResources{
 			CodeInterpreter: openai.F(openai.BetaThreadNewParamsToolResourcesCodeInterpreter{
 				FileIDs: openai.F([]string{"string"}),
@@ -48,8 +53,10 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 					ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
 						Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
 					}),
-					FileIDs:  openai.F([]string{"string"}),
-					Metadata: openai.F[any](map[string]interface{}{}),
+					FileIDs: openai.F([]string{"string"}),
+					Metadata: openai.F(shared.MetadataParam{
+						"foo": "string",
+					}),
 				}}),
 			}),
 		}),
@@ -101,7 +108,9 @@ func TestBetaThreadUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"thread_id",
 		openai.BetaThreadUpdateParams{
-			Metadata: openai.F[any](map[string]interface{}{}),
+			Metadata: openai.F(shared.MetadataParam{
+				"foo": "string",
+			}),
 			ToolResources: openai.F(openai.BetaThreadUpdateParamsToolResources{
 				CodeInterpreter: openai.F(openai.BetaThreadUpdateParamsToolResourcesCodeInterpreter{
 					FileIDs: openai.F([]string{"string"}),
@@ -160,10 +169,12 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 		Instructions:        openai.F("instructions"),
 		MaxCompletionTokens: openai.F(int64(256)),
 		MaxPromptTokens:     openai.F(int64(256)),
-		Metadata:            openai.F[any](map[string]interface{}{}),
-		Model:               openai.F(openai.ChatModelO1),
-		ParallelToolCalls:   openai.F(true),
-		Temperature:         openai.F(1.000000),
+		Metadata: openai.F(shared.MetadataParam{
+			"foo": "string",
+		}),
+		Model:             openai.F(openai.ChatModelO3Mini),
+		ParallelToolCalls: openai.F(true),
+		Temperature:       openai.F(1.000000),
 		Thread: openai.F(openai.BetaThreadNewAndRunParamsThread{
 			Messages: openai.F([]openai.BetaThreadNewAndRunParamsThreadMessage{{
 				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
@@ -174,9 +185,13 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
 					}}),
 				}}),
-				Metadata: openai.F[any](map[string]interface{}{}),
+				Metadata: openai.F(shared.MetadataParam{
+					"foo": "string",
+				}),
 			}}),
-			Metadata: openai.F[any](map[string]interface{}{}),
+			Metadata: openai.F(shared.MetadataParam{
+				"foo": "string",
+			}),
 			ToolResources: openai.F(openai.BetaThreadNewAndRunParamsThreadToolResources{
 				CodeInterpreter: openai.F(openai.BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter{
 					FileIDs: openai.F([]string{"string"}),
@@ -187,8 +202,10 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 						ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
 							Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
 						}),
-						FileIDs:  openai.F([]string{"string"}),
-						Metadata: openai.F[any](map[string]interface{}{}),
+						FileIDs: openai.F([]string{"string"}),
+						Metadata: openai.F(shared.MetadataParam{
+							"foo": "string",
+						}),
 					}}),
 				}),
 			}),

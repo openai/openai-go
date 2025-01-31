@@ -11,6 +11,7 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
@@ -41,16 +42,20 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
 					}}),
 				}}),
-				Metadata: openai.F[any](map[string]interface{}{}),
+				Metadata: openai.F(shared.MetadataParam{
+					"foo": "string",
+				}),
 			}}),
 			Instructions:        openai.F("instructions"),
 			MaxCompletionTokens: openai.F(int64(256)),
 			MaxPromptTokens:     openai.F(int64(256)),
-			Metadata:            openai.F[any](map[string]interface{}{}),
-			Model:               openai.F(openai.ChatModelO1),
-			ParallelToolCalls:   openai.F(true),
-			Temperature:         openai.F(1.000000),
-			ToolChoice:          openai.F[openai.AssistantToolChoiceOptionUnionParam](openai.AssistantToolChoiceOptionAuto(openai.AssistantToolChoiceOptionAutoNone)),
+			Metadata: openai.F(shared.MetadataParam{
+				"foo": "string",
+			}),
+			Model:             openai.F(openai.ChatModelO3Mini),
+			ParallelToolCalls: openai.F(true),
+			Temperature:       openai.F(1.000000),
+			ToolChoice:        openai.F[openai.AssistantToolChoiceOptionUnionParam](openai.AssistantToolChoiceOptionAuto(openai.AssistantToolChoiceOptionAutoNone)),
 			Tools: openai.F([]openai.AssistantToolUnionParam{openai.CodeInterpreterToolParam{
 				Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
 			}}),
@@ -113,7 +118,9 @@ func TestBetaThreadRunUpdateWithOptionalParams(t *testing.T) {
 		"thread_id",
 		"run_id",
 		openai.BetaThreadRunUpdateParams{
-			Metadata: openai.F[any](map[string]interface{}{}),
+			Metadata: openai.F(shared.MetadataParam{
+				"foo": "string",
+			}),
 		},
 	)
 	if err != nil {

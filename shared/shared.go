@@ -105,6 +105,10 @@ func (r FunctionDefinitionParam) MarshalJSON() (data []byte, err error) {
 
 type FunctionParameters map[string]interface{}
 
+type Metadata map[string]string
+
+type MetadataParam map[string]string
+
 type ResponseFormatJSONObjectParam struct {
 	// The type of response format being defined: `json_object`
 	Type param.Field[ResponseFormatJSONObjectType] `json:"type,required"`

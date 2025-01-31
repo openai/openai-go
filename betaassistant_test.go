@@ -11,6 +11,7 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
@@ -26,12 +27,14 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.Assistants.New(context.TODO(), openai.BetaAssistantNewParams{
-		Model:        openai.F(openai.ChatModelO1),
+		Model:        openai.F(openai.ChatModelO3Mini),
 		Description:  openai.F("description"),
 		Instructions: openai.F("instructions"),
-		Metadata:     openai.F[any](map[string]interface{}{}),
-		Name:         openai.F("name"),
-		Temperature:  openai.F(1.000000),
+		Metadata: openai.F(shared.MetadataParam{
+			"foo": "string",
+		}),
+		Name:        openai.F("name"),
+		Temperature: openai.F(1.000000),
 		ToolResources: openai.F(openai.BetaAssistantNewParamsToolResources{
 			CodeInterpreter: openai.F(openai.BetaAssistantNewParamsToolResourcesCodeInterpreter{
 				FileIDs: openai.F([]string{"string"}),
@@ -42,8 +45,10 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 					ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
 						Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
 					}),
-					FileIDs:  openai.F([]string{"string"}),
-					Metadata: openai.F[any](map[string]interface{}{}),
+					FileIDs: openai.F([]string{"string"}),
+					Metadata: openai.F(shared.MetadataParam{
+						"foo": "string",
+					}),
 				}}),
 			}),
 		}),
@@ -101,10 +106,12 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 		openai.BetaAssistantUpdateParams{
 			Description:  openai.F("description"),
 			Instructions: openai.F("instructions"),
-			Metadata:     openai.F[any](map[string]interface{}{}),
-			Model:        openai.F("model"),
-			Name:         openai.F("name"),
-			Temperature:  openai.F(1.000000),
+			Metadata: openai.F(shared.MetadataParam{
+				"foo": "string",
+			}),
+			Model:       openai.F("model"),
+			Name:        openai.F("name"),
+			Temperature: openai.F(1.000000),
 			ToolResources: openai.F(openai.BetaAssistantUpdateParamsToolResources{
 				CodeInterpreter: openai.F(openai.BetaAssistantUpdateParamsToolResourcesCodeInterpreter{
 					FileIDs: openai.F([]string{"string"}),

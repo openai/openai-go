@@ -11,6 +11,7 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 func TestBetaThreadMessageNewWithOptionalParams(t *testing.T) {
@@ -37,7 +38,9 @@ func TestBetaThreadMessageNewWithOptionalParams(t *testing.T) {
 					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
 				}}),
 			}}),
-			Metadata: openai.F[any](map[string]interface{}{}),
+			Metadata: openai.F(shared.MetadataParam{
+				"foo": "string",
+			}),
 		},
 	)
 	if err != nil {
@@ -92,7 +95,9 @@ func TestBetaThreadMessageUpdateWithOptionalParams(t *testing.T) {
 		"thread_id",
 		"message_id",
 		openai.BetaThreadMessageUpdateParams{
-			Metadata: openai.F[any](map[string]interface{}{}),
+			Metadata: openai.F(shared.MetadataParam{
+				"foo": "string",
+			}),
 		},
 	)
 	if err != nil {
