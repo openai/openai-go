@@ -118,7 +118,7 @@ type Upload struct {
 	Purpose string `json:"purpose,required"`
 	// The status of the Upload.
 	Status UploadStatus `json:"status,required"`
-	// The ready File object after the Upload is completed.
+	// The `File` object represents a document that has been uploaded to OpenAI.
 	File FileObject `json:"file,nullable"`
 	JSON uploadJSON `json:"-"`
 }

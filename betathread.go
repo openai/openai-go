@@ -283,10 +283,12 @@ type Thread struct {
 	// The Unix timestamp (in seconds) for when the thread was created.
 	CreatedAt int64 `json:"created_at,required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata interface{} `json:"metadata,required,nullable"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata shared.Metadata `json:"metadata,required,nullable"`
 	// The object type, which is always `thread`.
 	Object ThreadObject `json:"object,required"`
 	// A set of resources that are made available to the assistant's tools in this
@@ -450,10 +452,12 @@ type BetaThreadNewParams struct {
 	// start the thread with.
 	Messages param.Field[[]BetaThreadNewParamsMessage] `json:"messages"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// A set of resources that are made available to the assistant's tools in this
 	// thread. The resources are specific to the type of tool. For example, the
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
@@ -481,10 +485,12 @@ type BetaThreadNewParamsMessage struct {
 	// A list of files attached to the message, and the tools they should be added to.
 	Attachments param.Field[[]BetaThreadNewParamsMessagesAttachment] `json:"attachments"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 }
 
 func (r BetaThreadNewParamsMessage) MarshalJSON() (data []byte, err error) {
@@ -634,11 +640,13 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStore struct {
 	// add to the vector store. There can be a maximum of 10000 files in a vector
 	// store.
 	FileIDs param.Field[[]string] `json:"file_ids"`
-	// Set of 16 key-value pairs that can be attached to a vector store. This can be
-	// useful for storing additional information about the vector store in a structured
-	// format. Keys can be a maximum of 64 characters long and values can be a maximum
-	// of 512 characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 }
 
 func (r BetaThreadNewParamsToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {
@@ -647,10 +655,12 @@ func (r BetaThreadNewParamsToolResourcesFileSearchVectorStore) MarshalJSON() (da
 
 type BetaThreadUpdateParams struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// A set of resources that are made available to the assistant's tools in this
 	// thread. The resources are specific to the type of tool. For example, the
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
@@ -719,10 +729,12 @@ type BetaThreadNewAndRunParams struct {
 	// `incomplete_details` for more info.
 	MaxPromptTokens param.Field[int64] `json:"max_prompt_tokens"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
 	// be used to execute this run. If a value is provided here, it will override the
 	// model associated with the assistant. If not, the model associated with the
@@ -736,7 +748,8 @@ type BetaThreadNewAndRunParams struct {
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
 	Temperature param.Field[float64] `json:"temperature"`
-	// If no thread is provided, an empty thread will be created.
+	// Options to create a new thread. If no thread is provided when running a request,
+	// an empty thread will be created.
 	Thread param.Field[BetaThreadNewAndRunParamsThread] `json:"thread"`
 	// Controls which (if any) tool is called by the model. `none` means the model will
 	// not call any tools and instead generates a message. `auto` is the default value
@@ -769,16 +782,19 @@ func (r BetaThreadNewAndRunParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-// If no thread is provided, an empty thread will be created.
+// Options to create a new thread. If no thread is provided when running a request,
+// an empty thread will be created.
 type BetaThreadNewAndRunParamsThread struct {
 	// A list of [messages](https://platform.openai.com/docs/api-reference/messages) to
 	// start the thread with.
 	Messages param.Field[[]BetaThreadNewAndRunParamsThreadMessage] `json:"messages"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// A set of resources that are made available to the assistant's tools in this
 	// thread. The resources are specific to the type of tool. For example, the
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
@@ -806,10 +822,12 @@ type BetaThreadNewAndRunParamsThreadMessage struct {
 	// A list of files attached to the message, and the tools they should be added to.
 	Attachments param.Field[[]BetaThreadNewAndRunParamsThreadMessagesAttachment] `json:"attachments"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 }
 
 func (r BetaThreadNewAndRunParamsThreadMessage) MarshalJSON() (data []byte, err error) {
@@ -959,11 +977,13 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore struct {
 	// add to the vector store. There can be a maximum of 10000 files in a vector
 	// store.
 	FileIDs param.Field[[]string] `json:"file_ids"`
-	// Set of 16 key-value pairs that can be attached to a vector store. This can be
-	// useful for storing additional information about the vector store in a structured
-	// format. Keys can be a maximum of 64 characters long and values can be a maximum
-	// of 512 characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 }
 
 func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {

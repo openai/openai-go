@@ -30,6 +30,8 @@ func NewChatService(opts ...option.RequestOption) (r *ChatService) {
 type ChatModel = string
 
 const (
+	ChatModelO3Mini                          ChatModel = "o3-mini"
+	ChatModelO3Mini2025_01_31                ChatModel = "o3-mini-2025-01-31"
 	ChatModelO1                              ChatModel = "o1"
 	ChatModelO1_2024_12_17                   ChatModel = "o1-2024-12-17"
 	ChatModelO1Preview                       ChatModel = "o1-preview"

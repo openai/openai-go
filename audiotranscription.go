@@ -74,8 +74,8 @@ type AudioTranscriptionNewParams struct {
 	// Whisper V2 model) is currently available.
 	Model param.Field[AudioModel] `json:"model,required"`
 	// The language of the input audio. Supplying the input language in
-	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) format will
-	// improve accuracy and latency.
+	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) (e.g. `en`)
+	// format will improve accuracy and latency.
 	Language param.Field[string] `json:"language"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. The
