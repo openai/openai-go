@@ -143,7 +143,7 @@ func (e *encoder) newPrimitiveTypeEncoder(t reflect.Type) encoderFunc {
 	// code more and this current code shouldn't cause any issues
 	case reflect.String:
 		return func(v reflect.Value) ([]byte, error) {
-			return []byte(fmt.Sprintf("%q", v.String())), nil
+			return json.Marshal(v.Interface())
 		}
 	case reflect.Bool:
 		return func(v reflect.Value) ([]byte, error) {
