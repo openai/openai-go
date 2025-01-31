@@ -16,6 +16,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/shared"
 	"github.com/tidwall/gjson"
 )
 
@@ -424,10 +425,12 @@ type VectorStore struct {
 	// The Unix timestamp (in seconds) for when the vector store was last active.
 	LastActiveAt int64 `json:"last_active_at,required,nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata interface{} `json:"metadata,required,nullable"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata shared.Metadata `json:"metadata,required,nullable"`
 	// The name of the vector store.
 	Name string `json:"name,required"`
 	// The object type, which is always `vector_store`.
@@ -631,10 +634,12 @@ type BetaVectorStoreNewParams struct {
 	// files.
 	FileIDs param.Field[[]string] `json:"file_ids"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// The name of the vector store.
 	Name param.Field[string] `json:"name"`
 }
@@ -676,10 +681,12 @@ type BetaVectorStoreUpdateParams struct {
 	// The expiration policy for a vector store.
 	ExpiresAfter param.Field[BetaVectorStoreUpdateParamsExpiresAfter] `json:"expires_after"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// The name of the vector store.
 	Name param.Field[string] `json:"name"`
 }

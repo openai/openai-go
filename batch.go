@@ -15,6 +15,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/shared"
 )
 
 // BatchService contains methods and other services that help with interacting with
@@ -127,10 +128,12 @@ type Batch struct {
 	// The Unix timestamp (in seconds) for when the batch started processing.
 	InProgressAt int64 `json:"in_progress_at"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata interface{} `json:"metadata,nullable"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata shared.Metadata `json:"metadata,nullable"`
 	// The ID of the file containing the outputs of successfully executed requests.
 	OutputFileID string `json:"output_file_id"`
 	// The request counts for different statuses within the batch.
@@ -310,8 +313,13 @@ type BatchNewParams struct {
 	// and must be uploaded with the purpose `batch`. The file can contain up to 50,000
 	// requests, and can be up to 200 MB in size.
 	InputFileID param.Field[string] `json:"input_file_id,required"`
-	// Optional custom metadata for the batch.
-	Metadata param.Field[map[string]string] `json:"metadata"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 }
 
 func (r BatchNewParams) MarshalJSON() (data []byte, err error) {

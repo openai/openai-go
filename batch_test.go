@@ -11,6 +11,7 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 func TestBatchNewWithOptionalParams(t *testing.T) {
@@ -29,7 +30,7 @@ func TestBatchNewWithOptionalParams(t *testing.T) {
 		CompletionWindow: openai.F(openai.BatchNewParamsCompletionWindow24h),
 		Endpoint:         openai.F(openai.BatchNewParamsEndpointV1ChatCompletions),
 		InputFileID:      openai.F("input_file_id"),
-		Metadata: openai.F(map[string]string{
+		Metadata: openai.F(shared.MetadataParam{
 			"foo": "string",
 		}),
 	})

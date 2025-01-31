@@ -11,6 +11,7 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 func TestBetaVectorStoreNewWithOptionalParams(t *testing.T) {
@@ -33,9 +34,11 @@ func TestBetaVectorStoreNewWithOptionalParams(t *testing.T) {
 			Anchor: openai.F(openai.BetaVectorStoreNewParamsExpiresAfterAnchorLastActiveAt),
 			Days:   openai.F(int64(1)),
 		}),
-		FileIDs:  openai.F([]string{"string"}),
-		Metadata: openai.F[any](map[string]interface{}{}),
-		Name:     openai.F("name"),
+		FileIDs: openai.F([]string{"string"}),
+		Metadata: openai.F(shared.MetadataParam{
+			"foo": "string",
+		}),
+		Name: openai.F("name"),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -88,8 +91,10 @@ func TestBetaVectorStoreUpdateWithOptionalParams(t *testing.T) {
 				Anchor: openai.F(openai.BetaVectorStoreUpdateParamsExpiresAfterAnchorLastActiveAt),
 				Days:   openai.F(int64(1)),
 			}),
-			Metadata: openai.F[any](map[string]interface{}{}),
-			Name:     openai.F("name"),
+			Metadata: openai.F(shared.MetadataParam{
+				"foo": "string",
+			}),
+			Name: openai.F("name"),
 		},
 	)
 	if err != nil {

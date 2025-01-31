@@ -16,6 +16,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/shared"
 	"github.com/tidwall/gjson"
 )
 
@@ -1050,10 +1051,12 @@ type Message struct {
 	// On an incomplete message, details about why the message is incomplete.
 	IncompleteDetails MessageIncompleteDetails `json:"incomplete_details,required,nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata interface{} `json:"metadata,required,nullable"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata shared.Metadata `json:"metadata,required,nullable"`
 	// The object type, which is always `thread.message`.
 	Object MessageObject `json:"object,required"`
 	// The entity that produced the message. One of `user` or `assistant`.
@@ -1964,10 +1967,12 @@ type BetaThreadMessageNewParams struct {
 	// A list of files attached to the message, and the tools they should be added to.
 	Attachments param.Field[[]BetaThreadMessageNewParamsAttachment] `json:"attachments"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 }
 
 func (r BetaThreadMessageNewParams) MarshalJSON() (data []byte, err error) {
@@ -2070,10 +2075,12 @@ func (r BetaThreadMessageNewParamsAttachmentsToolsType) IsKnown() bool {
 
 type BetaThreadMessageUpdateParams struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format. Keys
-	// can be a maximum of 64 characters long and values can be a maximum of 512
-	// characters long.
-	Metadata param.Field[interface{}] `json:"metadata"`
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 }
 
 func (r BetaThreadMessageUpdateParams) MarshalJSON() (data []byte, err error) {
