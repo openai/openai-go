@@ -171,5 +171,8 @@ func (s *Stream[T]) Err() error {
 }
 
 func (s *Stream[T]) Close() error {
+	if s.decoder == nil {
+		return nil
+	}
 	return s.decoder.Close()
 }
