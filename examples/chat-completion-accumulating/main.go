@@ -46,6 +46,9 @@ func main() {
 				}),
 			},
 		}),
+		StreamOptions: openai.F(openai.ChatCompletionStreamOptionsParam{
+			IncludeUsage: openai.F(true), // Needs to be set to true in order to include usage statistics in the completion response
+		}),
 	}
 
 	stream := client.Chat.Completions.NewStreaming(ctx, params)
