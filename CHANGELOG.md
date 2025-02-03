@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.0-alpha.52 (2025-02-03)
+
+Full Changelog: [v0.1.0-alpha.51...v0.1.0-alpha.52](https://github.com/openai/openai-go/compare/v0.1.0-alpha.51...v0.1.0-alpha.52)
+
+### Features
+
+* **client:** send `X-Stainless-Timeout` header ([#204](https://github.com/openai/openai-go/issues/204)) ([4ccf9c9](https://github.com/openai/openai-go/commit/4ccf9c9be331773407ec062c9da563d5b20831fe))
+
+
+### Bug Fixes
+
+* **stream:** ensure .Close() doesn't panic ([#194](https://github.com/openai/openai-go/issues/194)) ([02983a3](https://github.com/openai/openai-go/commit/02983a322b264af40105b7c742e6fe24cbb396d3))
+* **stream:** ensure .Close() doesn't panic ([#201](https://github.com/openai/openai-go/issues/201)) ([2df52a9](https://github.com/openai/openai-go/commit/2df52a9c7ec4839f104c0f30edfda183693fce8c))
+
+
+### Documentation
+
+* document raw responses ([#197](https://github.com/openai/openai-go/issues/197)) ([8400879](https://github.com/openai/openai-go/commit/8400879b1c226a62dc95feedc97a9c2718c8210f))
+
 ## 0.1.0-alpha.51 (2025-01-31)
 
 Full Changelog: [v0.1.0-alpha.50...v0.1.0-alpha.51](https://github.com/openai/openai-go/compare/v0.1.0-alpha.50...v0.1.0-alpha.51)
