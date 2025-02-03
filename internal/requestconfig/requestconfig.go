@@ -138,6 +138,7 @@ func NewRequestConfig(ctx context.Context, method string, u string, body interfa
 
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("X-Stainless-Retry-Count", "0")
+	req.Header.Set("X-Stainless-Timeout", "0")
 	for k, v := range getDefaultHeaders() {
 		req.Header.Add(k, v)
 	}
@@ -157,6 +158,18 @@ func NewRequestConfig(ctx context.Context, method string, u string, body interfa
 	if err != nil {
 		return nil, err
 	}
+
+	// This must run after `cfg.Apply(...)` above in case the request timeout gets modified. We also only
+	// apply our own logic for it if it's still "0" from above. If it's not, then it was deleted or modified
+	// by the user and we should respect that.
+	if req.Header.Get("X-Stainless-Timeout") == "0" {
+		if cfg.RequestTimeout == time.Duration(0) {
+			req.Header.Del("X-Stainless-Timeout")
+		} else {
+			req.Header.Set("X-Stainless-Timeout", strconv.Itoa(int(cfg.RequestTimeout.Seconds())))
+		}
+	}
+
 	return &cfg, nil
 }
 
