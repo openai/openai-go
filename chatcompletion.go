@@ -58,6 +58,24 @@ func AssistantMessage(content string) ChatCompletionAssistantMessageParam {
 	}
 }
 
+func AssistantToolCallMessage(toolCalls []ChatCompletionMessageToolCall) ChatCompletionAssistantMessageParam {
+	toolCallParams := make([]ChatCompletionMessageToolCallParam, 0, len(toolCalls))
+	for _, toolCall := range toolCalls {
+		toolCallParams = append(toolCallParams, ChatCompletionMessageToolCallParam{
+			Type: F(ChatCompletionMessageToolCallTypeFunction),
+			ID:   F(toolCall.ID),
+			Function: F(ChatCompletionMessageToolCallFunctionParam{
+				Name:      F(toolCall.Function.Name),
+				Arguments: F(toolCall.Function.Arguments),
+			}),
+		})
+	}
+	return ChatCompletionAssistantMessageParam{
+		Role:      F(ChatCompletionAssistantMessageParamRoleAssistant),
+		ToolCalls: F(toolCallParams),
+	}
+}
+
 func ToolMessage(toolCallID, content string) ChatCompletionToolMessageParam {
 	return ChatCompletionToolMessageParam{
 		Role:       F(ChatCompletionToolMessageParamRoleTool),
