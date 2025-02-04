@@ -58,7 +58,7 @@ func main() {
 		return
 	}
 
-	// If there is a was a function call, continue the conversation
+	// If there is a function call, continue the conversation
 	params.Messages.Value = append(params.Messages.Value, completion.Choices[0].Message)
 	for _, toolCall := range toolCalls {
 		if toolCall.Function.Name == "get_weather" {
