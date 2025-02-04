@@ -128,22 +128,6 @@ func (r *FileService) Content(ctx context.Context, fileID string, opts ...option
 	return
 }
 
-// Returns the contents of the specified file.
-//
-// Deprecated: The `.content()` method should be used instead
-func (r *FileService) GetContent(ctx context.Context, fileID string, opts ...option.RequestOption) (res *FileContent, err error) {
-	opts = append(r.Options[:], opts...)
-	if fileID == "" {
-		err = errors.New("missing required file_id parameter")
-		return
-	}
-	path := fmt.Sprintf("files/%s/content", fileID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
-}
-
-type FileContent = string
-
 type FileDeleted struct {
 	ID      string            `json:"id,required"`
 	Deleted bool              `json:"deleted,required"`
