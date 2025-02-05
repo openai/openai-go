@@ -54,6 +54,7 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 			}),
 			Model:             openai.F(openai.ChatModelO3Mini),
 			ParallelToolCalls: openai.F(true),
+			ReasoningEffort:   openai.F(openai.BetaThreadRunNewParamsReasoningEffortLow),
 			Temperature:       openai.F(1.000000),
 			ToolChoice:        openai.F[openai.AssistantToolChoiceOptionUnionParam](openai.AssistantToolChoiceOptionAuto(openai.AssistantToolChoiceOptionAutoNone)),
 			Tools: openai.F([]openai.AssistantToolUnionParam{openai.CodeInterpreterToolParam{

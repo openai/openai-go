@@ -33,8 +33,9 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 		Metadata: openai.F(shared.MetadataParam{
 			"foo": "string",
 		}),
-		Name:        openai.F("name"),
-		Temperature: openai.F(1.000000),
+		Name:            openai.F("name"),
+		ReasoningEffort: openai.F(openai.BetaAssistantNewParamsReasoningEffortLow),
+		Temperature:     openai.F(1.000000),
 		ToolResources: openai.F(openai.BetaAssistantNewParamsToolResources{
 			CodeInterpreter: openai.F(openai.BetaAssistantNewParamsToolResourcesCodeInterpreter{
 				FileIDs: openai.F([]string{"string"}),
@@ -109,9 +110,10 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 			Metadata: openai.F(shared.MetadataParam{
 				"foo": "string",
 			}),
-			Model:       openai.F("model"),
-			Name:        openai.F("name"),
-			Temperature: openai.F(1.000000),
+			Model:           openai.F(openai.BetaAssistantUpdateParamsModelO3Mini),
+			Name:            openai.F("name"),
+			ReasoningEffort: openai.F(openai.BetaAssistantUpdateParamsReasoningEffortLow),
+			Temperature:     openai.F(1.000000),
 			ToolResources: openai.F(openai.BetaAssistantUpdateParamsToolResources{
 				CodeInterpreter: openai.F(openai.BetaAssistantUpdateParamsToolResourcesCodeInterpreter{
 					FileIDs: openai.F([]string{"string"}),

@@ -2082,6 +2082,13 @@ type BetaAssistantNewParams struct {
 	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// The name of the assistant. The maximum length is 256 characters.
 	Name param.Field[string] `json:"name"`
+	// **o1 and o3-mini models only**
+	//
+	// Constrains effort on reasoning for
+	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+	// result in faster responses and fewer tokens used on reasoning in a response.
+	ReasoningEffort param.Field[BetaAssistantNewParamsReasoningEffort] `json:"reasoning_effort"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -2105,6 +2112,28 @@ type BetaAssistantNewParams struct {
 
 func (r BetaAssistantNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// **o1 and o3-mini models only**
+//
+// Constrains effort on reasoning for
+// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+// result in faster responses and fewer tokens used on reasoning in a response.
+type BetaAssistantNewParamsReasoningEffort string
+
+const (
+	BetaAssistantNewParamsReasoningEffortLow    BetaAssistantNewParamsReasoningEffort = "low"
+	BetaAssistantNewParamsReasoningEffortMedium BetaAssistantNewParamsReasoningEffort = "medium"
+	BetaAssistantNewParamsReasoningEffortHigh   BetaAssistantNewParamsReasoningEffort = "high"
+)
+
+func (r BetaAssistantNewParamsReasoningEffort) IsKnown() bool {
+	switch r {
+	case BetaAssistantNewParamsReasoningEffortLow, BetaAssistantNewParamsReasoningEffortMedium, BetaAssistantNewParamsReasoningEffortHigh:
+		return true
+	}
+	return false
 }
 
 // A set of resources that are used by the assistant's tools. The resources are
@@ -2187,9 +2216,16 @@ type BetaAssistantUpdateParams struct {
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
 	// them.
-	Model param.Field[string] `json:"model"`
+	Model param.Field[BetaAssistantUpdateParamsModel] `json:"model"`
 	// The name of the assistant. The maximum length is 256 characters.
 	Name param.Field[string] `json:"name"`
+	// **o1 and o3-mini models only**
+	//
+	// Constrains effort on reasoning for
+	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+	// result in faster responses and fewer tokens used on reasoning in a response.
+	ReasoningEffort param.Field[BetaAssistantUpdateParamsReasoningEffort] `json:"reasoning_effort"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -2213,6 +2249,74 @@ type BetaAssistantUpdateParams struct {
 
 func (r BetaAssistantUpdateParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// ID of the model to use. You can use the
+// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
+// see all of your available models, or see our
+// [Model overview](https://platform.openai.com/docs/models) for descriptions of
+// them.
+type BetaAssistantUpdateParamsModel string
+
+const (
+	BetaAssistantUpdateParamsModelO3Mini              BetaAssistantUpdateParamsModel = "o3-mini"
+	BetaAssistantUpdateParamsModelO3Mini2025_01_31    BetaAssistantUpdateParamsModel = "o3-mini-2025-01-31"
+	BetaAssistantUpdateParamsModelO1                  BetaAssistantUpdateParamsModel = "o1"
+	BetaAssistantUpdateParamsModelO1_2024_12_17       BetaAssistantUpdateParamsModel = "o1-2024-12-17"
+	BetaAssistantUpdateParamsModelGPT4o               BetaAssistantUpdateParamsModel = "gpt-4o"
+	BetaAssistantUpdateParamsModelGPT4o2024_11_20     BetaAssistantUpdateParamsModel = "gpt-4o-2024-11-20"
+	BetaAssistantUpdateParamsModelGPT4o2024_08_06     BetaAssistantUpdateParamsModel = "gpt-4o-2024-08-06"
+	BetaAssistantUpdateParamsModelGPT4o2024_05_13     BetaAssistantUpdateParamsModel = "gpt-4o-2024-05-13"
+	BetaAssistantUpdateParamsModelGPT4oMini           BetaAssistantUpdateParamsModel = "gpt-4o-mini"
+	BetaAssistantUpdateParamsModelGPT4oMini2024_07_18 BetaAssistantUpdateParamsModel = "gpt-4o-mini-2024-07-18"
+	BetaAssistantUpdateParamsModelGPT4Turbo           BetaAssistantUpdateParamsModel = "gpt-4-turbo"
+	BetaAssistantUpdateParamsModelGPT4Turbo2024_04_09 BetaAssistantUpdateParamsModel = "gpt-4-turbo-2024-04-09"
+	BetaAssistantUpdateParamsModelGPT4_0125Preview    BetaAssistantUpdateParamsModel = "gpt-4-0125-preview"
+	BetaAssistantUpdateParamsModelGPT4TurboPreview    BetaAssistantUpdateParamsModel = "gpt-4-turbo-preview"
+	BetaAssistantUpdateParamsModelGPT4_1106Preview    BetaAssistantUpdateParamsModel = "gpt-4-1106-preview"
+	BetaAssistantUpdateParamsModelGPT4VisionPreview   BetaAssistantUpdateParamsModel = "gpt-4-vision-preview"
+	BetaAssistantUpdateParamsModelGPT4                BetaAssistantUpdateParamsModel = "gpt-4"
+	BetaAssistantUpdateParamsModelGPT4_0314           BetaAssistantUpdateParamsModel = "gpt-4-0314"
+	BetaAssistantUpdateParamsModelGPT4_0613           BetaAssistantUpdateParamsModel = "gpt-4-0613"
+	BetaAssistantUpdateParamsModelGPT4_32k            BetaAssistantUpdateParamsModel = "gpt-4-32k"
+	BetaAssistantUpdateParamsModelGPT4_32k0314        BetaAssistantUpdateParamsModel = "gpt-4-32k-0314"
+	BetaAssistantUpdateParamsModelGPT4_32k0613        BetaAssistantUpdateParamsModel = "gpt-4-32k-0613"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo         BetaAssistantUpdateParamsModel = "gpt-3.5-turbo"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo16k      BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-16k"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo0613     BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-0613"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo1106     BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-1106"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo0125     BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-0125"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo16k0613  BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-16k-0613"
+)
+
+func (r BetaAssistantUpdateParamsModel) IsKnown() bool {
+	switch r {
+	case BetaAssistantUpdateParamsModelO3Mini, BetaAssistantUpdateParamsModelO3Mini2025_01_31, BetaAssistantUpdateParamsModelO1, BetaAssistantUpdateParamsModelO1_2024_12_17, BetaAssistantUpdateParamsModelGPT4o, BetaAssistantUpdateParamsModelGPT4o2024_11_20, BetaAssistantUpdateParamsModelGPT4o2024_08_06, BetaAssistantUpdateParamsModelGPT4o2024_05_13, BetaAssistantUpdateParamsModelGPT4oMini, BetaAssistantUpdateParamsModelGPT4oMini2024_07_18, BetaAssistantUpdateParamsModelGPT4Turbo, BetaAssistantUpdateParamsModelGPT4Turbo2024_04_09, BetaAssistantUpdateParamsModelGPT4_0125Preview, BetaAssistantUpdateParamsModelGPT4TurboPreview, BetaAssistantUpdateParamsModelGPT4_1106Preview, BetaAssistantUpdateParamsModelGPT4VisionPreview, BetaAssistantUpdateParamsModelGPT4, BetaAssistantUpdateParamsModelGPT4_0314, BetaAssistantUpdateParamsModelGPT4_0613, BetaAssistantUpdateParamsModelGPT4_32k, BetaAssistantUpdateParamsModelGPT4_32k0314, BetaAssistantUpdateParamsModelGPT4_32k0613, BetaAssistantUpdateParamsModelGPT3_5Turbo, BetaAssistantUpdateParamsModelGPT3_5Turbo16k, BetaAssistantUpdateParamsModelGPT3_5Turbo0613, BetaAssistantUpdateParamsModelGPT3_5Turbo1106, BetaAssistantUpdateParamsModelGPT3_5Turbo0125, BetaAssistantUpdateParamsModelGPT3_5Turbo16k0613:
+		return true
+	}
+	return false
+}
+
+// **o1 and o3-mini models only**
+//
+// Constrains effort on reasoning for
+// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+// result in faster responses and fewer tokens used on reasoning in a response.
+type BetaAssistantUpdateParamsReasoningEffort string
+
+const (
+	BetaAssistantUpdateParamsReasoningEffortLow    BetaAssistantUpdateParamsReasoningEffort = "low"
+	BetaAssistantUpdateParamsReasoningEffortMedium BetaAssistantUpdateParamsReasoningEffort = "medium"
+	BetaAssistantUpdateParamsReasoningEffortHigh   BetaAssistantUpdateParamsReasoningEffort = "high"
+)
+
+func (r BetaAssistantUpdateParamsReasoningEffort) IsKnown() bool {
+	switch r {
+	case BetaAssistantUpdateParamsReasoningEffortLow, BetaAssistantUpdateParamsReasoningEffortMedium, BetaAssistantUpdateParamsReasoningEffortHigh:
+		return true
+	}
+	return false
 }
 
 // A set of resources that are used by the assistant's tools. The resources are
