@@ -95,7 +95,6 @@ Params Types:
 
 Response Types:
 
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileContent">FileContent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileDeleted">FileDeleted</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileObject">FileObject</a>
 
@@ -106,7 +105,6 @@ Methods:
 - <code title="get /files">client.Files.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileListParams">FileListParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/packages/pagination#CursorPage">CursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileObject">FileObject</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="delete /files/{file_id}">client.Files.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, fileID <a href="https://pkg.go.dev/builtin#string">string</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileDeleted">FileDeleted</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /files/{file_id}/content">client.Files.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileService.Content">Content</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, fileID <a href="https://pkg.go.dev/builtin#string">string</a>) (http.Response, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
-- <code title="get /files/{file_id}/content">client.Files.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileService.GetContent">GetContent</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, fileID <a href="https://pkg.go.dev/builtin#string">string</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileContent">FileContent</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 # Images
 
