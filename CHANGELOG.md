@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.54 (2025-02-05)
+
+Full Changelog: [v0.1.0-alpha.53...v0.1.0-alpha.54](https://github.com/openai/openai-go/compare/v0.1.0-alpha.53...v0.1.0-alpha.54)
+
+### Bug Fixes
+
+* **streaming:** correctly decode assistant events ([38ded46](https://github.com/openai/openai-go/commit/38ded4694480071a768eb4d2790ba4552e001506))
+
+
+### Chores
+
+* add UnionUnmarshaler for responses that are interfaces ([#211](https://github.com/openai/openai-go/issues/211)) ([185d848](https://github.com/openai/openai-go/commit/185d848cd3e9efb48f7468acc06a8b78f3a7b785))
+
 ## 0.1.0-alpha.53 (2025-02-05)
 
 Full Changelog: [v0.1.0-alpha.52...v0.1.0-alpha.53](https://github.com/openai/openai-go/compare/v0.1.0-alpha.52...v0.1.0-alpha.53)
