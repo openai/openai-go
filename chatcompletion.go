@@ -614,6 +614,7 @@ func (r chatCompletionChunkChoicesDeltaFunctionCallJSON) RawJSON() string {
 type ChatCompletionChunkChoicesDeltaRole string
 
 const (
+	ChatCompletionChunkChoicesDeltaRoleDeveloper ChatCompletionChunkChoicesDeltaRole = "developer"
 	ChatCompletionChunkChoicesDeltaRoleSystem    ChatCompletionChunkChoicesDeltaRole = "system"
 	ChatCompletionChunkChoicesDeltaRoleUser      ChatCompletionChunkChoicesDeltaRole = "user"
 	ChatCompletionChunkChoicesDeltaRoleAssistant ChatCompletionChunkChoicesDeltaRole = "assistant"
@@ -622,7 +623,7 @@ const (
 
 func (r ChatCompletionChunkChoicesDeltaRole) IsKnown() bool {
 	switch r {
-	case ChatCompletionChunkChoicesDeltaRoleSystem, ChatCompletionChunkChoicesDeltaRoleUser, ChatCompletionChunkChoicesDeltaRoleAssistant, ChatCompletionChunkChoicesDeltaRoleTool:
+	case ChatCompletionChunkChoicesDeltaRoleDeveloper, ChatCompletionChunkChoicesDeltaRoleSystem, ChatCompletionChunkChoicesDeltaRoleUser, ChatCompletionChunkChoicesDeltaRoleAssistant, ChatCompletionChunkChoicesDeltaRoleTool:
 		return true
 	}
 	return false
