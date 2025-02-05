@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.55 (2025-02-05)
+
+Full Changelog: [v0.1.0-alpha.54...v0.1.0-alpha.55](https://github.com/openai/openai-go/compare/v0.1.0-alpha.54...v0.1.0-alpha.55)
+
+### Bug Fixes
+
+* **api:** add missing reasoning effort + model enums ([#215](https://github.com/openai/openai-go/issues/215)) ([a2345e6](https://github.com/openai/openai-go/commit/a2345e67316c4571354ab8587a94aa477fadf81b))
+* update stream error handling ([#213](https://github.com/openai/openai-go/issues/213)) ([2f82244](https://github.com/openai/openai-go/commit/2f82244b2c6c8584c4e8a91db8863a4cd0b41a2b))
+
 ## 0.1.0-alpha.54 (2025-02-05)
 
 Full Changelog: [v0.1.0-alpha.53...v0.1.0-alpha.54](https://github.com/openai/openai-go/compare/v0.1.0-alpha.53...v0.1.0-alpha.54)
