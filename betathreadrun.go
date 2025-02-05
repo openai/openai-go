@@ -714,6 +714,13 @@ type BetaThreadRunNewParams struct {
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Field[bool] `json:"parallel_tool_calls"`
+	// **o1 and o3-mini models only**
+	//
+	// Constrains effort on reasoning for
+	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+	// result in faster responses and fewer tokens used on reasoning in a response.
+	ReasoningEffort param.Field[BetaThreadRunNewParamsReasoningEffort] `json:"reasoning_effort"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -869,6 +876,28 @@ const (
 func (r BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolsType) IsKnown() bool {
 	switch r {
 	case BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolsTypeCodeInterpreter, BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolsTypeFileSearch:
+		return true
+	}
+	return false
+}
+
+// **o1 and o3-mini models only**
+//
+// Constrains effort on reasoning for
+// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+// result in faster responses and fewer tokens used on reasoning in a response.
+type BetaThreadRunNewParamsReasoningEffort string
+
+const (
+	BetaThreadRunNewParamsReasoningEffortLow    BetaThreadRunNewParamsReasoningEffort = "low"
+	BetaThreadRunNewParamsReasoningEffortMedium BetaThreadRunNewParamsReasoningEffort = "medium"
+	BetaThreadRunNewParamsReasoningEffortHigh   BetaThreadRunNewParamsReasoningEffort = "high"
+)
+
+func (r BetaThreadRunNewParamsReasoningEffort) IsKnown() bool {
+	switch r {
+	case BetaThreadRunNewParamsReasoningEffortLow, BetaThreadRunNewParamsReasoningEffortMedium, BetaThreadRunNewParamsReasoningEffortHigh:
 		return true
 	}
 	return false
