@@ -1509,7 +1509,7 @@ func (r ChatCompletionPredictionContentType) IsKnown() bool {
 	return false
 }
 
-// **o1 models only**
+// **o1 and o3-mini models only**
 //
 // Constrains effort on reasoning for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
@@ -1871,7 +1871,7 @@ type ChatCompletionNewParams struct {
 	// whether they appear in the text so far, increasing the model's likelihood to
 	// talk about new topics.
 	PresencePenalty param.Field[float64] `json:"presence_penalty"`
-	// **o1 models only**
+	// **o1 and o3-mini models only**
 	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
