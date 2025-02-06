@@ -109,15 +109,17 @@ func (r *PageAutoPager[T]) Index() int {
 }
 
 type CursorPage[T any] struct {
-	Data []T            `json:"data"`
-	JSON cursorPageJSON `json:"-"`
-	cfg  *requestconfig.RequestConfig
-	res  *http.Response
+	Data    []T            `json:"data"`
+	HasMore bool           `json:"has_more"`
+	JSON    cursorPageJSON `json:"-"`
+	cfg     *requestconfig.RequestConfig
+	res     *http.Response
 }
 
 // cursorPageJSON contains the JSON metadata for the struct [CursorPage[T]]
 type cursorPageJSON struct {
 	Data        apijson.Field
+	HasMore     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -134,6 +136,9 @@ func (r cursorPageJSON) RawJSON() string {
 // there is no next page, this function will return a 'nil' for the page value, but
 // will not return an error
 func (r *CursorPage[T]) GetNextPage() (res *CursorPage[T], err error) {
+	if !r.JSON.HasMore.IsMissing() && r.HasMore == false {
+		return nil, nil
+	}
 	items := r.Data
 	if items == nil || len(items) == 0 {
 		return nil, nil
