@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.56 (2025-02-07)
+
+Full Changelog: [v0.1.0-alpha.55...v0.1.0-alpha.56](https://github.com/openai/openai-go/compare/v0.1.0-alpha.55...v0.1.0-alpha.56)
+
+### Features
+
+* **pagination:** avoid fetching when has_more: false ([#218](https://github.com/openai/openai-go/issues/218)) ([22dfd12](https://github.com/openai/openai-go/commit/22dfd12bd06caaa6750b54c934b970288f43c67f))
+
+
+### Bug Fixes
+
+* fix early cancel when RequestTimeout is provided for streaming requests ([#221](https://github.com/openai/openai-go/issues/221)) ([4843296](https://github.com/openai/openai-go/commit/48432968fbb130a60d2a678df4e19bcc41d4a5e1))
+
 ## 0.1.0-alpha.55 (2025-02-05)
 
 Full Changelog: [v0.1.0-alpha.54...v0.1.0-alpha.55](https://github.com/openai/openai-go/compare/v0.1.0-alpha.54...v0.1.0-alpha.55)
