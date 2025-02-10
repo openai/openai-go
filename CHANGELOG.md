@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.57 (2025-02-10)
+
+Full Changelog: [v0.1.0-alpha.56...v0.1.0-alpha.57](https://github.com/openai/openai-go/compare/v0.1.0-alpha.56...v0.1.0-alpha.57)
+
+### Bug Fixes
+
+* do not call path.Base on ContentType ([#225](https://github.com/openai/openai-go/issues/225)) ([7dda9a8](https://github.com/openai/openai-go/commit/7dda9a8792c5d0725614d8867d42db45cb408a91))
+
 ## 0.1.0-alpha.56 (2025-02-07)
 
 Full Changelog: [v0.1.0-alpha.55...v0.1.0-alpha.56](https://github.com/openai/openai-go/compare/v0.1.0-alpha.55...v0.1.0-alpha.56)
