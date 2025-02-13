@@ -90,11 +90,11 @@ type ModerationCategories struct {
 	// Content that includes instructions or advice that facilitate the planning or
 	// execution of wrongdoing, or that gives advice or instruction on how to commit
 	// illicit acts. For example, "how to shoplift" would fit this category.
-	Illicit bool `json:"illicit,required"`
+	Illicit bool `json:"illicit,required,nullable"`
 	// Content that includes instructions or advice that facilitate the planning or
 	// execution of wrongdoing that also includes violence, or that gives advice or
 	// instruction on the procurement of any weapon.
-	IllicitViolent bool `json:"illicit/violent,required"`
+	IllicitViolent bool `json:"illicit/violent,required,nullable"`
 	// Content that promotes, encourages, or depicts acts of self-harm, such as
 	// suicide, cutting, and eating disorders.
 	SelfHarm bool `json:"self-harm,required"`
