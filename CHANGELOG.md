@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.58 (2025-02-13)
+
+Full Changelog: [v0.1.0-alpha.57...v0.1.0-alpha.58](https://github.com/openai/openai-go/compare/v0.1.0-alpha.57...v0.1.0-alpha.58)
+
+### Features
+
+* **api:** add support for storing chat completions ([#228](https://github.com/openai/openai-go/issues/228)) ([e3cb85e](https://github.com/openai/openai-go/commit/e3cb85ea8020c774557a8b2283f41f146b7efd94))
+
 ## 0.1.0-alpha.57 (2025-02-10)
 
 Full Changelog: [v0.1.0-alpha.56...v0.1.0-alpha.57](https://github.com/openai/openai-go/compare/v0.1.0-alpha.56...v0.1.0-alpha.57)
