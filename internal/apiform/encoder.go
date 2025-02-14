@@ -316,7 +316,7 @@ func (e *encoder) newReaderTypeEncoder() encoderFunc {
 		filename := "anonymous_file"
 		contentType := "application/octet-stream"
 		if named, ok := reader.(interface{ Name() string }); ok {
-			filename = path.Base(named.Name())
+			filename = named.Name()
 		}
 		if typed, ok := reader.(interface{ ContentType() string }); ok {
 			contentType = typed.ContentType()
