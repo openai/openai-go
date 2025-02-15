@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.59 (2025-02-15)
+
+Full Changelog: [v0.1.0-alpha.58...v0.1.0-alpha.59](https://github.com/openai/openai-go/compare/v0.1.0-alpha.58...v0.1.0-alpha.59)
+
+### Bug Fixes
+
+* **client:** don't truncate manually specified filenames ([#230](https://github.com/openai/openai-go/issues/230)) ([853b748](https://github.com/openai/openai-go/commit/853b7483c07dc6f3b820f28bf3c5f097c3d440ad))
+
 ## 0.1.0-alpha.58 (2025-02-13)
 
 Full Changelog: [v0.1.0-alpha.57...v0.1.0-alpha.58](https://github.com/openai/openai-go/compare/v0.1.0-alpha.57...v0.1.0-alpha.58)
