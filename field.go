@@ -46,5 +46,5 @@ type file struct {
 	contentType string
 }
 
-func (f *file) Name() string        { return f.name }
 func (f *file) ContentType() string { return f.contentType }
+func (f *file) Filename() string    { return f.name }
