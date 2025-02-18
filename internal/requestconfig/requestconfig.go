@@ -183,7 +183,7 @@ type RequestConfig struct {
 	Context        context.Context
 	Request        *http.Request
 	BaseURL        *url.URL
-	HTTPClient     *http.Client
+	HTTPClient     httpclient
 	Middlewares    []middleware
 	APIKey         string
 	Organization   string
@@ -196,6 +196,12 @@ type RequestConfig struct {
 	// given address
 	ResponseInto **http.Response
 	Body         io.Reader
+}
+
+// httpclient is exactly the same type as the HTTPClient type found in the [option] package,
+// but it is redeclared here for circular dependency issues.
+type httpclient interface {
+	Do(*http.Request) (*http.Response, error)
 }
 
 // middleware is exactly the same type as the Middleware type found in the [option] package,
