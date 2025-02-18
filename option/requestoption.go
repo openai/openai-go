@@ -34,9 +34,13 @@ func WithBaseURL(base string) RequestOption {
 	}
 }
 
-// WithHTTPClient returns a RequestOption that changes the underlying [http.Client] used to make this
+type HTTPClient interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
+// WithHTTPClient returns a RequestOption that changes the underlying [HTTPClient] used to make this
 // request, which by default is [http.DefaultClient].
-func WithHTTPClient(client *http.Client) RequestOption {
+func WithHTTPClient(client HTTPClient) RequestOption {
 	return func(r *requestconfig.RequestConfig) error {
 		r.HTTPClient = client
 		return nil
