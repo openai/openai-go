@@ -22,72 +22,75 @@ import (
 )
 
 func UserMessage(content string) ChatCompletionMessageParamUnion {
-	return UserMessageParts(TextPart(content))
+	return ChatCompletionMessageParamUnion{
+		OfUser: &ChatCompletionUserMessageParam{
+			Content: []ChatCompletionContentPartUnionParam{
+				{
+					OfText: &ChatCompletionContentPartTextParam{
+						Text: String(content),
+						Type: "text",
+					},
+				},
+			},
+			Role: "user",
+		},
+	}
 }
 
 func UserMessageParts(parts ...ChatCompletionContentPartUnionParam) ChatCompletionUserMessageParam {
-	return ChatCompletionUserMessageParam{
-		Role:    F(ChatCompletionUserMessageParamRoleUser),
-		Content: F(parts),
-	}
+	return ChatCompletionUserMessageParam{Role: "user", Content: parts}
 }
 
 func TextPart(content string) ChatCompletionContentPartTextParam {
-	return ChatCompletionContentPartTextParam{
-		Type: F(ChatCompletionContentPartTextTypeText),
-		Text: F(content),
-	}
+	return ChatCompletionContentPartTextParam{Text: String(content)}
 }
 
 func RefusalPart(refusal string) ChatCompletionContentPartRefusalParam {
-	return ChatCompletionContentPartRefusalParam{
-		Type:    F(ChatCompletionContentPartRefusalTypeRefusal),
-		Refusal: F(refusal),
-	}
+	return ChatCompletionContentPartRefusalParam{Refusal: String(refusal)}
 }
 
 func ImagePart(url string) ChatCompletionContentPartImageParam {
 	return ChatCompletionContentPartImageParam{
-		Type: F(ChatCompletionContentPartImageTypeImageURL),
-		ImageURL: F(ChatCompletionContentPartImageImageURLParam{
-			URL: F(url),
-		}),
+		ImageURL: ChatCompletionContentPartImageImageURLParam{URL: String(url)},
 	}
 }
 
 func AssistantMessage(content string) ChatCompletionAssistantMessageParam {
+	txt := TextPart(content)
 	return ChatCompletionAssistantMessageParam{
-		Role: F(ChatCompletionAssistantMessageParamRoleAssistant),
-		Content: F([]ChatCompletionAssistantMessageParamContentUnion{
-			TextPart(content),
-		}),
+		Role:    "assistant",
+		Content: []ChatCompletionAssistantMessageParamContentUnion{{OfText: &txt}},
 	}
 }
 
 func ToolMessage(toolCallID, content string) ChatCompletionToolMessageParam {
 	return ChatCompletionToolMessageParam{
-		Role:       F(ChatCompletionToolMessageParamRoleTool),
-		ToolCallID: F(toolCallID),
-		Content: F([]ChatCompletionContentPartTextParam{
+		Role:       "tool",
+		ToolCallID: String(toolCallID),
+		Content: []ChatCompletionContentPartTextParam{
 			TextPart(content),
-		}),
+		},
 	}
 }
 
 func SystemMessage(content string) ChatCompletionMessageParamUnion {
-	return ChatCompletionSystemMessageParam{
-		Role: F(ChatCompletionSystemMessageParamRoleSystem),
-		Content: F([]ChatCompletionContentPartTextParam{
-			TextPart(content),
-		}),
+	return ChatCompletionMessageParamUnion{
+		OfSystem: &ChatCompletionSystemMessageParam{
+			Role: "system",
+			Content: []ChatCompletionContentPartTextParam{
+				TextPart(content),
+			},
+		},
 	}
 }
 
 func FunctionMessage(name, content string) ChatCompletionMessageParamUnion {
-	return ChatCompletionFunctionMessageParam{
-		Role:    F(ChatCompletionFunctionMessageParamRoleFunction),
-		Name:    F(name),
-		Content: F(content),
+	return ChatCompletionMessageParamUnion{
+		OfFunction: &ChatCompletionFunctionMessageParam{
+			Role:    "function",
+			Name:    String(name),
+			Content: String(content),
+		},
 	}
 }
 
