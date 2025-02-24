@@ -19,16 +19,15 @@ func main() {
 	println(question)
 
 	params := openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(question),
-		}),
-		Tools: openai.F([]openai.ChatCompletionToolParam{
+		},
+		Tools: []openai.ChatCompletionToolParam{
 			{
-				Type: openai.F(openai.ChatCompletionToolTypeFunction),
-				Function: openai.F(openai.FunctionDefinitionParam{
+				Function: openai.FunctionDefinitionParam{
 					Name:        openai.String("get_weather"),
 					Description: openai.String("Get weather at the given location"),
-					Parameters: openai.F(openai.FunctionParameters{
+					Parameters: openai.FunctionParameters{
 						"type": "object",
 						"properties": map[string]interface{}{
 							"location": map[string]string{
@@ -36,12 +35,12 @@ func main() {
 							},
 						},
 						"required": []string{"location"},
-					}),
-				}),
+					},
+				},
 			},
-		}),
+		},
 		Seed:  openai.Int(0),
-		Model: openai.F(openai.ChatModelGPT4o),
+		Model: openai.ChatModelGPT4o,
 	}
 
 	// Make initial chat completion request
@@ -58,8 +57,12 @@ func main() {
 		return
 	}
 
-	// If there is a was a function call, continue the conversation
-	params.Messages.Value = append(params.Messages.Value, completion.Choices[0].Message)
+	asstMsg := completion.Choices[0].Message.ToParam()
+	// If there is a function call, continue the conversation
+	params.Messages = append(
+		params.Messages,
+		openai.ChatCompletionMessageParamUnion{OfAssistant: &asstMsg},
+	)
 	for _, toolCall := range toolCalls {
 		if toolCall.Function.Name == "get_weather" {
 			// Extract the location from the function call arguments
@@ -75,7 +78,7 @@ func main() {
 			// Print the weather data
 			fmt.Printf("Weather in %s: %s\n", location, weatherData)
 
-			params.Messages.Value = append(params.Messages.Value, openai.ToolMessage(toolCall.ID, weatherData))
+			params.Messages = append(params.Messages, openai.ToolMessage(toolCall.ID, weatherData))
 		}
 	}
 

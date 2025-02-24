@@ -13,10 +13,10 @@ func main() {
 	ctx := context.Background()
 
 	res, err := client.Audio.Speech.New(ctx, openai.AudioSpeechNewParams{
-		Model:          openai.F(openai.AudioSpeechNewParamsModelTTS1),
+		Model:          openai.SpeechModelTTS1,
 		Input:          openai.String(`Why did the chicken cross the road? To get to the other side.`),
-		ResponseFormat: openai.F(openai.AudioSpeechNewParamsResponseFormatPCM),
-		Voice:          openai.F(openai.AudioSpeechNewParamsVoiceAlloy),
+		ResponseFormat: openai.AudioSpeechNewParamsResponseFormatPCM,
+		Voice:          openai.AudioSpeechNewParamsVoiceAlloy,
 	})
 	defer res.Body.Close()
 	if err != nil {

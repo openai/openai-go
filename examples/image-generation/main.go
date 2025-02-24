@@ -23,8 +23,8 @@ func main() {
 
 	image, err := client.Images.Generate(ctx, openai.ImageGenerateParams{
 		Prompt:         openai.String(prompt),
-		Model:          openai.F(openai.ImageGenerateParamsModelDallE3),
-		ResponseFormat: openai.F(openai.ImageGenerateParamsResponseFormatURL),
+		Model:          openai.ImageModelDallE3,
+		ResponseFormat: openai.ImageGenerateParamsResponseFormatURL,
 		N:              openai.Int(1),
 	})
 	if err != nil {
@@ -38,8 +38,8 @@ func main() {
 
 	image, err = client.Images.Generate(ctx, openai.ImageGenerateParams{
 		Prompt:         openai.String(prompt),
-		Model:          openai.F(openai.ImageGenerateParamsModelDallE3),
-		ResponseFormat: openai.F(openai.ImageGenerateParamsResponseFormatB64JSON),
+		Model:          openai.ImageModelDallE3,
+		ResponseFormat: openai.ImageGenerateParamsResponseFormatB64JSON,
 		N:              openai.Int(1),
 	})
 	if err != nil {

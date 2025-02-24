@@ -18,11 +18,11 @@ func main() {
 	println()
 
 	completion, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage(question),
-		}),
-		Seed:  openai.Int(0),
-		Model: openai.F(openai.ChatModelGPT4o),
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.NewChatCompletionMessageParamOfUser(question),
+		},
+		Seed:  openai.Int(1),
+		Model: openai.ChatModelGPT4o,
 	})
 	if err != nil {
 		panic(err)
