@@ -55,32 +55,33 @@ func ImagePart(url string) ChatCompletionContentPartImageParam {
 	}
 }
 
-func AssistantMessage(content string) ChatCompletionAssistantMessageParam {
+func AssistantMessage(content string) ChatCompletionMessageParamUnion {
 	txt := TextPart(content)
-	return ChatCompletionAssistantMessageParam{
-		Role:    "assistant",
-		Content: []ChatCompletionAssistantMessageParamContentUnion{{OfText: &txt}},
-	}
+	return ChatCompletionMessageParamUnion{OfAssistant: &ChatCompletionAssistantMessageParam{
+		Role: "assistant",
+		Content: []ChatCompletionAssistantMessageParamContentUnion{
+			{OfText: &txt},
+		},
+	}}
 }
 
-func ToolMessage(toolCallID, content string) ChatCompletionToolMessageParam {
-	return ChatCompletionToolMessageParam{
+func ToolMessage(toolCallID, content string) ChatCompletionMessageParamUnion {
+	return ChatCompletionMessageParamUnion{OfTool: &ChatCompletionToolMessageParam{
 		Role:       "tool",
 		ToolCallID: String(toolCallID),
 		Content: []ChatCompletionContentPartTextParam{
 			TextPart(content),
 		},
-	}
+	}}
 }
 
 func SystemMessage(content string) ChatCompletionMessageParamUnion {
-	return ChatCompletionMessageParamUnion{
-		OfSystem: &ChatCompletionSystemMessageParam{
-			Role: "system",
-			Content: []ChatCompletionContentPartTextParam{
-				TextPart(content),
-			},
+	return ChatCompletionMessageParamUnion{OfSystem: &ChatCompletionSystemMessageParam{
+		Role: "system",
+		Content: []ChatCompletionContentPartTextParam{
+			TextPart(content),
 		},
+	},
 	}
 }
 

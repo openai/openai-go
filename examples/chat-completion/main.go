@@ -19,7 +19,7 @@ func main() {
 
 	completion, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
-			openai.NewChatCompletionMessageParamOfUser(question),
+			openai.UserMessage(question),
 		},
 		Seed:  openai.Int(1),
 		Model: openai.ChatModelGPT4o,

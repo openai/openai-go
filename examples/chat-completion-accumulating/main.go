@@ -24,7 +24,7 @@ func main() {
 
 	params := openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
-			openai.NewChatCompletionMessageParamOfUser(question),
+			openai.UserMessage(question),
 		},
 		Seed:  openai.Int(0),
 		Model: openai.ChatModelGPT4o,
