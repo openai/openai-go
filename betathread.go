@@ -90,6 +90,15 @@ func (r *BetaThreadService) Delete(ctx context.Context, threadID string, opts ..
 	return
 }
 
+// Create a thread and run it in one request. Poll the API until the run is complete.
+func (r *BetaThreadService) NewAndRunPoll(ctx context.Context, body BetaThreadNewAndRunParams, pollIntervalMs int, opts ...option.RequestOption) (res *Run, err error) {
+	run, err := r.NewAndRun(ctx, body, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return r.Runs.PollStatus(ctx, run.ThreadID, run.ID, pollIntervalMs, opts...)
+}
+
 // Create a thread and run it in one request.
 func (r *BetaThreadService) NewAndRun(ctx context.Context, body BetaThreadNewAndRunParams, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
