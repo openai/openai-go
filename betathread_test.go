@@ -27,39 +27,41 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.Threads.New(context.TODO(), openai.BetaThreadNewParams{
-		Messages: openai.F([]openai.BetaThreadNewParamsMessage{{
-			Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
-			Role:    openai.F(openai.BetaThreadNewParamsMessagesRoleUser),
-			Attachments: openai.F([]openai.BetaThreadNewParamsMessagesAttachment{{
-				FileID: openai.F("file_id"),
-				Tools: openai.F([]openai.BetaThreadNewParamsMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-				}}),
-			}}),
-			Metadata: openai.F(shared.MetadataParam{
+		Messages: []openai.BetaThreadNewParamsMessage{{
+			Content: []openai.MessageContentPartParamUnion{{
+				OfImageFile: &openai.ImageFileContentBlockParam{ImageFile: openai.ImageFileParam{FileID: openai.String("file_id"), Detail: "auto"}},
+			}},
+			Role: "user",
+			Attachments: []openai.BetaThreadNewParamsMessagesAttachment{{
+				FileID: openai.String("file_id"),
+				Tools: []openai.BetaThreadNewParamsMessagesAttachmentsToolUnion{{
+					OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
+				}},
+			}},
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
-		}}),
-		Metadata: openai.F(shared.MetadataParam{
+			},
+		}},
+		Metadata: shared.MetadataParam{
 			"foo": "string",
-		}),
-		ToolResources: openai.F(openai.BetaThreadNewParamsToolResources{
-			CodeInterpreter: openai.F(openai.BetaThreadNewParamsToolResourcesCodeInterpreter{
-				FileIDs: openai.F([]string{"string"}),
-			}),
-			FileSearch: openai.F(openai.BetaThreadNewParamsToolResourcesFileSearch{
-				VectorStoreIDs: openai.F([]string{"string"}),
-				VectorStores: openai.F([]openai.BetaThreadNewParamsToolResourcesFileSearchVectorStore{{
-					ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
-						Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
-					}),
-					FileIDs: openai.F([]string{"string"}),
-					Metadata: openai.F(shared.MetadataParam{
+		},
+		ToolResources: openai.BetaThreadNewParamsToolResources{
+			CodeInterpreter: openai.BetaThreadNewParamsToolResourcesCodeInterpreter{
+				FileIDs: []string{"string"},
+			},
+			FileSearch: openai.BetaThreadNewParamsToolResourcesFileSearch{
+				VectorStoreIDs: []string{"string"},
+				VectorStores: []openai.BetaThreadNewParamsToolResourcesFileSearchVectorStore{{
+					ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
+						OfAuto: &openai.AutoFileChunkingStrategyParam{},
+					},
+					FileIDs: []string{"string"},
+					Metadata: shared.MetadataParam{
 						"foo": "string",
-					}),
-				}}),
-			}),
-		}),
+					},
+				}},
+			},
+		},
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -108,17 +110,17 @@ func TestBetaThreadUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"thread_id",
 		openai.BetaThreadUpdateParams{
-			Metadata: openai.F(shared.MetadataParam{
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
-			ToolResources: openai.F(openai.BetaThreadUpdateParamsToolResources{
-				CodeInterpreter: openai.F(openai.BetaThreadUpdateParamsToolResourcesCodeInterpreter{
-					FileIDs: openai.F([]string{"string"}),
-				}),
-				FileSearch: openai.F(openai.BetaThreadUpdateParamsToolResourcesFileSearch{
-					VectorStoreIDs: openai.F([]string{"string"}),
-				}),
-			}),
+			},
+			ToolResources: openai.BetaThreadUpdateParamsToolResources{
+				CodeInterpreter: openai.BetaThreadUpdateParamsToolResourcesCodeInterpreter{
+					FileIDs: []string{"string"},
+				},
+				FileSearch: openai.BetaThreadUpdateParamsToolResourcesFileSearch{
+					VectorStoreIDs: []string{"string"},
+				},
+			},
 		},
 	)
 	if err != nil {
@@ -165,68 +167,72 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.Threads.NewAndRun(context.TODO(), openai.BetaThreadNewAndRunParams{
-		AssistantID:         openai.F("assistant_id"),
-		Instructions:        openai.F("instructions"),
-		MaxCompletionTokens: openai.F(int64(256)),
-		MaxPromptTokens:     openai.F(int64(256)),
-		Metadata: openai.F(shared.MetadataParam{
+		AssistantID:         openai.String("assistant_id"),
+		Instructions:        openai.String("instructions"),
+		MaxCompletionTokens: openai.Int(256),
+		MaxPromptTokens:     openai.Int(256),
+		Metadata: shared.MetadataParam{
 			"foo": "string",
-		}),
-		Model:             openai.F(openai.ChatModelO3Mini),
-		ParallelToolCalls: openai.F(true),
-		Temperature:       openai.F(1.000000),
-		Thread: openai.F(openai.BetaThreadNewAndRunParamsThread{
-			Messages: openai.F([]openai.BetaThreadNewAndRunParamsThreadMessage{{
-				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
-				Role:    openai.F(openai.BetaThreadNewAndRunParamsThreadMessagesRoleUser),
-				Attachments: openai.F([]openai.BetaThreadNewAndRunParamsThreadMessagesAttachment{{
-					FileID: openai.F("file_id"),
-					Tools: openai.F([]openai.BetaThreadNewAndRunParamsThreadMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}}),
-				}}),
-				Metadata: openai.F(shared.MetadataParam{
+		},
+		Model:             openai.ChatModelO3Mini,
+		ParallelToolCalls: openai.Bool(true),
+		Temperature:       openai.Float(1),
+		Thread: openai.BetaThreadNewAndRunParamsThread{
+			Messages: []openai.BetaThreadNewAndRunParamsThreadMessage{{
+				Content: []openai.MessageContentPartParamUnion{{
+					OfImageFile: &openai.ImageFileContentBlockParam{ImageFile: openai.ImageFileParam{FileID: openai.String("file_id"), Detail: "auto"}},
+				}},
+				Role: "user",
+				Attachments: []openai.BetaThreadNewAndRunParamsThreadMessagesAttachment{{
+					FileID: openai.String("file_id"),
+					Tools: []openai.BetaThreadNewAndRunParamsThreadMessagesAttachmentsToolUnion{{
+						OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
+					}},
+				}},
+				Metadata: shared.MetadataParam{
 					"foo": "string",
-				}),
-			}}),
-			Metadata: openai.F(shared.MetadataParam{
+				},
+			}},
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
-			ToolResources: openai.F(openai.BetaThreadNewAndRunParamsThreadToolResources{
-				CodeInterpreter: openai.F(openai.BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter{
-					FileIDs: openai.F([]string{"string"}),
-				}),
-				FileSearch: openai.F(openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearch{
-					VectorStoreIDs: openai.F([]string{"string"}),
-					VectorStores: openai.F([]openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore{{
-						ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
-							Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
-						}),
-						FileIDs: openai.F([]string{"string"}),
-						Metadata: openai.F(shared.MetadataParam{
+			},
+			ToolResources: openai.BetaThreadNewAndRunParamsThreadToolResources{
+				CodeInterpreter: openai.BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter{
+					FileIDs: []string{"string"},
+				},
+				FileSearch: openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearch{
+					VectorStoreIDs: []string{"string"},
+					VectorStores: []openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore{{
+						ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
+							OfAuto: &openai.AutoFileChunkingStrategyParam{},
+						},
+						FileIDs: []string{"string"},
+						Metadata: shared.MetadataParam{
 							"foo": "string",
-						}),
-					}}),
-				}),
-			}),
-		}),
-		ToolChoice: openai.F[openai.AssistantToolChoiceOptionUnionParam](openai.AssistantToolChoiceOptionAuto(openai.AssistantToolChoiceOptionAutoNone)),
-		ToolResources: openai.F(openai.BetaThreadNewAndRunParamsToolResources{
-			CodeInterpreter: openai.F(openai.BetaThreadNewAndRunParamsToolResourcesCodeInterpreter{
-				FileIDs: openai.F([]string{"string"}),
-			}),
-			FileSearch: openai.F(openai.BetaThreadNewAndRunParamsToolResourcesFileSearch{
-				VectorStoreIDs: openai.F([]string{"string"}),
-			}),
-		}),
-		Tools: openai.F([]openai.BetaThreadNewAndRunParamsToolUnion{openai.CodeInterpreterToolParam{
-			Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-		}}),
-		TopP: openai.F(1.000000),
-		TruncationStrategy: openai.F(openai.BetaThreadNewAndRunParamsTruncationStrategy{
-			Type:         openai.F(openai.BetaThreadNewAndRunParamsTruncationStrategyTypeAuto),
-			LastMessages: openai.F(int64(1)),
-		}),
+						},
+					}},
+				},
+			},
+		},
+		ToolChoice: openai.AssistantToolChoiceOptionUnionParam{
+			OfAuto: "none",
+		},
+		ToolResources: openai.BetaThreadNewAndRunParamsToolResources{
+			CodeInterpreter: openai.BetaThreadNewAndRunParamsToolResourcesCodeInterpreter{
+				FileIDs: []string{"string"},
+			},
+			FileSearch: openai.BetaThreadNewAndRunParamsToolResourcesFileSearch{
+				VectorStoreIDs: []string{"string"},
+			},
+		},
+		Tools: []openai.BetaThreadNewAndRunParamsToolUnion{{
+			OfCodeInterpreterTool: &openai.CodeInterpreterToolParam{},
+		}},
+		TopP: openai.Float(1),
+		TruncationStrategy: openai.BetaThreadNewAndRunParamsTruncationStrategy{
+			Type:         "auto",
+			LastMessages: openai.Int(1),
+		},
 	})
 	if err != nil {
 		var apierr *openai.Error

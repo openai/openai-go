@@ -433,9 +433,7 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 					status: valid,
 				}
 			}
-			if metadata := getSubField(value, inlineDecoder.idx, inlineDecoder.goname); metadata.IsValid() {
-				metadata.Set(reflect.ValueOf(meta))
-			}
+			setSubField(value, inlineDecoder.idx, inlineDecoder.goname, meta)
 			return err
 		}
 
@@ -489,9 +487,7 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 			}
 
 			if explicit {
-				if metadata := getSubField(value, df.idx, df.goname); metadata.IsValid() {
-					metadata.Set(reflect.ValueOf(meta))
-				}
+				setSubField(value, df.idx, df.goname, meta)
 			}
 			if !explicit {
 				untypedExtraFields[fieldName] = meta

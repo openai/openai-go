@@ -7,10 +7,12 @@ import (
 	"net/http"
 
 	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
 	"github.com/openai/openai-go/packages/ssestream"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // CompletionService contains methods and other services that help with interacting
@@ -26,8 +28,8 @@ type CompletionService struct {
 // NewCompletionService generates a new service that applies the given options to
 // each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewCompletionService(opts ...option.RequestOption) (r *CompletionService) {
-	r = &CompletionService{}
+func NewCompletionService(opts ...option.RequestOption) (r CompletionService) {
+	r = CompletionService{}
 	r.Options = opts
 	return
 }
@@ -57,59 +59,39 @@ func (r *CompletionService) NewStreaming(ctx context.Context, body CompletionNew
 // non-streamed response objects share the same shape (unlike the chat endpoint).
 type Completion struct {
 	// A unique identifier for the completion.
-	ID string `json:"id,required"`
+	ID string `json:"id,omitzero,required"`
 	// The list of completion choices the model generated for the input prompt.
-	Choices []CompletionChoice `json:"choices,required"`
+	Choices []CompletionChoice `json:"choices,omitzero,required"`
 	// The Unix timestamp (in seconds) of when the completion was created.
-	Created int64 `json:"created,required"`
+	Created int64 `json:"created,omitzero,required"`
 	// The model used for completion.
-	Model string `json:"model,required"`
+	Model string `json:"model,omitzero,required"`
 	// The object type, which is always "text_completion"
-	Object CompletionObject `json:"object,required"`
+	//
+	// This field can be elided, and will be automatically set as "text_completion".
+	Object constant.TextCompletion `json:"object,required"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	//
 	// Can be used in conjunction with the `seed` request parameter to understand when
 	// backend changes have been made that might impact determinism.
-	SystemFingerprint string `json:"system_fingerprint"`
+	SystemFingerprint string `json:"system_fingerprint,omitzero"`
 	// Usage statistics for the completion request.
-	Usage CompletionUsage `json:"usage"`
-	JSON  completionJSON  `json:"-"`
+	Usage CompletionUsage `json:"usage,omitzero"`
+	JSON  struct {
+		ID                resp.Field
+		Choices           resp.Field
+		Created           resp.Field
+		Model             resp.Field
+		Object            resp.Field
+		SystemFingerprint resp.Field
+		Usage             resp.Field
+		raw               string
+	} `json:"-"`
 }
 
-// completionJSON contains the JSON metadata for the struct [Completion]
-type completionJSON struct {
-	ID                apijson.Field
-	Choices           apijson.Field
-	Created           apijson.Field
-	Model             apijson.Field
-	Object            apijson.Field
-	SystemFingerprint apijson.Field
-	Usage             apijson.Field
-	raw               string
-	ExtraFields       map[string]apijson.Field
-}
-
-func (r *Completion) UnmarshalJSON(data []byte) (err error) {
+func (r Completion) RawJSON() string { return r.JSON.raw }
+func (r *Completion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r completionJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always "text_completion"
-type CompletionObject string
-
-const (
-	CompletionObjectTextCompletion CompletionObject = "text_completion"
-)
-
-func (r CompletionObject) IsKnown() bool {
-	switch r {
-	case CompletionObjectTextCompletion:
-		return true
-	}
-	return false
 }
 
 type CompletionChoice struct {
@@ -117,37 +99,31 @@ type CompletionChoice struct {
 	// hit a natural stop point or a provided stop sequence, `length` if the maximum
 	// number of tokens specified in the request was reached, or `content_filter` if
 	// content was omitted due to a flag from our content filters.
-	FinishReason CompletionChoiceFinishReason `json:"finish_reason,required"`
-	Index        int64                        `json:"index,required"`
-	Logprobs     CompletionChoiceLogprobs     `json:"logprobs,required,nullable"`
-	Text         string                       `json:"text,required"`
-	JSON         completionChoiceJSON         `json:"-"`
+	//
+	// Any of "stop", "length", "content_filter"
+	FinishReason string                   `json:"finish_reason,omitzero,required"`
+	Index        int64                    `json:"index,omitzero,required"`
+	Logprobs     CompletionChoiceLogprobs `json:"logprobs,omitzero,required,nullable"`
+	Text         string                   `json:"text,omitzero,required"`
+	JSON         struct {
+		FinishReason resp.Field
+		Index        resp.Field
+		Logprobs     resp.Field
+		Text         resp.Field
+		raw          string
+	} `json:"-"`
 }
 
-// completionChoiceJSON contains the JSON metadata for the struct
-// [CompletionChoice]
-type completionChoiceJSON struct {
-	FinishReason apijson.Field
-	Index        apijson.Field
-	Logprobs     apijson.Field
-	Text         apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
-}
-
-func (r *CompletionChoice) UnmarshalJSON(data []byte) (err error) {
+func (r CompletionChoice) RawJSON() string { return r.JSON.raw }
+func (r *CompletionChoice) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r completionChoiceJSON) RawJSON() string {
-	return r.raw
 }
 
 // The reason the model stopped generating tokens. This will be `stop` if the model
 // hit a natural stop point or a provided stop sequence, `length` if the maximum
 // number of tokens specified in the request was reached, or `content_filter` if
 // content was omitted due to a flag from our content filters.
-type CompletionChoiceFinishReason string
+type CompletionChoiceFinishReason = string
 
 const (
 	CompletionChoiceFinishReasonStop          CompletionChoiceFinishReason = "stop"
@@ -155,135 +131,96 @@ const (
 	CompletionChoiceFinishReasonContentFilter CompletionChoiceFinishReason = "content_filter"
 )
 
-func (r CompletionChoiceFinishReason) IsKnown() bool {
-	switch r {
-	case CompletionChoiceFinishReasonStop, CompletionChoiceFinishReasonLength, CompletionChoiceFinishReasonContentFilter:
-		return true
-	}
-	return false
-}
-
 type CompletionChoiceLogprobs struct {
-	TextOffset    []int64                      `json:"text_offset"`
-	TokenLogprobs []float64                    `json:"token_logprobs"`
-	Tokens        []string                     `json:"tokens"`
-	TopLogprobs   []map[string]float64         `json:"top_logprobs"`
-	JSON          completionChoiceLogprobsJSON `json:"-"`
+	TextOffset    []int64              `json:"text_offset,omitzero"`
+	TokenLogprobs []float64            `json:"token_logprobs,omitzero"`
+	Tokens        []string             `json:"tokens,omitzero"`
+	TopLogprobs   []map[string]float64 `json:"top_logprobs,omitzero"`
+	JSON          struct {
+		TextOffset    resp.Field
+		TokenLogprobs resp.Field
+		Tokens        resp.Field
+		TopLogprobs   resp.Field
+		raw           string
+	} `json:"-"`
 }
 
-// completionChoiceLogprobsJSON contains the JSON metadata for the struct
-// [CompletionChoiceLogprobs]
-type completionChoiceLogprobsJSON struct {
-	TextOffset    apijson.Field
-	TokenLogprobs apijson.Field
-	Tokens        apijson.Field
-	TopLogprobs   apijson.Field
-	raw           string
-	ExtraFields   map[string]apijson.Field
-}
-
-func (r *CompletionChoiceLogprobs) UnmarshalJSON(data []byte) (err error) {
+func (r CompletionChoiceLogprobs) RawJSON() string { return r.JSON.raw }
+func (r *CompletionChoiceLogprobs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r completionChoiceLogprobsJSON) RawJSON() string {
-	return r.raw
 }
 
 // Usage statistics for the completion request.
 type CompletionUsage struct {
 	// Number of tokens in the generated completion.
-	CompletionTokens int64 `json:"completion_tokens,required"`
+	CompletionTokens int64 `json:"completion_tokens,omitzero,required"`
 	// Number of tokens in the prompt.
-	PromptTokens int64 `json:"prompt_tokens,required"`
+	PromptTokens int64 `json:"prompt_tokens,omitzero,required"`
 	// Total number of tokens used in the request (prompt + completion).
-	TotalTokens int64 `json:"total_tokens,required"`
+	TotalTokens int64 `json:"total_tokens,omitzero,required"`
 	// Breakdown of tokens used in a completion.
-	CompletionTokensDetails CompletionUsageCompletionTokensDetails `json:"completion_tokens_details"`
+	CompletionTokensDetails CompletionUsageCompletionTokensDetails `json:"completion_tokens_details,omitzero"`
 	// Breakdown of tokens used in the prompt.
-	PromptTokensDetails CompletionUsagePromptTokensDetails `json:"prompt_tokens_details"`
-	JSON                completionUsageJSON                `json:"-"`
+	PromptTokensDetails CompletionUsagePromptTokensDetails `json:"prompt_tokens_details,omitzero"`
+	JSON                struct {
+		CompletionTokens        resp.Field
+		PromptTokens            resp.Field
+		TotalTokens             resp.Field
+		CompletionTokensDetails resp.Field
+		PromptTokensDetails     resp.Field
+		raw                     string
+	} `json:"-"`
 }
 
-// completionUsageJSON contains the JSON metadata for the struct [CompletionUsage]
-type completionUsageJSON struct {
-	CompletionTokens        apijson.Field
-	PromptTokens            apijson.Field
-	TotalTokens             apijson.Field
-	CompletionTokensDetails apijson.Field
-	PromptTokensDetails     apijson.Field
-	raw                     string
-	ExtraFields             map[string]apijson.Field
-}
-
-func (r *CompletionUsage) UnmarshalJSON(data []byte) (err error) {
+func (r CompletionUsage) RawJSON() string { return r.JSON.raw }
+func (r *CompletionUsage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r completionUsageJSON) RawJSON() string {
-	return r.raw
 }
 
 // Breakdown of tokens used in a completion.
 type CompletionUsageCompletionTokensDetails struct {
 	// When using Predicted Outputs, the number of tokens in the prediction that
 	// appeared in the completion.
-	AcceptedPredictionTokens int64 `json:"accepted_prediction_tokens"`
+	AcceptedPredictionTokens int64 `json:"accepted_prediction_tokens,omitzero"`
 	// Audio input tokens generated by the model.
-	AudioTokens int64 `json:"audio_tokens"`
+	AudioTokens int64 `json:"audio_tokens,omitzero"`
 	// Tokens generated by the model for reasoning.
-	ReasoningTokens int64 `json:"reasoning_tokens"`
+	ReasoningTokens int64 `json:"reasoning_tokens,omitzero"`
 	// When using Predicted Outputs, the number of tokens in the prediction that did
 	// not appear in the completion. However, like reasoning tokens, these tokens are
 	// still counted in the total completion tokens for purposes of billing, output,
 	// and context window limits.
-	RejectedPredictionTokens int64                                      `json:"rejected_prediction_tokens"`
-	JSON                     completionUsageCompletionTokensDetailsJSON `json:"-"`
+	RejectedPredictionTokens int64 `json:"rejected_prediction_tokens,omitzero"`
+	JSON                     struct {
+		AcceptedPredictionTokens resp.Field
+		AudioTokens              resp.Field
+		ReasoningTokens          resp.Field
+		RejectedPredictionTokens resp.Field
+		raw                      string
+	} `json:"-"`
 }
 
-// completionUsageCompletionTokensDetailsJSON contains the JSON metadata for the
-// struct [CompletionUsageCompletionTokensDetails]
-type completionUsageCompletionTokensDetailsJSON struct {
-	AcceptedPredictionTokens apijson.Field
-	AudioTokens              apijson.Field
-	ReasoningTokens          apijson.Field
-	RejectedPredictionTokens apijson.Field
-	raw                      string
-	ExtraFields              map[string]apijson.Field
-}
-
-func (r *CompletionUsageCompletionTokensDetails) UnmarshalJSON(data []byte) (err error) {
+func (r CompletionUsageCompletionTokensDetails) RawJSON() string { return r.JSON.raw }
+func (r *CompletionUsageCompletionTokensDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r completionUsageCompletionTokensDetailsJSON) RawJSON() string {
-	return r.raw
 }
 
 // Breakdown of tokens used in the prompt.
 type CompletionUsagePromptTokensDetails struct {
 	// Audio input tokens present in the prompt.
-	AudioTokens int64 `json:"audio_tokens"`
+	AudioTokens int64 `json:"audio_tokens,omitzero"`
 	// Cached tokens present in the prompt.
-	CachedTokens int64                                  `json:"cached_tokens"`
-	JSON         completionUsagePromptTokensDetailsJSON `json:"-"`
+	CachedTokens int64 `json:"cached_tokens,omitzero"`
+	JSON         struct {
+		AudioTokens  resp.Field
+		CachedTokens resp.Field
+		raw          string
+	} `json:"-"`
 }
 
-// completionUsagePromptTokensDetailsJSON contains the JSON metadata for the struct
-// [CompletionUsagePromptTokensDetails]
-type completionUsagePromptTokensDetailsJSON struct {
-	AudioTokens  apijson.Field
-	CachedTokens apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
-}
-
-func (r *CompletionUsagePromptTokensDetails) UnmarshalJSON(data []byte) (err error) {
+func (r CompletionUsagePromptTokensDetails) RawJSON() string { return r.JSON.raw }
+func (r *CompletionUsagePromptTokensDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r completionUsagePromptTokensDetailsJSON) RawJSON() string {
-	return r.raw
 }
 
 type CompletionNewParams struct {
@@ -292,14 +229,14 @@ type CompletionNewParams struct {
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
 	// them.
-	Model param.Field[CompletionNewParamsModel] `json:"model,required"`
+	Model string `json:"model,omitzero,required"`
 	// The prompt(s) to generate completions for, encoded as a string, array of
 	// strings, array of tokens, or array of token arrays.
 	//
 	// Note that <|endoftext|> is the document separator that the model sees during
 	// training, so if a prompt is not specified the model will generate as if from the
 	// beginning of a new document.
-	Prompt param.Field[CompletionNewParamsPromptUnion] `json:"prompt,required"`
+	Prompt CompletionNewParamsPromptUnion `json:"prompt,omitzero,required"`
 	// Generates `best_of` completions server-side and returns the "best" (the one with
 	// the highest log probability per token). Results cannot be streamed.
 	//
@@ -309,15 +246,15 @@ type CompletionNewParams struct {
 	// **Note:** Because this parameter generates many completions, it can quickly
 	// consume your token quota. Use carefully and ensure that you have reasonable
 	// settings for `max_tokens` and `stop`.
-	BestOf param.Field[int64] `json:"best_of"`
+	BestOf param.Int `json:"best_of,omitzero"`
 	// Echo back the prompt in addition to the completion
-	Echo param.Field[bool] `json:"echo"`
+	Echo param.Bool `json:"echo,omitzero"`
 	// Number between -2.0 and 2.0. Positive values penalize new tokens based on their
 	// existing frequency in the text so far, decreasing the model's likelihood to
 	// repeat the same line verbatim.
 	//
 	// [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation)
-	FrequencyPenalty param.Field[float64] `json:"frequency_penalty"`
+	FrequencyPenalty param.Float `json:"frequency_penalty,omitzero"`
 	// Modify the likelihood of specified tokens appearing in the completion.
 	//
 	// Accepts a JSON object that maps tokens (specified by their token ID in the GPT
@@ -330,14 +267,14 @@ type CompletionNewParams struct {
 	//
 	// As an example, you can pass `{"50256": -100}` to prevent the <|endoftext|> token
 	// from being generated.
-	LogitBias param.Field[map[string]int64] `json:"logit_bias"`
+	LogitBias map[string]int64 `json:"logit_bias,omitzero"`
 	// Include the log probabilities on the `logprobs` most likely output tokens, as
 	// well the chosen tokens. For example, if `logprobs` is 5, the API will return a
 	// list of the 5 most likely tokens. The API will always return the `logprob` of
 	// the sampled token, so there may be up to `logprobs+1` elements in the response.
 	//
 	// The maximum value for `logprobs` is 5.
-	Logprobs param.Field[int64] `json:"logprobs"`
+	Logprobs param.Int `json:"logprobs,omitzero"`
 	// The maximum number of [tokens](/tokenizer) that can be generated in the
 	// completion.
 	//
@@ -345,55 +282,59 @@ type CompletionNewParams struct {
 	// context length.
 	// [Example Python code](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken)
 	// for counting tokens.
-	MaxTokens param.Field[int64] `json:"max_tokens"`
+	MaxTokens param.Int `json:"max_tokens,omitzero"`
 	// How many completions to generate for each prompt.
 	//
 	// **Note:** Because this parameter generates many completions, it can quickly
 	// consume your token quota. Use carefully and ensure that you have reasonable
 	// settings for `max_tokens` and `stop`.
-	N param.Field[int64] `json:"n"`
+	N param.Int `json:"n,omitzero"`
 	// Number between -2.0 and 2.0. Positive values penalize new tokens based on
 	// whether they appear in the text so far, increasing the model's likelihood to
 	// talk about new topics.
 	//
 	// [See more information about frequency and presence penalties.](https://platform.openai.com/docs/guides/text-generation)
-	PresencePenalty param.Field[float64] `json:"presence_penalty"`
+	PresencePenalty param.Float `json:"presence_penalty,omitzero"`
 	// If specified, our system will make a best effort to sample deterministically,
 	// such that repeated requests with the same `seed` and parameters should return
 	// the same result.
 	//
 	// Determinism is not guaranteed, and you should refer to the `system_fingerprint`
 	// response parameter to monitor changes in the backend.
-	Seed param.Field[int64] `json:"seed"`
+	Seed param.Int `json:"seed,omitzero"`
 	// Up to 4 sequences where the API will stop generating further tokens. The
 	// returned text will not contain the stop sequence.
-	Stop param.Field[CompletionNewParamsStopUnion] `json:"stop"`
+	Stop CompletionNewParamsStopUnion `json:"stop,omitzero"`
 	// Options for streaming response. Only set this when you set `stream: true`.
-	StreamOptions param.Field[ChatCompletionStreamOptionsParam] `json:"stream_options"`
+	StreamOptions ChatCompletionStreamOptionsParam `json:"stream_options,omitzero"`
 	// The suffix that comes after a completion of inserted text.
 	//
 	// This parameter is only supported for `gpt-3.5-turbo-instruct`.
-	Suffix param.Field[string] `json:"suffix"`
+	Suffix param.String `json:"suffix,omitzero"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
 	//
 	// We generally recommend altering this or `top_p` but not both.
-	Temperature param.Field[float64] `json:"temperature"`
+	Temperature param.Float `json:"temperature,omitzero"`
 	// An alternative to sampling with temperature, called nucleus sampling, where the
 	// model considers the results of the tokens with top_p probability mass. So 0.1
 	// means only the tokens comprising the top 10% probability mass are considered.
 	//
 	// We generally recommend altering this or `temperature` but not both.
-	TopP param.Field[float64] `json:"top_p"`
+	TopP param.Float `json:"top_p,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
-	User param.Field[string] `json:"user"`
+	User param.String `json:"user,omitzero"`
+	apiobject
 }
 
+func (f CompletionNewParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r CompletionNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow CompletionNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // ID of the model to use. You can use the
@@ -401,7 +342,7 @@ func (r CompletionNewParams) MarshalJSON() (data []byte, err error) {
 // see all of your available models, or see our
 // [Model overview](https://platform.openai.com/docs/models) for descriptions of
 // them.
-type CompletionNewParamsModel string
+type CompletionNewParamsModel = string
 
 const (
 	CompletionNewParamsModelGPT3_5TurboInstruct CompletionNewParamsModel = "gpt-3.5-turbo-instruct"
@@ -409,48 +350,30 @@ const (
 	CompletionNewParamsModelBabbage002          CompletionNewParamsModel = "babbage-002"
 )
 
-func (r CompletionNewParamsModel) IsKnown() bool {
-	switch r {
-	case CompletionNewParamsModelGPT3_5TurboInstruct, CompletionNewParamsModelDavinci002, CompletionNewParamsModelBabbage002:
-		return true
-	}
-	return false
+// Only one field can be non-zero
+type CompletionNewParamsPromptUnion struct {
+	OfString             param.String
+	OfArrayOfStrings     []string
+	OfArrayOfTokens      []int64
+	OfArrayOfTokenArrays [][]int64
+	apiunion
 }
 
-// The prompt(s) to generate completions for, encoded as a string, array of
-// strings, array of tokens, or array of token arrays.
-//
-// Note that <|endoftext|> is the document separator that the model sees during
-// training, so if a prompt is not specified the model will generate as if from the
-// beginning of a new document.
-//
-// Satisfied by [shared.UnionString], [CompletionNewParamsPromptArrayOfStrings],
-// [CompletionNewParamsPromptArrayOfTokens],
-// [CompletionNewParamsPromptArrayOfTokenArrays].
-type CompletionNewParamsPromptUnion interface {
-	ImplementsCompletionNewParamsPromptUnion()
+func (u CompletionNewParamsPromptUnion) IsMissing() bool { return param.IsOmitted(u) || u.IsNull() }
+
+func (u CompletionNewParamsPromptUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[CompletionNewParamsPromptUnion](u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
 }
 
-type CompletionNewParamsPromptArrayOfStrings []string
-
-func (r CompletionNewParamsPromptArrayOfStrings) ImplementsCompletionNewParamsPromptUnion() {}
-
-type CompletionNewParamsPromptArrayOfTokens []int64
-
-func (r CompletionNewParamsPromptArrayOfTokens) ImplementsCompletionNewParamsPromptUnion() {}
-
-type CompletionNewParamsPromptArrayOfTokenArrays [][]int64
-
-func (r CompletionNewParamsPromptArrayOfTokenArrays) ImplementsCompletionNewParamsPromptUnion() {}
-
-// Up to 4 sequences where the API will stop generating further tokens. The
-// returned text will not contain the stop sequence.
-//
-// Satisfied by [shared.UnionString], [CompletionNewParamsStopArray].
-type CompletionNewParamsStopUnion interface {
-	ImplementsCompletionNewParamsStopUnion()
+// Only one field can be non-zero
+type CompletionNewParamsStopUnion struct {
+	OfString                  param.String
+	OfCompletionNewsStopArray []string
+	apiunion
 }
 
-type CompletionNewParamsStopArray []string
+func (u CompletionNewParamsStopUnion) IsMissing() bool { return param.IsOmitted(u) || u.IsNull() }
 
-func (r CompletionNewParamsStopArray) ImplementsCompletionNewParamsStopUnion() {}
+func (u CompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[CompletionNewParamsStopUnion](u.OfString, u.OfCompletionNewsStopArray)
+}

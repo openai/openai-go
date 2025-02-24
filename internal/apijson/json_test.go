@@ -86,8 +86,8 @@ type JSONFieldStruct struct {
 	B           int64               `json:"b"`
 	C           string              `json:"c"`
 	D           string              `json:"d"`
-	ExtraFields map[string]int64    `json:"-,extras"`
-	JSON        JSONFieldStructJSON `json:"-,metadata"`
+	ExtraFields map[string]int64    `json:",extras"`
+	JSON        JSONFieldStructJSON `json:",metadata"`
 }
 
 type JSONFieldStructJSON struct {
@@ -112,13 +112,13 @@ type Union interface {
 }
 
 type Inline struct {
-	InlineField Primitives `json:"-,inline"`
-	JSON        InlineJSON `json:"-,metadata"`
+	InlineField Primitives `json:",inline"`
+	JSON        InlineJSON `json:",metadata"`
 }
 
 type InlineArray struct {
-	InlineField []string   `json:"-,inline"`
-	JSON        InlineJSON `json:"-,metadata"`
+	InlineField []string   `json:",inline"`
+	JSON        InlineJSON `json:",metadata"`
 }
 
 type InlineJSON struct {

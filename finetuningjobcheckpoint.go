@@ -11,10 +11,12 @@ import (
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // FineTuningJobCheckpointService contains methods and other services that help
@@ -30,8 +32,8 @@ type FineTuningJobCheckpointService struct {
 // NewFineTuningJobCheckpointService generates a new service that applies the given
 // options to each request. These options are applied after the parent client's
 // options (if there is one), and before any request-specific options.
-func NewFineTuningJobCheckpointService(opts ...option.RequestOption) (r *FineTuningJobCheckpointService) {
-	r = &FineTuningJobCheckpointService{}
+func NewFineTuningJobCheckpointService(opts ...option.RequestOption) (r FineTuningJobCheckpointService) {
+	r = FineTuningJobCheckpointService{}
 	r.Options = opts
 	return
 }
@@ -67,99 +69,74 @@ func (r *FineTuningJobCheckpointService) ListAutoPaging(ctx context.Context, fin
 // fine-tuning job that is ready to use.
 type FineTuningJobCheckpoint struct {
 	// The checkpoint identifier, which can be referenced in the API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id,omitzero,required"`
 	// The Unix timestamp (in seconds) for when the checkpoint was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at,omitzero,required"`
 	// The name of the fine-tuned checkpoint model that is created.
-	FineTunedModelCheckpoint string `json:"fine_tuned_model_checkpoint,required"`
+	FineTunedModelCheckpoint string `json:"fine_tuned_model_checkpoint,omitzero,required"`
 	// The name of the fine-tuning job that this checkpoint was created from.
-	FineTuningJobID string `json:"fine_tuning_job_id,required"`
+	FineTuningJobID string `json:"fine_tuning_job_id,omitzero,required"`
 	// Metrics at the step number during the fine-tuning job.
-	Metrics FineTuningJobCheckpointMetrics `json:"metrics,required"`
+	Metrics FineTuningJobCheckpointMetrics `json:"metrics,omitzero,required"`
 	// The object type, which is always "fine_tuning.job.checkpoint".
-	Object FineTuningJobCheckpointObject `json:"object,required"`
+	//
+	// This field can be elided, and will be automatically set as
+	// "fine_tuning.job.checkpoint".
+	Object constant.FineTuningJobCheckpoint `json:"object,required"`
 	// The step number that the checkpoint was created at.
-	StepNumber int64                       `json:"step_number,required"`
-	JSON       fineTuningJobCheckpointJSON `json:"-"`
+	StepNumber int64 `json:"step_number,omitzero,required"`
+	JSON       struct {
+		ID                       resp.Field
+		CreatedAt                resp.Field
+		FineTunedModelCheckpoint resp.Field
+		FineTuningJobID          resp.Field
+		Metrics                  resp.Field
+		Object                   resp.Field
+		StepNumber               resp.Field
+		raw                      string
+	} `json:"-"`
 }
 
-// fineTuningJobCheckpointJSON contains the JSON metadata for the struct
-// [FineTuningJobCheckpoint]
-type fineTuningJobCheckpointJSON struct {
-	ID                       apijson.Field
-	CreatedAt                apijson.Field
-	FineTunedModelCheckpoint apijson.Field
-	FineTuningJobID          apijson.Field
-	Metrics                  apijson.Field
-	Object                   apijson.Field
-	StepNumber               apijson.Field
-	raw                      string
-	ExtraFields              map[string]apijson.Field
-}
-
-func (r *FineTuningJobCheckpoint) UnmarshalJSON(data []byte) (err error) {
+func (r FineTuningJobCheckpoint) RawJSON() string { return r.JSON.raw }
+func (r *FineTuningJobCheckpoint) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r fineTuningJobCheckpointJSON) RawJSON() string {
-	return r.raw
 }
 
 // Metrics at the step number during the fine-tuning job.
 type FineTuningJobCheckpointMetrics struct {
-	FullValidLoss              float64                            `json:"full_valid_loss"`
-	FullValidMeanTokenAccuracy float64                            `json:"full_valid_mean_token_accuracy"`
-	Step                       float64                            `json:"step"`
-	TrainLoss                  float64                            `json:"train_loss"`
-	TrainMeanTokenAccuracy     float64                            `json:"train_mean_token_accuracy"`
-	ValidLoss                  float64                            `json:"valid_loss"`
-	ValidMeanTokenAccuracy     float64                            `json:"valid_mean_token_accuracy"`
-	JSON                       fineTuningJobCheckpointMetricsJSON `json:"-"`
+	FullValidLoss              float64 `json:"full_valid_loss,omitzero"`
+	FullValidMeanTokenAccuracy float64 `json:"full_valid_mean_token_accuracy,omitzero"`
+	Step                       float64 `json:"step,omitzero"`
+	TrainLoss                  float64 `json:"train_loss,omitzero"`
+	TrainMeanTokenAccuracy     float64 `json:"train_mean_token_accuracy,omitzero"`
+	ValidLoss                  float64 `json:"valid_loss,omitzero"`
+	ValidMeanTokenAccuracy     float64 `json:"valid_mean_token_accuracy,omitzero"`
+	JSON                       struct {
+		FullValidLoss              resp.Field
+		FullValidMeanTokenAccuracy resp.Field
+		Step                       resp.Field
+		TrainLoss                  resp.Field
+		TrainMeanTokenAccuracy     resp.Field
+		ValidLoss                  resp.Field
+		ValidMeanTokenAccuracy     resp.Field
+		raw                        string
+	} `json:"-"`
 }
 
-// fineTuningJobCheckpointMetricsJSON contains the JSON metadata for the struct
-// [FineTuningJobCheckpointMetrics]
-type fineTuningJobCheckpointMetricsJSON struct {
-	FullValidLoss              apijson.Field
-	FullValidMeanTokenAccuracy apijson.Field
-	Step                       apijson.Field
-	TrainLoss                  apijson.Field
-	TrainMeanTokenAccuracy     apijson.Field
-	ValidLoss                  apijson.Field
-	ValidMeanTokenAccuracy     apijson.Field
-	raw                        string
-	ExtraFields                map[string]apijson.Field
-}
-
-func (r *FineTuningJobCheckpointMetrics) UnmarshalJSON(data []byte) (err error) {
+func (r FineTuningJobCheckpointMetrics) RawJSON() string { return r.JSON.raw }
+func (r *FineTuningJobCheckpointMetrics) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r fineTuningJobCheckpointMetricsJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always "fine_tuning.job.checkpoint".
-type FineTuningJobCheckpointObject string
-
-const (
-	FineTuningJobCheckpointObjectFineTuningJobCheckpoint FineTuningJobCheckpointObject = "fine_tuning.job.checkpoint"
-)
-
-func (r FineTuningJobCheckpointObject) IsKnown() bool {
-	switch r {
-	case FineTuningJobCheckpointObjectFineTuningJobCheckpoint:
-		return true
-	}
-	return false
 }
 
 type FineTuningJobCheckpointListParams struct {
 	// Identifier for the last checkpoint ID from the previous pagination request.
-	After param.Field[string] `query:"after"`
+	After param.String `query:"after,omitzero"`
 	// Number of checkpoints to retrieve.
-	Limit param.Field[int64] `query:"limit"`
+	Limit param.Int `query:"limit,omitzero"`
+	apiobject
 }
+
+func (f FineTuningJobCheckpointListParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [FineTuningJobCheckpointListParams]'s query parameters as
 // `url.Values`.

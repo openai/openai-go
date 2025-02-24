@@ -53,7 +53,7 @@ func Port(from any, to any) error {
 		for i := 0; i < t.NumField(); i++ {
 			field := t.Field(i)
 			ptag, ok := parseJSONStructTag(field)
-			if !ok || ptag.name == "-" {
+			if !ok || ptag.name == "-" || ptag.name == "" {
 				continue
 			}
 			values[ptag.name] = v.Field(i)

@@ -28,12 +28,12 @@ func TestImageNewVariationWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Images.NewVariation(context.TODO(), openai.ImageNewVariationParams{
-		Image:          openai.F(io.Reader(bytes.NewBuffer([]byte("some file contents")))),
-		Model:          openai.F(openai.ImageModelDallE2),
-		N:              openai.F(int64(1)),
-		ResponseFormat: openai.F(openai.ImageNewVariationParamsResponseFormatURL),
-		Size:           openai.F(openai.ImageNewVariationParamsSize256x256),
-		User:           openai.F("user-1234"),
+		Image:          io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		Model:          openai.ImageModelDallE2,
+		N:              openai.Int(1),
+		ResponseFormat: openai.ImageNewVariationParamsResponseFormatURL,
+		Size:           openai.ImageNewVariationParamsSize256x256,
+		User:           openai.String("user-1234"),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -57,14 +57,14 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Images.Edit(context.TODO(), openai.ImageEditParams{
-		Image:          openai.F(io.Reader(bytes.NewBuffer([]byte("some file contents")))),
-		Prompt:         openai.F("A cute baby sea otter wearing a beret"),
-		Mask:           openai.F(io.Reader(bytes.NewBuffer([]byte("some file contents")))),
-		Model:          openai.F(openai.ImageModelDallE2),
-		N:              openai.F(int64(1)),
-		ResponseFormat: openai.F(openai.ImageEditParamsResponseFormatURL),
-		Size:           openai.F(openai.ImageEditParamsSize256x256),
-		User:           openai.F("user-1234"),
+		Image:          io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		Prompt:         openai.String("A cute baby sea otter wearing a beret"),
+		Mask:           io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		Model:          openai.ImageModelDallE2,
+		N:              openai.Int(1),
+		ResponseFormat: openai.ImageEditParamsResponseFormatURL,
+		Size:           openai.ImageEditParamsSize256x256,
+		User:           openai.String("user-1234"),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -88,14 +88,14 @@ func TestImageGenerateWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Images.Generate(context.TODO(), openai.ImageGenerateParams{
-		Prompt:         openai.F("A cute baby sea otter"),
-		Model:          openai.F(openai.ImageModelDallE2),
-		N:              openai.F(int64(1)),
-		Quality:        openai.F(openai.ImageGenerateParamsQualityStandard),
-		ResponseFormat: openai.F(openai.ImageGenerateParamsResponseFormatURL),
-		Size:           openai.F(openai.ImageGenerateParamsSize256x256),
-		Style:          openai.F(openai.ImageGenerateParamsStyleVivid),
-		User:           openai.F("user-1234"),
+		Prompt:         openai.String("A cute baby sea otter"),
+		Model:          openai.ImageModelDallE2,
+		N:              openai.Int(1),
+		Quality:        openai.ImageGenerateParamsQualityStandard,
+		ResponseFormat: openai.ImageGenerateParamsResponseFormatURL,
+		Size:           openai.ImageGenerateParamsSize256x256,
+		Style:          openai.ImageGenerateParamsStyleVivid,
+		User:           openai.String("user-1234"),
 	})
 	if err != nil {
 		var apierr *openai.Error

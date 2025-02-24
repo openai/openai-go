@@ -27,36 +27,36 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.Assistants.New(context.TODO(), openai.BetaAssistantNewParams{
-		Model:        openai.F(openai.ChatModelO3Mini),
-		Description:  openai.F("description"),
-		Instructions: openai.F("instructions"),
-		Metadata: openai.F(shared.MetadataParam{
+		Model:        openai.ChatModelO3Mini,
+		Description:  openai.String("description"),
+		Instructions: openai.String("instructions"),
+		Metadata: shared.MetadataParam{
 			"foo": "string",
-		}),
-		Name:            openai.F("name"),
-		ReasoningEffort: openai.F(openai.BetaAssistantNewParamsReasoningEffortLow),
-		Temperature:     openai.F(1.000000),
-		ToolResources: openai.F(openai.BetaAssistantNewParamsToolResources{
-			CodeInterpreter: openai.F(openai.BetaAssistantNewParamsToolResourcesCodeInterpreter{
-				FileIDs: openai.F([]string{"string"}),
-			}),
-			FileSearch: openai.F(openai.BetaAssistantNewParamsToolResourcesFileSearch{
-				VectorStoreIDs: openai.F([]string{"string"}),
-				VectorStores: openai.F([]openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStore{{
-					ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
-						Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
-					}),
-					FileIDs: openai.F([]string{"string"}),
-					Metadata: openai.F(shared.MetadataParam{
+		},
+		Name:            openai.String("name"),
+		ReasoningEffort: openai.BetaAssistantNewParamsReasoningEffortLow,
+		Temperature:     openai.Float(1),
+		ToolResources: openai.BetaAssistantNewParamsToolResources{
+			CodeInterpreter: openai.BetaAssistantNewParamsToolResourcesCodeInterpreter{
+				FileIDs: []string{"string"},
+			},
+			FileSearch: openai.BetaAssistantNewParamsToolResourcesFileSearch{
+				VectorStoreIDs: []string{"string"},
+				VectorStores: []openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStore{{
+					ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
+						OfAuto: &openai.AutoFileChunkingStrategyParam{},
+					},
+					FileIDs: []string{"string"},
+					Metadata: shared.MetadataParam{
 						"foo": "string",
-					}),
-				}}),
-			}),
-		}),
-		Tools: openai.F([]openai.AssistantToolUnionParam{openai.CodeInterpreterToolParam{
-			Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-		}}),
-		TopP: openai.F(1.000000),
+					},
+				}},
+			},
+		},
+		Tools: []openai.AssistantToolUnionParam{{
+			OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
+		}},
+		TopP: openai.Float(1),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -105,27 +105,27 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"assistant_id",
 		openai.BetaAssistantUpdateParams{
-			Description:  openai.F("description"),
-			Instructions: openai.F("instructions"),
-			Metadata: openai.F(shared.MetadataParam{
+			Description:  openai.String("description"),
+			Instructions: openai.String("instructions"),
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
-			Model:           openai.F(openai.BetaAssistantUpdateParamsModelO3Mini),
-			Name:            openai.F("name"),
-			ReasoningEffort: openai.F(openai.BetaAssistantUpdateParamsReasoningEffortLow),
-			Temperature:     openai.F(1.000000),
-			ToolResources: openai.F(openai.BetaAssistantUpdateParamsToolResources{
-				CodeInterpreter: openai.F(openai.BetaAssistantUpdateParamsToolResourcesCodeInterpreter{
-					FileIDs: openai.F([]string{"string"}),
-				}),
-				FileSearch: openai.F(openai.BetaAssistantUpdateParamsToolResourcesFileSearch{
-					VectorStoreIDs: openai.F([]string{"string"}),
-				}),
-			}),
-			Tools: openai.F([]openai.AssistantToolUnionParam{openai.CodeInterpreterToolParam{
-				Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-			}}),
-			TopP: openai.F(1.000000),
+			},
+			Model:           "o3-mini",
+			Name:            openai.String("name"),
+			ReasoningEffort: openai.BetaAssistantUpdateParamsReasoningEffortLow,
+			Temperature:     openai.Float(1),
+			ToolResources: openai.BetaAssistantUpdateParamsToolResources{
+				CodeInterpreter: openai.BetaAssistantUpdateParamsToolResourcesCodeInterpreter{
+					FileIDs: []string{"string"},
+				},
+				FileSearch: openai.BetaAssistantUpdateParamsToolResourcesFileSearch{
+					VectorStoreIDs: []string{"string"},
+				},
+			},
+			Tools: []openai.AssistantToolUnionParam{{
+				OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
+			}},
+			TopP: openai.Float(1),
 		},
 	)
 	if err != nil {
@@ -150,10 +150,10 @@ func TestBetaAssistantListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.Assistants.List(context.TODO(), openai.BetaAssistantListParams{
-		After:  openai.F("after"),
-		Before: openai.F("before"),
-		Limit:  openai.F(int64(0)),
-		Order:  openai.F(openai.BetaAssistantListParamsOrderAsc),
+		After:  openai.String("after"),
+		Before: openai.String("before"),
+		Limit:  openai.Int(0),
+		Order:  openai.BetaAssistantListParamsOrderAsc,
 	})
 	if err != nil {
 		var apierr *openai.Error

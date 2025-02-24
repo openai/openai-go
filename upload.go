@@ -9,9 +9,11 @@ import (
 	"net/http"
 
 	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // UploadService contains methods and other services that help with interacting
@@ -22,14 +24,14 @@ import (
 // the [NewUploadService] method instead.
 type UploadService struct {
 	Options []option.RequestOption
-	Parts   *UploadPartService
+	Parts   UploadPartService
 }
 
 // NewUploadService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewUploadService(opts ...option.RequestOption) (r *UploadService) {
-	r = &UploadService{}
+func NewUploadService(opts ...option.RequestOption) (r UploadService) {
+	r = UploadService{}
 	r.Options = opts
 	r.Parts = NewUploadPartService(opts...)
 	return
@@ -101,68 +103,50 @@ func (r *UploadService) Complete(ctx context.Context, uploadID string, body Uplo
 // The Upload object can accept byte chunks in the form of Parts.
 type Upload struct {
 	// The Upload unique identifier, which can be referenced in API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id,omitzero,required"`
 	// The intended number of bytes to be uploaded.
-	Bytes int64 `json:"bytes,required"`
+	Bytes int64 `json:"bytes,omitzero,required"`
 	// The Unix timestamp (in seconds) for when the Upload was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at,omitzero,required"`
 	// The Unix timestamp (in seconds) for when the Upload was created.
-	ExpiresAt int64 `json:"expires_at,required"`
+	ExpiresAt int64 `json:"expires_at,omitzero,required"`
 	// The name of the file to be uploaded.
-	Filename string `json:"filename,required"`
+	Filename string `json:"filename,omitzero,required"`
 	// The object type, which is always "upload".
-	Object UploadObject `json:"object,required"`
+	//
+	// This field can be elided, and will be automatically set as "upload".
+	Object constant.Upload `json:"object,required"`
 	// The intended purpose of the file.
 	// [Please refer here](https://platform.openai.com/docs/api-reference/files/object#files/object-purpose)
 	// for acceptable values.
-	Purpose string `json:"purpose,required"`
+	Purpose string `json:"purpose,omitzero,required"`
 	// The status of the Upload.
-	Status UploadStatus `json:"status,required"`
+	//
+	// Any of "pending", "completed", "cancelled", "expired"
+	Status string `json:"status,omitzero,required"`
 	// The `File` object represents a document that has been uploaded to OpenAI.
-	File FileObject `json:"file,nullable"`
-	JSON uploadJSON `json:"-"`
+	File FileObject `json:"file,omitzero,nullable"`
+	JSON struct {
+		ID        resp.Field
+		Bytes     resp.Field
+		CreatedAt resp.Field
+		ExpiresAt resp.Field
+		Filename  resp.Field
+		Object    resp.Field
+		Purpose   resp.Field
+		Status    resp.Field
+		File      resp.Field
+		raw       string
+	} `json:"-"`
 }
 
-// uploadJSON contains the JSON metadata for the struct [Upload]
-type uploadJSON struct {
-	ID          apijson.Field
-	Bytes       apijson.Field
-	CreatedAt   apijson.Field
-	ExpiresAt   apijson.Field
-	Filename    apijson.Field
-	Object      apijson.Field
-	Purpose     apijson.Field
-	Status      apijson.Field
-	File        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Upload) UnmarshalJSON(data []byte) (err error) {
+func (r Upload) RawJSON() string { return r.JSON.raw }
+func (r *Upload) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r uploadJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always "upload".
-type UploadObject string
-
-const (
-	UploadObjectUpload UploadObject = "upload"
-)
-
-func (r UploadObject) IsKnown() bool {
-	switch r {
-	case UploadObjectUpload:
-		return true
-	}
-	return false
-}
-
 // The status of the Upload.
-type UploadStatus string
+type UploadStatus = string
 
 const (
 	UploadStatusPending   UploadStatus = "pending"
@@ -171,43 +155,45 @@ const (
 	UploadStatusExpired   UploadStatus = "expired"
 )
 
-func (r UploadStatus) IsKnown() bool {
-	switch r {
-	case UploadStatusPending, UploadStatusCompleted, UploadStatusCancelled, UploadStatusExpired:
-		return true
-	}
-	return false
-}
-
 type UploadNewParams struct {
 	// The number of bytes in the file you are uploading.
-	Bytes param.Field[int64] `json:"bytes,required"`
+	Bytes param.Int `json:"bytes,omitzero,required"`
 	// The name of the file to upload.
-	Filename param.Field[string] `json:"filename,required"`
+	Filename param.String `json:"filename,omitzero,required"`
 	// The MIME type of the file.
 	//
 	// This must fall within the supported MIME types for your file purpose. See the
 	// supported MIME types for assistants and vision.
-	MimeType param.Field[string] `json:"mime_type,required"`
+	MimeType param.String `json:"mime_type,omitzero,required"`
 	// The intended purpose of the uploaded file.
 	//
 	// See the
 	// [documentation on File purposes](https://platform.openai.com/docs/api-reference/files/create#files-create-purpose).
-	Purpose param.Field[FilePurpose] `json:"purpose,required"`
+	//
+	// Any of "assistants", "batch", "fine-tune", "vision"
+	Purpose FilePurpose `json:"purpose,omitzero,required"`
+	apiobject
 }
 
+func (f UploadNewParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r UploadNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow UploadNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type UploadCompleteParams struct {
 	// The ordered list of Part IDs.
-	PartIDs param.Field[[]string] `json:"part_ids,required"`
+	PartIDs []string `json:"part_ids,omitzero,required"`
 	// The optional md5 checksum for the file contents to verify if the bytes uploaded
 	// matches what you expect.
-	Md5 param.Field[string] `json:"md5"`
+	Md5 param.String `json:"md5,omitzero"`
+	apiobject
 }
 
+func (f UploadCompleteParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r UploadCompleteParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow UploadCompleteParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }

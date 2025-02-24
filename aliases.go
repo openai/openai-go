@@ -3,9 +3,20 @@
 package openai
 
 import (
+	"time"
+
 	"github.com/openai/openai-go/internal/apierror"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
 	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/shared/constant"
 )
+
+// aliased to make param.APIUnion private when embedding
+type apiunion = param.APIUnion
+
+// aliased to make param.APIObject private when embedding
+type apiobject = param.APIObject
 
 type Error = apierror.Error
 
@@ -52,35 +63,98 @@ type MetadataParam = shared.MetadataParam
 // This is an alias to an internal type.
 type ResponseFormatJSONObjectParam = shared.ResponseFormatJSONObjectParam
 
-// The type of response format being defined: `json_object`
-//
-// This is an alias to an internal type.
-type ResponseFormatJSONObjectType = shared.ResponseFormatJSONObjectType
-
-// This is an alias to an internal value.
-const ResponseFormatJSONObjectTypeJSONObject = shared.ResponseFormatJSONObjectTypeJSONObject
-
 // This is an alias to an internal type.
 type ResponseFormatJSONSchemaParam = shared.ResponseFormatJSONSchemaParam
 
 // This is an alias to an internal type.
 type ResponseFormatJSONSchemaJSONSchemaParam = shared.ResponseFormatJSONSchemaJSONSchemaParam
 
-// The type of response format being defined: `json_schema`
-//
-// This is an alias to an internal type.
-type ResponseFormatJSONSchemaType = shared.ResponseFormatJSONSchemaType
-
-// This is an alias to an internal value.
-const ResponseFormatJSONSchemaTypeJSONSchema = shared.ResponseFormatJSONSchemaTypeJSONSchema
-
 // This is an alias to an internal type.
 type ResponseFormatTextParam = shared.ResponseFormatTextParam
 
-// The type of response format being defined: `text`
-//
-// This is an alias to an internal type.
-type ResponseFormatTextType = shared.ResponseFormatTextType
+// Internal helpers for converting from response to param types
 
-// This is an alias to an internal value.
-const ResponseFormatTextTypeText = shared.ResponseFormatTextTypeText
+func newString(value string) param.String {
+	res := param.NeverOmitted[param.String]()
+	res.V = value
+	return res
+}
+
+func newInt(value int64) param.Int {
+	res := param.NeverOmitted[param.Int]()
+	res.V = value
+	return res
+}
+
+func newBool(value bool) param.Bool {
+	res := param.NeverOmitted[param.Bool]()
+	res.V = value
+	return res
+}
+
+func newFloat(value float64) param.Float {
+	res := param.NeverOmitted[param.Float]()
+	res.V = value
+	return res
+}
+
+func newDatetime(value time.Time) param.Datetime {
+	res := param.NeverOmitted[param.Datetime]()
+	res.V = value
+	return res
+}
+
+func newDate(value time.Time) param.Date {
+	res := param.NeverOmitted[param.Date]()
+	res.V = value
+	return res
+}
+
+func toParamString(value string, meta resp.Field) param.String {
+	if !meta.IsMissing() {
+		return newString(value)
+	}
+	return param.String{}
+}
+
+func toParamInt(value int64, meta resp.Field) param.Int {
+	if !meta.IsMissing() {
+		return newInt(value)
+	}
+	return param.Int{}
+}
+
+func toParamBool(value bool, meta resp.Field) param.Bool {
+	if !meta.IsMissing() {
+		return newBool(value)
+	}
+	return param.Bool{}
+}
+
+func toParamFloat(value float64, meta resp.Field) param.Float {
+	if !meta.IsMissing() {
+		return newFloat(value)
+	}
+	return param.Float{}
+}
+
+func toParamDatetime(value time.Time, meta resp.Field) param.Datetime {
+	if !meta.IsMissing() {
+		return newDatetime(value)
+	}
+	return param.Datetime{}
+}
+
+func toParamDate(value time.Time, meta resp.Field) param.Date {
+	if !meta.IsMissing() {
+		return newDate(value)
+	}
+	return param.Date{}
+}
+
+func ptrToConstant[T constant.Constant[T]](c T) *T {
+	if param.IsOmitted(c) {
+		c = c.Default()
+	}
+	return &c
+}

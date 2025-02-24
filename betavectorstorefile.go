@@ -11,10 +11,12 @@ import (
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // BetaVectorStoreFileService contains methods and other services that help with
@@ -30,8 +32,8 @@ type BetaVectorStoreFileService struct {
 // NewBetaVectorStoreFileService generates a new service that applies the given
 // options to each request. These options are applied after the parent client's
 // options (if there is one), and before any request-specific options.
-func NewBetaVectorStoreFileService(opts ...option.RequestOption) (r *BetaVectorStoreFileService) {
-	r = &BetaVectorStoreFileService{}
+func NewBetaVectorStoreFileService(opts ...option.RequestOption) (r BetaVectorStoreFileService) {
+	r = BetaVectorStoreFileService{}
 	r.Options = opts
 	return
 }
@@ -118,82 +120,73 @@ func (r *BetaVectorStoreFileService) Delete(ctx context.Context, vectorStoreID s
 // A list of files attached to a vector store.
 type VectorStoreFile struct {
 	// The identifier, which can be referenced in API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id,omitzero,required"`
 	// The Unix timestamp (in seconds) for when the vector store file was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at,omitzero,required"`
 	// The last error associated with this vector store file. Will be `null` if there
 	// are no errors.
-	LastError VectorStoreFileLastError `json:"last_error,required,nullable"`
+	LastError VectorStoreFileLastError `json:"last_error,omitzero,required,nullable"`
 	// The object type, which is always `vector_store.file`.
-	Object VectorStoreFileObject `json:"object,required"`
+	//
+	// This field can be elided, and will be automatically set as "vector_store.file".
+	Object constant.VectorStoreFile `json:"object,required"`
 	// The status of the vector store file, which can be either `in_progress`,
 	// `completed`, `cancelled`, or `failed`. The status `completed` indicates that the
 	// vector store file is ready for use.
-	Status VectorStoreFileStatus `json:"status,required"`
+	//
+	// Any of "in_progress", "completed", "cancelled", "failed"
+	Status string `json:"status,omitzero,required"`
 	// The total vector store usage in bytes. Note that this may be different from the
 	// original file size.
-	UsageBytes int64 `json:"usage_bytes,required"`
+	UsageBytes int64 `json:"usage_bytes,omitzero,required"`
 	// The ID of the
 	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
 	// that the [File](https://platform.openai.com/docs/api-reference/files) is
 	// attached to.
-	VectorStoreID string `json:"vector_store_id,required"`
+	VectorStoreID string `json:"vector_store_id,omitzero,required"`
 	// The strategy used to chunk the file.
-	ChunkingStrategy FileChunkingStrategy `json:"chunking_strategy"`
-	JSON             vectorStoreFileJSON  `json:"-"`
+	ChunkingStrategy FileChunkingStrategyUnion `json:"chunking_strategy,omitzero"`
+	JSON             struct {
+		ID               resp.Field
+		CreatedAt        resp.Field
+		LastError        resp.Field
+		Object           resp.Field
+		Status           resp.Field
+		UsageBytes       resp.Field
+		VectorStoreID    resp.Field
+		ChunkingStrategy resp.Field
+		raw              string
+	} `json:"-"`
 }
 
-// vectorStoreFileJSON contains the JSON metadata for the struct [VectorStoreFile]
-type vectorStoreFileJSON struct {
-	ID               apijson.Field
-	CreatedAt        apijson.Field
-	LastError        apijson.Field
-	Object           apijson.Field
-	Status           apijson.Field
-	UsageBytes       apijson.Field
-	VectorStoreID    apijson.Field
-	ChunkingStrategy apijson.Field
-	raw              string
-	ExtraFields      map[string]apijson.Field
-}
-
-func (r *VectorStoreFile) UnmarshalJSON(data []byte) (err error) {
+func (r VectorStoreFile) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreFile) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileJSON) RawJSON() string {
-	return r.raw
 }
 
 // The last error associated with this vector store file. Will be `null` if there
 // are no errors.
 type VectorStoreFileLastError struct {
 	// One of `server_error` or `rate_limit_exceeded`.
-	Code VectorStoreFileLastErrorCode `json:"code,required"`
+	//
+	// Any of "server_error", "unsupported_file", "invalid_file"
+	Code string `json:"code,omitzero,required"`
 	// A human-readable description of the error.
-	Message string                       `json:"message,required"`
-	JSON    vectorStoreFileLastErrorJSON `json:"-"`
+	Message string `json:"message,omitzero,required"`
+	JSON    struct {
+		Code    resp.Field
+		Message resp.Field
+		raw     string
+	} `json:"-"`
 }
 
-// vectorStoreFileLastErrorJSON contains the JSON metadata for the struct
-// [VectorStoreFileLastError]
-type vectorStoreFileLastErrorJSON struct {
-	Code        apijson.Field
-	Message     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *VectorStoreFileLastError) UnmarshalJSON(data []byte) (err error) {
+func (r VectorStoreFileLastError) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreFileLastError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r vectorStoreFileLastErrorJSON) RawJSON() string {
-	return r.raw
-}
-
 // One of `server_error` or `rate_limit_exceeded`.
-type VectorStoreFileLastErrorCode string
+type VectorStoreFileLastErrorCode = string
 
 const (
 	VectorStoreFileLastErrorCodeServerError     VectorStoreFileLastErrorCode = "server_error"
@@ -201,33 +194,10 @@ const (
 	VectorStoreFileLastErrorCodeInvalidFile     VectorStoreFileLastErrorCode = "invalid_file"
 )
 
-func (r VectorStoreFileLastErrorCode) IsKnown() bool {
-	switch r {
-	case VectorStoreFileLastErrorCodeServerError, VectorStoreFileLastErrorCodeUnsupportedFile, VectorStoreFileLastErrorCodeInvalidFile:
-		return true
-	}
-	return false
-}
-
-// The object type, which is always `vector_store.file`.
-type VectorStoreFileObject string
-
-const (
-	VectorStoreFileObjectVectorStoreFile VectorStoreFileObject = "vector_store.file"
-)
-
-func (r VectorStoreFileObject) IsKnown() bool {
-	switch r {
-	case VectorStoreFileObjectVectorStoreFile:
-		return true
-	}
-	return false
-}
-
 // The status of the vector store file, which can be either `in_progress`,
 // `completed`, `cancelled`, or `failed`. The status `completed` indicates that the
 // vector store file is ready for use.
-type VectorStoreFileStatus string
+type VectorStoreFileStatus = string
 
 const (
 	VectorStoreFileStatusInProgress VectorStoreFileStatus = "in_progress"
@@ -236,65 +206,41 @@ const (
 	VectorStoreFileStatusFailed     VectorStoreFileStatus = "failed"
 )
 
-func (r VectorStoreFileStatus) IsKnown() bool {
-	switch r {
-	case VectorStoreFileStatusInProgress, VectorStoreFileStatusCompleted, VectorStoreFileStatusCancelled, VectorStoreFileStatusFailed:
-		return true
-	}
-	return false
-}
-
 type VectorStoreFileDeleted struct {
-	ID      string                       `json:"id,required"`
-	Deleted bool                         `json:"deleted,required"`
-	Object  VectorStoreFileDeletedObject `json:"object,required"`
-	JSON    vectorStoreFileDeletedJSON   `json:"-"`
+	ID      string `json:"id,omitzero,required"`
+	Deleted bool   `json:"deleted,omitzero,required"`
+	// This field can be elided, and will be automatically set as
+	// "vector_store.file.deleted".
+	Object constant.VectorStoreFileDeleted `json:"object,required"`
+	JSON   struct {
+		ID      resp.Field
+		Deleted resp.Field
+		Object  resp.Field
+		raw     string
+	} `json:"-"`
 }
 
-// vectorStoreFileDeletedJSON contains the JSON metadata for the struct
-// [VectorStoreFileDeleted]
-type vectorStoreFileDeletedJSON struct {
-	ID          apijson.Field
-	Deleted     apijson.Field
-	Object      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *VectorStoreFileDeleted) UnmarshalJSON(data []byte) (err error) {
+func (r VectorStoreFileDeleted) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreFileDeleted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileDeletedJSON) RawJSON() string {
-	return r.raw
-}
-
-type VectorStoreFileDeletedObject string
-
-const (
-	VectorStoreFileDeletedObjectVectorStoreFileDeleted VectorStoreFileDeletedObject = "vector_store.file.deleted"
-)
-
-func (r VectorStoreFileDeletedObject) IsKnown() bool {
-	switch r {
-	case VectorStoreFileDeletedObjectVectorStoreFileDeleted:
-		return true
-	}
-	return false
 }
 
 type BetaVectorStoreFileNewParams struct {
 	// A [File](https://platform.openai.com/docs/api-reference/files) ID that the
 	// vector store should use. Useful for tools like `file_search` that can access
 	// files.
-	FileID param.Field[string] `json:"file_id,required"`
+	FileID param.String `json:"file_id,omitzero,required"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
-	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
+	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
+	apiobject
 }
 
+func (f BetaVectorStoreFileNewParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r BetaVectorStoreFileNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow BetaVectorStoreFileNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type BetaVectorStoreFileListParams struct {
@@ -302,21 +248,28 @@ type BetaVectorStoreFileListParams struct {
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
 	// fetch the next page of the list.
-	After param.Field[string] `query:"after"`
+	After param.String `query:"after,omitzero"`
 	// A cursor for use in pagination. `before` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// starting with obj_foo, your subsequent call can include before=obj_foo in order
 	// to fetch the previous page of the list.
-	Before param.Field[string] `query:"before"`
+	Before param.String `query:"before,omitzero"`
 	// Filter by file status. One of `in_progress`, `completed`, `failed`, `cancelled`.
-	Filter param.Field[BetaVectorStoreFileListParamsFilter] `query:"filter"`
+	//
+	// Any of "in_progress", "completed", "failed", "cancelled"
+	Filter BetaVectorStoreFileListParamsFilter `query:"filter,omitzero"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
-	Limit param.Field[int64] `query:"limit"`
+	Limit param.Int `query:"limit,omitzero"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
-	Order param.Field[BetaVectorStoreFileListParamsOrder] `query:"order"`
+	//
+	// Any of "asc", "desc"
+	Order BetaVectorStoreFileListParamsOrder `query:"order,omitzero"`
+	apiobject
 }
+
+func (f BetaVectorStoreFileListParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [BetaVectorStoreFileListParams]'s query parameters as
 // `url.Values`.
@@ -337,14 +290,6 @@ const (
 	BetaVectorStoreFileListParamsFilterCancelled  BetaVectorStoreFileListParamsFilter = "cancelled"
 )
 
-func (r BetaVectorStoreFileListParamsFilter) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreFileListParamsFilterInProgress, BetaVectorStoreFileListParamsFilterCompleted, BetaVectorStoreFileListParamsFilterFailed, BetaVectorStoreFileListParamsFilterCancelled:
-		return true
-	}
-	return false
-}
-
 // Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 // order and `desc` for descending order.
 type BetaVectorStoreFileListParamsOrder string
@@ -353,11 +298,3 @@ const (
 	BetaVectorStoreFileListParamsOrderAsc  BetaVectorStoreFileListParamsOrder = "asc"
 	BetaVectorStoreFileListParamsOrderDesc BetaVectorStoreFileListParamsOrder = "desc"
 )
-
-func (r BetaVectorStoreFileListParamsOrder) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreFileListParamsOrderAsc, BetaVectorStoreFileListParamsOrderDesc:
-		return true
-	}
-	return false
-}

@@ -30,41 +30,45 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"thread_id",
 		openai.BetaThreadRunNewParams{
-			AssistantID:            openai.F("assistant_id"),
-			Include:                openai.F([]openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent}),
-			AdditionalInstructions: openai.F("additional_instructions"),
-			AdditionalMessages: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessage{{
-				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
-				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
-				Attachments: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachment{{
-					FileID: openai.F("file_id"),
-					Tools: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-						Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-					}}),
-				}}),
-				Metadata: openai.F(shared.MetadataParam{
+			AssistantID:            openai.String("assistant_id"),
+			Include:                []openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent},
+			AdditionalInstructions: openai.String("additional_instructions"),
+			AdditionalMessages: []openai.BetaThreadRunNewParamsAdditionalMessage{{
+				Content: []openai.MessageContentPartParamUnion{{
+					OfImageFile: &openai.ImageFileContentBlockParam{ImageFile: openai.ImageFileParam{FileID: openai.String("file_id"), Detail: "auto"}},
+				}},
+				Role: "user",
+				Attachments: []openai.BetaThreadRunNewParamsAdditionalMessagesAttachment{{
+					FileID: openai.String("file_id"),
+					Tools: []openai.BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion{{
+						OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
+					}},
+				}},
+				Metadata: shared.MetadataParam{
 					"foo": "string",
-				}),
-			}}),
-			Instructions:        openai.F("instructions"),
-			MaxCompletionTokens: openai.F(int64(256)),
-			MaxPromptTokens:     openai.F(int64(256)),
-			Metadata: openai.F(shared.MetadataParam{
+				},
+			}},
+			Instructions:        openai.String("instructions"),
+			MaxCompletionTokens: openai.Int(256),
+			MaxPromptTokens:     openai.Int(256),
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
-			Model:             openai.F(openai.ChatModelO3Mini),
-			ParallelToolCalls: openai.F(true),
-			ReasoningEffort:   openai.F(openai.BetaThreadRunNewParamsReasoningEffortLow),
-			Temperature:       openai.F(1.000000),
-			ToolChoice:        openai.F[openai.AssistantToolChoiceOptionUnionParam](openai.AssistantToolChoiceOptionAuto(openai.AssistantToolChoiceOptionAutoNone)),
-			Tools: openai.F([]openai.AssistantToolUnionParam{openai.CodeInterpreterToolParam{
-				Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-			}}),
-			TopP: openai.F(1.000000),
-			TruncationStrategy: openai.F(openai.BetaThreadRunNewParamsTruncationStrategy{
-				Type:         openai.F(openai.BetaThreadRunNewParamsTruncationStrategyTypeAuto),
-				LastMessages: openai.F(int64(1)),
-			}),
+			},
+			Model:             openai.ChatModelO3Mini,
+			ParallelToolCalls: openai.Bool(true),
+			ReasoningEffort:   openai.BetaThreadRunNewParamsReasoningEffortLow,
+			Temperature:       openai.Float(1),
+			ToolChoice: openai.AssistantToolChoiceOptionUnionParam{
+				OfAuto: "none",
+			},
+			Tools: []openai.AssistantToolUnionParam{{
+				OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
+			}},
+			TopP: openai.Float(1),
+			TruncationStrategy: openai.BetaThreadRunNewParamsTruncationStrategy{
+				Type:         "auto",
+				LastMessages: openai.Int(1),
+			},
 		},
 	)
 	if err != nil {
@@ -119,9 +123,9 @@ func TestBetaThreadRunUpdateWithOptionalParams(t *testing.T) {
 		"thread_id",
 		"run_id",
 		openai.BetaThreadRunUpdateParams{
-			Metadata: openai.F(shared.MetadataParam{
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
+			},
 		},
 	)
 	if err != nil {
@@ -149,10 +153,10 @@ func TestBetaThreadRunListWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"thread_id",
 		openai.BetaThreadRunListParams{
-			After:  openai.F("after"),
-			Before: openai.F("before"),
-			Limit:  openai.F(int64(0)),
-			Order:  openai.F(openai.BetaThreadRunListParamsOrderAsc),
+			After:  openai.String("after"),
+			Before: openai.String("before"),
+			Limit:  openai.Int(0),
+			Order:  openai.BetaThreadRunListParamsOrderAsc,
 		},
 	)
 	if err != nil {
@@ -207,10 +211,10 @@ func TestBetaThreadRunSubmitToolOutputsWithOptionalParams(t *testing.T) {
 		"thread_id",
 		"run_id",
 		openai.BetaThreadRunSubmitToolOutputsParams{
-			ToolOutputs: openai.F([]openai.BetaThreadRunSubmitToolOutputsParamsToolOutput{{
-				Output:     openai.F("output"),
-				ToolCallID: openai.F("tool_call_id"),
-			}}),
+			ToolOutputs: []openai.BetaThreadRunSubmitToolOutputsParamsToolOutput{{
+				Output:     openai.String("output"),
+				ToolCallID: openai.String("tool_call_id"),
+			}},
 		},
 	)
 	if err != nil {

@@ -30,17 +30,19 @@ func TestBetaThreadMessageNewWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"thread_id",
 		openai.BetaThreadMessageNewParams{
-			Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
-			Role:    openai.F(openai.BetaThreadMessageNewParamsRoleUser),
-			Attachments: openai.F([]openai.BetaThreadMessageNewParamsAttachment{{
-				FileID: openai.F("file_id"),
-				Tools: openai.F([]openai.BetaThreadMessageNewParamsAttachmentsToolUnion{openai.CodeInterpreterToolParam{
-					Type: openai.F(openai.CodeInterpreterToolTypeCodeInterpreter),
-				}}),
-			}}),
-			Metadata: openai.F(shared.MetadataParam{
+			Content: []openai.MessageContentPartParamUnion{{
+				OfImageFile: &openai.ImageFileContentBlockParam{ImageFile: openai.ImageFileParam{FileID: openai.String("file_id"), Detail: "auto"}},
+			}},
+			Role: openai.BetaThreadMessageNewParamsRoleUser,
+			Attachments: []openai.BetaThreadMessageNewParamsAttachment{{
+				FileID: openai.String("file_id"),
+				Tools: []openai.BetaThreadMessageNewParamsAttachmentsToolUnion{{
+					OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
+				}},
+			}},
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
+			},
 		},
 	)
 	if err != nil {
@@ -95,9 +97,9 @@ func TestBetaThreadMessageUpdateWithOptionalParams(t *testing.T) {
 		"thread_id",
 		"message_id",
 		openai.BetaThreadMessageUpdateParams{
-			Metadata: openai.F(shared.MetadataParam{
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
+			},
 		},
 	)
 	if err != nil {
@@ -125,11 +127,11 @@ func TestBetaThreadMessageListWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"thread_id",
 		openai.BetaThreadMessageListParams{
-			After:  openai.F("after"),
-			Before: openai.F("before"),
-			Limit:  openai.F(int64(0)),
-			Order:  openai.F(openai.BetaThreadMessageListParamsOrderAsc),
-			RunID:  openai.F("run_id"),
+			After:  openai.String("after"),
+			Before: openai.String("before"),
+			Limit:  openai.Int(0),
+			Order:  openai.BetaThreadMessageListParamsOrderAsc,
+			RunID:  openai.String("run_id"),
 		},
 	)
 	if err != nil {

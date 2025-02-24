@@ -27,11 +27,11 @@ func TestAudioSpeechNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	resp, err := client.Audio.Speech.New(context.TODO(), openai.AudioSpeechNewParams{
-		Input:          openai.F("input"),
-		Model:          openai.F(openai.SpeechModelTTS1),
-		Voice:          openai.F(openai.AudioSpeechNewParamsVoiceAlloy),
-		ResponseFormat: openai.F(openai.AudioSpeechNewParamsResponseFormatMP3),
-		Speed:          openai.F(0.250000),
+		Input:          openai.String("input"),
+		Model:          openai.SpeechModelTTS1,
+		Voice:          openai.AudioSpeechNewParamsVoiceAlloy,
+		ResponseFormat: openai.AudioSpeechNewParamsResponseFormatMP3,
+		Speed:          openai.Float(0.25),
 	})
 	if err != nil {
 		var apierr *openai.Error

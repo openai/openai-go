@@ -4,20 +4,21 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
 	"github.com/openai/openai-go/shared"
-	"github.com/tidwall/gjson"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // BetaVectorStoreService contains methods and other services that help with
@@ -28,15 +29,15 @@ import (
 // the [NewBetaVectorStoreService] method instead.
 type BetaVectorStoreService struct {
 	Options     []option.RequestOption
-	Files       *BetaVectorStoreFileService
-	FileBatches *BetaVectorStoreFileBatchService
+	Files       BetaVectorStoreFileService
+	FileBatches BetaVectorStoreFileBatchService
 }
 
 // NewBetaVectorStoreService generates a new service that applies the given options
 // to each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewBetaVectorStoreService(opts ...option.RequestOption) (r *BetaVectorStoreService) {
-	r = &BetaVectorStoreService{}
+func NewBetaVectorStoreService(opts ...option.RequestOption) (r BetaVectorStoreService) {
+	r = BetaVectorStoreService{}
 	r.Options = opts
 	r.Files = NewBetaVectorStoreFileService(opts...)
 	r.FileBatches = NewBetaVectorStoreFileBatchService(opts...)
@@ -118,148 +119,98 @@ func (r *BetaVectorStoreService) Delete(ctx context.Context, vectorStoreID strin
 // `800` and `chunk_overlap_tokens` of `400`.
 type AutoFileChunkingStrategyParam struct {
 	// Always `auto`.
-	Type param.Field[AutoFileChunkingStrategyParamType] `json:"type,required"`
+	//
+	// This field can be elided, and will be automatically set as "auto".
+	Type constant.Auto `json:"type,required"`
+	apiobject
 }
+
+func (f AutoFileChunkingStrategyParam) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r AutoFileChunkingStrategyParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow AutoFileChunkingStrategyParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
-func (r AutoFileChunkingStrategyParam) implementsFileChunkingStrategyParamUnion() {}
-
-// Always `auto`.
-type AutoFileChunkingStrategyParamType string
-
-const (
-	AutoFileChunkingStrategyParamTypeAuto AutoFileChunkingStrategyParamType = "auto"
-)
-
-func (r AutoFileChunkingStrategyParamType) IsKnown() bool {
-	switch r {
-	case AutoFileChunkingStrategyParamTypeAuto:
-		return true
-	}
-	return false
-}
-
-// The strategy used to chunk the file.
-type FileChunkingStrategy struct {
-	// Always `static`.
-	Type   FileChunkingStrategyType   `json:"type,required"`
+type FileChunkingStrategyUnion struct {
 	Static StaticFileChunkingStrategy `json:"static"`
-	JSON   fileChunkingStrategyJSON   `json:"-"`
-	union  FileChunkingStrategyUnion
+	Type   string                     `json:"type"`
+	JSON   struct {
+		Static resp.Field
+		Type   resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// fileChunkingStrategyJSON contains the JSON metadata for the struct
-// [FileChunkingStrategy]
-type fileChunkingStrategyJSON struct {
-	Type        apijson.Field
-	Static      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r fileChunkingStrategyJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *FileChunkingStrategy) UnmarshalJSON(data []byte) (err error) {
-	*r = FileChunkingStrategy{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
+// note: this function is generated only for discriminated unions
+func (u FileChunkingStrategyUnion) Variant() (res struct {
+	OfStatic *StaticFileChunkingStrategyObject
+	OfOther  *OtherFileChunkingStrategyObject
+}) {
+	switch u.Type {
+	case "static":
+		v := u.AsStatic()
+		res.OfStatic = &v
+	case "other":
+		v := u.AsOther()
+		res.OfOther = &v
 	}
-	return apijson.Port(r.union, &r)
+	return
 }
 
-// AsUnion returns a [FileChunkingStrategyUnion] interface which you can cast to
-// the specific types for more type safety.
-//
-// Possible runtime types of the union are [StaticFileChunkingStrategyObject],
-// [OtherFileChunkingStrategyObject].
-func (r FileChunkingStrategy) AsUnion() FileChunkingStrategyUnion {
-	return r.union
+func (u FileChunkingStrategyUnion) WhichKind() string {
+	return u.Type
 }
 
-// The strategy used to chunk the file.
-//
-// Union satisfied by [StaticFileChunkingStrategyObject] or
-// [OtherFileChunkingStrategyObject].
-type FileChunkingStrategyUnion interface {
-	implementsFileChunkingStrategy()
+func (u FileChunkingStrategyUnion) AsStatic() (v StaticFileChunkingStrategyObject) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*FileChunkingStrategyUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(StaticFileChunkingStrategyObject{}),
-			DiscriminatorValue: "static",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(OtherFileChunkingStrategyObject{}),
-			DiscriminatorValue: "other",
-		},
-	)
+func (u FileChunkingStrategyUnion) AsOther() (v OtherFileChunkingStrategyObject) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-// Always `static`.
-type FileChunkingStrategyType string
+func (u FileChunkingStrategyUnion) RawJSON() string { return u.JSON.raw }
 
-const (
-	FileChunkingStrategyTypeStatic FileChunkingStrategyType = "static"
-	FileChunkingStrategyTypeOther  FileChunkingStrategyType = "other"
-)
+func (r *FileChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
-func (r FileChunkingStrategyType) IsKnown() bool {
-	switch r {
-	case FileChunkingStrategyTypeStatic, FileChunkingStrategyTypeOther:
-		return true
+func NewFileChunkingStrategyParamOfStatic(static StaticFileChunkingStrategyParam) FileChunkingStrategyParamUnion {
+	var variant StaticFileChunkingStrategyObjectParam
+	variant.Static = static
+	return FileChunkingStrategyParamUnion{OfStatic: &variant}
+}
+
+// Only one field can be non-zero
+type FileChunkingStrategyParamUnion struct {
+	OfAuto   *AutoFileChunkingStrategyParam
+	OfStatic *StaticFileChunkingStrategyObjectParam
+	apiunion
+}
+
+func (u FileChunkingStrategyParamUnion) IsMissing() bool { return param.IsOmitted(u) || u.IsNull() }
+
+func (u FileChunkingStrategyParamUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[FileChunkingStrategyParamUnion](u.OfAuto, u.OfStatic)
+}
+
+func (u FileChunkingStrategyParamUnion) GetStatic() *StaticFileChunkingStrategyParam {
+	if vt := u.OfStatic; vt != nil {
+		return &vt.Static
 	}
-	return false
+	return nil
 }
 
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy. Only applicable if `file_ids` is non-empty.
-type FileChunkingStrategyParam struct {
-	// Always `auto`.
-	Type   param.Field[FileChunkingStrategyParamType]   `json:"type,required"`
-	Static param.Field[StaticFileChunkingStrategyParam] `json:"static"`
-}
-
-func (r FileChunkingStrategyParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r FileChunkingStrategyParam) implementsFileChunkingStrategyParamUnion() {}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy. Only applicable if `file_ids` is non-empty.
-//
-// Satisfied by [AutoFileChunkingStrategyParam],
-// [StaticFileChunkingStrategyObjectParam], [FileChunkingStrategyParam].
-type FileChunkingStrategyParamUnion interface {
-	implementsFileChunkingStrategyParamUnion()
-}
-
-// Always `auto`.
-type FileChunkingStrategyParamType string
-
-const (
-	FileChunkingStrategyParamTypeAuto   FileChunkingStrategyParamType = "auto"
-	FileChunkingStrategyParamTypeStatic FileChunkingStrategyParamType = "static"
-)
-
-func (r FileChunkingStrategyParamType) IsKnown() bool {
-	switch r {
-	case FileChunkingStrategyParamTypeAuto, FileChunkingStrategyParamTypeStatic:
-		return true
+func (u FileChunkingStrategyParamUnion) GetType() *string {
+	if vt := u.OfAuto; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfStatic; vt != nil {
+		return (*string)(&vt.Type)
 	}
-	return false
+	return nil
 }
 
 // This is returned when the chunking strategy is unknown. Typically, this is
@@ -267,265 +218,190 @@ func (r FileChunkingStrategyParamType) IsKnown() bool {
 // introduced in the API.
 type OtherFileChunkingStrategyObject struct {
 	// Always `other`.
-	Type OtherFileChunkingStrategyObjectType `json:"type,required"`
-	JSON otherFileChunkingStrategyObjectJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "other".
+	Type constant.Other `json:"type,required"`
+	JSON struct {
+		Type resp.Field
+		raw  string
+	} `json:"-"`
 }
 
-// otherFileChunkingStrategyObjectJSON contains the JSON metadata for the struct
-// [OtherFileChunkingStrategyObject]
-type otherFileChunkingStrategyObjectJSON struct {
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *OtherFileChunkingStrategyObject) UnmarshalJSON(data []byte) (err error) {
+func (r OtherFileChunkingStrategyObject) RawJSON() string { return r.JSON.raw }
+func (r *OtherFileChunkingStrategyObject) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r otherFileChunkingStrategyObjectJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r OtherFileChunkingStrategyObject) implementsFileChunkingStrategy() {}
-
-// Always `other`.
-type OtherFileChunkingStrategyObjectType string
-
-const (
-	OtherFileChunkingStrategyObjectTypeOther OtherFileChunkingStrategyObjectType = "other"
-)
-
-func (r OtherFileChunkingStrategyObjectType) IsKnown() bool {
-	switch r {
-	case OtherFileChunkingStrategyObjectTypeOther:
-		return true
-	}
-	return false
 }
 
 type StaticFileChunkingStrategy struct {
 	// The number of tokens that overlap between chunks. The default value is `400`.
 	//
 	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens,required"`
+	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens,omitzero,required"`
 	// The maximum number of tokens in each chunk. The default value is `800`. The
 	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens int64                          `json:"max_chunk_size_tokens,required"`
-	JSON               staticFileChunkingStrategyJSON `json:"-"`
+	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens,omitzero,required"`
+	JSON               struct {
+		ChunkOverlapTokens resp.Field
+		MaxChunkSizeTokens resp.Field
+		raw                string
+	} `json:"-"`
 }
 
-// staticFileChunkingStrategyJSON contains the JSON metadata for the struct
-// [StaticFileChunkingStrategy]
-type staticFileChunkingStrategyJSON struct {
-	ChunkOverlapTokens apijson.Field
-	MaxChunkSizeTokens apijson.Field
-	raw                string
-	ExtraFields        map[string]apijson.Field
-}
-
-func (r *StaticFileChunkingStrategy) UnmarshalJSON(data []byte) (err error) {
+func (r StaticFileChunkingStrategy) RawJSON() string { return r.JSON.raw }
+func (r *StaticFileChunkingStrategy) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r staticFileChunkingStrategyJSON) RawJSON() string {
-	return r.raw
+// ToParam converts this StaticFileChunkingStrategy to a
+// StaticFileChunkingStrategyParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// StaticFileChunkingStrategyParam.IsOverridden()
+func (r StaticFileChunkingStrategy) ToParam() StaticFileChunkingStrategyParam {
+	return param.Override[StaticFileChunkingStrategyParam](r.RawJSON())
 }
 
 type StaticFileChunkingStrategyParam struct {
 	// The number of tokens that overlap between chunks. The default value is `400`.
 	//
 	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens param.Field[int64] `json:"chunk_overlap_tokens,required"`
+	ChunkOverlapTokens param.Int `json:"chunk_overlap_tokens,omitzero,required"`
 	// The maximum number of tokens in each chunk. The default value is `800`. The
 	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens param.Field[int64] `json:"max_chunk_size_tokens,required"`
+	MaxChunkSizeTokens param.Int `json:"max_chunk_size_tokens,omitzero,required"`
+	apiobject
 }
 
+func (f StaticFileChunkingStrategyParam) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r StaticFileChunkingStrategyParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow StaticFileChunkingStrategyParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type StaticFileChunkingStrategyObject struct {
-	Static StaticFileChunkingStrategy `json:"static,required"`
+	Static StaticFileChunkingStrategy `json:"static,omitzero,required"`
 	// Always `static`.
-	Type StaticFileChunkingStrategyObjectType `json:"type,required"`
-	JSON staticFileChunkingStrategyObjectJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "static".
+	Type constant.Static `json:"type,required"`
+	JSON struct {
+		Static resp.Field
+		Type   resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// staticFileChunkingStrategyObjectJSON contains the JSON metadata for the struct
-// [StaticFileChunkingStrategyObject]
-type staticFileChunkingStrategyObjectJSON struct {
-	Static      apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *StaticFileChunkingStrategyObject) UnmarshalJSON(data []byte) (err error) {
+func (r StaticFileChunkingStrategyObject) RawJSON() string { return r.JSON.raw }
+func (r *StaticFileChunkingStrategyObject) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r staticFileChunkingStrategyObjectJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r StaticFileChunkingStrategyObject) implementsFileChunkingStrategy() {}
-
-// Always `static`.
-type StaticFileChunkingStrategyObjectType string
-
-const (
-	StaticFileChunkingStrategyObjectTypeStatic StaticFileChunkingStrategyObjectType = "static"
-)
-
-func (r StaticFileChunkingStrategyObjectType) IsKnown() bool {
-	switch r {
-	case StaticFileChunkingStrategyObjectTypeStatic:
-		return true
-	}
-	return false
-}
-
 type StaticFileChunkingStrategyObjectParam struct {
-	Static param.Field[StaticFileChunkingStrategyParam] `json:"static,required"`
+	Static StaticFileChunkingStrategyParam `json:"static,omitzero,required"`
 	// Always `static`.
-	Type param.Field[StaticFileChunkingStrategyObjectParamType] `json:"type,required"`
+	//
+	// This field can be elided, and will be automatically set as "static".
+	Type constant.Static `json:"type,required"`
+	apiobject
+}
+
+func (f StaticFileChunkingStrategyObjectParam) IsMissing() bool {
+	return param.IsOmitted(f) || f.IsNull()
 }
 
 func (r StaticFileChunkingStrategyObjectParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r StaticFileChunkingStrategyObjectParam) implementsFileChunkingStrategyParamUnion() {}
-
-// Always `static`.
-type StaticFileChunkingStrategyObjectParamType string
-
-const (
-	StaticFileChunkingStrategyObjectParamTypeStatic StaticFileChunkingStrategyObjectParamType = "static"
-)
-
-func (r StaticFileChunkingStrategyObjectParamType) IsKnown() bool {
-	switch r {
-	case StaticFileChunkingStrategyObjectParamTypeStatic:
-		return true
-	}
-	return false
+	type shadow StaticFileChunkingStrategyObjectParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // A vector store is a collection of processed files can be used by the
 // `file_search` tool.
 type VectorStore struct {
 	// The identifier, which can be referenced in API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id,omitzero,required"`
 	// The Unix timestamp (in seconds) for when the vector store was created.
-	CreatedAt  int64                 `json:"created_at,required"`
-	FileCounts VectorStoreFileCounts `json:"file_counts,required"`
+	CreatedAt  int64                 `json:"created_at,omitzero,required"`
+	FileCounts VectorStoreFileCounts `json:"file_counts,omitzero,required"`
 	// The Unix timestamp (in seconds) for when the vector store was last active.
-	LastActiveAt int64 `json:"last_active_at,required,nullable"`
+	LastActiveAt int64 `json:"last_active_at,omitzero,required,nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.Metadata `json:"metadata,required,nullable"`
+	Metadata shared.Metadata `json:"metadata,omitzero,required,nullable"`
 	// The name of the vector store.
-	Name string `json:"name,required"`
+	Name string `json:"name,omitzero,required"`
 	// The object type, which is always `vector_store`.
-	Object VectorStoreObject `json:"object,required"`
+	//
+	// This field can be elided, and will be automatically set as "vector_store".
+	Object constant.VectorStore `json:"object,required"`
 	// The status of the vector store, which can be either `expired`, `in_progress`, or
 	// `completed`. A status of `completed` indicates that the vector store is ready
 	// for use.
-	Status VectorStoreStatus `json:"status,required"`
+	//
+	// Any of "expired", "in_progress", "completed"
+	Status string `json:"status,omitzero,required"`
 	// The total number of bytes used by the files in the vector store.
-	UsageBytes int64 `json:"usage_bytes,required"`
+	UsageBytes int64 `json:"usage_bytes,omitzero,required"`
 	// The expiration policy for a vector store.
-	ExpiresAfter VectorStoreExpiresAfter `json:"expires_after"`
+	ExpiresAfter VectorStoreExpiresAfter `json:"expires_after,omitzero"`
 	// The Unix timestamp (in seconds) for when the vector store will expire.
-	ExpiresAt int64           `json:"expires_at,nullable"`
-	JSON      vectorStoreJSON `json:"-"`
+	ExpiresAt int64 `json:"expires_at,omitzero,nullable"`
+	JSON      struct {
+		ID           resp.Field
+		CreatedAt    resp.Field
+		FileCounts   resp.Field
+		LastActiveAt resp.Field
+		Metadata     resp.Field
+		Name         resp.Field
+		Object       resp.Field
+		Status       resp.Field
+		UsageBytes   resp.Field
+		ExpiresAfter resp.Field
+		ExpiresAt    resp.Field
+		raw          string
+	} `json:"-"`
 }
 
-// vectorStoreJSON contains the JSON metadata for the struct [VectorStore]
-type vectorStoreJSON struct {
-	ID           apijson.Field
-	CreatedAt    apijson.Field
-	FileCounts   apijson.Field
-	LastActiveAt apijson.Field
-	Metadata     apijson.Field
-	Name         apijson.Field
-	Object       apijson.Field
-	Status       apijson.Field
-	UsageBytes   apijson.Field
-	ExpiresAfter apijson.Field
-	ExpiresAt    apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
-}
-
-func (r *VectorStore) UnmarshalJSON(data []byte) (err error) {
+func (r VectorStore) RawJSON() string { return r.JSON.raw }
+func (r *VectorStore) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreJSON) RawJSON() string {
-	return r.raw
 }
 
 type VectorStoreFileCounts struct {
 	// The number of files that were cancelled.
-	Cancelled int64 `json:"cancelled,required"`
+	Cancelled int64 `json:"cancelled,omitzero,required"`
 	// The number of files that have been successfully processed.
-	Completed int64 `json:"completed,required"`
+	Completed int64 `json:"completed,omitzero,required"`
 	// The number of files that have failed to process.
-	Failed int64 `json:"failed,required"`
+	Failed int64 `json:"failed,omitzero,required"`
 	// The number of files that are currently being processed.
-	InProgress int64 `json:"in_progress,required"`
+	InProgress int64 `json:"in_progress,omitzero,required"`
 	// The total number of files.
-	Total int64                     `json:"total,required"`
-	JSON  vectorStoreFileCountsJSON `json:"-"`
+	Total int64 `json:"total,omitzero,required"`
+	JSON  struct {
+		Cancelled  resp.Field
+		Completed  resp.Field
+		Failed     resp.Field
+		InProgress resp.Field
+		Total      resp.Field
+		raw        string
+	} `json:"-"`
 }
 
-// vectorStoreFileCountsJSON contains the JSON metadata for the struct
-// [VectorStoreFileCounts]
-type vectorStoreFileCountsJSON struct {
-	Cancelled   apijson.Field
-	Completed   apijson.Field
-	Failed      apijson.Field
-	InProgress  apijson.Field
-	Total       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *VectorStoreFileCounts) UnmarshalJSON(data []byte) (err error) {
+func (r VectorStoreFileCounts) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreFileCounts) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileCountsJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always `vector_store`.
-type VectorStoreObject string
-
-const (
-	VectorStoreObjectVectorStore VectorStoreObject = "vector_store"
-)
-
-func (r VectorStoreObject) IsKnown() bool {
-	switch r {
-	case VectorStoreObjectVectorStore:
-		return true
-	}
-	return false
 }
 
 // The status of the vector store, which can be either `expired`, `in_progress`, or
 // `completed`. A status of `completed` indicates that the vector store is ready
 // for use.
-type VectorStoreStatus string
+type VectorStoreStatus = string
 
 const (
 	VectorStoreStatusExpired    VectorStoreStatus = "expired"
@@ -533,195 +409,137 @@ const (
 	VectorStoreStatusCompleted  VectorStoreStatus = "completed"
 )
 
-func (r VectorStoreStatus) IsKnown() bool {
-	switch r {
-	case VectorStoreStatusExpired, VectorStoreStatusInProgress, VectorStoreStatusCompleted:
-		return true
-	}
-	return false
-}
-
 // The expiration policy for a vector store.
 type VectorStoreExpiresAfter struct {
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
-	Anchor VectorStoreExpiresAfterAnchor `json:"anchor,required"`
+	//
+	// This field can be elided, and will be automatically set as "last_active_at".
+	Anchor constant.LastActiveAt `json:"anchor,required"`
 	// The number of days after the anchor time that the vector store will expire.
-	Days int64                       `json:"days,required"`
-	JSON vectorStoreExpiresAfterJSON `json:"-"`
+	Days int64 `json:"days,omitzero,required"`
+	JSON struct {
+		Anchor resp.Field
+		Days   resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// vectorStoreExpiresAfterJSON contains the JSON metadata for the struct
-// [VectorStoreExpiresAfter]
-type vectorStoreExpiresAfterJSON struct {
-	Anchor      apijson.Field
-	Days        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *VectorStoreExpiresAfter) UnmarshalJSON(data []byte) (err error) {
+func (r VectorStoreExpiresAfter) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreExpiresAfter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreExpiresAfterJSON) RawJSON() string {
-	return r.raw
-}
-
-// Anchor timestamp after which the expiration policy applies. Supported anchors:
-// `last_active_at`.
-type VectorStoreExpiresAfterAnchor string
-
-const (
-	VectorStoreExpiresAfterAnchorLastActiveAt VectorStoreExpiresAfterAnchor = "last_active_at"
-)
-
-func (r VectorStoreExpiresAfterAnchor) IsKnown() bool {
-	switch r {
-	case VectorStoreExpiresAfterAnchorLastActiveAt:
-		return true
-	}
-	return false
 }
 
 type VectorStoreDeleted struct {
-	ID      string                   `json:"id,required"`
-	Deleted bool                     `json:"deleted,required"`
-	Object  VectorStoreDeletedObject `json:"object,required"`
-	JSON    vectorStoreDeletedJSON   `json:"-"`
+	ID      string `json:"id,omitzero,required"`
+	Deleted bool   `json:"deleted,omitzero,required"`
+	// This field can be elided, and will be automatically set as
+	// "vector_store.deleted".
+	Object constant.VectorStoreDeleted `json:"object,required"`
+	JSON   struct {
+		ID      resp.Field
+		Deleted resp.Field
+		Object  resp.Field
+		raw     string
+	} `json:"-"`
 }
 
-// vectorStoreDeletedJSON contains the JSON metadata for the struct
-// [VectorStoreDeleted]
-type vectorStoreDeletedJSON struct {
-	ID          apijson.Field
-	Deleted     apijson.Field
-	Object      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *VectorStoreDeleted) UnmarshalJSON(data []byte) (err error) {
+func (r VectorStoreDeleted) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreDeleted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreDeletedJSON) RawJSON() string {
-	return r.raw
-}
-
-type VectorStoreDeletedObject string
-
-const (
-	VectorStoreDeletedObjectVectorStoreDeleted VectorStoreDeletedObject = "vector_store.deleted"
-)
-
-func (r VectorStoreDeletedObject) IsKnown() bool {
-	switch r {
-	case VectorStoreDeletedObjectVectorStoreDeleted:
-		return true
-	}
-	return false
 }
 
 type BetaVectorStoreNewParams struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
-	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
+	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
 	// The expiration policy for a vector store.
-	ExpiresAfter param.Field[BetaVectorStoreNewParamsExpiresAfter] `json:"expires_after"`
+	ExpiresAfter BetaVectorStoreNewParamsExpiresAfter `json:"expires_after,omitzero"`
 	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
 	// the vector store should use. Useful for tools like `file_search` that can access
 	// files.
-	FileIDs param.Field[[]string] `json:"file_ids"`
+	FileIDs []string `json:"file_ids,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
 	// The name of the vector store.
-	Name param.Field[string] `json:"name"`
+	Name param.String `json:"name,omitzero"`
+	apiobject
 }
 
+func (f BetaVectorStoreNewParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r BetaVectorStoreNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow BetaVectorStoreNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // The expiration policy for a vector store.
 type BetaVectorStoreNewParamsExpiresAfter struct {
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
-	Anchor param.Field[BetaVectorStoreNewParamsExpiresAfterAnchor] `json:"anchor,required"`
+	//
+	// This field can be elided, and will be automatically set as "last_active_at".
+	Anchor constant.LastActiveAt `json:"anchor,required"`
 	// The number of days after the anchor time that the vector store will expire.
-	Days param.Field[int64] `json:"days,required"`
+	Days param.Int `json:"days,omitzero,required"`
+	apiobject
+}
+
+func (f BetaVectorStoreNewParamsExpiresAfter) IsMissing() bool {
+	return param.IsOmitted(f) || f.IsNull()
 }
 
 func (r BetaVectorStoreNewParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// Anchor timestamp after which the expiration policy applies. Supported anchors:
-// `last_active_at`.
-type BetaVectorStoreNewParamsExpiresAfterAnchor string
-
-const (
-	BetaVectorStoreNewParamsExpiresAfterAnchorLastActiveAt BetaVectorStoreNewParamsExpiresAfterAnchor = "last_active_at"
-)
-
-func (r BetaVectorStoreNewParamsExpiresAfterAnchor) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreNewParamsExpiresAfterAnchorLastActiveAt:
-		return true
-	}
-	return false
+	type shadow BetaVectorStoreNewParamsExpiresAfter
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type BetaVectorStoreUpdateParams struct {
 	// The expiration policy for a vector store.
-	ExpiresAfter param.Field[BetaVectorStoreUpdateParamsExpiresAfter] `json:"expires_after"`
+	ExpiresAfter BetaVectorStoreUpdateParamsExpiresAfter `json:"expires_after,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
 	// The name of the vector store.
-	Name param.Field[string] `json:"name"`
+	Name param.String `json:"name,omitzero"`
+	apiobject
 }
 
+func (f BetaVectorStoreUpdateParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r BetaVectorStoreUpdateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow BetaVectorStoreUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // The expiration policy for a vector store.
 type BetaVectorStoreUpdateParamsExpiresAfter struct {
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
-	Anchor param.Field[BetaVectorStoreUpdateParamsExpiresAfterAnchor] `json:"anchor,required"`
+	//
+	// This field can be elided, and will be automatically set as "last_active_at".
+	Anchor constant.LastActiveAt `json:"anchor,required"`
 	// The number of days after the anchor time that the vector store will expire.
-	Days param.Field[int64] `json:"days,required"`
+	Days param.Int `json:"days,omitzero,required"`
+	apiobject
+}
+
+func (f BetaVectorStoreUpdateParamsExpiresAfter) IsMissing() bool {
+	return param.IsOmitted(f) || f.IsNull()
 }
 
 func (r BetaVectorStoreUpdateParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// Anchor timestamp after which the expiration policy applies. Supported anchors:
-// `last_active_at`.
-type BetaVectorStoreUpdateParamsExpiresAfterAnchor string
-
-const (
-	BetaVectorStoreUpdateParamsExpiresAfterAnchorLastActiveAt BetaVectorStoreUpdateParamsExpiresAfterAnchor = "last_active_at"
-)
-
-func (r BetaVectorStoreUpdateParamsExpiresAfterAnchor) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreUpdateParamsExpiresAfterAnchorLastActiveAt:
-		return true
-	}
-	return false
+	type shadow BetaVectorStoreUpdateParamsExpiresAfter
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type BetaVectorStoreListParams struct {
@@ -729,19 +547,24 @@ type BetaVectorStoreListParams struct {
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
 	// fetch the next page of the list.
-	After param.Field[string] `query:"after"`
+	After param.String `query:"after,omitzero"`
 	// A cursor for use in pagination. `before` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// starting with obj_foo, your subsequent call can include before=obj_foo in order
 	// to fetch the previous page of the list.
-	Before param.Field[string] `query:"before"`
+	Before param.String `query:"before,omitzero"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
-	Limit param.Field[int64] `query:"limit"`
+	Limit param.Int `query:"limit,omitzero"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
-	Order param.Field[BetaVectorStoreListParamsOrder] `query:"order"`
+	//
+	// Any of "asc", "desc"
+	Order BetaVectorStoreListParamsOrder `query:"order,omitzero"`
+	apiobject
 }
+
+func (f BetaVectorStoreListParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [BetaVectorStoreListParams]'s query parameters as
 // `url.Values`.
@@ -760,11 +583,3 @@ const (
 	BetaVectorStoreListParamsOrderAsc  BetaVectorStoreListParamsOrder = "asc"
 	BetaVectorStoreListParamsOrderDesc BetaVectorStoreListParamsOrder = "desc"
 )
-
-func (r BetaVectorStoreListParamsOrder) IsKnown() bool {
-	switch r {
-	case BetaVectorStoreListParamsOrderAsc, BetaVectorStoreListParamsOrderDesc:
-		return true
-	}
-	return false
-}

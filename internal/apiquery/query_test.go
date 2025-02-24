@@ -1,6 +1,7 @@
 package apiquery
 
 import (
+	"github.com/openai/openai-go/packages/param"
 	"net/url"
 	"testing"
 	"time"
@@ -99,6 +100,10 @@ type DeeplyNested2 struct {
 
 type DeeplyNested3 struct {
 	D *string `query:"d"`
+}
+
+type RichPrimitives struct {
+	A param.String `query:"a"`
 }
 
 var tests = map[string]struct {
@@ -319,6 +324,14 @@ var tests = map[string]struct {
 			},
 		},
 		QuerySettings{NestedFormat: NestedQueryFormatDots},
+	},
+
+	"rich_primitives": {
+		`a=hello`,
+		RichPrimitives{
+			A: param.String{V: "hello"},
+		},
+		QuerySettings{},
 	},
 }
 

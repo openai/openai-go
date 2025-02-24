@@ -4,20 +4,21 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
 	"github.com/openai/openai-go/shared"
-	"github.com/tidwall/gjson"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // BetaThreadMessageService contains methods and other services that help with
@@ -33,8 +34,8 @@ type BetaThreadMessageService struct {
 // NewBetaThreadMessageService generates a new service that applies the given
 // options to each request. These options are applied after the parent client's
 // options (if there is one), and before any request-specific options.
-func NewBetaThreadMessageService(opts ...option.RequestOption) (r *BetaThreadMessageService) {
-	r = &BetaThreadMessageService{}
+func NewBetaThreadMessageService(opts ...option.RequestOption) (r BetaThreadMessageService) {
+	r = BetaThreadMessageService{}
 	r.Options = opts
 	return
 }
@@ -130,269 +131,156 @@ func (r *BetaThreadMessageService) Delete(ctx context.Context, threadID string, 
 	return
 }
 
-// A citation within the message that points to a specific quote from a specific
-// File associated with the assistant or the message. Generated when the assistant
-// uses the "file_search" tool to search files.
-type Annotation struct {
-	EndIndex   int64 `json:"end_index,required"`
-	StartIndex int64 `json:"start_index,required"`
-	// The text in the message content that needs to be replaced.
-	Text string `json:"text,required"`
-	// Always `file_citation`.
-	Type AnnotationType `json:"type,required"`
-	// This field can have the runtime type of [FileCitationAnnotationFileCitation].
-	FileCitation interface{} `json:"file_citation"`
-	// This field can have the runtime type of [FilePathAnnotationFilePath].
-	FilePath interface{}    `json:"file_path"`
-	JSON     annotationJSON `json:"-"`
-	union    AnnotationUnion
+type AnnotationUnion struct {
+	EndIndex     int64                              `json:"end_index"`
+	FileCitation FileCitationAnnotationFileCitation `json:"file_citation"`
+	StartIndex   int64                              `json:"start_index"`
+	Text         string                             `json:"text"`
+	Type         string                             `json:"type"`
+	FilePath     FilePathAnnotationFilePath         `json:"file_path"`
+	JSON         struct {
+		EndIndex     resp.Field
+		FileCitation resp.Field
+		StartIndex   resp.Field
+		Text         resp.Field
+		Type         resp.Field
+		FilePath     resp.Field
+		raw          string
+	} `json:"-"`
 }
 
-// annotationJSON contains the JSON metadata for the struct [Annotation]
-type annotationJSON struct {
-	EndIndex     apijson.Field
-	StartIndex   apijson.Field
-	Text         apijson.Field
-	Type         apijson.Field
-	FileCitation apijson.Field
-	FilePath     apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
-}
-
-func (r annotationJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *Annotation) UnmarshalJSON(data []byte) (err error) {
-	*r = Annotation{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
+// note: this function is generated only for discriminated unions
+func (u AnnotationUnion) Variant() (res struct {
+	OfFileCitation *FileCitationAnnotation
+	OfFilePath     *FilePathAnnotation
+}) {
+	switch u.Type {
+	case "file_citation":
+		v := u.AsFileCitation()
+		res.OfFileCitation = &v
+	case "file_path":
+		v := u.AsFilePath()
+		res.OfFilePath = &v
 	}
-	return apijson.Port(r.union, &r)
+	return
 }
 
-// AsUnion returns a [AnnotationUnion] interface which you can cast to the specific
-// types for more type safety.
-//
-// Possible runtime types of the union are [FileCitationAnnotation],
-// [FilePathAnnotation].
-func (r Annotation) AsUnion() AnnotationUnion {
-	return r.union
+func (u AnnotationUnion) WhichKind() string {
+	return u.Type
 }
 
-// A citation within the message that points to a specific quote from a specific
-// File associated with the assistant or the message. Generated when the assistant
-// uses the "file_search" tool to search files.
-//
-// Union satisfied by [FileCitationAnnotation] or [FilePathAnnotation].
-type AnnotationUnion interface {
-	implementsAnnotation()
+func (u AnnotationUnion) AsFileCitation() (v FileCitationAnnotation) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*AnnotationUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FileCitationAnnotation{}),
-			DiscriminatorValue: "file_citation",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FilePathAnnotation{}),
-			DiscriminatorValue: "file_path",
-		},
-	)
+func (u AnnotationUnion) AsFilePath() (v FilePathAnnotation) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-// Always `file_citation`.
-type AnnotationType string
+func (u AnnotationUnion) RawJSON() string { return u.JSON.raw }
 
-const (
-	AnnotationTypeFileCitation AnnotationType = "file_citation"
-	AnnotationTypeFilePath     AnnotationType = "file_path"
-)
+func (r *AnnotationUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
-func (r AnnotationType) IsKnown() bool {
-	switch r {
-	case AnnotationTypeFileCitation, AnnotationTypeFilePath:
-		return true
+type AnnotationDeltaUnion struct {
+	Index        int64                                   `json:"index"`
+	Type         string                                  `json:"type"`
+	EndIndex     int64                                   `json:"end_index"`
+	FileCitation FileCitationDeltaAnnotationFileCitation `json:"file_citation"`
+	StartIndex   int64                                   `json:"start_index"`
+	Text         string                                  `json:"text"`
+	FilePath     FilePathDeltaAnnotationFilePath         `json:"file_path"`
+	JSON         struct {
+		Index        resp.Field
+		Type         resp.Field
+		EndIndex     resp.Field
+		FileCitation resp.Field
+		StartIndex   resp.Field
+		Text         resp.Field
+		FilePath     resp.Field
+		raw          string
+	} `json:"-"`
+}
+
+// note: this function is generated only for discriminated unions
+func (u AnnotationDeltaUnion) Variant() (res struct {
+	OfFileCitation *FileCitationDeltaAnnotation
+	OfFilePath     *FilePathDeltaAnnotation
+}) {
+	switch u.Type {
+	case "file_citation":
+		v := u.AsFileCitation()
+		res.OfFileCitation = &v
+	case "file_path":
+		v := u.AsFilePath()
+		res.OfFilePath = &v
 	}
-	return false
+	return
 }
 
-// A citation within the message that points to a specific quote from a specific
-// File associated with the assistant or the message. Generated when the assistant
-// uses the "file_search" tool to search files.
-type AnnotationDelta struct {
-	// The index of the annotation in the text content part.
-	Index int64 `json:"index,required"`
-	// Always `file_citation`.
-	Type     AnnotationDeltaType `json:"type,required"`
-	EndIndex int64               `json:"end_index"`
-	// This field can have the runtime type of
-	// [FileCitationDeltaAnnotationFileCitation].
-	FileCitation interface{} `json:"file_citation"`
-	// This field can have the runtime type of [FilePathDeltaAnnotationFilePath].
-	FilePath   interface{} `json:"file_path"`
-	StartIndex int64       `json:"start_index"`
-	// The text in the message content that needs to be replaced.
-	Text  string              `json:"text"`
-	JSON  annotationDeltaJSON `json:"-"`
-	union AnnotationDeltaUnion
+func (u AnnotationDeltaUnion) WhichKind() string {
+	return u.Type
 }
 
-// annotationDeltaJSON contains the JSON metadata for the struct [AnnotationDelta]
-type annotationDeltaJSON struct {
-	Index        apijson.Field
-	Type         apijson.Field
-	EndIndex     apijson.Field
-	FileCitation apijson.Field
-	FilePath     apijson.Field
-	StartIndex   apijson.Field
-	Text         apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
+func (u AnnotationDeltaUnion) AsFileCitation() (v FileCitationDeltaAnnotation) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-func (r annotationDeltaJSON) RawJSON() string {
-	return r.raw
+func (u AnnotationDeltaUnion) AsFilePath() (v FilePathDeltaAnnotation) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-func (r *AnnotationDelta) UnmarshalJSON(data []byte) (err error) {
-	*r = AnnotationDelta{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
+func (u AnnotationDeltaUnion) RawJSON() string { return u.JSON.raw }
 
-// AsUnion returns a [AnnotationDeltaUnion] interface which you can cast to the
-// specific types for more type safety.
-//
-// Possible runtime types of the union are [FileCitationDeltaAnnotation],
-// [FilePathDeltaAnnotation].
-func (r AnnotationDelta) AsUnion() AnnotationDeltaUnion {
-	return r.union
-}
-
-// A citation within the message that points to a specific quote from a specific
-// File associated with the assistant or the message. Generated when the assistant
-// uses the "file_search" tool to search files.
-//
-// Union satisfied by [FileCitationDeltaAnnotation] or [FilePathDeltaAnnotation].
-type AnnotationDeltaUnion interface {
-	implementsAnnotationDelta()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*AnnotationDeltaUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FileCitationDeltaAnnotation{}),
-			DiscriminatorValue: "file_citation",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FilePathDeltaAnnotation{}),
-			DiscriminatorValue: "file_path",
-		},
-	)
-}
-
-// Always `file_citation`.
-type AnnotationDeltaType string
-
-const (
-	AnnotationDeltaTypeFileCitation AnnotationDeltaType = "file_citation"
-	AnnotationDeltaTypeFilePath     AnnotationDeltaType = "file_path"
-)
-
-func (r AnnotationDeltaType) IsKnown() bool {
-	switch r {
-	case AnnotationDeltaTypeFileCitation, AnnotationDeltaTypeFilePath:
-		return true
-	}
-	return false
+func (r *AnnotationDeltaUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A citation within the message that points to a specific quote from a specific
 // File associated with the assistant or the message. Generated when the assistant
 // uses the "file_search" tool to search files.
 type FileCitationAnnotation struct {
-	EndIndex     int64                              `json:"end_index,required"`
-	FileCitation FileCitationAnnotationFileCitation `json:"file_citation,required"`
-	StartIndex   int64                              `json:"start_index,required"`
+	EndIndex     int64                              `json:"end_index,omitzero,required"`
+	FileCitation FileCitationAnnotationFileCitation `json:"file_citation,omitzero,required"`
+	StartIndex   int64                              `json:"start_index,omitzero,required"`
 	// The text in the message content that needs to be replaced.
-	Text string `json:"text,required"`
+	Text string `json:"text,omitzero,required"`
 	// Always `file_citation`.
-	Type FileCitationAnnotationType `json:"type,required"`
-	JSON fileCitationAnnotationJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "file_citation".
+	Type constant.FileCitation `json:"type,required"`
+	JSON struct {
+		EndIndex     resp.Field
+		FileCitation resp.Field
+		StartIndex   resp.Field
+		Text         resp.Field
+		Type         resp.Field
+		raw          string
+	} `json:"-"`
 }
 
-// fileCitationAnnotationJSON contains the JSON metadata for the struct
-// [FileCitationAnnotation]
-type fileCitationAnnotationJSON struct {
-	EndIndex     apijson.Field
-	FileCitation apijson.Field
-	StartIndex   apijson.Field
-	Text         apijson.Field
-	Type         apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
-}
-
-func (r *FileCitationAnnotation) UnmarshalJSON(data []byte) (err error) {
+func (r FileCitationAnnotation) RawJSON() string { return r.JSON.raw }
+func (r *FileCitationAnnotation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-func (r fileCitationAnnotationJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r FileCitationAnnotation) implementsAnnotation() {}
 
 type FileCitationAnnotationFileCitation struct {
 	// The ID of the specific File the citation is from.
-	FileID string                                 `json:"file_id,required"`
-	JSON   fileCitationAnnotationFileCitationJSON `json:"-"`
+	FileID string `json:"file_id,omitzero,required"`
+	JSON   struct {
+		FileID resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// fileCitationAnnotationFileCitationJSON contains the JSON metadata for the struct
-// [FileCitationAnnotationFileCitation]
-type fileCitationAnnotationFileCitationJSON struct {
-	FileID      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FileCitationAnnotationFileCitation) UnmarshalJSON(data []byte) (err error) {
+func (r FileCitationAnnotationFileCitation) RawJSON() string { return r.JSON.raw }
+func (r *FileCitationAnnotationFileCitation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r fileCitationAnnotationFileCitationJSON) RawJSON() string {
-	return r.raw
-}
-
-// Always `file_citation`.
-type FileCitationAnnotationType string
-
-const (
-	FileCitationAnnotationTypeFileCitation FileCitationAnnotationType = "file_citation"
-)
-
-func (r FileCitationAnnotationType) IsKnown() bool {
-	switch r {
-	case FileCitationAnnotationTypeFileCitation:
-		return true
-	}
-	return false
 }
 
 // A citation within the message that points to a specific quote from a specific
@@ -400,257 +288,168 @@ func (r FileCitationAnnotationType) IsKnown() bool {
 // uses the "file_search" tool to search files.
 type FileCitationDeltaAnnotation struct {
 	// The index of the annotation in the text content part.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index,omitzero,required"`
 	// Always `file_citation`.
-	Type         FileCitationDeltaAnnotationType         `json:"type,required"`
-	EndIndex     int64                                   `json:"end_index"`
-	FileCitation FileCitationDeltaAnnotationFileCitation `json:"file_citation"`
-	StartIndex   int64                                   `json:"start_index"`
+	//
+	// This field can be elided, and will be automatically set as "file_citation".
+	Type         constant.FileCitation                   `json:"type,required"`
+	EndIndex     int64                                   `json:"end_index,omitzero"`
+	FileCitation FileCitationDeltaAnnotationFileCitation `json:"file_citation,omitzero"`
+	StartIndex   int64                                   `json:"start_index,omitzero"`
 	// The text in the message content that needs to be replaced.
-	Text string                          `json:"text"`
-	JSON fileCitationDeltaAnnotationJSON `json:"-"`
+	Text string `json:"text,omitzero"`
+	JSON struct {
+		Index        resp.Field
+		Type         resp.Field
+		EndIndex     resp.Field
+		FileCitation resp.Field
+		StartIndex   resp.Field
+		Text         resp.Field
+		raw          string
+	} `json:"-"`
 }
 
-// fileCitationDeltaAnnotationJSON contains the JSON metadata for the struct
-// [FileCitationDeltaAnnotation]
-type fileCitationDeltaAnnotationJSON struct {
-	Index        apijson.Field
-	Type         apijson.Field
-	EndIndex     apijson.Field
-	FileCitation apijson.Field
-	StartIndex   apijson.Field
-	Text         apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
-}
-
-func (r *FileCitationDeltaAnnotation) UnmarshalJSON(data []byte) (err error) {
+func (r FileCitationDeltaAnnotation) RawJSON() string { return r.JSON.raw }
+func (r *FileCitationDeltaAnnotation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r fileCitationDeltaAnnotationJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r FileCitationDeltaAnnotation) implementsAnnotationDelta() {}
-
-// Always `file_citation`.
-type FileCitationDeltaAnnotationType string
-
-const (
-	FileCitationDeltaAnnotationTypeFileCitation FileCitationDeltaAnnotationType = "file_citation"
-)
-
-func (r FileCitationDeltaAnnotationType) IsKnown() bool {
-	switch r {
-	case FileCitationDeltaAnnotationTypeFileCitation:
-		return true
-	}
-	return false
 }
 
 type FileCitationDeltaAnnotationFileCitation struct {
 	// The ID of the specific File the citation is from.
-	FileID string `json:"file_id"`
+	FileID string `json:"file_id,omitzero"`
 	// The specific quote in the file.
-	Quote string                                      `json:"quote"`
-	JSON  fileCitationDeltaAnnotationFileCitationJSON `json:"-"`
+	Quote string `json:"quote,omitzero"`
+	JSON  struct {
+		FileID resp.Field
+		Quote  resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// fileCitationDeltaAnnotationFileCitationJSON contains the JSON metadata for the
-// struct [FileCitationDeltaAnnotationFileCitation]
-type fileCitationDeltaAnnotationFileCitationJSON struct {
-	FileID      apijson.Field
-	Quote       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FileCitationDeltaAnnotationFileCitation) UnmarshalJSON(data []byte) (err error) {
+func (r FileCitationDeltaAnnotationFileCitation) RawJSON() string { return r.JSON.raw }
+func (r *FileCitationDeltaAnnotationFileCitation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r fileCitationDeltaAnnotationFileCitationJSON) RawJSON() string {
-	return r.raw
 }
 
 // A URL for the file that's generated when the assistant used the
 // `code_interpreter` tool to generate a file.
 type FilePathAnnotation struct {
-	EndIndex   int64                      `json:"end_index,required"`
-	FilePath   FilePathAnnotationFilePath `json:"file_path,required"`
-	StartIndex int64                      `json:"start_index,required"`
+	EndIndex   int64                      `json:"end_index,omitzero,required"`
+	FilePath   FilePathAnnotationFilePath `json:"file_path,omitzero,required"`
+	StartIndex int64                      `json:"start_index,omitzero,required"`
 	// The text in the message content that needs to be replaced.
-	Text string `json:"text,required"`
+	Text string `json:"text,omitzero,required"`
 	// Always `file_path`.
-	Type FilePathAnnotationType `json:"type,required"`
-	JSON filePathAnnotationJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "file_path".
+	Type constant.FilePath `json:"type,required"`
+	JSON struct {
+		EndIndex   resp.Field
+		FilePath   resp.Field
+		StartIndex resp.Field
+		Text       resp.Field
+		Type       resp.Field
+		raw        string
+	} `json:"-"`
 }
 
-// filePathAnnotationJSON contains the JSON metadata for the struct
-// [FilePathAnnotation]
-type filePathAnnotationJSON struct {
-	EndIndex    apijson.Field
-	FilePath    apijson.Field
-	StartIndex  apijson.Field
-	Text        apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FilePathAnnotation) UnmarshalJSON(data []byte) (err error) {
+func (r FilePathAnnotation) RawJSON() string { return r.JSON.raw }
+func (r *FilePathAnnotation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-func (r filePathAnnotationJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r FilePathAnnotation) implementsAnnotation() {}
 
 type FilePathAnnotationFilePath struct {
 	// The ID of the file that was generated.
-	FileID string                         `json:"file_id,required"`
-	JSON   filePathAnnotationFilePathJSON `json:"-"`
+	FileID string `json:"file_id,omitzero,required"`
+	JSON   struct {
+		FileID resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// filePathAnnotationFilePathJSON contains the JSON metadata for the struct
-// [FilePathAnnotationFilePath]
-type filePathAnnotationFilePathJSON struct {
-	FileID      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FilePathAnnotationFilePath) UnmarshalJSON(data []byte) (err error) {
+func (r FilePathAnnotationFilePath) RawJSON() string { return r.JSON.raw }
+func (r *FilePathAnnotationFilePath) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r filePathAnnotationFilePathJSON) RawJSON() string {
-	return r.raw
-}
-
-// Always `file_path`.
-type FilePathAnnotationType string
-
-const (
-	FilePathAnnotationTypeFilePath FilePathAnnotationType = "file_path"
-)
-
-func (r FilePathAnnotationType) IsKnown() bool {
-	switch r {
-	case FilePathAnnotationTypeFilePath:
-		return true
-	}
-	return false
 }
 
 // A URL for the file that's generated when the assistant used the
 // `code_interpreter` tool to generate a file.
 type FilePathDeltaAnnotation struct {
 	// The index of the annotation in the text content part.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index,omitzero,required"`
 	// Always `file_path`.
-	Type       FilePathDeltaAnnotationType     `json:"type,required"`
-	EndIndex   int64                           `json:"end_index"`
-	FilePath   FilePathDeltaAnnotationFilePath `json:"file_path"`
-	StartIndex int64                           `json:"start_index"`
+	//
+	// This field can be elided, and will be automatically set as "file_path".
+	Type       constant.FilePath               `json:"type,required"`
+	EndIndex   int64                           `json:"end_index,omitzero"`
+	FilePath   FilePathDeltaAnnotationFilePath `json:"file_path,omitzero"`
+	StartIndex int64                           `json:"start_index,omitzero"`
 	// The text in the message content that needs to be replaced.
-	Text string                      `json:"text"`
-	JSON filePathDeltaAnnotationJSON `json:"-"`
+	Text string `json:"text,omitzero"`
+	JSON struct {
+		Index      resp.Field
+		Type       resp.Field
+		EndIndex   resp.Field
+		FilePath   resp.Field
+		StartIndex resp.Field
+		Text       resp.Field
+		raw        string
+	} `json:"-"`
 }
 
-// filePathDeltaAnnotationJSON contains the JSON metadata for the struct
-// [FilePathDeltaAnnotation]
-type filePathDeltaAnnotationJSON struct {
-	Index       apijson.Field
-	Type        apijson.Field
-	EndIndex    apijson.Field
-	FilePath    apijson.Field
-	StartIndex  apijson.Field
-	Text        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FilePathDeltaAnnotation) UnmarshalJSON(data []byte) (err error) {
+func (r FilePathDeltaAnnotation) RawJSON() string { return r.JSON.raw }
+func (r *FilePathDeltaAnnotation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r filePathDeltaAnnotationJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r FilePathDeltaAnnotation) implementsAnnotationDelta() {}
-
-// Always `file_path`.
-type FilePathDeltaAnnotationType string
-
-const (
-	FilePathDeltaAnnotationTypeFilePath FilePathDeltaAnnotationType = "file_path"
-)
-
-func (r FilePathDeltaAnnotationType) IsKnown() bool {
-	switch r {
-	case FilePathDeltaAnnotationTypeFilePath:
-		return true
-	}
-	return false
 }
 
 type FilePathDeltaAnnotationFilePath struct {
 	// The ID of the file that was generated.
-	FileID string                              `json:"file_id"`
-	JSON   filePathDeltaAnnotationFilePathJSON `json:"-"`
+	FileID string `json:"file_id,omitzero"`
+	JSON   struct {
+		FileID resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// filePathDeltaAnnotationFilePathJSON contains the JSON metadata for the struct
-// [FilePathDeltaAnnotationFilePath]
-type filePathDeltaAnnotationFilePathJSON struct {
-	FileID      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FilePathDeltaAnnotationFilePath) UnmarshalJSON(data []byte) (err error) {
+func (r FilePathDeltaAnnotationFilePath) RawJSON() string { return r.JSON.raw }
+func (r *FilePathDeltaAnnotationFilePath) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r filePathDeltaAnnotationFilePathJSON) RawJSON() string {
-	return r.raw
 }
 
 type ImageFile struct {
 	// The [File](https://platform.openai.com/docs/api-reference/files) ID of the image
 	// in the message content. Set `purpose="vision"` when uploading the File if you
 	// need to later display the file content.
-	FileID string `json:"file_id,required"`
+	FileID string `json:"file_id,omitzero,required"`
 	// Specifies the detail level of the image if specified by the user. `low` uses
 	// fewer tokens, you can opt in to high resolution using `high`.
-	Detail ImageFileDetail `json:"detail"`
-	JSON   imageFileJSON   `json:"-"`
+	//
+	// Any of "auto", "low", "high"
+	Detail string `json:"detail,omitzero"`
+	JSON   struct {
+		FileID resp.Field
+		Detail resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// imageFileJSON contains the JSON metadata for the struct [ImageFile]
-type imageFileJSON struct {
-	FileID      apijson.Field
-	Detail      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ImageFile) UnmarshalJSON(data []byte) (err error) {
+func (r ImageFile) RawJSON() string { return r.JSON.raw }
+func (r *ImageFile) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r imageFileJSON) RawJSON() string {
-	return r.raw
+// ToParam converts this ImageFile to a ImageFileParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ImageFileParam.IsOverridden()
+func (r ImageFile) ToParam() ImageFileParam {
+	return param.Override[ImageFileParam](r.RawJSON())
 }
 
 // Specifies the detail level of the image if specified by the user. `low` uses
 // fewer tokens, you can opt in to high resolution using `high`.
-type ImageFileDetail string
+type ImageFileDetail = string
 
 const (
 	ImageFileDetailAuto ImageFileDetail = "auto"
@@ -658,115 +457,98 @@ const (
 	ImageFileDetailHigh ImageFileDetail = "high"
 )
 
-func (r ImageFileDetail) IsKnown() bool {
-	switch r {
-	case ImageFileDetailAuto, ImageFileDetailLow, ImageFileDetailHigh:
-		return true
-	}
-	return false
-}
-
 type ImageFileParam struct {
 	// The [File](https://platform.openai.com/docs/api-reference/files) ID of the image
 	// in the message content. Set `purpose="vision"` when uploading the File if you
 	// need to later display the file content.
-	FileID param.Field[string] `json:"file_id,required"`
+	FileID param.String `json:"file_id,omitzero,required"`
 	// Specifies the detail level of the image if specified by the user. `low` uses
 	// fewer tokens, you can opt in to high resolution using `high`.
-	Detail param.Field[ImageFileDetail] `json:"detail"`
+	//
+	// Any of "auto", "low", "high"
+	Detail string `json:"detail,omitzero"`
+	apiobject
 }
 
+func (f ImageFileParam) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r ImageFileParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow ImageFileParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // References an image [File](https://platform.openai.com/docs/api-reference/files)
 // in the content of a message.
 type ImageFileContentBlock struct {
-	ImageFile ImageFile `json:"image_file,required"`
+	ImageFile ImageFile `json:"image_file,omitzero,required"`
 	// Always `image_file`.
-	Type ImageFileContentBlockType `json:"type,required"`
-	JSON imageFileContentBlockJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "image_file".
+	Type constant.ImageFile `json:"type,required"`
+	JSON struct {
+		ImageFile resp.Field
+		Type      resp.Field
+		raw       string
+	} `json:"-"`
 }
 
-// imageFileContentBlockJSON contains the JSON metadata for the struct
-// [ImageFileContentBlock]
-type imageFileContentBlockJSON struct {
-	ImageFile   apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ImageFileContentBlock) UnmarshalJSON(data []byte) (err error) {
+func (r ImageFileContentBlock) RawJSON() string { return r.JSON.raw }
+func (r *ImageFileContentBlock) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r imageFileContentBlockJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r ImageFileContentBlock) implementsMessageContent() {}
-
-// Always `image_file`.
-type ImageFileContentBlockType string
-
-const (
-	ImageFileContentBlockTypeImageFile ImageFileContentBlockType = "image_file"
-)
-
-func (r ImageFileContentBlockType) IsKnown() bool {
-	switch r {
-	case ImageFileContentBlockTypeImageFile:
-		return true
-	}
-	return false
+// ToParam converts this ImageFileContentBlock to a ImageFileContentBlockParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ImageFileContentBlockParam.IsOverridden()
+func (r ImageFileContentBlock) ToParam() ImageFileContentBlockParam {
+	return param.Override[ImageFileContentBlockParam](r.RawJSON())
 }
 
 // References an image [File](https://platform.openai.com/docs/api-reference/files)
 // in the content of a message.
 type ImageFileContentBlockParam struct {
-	ImageFile param.Field[ImageFileParam] `json:"image_file,required"`
+	ImageFile ImageFileParam `json:"image_file,omitzero,required"`
 	// Always `image_file`.
-	Type param.Field[ImageFileContentBlockType] `json:"type,required"`
+	//
+	// This field can be elided, and will be automatically set as "image_file".
+	Type constant.ImageFile `json:"type,required"`
+	apiobject
 }
+
+func (f ImageFileContentBlockParam) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r ImageFileContentBlockParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow ImageFileContentBlockParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-func (r ImageFileContentBlockParam) implementsMessageContentPartParamUnion() {}
 
 type ImageFileDelta struct {
 	// Specifies the detail level of the image if specified by the user. `low` uses
 	// fewer tokens, you can opt in to high resolution using `high`.
-	Detail ImageFileDeltaDetail `json:"detail"`
+	//
+	// Any of "auto", "low", "high"
+	Detail string `json:"detail,omitzero"`
 	// The [File](https://platform.openai.com/docs/api-reference/files) ID of the image
 	// in the message content. Set `purpose="vision"` when uploading the File if you
 	// need to later display the file content.
-	FileID string             `json:"file_id"`
-	JSON   imageFileDeltaJSON `json:"-"`
+	FileID string `json:"file_id,omitzero"`
+	JSON   struct {
+		Detail resp.Field
+		FileID resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// imageFileDeltaJSON contains the JSON metadata for the struct [ImageFileDelta]
-type imageFileDeltaJSON struct {
-	Detail      apijson.Field
-	FileID      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ImageFileDelta) UnmarshalJSON(data []byte) (err error) {
+func (r ImageFileDelta) RawJSON() string { return r.JSON.raw }
+func (r *ImageFileDelta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r imageFileDeltaJSON) RawJSON() string {
-	return r.raw
 }
 
 // Specifies the detail level of the image if specified by the user. `low` uses
 // fewer tokens, you can opt in to high resolution using `high`.
-type ImageFileDeltaDetail string
+type ImageFileDeltaDetail = string
 
 const (
 	ImageFileDeltaDetailAuto ImageFileDeltaDetail = "auto"
@@ -774,89 +556,62 @@ const (
 	ImageFileDeltaDetailHigh ImageFileDeltaDetail = "high"
 )
 
-func (r ImageFileDeltaDetail) IsKnown() bool {
-	switch r {
-	case ImageFileDeltaDetailAuto, ImageFileDeltaDetailLow, ImageFileDeltaDetailHigh:
-		return true
-	}
-	return false
-}
-
 // References an image [File](https://platform.openai.com/docs/api-reference/files)
 // in the content of a message.
 type ImageFileDeltaBlock struct {
 	// The index of the content part in the message.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index,omitzero,required"`
 	// Always `image_file`.
-	Type      ImageFileDeltaBlockType `json:"type,required"`
-	ImageFile ImageFileDelta          `json:"image_file"`
-	JSON      imageFileDeltaBlockJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "image_file".
+	Type      constant.ImageFile `json:"type,required"`
+	ImageFile ImageFileDelta     `json:"image_file,omitzero"`
+	JSON      struct {
+		Index     resp.Field
+		Type      resp.Field
+		ImageFile resp.Field
+		raw       string
+	} `json:"-"`
 }
 
-// imageFileDeltaBlockJSON contains the JSON metadata for the struct
-// [ImageFileDeltaBlock]
-type imageFileDeltaBlockJSON struct {
-	Index       apijson.Field
-	Type        apijson.Field
-	ImageFile   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ImageFileDeltaBlock) UnmarshalJSON(data []byte) (err error) {
+func (r ImageFileDeltaBlock) RawJSON() string { return r.JSON.raw }
+func (r *ImageFileDeltaBlock) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r imageFileDeltaBlockJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r ImageFileDeltaBlock) implementsMessageContentDelta() {}
-
-// Always `image_file`.
-type ImageFileDeltaBlockType string
-
-const (
-	ImageFileDeltaBlockTypeImageFile ImageFileDeltaBlockType = "image_file"
-)
-
-func (r ImageFileDeltaBlockType) IsKnown() bool {
-	switch r {
-	case ImageFileDeltaBlockTypeImageFile:
-		return true
-	}
-	return false
 }
 
 type ImageURL struct {
 	// The external URL of the image, must be a supported image types: jpeg, jpg, png,
 	// gif, webp.
-	URL string `json:"url,required" format:"uri"`
+	URL string `json:"url,omitzero,required" format:"uri"`
 	// Specifies the detail level of the image. `low` uses fewer tokens, you can opt in
 	// to high resolution using `high`. Default value is `auto`
-	Detail ImageURLDetail `json:"detail"`
-	JSON   imageURLJSON   `json:"-"`
+	//
+	// Any of "auto", "low", "high"
+	Detail string `json:"detail,omitzero"`
+	JSON   struct {
+		URL    resp.Field
+		Detail resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// imageURLJSON contains the JSON metadata for the struct [ImageURL]
-type imageURLJSON struct {
-	URL         apijson.Field
-	Detail      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ImageURL) UnmarshalJSON(data []byte) (err error) {
+func (r ImageURL) RawJSON() string { return r.JSON.raw }
+func (r *ImageURL) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r imageURLJSON) RawJSON() string {
-	return r.raw
+// ToParam converts this ImageURL to a ImageURLParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ImageURLParam.IsOverridden()
+func (r ImageURL) ToParam() ImageURLParam {
+	return param.Override[ImageURLParam](r.RawJSON())
 }
 
 // Specifies the detail level of the image. `low` uses fewer tokens, you can opt in
 // to high resolution using `high`. Default value is `auto`
-type ImageURLDetail string
+type ImageURLDetail = string
 
 const (
 	ImageURLDetailAuto ImageURLDetail = "auto"
@@ -864,111 +619,94 @@ const (
 	ImageURLDetailHigh ImageURLDetail = "high"
 )
 
-func (r ImageURLDetail) IsKnown() bool {
-	switch r {
-	case ImageURLDetailAuto, ImageURLDetailLow, ImageURLDetailHigh:
-		return true
-	}
-	return false
-}
-
 type ImageURLParam struct {
 	// The external URL of the image, must be a supported image types: jpeg, jpg, png,
 	// gif, webp.
-	URL param.Field[string] `json:"url,required" format:"uri"`
+	URL param.String `json:"url,omitzero,required" format:"uri"`
 	// Specifies the detail level of the image. `low` uses fewer tokens, you can opt in
 	// to high resolution using `high`. Default value is `auto`
-	Detail param.Field[ImageURLDetail] `json:"detail"`
+	//
+	// Any of "auto", "low", "high"
+	Detail string `json:"detail,omitzero"`
+	apiobject
 }
 
+func (f ImageURLParam) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r ImageURLParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow ImageURLParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // References an image URL in the content of a message.
 type ImageURLContentBlock struct {
-	ImageURL ImageURL `json:"image_url,required"`
+	ImageURL ImageURL `json:"image_url,omitzero,required"`
 	// The type of the content part.
-	Type ImageURLContentBlockType `json:"type,required"`
-	JSON imageURLContentBlockJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "image_url".
+	Type constant.ImageURL `json:"type,required"`
+	JSON struct {
+		ImageURL resp.Field
+		Type     resp.Field
+		raw      string
+	} `json:"-"`
 }
 
-// imageURLContentBlockJSON contains the JSON metadata for the struct
-// [ImageURLContentBlock]
-type imageURLContentBlockJSON struct {
-	ImageURL    apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ImageURLContentBlock) UnmarshalJSON(data []byte) (err error) {
+func (r ImageURLContentBlock) RawJSON() string { return r.JSON.raw }
+func (r *ImageURLContentBlock) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r imageURLContentBlockJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r ImageURLContentBlock) implementsMessageContent() {}
-
-// The type of the content part.
-type ImageURLContentBlockType string
-
-const (
-	ImageURLContentBlockTypeImageURL ImageURLContentBlockType = "image_url"
-)
-
-func (r ImageURLContentBlockType) IsKnown() bool {
-	switch r {
-	case ImageURLContentBlockTypeImageURL:
-		return true
-	}
-	return false
+// ToParam converts this ImageURLContentBlock to a ImageURLContentBlockParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ImageURLContentBlockParam.IsOverridden()
+func (r ImageURLContentBlock) ToParam() ImageURLContentBlockParam {
+	return param.Override[ImageURLContentBlockParam](r.RawJSON())
 }
 
 // References an image URL in the content of a message.
 type ImageURLContentBlockParam struct {
-	ImageURL param.Field[ImageURLParam] `json:"image_url,required"`
+	ImageURL ImageURLParam `json:"image_url,omitzero,required"`
 	// The type of the content part.
-	Type param.Field[ImageURLContentBlockType] `json:"type,required"`
+	//
+	// This field can be elided, and will be automatically set as "image_url".
+	Type constant.ImageURL `json:"type,required"`
+	apiobject
 }
+
+func (f ImageURLContentBlockParam) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r ImageURLContentBlockParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow ImageURLContentBlockParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-func (r ImageURLContentBlockParam) implementsMessageContentPartParamUnion() {}
 
 type ImageURLDelta struct {
 	// Specifies the detail level of the image. `low` uses fewer tokens, you can opt in
 	// to high resolution using `high`.
-	Detail ImageURLDeltaDetail `json:"detail"`
+	//
+	// Any of "auto", "low", "high"
+	Detail string `json:"detail,omitzero"`
 	// The URL of the image, must be a supported image types: jpeg, jpg, png, gif,
 	// webp.
-	URL  string            `json:"url"`
-	JSON imageURLDeltaJSON `json:"-"`
+	URL  string `json:"url,omitzero"`
+	JSON struct {
+		Detail resp.Field
+		URL    resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// imageURLDeltaJSON contains the JSON metadata for the struct [ImageURLDelta]
-type imageURLDeltaJSON struct {
-	Detail      apijson.Field
-	URL         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ImageURLDelta) UnmarshalJSON(data []byte) (err error) {
+func (r ImageURLDelta) RawJSON() string { return r.JSON.raw }
+func (r *ImageURLDelta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r imageURLDeltaJSON) RawJSON() string {
-	return r.raw
 }
 
 // Specifies the detail level of the image. `low` uses fewer tokens, you can opt in
 // to high resolution using `high`.
-type ImageURLDeltaDetail string
+type ImageURLDeltaDetail = string
 
 const (
 	ImageURLDeltaDetailAuto ImageURLDeltaDetail = "auto"
@@ -976,296 +714,177 @@ const (
 	ImageURLDeltaDetailHigh ImageURLDeltaDetail = "high"
 )
 
-func (r ImageURLDeltaDetail) IsKnown() bool {
-	switch r {
-	case ImageURLDeltaDetailAuto, ImageURLDeltaDetailLow, ImageURLDeltaDetailHigh:
-		return true
-	}
-	return false
-}
-
 // References an image URL in the content of a message.
 type ImageURLDeltaBlock struct {
 	// The index of the content part in the message.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index,omitzero,required"`
 	// Always `image_url`.
-	Type     ImageURLDeltaBlockType `json:"type,required"`
-	ImageURL ImageURLDelta          `json:"image_url"`
-	JSON     imageURLDeltaBlockJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "image_url".
+	Type     constant.ImageURL `json:"type,required"`
+	ImageURL ImageURLDelta     `json:"image_url,omitzero"`
+	JSON     struct {
+		Index    resp.Field
+		Type     resp.Field
+		ImageURL resp.Field
+		raw      string
+	} `json:"-"`
 }
 
-// imageURLDeltaBlockJSON contains the JSON metadata for the struct
-// [ImageURLDeltaBlock]
-type imageURLDeltaBlockJSON struct {
-	Index       apijson.Field
-	Type        apijson.Field
-	ImageURL    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ImageURLDeltaBlock) UnmarshalJSON(data []byte) (err error) {
+func (r ImageURLDeltaBlock) RawJSON() string { return r.JSON.raw }
+func (r *ImageURLDeltaBlock) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r imageURLDeltaBlockJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r ImageURLDeltaBlock) implementsMessageContentDelta() {}
-
-// Always `image_url`.
-type ImageURLDeltaBlockType string
-
-const (
-	ImageURLDeltaBlockTypeImageURL ImageURLDeltaBlockType = "image_url"
-)
-
-func (r ImageURLDeltaBlockType) IsKnown() bool {
-	switch r {
-	case ImageURLDeltaBlockTypeImageURL:
-		return true
-	}
-	return false
 }
 
 // Represents a message within a
 // [thread](https://platform.openai.com/docs/api-reference/threads).
 type Message struct {
 	// The identifier, which can be referenced in API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id,omitzero,required"`
 	// If applicable, the ID of the
 	// [assistant](https://platform.openai.com/docs/api-reference/assistants) that
 	// authored this message.
-	AssistantID string `json:"assistant_id,required,nullable"`
+	AssistantID string `json:"assistant_id,omitzero,required,nullable"`
 	// A list of files attached to the message, and the tools they were added to.
-	Attachments []MessageAttachment `json:"attachments,required,nullable"`
+	Attachments []MessageAttachment `json:"attachments,omitzero,required,nullable"`
 	// The Unix timestamp (in seconds) for when the message was completed.
-	CompletedAt int64 `json:"completed_at,required,nullable"`
+	CompletedAt int64 `json:"completed_at,omitzero,required,nullable"`
 	// The content of the message in array of text and/or images.
-	Content []MessageContent `json:"content,required"`
+	Content []MessageContentUnion `json:"content,omitzero,required"`
 	// The Unix timestamp (in seconds) for when the message was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at,omitzero,required"`
 	// The Unix timestamp (in seconds) for when the message was marked as incomplete.
-	IncompleteAt int64 `json:"incomplete_at,required,nullable"`
+	IncompleteAt int64 `json:"incomplete_at,omitzero,required,nullable"`
 	// On an incomplete message, details about why the message is incomplete.
-	IncompleteDetails MessageIncompleteDetails `json:"incomplete_details,required,nullable"`
+	IncompleteDetails MessageIncompleteDetails `json:"incomplete_details,omitzero,required,nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.Metadata `json:"metadata,required,nullable"`
+	Metadata shared.Metadata `json:"metadata,omitzero,required,nullable"`
 	// The object type, which is always `thread.message`.
-	Object MessageObject `json:"object,required"`
+	//
+	// This field can be elided, and will be automatically set as "thread.message".
+	Object constant.ThreadMessage `json:"object,required"`
 	// The entity that produced the message. One of `user` or `assistant`.
-	Role MessageRole `json:"role,required"`
+	//
+	// Any of "user", "assistant"
+	Role string `json:"role,omitzero,required"`
 	// The ID of the [run](https://platform.openai.com/docs/api-reference/runs)
 	// associated with the creation of this message. Value is `null` when messages are
 	// created manually using the create message or create thread endpoints.
-	RunID string `json:"run_id,required,nullable"`
+	RunID string `json:"run_id,omitzero,required,nullable"`
 	// The status of the message, which can be either `in_progress`, `incomplete`, or
 	// `completed`.
-	Status MessageStatus `json:"status,required"`
+	//
+	// Any of "in_progress", "incomplete", "completed"
+	Status string `json:"status,omitzero,required"`
 	// The [thread](https://platform.openai.com/docs/api-reference/threads) ID that
 	// this message belongs to.
-	ThreadID string      `json:"thread_id,required"`
-	JSON     messageJSON `json:"-"`
+	ThreadID string `json:"thread_id,omitzero,required"`
+	JSON     struct {
+		ID                resp.Field
+		AssistantID       resp.Field
+		Attachments       resp.Field
+		CompletedAt       resp.Field
+		Content           resp.Field
+		CreatedAt         resp.Field
+		IncompleteAt      resp.Field
+		IncompleteDetails resp.Field
+		Metadata          resp.Field
+		Object            resp.Field
+		Role              resp.Field
+		RunID             resp.Field
+		Status            resp.Field
+		ThreadID          resp.Field
+		raw               string
+	} `json:"-"`
 }
 
-// messageJSON contains the JSON metadata for the struct [Message]
-type messageJSON struct {
-	ID                apijson.Field
-	AssistantID       apijson.Field
-	Attachments       apijson.Field
-	CompletedAt       apijson.Field
-	Content           apijson.Field
-	CreatedAt         apijson.Field
-	IncompleteAt      apijson.Field
-	IncompleteDetails apijson.Field
-	Metadata          apijson.Field
-	Object            apijson.Field
-	Role              apijson.Field
-	RunID             apijson.Field
-	Status            apijson.Field
-	ThreadID          apijson.Field
-	raw               string
-	ExtraFields       map[string]apijson.Field
-}
-
-func (r *Message) UnmarshalJSON(data []byte) (err error) {
+func (r Message) RawJSON() string { return r.JSON.raw }
+func (r *Message) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r messageJSON) RawJSON() string {
-	return r.raw
 }
 
 type MessageAttachment struct {
 	// The ID of the file to attach to the message.
-	FileID string `json:"file_id"`
+	FileID string `json:"file_id,omitzero"`
 	// The tools to add this file to.
-	Tools []MessageAttachmentsTool `json:"tools"`
-	JSON  messageAttachmentJSON    `json:"-"`
+	Tools []MessageAttachmentsToolsUnion `json:"tools,omitzero"`
+	JSON  struct {
+		FileID resp.Field
+		Tools  resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// messageAttachmentJSON contains the JSON metadata for the struct
-// [MessageAttachment]
-type messageAttachmentJSON struct {
-	FileID      apijson.Field
-	Tools       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageAttachment) UnmarshalJSON(data []byte) (err error) {
+func (r MessageAttachment) RawJSON() string { return r.JSON.raw }
+func (r *MessageAttachment) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r messageAttachmentJSON) RawJSON() string {
-	return r.raw
+type MessageAttachmentsToolsUnion struct {
+	Type string `json:"type"`
+	JSON struct {
+		Type resp.Field
+		raw  string
+	} `json:"-"`
 }
 
-type MessageAttachmentsTool struct {
-	// The type of tool being defined: `code_interpreter`
-	Type  MessageAttachmentsToolsType `json:"type,required"`
-	JSON  messageAttachmentsToolJSON  `json:"-"`
-	union MessageAttachmentsToolsUnion
+func (u MessageAttachmentsToolsUnion) AsCodeInterpreterTool() (v CodeInterpreterTool) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-// messageAttachmentsToolJSON contains the JSON metadata for the struct
-// [MessageAttachmentsTool]
-type messageAttachmentsToolJSON struct {
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+func (u MessageAttachmentsToolsUnion) AsFileSearchTool() (v MessageAttachmentsToolsAssistantToolsFileSearchTypeOnly) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-func (r messageAttachmentsToolJSON) RawJSON() string {
-	return r.raw
-}
+func (u MessageAttachmentsToolsUnion) RawJSON() string { return u.JSON.raw }
 
-func (r *MessageAttachmentsTool) UnmarshalJSON(data []byte) (err error) {
-	*r = MessageAttachmentsTool{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [MessageAttachmentsToolsUnion] interface which you can cast to
-// the specific types for more type safety.
-//
-// Possible runtime types of the union are [CodeInterpreterTool],
-// [MessageAttachmentsToolsAssistantToolsFileSearchTypeOnly].
-func (r MessageAttachmentsTool) AsUnion() MessageAttachmentsToolsUnion {
-	return r.union
-}
-
-// Union satisfied by [CodeInterpreterTool] or
-// [MessageAttachmentsToolsAssistantToolsFileSearchTypeOnly].
-type MessageAttachmentsToolsUnion interface {
-	implementsMessageAttachmentsTool()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*MessageAttachmentsToolsUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(CodeInterpreterTool{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(MessageAttachmentsToolsAssistantToolsFileSearchTypeOnly{}),
-		},
-	)
+func (r *MessageAttachmentsToolsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type MessageAttachmentsToolsAssistantToolsFileSearchTypeOnly struct {
 	// The type of tool being defined: `file_search`
-	Type MessageAttachmentsToolsAssistantToolsFileSearchTypeOnlyType `json:"type,required"`
-	JSON messageAttachmentsToolsAssistantToolsFileSearchTypeOnlyJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "file_search".
+	Type constant.FileSearch `json:"type,required"`
+	JSON struct {
+		Type resp.Field
+		raw  string
+	} `json:"-"`
 }
 
-// messageAttachmentsToolsAssistantToolsFileSearchTypeOnlyJSON contains the JSON
-// metadata for the struct
-// [MessageAttachmentsToolsAssistantToolsFileSearchTypeOnly]
-type messageAttachmentsToolsAssistantToolsFileSearchTypeOnlyJSON struct {
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageAttachmentsToolsAssistantToolsFileSearchTypeOnly) UnmarshalJSON(data []byte) (err error) {
+func (r MessageAttachmentsToolsAssistantToolsFileSearchTypeOnly) RawJSON() string { return r.JSON.raw }
+func (r *MessageAttachmentsToolsAssistantToolsFileSearchTypeOnly) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r messageAttachmentsToolsAssistantToolsFileSearchTypeOnlyJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r MessageAttachmentsToolsAssistantToolsFileSearchTypeOnly) implementsMessageAttachmentsTool() {}
-
-// The type of tool being defined: `file_search`
-type MessageAttachmentsToolsAssistantToolsFileSearchTypeOnlyType string
-
-const (
-	MessageAttachmentsToolsAssistantToolsFileSearchTypeOnlyTypeFileSearch MessageAttachmentsToolsAssistantToolsFileSearchTypeOnlyType = "file_search"
-)
-
-func (r MessageAttachmentsToolsAssistantToolsFileSearchTypeOnlyType) IsKnown() bool {
-	switch r {
-	case MessageAttachmentsToolsAssistantToolsFileSearchTypeOnlyTypeFileSearch:
-		return true
-	}
-	return false
-}
-
-// The type of tool being defined: `code_interpreter`
-type MessageAttachmentsToolsType string
-
-const (
-	MessageAttachmentsToolsTypeCodeInterpreter MessageAttachmentsToolsType = "code_interpreter"
-	MessageAttachmentsToolsTypeFileSearch      MessageAttachmentsToolsType = "file_search"
-)
-
-func (r MessageAttachmentsToolsType) IsKnown() bool {
-	switch r {
-	case MessageAttachmentsToolsTypeCodeInterpreter, MessageAttachmentsToolsTypeFileSearch:
-		return true
-	}
-	return false
 }
 
 // On an incomplete message, details about why the message is incomplete.
 type MessageIncompleteDetails struct {
 	// The reason the message is incomplete.
-	Reason MessageIncompleteDetailsReason `json:"reason,required"`
-	JSON   messageIncompleteDetailsJSON   `json:"-"`
+	//
+	// Any of "content_filter", "max_tokens", "run_cancelled", "run_expired",
+	// "run_failed"
+	Reason string `json:"reason,omitzero,required"`
+	JSON   struct {
+		Reason resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// messageIncompleteDetailsJSON contains the JSON metadata for the struct
-// [MessageIncompleteDetails]
-type messageIncompleteDetailsJSON struct {
-	Reason      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageIncompleteDetails) UnmarshalJSON(data []byte) (err error) {
+func (r MessageIncompleteDetails) RawJSON() string { return r.JSON.raw }
+func (r *MessageIncompleteDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r messageIncompleteDetailsJSON) RawJSON() string {
-	return r.raw
-}
-
 // The reason the message is incomplete.
-type MessageIncompleteDetailsReason string
+type MessageIncompleteDetailsReason = string
 
 const (
 	MessageIncompleteDetailsReasonContentFilter MessageIncompleteDetailsReason = "content_filter"
@@ -1275,48 +894,17 @@ const (
 	MessageIncompleteDetailsReasonRunFailed     MessageIncompleteDetailsReason = "run_failed"
 )
 
-func (r MessageIncompleteDetailsReason) IsKnown() bool {
-	switch r {
-	case MessageIncompleteDetailsReasonContentFilter, MessageIncompleteDetailsReasonMaxTokens, MessageIncompleteDetailsReasonRunCancelled, MessageIncompleteDetailsReasonRunExpired, MessageIncompleteDetailsReasonRunFailed:
-		return true
-	}
-	return false
-}
-
-// The object type, which is always `thread.message`.
-type MessageObject string
-
-const (
-	MessageObjectThreadMessage MessageObject = "thread.message"
-)
-
-func (r MessageObject) IsKnown() bool {
-	switch r {
-	case MessageObjectThreadMessage:
-		return true
-	}
-	return false
-}
-
 // The entity that produced the message. One of `user` or `assistant`.
-type MessageRole string
+type MessageRole = string
 
 const (
 	MessageRoleUser      MessageRole = "user"
 	MessageRoleAssistant MessageRole = "assistant"
 )
 
-func (r MessageRole) IsKnown() bool {
-	switch r {
-	case MessageRoleUser, MessageRoleAssistant:
-		return true
-	}
-	return false
-}
-
 // The status of the message, which can be either `in_progress`, `incomplete`, or
 // `completed`.
-type MessageStatus string
+type MessageStatus = string
 
 const (
 	MessageStatusInProgress MessageStatus = "in_progress"
@@ -1324,631 +912,414 @@ const (
 	MessageStatusCompleted  MessageStatus = "completed"
 )
 
-func (r MessageStatus) IsKnown() bool {
-	switch r {
-	case MessageStatusInProgress, MessageStatusIncomplete, MessageStatusCompleted:
-		return true
+type MessageContentUnion struct {
+	ImageFile ImageFile `json:"image_file"`
+	Type      string    `json:"type"`
+	ImageURL  ImageURL  `json:"image_url"`
+	Text      Text      `json:"text"`
+	Refusal   string    `json:"refusal"`
+	JSON      struct {
+		ImageFile resp.Field
+		Type      resp.Field
+		ImageURL  resp.Field
+		Text      resp.Field
+		Refusal   resp.Field
+		raw       string
+	} `json:"-"`
+}
+
+// note: this function is generated only for discriminated unions
+func (u MessageContentUnion) Variant() (res struct {
+	OfImageFile *ImageFileContentBlock
+	OfImageURL  *ImageURLContentBlock
+	OfText      *TextContentBlock
+	OfRefusal   *RefusalContentBlock
+}) {
+	switch u.Type {
+	case "image_file":
+		v := u.AsImageFile()
+		res.OfImageFile = &v
+	case "image_url":
+		v := u.AsImageURL()
+		res.OfImageURL = &v
+	case "text":
+		v := u.AsText()
+		res.OfText = &v
+	case "refusal":
+		v := u.AsRefusal()
+		res.OfRefusal = &v
 	}
-	return false
+	return
 }
 
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
-type MessageContent struct {
-	// Always `image_file`.
-	Type      MessageContentType `json:"type,required"`
-	ImageFile ImageFile          `json:"image_file"`
-	ImageURL  ImageURL           `json:"image_url"`
-	Refusal   string             `json:"refusal"`
-	Text      Text               `json:"text"`
-	JSON      messageContentJSON `json:"-"`
-	union     MessageContentUnion
+func (u MessageContentUnion) WhichKind() string {
+	return u.Type
 }
 
-// messageContentJSON contains the JSON metadata for the struct [MessageContent]
-type messageContentJSON struct {
-	Type        apijson.Field
-	ImageFile   apijson.Field
-	ImageURL    apijson.Field
-	Refusal     apijson.Field
-	Text        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+func (u MessageContentUnion) AsImageFile() (v ImageFileContentBlock) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-func (r messageContentJSON) RawJSON() string {
-	return r.raw
+func (u MessageContentUnion) AsImageURL() (v ImageURLContentBlock) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-func (r *MessageContent) UnmarshalJSON(data []byte) (err error) {
-	*r = MessageContent{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
+func (u MessageContentUnion) AsText() (v TextContentBlock) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-// AsUnion returns a [MessageContentUnion] interface which you can cast to the
-// specific types for more type safety.
-//
-// Possible runtime types of the union are [ImageFileContentBlock],
-// [ImageURLContentBlock], [TextContentBlock], [RefusalContentBlock].
-func (r MessageContent) AsUnion() MessageContentUnion {
-	return r.union
+func (u MessageContentUnion) AsRefusal() (v RefusalContentBlock) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
-//
-// Union satisfied by [ImageFileContentBlock], [ImageURLContentBlock],
-// [TextContentBlock] or [RefusalContentBlock].
-type MessageContentUnion interface {
-	implementsMessageContent()
-}
+func (u MessageContentUnion) RawJSON() string { return u.JSON.raw }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*MessageContentUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ImageFileContentBlock{}),
-			DiscriminatorValue: "image_file",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ImageURLContentBlock{}),
-			DiscriminatorValue: "image_url",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(TextContentBlock{}),
-			DiscriminatorValue: "text",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(RefusalContentBlock{}),
-			DiscriminatorValue: "refusal",
-		},
-	)
-}
-
-// Always `image_file`.
-type MessageContentType string
-
-const (
-	MessageContentTypeImageFile MessageContentType = "image_file"
-	MessageContentTypeImageURL  MessageContentType = "image_url"
-	MessageContentTypeText      MessageContentType = "text"
-	MessageContentTypeRefusal   MessageContentType = "refusal"
-)
-
-func (r MessageContentType) IsKnown() bool {
-	switch r {
-	case MessageContentTypeImageFile, MessageContentTypeImageURL, MessageContentTypeText, MessageContentTypeRefusal:
-		return true
-	}
-	return false
-}
-
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
-type MessageContentDelta struct {
-	// The index of the content part in the message.
-	Index int64 `json:"index,required"`
-	// Always `image_file`.
-	Type      MessageContentDeltaType `json:"type,required"`
-	ImageFile ImageFileDelta          `json:"image_file"`
-	ImageURL  ImageURLDelta           `json:"image_url"`
-	Refusal   string                  `json:"refusal"`
-	Text      TextDelta               `json:"text"`
-	JSON      messageContentDeltaJSON `json:"-"`
-	union     MessageContentDeltaUnion
-}
-
-// messageContentDeltaJSON contains the JSON metadata for the struct
-// [MessageContentDelta]
-type messageContentDeltaJSON struct {
-	Index       apijson.Field
-	Type        apijson.Field
-	ImageFile   apijson.Field
-	ImageURL    apijson.Field
-	Refusal     apijson.Field
-	Text        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r messageContentDeltaJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *MessageContentDelta) UnmarshalJSON(data []byte) (err error) {
-	*r = MessageContentDelta{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [MessageContentDeltaUnion] interface which you can cast to the
-// specific types for more type safety.
-//
-// Possible runtime types of the union are [ImageFileDeltaBlock], [TextDeltaBlock],
-// [RefusalDeltaBlock], [ImageURLDeltaBlock].
-func (r MessageContentDelta) AsUnion() MessageContentDeltaUnion {
-	return r.union
-}
-
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
-//
-// Union satisfied by [ImageFileDeltaBlock], [TextDeltaBlock], [RefusalDeltaBlock]
-// or [ImageURLDeltaBlock].
-type MessageContentDeltaUnion interface {
-	implementsMessageContentDelta()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*MessageContentDeltaUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ImageFileDeltaBlock{}),
-			DiscriminatorValue: "image_file",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(TextDeltaBlock{}),
-			DiscriminatorValue: "text",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(RefusalDeltaBlock{}),
-			DiscriminatorValue: "refusal",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ImageURLDeltaBlock{}),
-			DiscriminatorValue: "image_url",
-		},
-	)
-}
-
-// Always `image_file`.
-type MessageContentDeltaType string
-
-const (
-	MessageContentDeltaTypeImageFile MessageContentDeltaType = "image_file"
-	MessageContentDeltaTypeText      MessageContentDeltaType = "text"
-	MessageContentDeltaTypeRefusal   MessageContentDeltaType = "refusal"
-	MessageContentDeltaTypeImageURL  MessageContentDeltaType = "image_url"
-)
-
-func (r MessageContentDeltaType) IsKnown() bool {
-	switch r {
-	case MessageContentDeltaTypeImageFile, MessageContentDeltaTypeText, MessageContentDeltaTypeRefusal, MessageContentDeltaTypeImageURL:
-		return true
-	}
-	return false
-}
-
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
-type MessageContentPartParam struct {
-	// Always `image_file`.
-	Type      param.Field[MessageContentPartParamType] `json:"type,required"`
-	ImageFile param.Field[ImageFileParam]              `json:"image_file"`
-	ImageURL  param.Field[ImageURLParam]               `json:"image_url"`
-	// Text content to be sent to the model
-	Text param.Field[string] `json:"text"`
-}
-
-func (r MessageContentPartParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r MessageContentPartParam) implementsMessageContentPartParamUnion() {}
-
-// References an image [File](https://platform.openai.com/docs/api-reference/files)
-// in the content of a message.
-//
-// Satisfied by [ImageFileContentBlockParam], [ImageURLContentBlockParam],
-// [TextContentBlockParam], [MessageContentPartParam].
-type MessageContentPartParamUnion interface {
-	implementsMessageContentPartParamUnion()
-}
-
-// Always `image_file`.
-type MessageContentPartParamType string
-
-const (
-	MessageContentPartParamTypeImageFile MessageContentPartParamType = "image_file"
-	MessageContentPartParamTypeImageURL  MessageContentPartParamType = "image_url"
-	MessageContentPartParamTypeText      MessageContentPartParamType = "text"
-)
-
-func (r MessageContentPartParamType) IsKnown() bool {
-	switch r {
-	case MessageContentPartParamTypeImageFile, MessageContentPartParamTypeImageURL, MessageContentPartParamTypeText:
-		return true
-	}
-	return false
-}
-
-type MessageDeleted struct {
-	ID      string               `json:"id,required"`
-	Deleted bool                 `json:"deleted,required"`
-	Object  MessageDeletedObject `json:"object,required"`
-	JSON    messageDeletedJSON   `json:"-"`
-}
-
-// messageDeletedJSON contains the JSON metadata for the struct [MessageDeleted]
-type messageDeletedJSON struct {
-	ID          apijson.Field
-	Deleted     apijson.Field
-	Object      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageDeleted) UnmarshalJSON(data []byte) (err error) {
+func (r *MessageContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r messageDeletedJSON) RawJSON() string {
-	return r.raw
+type MessageContentDeltaUnion struct {
+	Index     int64          `json:"index"`
+	Type      string         `json:"type"`
+	ImageFile ImageFileDelta `json:"image_file"`
+	Text      TextDelta      `json:"text"`
+	Refusal   string         `json:"refusal"`
+	ImageURL  ImageURLDelta  `json:"image_url"`
+	JSON      struct {
+		Index     resp.Field
+		Type      resp.Field
+		ImageFile resp.Field
+		Text      resp.Field
+		Refusal   resp.Field
+		ImageURL  resp.Field
+		raw       string
+	} `json:"-"`
 }
 
-type MessageDeletedObject string
-
-const (
-	MessageDeletedObjectThreadMessageDeleted MessageDeletedObject = "thread.message.deleted"
-)
-
-func (r MessageDeletedObject) IsKnown() bool {
-	switch r {
-	case MessageDeletedObjectThreadMessageDeleted:
-		return true
+// note: this function is generated only for discriminated unions
+func (u MessageContentDeltaUnion) Variant() (res struct {
+	OfImageFile *ImageFileDeltaBlock
+	OfText      *TextDeltaBlock
+	OfRefusal   *RefusalDeltaBlock
+	OfImageURL  *ImageURLDeltaBlock
+}) {
+	switch u.Type {
+	case "image_file":
+		v := u.AsImageFile()
+		res.OfImageFile = &v
+	case "text":
+		v := u.AsText()
+		res.OfText = &v
+	case "refusal":
+		v := u.AsRefusal()
+		res.OfRefusal = &v
+	case "image_url":
+		v := u.AsImageURL()
+		res.OfImageURL = &v
 	}
-	return false
+	return
+}
+
+func (u MessageContentDeltaUnion) WhichKind() string {
+	return u.Type
+}
+
+func (u MessageContentDeltaUnion) AsImageFile() (v ImageFileDeltaBlock) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u MessageContentDeltaUnion) AsText() (v TextDeltaBlock) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u MessageContentDeltaUnion) AsRefusal() (v RefusalDeltaBlock) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u MessageContentDeltaUnion) AsImageURL() (v ImageURLDeltaBlock) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u MessageContentDeltaUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *MessageContentDeltaUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewMessageContentPartParamOfImageFile(imageFile ImageFileParam) MessageContentPartParamUnion {
+	var image_file ImageFileContentBlockParam
+	image_file.ImageFile = imageFile
+	return MessageContentPartParamUnion{OfImageFile: &image_file}
+}
+
+func NewMessageContentPartParamOfImageURL(imageURL ImageURLParam) MessageContentPartParamUnion {
+	var image_url ImageURLContentBlockParam
+	image_url.ImageURL = imageURL
+	return MessageContentPartParamUnion{OfImageURL: &image_url}
+}
+
+func NewMessageContentPartParamOfText(text string) MessageContentPartParamUnion {
+	var variant TextContentBlockParam
+	variant.Text = newString(text)
+	return MessageContentPartParamUnion{OfText: &variant}
+}
+
+// Only one field can be non-zero
+type MessageContentPartParamUnion struct {
+	OfImageFile *ImageFileContentBlockParam
+	OfImageURL  *ImageURLContentBlockParam
+	OfText      *TextContentBlockParam
+	apiunion
+}
+
+func (u MessageContentPartParamUnion) IsMissing() bool { return param.IsOmitted(u) || u.IsNull() }
+
+func (u MessageContentPartParamUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[MessageContentPartParamUnion](u.OfImageFile, u.OfImageURL, u.OfText)
+}
+
+func (u MessageContentPartParamUnion) GetImageFile() *ImageFileParam {
+	if vt := u.OfImageFile; vt != nil {
+		return &vt.ImageFile
+	}
+	return nil
+}
+
+func (u MessageContentPartParamUnion) GetImageURL() *ImageURLParam {
+	if vt := u.OfImageURL; vt != nil {
+		return &vt.ImageURL
+	}
+	return nil
+}
+
+func (u MessageContentPartParamUnion) GetText() *string {
+	if vt := u.OfText; vt != nil && !vt.Text.IsOmitted() {
+		return &vt.Text.V
+	}
+	return nil
+}
+
+func (u MessageContentPartParamUnion) GetType() *string {
+	if vt := u.OfImageFile; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfImageURL; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfText; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+type MessageDeleted struct {
+	ID      string `json:"id,omitzero,required"`
+	Deleted bool   `json:"deleted,omitzero,required"`
+	// This field can be elided, and will be automatically set as
+	// "thread.message.deleted".
+	Object constant.ThreadMessageDeleted `json:"object,required"`
+	JSON   struct {
+		ID      resp.Field
+		Deleted resp.Field
+		Object  resp.Field
+		raw     string
+	} `json:"-"`
+}
+
+func (r MessageDeleted) RawJSON() string { return r.JSON.raw }
+func (r *MessageDeleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // The delta containing the fields that have changed on the Message.
 type MessageDelta struct {
 	// The content of the message in array of text and/or images.
-	Content []MessageContentDelta `json:"content"`
+	Content []MessageContentDeltaUnion `json:"content,omitzero"`
 	// The entity that produced the message. One of `user` or `assistant`.
-	Role MessageDeltaRole `json:"role"`
-	JSON messageDeltaJSON `json:"-"`
+	//
+	// Any of "user", "assistant"
+	Role string `json:"role,omitzero"`
+	JSON struct {
+		Content resp.Field
+		Role    resp.Field
+		raw     string
+	} `json:"-"`
 }
 
-// messageDeltaJSON contains the JSON metadata for the struct [MessageDelta]
-type messageDeltaJSON struct {
-	Content     apijson.Field
-	Role        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageDelta) UnmarshalJSON(data []byte) (err error) {
+func (r MessageDelta) RawJSON() string { return r.JSON.raw }
+func (r *MessageDelta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r messageDeltaJSON) RawJSON() string {
-	return r.raw
-}
-
 // The entity that produced the message. One of `user` or `assistant`.
-type MessageDeltaRole string
+type MessageDeltaRole = string
 
 const (
 	MessageDeltaRoleUser      MessageDeltaRole = "user"
 	MessageDeltaRoleAssistant MessageDeltaRole = "assistant"
 )
 
-func (r MessageDeltaRole) IsKnown() bool {
-	switch r {
-	case MessageDeltaRoleUser, MessageDeltaRoleAssistant:
-		return true
-	}
-	return false
-}
-
 // Represents a message delta i.e. any changed fields on a message during
 // streaming.
 type MessageDeltaEvent struct {
 	// The identifier of the message, which can be referenced in API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id,omitzero,required"`
 	// The delta containing the fields that have changed on the Message.
-	Delta MessageDelta `json:"delta,required"`
+	Delta MessageDelta `json:"delta,omitzero,required"`
 	// The object type, which is always `thread.message.delta`.
-	Object MessageDeltaEventObject `json:"object,required"`
-	JSON   messageDeltaEventJSON   `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as
+	// "thread.message.delta".
+	Object constant.ThreadMessageDelta `json:"object,required"`
+	JSON   struct {
+		ID     resp.Field
+		Delta  resp.Field
+		Object resp.Field
+		raw    string
+	} `json:"-"`
 }
 
-// messageDeltaEventJSON contains the JSON metadata for the struct
-// [MessageDeltaEvent]
-type messageDeltaEventJSON struct {
-	ID          apijson.Field
-	Delta       apijson.Field
-	Object      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *MessageDeltaEvent) UnmarshalJSON(data []byte) (err error) {
+func (r MessageDeltaEvent) RawJSON() string { return r.JSON.raw }
+func (r *MessageDeltaEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r messageDeltaEventJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always `thread.message.delta`.
-type MessageDeltaEventObject string
-
-const (
-	MessageDeltaEventObjectThreadMessageDelta MessageDeltaEventObject = "thread.message.delta"
-)
-
-func (r MessageDeltaEventObject) IsKnown() bool {
-	switch r {
-	case MessageDeltaEventObjectThreadMessageDelta:
-		return true
-	}
-	return false
 }
 
 // The refusal content generated by the assistant.
 type RefusalContentBlock struct {
-	Refusal string `json:"refusal,required"`
+	Refusal string `json:"refusal,omitzero,required"`
 	// Always `refusal`.
-	Type RefusalContentBlockType `json:"type,required"`
-	JSON refusalContentBlockJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "refusal".
+	Type constant.Refusal `json:"type,required"`
+	JSON struct {
+		Refusal resp.Field
+		Type    resp.Field
+		raw     string
+	} `json:"-"`
 }
 
-// refusalContentBlockJSON contains the JSON metadata for the struct
-// [RefusalContentBlock]
-type refusalContentBlockJSON struct {
-	Refusal     apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *RefusalContentBlock) UnmarshalJSON(data []byte) (err error) {
+func (r RefusalContentBlock) RawJSON() string { return r.JSON.raw }
+func (r *RefusalContentBlock) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r refusalContentBlockJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r RefusalContentBlock) implementsMessageContent() {}
-
-// Always `refusal`.
-type RefusalContentBlockType string
-
-const (
-	RefusalContentBlockTypeRefusal RefusalContentBlockType = "refusal"
-)
-
-func (r RefusalContentBlockType) IsKnown() bool {
-	switch r {
-	case RefusalContentBlockTypeRefusal:
-		return true
-	}
-	return false
 }
 
 // The refusal content that is part of a message.
 type RefusalDeltaBlock struct {
 	// The index of the refusal part in the message.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index,omitzero,required"`
 	// Always `refusal`.
-	Type    RefusalDeltaBlockType `json:"type,required"`
-	Refusal string                `json:"refusal"`
-	JSON    refusalDeltaBlockJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "refusal".
+	Type    constant.Refusal `json:"type,required"`
+	Refusal string           `json:"refusal,omitzero"`
+	JSON    struct {
+		Index   resp.Field
+		Type    resp.Field
+		Refusal resp.Field
+		raw     string
+	} `json:"-"`
 }
 
-// refusalDeltaBlockJSON contains the JSON metadata for the struct
-// [RefusalDeltaBlock]
-type refusalDeltaBlockJSON struct {
-	Index       apijson.Field
-	Type        apijson.Field
-	Refusal     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *RefusalDeltaBlock) UnmarshalJSON(data []byte) (err error) {
+func (r RefusalDeltaBlock) RawJSON() string { return r.JSON.raw }
+func (r *RefusalDeltaBlock) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r refusalDeltaBlockJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r RefusalDeltaBlock) implementsMessageContentDelta() {}
-
-// Always `refusal`.
-type RefusalDeltaBlockType string
-
-const (
-	RefusalDeltaBlockTypeRefusal RefusalDeltaBlockType = "refusal"
-)
-
-func (r RefusalDeltaBlockType) IsKnown() bool {
-	switch r {
-	case RefusalDeltaBlockTypeRefusal:
-		return true
-	}
-	return false
 }
 
 type Text struct {
-	Annotations []Annotation `json:"annotations,required"`
+	Annotations []AnnotationUnion `json:"annotations,omitzero,required"`
 	// The data that makes up the text.
-	Value string   `json:"value,required"`
-	JSON  textJSON `json:"-"`
+	Value string `json:"value,omitzero,required"`
+	JSON  struct {
+		Annotations resp.Field
+		Value       resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// textJSON contains the JSON metadata for the struct [Text]
-type textJSON struct {
-	Annotations apijson.Field
-	Value       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Text) UnmarshalJSON(data []byte) (err error) {
+func (r Text) RawJSON() string { return r.JSON.raw }
+func (r *Text) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r textJSON) RawJSON() string {
-	return r.raw
 }
 
 // The text content that is part of a message.
 type TextContentBlock struct {
-	Text Text `json:"text,required"`
+	Text Text `json:"text,omitzero,required"`
 	// Always `text`.
-	Type TextContentBlockType `json:"type,required"`
-	JSON textContentBlockJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "text".
+	Type constant.Text `json:"type,required"`
+	JSON struct {
+		Text resp.Field
+		Type resp.Field
+		raw  string
+	} `json:"-"`
 }
 
-// textContentBlockJSON contains the JSON metadata for the struct
-// [TextContentBlock]
-type textContentBlockJSON struct {
-	Text        apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *TextContentBlock) UnmarshalJSON(data []byte) (err error) {
+func (r TextContentBlock) RawJSON() string { return r.JSON.raw }
+func (r *TextContentBlock) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r textContentBlockJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r TextContentBlock) implementsMessageContent() {}
-
-// Always `text`.
-type TextContentBlockType string
-
-const (
-	TextContentBlockTypeText TextContentBlockType = "text"
-)
-
-func (r TextContentBlockType) IsKnown() bool {
-	switch r {
-	case TextContentBlockTypeText:
-		return true
-	}
-	return false
 }
 
 // The text content that is part of a message.
 type TextContentBlockParam struct {
 	// Text content to be sent to the model
-	Text param.Field[string] `json:"text,required"`
+	Text param.String `json:"text,omitzero,required"`
 	// Always `text`.
-	Type param.Field[TextContentBlockParamType] `json:"type,required"`
+	//
+	// This field can be elided, and will be automatically set as "text".
+	Type constant.Text `json:"type,required"`
+	apiobject
 }
+
+func (f TextContentBlockParam) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r TextContentBlockParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r TextContentBlockParam) implementsMessageContentPartParamUnion() {}
-
-// Always `text`.
-type TextContentBlockParamType string
-
-const (
-	TextContentBlockParamTypeText TextContentBlockParamType = "text"
-)
-
-func (r TextContentBlockParamType) IsKnown() bool {
-	switch r {
-	case TextContentBlockParamTypeText:
-		return true
-	}
-	return false
+	type shadow TextContentBlockParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type TextDelta struct {
-	Annotations []AnnotationDelta `json:"annotations"`
+	Annotations []AnnotationDeltaUnion `json:"annotations,omitzero"`
 	// The data that makes up the text.
-	Value string        `json:"value"`
-	JSON  textDeltaJSON `json:"-"`
+	Value string `json:"value,omitzero"`
+	JSON  struct {
+		Annotations resp.Field
+		Value       resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// textDeltaJSON contains the JSON metadata for the struct [TextDelta]
-type textDeltaJSON struct {
-	Annotations apijson.Field
-	Value       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *TextDelta) UnmarshalJSON(data []byte) (err error) {
+func (r TextDelta) RawJSON() string { return r.JSON.raw }
+func (r *TextDelta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r textDeltaJSON) RawJSON() string {
-	return r.raw
 }
 
 // The text content that is part of a message.
 type TextDeltaBlock struct {
 	// The index of the content part in the message.
-	Index int64 `json:"index,required"`
+	Index int64 `json:"index,omitzero,required"`
 	// Always `text`.
-	Type TextDeltaBlockType `json:"type,required"`
-	Text TextDelta          `json:"text"`
-	JSON textDeltaBlockJSON `json:"-"`
+	//
+	// This field can be elided, and will be automatically set as "text".
+	Type constant.Text `json:"type,required"`
+	Text TextDelta     `json:"text,omitzero"`
+	JSON struct {
+		Index resp.Field
+		Type  resp.Field
+		Text  resp.Field
+		raw   string
+	} `json:"-"`
 }
 
-// textDeltaBlockJSON contains the JSON metadata for the struct [TextDeltaBlock]
-type textDeltaBlockJSON struct {
-	Index       apijson.Field
-	Type        apijson.Field
-	Text        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *TextDeltaBlock) UnmarshalJSON(data []byte) (err error) {
+func (r TextDeltaBlock) RawJSON() string { return r.JSON.raw }
+func (r *TextDeltaBlock) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r textDeltaBlockJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r TextDeltaBlock) implementsMessageContentDelta() {}
-
-// Always `text`.
-type TextDeltaBlockType string
-
-const (
-	TextDeltaBlockTypeText TextDeltaBlockType = "text"
-)
-
-func (r TextDeltaBlockType) IsKnown() bool {
-	switch r {
-	case TextDeltaBlockTypeText:
-		return true
-	}
-	return false
 }
 
 type BetaThreadMessageNewParams struct {
@@ -1956,27 +1327,33 @@ type BetaThreadMessageNewParams struct {
 	// images can be passed with `image_url` or `image_file`. Image types are only
 	// supported on
 	// [Vision-compatible models](https://platform.openai.com/docs/models).
-	Content param.Field[[]MessageContentPartParamUnion] `json:"content,required"`
+	Content []MessageContentPartParamUnion `json:"content,omitzero,required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
 	//   - `user`: Indicates the message is sent by an actual user and should be used in
 	//     most cases to represent user-generated messages.
 	//   - `assistant`: Indicates the message is generated by the assistant. Use this
 	//     value to insert messages from the assistant into the conversation.
-	Role param.Field[BetaThreadMessageNewParamsRole] `json:"role,required"`
+	//
+	// Any of "user", "assistant"
+	Role BetaThreadMessageNewParamsRole `json:"role,omitzero,required"`
 	// A list of files attached to the message, and the tools they should be added to.
-	Attachments param.Field[[]BetaThreadMessageNewParamsAttachment] `json:"attachments"`
+	Attachments []BetaThreadMessageNewParamsAttachment `json:"attachments,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	apiobject
 }
 
+func (f BetaThreadMessageNewParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r BetaThreadMessageNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow BetaThreadMessageNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // The role of the entity that is creating the message. Allowed values include:
@@ -1992,85 +1369,62 @@ const (
 	BetaThreadMessageNewParamsRoleAssistant BetaThreadMessageNewParamsRole = "assistant"
 )
 
-func (r BetaThreadMessageNewParamsRole) IsKnown() bool {
-	switch r {
-	case BetaThreadMessageNewParamsRoleUser, BetaThreadMessageNewParamsRoleAssistant:
-		return true
-	}
-	return false
-}
-
 type BetaThreadMessageNewParamsAttachment struct {
 	// The ID of the file to attach to the message.
-	FileID param.Field[string] `json:"file_id"`
+	FileID param.String `json:"file_id,omitzero"`
 	// The tools to add this file to.
-	Tools param.Field[[]BetaThreadMessageNewParamsAttachmentsToolUnion] `json:"tools"`
+	Tools []BetaThreadMessageNewParamsAttachmentsToolUnion `json:"tools,omitzero"`
+	apiobject
+}
+
+func (f BetaThreadMessageNewParamsAttachment) IsMissing() bool {
+	return param.IsOmitted(f) || f.IsNull()
 }
 
 func (r BetaThreadMessageNewParamsAttachment) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow BetaThreadMessageNewParamsAttachment
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
-type BetaThreadMessageNewParamsAttachmentsTool struct {
-	// The type of tool being defined: `code_interpreter`
-	Type param.Field[BetaThreadMessageNewParamsAttachmentsToolsType] `json:"type,required"`
+// Only one field can be non-zero
+type BetaThreadMessageNewParamsAttachmentsToolUnion struct {
+	OfCodeInterpreter *CodeInterpreterToolParam
+	OfFileSearch      *BetaThreadMessageNewParamsAttachmentsToolsFileSearch
+	apiunion
 }
 
-func (r BetaThreadMessageNewParamsAttachmentsTool) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+func (u BetaThreadMessageNewParamsAttachmentsToolUnion) IsMissing() bool {
+	return param.IsOmitted(u) || u.IsNull()
 }
 
-func (r BetaThreadMessageNewParamsAttachmentsTool) implementsBetaThreadMessageNewParamsAttachmentsToolUnion() {
+func (u BetaThreadMessageNewParamsAttachmentsToolUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[BetaThreadMessageNewParamsAttachmentsToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
 }
 
-// Satisfied by [CodeInterpreterToolParam],
-// [BetaThreadMessageNewParamsAttachmentsToolsFileSearch],
-// [BetaThreadMessageNewParamsAttachmentsTool].
-type BetaThreadMessageNewParamsAttachmentsToolUnion interface {
-	implementsBetaThreadMessageNewParamsAttachmentsToolUnion()
+func (u BetaThreadMessageNewParamsAttachmentsToolUnion) GetType() *string {
+	if vt := u.OfCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
 }
 
 type BetaThreadMessageNewParamsAttachmentsToolsFileSearch struct {
 	// The type of tool being defined: `file_search`
-	Type param.Field[BetaThreadMessageNewParamsAttachmentsToolsFileSearchType] `json:"type,required"`
+	//
+	// This field can be elided, and will be automatically set as "file_search".
+	Type constant.FileSearch `json:"type,required"`
+	apiobject
+}
+
+func (f BetaThreadMessageNewParamsAttachmentsToolsFileSearch) IsMissing() bool {
+	return param.IsOmitted(f) || f.IsNull()
 }
 
 func (r BetaThreadMessageNewParamsAttachmentsToolsFileSearch) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaThreadMessageNewParamsAttachmentsToolsFileSearch) implementsBetaThreadMessageNewParamsAttachmentsToolUnion() {
-}
-
-// The type of tool being defined: `file_search`
-type BetaThreadMessageNewParamsAttachmentsToolsFileSearchType string
-
-const (
-	BetaThreadMessageNewParamsAttachmentsToolsFileSearchTypeFileSearch BetaThreadMessageNewParamsAttachmentsToolsFileSearchType = "file_search"
-)
-
-func (r BetaThreadMessageNewParamsAttachmentsToolsFileSearchType) IsKnown() bool {
-	switch r {
-	case BetaThreadMessageNewParamsAttachmentsToolsFileSearchTypeFileSearch:
-		return true
-	}
-	return false
-}
-
-// The type of tool being defined: `code_interpreter`
-type BetaThreadMessageNewParamsAttachmentsToolsType string
-
-const (
-	BetaThreadMessageNewParamsAttachmentsToolsTypeCodeInterpreter BetaThreadMessageNewParamsAttachmentsToolsType = "code_interpreter"
-	BetaThreadMessageNewParamsAttachmentsToolsTypeFileSearch      BetaThreadMessageNewParamsAttachmentsToolsType = "file_search"
-)
-
-func (r BetaThreadMessageNewParamsAttachmentsToolsType) IsKnown() bool {
-	switch r {
-	case BetaThreadMessageNewParamsAttachmentsToolsTypeCodeInterpreter, BetaThreadMessageNewParamsAttachmentsToolsTypeFileSearch:
-		return true
-	}
-	return false
+	type shadow BetaThreadMessageNewParamsAttachmentsToolsFileSearch
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type BetaThreadMessageUpdateParams struct {
@@ -2080,11 +1434,15 @@ type BetaThreadMessageUpdateParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	apiobject
 }
 
+func (f BetaThreadMessageUpdateParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r BetaThreadMessageUpdateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow BetaThreadMessageUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type BetaThreadMessageListParams struct {
@@ -2092,21 +1450,26 @@ type BetaThreadMessageListParams struct {
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
 	// fetch the next page of the list.
-	After param.Field[string] `query:"after"`
+	After param.String `query:"after,omitzero"`
 	// A cursor for use in pagination. `before` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// starting with obj_foo, your subsequent call can include before=obj_foo in order
 	// to fetch the previous page of the list.
-	Before param.Field[string] `query:"before"`
+	Before param.String `query:"before,omitzero"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
-	Limit param.Field[int64] `query:"limit"`
+	Limit param.Int `query:"limit,omitzero"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
-	Order param.Field[BetaThreadMessageListParamsOrder] `query:"order"`
+	//
+	// Any of "asc", "desc"
+	Order BetaThreadMessageListParamsOrder `query:"order,omitzero"`
 	// Filter messages by the run ID that generated them.
-	RunID param.Field[string] `query:"run_id"`
+	RunID param.String `query:"run_id,omitzero"`
+	apiobject
 }
+
+func (f BetaThreadMessageListParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [BetaThreadMessageListParams]'s query parameters as
 // `url.Values`.
@@ -2125,11 +1488,3 @@ const (
 	BetaThreadMessageListParamsOrderAsc  BetaThreadMessageListParamsOrder = "asc"
 	BetaThreadMessageListParamsOrderDesc BetaThreadMessageListParamsOrder = "desc"
 )
-
-func (r BetaThreadMessageListParamsOrder) IsKnown() bool {
-	switch r {
-	case BetaThreadMessageListParamsOrderAsc, BetaThreadMessageListParamsOrderDesc:
-		return true
-	}
-	return false
-}

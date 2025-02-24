@@ -29,10 +29,10 @@ func TestBetaVectorStoreFileNewWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"vs_abc123",
 		openai.BetaVectorStoreFileNewParams{
-			FileID: openai.F("file_id"),
-			ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
-				Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
-			}),
+			FileID: openai.String("file_id"),
+			ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
+				OfAuto: &openai.AutoFileChunkingStrategyParam{},
+			},
 		},
 	)
 	if err != nil {
@@ -86,11 +86,11 @@ func TestBetaVectorStoreFileListWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"vector_store_id",
 		openai.BetaVectorStoreFileListParams{
-			After:  openai.F("after"),
-			Before: openai.F("before"),
-			Filter: openai.F(openai.BetaVectorStoreFileListParamsFilterInProgress),
-			Limit:  openai.F(int64(0)),
-			Order:  openai.F(openai.BetaVectorStoreFileListParamsOrderAsc),
+			After:  openai.String("after"),
+			Before: openai.String("before"),
+			Filter: openai.BetaVectorStoreFileListParamsFilterInProgress,
+			Limit:  openai.Int(0),
+			Order:  openai.BetaVectorStoreFileListParamsOrderAsc,
 		},
 	)
 	if err != nil {

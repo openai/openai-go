@@ -27,18 +27,17 @@ func TestBetaVectorStoreNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.VectorStores.New(context.TODO(), openai.BetaVectorStoreNewParams{
-		ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
-			Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
-		}),
-		ExpiresAfter: openai.F(openai.BetaVectorStoreNewParamsExpiresAfter{
-			Anchor: openai.F(openai.BetaVectorStoreNewParamsExpiresAfterAnchorLastActiveAt),
-			Days:   openai.F(int64(1)),
-		}),
-		FileIDs: openai.F([]string{"string"}),
-		Metadata: openai.F(shared.MetadataParam{
+		ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
+			OfAuto: &openai.AutoFileChunkingStrategyParam{},
+		},
+		ExpiresAfter: openai.BetaVectorStoreNewParamsExpiresAfter{
+			Days: openai.Int(1),
+		},
+		FileIDs: []string{"string"},
+		Metadata: shared.MetadataParam{
 			"foo": "string",
-		}),
-		Name: openai.F("name"),
+		},
+		Name: openai.String("name"),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -87,14 +86,13 @@ func TestBetaVectorStoreUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"vector_store_id",
 		openai.BetaVectorStoreUpdateParams{
-			ExpiresAfter: openai.F(openai.BetaVectorStoreUpdateParamsExpiresAfter{
-				Anchor: openai.F(openai.BetaVectorStoreUpdateParamsExpiresAfterAnchorLastActiveAt),
-				Days:   openai.F(int64(1)),
-			}),
-			Metadata: openai.F(shared.MetadataParam{
+			ExpiresAfter: openai.BetaVectorStoreUpdateParamsExpiresAfter{
+				Days: openai.Int(1),
+			},
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
-			Name: openai.F("name"),
+			},
+			Name: openai.String("name"),
 		},
 	)
 	if err != nil {
@@ -119,10 +117,10 @@ func TestBetaVectorStoreListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.VectorStores.List(context.TODO(), openai.BetaVectorStoreListParams{
-		After:  openai.F("after"),
-		Before: openai.F("before"),
-		Limit:  openai.F(int64(0)),
-		Order:  openai.F(openai.BetaVectorStoreListParamsOrderAsc),
+		After:  openai.String("after"),
+		Before: openai.String("before"),
+		Limit:  openai.Int(0),
+		Order:  openai.BetaVectorStoreListParamsOrderAsc,
 	})
 	if err != nil {
 		var apierr *openai.Error

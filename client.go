@@ -16,25 +16,25 @@ import (
 // directly, and instead use the [NewClient] method instead.
 type Client struct {
 	Options     []option.RequestOption
-	Completions *CompletionService
-	Chat        *ChatService
-	Embeddings  *EmbeddingService
-	Files       *FileService
-	Images      *ImageService
-	Audio       *AudioService
-	Moderations *ModerationService
-	Models      *ModelService
-	FineTuning  *FineTuningService
-	Beta        *BetaService
-	Batches     *BatchService
-	Uploads     *UploadService
+	Completions CompletionService
+	Chat        ChatService
+	Embeddings  EmbeddingService
+	Files       FileService
+	Images      ImageService
+	Audio       AudioService
+	Moderations ModerationService
+	Models      ModelService
+	FineTuning  FineTuningService
+	Beta        BetaService
+	Batches     BatchService
+	Uploads     UploadService
 }
 
 // NewClient generates a new client with the default option read from the
 // environment (OPENAI_API_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID). The option
 // passed in as arguments are applied after these default arguments, and all option
 // will be passed down to the services and requests that this client makes.
-func NewClient(opts ...option.RequestOption) (r *Client) {
+func NewClient(opts ...option.RequestOption) (r Client) {
 	defaults := []option.RequestOption{option.WithEnvironmentProduction()}
 	if o, ok := os.LookupEnv("OPENAI_API_KEY"); ok {
 		defaults = append(defaults, option.WithAPIKey(o))
@@ -47,7 +47,7 @@ func NewClient(opts ...option.RequestOption) (r *Client) {
 	}
 	opts = append(defaults, opts...)
 
-	r = &Client{Options: opts}
+	r = Client{Options: opts}
 
 	r.Completions = NewCompletionService(opts...)
 	r.Chat = NewChatService(opts...)

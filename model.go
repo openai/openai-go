@@ -12,6 +12,8 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // ModelService contains methods and other services that help with interacting with
@@ -27,8 +29,8 @@ type ModelService struct {
 // NewModelService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewModelService(opts ...option.RequestOption) (r *ModelService) {
-	r = &ModelService{}
+func NewModelService(opts ...option.RequestOption) (r ModelService) {
+	r = ModelService{}
 	r.Options = opts
 	return
 }
@@ -87,69 +89,42 @@ func (r *ModelService) Delete(ctx context.Context, model string, opts ...option.
 // Describes an OpenAI model offering that can be used with the API.
 type Model struct {
 	// The model identifier, which can be referenced in the API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id,omitzero,required"`
 	// The Unix timestamp (in seconds) when the model was created.
-	Created int64 `json:"created,required"`
+	Created int64 `json:"created,omitzero,required"`
 	// The object type, which is always "model".
-	Object ModelObject `json:"object,required"`
+	//
+	// This field can be elided, and will be automatically set as "model".
+	Object constant.Model `json:"object,required"`
 	// The organization that owns the model.
-	OwnedBy string    `json:"owned_by,required"`
-	JSON    modelJSON `json:"-"`
+	OwnedBy string `json:"owned_by,omitzero,required"`
+	JSON    struct {
+		ID      resp.Field
+		Created resp.Field
+		Object  resp.Field
+		OwnedBy resp.Field
+		raw     string
+	} `json:"-"`
 }
 
-// modelJSON contains the JSON metadata for the struct [Model]
-type modelJSON struct {
-	ID          apijson.Field
-	Created     apijson.Field
-	Object      apijson.Field
-	OwnedBy     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Model) UnmarshalJSON(data []byte) (err error) {
+func (r Model) RawJSON() string { return r.JSON.raw }
+func (r *Model) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r modelJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always "model".
-type ModelObject string
-
-const (
-	ModelObjectModel ModelObject = "model"
-)
-
-func (r ModelObject) IsKnown() bool {
-	switch r {
-	case ModelObjectModel:
-		return true
-	}
-	return false
 }
 
 type ModelDeleted struct {
-	ID      string           `json:"id,required"`
-	Deleted bool             `json:"deleted,required"`
-	Object  string           `json:"object,required"`
-	JSON    modelDeletedJSON `json:"-"`
+	ID      string `json:"id,omitzero,required"`
+	Deleted bool   `json:"deleted,omitzero,required"`
+	Object  string `json:"object,omitzero,required"`
+	JSON    struct {
+		ID      resp.Field
+		Deleted resp.Field
+		Object  resp.Field
+		raw     string
+	} `json:"-"`
 }
 
-// modelDeletedJSON contains the JSON metadata for the struct [ModelDeleted]
-type modelDeletedJSON struct {
-	ID          apijson.Field
-	Deleted     apijson.Field
-	Object      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ModelDeleted) UnmarshalJSON(data []byte) (err error) {
+func (r ModelDeleted) RawJSON() string { return r.JSON.raw }
+func (r *ModelDeleted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r modelDeletedJSON) RawJSON() string {
-	return r.raw
 }

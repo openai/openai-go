@@ -27,69 +27,74 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionDeveloperMessageParam{
-			Content: openai.F([]openai.ChatCompletionContentPartTextParam{{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
-			Role:    openai.F(openai.ChatCompletionDeveloperMessageParamRoleDeveloper),
-			Name:    openai.F("name"),
-		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
-		Audio: openai.F(openai.ChatCompletionAudioParam{
-			Format: openai.F(openai.ChatCompletionAudioParamFormatWAV),
-			Voice:  openai.F(openai.ChatCompletionAudioParamVoiceAlloy),
-		}),
-		FrequencyPenalty: openai.F(-2.000000),
-		FunctionCall:     openai.F[openai.ChatCompletionNewParamsFunctionCallUnion](openai.ChatCompletionNewParamsFunctionCallAuto(openai.ChatCompletionNewParamsFunctionCallAutoNone)),
-		Functions: openai.F([]openai.ChatCompletionNewParamsFunction{{
-			Name:        openai.F("name"),
-			Description: openai.F("description"),
-			Parameters: openai.F(shared.FunctionParameters{
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfDeveloper: &openai.ChatCompletionDeveloperMessageParam{
+				Content: []openai.ChatCompletionContentPartTextParam{{Text: openai.String("text")}},
+				Name:    openai.String("name"),
+			},
+		}},
+		Model: openai.ChatModelO3Mini,
+		Audio: openai.ChatCompletionAudioParam{
+			Format: "wav",
+			Voice:  "alloy",
+		},
+		FrequencyPenalty: openai.Float(-2),
+		FunctionCall: openai.ChatCompletionNewParamsFunctionCallUnion{
+			OfAuto: "none",
+		},
+		Functions: []openai.ChatCompletionNewParamsFunction{{
+			Name:        openai.String("name"),
+			Description: openai.String("description"),
+			Parameters: shared.FunctionParameters{
 				"foo": "bar",
-			}),
-		}}),
-		LogitBias: openai.F(map[string]int64{
-			"foo": int64(0),
-		}),
-		Logprobs:            openai.F(true),
-		MaxCompletionTokens: openai.F(int64(0)),
-		MaxTokens:           openai.F(int64(0)),
-		Metadata: openai.F(shared.MetadataParam{
+			},
+		}},
+		LogitBias: map[string]int64{
+			"foo": 0,
+		},
+		Logprobs:            openai.Bool(true),
+		MaxCompletionTokens: openai.Int(0),
+		MaxTokens:           openai.Int(0),
+		Metadata: shared.MetadataParam{
 			"foo": "string",
-		}),
-		Modalities:        openai.F([]openai.ChatCompletionModality{openai.ChatCompletionModalityText}),
-		N:                 openai.F(int64(1)),
-		ParallelToolCalls: openai.F(true),
-		Prediction: openai.F(openai.ChatCompletionPredictionContentParam{
-			Content: openai.F([]openai.ChatCompletionContentPartTextParam{{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
-			Type:    openai.F(openai.ChatCompletionPredictionContentTypeContent),
-		}),
-		PresencePenalty: openai.F(-2.000000),
-		ReasoningEffort: openai.F(openai.ChatCompletionReasoningEffortLow),
-		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](shared.ResponseFormatTextParam{
-			Type: openai.F(shared.ResponseFormatTextTypeText),
-		}),
-		Seed:        openai.F(int64(0)),
-		ServiceTier: openai.F(openai.ChatCompletionNewParamsServiceTierAuto),
-		Stop:        openai.F[openai.ChatCompletionNewParamsStopUnion](shared.UnionString("string")),
-		Store:       openai.F(true),
-		StreamOptions: openai.F(openai.ChatCompletionStreamOptionsParam{
-			IncludeUsage: openai.F(true),
-		}),
-		Temperature: openai.F(1.000000),
-		ToolChoice:  openai.F[openai.ChatCompletionToolChoiceOptionUnionParam](openai.ChatCompletionToolChoiceOptionAuto(openai.ChatCompletionToolChoiceOptionAutoNone)),
-		Tools: openai.F([]openai.ChatCompletionToolParam{{
-			Function: openai.F(shared.FunctionDefinitionParam{
-				Name:        openai.F("name"),
-				Description: openai.F("description"),
-				Parameters: openai.F(shared.FunctionParameters{
+		},
+		Modalities:        []openai.ChatCompletionModality{openai.ChatCompletionModalityText},
+		N:                 openai.Int(1),
+		ParallelToolCalls: openai.Bool(true),
+		Prediction: openai.ChatCompletionPredictionContentParam{
+			Content: []openai.ChatCompletionContentPartTextParam{{Text: openai.String("text")}},
+		},
+		PresencePenalty: openai.Float(-2),
+		ReasoningEffort: openai.ChatCompletionReasoningEffortLow,
+		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
+			OfResponseFormatText: &shared.ResponseFormatTextParam{},
+		},
+		Seed:        openai.Int(0),
+		ServiceTier: openai.ChatCompletionNewParamsServiceTierAuto,
+		Stop: openai.ChatCompletionNewParamsStopUnion{
+			OfString: openai.String("string"),
+		},
+		Store: openai.Bool(true),
+		StreamOptions: openai.ChatCompletionStreamOptionsParam{
+			IncludeUsage: openai.Bool(true),
+		},
+		Temperature: openai.Float(1),
+		ToolChoice: openai.ChatCompletionToolChoiceOptionUnionParam{
+			OfAuto: "none",
+		},
+		Tools: []openai.ChatCompletionToolParam{{
+			Function: shared.FunctionDefinitionParam{
+				Name:        openai.String("name"),
+				Description: openai.String("description"),
+				Parameters: shared.FunctionParameters{
 					"foo": "bar",
-				}),
-				Strict: openai.F(true),
-			}),
-			Type: openai.F(openai.ChatCompletionToolTypeFunction),
-		}}),
-		TopLogprobs: openai.F(int64(0)),
-		TopP:        openai.F(1.000000),
-		User:        openai.F("user-1234"),
+				},
+				Strict: openai.Bool(true),
+			},
+		}},
+		TopLogprobs: openai.Int(0),
+		TopP:        openai.Float(1),
+		User:        openai.String("user-1234"),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -138,9 +143,9 @@ func TestChatCompletionUpdate(t *testing.T) {
 		context.TODO(),
 		"completion_id",
 		openai.ChatCompletionUpdateParams{
-			Metadata: openai.F(shared.MetadataParam{
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
+			},
 		},
 	)
 	if err != nil {
@@ -165,13 +170,13 @@ func TestChatCompletionListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Chat.Completions.List(context.TODO(), openai.ChatCompletionListParams{
-		After: openai.F("after"),
-		Limit: openai.F(int64(0)),
-		Metadata: openai.F(shared.MetadataParam{
+		After: openai.String("after"),
+		Limit: openai.Int(0),
+		Metadata: shared.MetadataParam{
 			"foo": "string",
-		}),
-		Model: openai.F("model"),
-		Order: openai.F(openai.ChatCompletionListParamsOrderAsc),
+		},
+		Model: openai.String("model"),
+		Order: openai.ChatCompletionListParamsOrderAsc,
 	})
 	if err != nil {
 		var apierr *openai.Error

@@ -6,10 +6,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/packages/param"
 )
 
 // AudioSpeechService contains methods and other services that help with
@@ -25,8 +24,8 @@ type AudioSpeechService struct {
 // NewAudioSpeechService generates a new service that applies the given options to
 // each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewAudioSpeechService(opts ...option.RequestOption) (r *AudioSpeechService) {
-	r = &AudioSpeechService{}
+func NewAudioSpeechService(opts ...option.RequestOption) (r AudioSpeechService) {
+	r = AudioSpeechService{}
 	r.Options = opts
 	return
 }
@@ -49,25 +48,34 @@ const (
 
 type AudioSpeechNewParams struct {
 	// The text to generate audio for. The maximum length is 4096 characters.
-	Input param.Field[string] `json:"input,required"`
+	Input param.String `json:"input,omitzero,required"`
 	// One of the available [TTS models](https://platform.openai.com/docs/models#tts):
 	// `tts-1` or `tts-1-hd`
-	Model param.Field[SpeechModel] `json:"model,required"`
+	Model SpeechModel `json:"model,omitzero,required"`
 	// The voice to use when generating the audio. Supported voices are `alloy`, `ash`,
 	// `coral`, `echo`, `fable`, `onyx`, `nova`, `sage` and `shimmer`. Previews of the
 	// voices are available in the
 	// [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
-	Voice param.Field[AudioSpeechNewParamsVoice] `json:"voice,required"`
+	//
+	// Any of "alloy", "ash", "coral", "echo", "fable", "onyx", "nova", "sage",
+	// "shimmer"
+	Voice AudioSpeechNewParamsVoice `json:"voice,omitzero,required"`
 	// The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,
 	// `wav`, and `pcm`.
-	ResponseFormat param.Field[AudioSpeechNewParamsResponseFormat] `json:"response_format"`
+	//
+	// Any of "mp3", "opus", "aac", "flac", "wav", "pcm"
+	ResponseFormat AudioSpeechNewParamsResponseFormat `json:"response_format,omitzero"`
 	// The speed of the generated audio. Select a value from `0.25` to `4.0`. `1.0` is
 	// the default.
-	Speed param.Field[float64] `json:"speed"`
+	Speed param.Float `json:"speed,omitzero"`
+	apiobject
 }
 
+func (f AudioSpeechNewParams) IsMissing() bool { return param.IsOmitted(f) || f.IsNull() }
+
 func (r AudioSpeechNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow AudioSpeechNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // The voice to use when generating the audio. Supported voices are `alloy`, `ash`,
@@ -88,14 +96,6 @@ const (
 	AudioSpeechNewParamsVoiceShimmer AudioSpeechNewParamsVoice = "shimmer"
 )
 
-func (r AudioSpeechNewParamsVoice) IsKnown() bool {
-	switch r {
-	case AudioSpeechNewParamsVoiceAlloy, AudioSpeechNewParamsVoiceAsh, AudioSpeechNewParamsVoiceCoral, AudioSpeechNewParamsVoiceEcho, AudioSpeechNewParamsVoiceFable, AudioSpeechNewParamsVoiceOnyx, AudioSpeechNewParamsVoiceNova, AudioSpeechNewParamsVoiceSage, AudioSpeechNewParamsVoiceShimmer:
-		return true
-	}
-	return false
-}
-
 // The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,
 // `wav`, and `pcm`.
 type AudioSpeechNewParamsResponseFormat string
@@ -108,11 +108,3 @@ const (
 	AudioSpeechNewParamsResponseFormatWAV  AudioSpeechNewParamsResponseFormat = "wav"
 	AudioSpeechNewParamsResponseFormatPCM  AudioSpeechNewParamsResponseFormat = "pcm"
 )
-
-func (r AudioSpeechNewParamsResponseFormat) IsKnown() bool {
-	switch r {
-	case AudioSpeechNewParamsResponseFormatMP3, AudioSpeechNewParamsResponseFormatOpus, AudioSpeechNewParamsResponseFormatAAC, AudioSpeechNewParamsResponseFormatFLAC, AudioSpeechNewParamsResponseFormatWAV, AudioSpeechNewParamsResponseFormatPCM:
-		return true
-	}
-	return false
-}

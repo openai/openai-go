@@ -13,7 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/openai/openai-go/internal/param"
+	internalparam "github.com/openai/openai-go/internal/param"
+	"github.com/openai/openai-go/packages/param"
 )
 
 var encoders sync.Map // map[encoderEntry]encoderFunc
@@ -180,8 +181,12 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 }
 
 func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
-	if t.Implements(reflect.TypeOf((*param.FieldLike)(nil)).Elem()) {
+	if t.Implements(reflect.TypeOf((*internalparam.FieldLike)(nil)).Elem()) {
 		return e.newFieldTypeEncoder(t)
+	}
+
+	if idx, ok := param.RichPrimitiveTypes[t]; ok {
+		return e.newRichFieldTypeEncoder(t, idx)
 	}
 
 	encoderFields := []encoderField{}
