@@ -21,6 +21,76 @@ import (
 	"github.com/openai/openai-go/shared/constant"
 )
 
+func UserMessage(content string) ChatCompletionMessageParamUnion {
+	return UserMessageParts(TextPart(content))
+}
+
+func UserMessageParts(parts ...ChatCompletionContentPartUnionParam) ChatCompletionUserMessageParam {
+	return ChatCompletionUserMessageParam{
+		Role:    F(ChatCompletionUserMessageParamRoleUser),
+		Content: F(parts),
+	}
+}
+
+func TextPart(content string) ChatCompletionContentPartTextParam {
+	return ChatCompletionContentPartTextParam{
+		Type: F(ChatCompletionContentPartTextTypeText),
+		Text: F(content),
+	}
+}
+
+func RefusalPart(refusal string) ChatCompletionContentPartRefusalParam {
+	return ChatCompletionContentPartRefusalParam{
+		Type:    F(ChatCompletionContentPartRefusalTypeRefusal),
+		Refusal: F(refusal),
+	}
+}
+
+func ImagePart(url string) ChatCompletionContentPartImageParam {
+	return ChatCompletionContentPartImageParam{
+		Type: F(ChatCompletionContentPartImageTypeImageURL),
+		ImageURL: F(ChatCompletionContentPartImageImageURLParam{
+			URL: F(url),
+		}),
+	}
+}
+
+func AssistantMessage(content string) ChatCompletionAssistantMessageParam {
+	return ChatCompletionAssistantMessageParam{
+		Role: F(ChatCompletionAssistantMessageParamRoleAssistant),
+		Content: F([]ChatCompletionAssistantMessageParamContentUnion{
+			TextPart(content),
+		}),
+	}
+}
+
+func ToolMessage(toolCallID, content string) ChatCompletionToolMessageParam {
+	return ChatCompletionToolMessageParam{
+		Role:       F(ChatCompletionToolMessageParamRoleTool),
+		ToolCallID: F(toolCallID),
+		Content: F([]ChatCompletionContentPartTextParam{
+			TextPart(content),
+		}),
+	}
+}
+
+func SystemMessage(content string) ChatCompletionMessageParamUnion {
+	return ChatCompletionSystemMessageParam{
+		Role: F(ChatCompletionSystemMessageParamRoleSystem),
+		Content: F([]ChatCompletionContentPartTextParam{
+			TextPart(content),
+		}),
+	}
+}
+
+func FunctionMessage(name, content string) ChatCompletionMessageParamUnion {
+	return ChatCompletionFunctionMessageParam{
+		Role:    F(ChatCompletionFunctionMessageParamRoleFunction),
+		Name:    F(name),
+		Content: F(content),
+	}
+}
+
 // ChatCompletionService contains methods and other services that help with
 // interacting with the openai API.
 //
