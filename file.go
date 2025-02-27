@@ -187,6 +187,8 @@ type FileObject struct {
 	//
 	// Deprecated: deprecated
 	Status FileObjectStatus `json:"status,required"`
+	// The Unix timestamp (in seconds) for when the file will expire.
+	ExpiresAt int64 `json:"expires_at"`
 	// Deprecated. For details on why a fine-tuning training file failed validation,
 	// see the `error` field on `fine_tuning.job`.
 	//
@@ -204,6 +206,7 @@ type fileObjectJSON struct {
 	Object        apijson.Field
 	Purpose       apijson.Field
 	Status        apijson.Field
+	ExpiresAt     apijson.Field
 	StatusDetails apijson.Field
 	raw           string
 	ExtraFields   map[string]apijson.Field
