@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.61 (2025-02-27)
+
+Full Changelog: [v0.1.0-alpha.60...v0.1.0-alpha.61](https://github.com/openai/openai-go/compare/v0.1.0-alpha.60...v0.1.0-alpha.61)
+
+### Documentation
+
+* update URLs from stainlessapi.com to stainless.com ([#243](https://github.com/openai/openai-go/issues/243)) ([98019cf](https://github.com/openai/openai-go/commit/98019cf8c6b51e0b00ce8e58aca3b438f225f48f))
+
 ## 0.1.0-alpha.60 (2025-02-27)
 
 Full Changelog: [v0.1.0-alpha.59...v0.1.0-alpha.60](https://github.com/openai/openai-go/compare/v0.1.0-alpha.59...v0.1.0-alpha.60)
