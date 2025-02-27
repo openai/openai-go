@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.60 (2025-02-27)
+
+Full Changelog: [v0.1.0-alpha.59...v0.1.0-alpha.60](https://github.com/openai/openai-go/compare/v0.1.0-alpha.59...v0.1.0-alpha.60)
+
+### Features
+
+* **api:** add gpt-4.5-preview ([#242](https://github.com/openai/openai-go/issues/242)) ([0a7488c](https://github.com/openai/openai-go/commit/0a7488ce04a50e513d1dfe805540ddf84914bd50))
+
+
+### Chores
+
+* **internal:** fix devcontainers setup ([#236](https://github.com/openai/openai-go/issues/236)) ([b27a9db](https://github.com/openai/openai-go/commit/b27a9db77dc86b57312831f6c0e22a1bcb4967ed))
+
 ## 0.1.0-alpha.59 (2025-02-15)
 
 Full Changelog: [v0.1.0-alpha.58...v0.1.0-alpha.59](https://github.com/openai/openai-go/compare/v0.1.0-alpha.58...v0.1.0-alpha.59)
