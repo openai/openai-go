@@ -38,6 +38,8 @@ const (
 	ChatModelO1Preview2024_09_12             ChatModel = "o1-preview-2024-09-12"
 	ChatModelO1Mini                          ChatModel = "o1-mini"
 	ChatModelO1Mini2024_09_12                ChatModel = "o1-mini-2024-09-12"
+	ChatModelGPT4_5Preview                   ChatModel = "gpt-4.5-preview"
+	ChatModelGPT4_5Preview2025_02_27         ChatModel = "gpt-4.5-preview-2025-02-27"
 	ChatModelGPT4o                           ChatModel = "gpt-4o"
 	ChatModelGPT4o2024_11_20                 ChatModel = "gpt-4o-2024-11-20"
 	ChatModelGPT4o2024_08_06                 ChatModel = "gpt-4o-2024-08-06"
