@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.60 (2025-02-27)
+
+Full Changelog: [v0.1.0-alpha.59...v0.1.0-alpha.60](https://github.com/openai/openai-go/compare/v0.1.0-alpha.59...v0.1.0-alpha.60)
+
+### Chores
+
+* **internal:** fix devcontainers setup ([#236](https://github.com/openai/openai-go/issues/236)) ([b27a9db](https://github.com/openai/openai-go/commit/b27a9db77dc86b57312831f6c0e22a1bcb4967ed))
+
 ## 0.1.0-alpha.59 (2025-02-15)
 
 Full Changelog: [v0.1.0-alpha.58...v0.1.0-alpha.59](https://github.com/openai/openai-go/compare/v0.1.0-alpha.58...v0.1.0-alpha.59)
