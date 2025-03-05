@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.62 (2025-03-05)
+
+Full Changelog: [v0.1.0-alpha.61...v0.1.0-alpha.62](https://github.com/openai/openai-go/compare/v0.1.0-alpha.61...v0.1.0-alpha.62)
+
+### Bug Fixes
+
+* **api:** add missing file rank enum + more metadata ([#248](https://github.com/openai/openai-go/issues/248)) ([78e98d1](https://github.com/openai/openai-go/commit/78e98d18b319bc0de2c00543d75771166a42db73))
+
 ## 0.1.0-alpha.61 (2025-02-27)
 
 Full Changelog: [v0.1.0-alpha.60...v0.1.0-alpha.61](https://github.com/openai/openai-go/compare/v0.1.0-alpha.60...v0.1.0-alpha.61)
