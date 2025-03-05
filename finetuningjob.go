@@ -180,6 +180,13 @@ type FineTuningJob struct {
 	EstimatedFinish int64 `json:"estimated_finish,nullable"`
 	// A list of integrations to enable for this fine-tuning job.
 	Integrations []FineTuningJobWandbIntegrationObject `json:"integrations,nullable"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata shared.Metadata `json:"metadata,nullable"`
 	// The method used for fine-tuning.
 	Method FineTuningJobMethod `json:"method"`
 	JSON   fineTuningJobJSON   `json:"-"`
@@ -204,6 +211,7 @@ type fineTuningJobJSON struct {
 	ValidationFile  apijson.Field
 	EstimatedFinish apijson.Field
 	Integrations    apijson.Field
+	Metadata        apijson.Field
 	Method          apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
@@ -1087,6 +1095,13 @@ type FineTuningJobNewParams struct {
 	Hyperparameters param.Field[FineTuningJobNewParamsHyperparameters] `json:"hyperparameters"`
 	// A list of integrations to enable for your fine-tuning job.
 	Integrations param.Field[[]FineTuningJobNewParamsIntegration] `json:"integrations"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// The method used for fine-tuning.
 	Method param.Field[FineTuningJobNewParamsMethod] `json:"method"`
 	// The seed controls the reproducibility of the job. Passing in the same seed and
@@ -1567,6 +1582,9 @@ type FineTuningJobListParams struct {
 	After param.Field[string] `query:"after"`
 	// Number of fine-tuning jobs to retrieve.
 	Limit param.Field[int64] `query:"limit"`
+	// Optional metadata filter. To filter, use the syntax `metadata[k]=v`.
+	// Alternatively, set `metadata=null` to indicate no metadata.
+	Metadata param.Field[map[string]string] `query:"metadata"`
 }
 
 // URLQuery serializes [FineTuningJobListParams]'s query parameters as
