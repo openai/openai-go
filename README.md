@@ -635,8 +635,8 @@ multiple times, for example first in the client then the method, the
 middleware in the client will run first and the middleware given in the method
 will run next.
 
-You may also replace the default `http.Client` with
-`option.WithHTTPClient(client)`. Only one http client is
+You may also replace the default HTTP client with
+`option.WithHTTPClient(client)`. Only one HTTP client is
 accepted (this overwrites any previous client) and receives requests after any
 middleware has been applied.
 
