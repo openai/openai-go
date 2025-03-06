@@ -32,7 +32,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionDeveloperMessageParamRoleDeveloper),
 			Name:    openai.F("name"),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 		Audio: openai.F(openai.ChatCompletionAudioParam{
 			Format: openai.F(openai.ChatCompletionAudioParamFormatWAV),
 			Voice:  openai.F(openai.ChatCompletionAudioParamVoiceAlloy),

@@ -44,6 +44,7 @@ import (
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 func main() {
@@ -55,7 +56,7 @@ func main() {
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	})
 	if err != nil {
 		panic(err.Error())
@@ -242,7 +243,7 @@ client.Chat.Completions.New(
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -305,7 +306,7 @@ client.Chat.Completions.New(
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	},
 	option.WithMaxRetries(5),
 )
@@ -326,7 +327,7 @@ chatCompletion, err := client.Chat.Completions.New(
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	},
 	option.WithResponseInto(&response),
 )
