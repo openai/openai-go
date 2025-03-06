@@ -10,6 +10,132 @@ import (
 type Error = apierror.Error
 
 // This is an alias to an internal type.
+type ChatModel = shared.ChatModel
+
+// This is an alias to an internal value.
+const ChatModelO3Mini = shared.ChatModelO3Mini
+
+// This is an alias to an internal value.
+const ChatModelO3Mini2025_01_31 = shared.ChatModelO3Mini2025_01_31
+
+// This is an alias to an internal value.
+const ChatModelO1 = shared.ChatModelO1
+
+// This is an alias to an internal value.
+const ChatModelO1_2024_12_17 = shared.ChatModelO1_2024_12_17
+
+// This is an alias to an internal value.
+const ChatModelO1Preview = shared.ChatModelO1Preview
+
+// This is an alias to an internal value.
+const ChatModelO1Preview2024_09_12 = shared.ChatModelO1Preview2024_09_12
+
+// This is an alias to an internal value.
+const ChatModelO1Mini = shared.ChatModelO1Mini
+
+// This is an alias to an internal value.
+const ChatModelO1Mini2024_09_12 = shared.ChatModelO1Mini2024_09_12
+
+// This is an alias to an internal value.
+const ChatModelGPT4_5Preview = shared.ChatModelGPT4_5Preview
+
+// This is an alias to an internal value.
+const ChatModelGPT4_5Preview2025_02_27 = shared.ChatModelGPT4_5Preview2025_02_27
+
+// This is an alias to an internal value.
+const ChatModelGPT4o = shared.ChatModelGPT4o
+
+// This is an alias to an internal value.
+const ChatModelGPT4o2024_11_20 = shared.ChatModelGPT4o2024_11_20
+
+// This is an alias to an internal value.
+const ChatModelGPT4o2024_08_06 = shared.ChatModelGPT4o2024_08_06
+
+// This is an alias to an internal value.
+const ChatModelGPT4o2024_05_13 = shared.ChatModelGPT4o2024_05_13
+
+// This is an alias to an internal value.
+const ChatModelGPT4oAudioPreview = shared.ChatModelGPT4oAudioPreview
+
+// This is an alias to an internal value.
+const ChatModelGPT4oAudioPreview2024_10_01 = shared.ChatModelGPT4oAudioPreview2024_10_01
+
+// This is an alias to an internal value.
+const ChatModelGPT4oAudioPreview2024_12_17 = shared.ChatModelGPT4oAudioPreview2024_12_17
+
+// This is an alias to an internal value.
+const ChatModelGPT4oMiniAudioPreview = shared.ChatModelGPT4oMiniAudioPreview
+
+// This is an alias to an internal value.
+const ChatModelGPT4oMiniAudioPreview2024_12_17 = shared.ChatModelGPT4oMiniAudioPreview2024_12_17
+
+// This is an alias to an internal value.
+const ChatModelChatgpt4oLatest = shared.ChatModelChatgpt4oLatest
+
+// This is an alias to an internal value.
+const ChatModelGPT4oMini = shared.ChatModelGPT4oMini
+
+// This is an alias to an internal value.
+const ChatModelGPT4oMini2024_07_18 = shared.ChatModelGPT4oMini2024_07_18
+
+// This is an alias to an internal value.
+const ChatModelGPT4Turbo = shared.ChatModelGPT4Turbo
+
+// This is an alias to an internal value.
+const ChatModelGPT4Turbo2024_04_09 = shared.ChatModelGPT4Turbo2024_04_09
+
+// This is an alias to an internal value.
+const ChatModelGPT4_0125Preview = shared.ChatModelGPT4_0125Preview
+
+// This is an alias to an internal value.
+const ChatModelGPT4TurboPreview = shared.ChatModelGPT4TurboPreview
+
+// This is an alias to an internal value.
+const ChatModelGPT4_1106Preview = shared.ChatModelGPT4_1106Preview
+
+// This is an alias to an internal value.
+const ChatModelGPT4VisionPreview = shared.ChatModelGPT4VisionPreview
+
+// This is an alias to an internal value.
+const ChatModelGPT4 = shared.ChatModelGPT4
+
+// This is an alias to an internal value.
+const ChatModelGPT4_0314 = shared.ChatModelGPT4_0314
+
+// This is an alias to an internal value.
+const ChatModelGPT4_0613 = shared.ChatModelGPT4_0613
+
+// This is an alias to an internal value.
+const ChatModelGPT4_32k = shared.ChatModelGPT4_32k
+
+// This is an alias to an internal value.
+const ChatModelGPT4_32k0314 = shared.ChatModelGPT4_32k0314
+
+// This is an alias to an internal value.
+const ChatModelGPT4_32k0613 = shared.ChatModelGPT4_32k0613
+
+// This is an alias to an internal value.
+const ChatModelGPT3_5Turbo = shared.ChatModelGPT3_5Turbo
+
+// This is an alias to an internal value.
+const ChatModelGPT3_5Turbo16k = shared.ChatModelGPT3_5Turbo16k
+
+// This is an alias to an internal value.
+const ChatModelGPT3_5Turbo0301 = shared.ChatModelGPT3_5Turbo0301
+
+// This is an alias to an internal value.
+const ChatModelGPT3_5Turbo0613 = shared.ChatModelGPT3_5Turbo0613
+
+// This is an alias to an internal value.
+const ChatModelGPT3_5Turbo1106 = shared.ChatModelGPT3_5Turbo1106
+
+// This is an alias to an internal value.
+const ChatModelGPT3_5Turbo0125 = shared.ChatModelGPT3_5Turbo0125
+
+// This is an alias to an internal value.
+const ChatModelGPT3_5Turbo16k0613 = shared.ChatModelGPT3_5Turbo16k0613
+
+// This is an alias to an internal type.
 type ErrorObject = shared.ErrorObject
 
 // This is an alias to an internal type.

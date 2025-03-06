@@ -731,7 +731,7 @@ type BetaThreadRunNewParams struct {
 	// be used to execute this run. If a value is provided here, it will override the
 	// model associated with the assistant. If not, the model associated with the
 	// assistant will be used.
-	Model param.Field[ChatModel] `json:"model"`
+	Model param.Field[shared.ChatModel] `json:"model"`
 	// Whether to enable
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.

@@ -27,7 +27,7 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.Assistants.New(context.TODO(), openai.BetaAssistantNewParams{
-		Model:        openai.F(openai.ChatModelO3Mini),
+		Model:        openai.F(shared.ChatModelO3Mini),
 		Description:  openai.F("description"),
 		Instructions: openai.F("instructions"),
 		Metadata: openai.F(shared.MetadataParam{

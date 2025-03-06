@@ -172,7 +172,7 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 		Metadata: openai.F(shared.MetadataParam{
 			"foo": "string",
 		}),
-		Model:             openai.F(openai.ChatModelO3Mini),
+		Model:             openai.F(shared.ChatModelO3Mini),
 		ParallelToolCalls: openai.F(true),
 		Temperature:       openai.F(1.000000),
 		Thread: openai.F(openai.BetaThreadNewAndRunParamsThread{

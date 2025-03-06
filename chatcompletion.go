@@ -1924,7 +1924,7 @@ type ChatCompletionNewParams struct {
 	// ID of the model to use. See the
 	// [model endpoint compatibility](https://platform.openai.com/docs/models#model-endpoint-compatibility)
 	// table for details on which models work with the Chat API.
-	Model param.Field[ChatModel] `json:"model,required"`
+	Model param.Field[shared.ChatModel] `json:"model,required"`
 	// Parameters for audio output. Required when audio output is requested with
 	// `modalities: ["audio"]`.
 	// [Learn more](https://platform.openai.com/docs/guides/audio).
