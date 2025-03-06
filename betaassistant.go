@@ -2067,7 +2067,7 @@ type BetaAssistantNewParams struct {
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
 	// them.
-	Model param.Field[ChatModel] `json:"model,required"`
+	Model param.Field[shared.ChatModel] `json:"model,required"`
 	// The description of the assistant. The maximum length is 512 characters.
 	Description param.Field[string] `json:"description"`
 	// The system instructions that the assistant uses. The maximum length is 256,000
