@@ -11,6 +11,7 @@ type ChatCompletionAccumulator struct {
 type FinishedChatCompletionToolCall struct {
 	ChatCompletionMessageToolCallFunction
 	Index int
+	ID    string
 }
 
 type chatCompletionResponseState struct {
@@ -80,9 +81,11 @@ func (acc *ChatCompletionAccumulator) JustFinishedRefusal() (refusal string, ok 
 // You cannot rely on this with a stream that has ParallelToolCalls enabled.
 func (acc *ChatCompletionAccumulator) JustFinishedToolCall() (toolcall FinishedChatCompletionToolCall, ok bool) {
 	if acc.justFinished.state == toolResponseState {
-		f := acc.Choices[0].Message.ToolCalls[acc.justFinished.index].Function
+		t := acc.Choices[0].Message.ToolCalls[acc.justFinished.index]
+		f := t.Function
 		return FinishedChatCompletionToolCall{
 			Index: acc.justFinished.index,
+			ID:    t.ID,
 			ChatCompletionMessageToolCallFunction: ChatCompletionMessageToolCallFunction{
 				Name:      f.Name,
 				Arguments: f.Arguments,
