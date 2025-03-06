@@ -22,9 +22,13 @@ func getWeather(_ string) string {
 }
 
 // Since the streamed response is hardcoded, we can hardcode the expected tool call
-var expectedToolCall openai.ChatCompletionMessageToolCallFunction = openai.ChatCompletionMessageToolCallFunction{
-	Arguments: `{"location":"Santorini, Greece"}`,
-	Name:      "get_weather",
+var expectedToolCall openai.FinishedChatCompletionToolCall = openai.FinishedChatCompletionToolCall{
+	ID:    "call_FXoAjBUMcVv1k40fficJ9cSs",
+	Index: 0,
+	ChatCompletionMessageToolCallFunction: openai.ChatCompletionMessageToolCallFunction{
+		Arguments: `{"location":"Santorini, Greece"}`,
+		Name:      "get_weather",
+	},
 }
 
 var expectedContents string = `Let's take a journey to the beautiful island of Santorini in Greece.
@@ -129,7 +133,7 @@ func TestStreamingAccumulatorWithToolCalls(t *testing.T) {
 		t.Fatalf("Found unexpected content")
 	}
 
-	if expectedToolCall.Arguments != acc.Choices[0].Message.ToolCalls[0].Function.Arguments || expectedToolCall.Name != acc.Choices[0].Message.ToolCalls[0].Function.Name {
+	if expectedToolCall.Arguments != acc.Choices[0].Message.ToolCalls[0].Function.Arguments || expectedToolCall.Name != acc.Choices[0].Message.ToolCalls[0].Function.Name || expectedToolCall.ID != acc.Choices[0].Message.ToolCalls[0].ID {
 		t.Fatalf("Found unexpected tool call %v %v", acc.Choices[0].Message.ToolCalls[0].Function.Arguments, acc.Choices[0].Message.ToolCalls[0].Function.Name)
 	}
 
