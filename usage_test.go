@@ -10,6 +10,7 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 func TestUsage(t *testing.T) {
@@ -29,7 +30,7 @@ func TestUsage(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	})
 	if err != nil {
 		t.Error(err)

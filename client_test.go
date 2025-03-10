@@ -14,6 +14,7 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 type closureTransport struct {
@@ -43,7 +44,7 @@ func TestUserAgentHeader(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	})
 	if userAgent != fmt.Sprintf("OpenAI/Go %s", internal.PackageVersion) {
 		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
@@ -72,7 +73,7 @@ func TestRetryAfter(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -112,7 +113,7 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -147,7 +148,7 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -181,7 +182,7 @@ func TestRetryAfterMs(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -209,7 +210,7 @@ func TestContextCancel(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -234,7 +235,7 @@ func TestContextCancelDelay(t *testing.T) {
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	})
 	if err == nil {
 		t.Error("expected there to be a cancel error")
@@ -265,7 +266,7 @@ func TestContextDeadline(t *testing.T) {
 				Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 				Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 			}}),
-			Model: openai.F(openai.ChatModelO3Mini),
+			Model: openai.F(shared.ChatModelO3Mini),
 		})
 		if err == nil {
 			t.Error("expected there to be a deadline error")
@@ -315,7 +316,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 				Content: openai.F([]openai.ChatCompletionContentPartTextParam{{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 				Role:    openai.F(openai.ChatCompletionDeveloperMessageParamRoleDeveloper),
 			}}),
-			Model: openai.F(openai.ChatModelO3Mini),
+			Model: openai.F(shared.ChatModelO3Mini),
 		})
 		for stream.Next() {
 			_ = stream.Current()
@@ -367,7 +368,7 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 					Content: openai.F([]openai.ChatCompletionContentPartTextParam{{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 					Role:    openai.F(openai.ChatCompletionDeveloperMessageParamRoleDeveloper),
 				}}),
-				Model: openai.F(openai.ChatModelO3Mini),
+				Model: openai.F(shared.ChatModelO3Mini),
 			},
 			option.WithRequestTimeout((100 * time.Millisecond)),
 		)

@@ -25,7 +25,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go@v0.1.0-alpha.62'
+go get -u 'github.com/openai/openai-go@v0.1.0-alpha.63'
 ```
 
 <!-- x-release-please-end -->
@@ -49,6 +49,7 @@ import (
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
 )
 
 func main() {
@@ -541,7 +542,7 @@ chatCompletion, err := client.Chat.Completions.New(
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
 			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
-		Model: openai.F(openai.ChatModelO3Mini),
+		Model: openai.F(shared.ChatModelO3Mini),
 	},
 	option.WithResponseInto(&response),
 )
