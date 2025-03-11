@@ -38,7 +38,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 			Voice:  openai.F(openai.ChatCompletionAudioParamVoiceAlloy),
 		}),
 		FrequencyPenalty: openai.F(-2.000000),
-		FunctionCall:     openai.F[openai.ChatCompletionNewParamsFunctionCallUnion](openai.ChatCompletionNewParamsFunctionCallString(openai.ChatCompletionNewParamsFunctionCallStringNone)),
+		FunctionCall:     openai.F[openai.ChatCompletionNewParamsFunctionCallUnion](openai.ChatCompletionNewParamsFunctionCallFunctionCallMode(openai.ChatCompletionNewParamsFunctionCallFunctionCallModeNone)),
 		Functions: openai.F([]openai.ChatCompletionNewParamsFunction{{
 			Name:        openai.F("name"),
 			Description: openai.F("description"),
