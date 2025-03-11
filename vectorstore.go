@@ -20,31 +20,31 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-// BetaVectorStoreService contains methods and other services that help with
+// VectorStoreService contains methods and other services that help with
 // interacting with the openai API.
 //
 // Note, unlike clients, this service does not read variables from the environment
 // automatically. You should not instantiate this service directly, and instead use
-// the [NewBetaVectorStoreService] method instead.
-type BetaVectorStoreService struct {
+// the [NewVectorStoreService] method instead.
+type VectorStoreService struct {
 	Options     []option.RequestOption
-	Files       *BetaVectorStoreFileService
-	FileBatches *BetaVectorStoreFileBatchService
+	Files       *VectorStoreFileService
+	FileBatches *VectorStoreFileBatchService
 }
 
-// NewBetaVectorStoreService generates a new service that applies the given options
-// to each request. These options are applied after the parent client's options (if
+// NewVectorStoreService generates a new service that applies the given options to
+// each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewBetaVectorStoreService(opts ...option.RequestOption) (r *BetaVectorStoreService) {
-	r = &BetaVectorStoreService{}
+func NewVectorStoreService(opts ...option.RequestOption) (r *VectorStoreService) {
+	r = &VectorStoreService{}
 	r.Options = opts
-	r.Files = NewBetaVectorStoreFileService(opts...)
-	r.FileBatches = NewBetaVectorStoreFileBatchService(opts...)
+	r.Files = NewVectorStoreFileService(opts...)
+	r.FileBatches = NewVectorStoreFileBatchService(opts...)
 	return
 }
 
 // Create a vector store.
-func (r *BetaVectorStoreService) New(ctx context.Context, body BetaVectorStoreNewParams, opts ...option.RequestOption) (res *VectorStore, err error) {
+func (r *VectorStoreService) New(ctx context.Context, body VectorStoreNewParams, opts ...option.RequestOption) (res *VectorStore, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	path := "vector_stores"
@@ -53,7 +53,7 @@ func (r *BetaVectorStoreService) New(ctx context.Context, body BetaVectorStoreNe
 }
 
 // Retrieves a vector store.
-func (r *BetaVectorStoreService) Get(ctx context.Context, vectorStoreID string, opts ...option.RequestOption) (res *VectorStore, err error) {
+func (r *VectorStoreService) Get(ctx context.Context, vectorStoreID string, opts ...option.RequestOption) (res *VectorStore, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
@@ -66,7 +66,7 @@ func (r *BetaVectorStoreService) Get(ctx context.Context, vectorStoreID string, 
 }
 
 // Modifies a vector store.
-func (r *BetaVectorStoreService) Update(ctx context.Context, vectorStoreID string, body BetaVectorStoreUpdateParams, opts ...option.RequestOption) (res *VectorStore, err error) {
+func (r *VectorStoreService) Update(ctx context.Context, vectorStoreID string, body VectorStoreUpdateParams, opts ...option.RequestOption) (res *VectorStore, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
@@ -79,7 +79,7 @@ func (r *BetaVectorStoreService) Update(ctx context.Context, vectorStoreID strin
 }
 
 // Returns a list of vector stores.
-func (r *BetaVectorStoreService) List(ctx context.Context, query BetaVectorStoreListParams, opts ...option.RequestOption) (res *pagination.CursorPage[VectorStore], err error) {
+func (r *VectorStoreService) List(ctx context.Context, query VectorStoreListParams, opts ...option.RequestOption) (res *pagination.CursorPage[VectorStore], err error) {
 	var raw *http.Response
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
@@ -97,12 +97,12 @@ func (r *BetaVectorStoreService) List(ctx context.Context, query BetaVectorStore
 }
 
 // Returns a list of vector stores.
-func (r *BetaVectorStoreService) ListAutoPaging(ctx context.Context, query BetaVectorStoreListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[VectorStore] {
+func (r *VectorStoreService) ListAutoPaging(ctx context.Context, query VectorStoreListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[VectorStore] {
 	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
 // Delete a vector store.
-func (r *BetaVectorStoreService) Delete(ctx context.Context, vectorStoreID string, opts ...option.RequestOption) (res *VectorStoreDeleted, err error) {
+func (r *VectorStoreService) Delete(ctx context.Context, vectorStoreID string, opts ...option.RequestOption) (res *VectorStoreDeleted, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
@@ -112,6 +112,35 @@ func (r *BetaVectorStoreService) Delete(ctx context.Context, vectorStoreID strin
 	path := fmt.Sprintf("vector_stores/%s", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return
+}
+
+// Search a vector store for relevant chunks based on a query and file attributes
+// filter.
+func (r *VectorStoreService) Search(ctx context.Context, vectorStoreID string, body VectorStoreSearchParams, opts ...option.RequestOption) (res *pagination.Page[VectorStoreSearchResponse], err error) {
+	var raw *http.Response
+	opts = append(r.Options[:], opts...)
+	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
+	if vectorStoreID == "" {
+		err = errors.New("missing required vector_store_id parameter")
+		return
+	}
+	path := fmt.Sprintf("vector_stores/%s/search", vectorStoreID)
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodPost, path, body, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Search a vector store for relevant chunks based on a query and file attributes
+// filter.
+func (r *VectorStoreService) SearchAutoPaging(ctx context.Context, vectorStoreID string, body VectorStoreSearchParams, opts ...option.RequestOption) *pagination.PageAutoPager[VectorStoreSearchResponse] {
+	return pagination.NewPageAutoPager(r.Search(ctx, vectorStoreID, body, opts...))
 }
 
 // The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
@@ -387,6 +416,7 @@ func (r StaticFileChunkingStrategyObjectType) IsKnown() bool {
 	return false
 }
 
+// Customize your own chunking strategy by setting chunk size and chunk overlap.
 type StaticFileChunkingStrategyObjectParam struct {
 	Static param.Field[StaticFileChunkingStrategyParam] `json:"static,required"`
 	// Always `static`.
@@ -623,12 +653,119 @@ func (r VectorStoreDeletedObject) IsKnown() bool {
 	return false
 }
 
-type BetaVectorStoreNewParams struct {
+type VectorStoreSearchResponse struct {
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard. Keys are strings with a maximum
+	// length of 64 characters. Values are strings with a maximum length of 512
+	// characters, booleans, or numbers.
+	Attributes map[string]VectorStoreSearchResponseAttributesUnion `json:"attributes,required,nullable"`
+	// Content chunks from the file.
+	Content []VectorStoreSearchResponseContent `json:"content,required"`
+	// The ID of the vector store file.
+	FileID string `json:"file_id,required"`
+	// The name of the vector store file.
+	Filename string `json:"filename,required"`
+	// The similarity score for the result.
+	Score float64                       `json:"score,required"`
+	JSON  vectorStoreSearchResponseJSON `json:"-"`
+}
+
+// vectorStoreSearchResponseJSON contains the JSON metadata for the struct
+// [VectorStoreSearchResponse]
+type vectorStoreSearchResponseJSON struct {
+	Attributes  apijson.Field
+	Content     apijson.Field
+	FileID      apijson.Field
+	Filename    apijson.Field
+	Score       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VectorStoreSearchResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r vectorStoreSearchResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+// Union satisfied by [shared.UnionString], [shared.UnionFloat] or
+// [shared.UnionBool].
+type VectorStoreSearchResponseAttributesUnion interface {
+	ImplementsVectorStoreSearchResponseAttributesUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*VectorStoreSearchResponseAttributesUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.True,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.False,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+	)
+}
+
+type VectorStoreSearchResponseContent struct {
+	// The text content returned from search.
+	Text string `json:"text,required"`
+	// The type of content.
+	Type VectorStoreSearchResponseContentType `json:"type,required"`
+	JSON vectorStoreSearchResponseContentJSON `json:"-"`
+}
+
+// vectorStoreSearchResponseContentJSON contains the JSON metadata for the struct
+// [VectorStoreSearchResponseContent]
+type vectorStoreSearchResponseContentJSON struct {
+	Text        apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VectorStoreSearchResponseContent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r vectorStoreSearchResponseContentJSON) RawJSON() string {
+	return r.raw
+}
+
+// The type of content.
+type VectorStoreSearchResponseContentType string
+
+const (
+	VectorStoreSearchResponseContentTypeText VectorStoreSearchResponseContentType = "text"
+)
+
+func (r VectorStoreSearchResponseContentType) IsKnown() bool {
+	switch r {
+	case VectorStoreSearchResponseContentTypeText:
+		return true
+	}
+	return false
+}
+
+type VectorStoreNewParams struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
 	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
 	// The expiration policy for a vector store.
-	ExpiresAfter param.Field[BetaVectorStoreNewParamsExpiresAfter] `json:"expires_after"`
+	ExpiresAfter param.Field[VectorStoreNewParamsExpiresAfter] `json:"expires_after"`
 	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
 	// the vector store should use. Useful for tools like `file_search` that can access
 	// files.
@@ -644,42 +781,42 @@ type BetaVectorStoreNewParams struct {
 	Name param.Field[string] `json:"name"`
 }
 
-func (r BetaVectorStoreNewParams) MarshalJSON() (data []byte, err error) {
+func (r VectorStoreNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
 // The expiration policy for a vector store.
-type BetaVectorStoreNewParamsExpiresAfter struct {
+type VectorStoreNewParamsExpiresAfter struct {
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
-	Anchor param.Field[BetaVectorStoreNewParamsExpiresAfterAnchor] `json:"anchor,required"`
+	Anchor param.Field[VectorStoreNewParamsExpiresAfterAnchor] `json:"anchor,required"`
 	// The number of days after the anchor time that the vector store will expire.
 	Days param.Field[int64] `json:"days,required"`
 }
 
-func (r BetaVectorStoreNewParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
+func (r VectorStoreNewParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
 // Anchor timestamp after which the expiration policy applies. Supported anchors:
 // `last_active_at`.
-type BetaVectorStoreNewParamsExpiresAfterAnchor string
+type VectorStoreNewParamsExpiresAfterAnchor string
 
 const (
-	BetaVectorStoreNewParamsExpiresAfterAnchorLastActiveAt BetaVectorStoreNewParamsExpiresAfterAnchor = "last_active_at"
+	VectorStoreNewParamsExpiresAfterAnchorLastActiveAt VectorStoreNewParamsExpiresAfterAnchor = "last_active_at"
 )
 
-func (r BetaVectorStoreNewParamsExpiresAfterAnchor) IsKnown() bool {
+func (r VectorStoreNewParamsExpiresAfterAnchor) IsKnown() bool {
 	switch r {
-	case BetaVectorStoreNewParamsExpiresAfterAnchorLastActiveAt:
+	case VectorStoreNewParamsExpiresAfterAnchorLastActiveAt:
 		return true
 	}
 	return false
 }
 
-type BetaVectorStoreUpdateParams struct {
+type VectorStoreUpdateParams struct {
 	// The expiration policy for a vector store.
-	ExpiresAfter param.Field[BetaVectorStoreUpdateParamsExpiresAfter] `json:"expires_after"`
+	ExpiresAfter param.Field[VectorStoreUpdateParamsExpiresAfter] `json:"expires_after"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
@@ -691,40 +828,40 @@ type BetaVectorStoreUpdateParams struct {
 	Name param.Field[string] `json:"name"`
 }
 
-func (r BetaVectorStoreUpdateParams) MarshalJSON() (data []byte, err error) {
+func (r VectorStoreUpdateParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
 // The expiration policy for a vector store.
-type BetaVectorStoreUpdateParamsExpiresAfter struct {
+type VectorStoreUpdateParamsExpiresAfter struct {
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
-	Anchor param.Field[BetaVectorStoreUpdateParamsExpiresAfterAnchor] `json:"anchor,required"`
+	Anchor param.Field[VectorStoreUpdateParamsExpiresAfterAnchor] `json:"anchor,required"`
 	// The number of days after the anchor time that the vector store will expire.
 	Days param.Field[int64] `json:"days,required"`
 }
 
-func (r BetaVectorStoreUpdateParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
+func (r VectorStoreUpdateParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
 // Anchor timestamp after which the expiration policy applies. Supported anchors:
 // `last_active_at`.
-type BetaVectorStoreUpdateParamsExpiresAfterAnchor string
+type VectorStoreUpdateParamsExpiresAfterAnchor string
 
 const (
-	BetaVectorStoreUpdateParamsExpiresAfterAnchorLastActiveAt BetaVectorStoreUpdateParamsExpiresAfterAnchor = "last_active_at"
+	VectorStoreUpdateParamsExpiresAfterAnchorLastActiveAt VectorStoreUpdateParamsExpiresAfterAnchor = "last_active_at"
 )
 
-func (r BetaVectorStoreUpdateParamsExpiresAfterAnchor) IsKnown() bool {
+func (r VectorStoreUpdateParamsExpiresAfterAnchor) IsKnown() bool {
 	switch r {
-	case BetaVectorStoreUpdateParamsExpiresAfterAnchorLastActiveAt:
+	case VectorStoreUpdateParamsExpiresAfterAnchorLastActiveAt:
 		return true
 	}
 	return false
 }
 
-type BetaVectorStoreListParams struct {
+type VectorStoreListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
@@ -740,12 +877,11 @@ type BetaVectorStoreListParams struct {
 	Limit param.Field[int64] `query:"limit"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
-	Order param.Field[BetaVectorStoreListParamsOrder] `query:"order"`
+	Order param.Field[VectorStoreListParamsOrder] `query:"order"`
 }
 
-// URLQuery serializes [BetaVectorStoreListParams]'s query parameters as
-// `url.Values`.
-func (r BetaVectorStoreListParams) URLQuery() (v url.Values) {
+// URLQuery serializes [VectorStoreListParams]'s query parameters as `url.Values`.
+func (r VectorStoreListParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -754,16 +890,130 @@ func (r BetaVectorStoreListParams) URLQuery() (v url.Values) {
 
 // Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 // order and `desc` for descending order.
-type BetaVectorStoreListParamsOrder string
+type VectorStoreListParamsOrder string
 
 const (
-	BetaVectorStoreListParamsOrderAsc  BetaVectorStoreListParamsOrder = "asc"
-	BetaVectorStoreListParamsOrderDesc BetaVectorStoreListParamsOrder = "desc"
+	VectorStoreListParamsOrderAsc  VectorStoreListParamsOrder = "asc"
+	VectorStoreListParamsOrderDesc VectorStoreListParamsOrder = "desc"
 )
 
-func (r BetaVectorStoreListParamsOrder) IsKnown() bool {
+func (r VectorStoreListParamsOrder) IsKnown() bool {
 	switch r {
-	case BetaVectorStoreListParamsOrderAsc, BetaVectorStoreListParamsOrderDesc:
+	case VectorStoreListParamsOrderAsc, VectorStoreListParamsOrderDesc:
+		return true
+	}
+	return false
+}
+
+type VectorStoreSearchParams struct {
+	// A query string for a search
+	Query param.Field[VectorStoreSearchParamsQueryUnion] `json:"query,required"`
+	// A filter to apply based on file attributes.
+	Filters param.Field[VectorStoreSearchParamsFiltersUnion] `json:"filters"`
+	// The maximum number of results to return. This number should be between 1 and 50
+	// inclusive.
+	MaxNumResults param.Field[int64] `json:"max_num_results"`
+	// Ranking options for search.
+	RankingOptions param.Field[VectorStoreSearchParamsRankingOptions] `json:"ranking_options"`
+	// Whether to rewrite the natural language query for vector search.
+	RewriteQuery param.Field[bool] `json:"rewrite_query"`
+}
+
+func (r VectorStoreSearchParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// A query string for a search
+//
+// Satisfied by [shared.UnionString], [VectorStoreSearchParamsQueryArray].
+type VectorStoreSearchParamsQueryUnion interface {
+	ImplementsVectorStoreSearchParamsQueryUnion()
+}
+
+type VectorStoreSearchParamsQueryArray []string
+
+func (r VectorStoreSearchParamsQueryArray) ImplementsVectorStoreSearchParamsQueryUnion() {}
+
+// A filter to apply based on file attributes.
+type VectorStoreSearchParamsFilters struct {
+	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+	//
+	// - `eq`: equals
+	// - `ne`: not equal
+	// - `gt`: greater than
+	// - `gte`: greater than or equal
+	// - `lt`: less than
+	// - `lte`: less than or equal
+	Type    param.Field[VectorStoreSearchParamsFiltersType] `json:"type,required"`
+	Filters param.Field[interface{}]                        `json:"filters"`
+	// The key to compare against the value.
+	Key   param.Field[string]      `json:"key"`
+	Value param.Field[interface{}] `json:"value"`
+}
+
+func (r VectorStoreSearchParamsFilters) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r VectorStoreSearchParamsFilters) ImplementsVectorStoreSearchParamsFiltersUnion() {}
+
+// A filter to apply based on file attributes.
+//
+// Satisfied by [shared.ComparisonFilterParam], [shared.CompoundFilterParam],
+// [VectorStoreSearchParamsFilters].
+type VectorStoreSearchParamsFiltersUnion interface {
+	ImplementsVectorStoreSearchParamsFiltersUnion()
+}
+
+// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+//
+// - `eq`: equals
+// - `ne`: not equal
+// - `gt`: greater than
+// - `gte`: greater than or equal
+// - `lt`: less than
+// - `lte`: less than or equal
+type VectorStoreSearchParamsFiltersType string
+
+const (
+	VectorStoreSearchParamsFiltersTypeEq  VectorStoreSearchParamsFiltersType = "eq"
+	VectorStoreSearchParamsFiltersTypeNe  VectorStoreSearchParamsFiltersType = "ne"
+	VectorStoreSearchParamsFiltersTypeGt  VectorStoreSearchParamsFiltersType = "gt"
+	VectorStoreSearchParamsFiltersTypeGte VectorStoreSearchParamsFiltersType = "gte"
+	VectorStoreSearchParamsFiltersTypeLt  VectorStoreSearchParamsFiltersType = "lt"
+	VectorStoreSearchParamsFiltersTypeLte VectorStoreSearchParamsFiltersType = "lte"
+	VectorStoreSearchParamsFiltersTypeAnd VectorStoreSearchParamsFiltersType = "and"
+	VectorStoreSearchParamsFiltersTypeOr  VectorStoreSearchParamsFiltersType = "or"
+)
+
+func (r VectorStoreSearchParamsFiltersType) IsKnown() bool {
+	switch r {
+	case VectorStoreSearchParamsFiltersTypeEq, VectorStoreSearchParamsFiltersTypeNe, VectorStoreSearchParamsFiltersTypeGt, VectorStoreSearchParamsFiltersTypeGte, VectorStoreSearchParamsFiltersTypeLt, VectorStoreSearchParamsFiltersTypeLte, VectorStoreSearchParamsFiltersTypeAnd, VectorStoreSearchParamsFiltersTypeOr:
+		return true
+	}
+	return false
+}
+
+// Ranking options for search.
+type VectorStoreSearchParamsRankingOptions struct {
+	Ranker         param.Field[VectorStoreSearchParamsRankingOptionsRanker] `json:"ranker"`
+	ScoreThreshold param.Field[float64]                                     `json:"score_threshold"`
+}
+
+func (r VectorStoreSearchParamsRankingOptions) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type VectorStoreSearchParamsRankingOptionsRanker string
+
+const (
+	VectorStoreSearchParamsRankingOptionsRankerAuto              VectorStoreSearchParamsRankingOptionsRanker = "auto"
+	VectorStoreSearchParamsRankingOptionsRankerDefault2024_11_15 VectorStoreSearchParamsRankingOptionsRanker = "default-2024-11-15"
+)
+
+func (r VectorStoreSearchParamsRankingOptionsRanker) IsKnown() bool {
+	switch r {
+	case VectorStoreSearchParamsRankingOptionsRankerAuto, VectorStoreSearchParamsRankingOptionsRankerDefault2024_11_15:
 		return true
 	}
 	return false
