@@ -2298,7 +2298,7 @@ func (r ChatCompletionNewParams) MarshalJSON() (data []byte, err error) {
 // `none` is the default when no functions are present. `auto` is the default if
 // functions are present.
 //
-// Satisfied by [ChatCompletionNewParamsFunctionCallString],
+// Satisfied by [ChatCompletionNewParamsFunctionCallFunctionCallMode],
 // [ChatCompletionFunctionCallOptionParam].
 //
 // Deprecated: deprecated
@@ -2309,22 +2309,22 @@ type ChatCompletionNewParamsFunctionCallUnion interface {
 // `none` means the model will not call a function and instead generates a message.
 // `auto` means the model can pick between generating a message or calling a
 // function.
-type ChatCompletionNewParamsFunctionCallString string
+type ChatCompletionNewParamsFunctionCallFunctionCallMode string
 
 const (
-	ChatCompletionNewParamsFunctionCallStringNone ChatCompletionNewParamsFunctionCallString = "none"
-	ChatCompletionNewParamsFunctionCallStringAuto ChatCompletionNewParamsFunctionCallString = "auto"
+	ChatCompletionNewParamsFunctionCallFunctionCallModeNone ChatCompletionNewParamsFunctionCallFunctionCallMode = "none"
+	ChatCompletionNewParamsFunctionCallFunctionCallModeAuto ChatCompletionNewParamsFunctionCallFunctionCallMode = "auto"
 )
 
-func (r ChatCompletionNewParamsFunctionCallString) IsKnown() bool {
+func (r ChatCompletionNewParamsFunctionCallFunctionCallMode) IsKnown() bool {
 	switch r {
-	case ChatCompletionNewParamsFunctionCallStringNone, ChatCompletionNewParamsFunctionCallStringAuto:
+	case ChatCompletionNewParamsFunctionCallFunctionCallModeNone, ChatCompletionNewParamsFunctionCallFunctionCallModeAuto:
 		return true
 	}
 	return false
 }
 
-func (r ChatCompletionNewParamsFunctionCallString) implementsChatCompletionNewParamsFunctionCallUnion() {
+func (r ChatCompletionNewParamsFunctionCallFunctionCallMode) implementsChatCompletionNewParamsFunctionCallUnion() {
 }
 
 // Deprecated: deprecated
