@@ -54,7 +54,7 @@ func main() {
 	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
+			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
 		}}),
 		Model: openai.F(shared.ChatModelO3Mini),
 	})
@@ -241,7 +241,7 @@ client.Chat.Completions.New(
 	openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
+			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("How can I list all files in a directory using Python?")),
 		}}),
 		Model: openai.F(shared.ChatModelO3Mini),
 	},
@@ -304,7 +304,7 @@ client.Chat.Completions.New(
 	openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
+			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("How can I get the name of the current day in JavaScript?")),
 		}}),
 		Model: openai.F(shared.ChatModelO3Mini),
 	},
@@ -325,7 +325,7 @@ chatCompletion, err := client.Chat.Completions.New(
 	openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
+			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
 		}}),
 		Model: openai.F(shared.ChatModelO3Mini),
 	},

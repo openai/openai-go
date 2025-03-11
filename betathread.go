@@ -111,6 +111,153 @@ func (r *BetaThreadService) NewAndRunStreaming(ctx context.Context, body BetaThr
 	return ssestream.NewStream[AssistantStreamEvent](ssestream.NewDecoder(raw), err)
 }
 
+// Specifies the format that the model must output. Compatible with
+// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
+// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+//
+// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
+// Outputs which ensures the model will match your supplied JSON schema. Learn more
+// in the
+// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+//
+// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
+// message the model generates is valid JSON.
+//
+// **Important:** when using JSON mode, you **must** also instruct the model to
+// produce JSON yourself via a system or user message. Without this, the model may
+// generate an unending stream of whitespace until the generation reaches the token
+// limit, resulting in a long-running and seemingly "stuck" request. Also note that
+// the message content may be partially cut off if `finish_reason="length"`, which
+// indicates the generation exceeded `max_tokens` or the conversation exceeded the
+// max context length.
+//
+// Union satisfied by [AssistantResponseFormatOptionString],
+// [shared.ResponseFormatText], [shared.ResponseFormatJSONObject] or
+// [shared.ResponseFormatJSONSchema].
+type AssistantResponseFormatOptionUnion interface {
+	ImplementsAssistantResponseFormatOptionUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*AssistantResponseFormatOptionUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(AssistantResponseFormatOptionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(shared.ResponseFormatText{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(shared.ResponseFormatJSONObject{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(shared.ResponseFormatJSONSchema{}),
+		},
+	)
+}
+
+// `auto` is the default value
+type AssistantResponseFormatOptionString string
+
+const (
+	AssistantResponseFormatOptionStringAuto AssistantResponseFormatOptionString = "auto"
+)
+
+func (r AssistantResponseFormatOptionString) IsKnown() bool {
+	switch r {
+	case AssistantResponseFormatOptionStringAuto:
+		return true
+	}
+	return false
+}
+
+func (r AssistantResponseFormatOptionString) ImplementsAssistantResponseFormatOptionUnion() {}
+
+func (r AssistantResponseFormatOptionString) ImplementsAssistantResponseFormatOptionUnionParam() {}
+
+// Specifies the format that the model must output. Compatible with
+// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
+// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+//
+// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
+// Outputs which ensures the model will match your supplied JSON schema. Learn more
+// in the
+// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+//
+// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
+// message the model generates is valid JSON.
+//
+// **Important:** when using JSON mode, you **must** also instruct the model to
+// produce JSON yourself via a system or user message. Without this, the model may
+// generate an unending stream of whitespace until the generation reaches the token
+// limit, resulting in a long-running and seemingly "stuck" request. Also note that
+// the message content may be partially cut off if `finish_reason="length"`, which
+// indicates the generation exceeded `max_tokens` or the conversation exceeded the
+// max context length.
+type AssistantResponseFormatOptionParam struct {
+	// The type of response format being defined. Always `text`.
+	Type       param.Field[AssistantResponseFormatOptionType] `json:"type,required"`
+	JSONSchema param.Field[interface{}]                       `json:"json_schema"`
+}
+
+func (r AssistantResponseFormatOptionParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r AssistantResponseFormatOptionParam) ImplementsAssistantResponseFormatOptionUnionParam() {}
+
+// Specifies the format that the model must output. Compatible with
+// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
+// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+//
+// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
+// Outputs which ensures the model will match your supplied JSON schema. Learn more
+// in the
+// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+//
+// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
+// message the model generates is valid JSON.
+//
+// **Important:** when using JSON mode, you **must** also instruct the model to
+// produce JSON yourself via a system or user message. Without this, the model may
+// generate an unending stream of whitespace until the generation reaches the token
+// limit, resulting in a long-running and seemingly "stuck" request. Also note that
+// the message content may be partially cut off if `finish_reason="length"`, which
+// indicates the generation exceeded `max_tokens` or the conversation exceeded the
+// max context length.
+//
+// Satisfied by [AssistantResponseFormatOptionString],
+// [shared.ResponseFormatTextParam], [shared.ResponseFormatJSONObjectParam],
+// [shared.ResponseFormatJSONSchemaParam], [AssistantResponseFormatOptionParam].
+type AssistantResponseFormatOptionUnionParam interface {
+	ImplementsAssistantResponseFormatOptionUnionParam()
+}
+
+// The type of response format being defined. Always `text`.
+type AssistantResponseFormatOptionType string
+
+const (
+	AssistantResponseFormatOptionTypeText       AssistantResponseFormatOptionType = "text"
+	AssistantResponseFormatOptionTypeJSONObject AssistantResponseFormatOptionType = "json_object"
+	AssistantResponseFormatOptionTypeJSONSchema AssistantResponseFormatOptionType = "json_schema"
+)
+
+func (r AssistantResponseFormatOptionType) IsKnown() bool {
+	switch r {
+	case AssistantResponseFormatOptionTypeText, AssistantResponseFormatOptionTypeJSONObject, AssistantResponseFormatOptionTypeJSONSchema:
+		return true
+	}
+	return false
+}
+
 // Specifies a tool the model should use. Use to force the model to call a specific
 // tool.
 type AssistantToolChoice struct {
@@ -461,11 +608,8 @@ func (r BetaThreadNewParams) MarshalJSON() (data []byte, err error) {
 }
 
 type BetaThreadNewParamsMessage struct {
-	// An array of content parts with a defined type, each can be of type `text` or
-	// images can be passed with `image_url` or `image_file`. Image types are only
-	// supported on
-	// [Vision-compatible models](https://platform.openai.com/docs/models).
-	Content param.Field[[]MessageContentPartParamUnion] `json:"content,required"`
+	// The text contents of the message.
+	Content param.Field[BetaThreadNewParamsMessagesContentUnion] `json:"content,required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
 	//   - `user`: Indicates the message is sent by an actual user and should be used in
@@ -486,6 +630,19 @@ type BetaThreadNewParamsMessage struct {
 
 func (r BetaThreadNewParamsMessage) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// The text contents of the message.
+//
+// Satisfied by [shared.UnionString],
+// [BetaThreadNewParamsMessagesContentArrayOfContentParts].
+type BetaThreadNewParamsMessagesContentUnion interface {
+	ImplementsBetaThreadNewParamsMessagesContentUnion()
+}
+
+type BetaThreadNewParamsMessagesContentArrayOfContentParts []MessageContentPartParamUnion
+
+func (r BetaThreadNewParamsMessagesContentArrayOfContentParts) ImplementsBetaThreadNewParamsMessagesContentUnion() {
 }
 
 // The role of the entity that is creating the message. Allowed values include:
@@ -625,8 +782,8 @@ func (r BetaThreadNewParamsToolResourcesFileSearch) MarshalJSON() (data []byte, 
 
 type BetaThreadNewParamsToolResourcesFileSearchVectorStore struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-	// strategy. Only applicable if `file_ids` is non-empty.
-	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
+	// strategy.
+	ChunkingStrategy param.Field[BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion] `json:"chunking_strategy"`
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to
 	// add to the vector store. There can be a maximum of 10000 files in a vector
 	// store.
@@ -642,6 +799,119 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStore struct {
 
 func (r BetaThreadNewParamsToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
+// strategy.
+type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy struct {
+	// Always `auto`.
+	Type   param.Field[BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType] `json:"type,required"`
+	Static param.Field[interface{}]                                                                `json:"static"`
+}
+
+func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy) implementsBetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
+}
+
+// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
+// strategy.
+//
+// Satisfied by
+// [BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto],
+// [BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic],
+// [BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy].
+type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion interface {
+	implementsBetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion()
+}
+
+// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
+// `800` and `chunk_overlap_tokens` of `400`.
+type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto struct {
+	// Always `auto`.
+	Type param.Field[BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType] `json:"type,required"`
+}
+
+func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto) implementsBetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
+}
+
+// Always `auto`.
+type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType string
+
+const (
+	BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType = "auto"
+)
+
+func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType) IsKnown() bool {
+	switch r {
+	case BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto:
+		return true
+	}
+	return false
+}
+
+type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic struct {
+	Static param.Field[BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic] `json:"static,required"`
+	// Always `static`.
+	Type param.Field[BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType] `json:"type,required"`
+}
+
+func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic) implementsBetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
+}
+
+type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic struct {
+	// The number of tokens that overlap between chunks. The default value is `400`.
+	//
+	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
+	ChunkOverlapTokens param.Field[int64] `json:"chunk_overlap_tokens,required"`
+	// The maximum number of tokens in each chunk. The default value is `800`. The
+	// minimum value is `100` and the maximum value is `4096`.
+	MaxChunkSizeTokens param.Field[int64] `json:"max_chunk_size_tokens,required"`
+}
+
+func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Always `static`.
+type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType string
+
+const (
+	BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType = "static"
+)
+
+func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType) IsKnown() bool {
+	switch r {
+	case BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic:
+		return true
+	}
+	return false
+}
+
+// Always `auto`.
+type BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType string
+
+const (
+	BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto   BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType = "auto"
+	BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType = "static"
+)
+
+func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType) IsKnown() bool {
+	switch r {
+	case BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto, BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic:
+		return true
+	}
+	return false
 }
 
 type BetaThreadUpdateParams struct {
@@ -735,6 +1005,27 @@ type BetaThreadNewAndRunParams struct {
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Field[bool] `json:"parallel_tool_calls"`
+	// Specifies the format that the model must output. Compatible with
+	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
+	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+	//
+	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
+	// Outputs which ensures the model will match your supplied JSON schema. Learn more
+	// in the
+	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	//
+	// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
+	// message the model generates is valid JSON.
+	//
+	// **Important:** when using JSON mode, you **must** also instruct the model to
+	// produce JSON yourself via a system or user message. Without this, the model may
+	// generate an unending stream of whitespace until the generation reaches the token
+	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
+	// the message content may be partially cut off if `finish_reason="length"`, which
+	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
+	// max context length.
+	ResponseFormat param.Field[AssistantResponseFormatOptionUnionParam] `json:"response_format"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -798,11 +1089,8 @@ func (r BetaThreadNewAndRunParamsThread) MarshalJSON() (data []byte, err error) 
 }
 
 type BetaThreadNewAndRunParamsThreadMessage struct {
-	// An array of content parts with a defined type, each can be of type `text` or
-	// images can be passed with `image_url` or `image_file`. Image types are only
-	// supported on
-	// [Vision-compatible models](https://platform.openai.com/docs/models).
-	Content param.Field[[]MessageContentPartParamUnion] `json:"content,required"`
+	// The text contents of the message.
+	Content param.Field[BetaThreadNewAndRunParamsThreadMessagesContentUnion] `json:"content,required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
 	//   - `user`: Indicates the message is sent by an actual user and should be used in
@@ -823,6 +1111,19 @@ type BetaThreadNewAndRunParamsThreadMessage struct {
 
 func (r BetaThreadNewAndRunParamsThreadMessage) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// The text contents of the message.
+//
+// Satisfied by [shared.UnionString],
+// [BetaThreadNewAndRunParamsThreadMessagesContentArrayOfContentParts].
+type BetaThreadNewAndRunParamsThreadMessagesContentUnion interface {
+	ImplementsBetaThreadNewAndRunParamsThreadMessagesContentUnion()
+}
+
+type BetaThreadNewAndRunParamsThreadMessagesContentArrayOfContentParts []MessageContentPartParamUnion
+
+func (r BetaThreadNewAndRunParamsThreadMessagesContentArrayOfContentParts) ImplementsBetaThreadNewAndRunParamsThreadMessagesContentUnion() {
 }
 
 // The role of the entity that is creating the message. Allowed values include:
@@ -962,8 +1263,8 @@ func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearch) MarshalJSON() (d
 
 type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-	// strategy. Only applicable if `file_ids` is non-empty.
-	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
+	// strategy.
+	ChunkingStrategy param.Field[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion] `json:"chunking_strategy"`
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to
 	// add to the vector store. There can be a maximum of 10000 files in a vector
 	// store.
@@ -979,6 +1280,119 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore struct {
 
 func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
+// strategy.
+type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategy struct {
+	// Always `auto`.
+	Type   param.Field[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyType] `json:"type,required"`
+	Static param.Field[interface{}]                                                                            `json:"static"`
+}
+
+func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategy) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategy) implementsBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
+}
+
+// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
+// strategy.
+//
+// Satisfied by
+// [BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAuto],
+// [BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStatic],
+// [BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategy].
+type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion interface {
+	implementsBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion()
+}
+
+// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
+// `800` and `chunk_overlap_tokens` of `400`.
+type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAuto struct {
+	// Always `auto`.
+	Type param.Field[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoType] `json:"type,required"`
+}
+
+func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAuto) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAuto) implementsBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
+}
+
+// Always `auto`.
+type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoType string
+
+const (
+	BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoType = "auto"
+)
+
+func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoType) IsKnown() bool {
+	switch r {
+	case BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto:
+		return true
+	}
+	return false
+}
+
+type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStatic struct {
+	Static param.Field[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic] `json:"static,required"`
+	// Always `static`.
+	Type param.Field[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticType] `json:"type,required"`
+}
+
+func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStatic) implementsBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
+}
+
+type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic struct {
+	// The number of tokens that overlap between chunks. The default value is `400`.
+	//
+	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
+	ChunkOverlapTokens param.Field[int64] `json:"chunk_overlap_tokens,required"`
+	// The maximum number of tokens in each chunk. The default value is `800`. The
+	// minimum value is `100` and the maximum value is `4096`.
+	MaxChunkSizeTokens param.Field[int64] `json:"max_chunk_size_tokens,required"`
+}
+
+func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Always `static`.
+type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticType string
+
+const (
+	BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticType = "static"
+)
+
+func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticType) IsKnown() bool {
+	switch r {
+	case BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic:
+		return true
+	}
+	return false
+}
+
+// Always `auto`.
+type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyType string
+
+const (
+	BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto   BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyType = "auto"
+	BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyType = "static"
+)
+
+func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyType) IsKnown() bool {
+	switch r {
+	case BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto, BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic:
+		return true
+	}
+	return false
 }
 
 // A set of resources that are used by the assistant's tools. The resources are

@@ -142,6 +142,27 @@ type Assistant struct {
 	// assistant. Tools can be of types `code_interpreter`, `file_search`, or
 	// `function`.
 	Tools []AssistantTool `json:"tools,required"`
+	// Specifies the format that the model must output. Compatible with
+	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
+	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+	//
+	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
+	// Outputs which ensures the model will match your supplied JSON schema. Learn more
+	// in the
+	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	//
+	// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
+	// message the model generates is valid JSON.
+	//
+	// **Important:** when using JSON mode, you **must** also instruct the model to
+	// produce JSON yourself via a system or user message. Without this, the model may
+	// generate an unending stream of whitespace until the generation reaches the token
+	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
+	// the message content may be partially cut off if `finish_reason="length"`, which
+	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
+	// max context length.
+	ResponseFormat AssistantResponseFormatOptionUnion `json:"response_format,nullable"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -162,20 +183,21 @@ type Assistant struct {
 
 // assistantJSON contains the JSON metadata for the struct [Assistant]
 type assistantJSON struct {
-	ID            apijson.Field
-	CreatedAt     apijson.Field
-	Description   apijson.Field
-	Instructions  apijson.Field
-	Metadata      apijson.Field
-	Model         apijson.Field
-	Name          apijson.Field
-	Object        apijson.Field
-	Tools         apijson.Field
-	Temperature   apijson.Field
-	ToolResources apijson.Field
-	TopP          apijson.Field
-	raw           string
-	ExtraFields   map[string]apijson.Field
+	ID             apijson.Field
+	CreatedAt      apijson.Field
+	Description    apijson.Field
+	Instructions   apijson.Field
+	Metadata       apijson.Field
+	Model          apijson.Field
+	Name           apijson.Field
+	Object         apijson.Field
+	Tools          apijson.Field
+	ResponseFormat apijson.Field
+	Temperature    apijson.Field
+	ToolResources  apijson.Field
+	TopP           apijson.Field
+	raw            string
+	ExtraFields    map[string]apijson.Field
 }
 
 func (r *Assistant) UnmarshalJSON(data []byte) (err error) {
@@ -2082,13 +2104,34 @@ type BetaAssistantNewParams struct {
 	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
 	// The name of the assistant. The maximum length is 256 characters.
 	Name param.Field[string] `json:"name"`
-	// **o1 and o3-mini models only**
+	// **o-series models only**
 	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
 	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
 	// result in faster responses and fewer tokens used on reasoning in a response.
-	ReasoningEffort param.Field[BetaAssistantNewParamsReasoningEffort] `json:"reasoning_effort"`
+	ReasoningEffort param.Field[shared.ReasoningEffort] `json:"reasoning_effort"`
+	// Specifies the format that the model must output. Compatible with
+	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
+	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+	//
+	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
+	// Outputs which ensures the model will match your supplied JSON schema. Learn more
+	// in the
+	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	//
+	// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
+	// message the model generates is valid JSON.
+	//
+	// **Important:** when using JSON mode, you **must** also instruct the model to
+	// produce JSON yourself via a system or user message. Without this, the model may
+	// generate an unending stream of whitespace until the generation reaches the token
+	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
+	// the message content may be partially cut off if `finish_reason="length"`, which
+	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
+	// max context length.
+	ResponseFormat param.Field[AssistantResponseFormatOptionUnionParam] `json:"response_format"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -2112,28 +2155,6 @@ type BetaAssistantNewParams struct {
 
 func (r BetaAssistantNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// **o1 and o3-mini models only**
-//
-// Constrains effort on reasoning for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-// result in faster responses and fewer tokens used on reasoning in a response.
-type BetaAssistantNewParamsReasoningEffort string
-
-const (
-	BetaAssistantNewParamsReasoningEffortLow    BetaAssistantNewParamsReasoningEffort = "low"
-	BetaAssistantNewParamsReasoningEffortMedium BetaAssistantNewParamsReasoningEffort = "medium"
-	BetaAssistantNewParamsReasoningEffortHigh   BetaAssistantNewParamsReasoningEffort = "high"
-)
-
-func (r BetaAssistantNewParamsReasoningEffort) IsKnown() bool {
-	switch r {
-	case BetaAssistantNewParamsReasoningEffortLow, BetaAssistantNewParamsReasoningEffortMedium, BetaAssistantNewParamsReasoningEffortHigh:
-		return true
-	}
-	return false
 }
 
 // A set of resources that are used by the assistant's tools. The resources are
@@ -2179,8 +2200,8 @@ func (r BetaAssistantNewParamsToolResourcesFileSearch) MarshalJSON() (data []byt
 
 type BetaAssistantNewParamsToolResourcesFileSearchVectorStore struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-	// strategy. Only applicable if `file_ids` is non-empty.
-	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
+	// strategy.
+	ChunkingStrategy param.Field[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion] `json:"chunking_strategy"`
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to
 	// add to the vector store. There can be a maximum of 10000 files in a vector
 	// store.
@@ -2196,6 +2217,119 @@ type BetaAssistantNewParamsToolResourcesFileSearchVectorStore struct {
 
 func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
+// strategy.
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy struct {
+	// Always `auto`.
+	Type   param.Field[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType] `json:"type,required"`
+	Static param.Field[interface{}]                                                                   `json:"static"`
+}
+
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy) implementsBetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
+}
+
+// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
+// strategy.
+//
+// Satisfied by
+// [BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto],
+// [BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic],
+// [BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy].
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion interface {
+	implementsBetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion()
+}
+
+// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
+// `800` and `chunk_overlap_tokens` of `400`.
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto struct {
+	// Always `auto`.
+	Type param.Field[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType] `json:"type,required"`
+}
+
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto) implementsBetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
+}
+
+// Always `auto`.
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType string
+
+const (
+	BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType = "auto"
+)
+
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType) IsKnown() bool {
+	switch r {
+	case BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto:
+		return true
+	}
+	return false
+}
+
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic struct {
+	Static param.Field[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic] `json:"static,required"`
+	// Always `static`.
+	Type param.Field[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType] `json:"type,required"`
+}
+
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic) implementsBetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
+}
+
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic struct {
+	// The number of tokens that overlap between chunks. The default value is `400`.
+	//
+	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
+	ChunkOverlapTokens param.Field[int64] `json:"chunk_overlap_tokens,required"`
+	// The maximum number of tokens in each chunk. The default value is `800`. The
+	// minimum value is `100` and the maximum value is `4096`.
+	MaxChunkSizeTokens param.Field[int64] `json:"max_chunk_size_tokens,required"`
+}
+
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Always `static`.
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType string
+
+const (
+	BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType = "static"
+)
+
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType) IsKnown() bool {
+	switch r {
+	case BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic:
+		return true
+	}
+	return false
+}
+
+// Always `auto`.
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType string
+
+const (
+	BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto   BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType = "auto"
+	BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType = "static"
+)
+
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType) IsKnown() bool {
+	switch r {
+	case BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto, BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic:
+		return true
+	}
+	return false
 }
 
 type BetaAssistantUpdateParams struct {
@@ -2219,13 +2353,34 @@ type BetaAssistantUpdateParams struct {
 	Model param.Field[BetaAssistantUpdateParamsModel] `json:"model"`
 	// The name of the assistant. The maximum length is 256 characters.
 	Name param.Field[string] `json:"name"`
-	// **o1 and o3-mini models only**
+	// **o-series models only**
 	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
 	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
 	// result in faster responses and fewer tokens used on reasoning in a response.
-	ReasoningEffort param.Field[BetaAssistantUpdateParamsReasoningEffort] `json:"reasoning_effort"`
+	ReasoningEffort param.Field[shared.ReasoningEffort] `json:"reasoning_effort"`
+	// Specifies the format that the model must output. Compatible with
+	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
+	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
+	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+	//
+	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
+	// Outputs which ensures the model will match your supplied JSON schema. Learn more
+	// in the
+	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	//
+	// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
+	// message the model generates is valid JSON.
+	//
+	// **Important:** when using JSON mode, you **must** also instruct the model to
+	// produce JSON yourself via a system or user message. Without this, the model may
+	// generate an unending stream of whitespace until the generation reaches the token
+	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
+	// the message content may be partially cut off if `finish_reason="length"`, which
+	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
+	// max context length.
+	ResponseFormat param.Field[AssistantResponseFormatOptionUnionParam] `json:"response_format"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -2294,28 +2449,6 @@ const (
 func (r BetaAssistantUpdateParamsModel) IsKnown() bool {
 	switch r {
 	case BetaAssistantUpdateParamsModelO3Mini, BetaAssistantUpdateParamsModelO3Mini2025_01_31, BetaAssistantUpdateParamsModelO1, BetaAssistantUpdateParamsModelO1_2024_12_17, BetaAssistantUpdateParamsModelGPT4o, BetaAssistantUpdateParamsModelGPT4o2024_11_20, BetaAssistantUpdateParamsModelGPT4o2024_08_06, BetaAssistantUpdateParamsModelGPT4o2024_05_13, BetaAssistantUpdateParamsModelGPT4oMini, BetaAssistantUpdateParamsModelGPT4oMini2024_07_18, BetaAssistantUpdateParamsModelGPT4_5Preview, BetaAssistantUpdateParamsModelGPT4_5Preview2025_02_27, BetaAssistantUpdateParamsModelGPT4Turbo, BetaAssistantUpdateParamsModelGPT4Turbo2024_04_09, BetaAssistantUpdateParamsModelGPT4_0125Preview, BetaAssistantUpdateParamsModelGPT4TurboPreview, BetaAssistantUpdateParamsModelGPT4_1106Preview, BetaAssistantUpdateParamsModelGPT4VisionPreview, BetaAssistantUpdateParamsModelGPT4, BetaAssistantUpdateParamsModelGPT4_0314, BetaAssistantUpdateParamsModelGPT4_0613, BetaAssistantUpdateParamsModelGPT4_32k, BetaAssistantUpdateParamsModelGPT4_32k0314, BetaAssistantUpdateParamsModelGPT4_32k0613, BetaAssistantUpdateParamsModelGPT3_5Turbo, BetaAssistantUpdateParamsModelGPT3_5Turbo16k, BetaAssistantUpdateParamsModelGPT3_5Turbo0613, BetaAssistantUpdateParamsModelGPT3_5Turbo1106, BetaAssistantUpdateParamsModelGPT3_5Turbo0125, BetaAssistantUpdateParamsModelGPT3_5Turbo16k0613:
-		return true
-	}
-	return false
-}
-
-// **o1 and o3-mini models only**
-//
-// Constrains effort on reasoning for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-// result in faster responses and fewer tokens used on reasoning in a response.
-type BetaAssistantUpdateParamsReasoningEffort string
-
-const (
-	BetaAssistantUpdateParamsReasoningEffortLow    BetaAssistantUpdateParamsReasoningEffort = "low"
-	BetaAssistantUpdateParamsReasoningEffortMedium BetaAssistantUpdateParamsReasoningEffort = "medium"
-	BetaAssistantUpdateParamsReasoningEffortHigh   BetaAssistantUpdateParamsReasoningEffort = "high"
-)
-
-func (r BetaAssistantUpdateParamsReasoningEffort) IsKnown() bool {
-	switch r {
-	case BetaAssistantUpdateParamsReasoningEffortLow, BetaAssistantUpdateParamsReasoningEffortMedium, BetaAssistantUpdateParamsReasoningEffortHigh:
 		return true
 	}
 	return false

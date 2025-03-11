@@ -28,7 +28,7 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Beta.Threads.New(context.TODO(), openai.BetaThreadNewParams{
 		Messages: openai.F([]openai.BetaThreadNewParamsMessage{{
-			Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
+			Content: openai.F[openai.BetaThreadNewParamsMessagesContentUnion](shared.UnionString("string")),
 			Role:    openai.F(openai.BetaThreadNewParamsMessagesRoleUser),
 			Attachments: openai.F([]openai.BetaThreadNewParamsMessagesAttachment{{
 				FileID: openai.F("file_id"),
@@ -50,8 +50,8 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 			FileSearch: openai.F(openai.BetaThreadNewParamsToolResourcesFileSearch{
 				VectorStoreIDs: openai.F([]string{"string"}),
 				VectorStores: openai.F([]openai.BetaThreadNewParamsToolResourcesFileSearchVectorStore{{
-					ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
-						Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
+					ChunkingStrategy: openai.F[openai.BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion](openai.BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto{
+						Type: openai.F(openai.BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto),
 					}),
 					FileIDs: openai.F([]string{"string"}),
 					Metadata: openai.F(shared.MetadataParam{
@@ -174,10 +174,11 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 		}),
 		Model:             openai.F(shared.ChatModelO3Mini),
 		ParallelToolCalls: openai.F(true),
+		ResponseFormat:    openai.F[openai.AssistantResponseFormatOptionUnionParam](openai.AssistantResponseFormatOptionString(openai.AssistantResponseFormatOptionStringAuto)),
 		Temperature:       openai.F(1.000000),
 		Thread: openai.F(openai.BetaThreadNewAndRunParamsThread{
 			Messages: openai.F([]openai.BetaThreadNewAndRunParamsThreadMessage{{
-				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
+				Content: openai.F[openai.BetaThreadNewAndRunParamsThreadMessagesContentUnion](shared.UnionString("string")),
 				Role:    openai.F(openai.BetaThreadNewAndRunParamsThreadMessagesRoleUser),
 				Attachments: openai.F([]openai.BetaThreadNewAndRunParamsThreadMessagesAttachment{{
 					FileID: openai.F("file_id"),
@@ -199,8 +200,8 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 				FileSearch: openai.F(openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearch{
 					VectorStoreIDs: openai.F([]string{"string"}),
 					VectorStores: openai.F([]openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore{{
-						ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
-							Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
+						ChunkingStrategy: openai.F[openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion](openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAuto{
+							Type: openai.F(openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto),
 						}),
 						FileIDs: openai.F([]string{"string"}),
 						Metadata: openai.F(shared.MetadataParam{
