@@ -30,7 +30,7 @@ func TestBetaThreadMessageNewWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"thread_id",
 		openai.BetaThreadMessageNewParams{
-			Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
+			Content: openai.F[openai.BetaThreadMessageNewParamsContentUnion](shared.UnionString("string")),
 			Role:    openai.F(openai.BetaThreadMessageNewParamsRoleUser),
 			Attachments: openai.F([]openai.BetaThreadMessageNewParamsAttachment{{
 				FileID: openai.F("file_id"),

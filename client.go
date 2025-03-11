@@ -15,19 +15,20 @@ import (
 // interacting with the openai API. You should not instantiate this client
 // directly, and instead use the [NewClient] method instead.
 type Client struct {
-	Options     []option.RequestOption
-	Completions *CompletionService
-	Chat        *ChatService
-	Embeddings  *EmbeddingService
-	Files       *FileService
-	Images      *ImageService
-	Audio       *AudioService
-	Moderations *ModerationService
-	Models      *ModelService
-	FineTuning  *FineTuningService
-	Beta        *BetaService
-	Batches     *BatchService
-	Uploads     *UploadService
+	Options      []option.RequestOption
+	Completions  *CompletionService
+	Chat         *ChatService
+	Embeddings   *EmbeddingService
+	Files        *FileService
+	Images       *ImageService
+	Audio        *AudioService
+	Moderations  *ModerationService
+	Models       *ModelService
+	FineTuning   *FineTuningService
+	VectorStores *VectorStoreService
+	Beta         *BetaService
+	Batches      *BatchService
+	Uploads      *UploadService
 }
 
 // NewClient generates a new client with the default option read from the
@@ -58,6 +59,7 @@ func NewClient(opts ...option.RequestOption) (r *Client) {
 	r.Moderations = NewModerationService(opts...)
 	r.Models = NewModelService(opts...)
 	r.FineTuning = NewFineTuningService(opts...)
+	r.VectorStores = NewVectorStoreService(opts...)
 	r.Beta = NewBetaService(opts...)
 	r.Batches = NewBatchService(opts...)
 	r.Uploads = NewUploadService(opts...)

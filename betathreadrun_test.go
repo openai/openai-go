@@ -34,7 +34,7 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 			Include:                openai.F([]openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent}),
 			AdditionalInstructions: openai.F("additional_instructions"),
 			AdditionalMessages: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessage{{
-				Content: openai.F([]openai.MessageContentPartParamUnion{openai.ImageFileContentBlockParam{ImageFile: openai.F(openai.ImageFileParam{FileID: openai.F("file_id"), Detail: openai.F(openai.ImageFileDetailAuto)}), Type: openai.F(openai.ImageFileContentBlockTypeImageFile)}}),
+				Content: openai.F[openai.BetaThreadRunNewParamsAdditionalMessagesContentUnion](shared.UnionString("string")),
 				Role:    openai.F(openai.BetaThreadRunNewParamsAdditionalMessagesRoleUser),
 				Attachments: openai.F([]openai.BetaThreadRunNewParamsAdditionalMessagesAttachment{{
 					FileID: openai.F("file_id"),
@@ -54,7 +54,8 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 			}),
 			Model:             openai.F(shared.ChatModelO3Mini),
 			ParallelToolCalls: openai.F(true),
-			ReasoningEffort:   openai.F(openai.BetaThreadRunNewParamsReasoningEffortLow),
+			ReasoningEffort:   openai.F(shared.ReasoningEffortLow),
+			ResponseFormat:    openai.F[openai.AssistantResponseFormatOptionUnionParam](openai.AssistantResponseFormatOptionString(openai.AssistantResponseFormatOptionStringAuto)),
 			Temperature:       openai.F(1.000000),
 			ToolChoice:        openai.F[openai.AssistantToolChoiceOptionUnionParam](openai.AssistantToolChoiceOptionAuto(openai.AssistantToolChoiceOptionAutoNone)),
 			Tools: openai.F([]openai.AssistantToolUnionParam{openai.CodeInterpreterToolParam{
