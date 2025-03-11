@@ -20,7 +20,8 @@ type unionEntry struct {
 	variants         []UnionVariant
 }
 
-func RegisterUnion(typ reflect.Type, discriminator string, variants ...UnionVariant) {
+func RegisterUnion[T any](discriminator string, variants ...UnionVariant) {
+	typ := reflect.TypeOf((*T)(nil)).Elem()
 	unionRegistry[typ] = unionEntry{
 		discriminatorKey: discriminator,
 		variants:         variants,

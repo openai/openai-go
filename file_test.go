@@ -30,8 +30,8 @@ func TestFileNew(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Files.New(context.TODO(), openai.FileNewParams{
-		File:    openai.F(io.Reader(bytes.NewBuffer([]byte("some file contents")))),
-		Purpose: openai.F(openai.FilePurposeAssistants),
+		File:    io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		Purpose: openai.FilePurposeAssistants,
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -77,10 +77,10 @@ func TestFileListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Files.List(context.TODO(), openai.FileListParams{
-		After:   openai.F("after"),
-		Limit:   openai.F(int64(0)),
-		Order:   openai.F(openai.FileListParamsOrderAsc),
-		Purpose: openai.F("purpose"),
+		After:   openai.String("after"),
+		Limit:   openai.Int(0),
+		Order:   openai.FileListParamsOrderAsc,
+		Purpose: openai.String("purpose"),
 	})
 	if err != nil {
 		var apierr *openai.Error

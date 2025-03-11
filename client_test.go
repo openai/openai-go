@@ -40,11 +40,14 @@ func TestUserAgentHeader(t *testing.T) {
 		}),
 	)
 	client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	})
 	if userAgent != fmt.Sprintf("OpenAI/Go %s", internal.PackageVersion) {
 		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
@@ -69,11 +72,14 @@ func TestRetryAfter(t *testing.T) {
 		}),
 	)
 	_, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -109,11 +115,14 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 		option.WithHeaderDel("X-Stainless-Retry-Count"),
 	)
 	_, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -144,11 +153,14 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 		option.WithHeader("X-Stainless-Retry-Count", "42"),
 	)
 	_, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -178,11 +190,14 @@ func TestRetryAfterMs(t *testing.T) {
 		}),
 	)
 	_, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -206,11 +221,14 @@ func TestContextCancel(t *testing.T) {
 	cancelCtx, cancel := context.WithCancel(context.Background())
 	cancel()
 	_, err := client.Chat.Completions.New(cancelCtx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -231,11 +249,14 @@ func TestContextCancelDelay(t *testing.T) {
 	cancelCtx, cancel := context.WithTimeout(context.Background(), 2*time.Millisecond)
 	defer cancel()
 	_, err := client.Chat.Completions.New(cancelCtx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	})
 	if err == nil {
 		t.Error("expected there to be a cancel error")
@@ -262,11 +283,14 @@ func TestContextDeadline(t *testing.T) {
 			}),
 		)
 		_, err := client.Chat.Completions.New(deadlineCtx, openai.ChatCompletionNewParams{
-			Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-				Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-				Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-			}}),
-			Model: openai.F(shared.ChatModelO3Mini),
+			Messages: []openai.ChatCompletionMessageParamUnion{{
+				OfUser: &openai.ChatCompletionUserMessageParam{
+					Content: openai.ChatCompletionUserMessageParamContentUnion{
+						OfString: openai.String("Say this is a test"),
+					},
+				},
+			}},
+			Model: shared.ChatModelO3Mini,
 		})
 		if err == nil {
 			t.Error("expected there to be a deadline error")
@@ -312,11 +336,14 @@ func TestContextDeadlineStreaming(t *testing.T) {
 			}),
 		)
 		stream := client.Chat.Completions.NewStreaming(deadlineCtx, openai.ChatCompletionNewParams{
-			Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionDeveloperMessageParam{
-				Content: openai.F[openai.ChatCompletionDeveloperMessageParamContentUnion](shared.UnionString("string")),
-				Role:    openai.F(openai.ChatCompletionDeveloperMessageParamRoleDeveloper),
-			}}),
-			Model: openai.F(shared.ChatModelO3Mini),
+			Messages: []openai.ChatCompletionMessageParamUnion{{
+				OfDeveloper: &openai.ChatCompletionDeveloperMessageParam{
+					Content: openai.ChatCompletionDeveloperMessageParamContentUnion{
+						OfString: openai.String("string"),
+					},
+				},
+			}},
+			Model: shared.ChatModelO3Mini,
 		})
 		for stream.Next() {
 			_ = stream.Current()
@@ -364,11 +391,14 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 		stream := client.Chat.Completions.NewStreaming(
 			context.Background(),
 			openai.ChatCompletionNewParams{
-				Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionDeveloperMessageParam{
-					Content: openai.F[openai.ChatCompletionDeveloperMessageParamContentUnion](shared.UnionString("string")),
-					Role:    openai.F(openai.ChatCompletionDeveloperMessageParamRoleDeveloper),
-				}}),
-				Model: openai.F(shared.ChatModelO3Mini),
+				Messages: []openai.ChatCompletionMessageParamUnion{{
+					OfDeveloper: &openai.ChatCompletionDeveloperMessageParam{
+						Content: openai.ChatCompletionDeveloperMessageParamContentUnion{
+							OfString: openai.String("string"),
+						},
+					},
+				}},
+				Model: shared.ChatModelO3Mini,
 			},
 			option.WithRequestTimeout((100 * time.Millisecond)),
 		)

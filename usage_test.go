@@ -26,14 +26,17 @@ func TestUsage(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	})
 	if err != nil {
-		t.Error(err)
+		t.Fatalf("err should be nil: %s", err.Error())
 	}
 	t.Logf("%+v\n", chatCompletion)
 }

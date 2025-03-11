@@ -11,7 +11,6 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
 )
 
 func TestEmbeddingNewWithOptionalParams(t *testing.T) {
@@ -27,11 +26,13 @@ func TestEmbeddingNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Embeddings.New(context.TODO(), openai.EmbeddingNewParams{
-		Input:          openai.F[openai.EmbeddingNewParamsInputUnion](shared.UnionString("The quick brown fox jumped over the lazy dog")),
-		Model:          openai.F(openai.EmbeddingModelTextEmbeddingAda002),
-		Dimensions:     openai.F(int64(1)),
-		EncodingFormat: openai.F(openai.EmbeddingNewParamsEncodingFormatFloat),
-		User:           openai.F("user-1234"),
+		Input: openai.EmbeddingNewParamsInputUnion{
+			OfString: openai.String("The quick brown fox jumped over the lazy dog"),
+		},
+		Model:          openai.EmbeddingModelTextEmbeddingAda002,
+		Dimensions:     openai.Int(1),
+		EncodingFormat: openai.EmbeddingNewParamsEncodingFormatFloat,
+		User:           openai.String("user-1234"),
 	})
 	if err != nil {
 		var apierr *openai.Error

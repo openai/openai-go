@@ -11,7 +11,6 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
 )
 
 func TestModerationNewWithOptionalParams(t *testing.T) {
@@ -27,8 +26,10 @@ func TestModerationNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Moderations.New(context.TODO(), openai.ModerationNewParams{
-		Input: openai.F[openai.ModerationNewParamsInputUnion](shared.UnionString("I want to kill them.")),
-		Model: openai.F(openai.ModerationModelOmniModerationLatest),
+		Input: openai.ModerationNewParamsInputUnion{
+			OfString: openai.String("I want to kill them."),
+		},
+		Model: openai.ModerationModelOmniModerationLatest,
 	})
 	if err != nil {
 		var apierr *openai.Error

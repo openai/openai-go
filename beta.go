@@ -14,15 +14,15 @@ import (
 // the [NewBetaService] method instead.
 type BetaService struct {
 	Options    []option.RequestOption
-	Assistants *BetaAssistantService
-	Threads    *BetaThreadService
+	Assistants BetaAssistantService
+	Threads    BetaThreadService
 }
 
 // NewBetaService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewBetaService(opts ...option.RequestOption) (r *BetaService) {
-	r = &BetaService{}
+func NewBetaService(opts ...option.RequestOption) (r BetaService) {
+	r = BetaService{}
 	r.Options = opts
 	r.Assistants = NewBetaAssistantService(opts...)
 	r.Threads = NewBetaThreadService(opts...)

@@ -52,11 +52,14 @@ func main() {
 		option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("OPENAI_API_KEY")
 	)
 	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	})
 	if err != nil {
 		panic(err.Error())
@@ -168,7 +171,7 @@ You can use `.ListAutoPaging()` methods to iterate through items across all page
 
 ```go
 iter := client.FineTuning.Jobs.ListAutoPaging(context.TODO(), openai.FineTuningJobListParams{
-	Limit: openai.F(int64(20)),
+	Limit: openai.Int(20),
 })
 // Automatically fetches more pages as needed.
 for iter.Next() {
@@ -185,7 +188,7 @@ with additional helper methods like `.GetNextPage()`, e.g.:
 
 ```go
 page, err := client.FineTuning.Jobs.List(context.TODO(), openai.FineTuningJobListParams{
-	Limit: openai.F(int64(20)),
+	Limit: openai.Int(20),
 })
 for page != nil {
 	for _, job := range page.Data {
@@ -209,8 +212,8 @@ To handle errors, we recommend that you use the `errors.As` pattern:
 
 ```go
 _, err := client.FineTuning.Jobs.New(context.TODO(), openai.FineTuningJobNewParams{
-	Model:        openai.F(openai.FineTuningJobNewParamsModelBabbage002),
-	TrainingFile: openai.F("file-abc123"),
+	Model:        "babbage-002",
+	TrainingFile: "file-abc123",
 })
 if err != nil {
 	var apierr *openai.Error
@@ -239,11 +242,14 @@ defer cancel()
 client.Chat.Completions.New(
 	ctx,
 	openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("How can I list all files in a directory using Python?")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("How can I list all files in a directory using Python?"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -268,19 +274,19 @@ which can be used to wrap any `io.Reader` with the appropriate file name and con
 file, err := os.Open("input.jsonl")
 openai.FileNewParams{
 	File:    openai.F[io.Reader](file),
-	Purpose: openai.F(openai.FilePurposeFineTune),
+	Purpose: openai.FilePurposeFineTune,
 }
 
 // A file from a string
 openai.FileNewParams{
 	File:    openai.F[io.Reader](strings.NewReader("my file contents")),
-	Purpose: openai.F(openai.FilePurposeFineTune),
+	Purpose: openai.FilePurposeFineTune,
 }
 
 // With a custom filename and contentType
 openai.FileNewParams{
 	File:    openai.FileParam(strings.NewReader(`{"hello": "foo"}`), "file.go", "application/json"),
-	Purpose: openai.F(openai.FilePurposeFineTune),
+	Purpose: openai.FilePurposeFineTune,
 }
 ```
 
@@ -302,11 +308,14 @@ client := openai.NewClient(
 client.Chat.Completions.New(
 	context.TODO(),
 	openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("How can I get the name of the current day in JavaScript?")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("How can I get the name of the current day in JavaScript?"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	},
 	option.WithMaxRetries(5),
 )
@@ -323,11 +332,14 @@ var response *http.Response
 chatCompletion, err := client.Chat.Completions.New(
 	context.TODO(),
 	openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	},
 	option.WithResponseInto(&response),
 )
