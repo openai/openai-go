@@ -122,7 +122,7 @@ type ComputerTool struct {
 	// Any of "mac", "windows", "ubuntu", "browser".
 	Environment ComputerToolEnvironment `json:"environment,required"`
 	// The type of the computer use tool. Always `computer_use_preview`.
-	Type constant.ComputerPreview `json:"type,required"`
+	Type constant.ComputerUsePreview `json:"type,required"`
 	// Metadata and presence of fields
 	JSON struct {
 		DisplayHeight resp.Field
@@ -174,8 +174,9 @@ type ComputerToolParam struct {
 	Environment ComputerToolEnvironment `json:"environment,omitzero,required"`
 	// The type of the computer use tool. Always `computer_use_preview`.
 	//
-	// This field can be elided, and will marshal its zero value as "computer-preview".
-	Type constant.ComputerPreview `json:"type,required"`
+	// This field can be elided, and will marshal its zero value as
+	// "computer_use_preview".
+	Type constant.ComputerUsePreview `json:"type,required"`
 	paramObj
 }
 
@@ -3652,10 +3653,10 @@ func ResponseInputItemParamOfFunctionCallOutput(callID string, output string) Re
 	return ResponseInputItemUnionParam{OfFunctionCallOutput: &functionCallOutput}
 }
 
-func ResponseInputItemParamOfReasoning(content []ResponseInputItemReasoningContentParam, id string) ResponseInputItemUnionParam {
-	var reasoning ResponseInputItemReasoningParam
-	reasoning.Content = content
+func ResponseInputItemParamOfReasoning(id string, summary []ResponseReasoningItemSummaryParam) ResponseInputItemUnionParam {
+	var reasoning ResponseReasoningItemParam
 	reasoning.ID = id
+	reasoning.Summary = summary
 	return ResponseInputItemUnionParam{OfReasoning: &reasoning}
 }
 
@@ -3678,7 +3679,7 @@ type ResponseInputItemUnionParam struct {
 	OfWebSearchCall      *ResponseFunctionWebSearchParam
 	OfFunctionCall       *ResponseFunctionToolCallParam
 	OfFunctionCallOutput *ResponseInputItemFunctionCallOutputParam
-	OfReasoning          *ResponseInputItemReasoningParam
+	OfReasoning          *ResponseReasoningItemParam
 	OfItemReference      *ResponseInputItemItemReferenceParam
 	paramUnion
 }
@@ -3778,6 +3779,14 @@ func (u ResponseInputItemUnionParam) GetArguments() *string {
 func (u ResponseInputItemUnionParam) GetName() *string {
 	if vt := u.OfFunctionCall; vt != nil {
 		return &vt.Name
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetSummary() []ResponseReasoningItemSummaryParam {
+	if vt := u.OfReasoning; vt != nil {
+		return vt.Summary
 	}
 	return nil
 }
@@ -3894,8 +3903,6 @@ func (u ResponseInputItemUnionParam) GetContent() (res responseInputItemUnionPar
 		res.ofResponseInputMessageContentList = &vt.Content
 	} else if vt := u.OfOutputMessage; vt != nil {
 		res.ofResponseOutputMessageContent = &vt.Content
-	} else if vt := u.OfReasoning; vt != nil {
-		res.ofResponseInputItemReasoningContent = &vt.Content
 	}
 	return
 }
@@ -3904,10 +3911,9 @@ func (u ResponseInputItemUnionParam) GetContent() (res responseInputItemUnionPar
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type responseInputItemUnionParamContent struct {
-	ofEasyInputMessageContentUnion      *EasyInputMessageContentUnionParam
-	ofResponseInputMessageContentList   *ResponseInputMessageContentListParam
-	ofResponseOutputMessageContent      *[]ResponseOutputMessageContentUnionParam
-	ofResponseInputItemReasoningContent *[]ResponseInputItemReasoningContentParam
+	ofEasyInputMessageContentUnion    *EasyInputMessageContentUnionParam
+	ofResponseInputMessageContentList *ResponseInputMessageContentListParam
+	ofResponseOutputMessageContent    *[]ResponseOutputMessageContentUnionParam
 }
 
 // Use the following switch statement to get the type of the union:
@@ -3916,7 +3922,6 @@ type responseInputItemUnionParamContent struct {
 //	case *string:
 //	case *responses.ResponseInputMessageContentListParam:
 //	case *[]responses.ResponseOutputMessageContentUnionParam:
-//	case *[]responses.ResponseInputItemReasoningContentParam:
 //	default:
 //	    fmt.Errorf("not present")
 //	}
@@ -3927,8 +3932,6 @@ func (u responseInputItemUnionParamContent) AsAny() any {
 		return u.ofResponseInputMessageContentList
 	} else if !param.IsOmitted(u.ofResponseOutputMessageContent) {
 		return u.ofResponseOutputMessageContent
-	} else if !param.IsOmitted(u.ofResponseInputItemReasoningContent) {
-		return u.ofResponseInputItemReasoningContent
 	}
 	return nil
 }
@@ -4044,7 +4047,7 @@ func init() {
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputItemReasoningParam{}),
+			Type:               reflect.TypeOf(ResponseReasoningItemParam{}),
 			DiscriminatorValue: "reasoning",
 		},
 		apijson.UnionVariant{
@@ -4227,61 +4230,6 @@ func init() {
 	)
 }
 
-// A description of the chain of thought used by a reasoning model while generating
-// a response.
-//
-// The properties ID, Content, Type are required.
-type ResponseInputItemReasoningParam struct {
-	// The unique identifier of the reasoning content.
-	ID string `json:"id,required"`
-	// Reasoning text contents.
-	Content []ResponseInputItemReasoningContentParam `json:"content,omitzero,required"`
-	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
-	// Populated when items are returned via API.
-	//
-	// Any of "in_progress", "completed", "incomplete".
-	Status string `json:"status,omitzero"`
-	// The type of the object. Always `reasoning`.
-	//
-	// This field can be elided, and will marshal its zero value as "reasoning".
-	Type constant.Reasoning `json:"type,required"`
-	paramObj
-}
-
-// IsPresent returns false if the field is omitted or `null`.
-func (f ResponseInputItemReasoningParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-func (r ResponseInputItemReasoningParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponseInputItemReasoningParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemReasoningParam](
-		"Status", false, "in_progress", "completed", "incomplete",
-	)
-}
-
-// The properties Text, Type are required.
-type ResponseInputItemReasoningContentParam struct {
-	// A short summary of the reasoning used by the model when generating the response.
-	Text string `json:"text,required"`
-	// The type of the object. Always `text`.
-	//
-	// This field can be elided, and will marshal its zero value as
-	// "reasoning_summary".
-	Type constant.ReasoningSummary `json:"type,required"`
-	paramObj
-}
-
-// IsPresent returns false if the field is omitted or `null`.
-func (f ResponseInputItemReasoningContentParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
-func (r ResponseInputItemReasoningContentParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponseInputItemReasoningContentParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-
 // An internal identifier for an item to reference.
 //
 // The properties ID, Type are required.
@@ -4360,19 +4308,16 @@ func (r ResponseInputTextParam) MarshalJSON() (data []byte, err error) {
 
 // ResponseOutputItemUnion contains all possible properties and values from
 // [ResponseOutputMessage, ResponseFileSearchToolCall, ResponseFunctionToolCall,
-// ResponseFunctionWebSearch, ResponseComputerToolCall,
-// ResponseOutputItemReasoning].
+// ResponseFunctionWebSearch, ResponseComputerToolCall, ResponseReasoningItem].
 //
 // Use ResponseOutputItemUnion.AsAny() to switch on the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseOutputItemUnion struct {
-	ID string `json:"id"`
-	// This field is a union of
-	// [[]ResponseOutputMessageContentUnion,[]ResponseOutputItemReasoningContent]
-	Content ResponseOutputItemUnionContent `json:"content"`
-	Role    constant.Assistant             `json:"role"`
-	Status  string                         `json:"status"`
+	ID      string                              `json:"id"`
+	Content []ResponseOutputMessageContentUnion `json:"content"`
+	Role    constant.Assistant                  `json:"role"`
+	Status  string                              `json:"status"`
 	// Any of "message", "file_search_call", "function_call", "web_search_call",
 	// "computer_call", "reasoning".
 	Type                string                                       `json:"type"`
@@ -4383,6 +4328,7 @@ type ResponseOutputItemUnion struct {
 	Name                string                                       `json:"name"`
 	Action              ResponseComputerToolCallActionUnion          `json:"action"`
 	PendingSafetyChecks []ResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
+	Summary             []ResponseReasoningItemSummary               `json:"summary"`
 	JSON                struct {
 		ID                  resp.Field
 		Content             resp.Field
@@ -4396,6 +4342,7 @@ type ResponseOutputItemUnion struct {
 		Name                resp.Field
 		Action              resp.Field
 		PendingSafetyChecks resp.Field
+		Summary             resp.Field
 		raw                 string
 	} `json:"-"`
 }
@@ -4408,7 +4355,7 @@ type ResponseOutputItemUnion struct {
 //	case ResponseFunctionToolCall:
 //	case ResponseFunctionWebSearch:
 //	case ResponseComputerToolCall:
-//	case ResponseOutputItemReasoning:
+//	case ResponseReasoningItem:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -4455,7 +4402,7 @@ func (u ResponseOutputItemUnion) AsComputerCall() (v ResponseComputerToolCall) {
 	return
 }
 
-func (u ResponseOutputItemUnion) AsReasoning() (v ResponseOutputItemReasoning) {
+func (u ResponseOutputItemUnion) AsReasoning() (v ResponseReasoningItem) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -4464,81 +4411,6 @@ func (u ResponseOutputItemUnion) AsReasoning() (v ResponseOutputItemReasoning) {
 func (u ResponseOutputItemUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ResponseOutputItemUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ResponseOutputItemUnionContent is an implicit subunion of
-// [ResponseOutputItemUnion]. ResponseOutputItemUnionContent provides convenient
-// access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ResponseOutputItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfResponseOutputMessageContent
-// OfResponseOutputItemReasoningContent]
-type ResponseOutputItemUnionContent struct {
-	OfResponseOutputMessageContent       []ResponseOutputMessageContentUnion  `json:",inline"`
-	OfResponseOutputItemReasoningContent []ResponseOutputItemReasoningContent `json:",inline"`
-	JSON                                 struct {
-		OfResponseOutputMessageContent       resp.Field
-		OfResponseOutputItemReasoningContent resp.Field
-		raw                                  string
-	} `json:"-"`
-}
-
-func (r *ResponseOutputItemUnionContent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A description of the chain of thought used by a reasoning model while generating
-// a response.
-type ResponseOutputItemReasoning struct {
-	// The unique identifier of the reasoning content.
-	ID string `json:"id,required"`
-	// Reasoning text contents.
-	Content []ResponseOutputItemReasoningContent `json:"content,required"`
-	// The type of the object. Always `reasoning`.
-	Type constant.Reasoning `json:"type,required"`
-	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
-	// Populated when items are returned via API.
-	//
-	// Any of "in_progress", "completed", "incomplete".
-	Status string `json:"status"`
-	// Metadata and presence of fields
-	JSON struct {
-		ID          resp.Field
-		Content     resp.Field
-		Type        resp.Field
-		Status      resp.Field
-		ExtraFields map[string]resp.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ResponseOutputItemReasoning) RawJSON() string { return r.JSON.raw }
-func (r *ResponseOutputItemReasoning) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ResponseOutputItemReasoningContent struct {
-	// A short summary of the reasoning used by the model when generating the response.
-	Text string `json:"text,required"`
-	// The type of the object. Always `text`.
-	Type constant.ReasoningSummary `json:"type,required"`
-	// Metadata and presence of fields
-	JSON struct {
-		Text        resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ResponseOutputItemReasoningContent) RawJSON() string { return r.JSON.raw }
-func (r *ResponseOutputItemReasoningContent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -5250,6 +5122,124 @@ func (r ResponseOutputTextAnnotationsFilePathParam) MarshalJSON() (data []byte, 
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 
+// A description of the chain of thought used by a reasoning model while generating
+// a response.
+type ResponseReasoningItem struct {
+	// The unique identifier of the reasoning content.
+	ID string `json:"id,required"`
+	// Reasoning text contents.
+	Summary []ResponseReasoningItemSummary `json:"summary,required"`
+	// The type of the object. Always `reasoning`.
+	Type constant.Reasoning `json:"type,required"`
+	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
+	// Populated when items are returned via API.
+	//
+	// Any of "in_progress", "completed", "incomplete".
+	Status ResponseReasoningItemStatus `json:"status"`
+	// Metadata and presence of fields
+	JSON struct {
+		ID          resp.Field
+		Summary     resp.Field
+		Type        resp.Field
+		Status      resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseReasoningItem) RawJSON() string { return r.JSON.raw }
+func (r *ResponseReasoningItem) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this ResponseReasoningItem to a ResponseReasoningItemParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ResponseReasoningItemParam.IsOverridden()
+func (r ResponseReasoningItem) ToParam() ResponseReasoningItemParam {
+	return param.Override[ResponseReasoningItemParam](r.RawJSON())
+}
+
+type ResponseReasoningItemSummary struct {
+	// A short summary of the reasoning used by the model when generating the response.
+	Text string `json:"text,required"`
+	// The type of the object. Always `summary_text`.
+	Type constant.SummaryText `json:"type,required"`
+	// Metadata and presence of fields
+	JSON struct {
+		Text        resp.Field
+		Type        resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseReasoningItemSummary) RawJSON() string { return r.JSON.raw }
+func (r *ResponseReasoningItemSummary) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
+// Populated when items are returned via API.
+type ResponseReasoningItemStatus string
+
+const (
+	ResponseReasoningItemStatusInProgress ResponseReasoningItemStatus = "in_progress"
+	ResponseReasoningItemStatusCompleted  ResponseReasoningItemStatus = "completed"
+	ResponseReasoningItemStatusIncomplete ResponseReasoningItemStatus = "incomplete"
+)
+
+// A description of the chain of thought used by a reasoning model while generating
+// a response.
+//
+// The properties ID, Summary, Type are required.
+type ResponseReasoningItemParam struct {
+	// The unique identifier of the reasoning content.
+	ID string `json:"id,required"`
+	// Reasoning text contents.
+	Summary []ResponseReasoningItemSummaryParam `json:"summary,omitzero,required"`
+	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
+	// Populated when items are returned via API.
+	//
+	// Any of "in_progress", "completed", "incomplete".
+	Status ResponseReasoningItemStatus `json:"status,omitzero"`
+	// The type of the object. Always `reasoning`.
+	//
+	// This field can be elided, and will marshal its zero value as "reasoning".
+	Type constant.Reasoning `json:"type,required"`
+	paramObj
+}
+
+// IsPresent returns false if the field is omitted or `null`.
+func (f ResponseReasoningItemParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+func (r ResponseReasoningItemParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseReasoningItemParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+
+// The properties Text, Type are required.
+type ResponseReasoningItemSummaryParam struct {
+	// A short summary of the reasoning used by the model when generating the response.
+	Text string `json:"text,required"`
+	// The type of the object. Always `summary_text`.
+	//
+	// This field can be elided, and will marshal its zero value as "summary_text".
+	Type constant.SummaryText `json:"type,required"`
+	paramObj
+}
+
+// IsPresent returns false if the field is omitted or `null`.
+func (f ResponseReasoningItemSummaryParam) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
+}
+func (r ResponseReasoningItemSummaryParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseReasoningItemSummaryParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+
 // Emitted when there is a partial refusal text.
 type ResponseRefusalDeltaEvent struct {
 	// The index of the content part that the refusal text is added to.
@@ -5362,23 +5352,25 @@ type ResponseStreamEventUnion struct {
 	// "response.output_text.annotation.added", "response.output_text.delta",
 	// "response.output_text.done", "response.web_search_call.completed",
 	// "response.web_search_call.in_progress", "response.web_search_call.searching".
-	Type                string                                          `json:"type"`
-	OutputIndex         int64                                           `json:"output_index"`
-	Code                string                                          `json:"code"`
-	CodeInterpreterCall ResponseCodeInterpreterToolCall                 `json:"code_interpreter_call"`
-	Response            Response                                        `json:"response"`
-	ContentIndex        int64                                           `json:"content_index"`
-	ItemID              string                                          `json:"item_id"`
-	Part                ResponseContentPartAddedEventPartUnion          `json:"part"`
-	Message             string                                          `json:"message"`
-	Param               string                                          `json:"param"`
-	Arguments           string                                          `json:"arguments"`
-	Item                ResponseOutputItemUnion                         `json:"item"`
-	Refusal             string                                          `json:"refusal"`
-	Annotation          ResponseTextAnnotationDeltaEventAnnotationUnion `json:"annotation"`
-	AnnotationIndex     int64                                           `json:"annotation_index"`
-	Text                string                                          `json:"text"`
-	JSON                struct {
+	Type                string                          `json:"type"`
+	OutputIndex         int64                           `json:"output_index"`
+	Code                string                          `json:"code"`
+	CodeInterpreterCall ResponseCodeInterpreterToolCall `json:"code_interpreter_call"`
+	Response            Response                        `json:"response"`
+	ContentIndex        int64                           `json:"content_index"`
+	ItemID              string                          `json:"item_id"`
+	// This field is a union of
+	// [ResponseContentPartAddedEventPartUnion,ResponseContentPartDoneEventPartUnion]
+	Part            ResponseStreamEventUnionPart                    `json:"part"`
+	Message         string                                          `json:"message"`
+	Param           string                                          `json:"param"`
+	Arguments       string                                          `json:"arguments"`
+	Item            ResponseOutputItemUnion                         `json:"item"`
+	Refusal         string                                          `json:"refusal"`
+	Annotation      ResponseTextAnnotationDeltaEventAnnotationUnion `json:"annotation"`
+	AnnotationIndex int64                                           `json:"annotation_index"`
+	Text            string                                          `json:"text"`
+	JSON            struct {
 		Delta               resp.Field
 		Type                resp.Field
 		OutputIndex         resp.Field
@@ -5672,6 +5664,30 @@ func (u ResponseStreamEventUnion) AsResponseWebSearchCallSearching() (v Response
 func (u ResponseStreamEventUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ResponseStreamEventUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseStreamEventUnionPart is an implicit subunion of
+// [ResponseStreamEventUnion]. ResponseStreamEventUnionPart provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ResponseStreamEventUnion].
+type ResponseStreamEventUnionPart struct {
+	Annotations []ResponseOutputTextAnnotationsUnion `json:"annotations"`
+	Text        string                               `json:"text"`
+	Type        string                               `json:"type"`
+	Refusal     string                               `json:"refusal"`
+	JSON        struct {
+		Annotations resp.Field
+		Text        resp.Field
+		Type        resp.Field
+		Refusal     resp.Field
+		raw         string
+	} `json:"-"`
+}
+
+func (r *ResponseStreamEventUnionPart) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -6117,7 +6133,7 @@ func (r *ResponseWebSearchCallSearchingEvent) UnmarshalJSON(data []byte) error {
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ToolUnion struct {
-	// Any of "file_search", "function", "computer-preview", nil.
+	// Any of "file_search", "function", "computer_use_preview", nil.
 	Type              string                         `json:"type"`
 	VectorStoreIDs    []string                       `json:"vector_store_ids"`
 	Filters           FileSearchToolFiltersUnion     `json:"filters"`
@@ -6161,7 +6177,7 @@ func (u ToolUnion) AsFunction() (v FunctionTool) {
 	return
 }
 
-func (u ToolUnion) AsComputerPreview() (v ComputerTool) {
+func (u ToolUnion) AsComputerUsePreview() (v ComputerTool) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -6201,12 +6217,12 @@ func ToolParamOfFunction(name string, parameters map[string]interface{}, strict 
 	return ToolUnionParam{OfFunction: &function}
 }
 
-func ToolParamOfComputerPreview(displayHeight float64, displayWidth float64, environment ComputerToolEnvironment) ToolUnionParam {
-	var computerPreview ComputerToolParam
-	computerPreview.DisplayHeight = displayHeight
-	computerPreview.DisplayWidth = displayWidth
-	computerPreview.Environment = environment
-	return ToolUnionParam{OfComputerPreview: &computerPreview}
+func ToolParamOfComputerUsePreview(displayHeight float64, displayWidth float64, environment ComputerToolEnvironment) ToolUnionParam {
+	var computerUsePreview ComputerToolParam
+	computerUsePreview.DisplayHeight = displayHeight
+	computerUsePreview.DisplayWidth = displayWidth
+	computerUsePreview.Environment = environment
+	return ToolUnionParam{OfComputerUsePreview: &computerUsePreview}
 }
 
 func ToolParamOfWebSearch(type_ WebSearchToolType) ToolUnionParam {
@@ -6219,17 +6235,17 @@ func ToolParamOfWebSearch(type_ WebSearchToolType) ToolUnionParam {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ToolUnionParam struct {
-	OfFileSearch      *FileSearchToolParam
-	OfFunction        *FunctionToolParam
-	OfComputerPreview *ComputerToolParam
-	OfWebSearch       *WebSearchToolParam
+	OfFileSearch         *FileSearchToolParam
+	OfFunction           *FunctionToolParam
+	OfComputerUsePreview *ComputerToolParam
+	OfWebSearch          *WebSearchToolParam
 	paramUnion
 }
 
 // IsPresent returns false if the field is omitted or `null`.
 func (u ToolUnionParam) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
 func (u ToolUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ToolUnionParam](u.OfFileSearch, u.OfFunction, u.OfComputerPreview, u.OfWebSearch)
+	return param.MarshalUnion[ToolUnionParam](u.OfFileSearch, u.OfFunction, u.OfComputerUsePreview, u.OfWebSearch)
 }
 
 func (u *ToolUnionParam) asAny() any {
@@ -6237,8 +6253,8 @@ func (u *ToolUnionParam) asAny() any {
 		return u.OfFileSearch
 	} else if !param.IsOmitted(u.OfFunction) {
 		return u.OfFunction
-	} else if !param.IsOmitted(u.OfComputerPreview) {
-		return u.OfComputerPreview
+	} else if !param.IsOmitted(u.OfComputerUsePreview) {
+		return u.OfComputerUsePreview
 	} else if !param.IsOmitted(u.OfWebSearch) {
 		return u.OfWebSearch
 	}
@@ -6311,7 +6327,7 @@ func (u ToolUnionParam) GetDescription() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ToolUnionParam) GetDisplayHeight() *float64 {
-	if vt := u.OfComputerPreview; vt != nil {
+	if vt := u.OfComputerUsePreview; vt != nil {
 		return &vt.DisplayHeight
 	}
 	return nil
@@ -6319,7 +6335,7 @@ func (u ToolUnionParam) GetDisplayHeight() *float64 {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ToolUnionParam) GetDisplayWidth() *float64 {
-	if vt := u.OfComputerPreview; vt != nil {
+	if vt := u.OfComputerUsePreview; vt != nil {
 		return &vt.DisplayWidth
 	}
 	return nil
@@ -6327,7 +6343,7 @@ func (u ToolUnionParam) GetDisplayWidth() *float64 {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ToolUnionParam) GetEnvironment() *string {
-	if vt := u.OfComputerPreview; vt != nil {
+	if vt := u.OfComputerUsePreview; vt != nil {
 		return (*string)(&vt.Environment)
 	}
 	return nil
@@ -6355,7 +6371,7 @@ func (u ToolUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfComputerPreview; vt != nil {
+	} else if vt := u.OfComputerUsePreview; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfWebSearch; vt != nil {
 		return (*string)(&vt.Type)
@@ -6379,7 +6395,7 @@ func init() {
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
 			Type:               reflect.TypeOf(ComputerToolParam{}),
-			DiscriminatorValue: "computer-preview",
+			DiscriminatorValue: "computer_use_preview",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,

@@ -706,13 +706,14 @@ type AssistantStreamEventUnionData struct {
 	ToolChoice          AssistantToolChoiceOptionUnion         `json:"tool_choice"`
 	Tools               []AssistantToolUnion                   `json:"tools"`
 	TruncationStrategy  RunTruncationStrategy                  `json:"truncation_strategy"`
-	Usage               RunUsage                               `json:"usage"`
-	Temperature         float64                                `json:"temperature"`
-	TopP                float64                                `json:"top_p"`
-	ExpiredAt           int64                                  `json:"expired_at"`
-	RunID               string                                 `json:"run_id"`
-	StepDetails         RunStepStepDetailsUnion                `json:"step_details"`
-	Type                string                                 `json:"type"`
+	// This field is a union of [RunUsage,RunStepUsage]
+	Usage       AssistantStreamEventUnionDataUsage `json:"usage"`
+	Temperature float64                            `json:"temperature"`
+	TopP        float64                            `json:"top_p"`
+	ExpiredAt   int64                              `json:"expired_at"`
+	RunID       string                             `json:"run_id"`
+	StepDetails RunStepStepDetailsUnion            `json:"step_details"`
+	Type        string                             `json:"type"`
 	// This field is a union of [RunStepDelta,MessageDelta]
 	Delta        AssistantStreamEventUnionDataDelta `json:"delta"`
 	Attachments  []MessageAttachment                `json:"attachments"`
@@ -806,6 +807,28 @@ type AssistantStreamEventUnionDataLastError struct {
 }
 
 func (r *AssistantStreamEventUnionDataLastError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AssistantStreamEventUnionDataUsage is an implicit subunion of
+// [AssistantStreamEventUnion]. AssistantStreamEventUnionDataUsage provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [AssistantStreamEventUnion].
+type AssistantStreamEventUnionDataUsage struct {
+	CompletionTokens int64 `json:"completion_tokens"`
+	PromptTokens     int64 `json:"prompt_tokens"`
+	TotalTokens      int64 `json:"total_tokens"`
+	JSON             struct {
+		CompletionTokens resp.Field
+		PromptTokens     resp.Field
+		TotalTokens      resp.Field
+		raw              string
+	} `json:"-"`
+}
+
+func (r *AssistantStreamEventUnionDataUsage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

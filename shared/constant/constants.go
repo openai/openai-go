@@ -31,7 +31,7 @@ type CodeInterpreter string                         // Always "code_interpreter"
 type CodeInterpreterCall string                     // Always "code_interpreter_call"
 type ComputerCallOutput string                      // Always "computer_call_output"
 type ComputerScreenshot string                      // Always "computer_screenshot"
-type ComputerPreview string                         // Always "computer-preview"
+type ComputerUsePreview string                      // Always "computer_use_preview"
 type Content string                                 // Always "content"
 type Developer string                               // Always "developer"
 type DoubleClick string                             // Always "double_click"
@@ -72,7 +72,6 @@ type Other string                                   // Always "other"
 type OutputAudio string                             // Always "output_audio"
 type OutputText string                              // Always "output_text"
 type Reasoning string                               // Always "reasoning"
-type ReasoningSummary string                        // Always "reasoning_summary"
 type Refusal string                                 // Always "refusal"
 type Response string                                // Always "response"
 type ResponseAudioDelta string                      // Always "response.audio.delta"
@@ -110,6 +109,7 @@ type Screenshot string                              // Always "screenshot"
 type Scroll string                                  // Always "scroll"
 type Static string                                  // Always "static"
 type SubmitToolOutputs string                       // Always "submit_tool_outputs"
+type SummaryText string                             // Always "summary_text"
 type System string                                  // Always "system"
 type Text string                                    // Always "text"
 type TextCompletion string                          // Always "text_completion"
@@ -173,7 +173,7 @@ func (c CodeInterpreter) Default() CodeInterpreter             { return "code_in
 func (c CodeInterpreterCall) Default() CodeInterpreterCall     { return "code_interpreter_call" }
 func (c ComputerCallOutput) Default() ComputerCallOutput       { return "computer_call_output" }
 func (c ComputerScreenshot) Default() ComputerScreenshot       { return "computer_screenshot" }
-func (c ComputerPreview) Default() ComputerPreview             { return "computer-preview" }
+func (c ComputerUsePreview) Default() ComputerUsePreview       { return "computer_use_preview" }
 func (c Content) Default() Content                             { return "content" }
 func (c Developer) Default() Developer                         { return "developer" }
 func (c DoubleClick) Default() DoubleClick                     { return "double_click" }
@@ -216,7 +216,6 @@ func (c Other) Default() Other                           { return "other" }
 func (c OutputAudio) Default() OutputAudio               { return "output_audio" }
 func (c OutputText) Default() OutputText                 { return "output_text" }
 func (c Reasoning) Default() Reasoning                   { return "reasoning" }
-func (c ReasoningSummary) Default() ReasoningSummary     { return "reasoning_summary" }
 func (c Refusal) Default() Refusal                       { return "refusal" }
 func (c Response) Default() Response                     { return "response" }
 func (c ResponseAudioDelta) Default() ResponseAudioDelta { return "response.audio.delta" }
@@ -294,6 +293,7 @@ func (c Screenshot) Default() Screenshot                         { return "scree
 func (c Scroll) Default() Scroll                                 { return "scroll" }
 func (c Static) Default() Static                                 { return "static" }
 func (c SubmitToolOutputs) Default() SubmitToolOutputs           { return "submit_tool_outputs" }
+func (c SummaryText) Default() SummaryText                       { return "summary_text" }
 func (c System) Default() System                                 { return "system" }
 func (c Text) Default() Text                                     { return "text" }
 func (c TextCompletion) Default() TextCompletion                 { return "text_completion" }
@@ -369,7 +369,7 @@ func (c CodeInterpreter) MarshalJSON() ([]byte, error)                       { r
 func (c CodeInterpreterCall) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
 func (c ComputerCallOutput) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c ComputerScreenshot) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
-func (c ComputerPreview) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c ComputerUsePreview) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c Content) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Developer) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c DoubleClick) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
@@ -410,7 +410,6 @@ func (c Other) MarshalJSON() ([]byte, error)                                 { r
 func (c OutputAudio) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c OutputText) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Reasoning) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c ReasoningSummary) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Refusal) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Response) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c ResponseAudioDelta) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
@@ -450,6 +449,7 @@ func (c Screenshot) MarshalJSON() ([]byte, error)                         { retu
 func (c Scroll) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Static) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c SubmitToolOutputs) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c SummaryText) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c System) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Text) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c TextCompletion) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
