@@ -33,8 +33,8 @@ type Optional interface {
 }
 
 func (o Opt[T]) IsNullish() bool {
-	var zero T
-	return o.Status == null || o.Value == zero
+	var zero Opt[T]
+	return o.Status == null || o == zero
 }
 func (o Opt[T]) IsNull() bool    { return o.Status == null }
 func (o Opt[T]) IsOmitted() bool { return o == Opt[T]{} }

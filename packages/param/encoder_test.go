@@ -45,6 +45,9 @@ func TestFieldMarshal(t *testing.T) {
 		"null_time":   {param.NullOpt[time.Time](), "null"},
 		"null_struct": {param.Null[Struct](), "null"},
 
+		"float_zero":  {param.NewOpt(float64(0.0)), "0.0"},
+		"string_zero": {param.NewOpt(""), `""`},
+
 		"string": {param.Opt[string]{Value: "string"}, `"string"`},
 		"int":    {param.Opt[int64]{Value: 123}, "123"},
 		"int64":  {param.Opt[int64]{Value: int64(123456789123456789)}, "123456789123456789"},
