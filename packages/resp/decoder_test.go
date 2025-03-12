@@ -56,10 +56,10 @@ func TestUnmarshalUnionString(t *testing.T) {
 			"$.function.name": checkEqual(res.Function.Name, ""),
 
 			"string.meta":          checkMeta(res.JSON.OfString, rawJSON, shouldBePresent),
-			"int.meta":             checkMeta(res.JSON.OfInt, "", shouldBeMissing),
-			"$.type.meta":          checkMeta(res.JSON.Type, "", shouldBeMissing),
-			"$.function.meta":      checkMeta(res.Function.JSON.Name, "", shouldBeMissing),
-			"$.function.name.meta": checkMeta(res.Function.JSON.Name, "", shouldBeMissing),
+			"int.meta":             checkMeta(res.JSON.OfInt, "", shouldBeNullish),
+			"$.type.meta":          checkMeta(res.JSON.Type, "", shouldBeNullish),
+			"$.function.meta":      checkMeta(res.Function.JSON.Name, "", shouldBeNullish),
+			"$.function.name.meta": checkMeta(res.Function.JSON.Name, "", shouldBeNullish),
 		}
 	})
 }
@@ -76,11 +76,11 @@ func TestUnmarshalUnionInt(t *testing.T) {
 			"$.function.name": checkEqual(res.Function.Name, ""),
 			"$.function.bool": checkEqual(res.Function.OfBool, false),
 
-			"string.meta":          checkMeta(res.JSON.OfString, "", shouldBeMissing),
+			"string.meta":          checkMeta(res.JSON.OfString, "", shouldBeNullish),
 			"int.meta":             checkMeta(res.JSON.OfInt, rawJSON, shouldBePresent),
-			"$.type.meta":          checkMeta(res.JSON.Type, "", shouldBeMissing),
-			"$.function.meta":      checkMeta(res.Function.JSON.Name, "", shouldBeMissing),
-			"$.function.name.meta": checkMeta(res.Function.JSON.Name, "", shouldBeMissing),
+			"$.type.meta":          checkMeta(res.JSON.Type, "", shouldBeNullish),
+			"$.function.meta":      checkMeta(res.Function.JSON.Name, "", shouldBeNullish),
+			"$.function.name.meta": checkMeta(res.Function.JSON.Name, "", shouldBeNullish),
 		}
 	})
 
@@ -91,7 +91,7 @@ func TestUnmarshalUnionInt(t *testing.T) {
 
 			"int":         checkEqual(res.OfInt, 0),
 			"int.meta":    checkMeta(res.JSON.OfInt, "0", shouldBePresent),
-			"string.meta": checkMeta(res.JSON.OfString, "", shouldBeMissing),
+			"string.meta": checkMeta(res.JSON.OfString, "", shouldBeNullish),
 		}
 	})
 }
@@ -108,12 +108,12 @@ func TestUnmarshalUnionObject(t *testing.T) {
 			"$.function.name": checkEqual(res.Function.Name, "test_fn"),
 			"$.function.bool": checkEqual(res.Function.OfBool, false),
 
-			"string.meta":          checkMeta(res.JSON.OfString, "", shouldBeMissing),
-			"int.meta":             checkMeta(res.JSON.OfInt, "", shouldBeMissing),
+			"string.meta":          checkMeta(res.JSON.OfString, "", shouldBeNullish),
+			"int.meta":             checkMeta(res.JSON.OfInt, "", shouldBeNullish),
 			"$.type.meta":          checkMeta(res.JSON.Type, `"auto"`, shouldBePresent),
 			"$.function.meta":      checkMeta(res.JSON.Function, `{"name":"test_fn"}`, shouldBePresent),
 			"$.function.name.meta": checkMeta(res.Function.JSON.Name, `"test_fn"`, shouldBePresent),
-			"$.function.bool.meta": checkMeta(res.Function.JSON.OfBool, "", shouldBeMissing),
+			"$.function.bool.meta": checkMeta(res.Function.JSON.OfBool, "", shouldBeNullish),
 		}
 	})
 }
@@ -129,11 +129,11 @@ func TestUnmarshalUnionObjectWithInlineSubUnion(t *testing.T) {
 			"$.type":     checkEqual(res.Type, "auto"),
 			"$.function": checkEqual(res.Function.OfBool, true),
 
-			"string.meta":          checkMeta(res.JSON.OfString, "", shouldBeMissing),
-			"int.meta":             checkMeta(res.JSON.OfInt, "", shouldBeMissing),
+			"string.meta":          checkMeta(res.JSON.OfString, "", shouldBeNullish),
+			"int.meta":             checkMeta(res.JSON.OfInt, "", shouldBeNullish),
 			"$.type.meta":          checkMeta(res.JSON.Type, `"auto"`, shouldBePresent),
 			"$.function.meta":      checkMeta(res.JSON.Function, `true`, shouldBePresent),
-			"$.function.name.meta": checkMeta(res.Function.JSON.Name, "", shouldBeMissing),
+			"$.function.name.meta": checkMeta(res.Function.JSON.Name, "", shouldBeNullish),
 			"$.function.bool.meta": checkMeta(res.Function.JSON.OfBool, `true`, shouldBePresent),
 		}
 	})
@@ -168,7 +168,7 @@ type metaStatus int
 
 const (
 	shouldBePresent metaStatus = iota
-	shouldBeMissing
+	shouldBeNullish
 	shouldBeInvalid
 )
 
@@ -177,18 +177,18 @@ type testChecks[T any] func(T) map[string]error
 func checkMeta(got resp.Field, raw string, stat metaStatus) error {
 	switch stat {
 	case shouldBePresent:
-		if got.IsMissing() {
-			return fmt.Errorf("expected field to be present, but got missing")
+		if got.IsNullish() {
+			return fmt.Errorf("expected field to be present, but got nullish")
 		}
 		if got.Raw() != raw {
 			return fmt.Errorf("expected field to be present with raw value %v, but got %v", raw, got.Raw())
 		}
-	case shouldBeMissing:
-		if !got.IsMissing() {
-			return fmt.Errorf("expected field to be missing, but got %v", got.Raw())
+	case shouldBeNullish:
+		if !got.IsNullish() {
+			return fmt.Errorf("expected field to be nullish, but got %v", got.Raw())
 		}
 		if got.Raw() != "" {
-			return fmt.Errorf("expected field to be missing, but got %v", got.Raw())
+			return fmt.Errorf("expected field to be nullish, but got %v", got.Raw())
 		}
 	case shouldBeInvalid:
 		if !got.IsInvalid() {

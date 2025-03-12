@@ -104,8 +104,9 @@ type AudioTranscriptionNewParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f AudioTranscriptionNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f AudioTranscriptionNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r AudioTranscriptionNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)

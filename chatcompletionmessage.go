@@ -77,8 +77,9 @@ type ChatCompletionMessageListParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionMessageListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionMessageListParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 // URLQuery serializes [ChatCompletionMessageListParams]'s query parameters as
 // `url.Values`.

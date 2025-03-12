@@ -139,8 +139,9 @@ type ImageNewVariationParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ImageNewVariationParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ImageNewVariationParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r ImageNewVariationParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)
@@ -211,8 +212,9 @@ type ImageEditParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ImageEditParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ImageEditParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r ImageEditParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)
@@ -290,8 +292,9 @@ type ImageGenerateParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ImageGenerateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ImageGenerateParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r ImageGenerateParams) MarshalJSON() (data []byte, err error) {
 	type shadow ImageGenerateParams

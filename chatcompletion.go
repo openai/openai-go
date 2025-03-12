@@ -299,9 +299,10 @@ type ChatCompletionAssistantMessageParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionAssistantMessageParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionAssistantMessageParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionAssistantMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionAssistantMessageParam
@@ -318,9 +319,10 @@ type ChatCompletionAssistantMessageParamAudio struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionAssistantMessageParamAudio) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionAssistantMessageParamAudio) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionAssistantMessageParamAudio) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionAssistantMessageParamAudio
@@ -336,9 +338,10 @@ type ChatCompletionAssistantMessageParamContentUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionAssistantMessageParamContentUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionAssistantMessageParamContentUnion) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u ChatCompletionAssistantMessageParamContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionAssistantMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
@@ -362,9 +365,10 @@ type ChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem stru
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem](u.OfText, u.OfRefusal)
@@ -438,9 +442,10 @@ type ChatCompletionAssistantMessageParamFunctionCall struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionAssistantMessageParamFunctionCall) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionAssistantMessageParamFunctionCall) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionAssistantMessageParamFunctionCall) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionAssistantMessageParamFunctionCall
@@ -497,8 +502,9 @@ type ChatCompletionAudioParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionAudioParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionAudioParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionAudioParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionAudioParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -789,9 +795,10 @@ type ChatCompletionContentPartUnionParam struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionContentPartUnionParam) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionContentPartUnionParam) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u ChatCompletionContentPartUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionContentPartUnionParam](u.OfText, u.OfImageURL, u.OfInputAudio, u.OfFile)
@@ -895,10 +902,9 @@ type ChatCompletionContentPartFileParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionContentPartFileParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionContentPartFileParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionContentPartFileParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionContentPartFileParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -915,9 +921,10 @@ type ChatCompletionContentPartFileFileParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionContentPartFileFileParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionContentPartFileFileParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionContentPartFileFileParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionContentPartFileFileParam
@@ -936,9 +943,10 @@ type ChatCompletionContentPartImageParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionContentPartImageParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionContentPartImageParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionContentPartImageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionContentPartImageParam
@@ -957,9 +965,10 @@ type ChatCompletionContentPartImageImageURLParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionContentPartImageImageURLParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionContentPartImageImageURLParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionContentPartImageImageURLParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionContentPartImageImageURLParam
@@ -984,9 +993,10 @@ type ChatCompletionContentPartInputAudioParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionContentPartInputAudioParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionContentPartInputAudioParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionContentPartInputAudioParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionContentPartInputAudioParam
@@ -1004,9 +1014,10 @@ type ChatCompletionContentPartInputAudioInputAudioParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionContentPartInputAudioInputAudioParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionContentPartInputAudioInputAudioParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionContentPartInputAudioInputAudioParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionContentPartInputAudioInputAudioParam
@@ -1030,9 +1041,10 @@ type ChatCompletionContentPartRefusalParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionContentPartRefusalParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionContentPartRefusalParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionContentPartRefusalParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionContentPartRefusalParam
@@ -1053,10 +1065,9 @@ type ChatCompletionContentPartTextParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionContentPartTextParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionContentPartTextParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionContentPartTextParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionContentPartTextParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1103,9 +1114,10 @@ type ChatCompletionDeveloperMessageParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionDeveloperMessageParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionDeveloperMessageParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionDeveloperMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionDeveloperMessageParam
@@ -1121,9 +1133,10 @@ type ChatCompletionDeveloperMessageParamContentUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionDeveloperMessageParamContentUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionDeveloperMessageParamContentUnion) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u ChatCompletionDeveloperMessageParamContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionDeveloperMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
@@ -1148,9 +1161,10 @@ type ChatCompletionFunctionCallOptionParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionFunctionCallOptionParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionFunctionCallOptionParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionFunctionCallOptionParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionFunctionCallOptionParam
@@ -1172,10 +1186,9 @@ type ChatCompletionFunctionMessageParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionFunctionMessageParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionFunctionMessageParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionFunctionMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionFunctionMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1363,8 +1376,9 @@ type ChatCompletionMessageParamUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionMessageParamUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionMessageParamUnion) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
 func (u ChatCompletionMessageParamUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionMessageParamUnion](u.OfDeveloper,
 		u.OfSystem,
@@ -1409,7 +1423,7 @@ func (u ChatCompletionMessageParamUnion) GetFunctionCall() *ChatCompletionAssist
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ChatCompletionMessageParamUnion) GetRefusal() *string {
-	if vt := u.OfAssistant; vt != nil && vt.Refusal.IsPresent() {
+	if vt := u.OfAssistant; vt != nil && !vt.Refusal.IsNullish() {
 		return &vt.Refusal.Value
 	}
 	return nil
@@ -1451,13 +1465,13 @@ func (u ChatCompletionMessageParamUnion) GetRole() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ChatCompletionMessageParamUnion) GetName() *string {
-	if vt := u.OfDeveloper; vt != nil && vt.Name.IsPresent() {
+	if vt := u.OfDeveloper; vt != nil && !vt.Name.IsNullish() {
 		return &vt.Name.Value
-	} else if vt := u.OfSystem; vt != nil && vt.Name.IsPresent() {
+	} else if vt := u.OfSystem; vt != nil && !vt.Name.IsNullish() {
 		return &vt.Name.Value
-	} else if vt := u.OfUser; vt != nil && vt.Name.IsPresent() {
+	} else if vt := u.OfUser; vt != nil && !vt.Name.IsNullish() {
 		return &vt.Name.Value
-	} else if vt := u.OfAssistant; vt != nil && vt.Name.IsPresent() {
+	} else if vt := u.OfAssistant; vt != nil && !vt.Name.IsNullish() {
 		return &vt.Name.Value
 	} else if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Name)
@@ -1479,7 +1493,7 @@ func (u ChatCompletionMessageParamUnion) GetContent() (res chatCompletionMessage
 		res.ofChatCompletionAssistantMessageContent = &vt.Content
 	} else if vt := u.OfTool; vt != nil {
 		res.ofChatCompletionToolMessageContent = &vt.Content
-	} else if vt := u.OfFunction; vt != nil && vt.Content.IsPresent() {
+	} else if vt := u.OfFunction; vt != nil && !vt.Content.IsNullish() {
 		res.ofString = &vt.Content.Value
 	}
 	return
@@ -1630,10 +1644,9 @@ type ChatCompletionMessageToolCallParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionMessageToolCallParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionMessageToolCallParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionMessageToolCallParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionMessageToolCallParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1653,9 +1666,10 @@ type ChatCompletionMessageToolCallFunctionParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionMessageToolCallFunctionParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionMessageToolCallFunctionParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionMessageToolCallFunctionParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionMessageToolCallFunctionParam
@@ -1675,10 +1689,9 @@ type ChatCompletionNamedToolChoiceParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionNamedToolChoiceParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionNamedToolChoiceParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionNamedToolChoiceParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionNamedToolChoiceParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1691,9 +1704,10 @@ type ChatCompletionNamedToolChoiceFunctionParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionNamedToolChoiceFunctionParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionNamedToolChoiceFunctionParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionNamedToolChoiceFunctionParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionNamedToolChoiceFunctionParam
@@ -1717,9 +1731,10 @@ type ChatCompletionPredictionContentParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionPredictionContentParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionPredictionContentParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionPredictionContentParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionPredictionContentParam
@@ -1735,9 +1750,10 @@ type ChatCompletionPredictionContentContentUnionParam struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionPredictionContentContentUnionParam) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionPredictionContentContentUnionParam) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u ChatCompletionPredictionContentContentUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionPredictionContentContentUnionParam](u.OfString, u.OfArrayOfContentParts)
@@ -1781,8 +1797,9 @@ type ChatCompletionStreamOptionsParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionStreamOptionsParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionStreamOptionsParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionStreamOptionsParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionStreamOptionsParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1806,8 +1823,9 @@ type ChatCompletionSystemMessageParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionSystemMessageParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionSystemMessageParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionSystemMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionSystemMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1822,9 +1840,10 @@ type ChatCompletionSystemMessageParamContentUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionSystemMessageParamContentUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionSystemMessageParamContentUnion) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u ChatCompletionSystemMessageParamContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionSystemMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
@@ -1910,8 +1929,9 @@ type ChatCompletionToolParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionToolParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionToolParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1933,9 +1953,10 @@ type ChatCompletionToolChoiceOptionUnionParam struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionToolChoiceOptionUnionParam) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionToolChoiceOptionUnionParam) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u ChatCompletionToolChoiceOptionUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionToolChoiceOptionUnionParam](u.OfAuto, u.OfChatCompletionNamedToolChoice)
@@ -1979,8 +2000,9 @@ type ChatCompletionToolMessageParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionToolMessageParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionToolMessageParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionToolMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionToolMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1995,9 +2017,10 @@ type ChatCompletionToolMessageParamContentUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionToolMessageParamContentUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionToolMessageParamContentUnion) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u ChatCompletionToolMessageParamContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionToolMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
@@ -2029,8 +2052,9 @@ type ChatCompletionUserMessageParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionUserMessageParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionUserMessageParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionUserMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionUserMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -2045,9 +2069,10 @@ type ChatCompletionUserMessageParamContentUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionUserMessageParamContentUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionUserMessageParamContentUnion) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u ChatCompletionUserMessageParamContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionUserMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
@@ -2253,8 +2278,9 @@ type ChatCompletionNewParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r ChatCompletionNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionNewParams
@@ -2271,9 +2297,10 @@ type ChatCompletionNewParamsFunctionCallUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionNewParamsFunctionCallUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionNewParamsFunctionCallUnion) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u ChatCompletionNewParamsFunctionCallUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionNewParamsFunctionCallUnion](u.OfFunctionCallMode, u.OfFunctionCallOption)
@@ -2317,8 +2344,9 @@ type ChatCompletionNewParamsFunction struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionNewParamsFunction) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionNewParamsFunction) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ChatCompletionNewParamsFunction) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionNewParamsFunction
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -2334,9 +2362,10 @@ type ChatCompletionNewParamsResponseFormatUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionNewParamsResponseFormatUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionNewParamsResponseFormatUnion) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u ChatCompletionNewParamsResponseFormatUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionNewParamsResponseFormatUnion](u.OfText, u.OfJSONSchema, u.OfJSONObject)
@@ -2403,8 +2432,9 @@ type ChatCompletionNewParamsStopUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ChatCompletionNewParamsStopUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ChatCompletionNewParamsStopUnion) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
 func (u ChatCompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionNewParamsStopUnion](u.OfString, u.OfChatCompletionNewsStopArray)
 }
@@ -2432,9 +2462,10 @@ type ChatCompletionNewParamsWebSearchOptions struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionNewParamsWebSearchOptions) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionNewParamsWebSearchOptions) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionNewParamsWebSearchOptions) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionNewParamsWebSearchOptions
@@ -2460,9 +2491,10 @@ type ChatCompletionNewParamsWebSearchOptionsUserLocation struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionNewParamsWebSearchOptionsUserLocation) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionNewParamsWebSearchOptionsUserLocation) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionNewParamsWebSearchOptionsUserLocation) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionNewParamsWebSearchOptionsUserLocation
@@ -2484,9 +2516,10 @@ type ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate
@@ -2504,8 +2537,9 @@ type ChatCompletionUpdateParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionUpdateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionUpdateParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r ChatCompletionUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionUpdateParams
@@ -2531,8 +2565,9 @@ type ChatCompletionListParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ChatCompletionListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ChatCompletionListParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 // URLQuery serializes [ChatCompletionListParams]'s query parameters as
 // `url.Values`.

@@ -56,6 +56,8 @@ type metadata struct{ any }
 type metadataNull struct{}
 type metadataExtraFields map[string]any
 
+// IsNull returns true if the field is the explicit value `null`,
+// try [IsNullish] to check for null or omitted.
 func (m metadata) IsNull() bool {
 	if _, ok := m.any.(metadataNull); ok {
 		return true

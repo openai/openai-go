@@ -346,8 +346,9 @@ type CompletionNewParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f CompletionNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f CompletionNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r CompletionNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow CompletionNewParams
@@ -365,8 +366,9 @@ type CompletionNewParamsPromptUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u CompletionNewParamsPromptUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u CompletionNewParamsPromptUnion) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
 func (u CompletionNewParamsPromptUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[CompletionNewParamsPromptUnion](u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
 }
@@ -393,8 +395,9 @@ type CompletionNewParamsStopUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u CompletionNewParamsStopUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u CompletionNewParamsStopUnion) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
 func (u CompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[CompletionNewParamsStopUnion](u.OfString, u.OfCompletionNewsStopArray)
 }

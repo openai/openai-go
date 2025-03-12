@@ -31,7 +31,7 @@ type Optional interface {
 	IsNull() bool
 }
 
-func (o Opt[T]) IsPresent() bool {
+func (o Opt[T]) IsNullish() bool {
 	var zero T
 	return o.Status > null || o.Value != zero
 }
@@ -42,7 +42,7 @@ func (o Opt[T]) IsNull() bool {
 func (o Opt[T]) IsOmitted() bool { return o == Opt[T]{} }
 
 func (o Opt[T]) MarshalJSON() ([]byte, error) {
-	if !o.IsPresent() {
+	if o.IsNullish() {
 		return []byte("null"), nil
 	}
 	return json.Marshal(o.Value)
@@ -57,7 +57,7 @@ func (o *Opt[T]) UnmarshalJSON(data []byte) error {
 }
 
 func (o Opt[T]) Or(v T) T {
-	if o.IsPresent() {
+	if !o.IsNullish() {
 		return o.Value
 	}
 	return v

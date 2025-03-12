@@ -194,8 +194,9 @@ type ComparisonFilterParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ComparisonFilterParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ComparisonFilterParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ComparisonFilterParam) MarshalJSON() (data []byte, err error) {
 	type shadow ComparisonFilterParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -211,8 +212,9 @@ type ComparisonFilterValueUnionParam struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u ComparisonFilterValueUnionParam) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u ComparisonFilterValueUnionParam) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
 func (u ComparisonFilterValueUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ComparisonFilterValueUnionParam](u.OfString, u.OfFloat, u.OfBool)
 }
@@ -283,8 +285,9 @@ type CompoundFilterParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f CompoundFilterParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f CompoundFilterParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r CompoundFilterParam) MarshalJSON() (data []byte, err error) {
 	type shadow CompoundFilterParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -384,8 +387,9 @@ type FunctionDefinitionParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f FunctionDefinitionParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f FunctionDefinitionParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r FunctionDefinitionParam) MarshalJSON() (data []byte, err error) {
 	type shadow FunctionDefinitionParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -482,8 +486,9 @@ type ReasoningParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ReasoningParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ReasoningParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ReasoningParam) MarshalJSON() (data []byte, err error) {
 	type shadow ReasoningParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -546,8 +551,9 @@ type ResponseFormatJSONObjectParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ResponseFormatJSONObjectParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ResponseFormatJSONObjectParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ResponseFormatJSONObjectParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFormatJSONObjectParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -635,8 +641,9 @@ type ResponseFormatJSONSchemaParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ResponseFormatJSONSchemaParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ResponseFormatJSONSchemaParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ResponseFormatJSONSchemaParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFormatJSONSchemaParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -664,9 +671,10 @@ type ResponseFormatJSONSchemaJSONSchemaParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ResponseFormatJSONSchemaJSONSchemaParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ResponseFormatJSONSchemaJSONSchemaParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r ResponseFormatJSONSchemaJSONSchemaParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFormatJSONSchemaJSONSchemaParam
@@ -711,8 +719,9 @@ type ResponseFormatTextParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f ResponseFormatTextParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f ResponseFormatTextParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r ResponseFormatTextParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFormatTextParam
 	return param.MarshalObject(r, (*shadow)(&r))

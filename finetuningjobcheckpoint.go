@@ -139,10 +139,9 @@ type FineTuningJobCheckpointListParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f FineTuningJobCheckpointListParams) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f FineTuningJobCheckpointListParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 // URLQuery serializes [FineTuningJobCheckpointListParams]'s query parameters as
 // `url.Values`.

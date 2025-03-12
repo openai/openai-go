@@ -94,8 +94,9 @@ type UploadPartNewParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f UploadPartNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f UploadPartNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r UploadPartNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)

@@ -158,8 +158,9 @@ type AutoFileChunkingStrategyParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f AutoFileChunkingStrategyParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f AutoFileChunkingStrategyParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r AutoFileChunkingStrategyParam) MarshalJSON() (data []byte, err error) {
 	type shadow AutoFileChunkingStrategyParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -232,8 +233,9 @@ type FileChunkingStrategyParamUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u FileChunkingStrategyParamUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u FileChunkingStrategyParamUnion) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
 func (u FileChunkingStrategyParamUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FileChunkingStrategyParamUnion](u.OfAuto, u.OfStatic)
 }
@@ -346,8 +348,9 @@ type StaticFileChunkingStrategyParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f StaticFileChunkingStrategyParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f StaticFileChunkingStrategyParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r StaticFileChunkingStrategyParam) MarshalJSON() (data []byte, err error) {
 	type shadow StaticFileChunkingStrategyParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -384,9 +387,10 @@ type StaticFileChunkingStrategyObjectParam struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f StaticFileChunkingStrategyObjectParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f StaticFileChunkingStrategyObjectParam) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r StaticFileChunkingStrategyObjectParam) MarshalJSON() (data []byte, err error) {
 	type shadow StaticFileChunkingStrategyObjectParam
@@ -650,8 +654,9 @@ type VectorStoreNewParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f VectorStoreNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f VectorStoreNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r VectorStoreNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreNewParams
@@ -672,8 +677,9 @@ type VectorStoreNewParamsExpiresAfter struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f VectorStoreNewParamsExpiresAfter) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f VectorStoreNewParamsExpiresAfter) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 func (r VectorStoreNewParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreNewParamsExpiresAfter
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -694,8 +700,9 @@ type VectorStoreUpdateParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f VectorStoreUpdateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f VectorStoreUpdateParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r VectorStoreUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreUpdateParams
@@ -716,9 +723,10 @@ type VectorStoreUpdateParamsExpiresAfter struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f VectorStoreUpdateParamsExpiresAfter) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f VectorStoreUpdateParamsExpiresAfter) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r VectorStoreUpdateParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreUpdateParamsExpiresAfter
@@ -747,8 +755,9 @@ type VectorStoreListParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f VectorStoreListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f VectorStoreListParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 // URLQuery serializes [VectorStoreListParams]'s query parameters as `url.Values`.
 func (r VectorStoreListParams) URLQuery() (v url.Values) {
@@ -782,8 +791,9 @@ type VectorStoreSearchParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f VectorStoreSearchParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f VectorStoreSearchParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r VectorStoreSearchParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreSearchParams
@@ -799,10 +809,9 @@ type VectorStoreSearchParamsQueryUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u VectorStoreSearchParamsQueryUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u VectorStoreSearchParamsQueryUnion) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
 func (u VectorStoreSearchParamsQueryUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreSearchParamsQueryUnion](u.OfString, u.OfVectorStoreSearchsQueryArray)
 }
@@ -825,9 +834,10 @@ type VectorStoreSearchParamsFiltersUnion struct {
 	paramUnion
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (u VectorStoreSearchParamsFiltersUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (u VectorStoreSearchParamsFiltersUnion) IsNullish() bool {
+	return param.IsOmitted(u) && u.IsNull()
 }
 func (u VectorStoreSearchParamsFiltersUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreSearchParamsFiltersUnion](u.OfComparisonFilter, u.OfCompoundFilter)
@@ -884,9 +894,10 @@ type VectorStoreSearchParamsRankingOptions struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f VectorStoreSearchParamsRankingOptions) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f VectorStoreSearchParamsRankingOptions) IsNullish() bool {
+	return param.IsOmitted(f) && f.IsNull()
 }
 func (r VectorStoreSearchParamsRankingOptions) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreSearchParamsRankingOptions

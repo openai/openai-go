@@ -71,8 +71,9 @@ type AudioSpeechNewParams struct {
 	paramObj
 }
 
-// IsPresent returns false if the field is omitted or `null`.
-func (f AudioSpeechNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+// IsNullish returns true if the field is omitted or `null`. To check if this field
+// is omitted, use [param.IsOmitted].
+func (f AudioSpeechNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
 
 func (r AudioSpeechNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow AudioSpeechNewParams

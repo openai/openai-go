@@ -366,8 +366,11 @@ type ResponseFormatText = shared.ResponseFormatText
 type ResponseFormatTextParam = shared.ResponseFormatTextParam
 
 func toParam[T comparable](value T, meta resp.Field) param.Opt[T] {
-	if !meta.IsMissing() {
+	if !meta.IsNullish() {
 		return param.NewOpt(value)
+	}
+	if meta.IsExplicitNull() {
+		return param.NullOpt[T]()
 	}
 	return param.Opt[T]{}
 }
