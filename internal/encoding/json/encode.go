@@ -323,7 +323,7 @@ func (e *encodeState) error(err error) {
 func isEmptyValue(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.String:
-		return v.Len() == 0 && !sentinel.IsEmptyString(v.String())
+		return v.Len() == 0
 	case reflect.Array, reflect.Map, reflect.Slice:
 		return v.Len() == 0
 	case reflect.Bool,

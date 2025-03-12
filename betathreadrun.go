@@ -624,7 +624,7 @@ type BetaThreadRunNewParams struct {
 	// See the
 	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 	// for more information.
-	Include []RunStepInclude `query:"include,omitzero"`
+	Include []RunStepInclude `query:"include,omitzero" json:"-"`
 	// Specifies the format that the model must output. Compatible with
 	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
 	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
@@ -891,20 +891,20 @@ type BetaThreadRunListParams struct {
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
 	// fetch the next page of the list.
-	After param.Opt[string] `query:"after,omitzero"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// A cursor for use in pagination. `before` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// starting with obj_foo, your subsequent call can include before=obj_foo in order
 	// to fetch the previous page of the list.
-	Before param.Opt[string] `query:"before,omitzero"`
+	Before param.Opt[string] `query:"before,omitzero" json:"-"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
-	Limit param.Opt[int64] `query:"limit,omitzero"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
 	//
 	// Any of "asc", "desc".
-	Order BetaThreadRunListParamsOrder `query:"order,omitzero"`
+	Order BetaThreadRunListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
 

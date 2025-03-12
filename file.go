@@ -282,17 +282,17 @@ type FileListParams struct {
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
 	// fetch the next page of the list.
-	After param.Opt[string] `query:"after,omitzero"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 10,000, and the default is 10,000.
-	Limit param.Opt[int64] `query:"limit,omitzero"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	// Only return files with the given purpose.
-	Purpose param.Opt[string] `query:"purpose,omitzero"`
+	Purpose param.Opt[string] `query:"purpose,omitzero" json:"-"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
 	//
 	// Any of "asc", "desc".
-	Order FileListParamsOrder `query:"order,omitzero"`
+	Order FileListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
 

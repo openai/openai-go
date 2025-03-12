@@ -448,24 +448,24 @@ type VectorStoreFileListParams struct {
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
 	// fetch the next page of the list.
-	After param.Opt[string] `query:"after,omitzero"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// A cursor for use in pagination. `before` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// starting with obj_foo, your subsequent call can include before=obj_foo in order
 	// to fetch the previous page of the list.
-	Before param.Opt[string] `query:"before,omitzero"`
+	Before param.Opt[string] `query:"before,omitzero" json:"-"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
-	Limit param.Opt[int64] `query:"limit,omitzero"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	// Filter by file status. One of `in_progress`, `completed`, `failed`, `cancelled`.
 	//
 	// Any of "in_progress", "completed", "failed", "cancelled".
-	Filter VectorStoreFileListParamsFilter `query:"filter,omitzero"`
+	Filter VectorStoreFileListParamsFilter `query:"filter,omitzero" json:"-"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
 	//
 	// Any of "asc", "desc".
-	Order VectorStoreFileListParamsOrder `query:"order,omitzero"`
+	Order VectorStoreFileListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
 

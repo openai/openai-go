@@ -434,19 +434,19 @@ func (r *ResponseItemListDataFunctionCallOutput) UnmarshalJSON(data []byte) erro
 
 type InputItemListParams struct {
 	// An item ID to list items after, used in pagination.
-	After param.Opt[string] `query:"after,omitzero"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// An item ID to list items before, used in pagination.
-	Before param.Opt[string] `query:"before,omitzero"`
+	Before param.Opt[string] `query:"before,omitzero" json:"-"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
-	Limit param.Opt[int64] `query:"limit,omitzero"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	// The order to return the input items in. Default is `asc`.
 	//
 	// - `asc`: Return the input items in ascending order.
 	// - `desc`: Return the input items in descending order.
 	//
 	// Any of "asc", "desc".
-	Order InputItemListParamsOrder `query:"order,omitzero"`
+	Order InputItemListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
 

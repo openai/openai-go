@@ -2548,20 +2548,20 @@ func (r ChatCompletionUpdateParams) MarshalJSON() (data []byte, err error) {
 
 type ChatCompletionListParams struct {
 	// Identifier for the last chat completion from the previous pagination request.
-	After param.Opt[string] `query:"after,omitzero"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// Number of Chat Completions to retrieve.
-	Limit param.Opt[int64] `query:"limit,omitzero"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	// The model used to generate the Chat Completions.
-	Model param.Opt[string] `query:"model,omitzero"`
+	Model param.Opt[string] `query:"model,omitzero" json:"-"`
 	// A list of metadata keys to filter the Chat Completions by. Example:
 	//
 	// `metadata[key1]=value1&metadata[key2]=value2`
-	Metadata shared.MetadataParam `query:"metadata,omitzero"`
+	Metadata shared.MetadataParam `query:"metadata,omitzero" json:"-"`
 	// Sort order for Chat Completions by timestamp. Use `asc` for ascending order or
 	// `desc` for descending order. Defaults to `asc`.
 	//
 	// Any of "asc", "desc".
-	Order ChatCompletionListParamsOrder `query:"order,omitzero"`
+	Order ChatCompletionListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
 

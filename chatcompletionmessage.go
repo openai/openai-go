@@ -66,14 +66,14 @@ func (r *ChatCompletionMessageService) ListAutoPaging(ctx context.Context, compl
 
 type ChatCompletionMessageListParams struct {
 	// Identifier for the last message from the previous pagination request.
-	After param.Opt[string] `query:"after,omitzero"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// Number of messages to retrieve.
-	Limit param.Opt[int64] `query:"limit,omitzero"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	// Sort order for messages by timestamp. Use `asc` for ascending order or `desc`
 	// for descending order. Defaults to `asc`.
 	//
 	// Any of "asc", "desc".
-	Order ChatCompletionMessageListParamsOrder `query:"order,omitzero"`
+	Order ChatCompletionMessageListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
 

@@ -1429,12 +1429,12 @@ func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion) asAn
 
 type FineTuningJobListParams struct {
 	// Identifier for the last job from the previous pagination request.
-	After param.Opt[string] `query:"after,omitzero"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// Number of fine-tuning jobs to retrieve.
-	Limit param.Opt[int64] `query:"limit,omitzero"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	// Optional metadata filter. To filter, use the syntax `metadata[k]=v`.
 	// Alternatively, set `metadata=null` to indicate no metadata.
-	Metadata map[string]string `query:"metadata,omitzero"`
+	Metadata map[string]string `query:"metadata,omitzero" json:"-"`
 	paramObj
 }
 
@@ -1453,9 +1453,9 @@ func (r FineTuningJobListParams) URLQuery() (v url.Values) {
 
 type FineTuningJobListEventsParams struct {
 	// Identifier for the last event from the previous pagination request.
-	After param.Opt[string] `query:"after,omitzero"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// Number of events to retrieve.
-	Limit param.Opt[int64] `query:"limit,omitzero"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	paramObj
 }
 

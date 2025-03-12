@@ -133,9 +133,9 @@ func (r *FineTuningJobCheckpointMetrics) UnmarshalJSON(data []byte) error {
 
 type FineTuningJobCheckpointListParams struct {
 	// Identifier for the last checkpoint ID from the previous pagination request.
-	After param.Opt[string] `query:"after,omitzero"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// Number of checkpoints to retrieve.
-	Limit param.Opt[int64] `query:"limit,omitzero"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	paramObj
 }
 
