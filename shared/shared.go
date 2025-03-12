@@ -11,10 +11,10 @@ import (
 	"github.com/openai/openai-go/shared/constant"
 )
 
-// aliased to make param.APIUnion.APIUnion private when embedding
+// aliased to make [param.APIUnion] private when embedding
 type paramUnion = param.APIUnion
 
-// aliased to make param.APIObject private when embedding
+// aliased to make [param.APIObject] private when embedding
 type paramObj = param.APIObject
 
 type ChatModel = string

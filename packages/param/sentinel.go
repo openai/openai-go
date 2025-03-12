@@ -5,7 +5,7 @@ import (
 )
 
 // NullPtr returns a pointer to the zero value of the type T.
-// When passed to a custom MarshalJSON method, it will be marshaled as `null`.
+// When used with [MarshalObject] or [MarshalUnion], it will be marshaled as null.
 //
 // It is unspecified behavior to mutate the value pointed to by the returned pointer.
 func NullPtr[T any]() *T {
@@ -18,7 +18,7 @@ func IsNullPtr[T any](ptr *T) bool {
 }
 
 // NullSlice returns a non-nil slice with a length of 0.
-// When passed to a custom MarshalJSON method, it will be marshaled as `null`.
+// When used with [MarshalObject] or [MarshalUnion], it will be marshaled as null.
 //
 // It is undefined behavior to mutate the slice returned by [NullSlice].
 func NullSlice[T any]() []T {

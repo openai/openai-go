@@ -12,10 +12,10 @@ import (
 	"github.com/openai/openai-go/packages/resp"
 )
 
-// aliased to make param.APIUnion.APIUnion private when embedding
+// aliased to make [param.APIUnion] private when embedding
 type paramUnion = param.APIUnion
 
-// aliased to make param.APIObject private when embedding
+// aliased to make [param.APIObject] private when embedding
 type paramObj = param.APIObject
 
 // Error represents an error that originates from the API, i.e. when a request is

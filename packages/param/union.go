@@ -7,6 +7,8 @@ import (
 
 var paramUnionType = reflect.TypeOf(APIUnion{})
 
+// VariantFromUnion can be used to extract the present variant from a param union type.
+// A param union type is a struct with an embedded field of [APIUnion].
 func VariantFromUnion(u reflect.Value) (any, error) {
 	if u.Kind() == reflect.Ptr {
 		u = u.Elem()
@@ -25,7 +27,7 @@ func VariantFromUnion(u reflect.Value) (any, error) {
 			variantIdx = i
 		}
 		if u.Field(i).Type() == paramUnionType {
-			isUnion = true
+			isUnion = u.Type().Field(i).Anonymous
 		}
 	}
 

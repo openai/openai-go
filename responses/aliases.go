@@ -9,10 +9,10 @@ import (
 	"github.com/openai/openai-go/shared"
 )
 
-// aliased to make param.APIUnion.APIUnion private when embedding
+// aliased to make [param.APIUnion] private when embedding
 type paramUnion = param.APIUnion
 
-// aliased to make param.APIObject private when embedding
+// aliased to make [param.APIObject] private when embedding
 type paramObj = param.APIObject
 
 type Error = apierror.Error
@@ -20,136 +20,136 @@ type Error = apierror.Error
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
 
-// This is an alias to "o3-mini"
+// Equals "o3-mini"
 const ChatModelO3Mini = shared.ChatModelO3Mini
 
-// This is an alias to "o3-mini-2025-01-31"
+// Equals "o3-mini-2025-01-31"
 const ChatModelO3Mini2025_01_31 = shared.ChatModelO3Mini2025_01_31
 
-// This is an alias to "o1"
+// Equals "o1"
 const ChatModelO1 = shared.ChatModelO1
 
-// This is an alias to "o1-2024-12-17"
+// Equals "o1-2024-12-17"
 const ChatModelO1_2024_12_17 = shared.ChatModelO1_2024_12_17
 
-// This is an alias to "o1-preview"
+// Equals "o1-preview"
 const ChatModelO1Preview = shared.ChatModelO1Preview
 
-// This is an alias to "o1-preview-2024-09-12"
+// Equals "o1-preview-2024-09-12"
 const ChatModelO1Preview2024_09_12 = shared.ChatModelO1Preview2024_09_12
 
-// This is an alias to "o1-mini"
+// Equals "o1-mini"
 const ChatModelO1Mini = shared.ChatModelO1Mini
 
-// This is an alias to "o1-mini-2024-09-12"
+// Equals "o1-mini-2024-09-12"
 const ChatModelO1Mini2024_09_12 = shared.ChatModelO1Mini2024_09_12
 
-// This is an alias to "computer-use-preview"
+// Equals "computer-use-preview"
 const ChatModelComputerUsePreview = shared.ChatModelComputerUsePreview
 
-// This is an alias to "computer-use-preview-2025-02-04"
+// Equals "computer-use-preview-2025-02-04"
 const ChatModelComputerUsePreview2025_02_04 = shared.ChatModelComputerUsePreview2025_02_04
 
-// This is an alias to "computer-use-preview-2025-03-11"
+// Equals "computer-use-preview-2025-03-11"
 const ChatModelComputerUsePreview2025_03_11 = shared.ChatModelComputerUsePreview2025_03_11
 
-// This is an alias to "gpt-4.5-preview"
+// Equals "gpt-4.5-preview"
 const ChatModelGPT4_5Preview = shared.ChatModelGPT4_5Preview
 
-// This is an alias to "gpt-4.5-preview-2025-02-27"
+// Equals "gpt-4.5-preview-2025-02-27"
 const ChatModelGPT4_5Preview2025_02_27 = shared.ChatModelGPT4_5Preview2025_02_27
 
-// This is an alias to "gpt-4o"
+// Equals "gpt-4o"
 const ChatModelGPT4o = shared.ChatModelGPT4o
 
-// This is an alias to "gpt-4o-2024-11-20"
+// Equals "gpt-4o-2024-11-20"
 const ChatModelGPT4o2024_11_20 = shared.ChatModelGPT4o2024_11_20
 
-// This is an alias to "gpt-4o-2024-08-06"
+// Equals "gpt-4o-2024-08-06"
 const ChatModelGPT4o2024_08_06 = shared.ChatModelGPT4o2024_08_06
 
-// This is an alias to "gpt-4o-2024-05-13"
+// Equals "gpt-4o-2024-05-13"
 const ChatModelGPT4o2024_05_13 = shared.ChatModelGPT4o2024_05_13
 
-// This is an alias to "gpt-4o-audio-preview"
+// Equals "gpt-4o-audio-preview"
 const ChatModelGPT4oAudioPreview = shared.ChatModelGPT4oAudioPreview
 
-// This is an alias to "gpt-4o-audio-preview-2024-10-01"
+// Equals "gpt-4o-audio-preview-2024-10-01"
 const ChatModelGPT4oAudioPreview2024_10_01 = shared.ChatModelGPT4oAudioPreview2024_10_01
 
-// This is an alias to "gpt-4o-audio-preview-2024-12-17"
+// Equals "gpt-4o-audio-preview-2024-12-17"
 const ChatModelGPT4oAudioPreview2024_12_17 = shared.ChatModelGPT4oAudioPreview2024_12_17
 
-// This is an alias to "gpt-4o-mini-audio-preview"
+// Equals "gpt-4o-mini-audio-preview"
 const ChatModelGPT4oMiniAudioPreview = shared.ChatModelGPT4oMiniAudioPreview
 
-// This is an alias to "gpt-4o-mini-audio-preview-2024-12-17"
+// Equals "gpt-4o-mini-audio-preview-2024-12-17"
 const ChatModelGPT4oMiniAudioPreview2024_12_17 = shared.ChatModelGPT4oMiniAudioPreview2024_12_17
 
-// This is an alias to "chatgpt-4o-latest"
+// Equals "chatgpt-4o-latest"
 const ChatModelChatgpt4oLatest = shared.ChatModelChatgpt4oLatest
 
-// This is an alias to "gpt-4o-mini"
+// Equals "gpt-4o-mini"
 const ChatModelGPT4oMini = shared.ChatModelGPT4oMini
 
-// This is an alias to "gpt-4o-mini-2024-07-18"
+// Equals "gpt-4o-mini-2024-07-18"
 const ChatModelGPT4oMini2024_07_18 = shared.ChatModelGPT4oMini2024_07_18
 
-// This is an alias to "gpt-4-turbo"
+// Equals "gpt-4-turbo"
 const ChatModelGPT4Turbo = shared.ChatModelGPT4Turbo
 
-// This is an alias to "gpt-4-turbo-2024-04-09"
+// Equals "gpt-4-turbo-2024-04-09"
 const ChatModelGPT4Turbo2024_04_09 = shared.ChatModelGPT4Turbo2024_04_09
 
-// This is an alias to "gpt-4-0125-preview"
+// Equals "gpt-4-0125-preview"
 const ChatModelGPT4_0125Preview = shared.ChatModelGPT4_0125Preview
 
-// This is an alias to "gpt-4-turbo-preview"
+// Equals "gpt-4-turbo-preview"
 const ChatModelGPT4TurboPreview = shared.ChatModelGPT4TurboPreview
 
-// This is an alias to "gpt-4-1106-preview"
+// Equals "gpt-4-1106-preview"
 const ChatModelGPT4_1106Preview = shared.ChatModelGPT4_1106Preview
 
-// This is an alias to "gpt-4-vision-preview"
+// Equals "gpt-4-vision-preview"
 const ChatModelGPT4VisionPreview = shared.ChatModelGPT4VisionPreview
 
-// This is an alias to "gpt-4"
+// Equals "gpt-4"
 const ChatModelGPT4 = shared.ChatModelGPT4
 
-// This is an alias to "gpt-4-0314"
+// Equals "gpt-4-0314"
 const ChatModelGPT4_0314 = shared.ChatModelGPT4_0314
 
-// This is an alias to "gpt-4-0613"
+// Equals "gpt-4-0613"
 const ChatModelGPT4_0613 = shared.ChatModelGPT4_0613
 
-// This is an alias to "gpt-4-32k"
+// Equals "gpt-4-32k"
 const ChatModelGPT4_32k = shared.ChatModelGPT4_32k
 
-// This is an alias to "gpt-4-32k-0314"
+// Equals "gpt-4-32k-0314"
 const ChatModelGPT4_32k0314 = shared.ChatModelGPT4_32k0314
 
-// This is an alias to "gpt-4-32k-0613"
+// Equals "gpt-4-32k-0613"
 const ChatModelGPT4_32k0613 = shared.ChatModelGPT4_32k0613
 
-// This is an alias to "gpt-3.5-turbo"
+// Equals "gpt-3.5-turbo"
 const ChatModelGPT3_5Turbo = shared.ChatModelGPT3_5Turbo
 
-// This is an alias to "gpt-3.5-turbo-16k"
+// Equals "gpt-3.5-turbo-16k"
 const ChatModelGPT3_5Turbo16k = shared.ChatModelGPT3_5Turbo16k
 
-// This is an alias to "gpt-3.5-turbo-0301"
+// Equals "gpt-3.5-turbo-0301"
 const ChatModelGPT3_5Turbo0301 = shared.ChatModelGPT3_5Turbo0301
 
-// This is an alias to "gpt-3.5-turbo-0613"
+// Equals "gpt-3.5-turbo-0613"
 const ChatModelGPT3_5Turbo0613 = shared.ChatModelGPT3_5Turbo0613
 
-// This is an alias to "gpt-3.5-turbo-1106"
+// Equals "gpt-3.5-turbo-1106"
 const ChatModelGPT3_5Turbo1106 = shared.ChatModelGPT3_5Turbo1106
 
-// This is an alias to "gpt-3.5-turbo-0125"
+// Equals "gpt-3.5-turbo-0125"
 const ChatModelGPT3_5Turbo0125 = shared.ChatModelGPT3_5Turbo0125
 
-// This is an alias to "gpt-3.5-turbo-16k-0613"
+// Equals "gpt-3.5-turbo-16k-0613"
 const ChatModelGPT3_5Turbo16k0613 = shared.ChatModelGPT3_5Turbo16k0613
 
 // A filter used to compare a specified attribute key to a given value using a
@@ -170,22 +170,22 @@ type ComparisonFilter = shared.ComparisonFilter
 // This is an alias to an internal type.
 type ComparisonFilterType = shared.ComparisonFilterType
 
-// This is an alias to "eq"
+// Equals "eq"
 const ComparisonFilterTypeEq = shared.ComparisonFilterTypeEq
 
-// This is an alias to "ne"
+// Equals "ne"
 const ComparisonFilterTypeNe = shared.ComparisonFilterTypeNe
 
-// This is an alias to "gt"
+// Equals "gt"
 const ComparisonFilterTypeGt = shared.ComparisonFilterTypeGt
 
-// This is an alias to "gte"
+// Equals "gte"
 const ComparisonFilterTypeGte = shared.ComparisonFilterTypeGte
 
-// This is an alias to "lt"
+// Equals "lt"
 const ComparisonFilterTypeLt = shared.ComparisonFilterTypeLt
 
-// This is an alias to "lte"
+// Equals "lte"
 const ComparisonFilterTypeLte = shared.ComparisonFilterTypeLte
 
 // The value to compare against the attribute key; supports string, number, or
@@ -216,10 +216,10 @@ type CompoundFilter = shared.CompoundFilter
 // This is an alias to an internal type.
 type CompoundFilterType = shared.CompoundFilterType
 
-// This is an alias to "and"
+// Equals "and"
 const CompoundFilterTypeAnd = shared.CompoundFilterTypeAnd
 
-// This is an alias to "or"
+// Equals "or"
 const CompoundFilterTypeOr = shared.CompoundFilterTypeOr
 
 // Combine multiple filters using `and` or `or`.
@@ -284,10 +284,10 @@ type Reasoning = shared.Reasoning
 // This is an alias to an internal type.
 type ReasoningGenerateSummary = shared.ReasoningGenerateSummary
 
-// This is an alias to "concise"
+// Equals "concise"
 const ReasoningGenerateSummaryConcise = shared.ReasoningGenerateSummaryConcise
 
-// This is an alias to "detailed"
+// Equals "detailed"
 const ReasoningGenerateSummaryDetailed = shared.ReasoningGenerateSummaryDetailed
 
 // **o-series models only**
@@ -308,13 +308,13 @@ type ReasoningParam = shared.ReasoningParam
 // This is an alias to an internal type.
 type ReasoningEffort = shared.ReasoningEffort
 
-// This is an alias to "low"
+// Equals "low"
 const ReasoningEffortLow = shared.ReasoningEffortLow
 
-// This is an alias to "medium"
+// Equals "medium"
 const ReasoningEffortMedium = shared.ReasoningEffortMedium
 
-// This is an alias to "high"
+// Equals "high"
 const ReasoningEffortHigh = shared.ReasoningEffortHigh
 
 // JSON object response format. An older method of generating JSON responses. Using
