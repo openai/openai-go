@@ -162,16 +162,31 @@ func (s *Stream[T]) Next() bool {
 			continue
 		}
 
-		ep := gjson.GetBytes(s.decoder.Event().Data, "error")
-		if ep.Exists() {
-			s.err = fmt.Errorf("received error while streaming: %s", ep.String())
-			return false
+		if s.decoder.Event().Type == "" {
+			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
+			if ep.Exists() {
+				s.err = fmt.Errorf("received error while streaming: %s", ep.String())
+				return false
+			}
+			s.err = json.Unmarshal(s.decoder.Event().Data, &s.cur)
+			if s.err != nil {
+				return false
+			}
+			return true
+		} else {
+			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
+			if ep.Exists() {
+				s.err = fmt.Errorf("received error while streaming: %s", ep.String())
+				return false
+			}
+			event := s.decoder.Event().Type
+			data := s.decoder.Event().Data
+			s.err = json.Unmarshal([]byte(fmt.Sprintf(`{ "event": %q, "data": %s }`, event, data)), &s.cur)
+			if s.err != nil {
+				return false
+			}
+			return true
 		}
-		s.err = json.Unmarshal(s.decoder.Event().Data, &s.cur)
-		if s.err != nil {
-			return false
-		}
-		return true
 	}
 
 	// decoder.Next() may be false because of an error

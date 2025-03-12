@@ -1311,6 +1311,17 @@ func (r *ChatCompletionMessageFunctionCall) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func ChatCompletionMessageParamOfAssistant[T string | []ChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem](content T) ChatCompletionMessageParamUnion {
+	var assistant ChatCompletionAssistantMessageParam
+	switch v := any(content).(type) {
+	case string:
+		assistant.Content.OfString = param.NewOpt(v)
+	case []ChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem:
+		assistant.Content.OfArrayOfContentParts = v
+	}
+	return ChatCompletionMessageParamUnion{OfAssistant: &assistant}
+}
+
 func ChatCompletionMessageParamOfDeveloper[T string | []ChatCompletionContentPartTextParam](content T) ChatCompletionMessageParamUnion {
 	var developer ChatCompletionDeveloperMessageParam
 	switch v := any(content).(type) {

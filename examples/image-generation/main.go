@@ -22,9 +22,9 @@ func main() {
 	// Image URL
 
 	image, err := client.Images.Generate(ctx, openai.ImageGenerateParams{
-		Prompt:         openai.String(prompt),
-		Model:          openai.F(openai.ImageGenerateParamsModelDallE3),
-		ResponseFormat: openai.F(openai.ImageGenerateParamsResponseFormatURL),
+		Prompt:         prompt,
+		Model:          openai.ImageModelDallE3,
+		ResponseFormat: openai.ImageGenerateParamsResponseFormatURL,
 		N:              openai.Int(1),
 	})
 	if err != nil {
@@ -37,9 +37,9 @@ func main() {
 	// Base64
 
 	image, err = client.Images.Generate(ctx, openai.ImageGenerateParams{
-		Prompt:         openai.String(prompt),
-		Model:          openai.F(openai.ImageGenerateParamsModelDallE3),
-		ResponseFormat: openai.F(openai.ImageGenerateParamsResponseFormatB64JSON),
+		Prompt:         prompt,
+		Model:          openai.ImageModelDallE3,
+		ResponseFormat: openai.ImageGenerateParamsResponseFormatB64JSON,
 		N:              openai.Int(1),
 	})
 	if err != nil {

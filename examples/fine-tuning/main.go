@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"time"
 
@@ -18,8 +17,8 @@ func main() {
 
 	data, err := os.Open("./fine-tuning-data.jsonl")
 	file, err := client.Files.New(ctx, openai.FileNewParams{
-		File:    openai.F[io.Reader](data),
-		Purpose: openai.F(openai.FileNewParamsPurposeFineTune),
+		File:    data,
+		Purpose: openai.FilePurposeFineTune,
 	})
 	if err != nil {
 		panic(err)
@@ -42,8 +41,8 @@ func main() {
 	fmt.Println("")
 	fmt.Println("==> Starting fine-tuning")
 	fineTune, err := client.FineTuning.Jobs.New(ctx, openai.FineTuningJobNewParams{
-		Model:        openai.F(openai.FineTuningJobNewParamsModelGPT3_5Turbo),
-		TrainingFile: openai.F(file.ID),
+		Model:        openai.ChatModelGPT3_5Turbo,
+		TrainingFile: file.ID,
 	})
 	if err != nil {
 		panic(err)

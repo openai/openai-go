@@ -18,11 +18,11 @@ func main() {
 	println()
 
 	stream := client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage(question),
-		}),
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.ChatCompletionMessageParamOfUser(question),
+		},
 		Seed:  openai.Int(0),
-		Model: openai.F(openai.ChatModelGPT4o),
+		Model: openai.ChatModelGPT4o,
 	})
 
 	for stream.Next() {

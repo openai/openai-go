@@ -53,6 +53,15 @@ func (r *BetaThreadService) New(ctx context.Context, body BetaThreadNewParams, o
 	return
 }
 
+// Create a thread and run it in one request. Poll the API until the run is complete.
+func (r *BetaThreadService) NewAndRunPoll(ctx context.Context, body BetaThreadNewAndRunParams, pollIntervalMs int, opts ...option.RequestOption) (res *Run, err error) {
+	run, err := r.NewAndRun(ctx, body, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return r.Runs.PollStatus(ctx, run.ThreadID, run.ID, pollIntervalMs, opts...)
+}
+
 // Retrieves a thread.
 func (r *BetaThreadService) Get(ctx context.Context, threadID string, opts ...option.RequestOption) (res *Thread, err error) {
 	opts = append(r.Options[:], opts...)
