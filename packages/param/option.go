@@ -27,18 +27,16 @@ const (
 )
 
 type Optional interface {
-	IsPresent() bool
+	IsOmitted() bool
 	IsNull() bool
+	IsNullish() bool
 }
 
 func (o Opt[T]) IsNullish() bool {
 	var zero T
-	return o.Status > null || o.Value != zero
+	return o.Status == null || o.Value != zero
 }
-func (o Opt[T]) IsNull() bool {
-	var zero T
-	return o.Status == null && o.Value == zero
-}
+func (o Opt[T]) IsNull() bool    { return o.Status == null }
 func (o Opt[T]) IsOmitted() bool { return o == Opt[T]{} }
 
 func (o Opt[T]) MarshalJSON() ([]byte, error) {
