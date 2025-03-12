@@ -687,14 +687,14 @@ type BetaThreadRunNewParamsAdditionalMessage struct {
 	// Any of "user", "assistant".
 	Role string `json:"role,omitzero,required"`
 	// A list of files attached to the message, and the tools they should be added to.
-	Attachments []BetaThreadRunNewParamsAdditionalMessagesAttachment `json:"attachments,omitzero,nullable"`
+	Attachments []BetaThreadRunNewParamsAdditionalMessagesAttachment `json:"attachments,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero,nullable"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
 	paramObj
 }
 
@@ -840,7 +840,7 @@ type BetaThreadRunNewParamsTruncationStrategy struct {
 	Type string `json:"type,omitzero,required"`
 	// The number of most recent messages from the thread when constructing the context
 	// for the run.
-	LastMessages param.Opt[int64] `json:"last_messages,omitzero,nullable"`
+	LastMessages param.Opt[int64] `json:"last_messages,omitzero"`
 	paramObj
 }
 

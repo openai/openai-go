@@ -534,7 +534,7 @@ type FunctionToolParam struct {
 	Strict bool `json:"strict,required"`
 	// A description of the function. Used by the model to determine whether or not to
 	// call the function.
-	Description param.Opt[string] `json:"description,omitzero,nullable"`
+	Description param.Opt[string] `json:"description,omitzero"`
 	// The type of the function tool. Always `function`.
 	//
 	// This field can be elided, and will marshal its zero value as "function".
@@ -2645,7 +2645,7 @@ type ResponseFileSearchToolCallParam struct {
 	// Any of "in_progress", "searching", "completed", "incomplete", "failed".
 	Status ResponseFileSearchToolCallStatus `json:"status,omitzero,required"`
 	// The results of the file search tool call.
-	Results []ResponseFileSearchToolCallResultParam `json:"results,omitzero,nullable"`
+	Results []ResponseFileSearchToolCallResultParam `json:"results,omitzero"`
 	// The type of the file search tool call. Always `file_search_call`.
 	//
 	// This field can be elided, and will marshal its zero value as "file_search_call".
@@ -2674,7 +2674,7 @@ type ResponseFileSearchToolCallResultParam struct {
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
 	// length of 64 characters. Values are strings with a maximum length of 512
 	// characters, booleans, or numbers.
-	Attributes map[string]ResponseFileSearchToolCallResultsAttributesUnionParam `json:"attributes,omitzero,nullable"`
+	Attributes map[string]ResponseFileSearchToolCallResultsAttributesUnionParam `json:"attributes,omitzero"`
 	paramObj
 }
 
@@ -2956,7 +2956,7 @@ type ResponseFormatTextJSONSchemaConfigParam struct {
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
 	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
-	Strict param.Opt[bool] `json:"strict,omitzero,nullable"`
+	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the response format is for, used by the model to determine
 	// how to respond in the format.
 	Description param.Opt[string] `json:"description,omitzero"`
@@ -3254,6 +3254,8 @@ func (r ResponseIncompleteEvent) RawJSON() string { return r.JSON.raw }
 func (r *ResponseIncompleteEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+type ResponseInputParam []ResponseInputItemUnionParam
 
 // ResponseInputContentUnion contains all possible properties and values from
 // [ResponseInputText, ResponseInputImage, ResponseInputFile].
@@ -3579,10 +3581,10 @@ type ResponseInputImageParam struct {
 	// Any of "high", "low", "auto".
 	Detail ResponseInputImageDetail `json:"detail,omitzero,required"`
 	// The ID of the file to be sent to the model.
-	FileID param.Opt[string] `json:"file_id,omitzero,nullable"`
+	FileID param.Opt[string] `json:"file_id,omitzero"`
 	// The URL of the image to be sent to the model. A fully qualified URL or base64
 	// encoded image in a data URL.
-	ImageURL param.Opt[string] `json:"image_url,omitzero,nullable"`
+	ImageURL param.Opt[string] `json:"image_url,omitzero"`
 	// The type of the input item. Always `input_image`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_image".
@@ -6665,7 +6667,7 @@ type WebSearchToolParam struct {
 	//
 	// Any of "web_search_preview", "web_search_preview_2025_03_11".
 	Type         WebSearchToolType              `json:"type,omitzero,required"`
-	UserLocation WebSearchToolUserLocationParam `json:"user_location,omitzero,nullable"`
+	UserLocation WebSearchToolUserLocationParam `json:"user_location,omitzero"`
 	// High level guidance for the amount of context window space to use for the
 	// search. One of `low`, `medium`, or `high`. `medium` is the default.
 	//
@@ -6830,7 +6832,7 @@ func (r ResponseNewParams) MarshalJSON() (data []byte, err error) {
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponseNewParamsInputUnion struct {
 	OfString        param.Opt[string]
-	OfInputItemList []ResponseInputItemUnionParam
+	OfInputItemList ResponseInputParam
 	paramUnion
 }
 

@@ -369,7 +369,7 @@ type FunctionDefinitionParam struct {
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
 	// [function calling guide](docs/guides/function-calling).
-	Strict param.Opt[bool] `json:"strict,omitzero,nullable"`
+	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the function does, used by the model to choose when and
 	// how to call the function.
 	Description param.Opt[string] `json:"description,omitzero"`
@@ -478,7 +478,7 @@ type ReasoningParam struct {
 	// `detailed`.
 	//
 	// Any of "concise", "detailed".
-	GenerateSummary ReasoningGenerateSummary `json:"generate_summary,omitzero,nullable"`
+	GenerateSummary ReasoningGenerateSummary `json:"generate_summary,omitzero"`
 	paramObj
 }
 
@@ -654,7 +654,7 @@ type ResponseFormatJSONSchemaJSONSchemaParam struct {
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
 	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
-	Strict param.Opt[bool] `json:"strict,omitzero,nullable"`
+	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the response format is for, used by the model to determine
 	// how to respond in the format.
 	Description param.Opt[string] `json:"description,omitzero"`

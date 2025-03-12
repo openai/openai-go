@@ -151,7 +151,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 				continue
 			}
 
-			if ptag.name == "-" && !ptag.inline {
+			if (ptag.name == "-" || ptag.name == "") && !ptag.inline {
 				continue
 			}
 
@@ -165,7 +165,19 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 					e.dateFormat = "2006-01-02"
 				}
 			}
-			encoderFields = append(encoderFields, encoderField{ptag, e.typeEncoder(field.Type), idx})
+			var encoderFn encoderFunc
+			if ptag.omitzero {
+				typeEncoderFn := e.typeEncoder(field.Type)
+				encoderFn = func(key string, value reflect.Value) []Pair {
+					if value.IsZero() {
+						return nil
+					}
+					return typeEncoderFn(key, value)
+				}
+			} else {
+				encoderFn = e.typeEncoder(field.Type)
+			}
+			encoderFields = append(encoderFields, encoderField{ptag, encoderFn, idx})
 			e.dateFormat = oldFormat
 		}
 	}

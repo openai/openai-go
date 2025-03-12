@@ -593,14 +593,14 @@ type BetaThreadNewParamsMessage struct {
 	// Any of "user", "assistant".
 	Role string `json:"role,omitzero,required"`
 	// A list of files attached to the message, and the tools they should be added to.
-	Attachments []BetaThreadNewParamsMessagesAttachment `json:"attachments,omitzero,nullable"`
+	Attachments []BetaThreadNewParamsMessagesAttachment `json:"attachments,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero,nullable"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
 	paramObj
 }
 
@@ -794,7 +794,7 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStore struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero,nullable"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy.
 	ChunkingStrategy BetaThreadNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion `json:"chunking_strategy,omitzero"`
@@ -1122,12 +1122,12 @@ type BetaThreadNewAndRunParamsThread struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero,nullable"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
 	// A set of resources that are made available to the assistant's tools in this
 	// thread. The resources are specific to the type of tool. For example, the
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
 	// tool requires a list of vector store IDs.
-	ToolResources BetaThreadNewAndRunParamsThreadToolResources `json:"tool_resources,omitzero,nullable"`
+	ToolResources BetaThreadNewAndRunParamsThreadToolResources `json:"tool_resources,omitzero"`
 	// A list of [messages](https://platform.openai.com/docs/api-reference/messages) to
 	// start the thread with.
 	Messages []BetaThreadNewAndRunParamsThreadMessage `json:"messages,omitzero"`
@@ -1155,14 +1155,14 @@ type BetaThreadNewAndRunParamsThreadMessage struct {
 	// Any of "user", "assistant".
 	Role string `json:"role,omitzero,required"`
 	// A list of files attached to the message, and the tools they should be added to.
-	Attachments []BetaThreadNewAndRunParamsThreadMessagesAttachment `json:"attachments,omitzero,nullable"`
+	Attachments []BetaThreadNewAndRunParamsThreadMessagesAttachment `json:"attachments,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero,nullable"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
 	paramObj
 }
 
@@ -1360,7 +1360,7 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero,nullable"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy.
 	ChunkingStrategy BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoresChunkingStrategyUnion `json:"chunking_strategy,omitzero"`
@@ -1626,7 +1626,7 @@ type BetaThreadNewAndRunParamsTruncationStrategy struct {
 	Type string `json:"type,omitzero,required"`
 	// The number of most recent messages from the thread when constructing the context
 	// for the run.
-	LastMessages param.Opt[int64] `json:"last_messages,omitzero,nullable"`
+	LastMessages param.Opt[int64] `json:"last_messages,omitzero"`
 	paramObj
 }
 

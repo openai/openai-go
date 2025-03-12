@@ -222,7 +222,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 				extraEncoder = &encoderField{ptag, e.typeEncoder(field.Type.Elem()), idx}
 				continue
 			}
-			if ptag.name == "-" {
+			if ptag.name == "-" || ptag.name == "" {
 				continue
 			}
 
@@ -236,7 +236,20 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 					e.dateFormat = "2006-01-02"
 				}
 			}
-			encoderFields = append(encoderFields, encoderField{ptag, e.typeEncoder(field.Type), idx})
+
+			var encoderFn encoderFunc
+			if ptag.omitzero {
+				typeEncoderFn := e.typeEncoder(field.Type)
+				encoderFn = func(key string, value reflect.Value, writer *multipart.Writer) error {
+					if value.IsZero() {
+						return nil
+					}
+					return typeEncoderFn(key, value, writer)
+				}
+			} else {
+				encoderFn = e.typeEncoder(field.Type)
+			}
+			encoderFields = append(encoderFields, encoderField{ptag, encoderFn, idx})
 			e.dateFormat = oldFormat
 		}
 	}

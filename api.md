@@ -303,12 +303,10 @@ Methods:
 
 Params Types:
 
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantChunkingStrategyUnionParam">AssistantChunkingStrategyUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantToolUnionParam">AssistantToolUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#CodeInterpreterToolParam">CodeInterpreterToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileSearchToolParam">FileSearchToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FunctionToolParam">FunctionToolParam</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ToolResourceFileSearchParam">ToolResourceFileSearchParam</a>
 
 Response Types:
 
@@ -502,6 +500,7 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFunctionToolCallParam">ResponseFunctionToolCallParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFunctionWebSearchParam">ResponseFunctionWebSearchParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseIncludable">ResponseIncludable</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputParam">ResponseInputParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputContentUnionParam">ResponseInputContentUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputFileParam">ResponseInputFileParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputImageParam">ResponseInputImageParam</a>

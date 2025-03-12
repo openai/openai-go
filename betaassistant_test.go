@@ -44,11 +44,11 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 			CodeInterpreter: openai.BetaAssistantNewParamsToolResourcesCodeInterpreter{
 				FileIDs: []string{"string"},
 			},
-			FileSearch: openai.ToolResourceFileSearchParam{
+			FileSearch: openai.BetaAssistantNewParamsToolResourcesFileSearch{
 				VectorStoreIDs: []string{"string"},
-				VectorStores: []openai.ToolResourceFileSearchVectorStoreParam{{
-					ChunkingStrategy: openai.AssistantChunkingStrategyUnionParam{
-						OfAuto: &openai.AssistantChunkingStrategyAutoParam{},
+				VectorStores: []openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStore{{
+					ChunkingStrategy: openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion{
+						OfAuto: &openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto{},
 					},
 					FileIDs: []string{"string"},
 					Metadata: shared.MetadataParam{

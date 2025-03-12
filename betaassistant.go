@@ -268,133 +268,6 @@ func (r *AssistantToolResourcesFileSearch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func AssistantChunkingStrategyParamOfStatic(static AssistantChunkingStrategyStaticStaticParam) AssistantChunkingStrategyUnionParam {
-	var variant AssistantChunkingStrategyStaticParam
-	variant.Static = static
-	return AssistantChunkingStrategyUnionParam{OfStatic: &variant}
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type AssistantChunkingStrategyUnionParam struct {
-	OfAuto   *AssistantChunkingStrategyAutoParam
-	OfStatic *AssistantChunkingStrategyStaticParam
-	paramUnion
-}
-
-// IsPresent returns false if the field is omitted or `null`.
-func (u AssistantChunkingStrategyUnionParam) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
-func (u AssistantChunkingStrategyUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[AssistantChunkingStrategyUnionParam](u.OfAuto, u.OfStatic)
-}
-
-func (u *AssistantChunkingStrategyUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return u.OfAuto
-	} else if !param.IsOmitted(u.OfStatic) {
-		return u.OfStatic
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u AssistantChunkingStrategyUnionParam) GetStatic() *AssistantChunkingStrategyStaticStaticParam {
-	if vt := u.OfStatic; vt != nil {
-		return &vt.Static
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u AssistantChunkingStrategyUnionParam) GetType() *string {
-	if vt := u.OfAuto; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfStatic; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-func init() {
-	apijson.RegisterUnion[AssistantChunkingStrategyUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantChunkingStrategyAutoParam{}),
-			DiscriminatorValue: "auto",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantChunkingStrategyStaticParam{}),
-			DiscriminatorValue: "static",
-		},
-	)
-}
-
-// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
-// `800` and `chunk_overlap_tokens` of `400`.
-//
-// The property Type is required.
-type AssistantChunkingStrategyAutoParam struct {
-	// Always `auto`.
-	//
-	// This field can be elided, and will marshal its zero value as "auto".
-	Type constant.Auto `json:"type,required"`
-	paramObj
-}
-
-// IsPresent returns false if the field is omitted or `null`.
-func (f AssistantChunkingStrategyAutoParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
-func (r AssistantChunkingStrategyAutoParam) MarshalJSON() (data []byte, err error) {
-	type shadow AssistantChunkingStrategyAutoParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-
-// The properties Static, Type are required.
-type AssistantChunkingStrategyStaticParam struct {
-	Static AssistantChunkingStrategyStaticStaticParam `json:"static,omitzero,required"`
-	// Always `static`.
-	//
-	// This field can be elided, and will marshal its zero value as "static".
-	Type constant.Static `json:"type,required"`
-	paramObj
-}
-
-// IsPresent returns false if the field is omitted or `null`.
-func (f AssistantChunkingStrategyStaticParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
-func (r AssistantChunkingStrategyStaticParam) MarshalJSON() (data []byte, err error) {
-	type shadow AssistantChunkingStrategyStaticParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-
-// The properties ChunkOverlapTokens, MaxChunkSizeTokens are required.
-type AssistantChunkingStrategyStaticStaticParam struct {
-	// The number of tokens that overlap between chunks. The default value is `400`.
-	//
-	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens,required"`
-	// The maximum number of tokens in each chunk. The default value is `800`. The
-	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens,required"`
-	paramObj
-}
-
-// IsPresent returns false if the field is omitted or `null`.
-func (f AssistantChunkingStrategyStaticStaticParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
-func (r AssistantChunkingStrategyStaticStaticParam) MarshalJSON() (data []byte, err error) {
-	type shadow AssistantChunkingStrategyStaticStaticParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-
 type AssistantDeleted struct {
 	ID      string                    `json:"id,required"`
 	Deleted bool                      `json:"deleted,required"`
@@ -1804,54 +1677,6 @@ func (r FunctionToolParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 
-type ToolResourceFileSearchParam struct {
-	// The
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
-	// attached to this assistant. There can be a maximum of 1 vector store attached to
-	// the assistant.
-	VectorStoreIDs []string `json:"vector_store_ids,omitzero"`
-	// A helper to create a
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
-	// with file_ids and attach it to this assistant. There can be a maximum of 1
-	// vector store attached to the assistant.
-	VectorStores []ToolResourceFileSearchVectorStoreParam `json:"vector_stores,omitzero"`
-	paramObj
-}
-
-// IsPresent returns false if the field is omitted or `null`.
-func (f ToolResourceFileSearchParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-func (r ToolResourceFileSearchParam) MarshalJSON() (data []byte, err error) {
-	type shadow ToolResourceFileSearchParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-
-type ToolResourceFileSearchVectorStoreParam struct {
-	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
-	//
-	// Keys are strings with a maximum length of 64 characters. Values are strings with
-	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero,nullable"`
-	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-	// strategy.
-	ChunkingStrategy AssistantChunkingStrategyUnionParam `json:"chunking_strategy,omitzero"`
-	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to
-	// add to the vector store. There can be a maximum of 10000 files in a vector
-	// store.
-	FileIDs []string `json:"file_ids,omitzero"`
-	paramObj
-}
-
-// IsPresent returns false if the field is omitted or `null`.
-func (f ToolResourceFileSearchVectorStoreParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
-func (r ToolResourceFileSearchVectorStoreParam) MarshalJSON() (data []byte, err error) {
-	type shadow ToolResourceFileSearchVectorStoreParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-
 type BetaAssistantNewParams struct {
 	// ID of the model to use. You can use the
 	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
@@ -1939,7 +1764,7 @@ func (r BetaAssistantNewParams) MarshalJSON() (data []byte, err error) {
 // IDs.
 type BetaAssistantNewParamsToolResources struct {
 	CodeInterpreter BetaAssistantNewParamsToolResourcesCodeInterpreter `json:"code_interpreter,omitzero"`
-	FileSearch      ToolResourceFileSearchParam                        `json:"file_search,omitzero"`
+	FileSearch      BetaAssistantNewParamsToolResourcesFileSearch      `json:"file_search,omitzero"`
 	paramObj
 }
 
@@ -1966,6 +1791,177 @@ func (f BetaAssistantNewParamsToolResourcesCodeInterpreter) IsPresent() bool {
 }
 func (r BetaAssistantNewParamsToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
 	type shadow BetaAssistantNewParamsToolResourcesCodeInterpreter
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+
+type BetaAssistantNewParamsToolResourcesFileSearch struct {
+	// The
+	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
+	// attached to this assistant. There can be a maximum of 1 vector store attached to
+	// the assistant.
+	VectorStoreIDs []string `json:"vector_store_ids,omitzero"`
+	// A helper to create a
+	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
+	// with file_ids and attach it to this assistant. There can be a maximum of 1
+	// vector store attached to the assistant.
+	VectorStores []BetaAssistantNewParamsToolResourcesFileSearchVectorStore `json:"vector_stores,omitzero"`
+	paramObj
+}
+
+// IsPresent returns false if the field is omitted or `null`.
+func (f BetaAssistantNewParamsToolResourcesFileSearch) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
+}
+func (r BetaAssistantNewParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAssistantNewParamsToolResourcesFileSearch
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStore struct {
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard.
+	//
+	// Keys are strings with a maximum length of 64 characters. Values are strings with
+	// a maximum length of 512 characters.
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
+	// strategy.
+	ChunkingStrategy BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion `json:"chunking_strategy,omitzero"`
+	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to
+	// add to the vector store. There can be a maximum of 10000 files in a vector
+	// store.
+	FileIDs []string `json:"file_ids,omitzero"`
+	paramObj
+}
+
+// IsPresent returns false if the field is omitted or `null`.
+func (f BetaAssistantNewParamsToolResourcesFileSearchVectorStore) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
+}
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAssistantNewParamsToolResourcesFileSearchVectorStore
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion struct {
+	OfAuto   *BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto
+	OfStatic *BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic
+	paramUnion
+}
+
+// IsPresent returns false if the field is omitted or `null`.
+func (u BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion) IsPresent() bool {
+	return !param.IsOmitted(u) && !u.IsNull()
+}
+func (u BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion](u.OfAuto, u.OfStatic)
+}
+
+func (u *BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion) asAny() any {
+	if !param.IsOmitted(u.OfAuto) {
+		return u.OfAuto
+	} else if !param.IsOmitted(u.OfStatic) {
+		return u.OfStatic
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion) GetStatic() *BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic {
+	if vt := u.OfStatic; vt != nil {
+		return &vt.Static
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion) GetType() *string {
+	if vt := u.OfAuto; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfStatic; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion](
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto{}),
+			DiscriminatorValue: "auto",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic{}),
+			DiscriminatorValue: "static",
+		},
+	)
+}
+
+// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
+// `800` and `chunk_overlap_tokens` of `400`.
+//
+// The property Type is required.
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto struct {
+	// Always `auto`.
+	//
+	// This field can be elided, and will marshal its zero value as "auto".
+	Type constant.Auto `json:"type,required"`
+	paramObj
+}
+
+// IsPresent returns false if the field is omitted or `null`.
+func (f BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
+}
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+
+// The properties Static, Type are required.
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic struct {
+	Static BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic `json:"static,omitzero,required"`
+	// Always `static`.
+	//
+	// This field can be elided, and will marshal its zero value as "static".
+	Type constant.Static `json:"type,required"`
+	paramObj
+}
+
+// IsPresent returns false if the field is omitted or `null`.
+func (f BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
+}
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+
+// The properties ChunkOverlapTokens, MaxChunkSizeTokens are required.
+type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic struct {
+	// The number of tokens that overlap between chunks. The default value is `400`.
+	//
+	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
+	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens,required"`
+	// The maximum number of tokens in each chunk. The default value is `800`. The
+	// minimum value is `100` and the maximum value is `4096`.
+	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens,required"`
+	paramObj
+}
+
+// IsPresent returns false if the field is omitted or `null`.
+func (f BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
+}
+func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 
