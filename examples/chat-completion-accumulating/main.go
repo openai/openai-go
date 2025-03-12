@@ -16,74 +16,92 @@ func main() {
 	client := openai.NewClient()
 	ctx := context.Background()
 
-	question := "Begin a very brief introduction of Greece, then incorporate the local weather of a few towns"
+	questions := []string{"Describe Greece in 50 words.", "Grab the live weather of the largest city in Greece"}
 
-	print("> ")
-	println(question)
-	println()
+	for _, question := range questions {
+		print("> ")
+		println(question)
+		println()
 
-	params := openai.ChatCompletionNewParams{
-		Messages: []openai.ChatCompletionMessageParamUnion{
-			openai.ChatCompletionMessageParamOfUser(question),
-		},
-		Seed:  openai.Int(0),
-		Model: openai.ChatModelGPT4o,
-		Tools: []openai.ChatCompletionToolParam{
-			{
-				Function: openai.FunctionDefinitionParam{
-					Name:        "get_live_weather",
-					Description: openai.String("Get weather at the given location"),
-					Parameters: openai.FunctionParameters{
-						"type": "object",
-						"properties": map[string]interface{}{
-							"location": map[string]string{
-								"type": "string",
+		params := openai.ChatCompletionNewParams{
+			Messages: []openai.ChatCompletionMessageParamUnion{
+				openai.ChatCompletionMessageParamOfUser(question),
+			},
+			Seed:  openai.Int(0),
+			Model: openai.ChatModelGPT4o,
+			Tools: []openai.ChatCompletionToolParam{
+				{
+					Function: openai.FunctionDefinitionParam{
+						Name:        "get_live_weather",
+						Description: openai.String("Get weather at the given location"),
+						Parameters: openai.FunctionParameters{
+							"type": "object",
+							"properties": map[string]interface{}{
+								"location": map[string]string{
+									"type": "string",
+								},
 							},
+							"required": []string{"location"},
 						},
-						"required": []string{"location"},
 					},
 				},
 			},
-		},
+		}
+
+		stream := client.Chat.Completions.NewStreaming(ctx, params)
+		acc := openai.ChatCompletionAccumulator{}
+
+		for stream.Next() {
+			chunk := stream.Current()
+			acc.AddChunk(chunk)
+
+			// When this fires, the current chunk value will not contain content data
+			if content, ok := acc.JustFinishedContent(); ok {
+				println("Content stream finished:", content)
+				println()
+			}
+
+			if tool, ok := acc.JustFinishedToolCall(); ok {
+				println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
+				println()
+			}
+
+			if refusal, ok := acc.JustFinishedRefusal(); ok {
+				println("Refusal stream finished:", refusal)
+				println()
+			}
+
+			// It's best to use chunks after handling JustFinished events
+			if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != "" {
+				print(chunk.Choices[0].Delta.Content)
+			}
+		}
+
+		if err := stream.Err(); err != nil {
+			panic(err)
+		}
+
+		if len(acc.Choices) == 0 {
+			println("Total Tokens:", acc.Usage.TotalTokens)
+			continue
+		}
+
+		if acc.Choices[0].Message.Content != "" {
+			// After the stream is finished, acc can be used like a ChatCompletion
+			println("Total text length:", len(acc.Choices[0].Message.Content))
+		}
+
+		if acc.Choices[0].Message.Refusal != "" {
+			println("Refusal:", acc.Choices[0].Message.Refusal)
+		}
+
+		for _, toolCall := range acc.Choices[0].Message.ToolCalls {
+			println("Tool call:", toolCall.Function.Name, toolCall.Function.Arguments)
+		}
+
+		if acc.Choices[0].FinishReason != "" {
+			println("Finish Reason:", acc.Choices[0].FinishReason)
+		}
 	}
 
-	stream := client.Chat.Completions.NewStreaming(ctx, params)
-
-	acc := openai.ChatCompletionAccumulator{}
-
-	for stream.Next() {
-		chunk := stream.Current()
-		acc.AddChunk(chunk)
-
-		// When this fires, the current chunk value will not contain content data
-		if content, ok := acc.JustFinishedContent(); ok {
-			println("Content stream finished:", content)
-			println()
-		}
-
-		if tool, ok := acc.JustFinishedToolCall(); ok {
-			println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
-			println()
-		}
-
-		if refusal, ok := acc.JustFinishedRefusal(); ok {
-			println("Refusal stream finished:", refusal)
-			println()
-		}
-
-		// It's best to use chunks after handling JustFinished events
-		if len(chunk.Choices) > 0 {
-			println(chunk.Choices[0].Delta.RawJSON())
-		}
-	}
-
-	if err := stream.Err(); err != nil {
-		panic(err)
-	}
-
-	// After the stream is finished, acc can be used like a ChatCompletion
-	_ = acc.Choices[0].Message.Content
-
-	println("Total Tokens:", acc.Usage.TotalTokens)
-	println("Finish Reason:", acc.Choices[0].FinishReason)
 }

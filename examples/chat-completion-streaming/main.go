@@ -27,11 +27,13 @@ func main() {
 
 	for stream.Next() {
 		evt := stream.Current()
-		print(evt.Choices[0].Delta.Content)
+		if len(evt.Choices) > 0 {
+			print(evt.Choices[0].Delta.Content)
+		}
 	}
 	println()
 
 	if err := stream.Err(); err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 }

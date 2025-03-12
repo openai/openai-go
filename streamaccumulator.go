@@ -160,11 +160,11 @@ func (prev *chatCompletionResponseState) update(chunk ChatCompletionChunk) (just
 	delta := chunk.Choices[0].Delta
 	new := chatCompletionResponseState{}
 	switch {
-	case !delta.JSON.Content.IsNull():
+	case !delta.JSON.Content.IsNullish():
 		new.state = contentResponseState
-	case !delta.JSON.Refusal.IsNull():
+	case !delta.JSON.Refusal.IsNullish():
 		new.state = refusalResponseState
-	case !delta.JSON.ToolCalls.IsNull():
+	case !delta.JSON.ToolCalls.IsNullish():
 		new.state = toolResponseState
 		new.index = int(delta.ToolCalls[0].Index)
 	default:
@@ -176,7 +176,7 @@ func (prev *chatCompletionResponseState) update(chunk ChatCompletionChunk) (just
 	}
 	*prev = new
 
-	return justFinished
+	return
 }
 
 func expandToFit[T any](slice []T, index int) []T {
