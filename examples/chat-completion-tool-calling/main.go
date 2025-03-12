@@ -57,11 +57,8 @@ func main() {
 		return
 	}
 
-	asstMsg := openai.ChatCompletionMessageParamUnion{
-		OfAssistant: completion.Choices[0].Message.ToParam(),
-	}
 	// If there is a was a function call, continue the conversation
-	params.Messages = append(params.Messages, asstMsg)
+	params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
 	for _, toolCall := range toolCalls {
 		if toolCall.Function.Name == "get_weather" {
 			// Extract the location from the function call arguments
@@ -77,7 +74,7 @@ func main() {
 			// Print the weather data
 			fmt.Printf("Weather in %s: %s\n", location, weatherData)
 
-			params.Messages = append(params.Messages, openai.ChatCompletionMessageParamOfTool(toolCall.ID, weatherData))
+			params.Messages = append(params.Messages, openai.ChatCompletionMessageParamOfTool(weatherData, toolCall.ID))
 		}
 	}
 

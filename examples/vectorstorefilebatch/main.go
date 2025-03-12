@@ -59,8 +59,13 @@ func main() {
 
 	println("Listing the files from the vector store")
 
-	filesCursor, err := client.VectorStores.FileBatches.ListFiles(ctx, vectorStore.ID, batch.ID,
-		openai.VectorStoreFileBatchListFilesParams{})
+	vector := openai.VectorStoreFileBatchListFilesParams{
+		Order: openai.VectorStoreFileBatchListFilesParamsOrderAsc,
+	}
+
+	println("Vector JSON:", vector.URLQuery())
+
+	filesCursor, err := client.VectorStores.FileBatches.ListFiles(ctx, vectorStore.ID, batch.ID, vector)
 
 	if err != nil {
 		panic(err)

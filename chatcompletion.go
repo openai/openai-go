@@ -1236,6 +1236,28 @@ func (r *ChatCompletionMessage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (r ChatCompletionMessage) ToParam() ChatCompletionMessageParamUnion {
+	asst := r.ToAssistantMessageParam()
+	return ChatCompletionMessageParamUnion{OfAssistant: &asst}
+}
+
+func (r ChatCompletionMessage) ToAssistantMessageParam() ChatCompletionAssistantMessageParam {
+	var p ChatCompletionAssistantMessageParam
+	p.Content.OfString = toParam(r.Content, r.JSON.Content)
+	p.Refusal = toParam(r.Refusal, r.JSON.Refusal)
+	p.Audio.ID = r.Audio.ID
+	p.Role = r.Role
+	p.FunctionCall.Arguments = r.FunctionCall.Arguments
+	p.FunctionCall.Name = r.FunctionCall.Name
+	p.ToolCalls = make([]ChatCompletionMessageToolCallParam, len(r.ToolCalls))
+	for i, v := range r.ToolCalls {
+		p.ToolCalls[i].ID = v.ID
+		p.ToolCalls[i].Function.Arguments = v.Function.Arguments
+		p.ToolCalls[i].Function.Name = v.Function.Name
+	}
+	return p
+}
+
 // A URL citation when using web search.
 type ChatCompletionMessageAnnotation struct {
 	// The type of the URL citation. Always `url_citation`.

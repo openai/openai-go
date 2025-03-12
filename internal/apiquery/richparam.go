@@ -1,8 +1,9 @@
 package apiquery
 
 import (
-	"github.com/openai/openai-go/packages/param"
 	"reflect"
+
+	"github.com/openai/openai-go/packages/param"
 )
 
 func (e *encoder) newRichFieldTypeEncoder(t reflect.Type, underlyingValueIdx []int) encoderFunc {

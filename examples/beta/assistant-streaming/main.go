@@ -5,13 +5,10 @@ import (
 	"fmt"
 
 	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/option"
 )
 
 func main() {
-	client := openai.NewClient(
-		option.WithHeader("OpenAI-Beta", "assistants=v2"),
-	)
+	client := openai.NewClient()
 
 	ctx := context.Background()
 
@@ -23,8 +20,9 @@ func main() {
 		Tools: []openai.AssistantToolUnionParam{
 			{OfCodeInterpreter: &openai.CodeInterpreterToolParam{Type: "code_interpreter"}},
 		},
-		Model: "gpt-4-1106-preview",
+		Model: openai.ChatModelGPT4_1106Preview,
 	})
+
 	if err != nil {
 		panic(err)
 	}

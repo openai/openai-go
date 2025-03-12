@@ -1,10 +1,11 @@
 package apiquery
 
 import (
-	"github.com/openai/openai-go/packages/param"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/openai/openai-go/packages/param"
 )
 
 func P[T any](v T) *T { return &v }
