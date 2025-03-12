@@ -4,6 +4,7 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -409,6 +410,8 @@ type Run struct {
 		raw                 string
 	} `json:"-"`
 }
+
+type runJSON json.RawMessage
 
 // Returns the unmodified JSON received from the API
 func (r Run) RawJSON() string { return r.JSON.raw }
