@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.1.0-alpha.63 (2025-03-12)
+
+Full Changelog: [v0.1.0-alpha.62...v0.1.0-alpha.63](https://github.com/openai/openai-go/compare/v0.1.0-alpha.62...v0.1.0-alpha.63)
+
+### Features
+
+* add SKIP_BREW env var to ./scripts/bootstrap ([#255](https://github.com/openai/openai-go/issues/255)) ([175ff8a](https://github.com/openai/openai-go/commit/175ff8a9fd945152693a873b20beaa1c4a4b0fc7))
+* **api:** updates ([#259](https://github.com/openai/openai-go/issues/259)) ([b95257b](https://github.com/openai/openai-go/commit/b95257b2950d77f5a634aa08a82925300c318031))
+* **client:** accept RFC6838 JSON content types ([#256](https://github.com/openai/openai-go/issues/256)) ([5941c83](https://github.com/openai/openai-go/commit/5941c838786018b77fdd8a72eaef5e798b95f81a))
+* **client:** allow custom baseurls without trailing slash ([#254](https://github.com/openai/openai-go/issues/254)) ([de1216a](https://github.com/openai/openai-go/commit/de1216a51301e6aeb987bdbff707d2f85b374593))
+
+
+### Bug Fixes
+
+* **responses:** correct computer use enum value ([#261](https://github.com/openai/openai-go/issues/261)) ([e5a07c6](https://github.com/openai/openai-go/commit/e5a07c6dbd762d567de2049bb218330b480ae35e))
+* **responses:** correct reasoning output type ([#262](https://github.com/openai/openai-go/issues/262)) ([ecad35d](https://github.com/openai/openai-go/commit/ecad35dce6297a7905af3f4760e46c482ac9f89f))
+
+
+### Chores
+
+* move ChatModel type to shared ([#250](https://github.com/openai/openai-go/issues/250)) ([34fbacc](https://github.com/openai/openai-go/commit/34fbacc8308683c2dca3368ad0d42cca3aee8deb))
+
+
+### Refactors
+
+* tidy up dependencies ([#257](https://github.com/openai/openai-go/issues/257)) ([d367e14](https://github.com/openai/openai-go/commit/d367e141c63b2585feb57670a9d7e762dfc7ca75))
+
 ## 0.1.0-alpha.62 (2025-03-05)
 
 Full Changelog: [v0.1.0-alpha.61...v0.1.0-alpha.62](https://github.com/openai/openai-go/compare/v0.1.0-alpha.61...v0.1.0-alpha.62)
