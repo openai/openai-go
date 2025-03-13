@@ -262,9 +262,9 @@ type ModerationImageURLInputParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ModerationImageURLInputParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ModerationImageURLInputParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ModerationImageURLInputParam) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationImageURLInputParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -279,10 +279,10 @@ type ModerationImageURLInputImageURLParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ModerationImageURLInputImageURLParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ModerationImageURLInputImageURLParam) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationImageURLInputImageURLParam
@@ -319,10 +319,10 @@ type ModerationMultiModalInputUnionParam struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u ModerationMultiModalInputUnionParam) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u ModerationMultiModalInputUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ModerationMultiModalInputUnionParam](u.OfImageURL, u.OfText)
@@ -392,9 +392,9 @@ type ModerationTextInputParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ModerationTextInputParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ModerationTextInputParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ModerationTextInputParam) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationTextInputParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -436,9 +436,9 @@ type ModerationNewParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ModerationNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ModerationNewParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r ModerationNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationNewParams
@@ -455,9 +455,9 @@ type ModerationNewParamsInputUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u ModerationNewParamsInputUnion) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
+func (u ModerationNewParamsInputUnion) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
 func (u ModerationNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ModerationNewParamsInputUnion](u.OfString, u.OfModerationNewsInputArray, u.OfModerationMultiModalArray)
 }

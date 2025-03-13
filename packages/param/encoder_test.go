@@ -47,6 +47,7 @@ func TestFieldMarshal(t *testing.T) {
 
 		"float_zero":  {param.NewOpt(float64(0.0)), "0"},
 		"string_zero": {param.NewOpt(""), `""`},
+		"time_zero":   {param.NewOpt(time.Time{}), `"0001-01-01T00:00:00Z"`},
 
 		"string": {param.Opt[string]{Value: "string"}, `"string"`},
 		"int":    {param.Opt[int64]{Value: 123}, "123"},
@@ -61,6 +62,12 @@ func TestFieldMarshal(t *testing.T) {
 				F: param.Opt[time.Time]{Value: time.Date(2023, time.March, 18, 14, 47, 38, 0, time.UTC)},
 			},
 			`{"f":"2023-03-18"}`,
+		},
+		"optional_time": {
+			FieldStruct{
+				G: param.Opt[time.Time]{Value: time.Date(2023, time.March, 18, 14, 47, 38, 0, time.UTC)},
+			},
+			`{"g":"2023-03-18T14:47:38Z"}`,
 		},
 
 		"param_struct": {

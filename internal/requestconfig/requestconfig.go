@@ -77,7 +77,17 @@ func getPlatformProperties() map[string]string {
 	}
 }
 
-func NewRequestConfig(ctx context.Context, method string, u string, body interface{}, dst interface{}, opts ...func(*RequestConfig) error) (*RequestConfig, error) {
+type RequestOption interface {
+	Apply(*RequestConfig) error
+}
+
+type RequestOptionFunc func(*RequestConfig) error
+type PreRequestOptionFunc func(*RequestConfig) error
+
+func (s RequestOptionFunc) Apply(r *RequestConfig) error    { return s(r) }
+func (s PreRequestOptionFunc) Apply(r *RequestConfig) error { return s(r) }
+
+func NewRequestConfig(ctx context.Context, method string, u string, body interface{}, dst interface{}, opts ...RequestOption) (*RequestConfig, error) {
 	var reader io.Reader
 
 	contentType := "application/json"
@@ -177,7 +187,7 @@ func NewRequestConfig(ctx context.Context, method string, u string, body interfa
 // RequestConfig represents all the state related to one request.
 //
 // Editing the variables inside RequestConfig directly is unstable api. Prefer
-// composing func(\*RequestConfig) error instead if possible.
+// composing the RequestOption instead if possible.
 type RequestConfig struct {
 	MaxRetries     int
 	RequestTimeout time.Duration
@@ -519,7 +529,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	return nil
 }
 
-func ExecuteNewRequest(ctx context.Context, method string, u string, body interface{}, dst interface{}, opts ...func(*RequestConfig) error) error {
+func ExecuteNewRequest(ctx context.Context, method string, u string, body interface{}, dst interface{}, opts ...RequestOption) error {
 	cfg, err := NewRequestConfig(ctx, method, u, body, dst, opts...)
 	if err != nil {
 		return err
@@ -555,12 +565,27 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 	return new
 }
 
-func (cfg *RequestConfig) Apply(opts ...func(*RequestConfig) error) error {
+func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
 	for _, opt := range opts {
-		err := opt(cfg)
+		err := opt.Apply(cfg)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func PreRequestOptions(opts ...RequestOption) (RequestConfig, error) {
+	cfg := RequestConfig{}
+	for _, opt := range opts {
+		if _, ok := opt.(PreRequestOptionFunc); !ok {
+			continue
+		}
+
+		err := opt.Apply(&cfg)
+		if err != nil {
+			return cfg, err
+		}
+	}
+	return cfg, nil
 }

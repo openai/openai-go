@@ -935,9 +935,9 @@ type FineTuningJobNewParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f FineTuningJobNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f FineTuningJobNewParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r FineTuningJobNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParams
@@ -961,10 +961,10 @@ type FineTuningJobNewParamsHyperparameters struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f FineTuningJobNewParamsHyperparameters) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r FineTuningJobNewParamsHyperparameters) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParamsHyperparameters
@@ -982,10 +982,10 @@ type FineTuningJobNewParamsHyperparametersBatchSizeUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u FineTuningJobNewParamsHyperparametersBatchSizeUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u FineTuningJobNewParamsHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
@@ -1011,10 +1011,10 @@ type FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
@@ -1040,10 +1040,10 @@ type FineTuningJobNewParamsHyperparametersNEpochsUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u FineTuningJobNewParamsHyperparametersNEpochsUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u FineTuningJobNewParamsHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
@@ -1073,9 +1073,9 @@ type FineTuningJobNewParamsIntegration struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f FineTuningJobNewParamsIntegration) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f FineTuningJobNewParamsIntegration) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r FineTuningJobNewParamsIntegration) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParamsIntegration
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1104,10 +1104,10 @@ type FineTuningJobNewParamsIntegrationsWandb struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f FineTuningJobNewParamsIntegrationsWandb) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r FineTuningJobNewParamsIntegrationsWandb) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParamsIntegrationsWandb
@@ -1127,9 +1127,9 @@ type FineTuningJobNewParamsMethod struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f FineTuningJobNewParamsMethod) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f FineTuningJobNewParamsMethod) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r FineTuningJobNewParamsMethod) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParamsMethod
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1148,9 +1148,9 @@ type FineTuningJobNewParamsMethodDpo struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f FineTuningJobNewParamsMethodDpo) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f FineTuningJobNewParamsMethodDpo) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r FineTuningJobNewParamsMethodDpo) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParamsMethodDpo
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1173,10 +1173,10 @@ type FineTuningJobNewParamsMethodDpoHyperparameters struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f FineTuningJobNewParamsMethodDpoHyperparameters) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r FineTuningJobNewParamsMethodDpoHyperparameters) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParamsMethodDpoHyperparameters
@@ -1194,10 +1194,10 @@ type FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
@@ -1223,10 +1223,10 @@ type FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion](u.OfAuto, u.OfFloat)
@@ -1252,10 +1252,10 @@ type FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion s
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
@@ -1281,10 +1281,10 @@ type FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
@@ -1306,10 +1306,10 @@ type FineTuningJobNewParamsMethodSupervised struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f FineTuningJobNewParamsMethodSupervised) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r FineTuningJobNewParamsMethodSupervised) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParamsMethodSupervised
@@ -1330,10 +1330,10 @@ type FineTuningJobNewParamsMethodSupervisedHyperparameters struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f FineTuningJobNewParamsMethodSupervisedHyperparameters) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r FineTuningJobNewParamsMethodSupervisedHyperparameters) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParamsMethodSupervisedHyperparameters
@@ -1351,10 +1351,10 @@ type FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion struct 
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
@@ -1380,10 +1380,10 @@ type FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplier
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
@@ -1409,10 +1409,10 @@ type FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
@@ -1438,9 +1438,9 @@ type FineTuningJobListParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f FineTuningJobListParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f FineTuningJobListParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [FineTuningJobListParams]'s query parameters as
 // `url.Values`.
@@ -1459,9 +1459,9 @@ type FineTuningJobListEventsParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f FineTuningJobListEventsParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f FineTuningJobListEventsParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [FineTuningJobListEventsParams]'s query parameters as
 // `url.Values`.

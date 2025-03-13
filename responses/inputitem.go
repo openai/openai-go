@@ -450,9 +450,9 @@ type InputItemListParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f InputItemListParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f InputItemListParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [InputItemListParams]'s query parameters as `url.Values`.
 func (r InputItemListParams) URLQuery() (v url.Values) {

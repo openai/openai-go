@@ -175,9 +175,9 @@ type UploadNewParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f UploadNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f UploadNewParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r UploadNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow UploadNewParams
@@ -193,9 +193,9 @@ type UploadCompleteParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f UploadCompleteParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f UploadCompleteParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r UploadCompleteParams) MarshalJSON() (data []byte, err error) {
 	type shadow UploadCompleteParams

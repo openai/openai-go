@@ -258,9 +258,9 @@ type FileNewParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f FileNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f FileNewParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r FileNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)
@@ -296,9 +296,9 @@ type FileListParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f FileListParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f FileListParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [FileListParams]'s query parameters as `url.Values`.
 func (r FileListParams) URLQuery() (v url.Values) {

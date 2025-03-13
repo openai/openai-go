@@ -504,9 +504,9 @@ type ImageFileParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ImageFileParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ImageFileParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ImageFileParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageFileParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -555,9 +555,9 @@ type ImageFileContentBlockParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ImageFileContentBlockParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ImageFileContentBlockParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ImageFileContentBlockParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageFileContentBlockParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -678,9 +678,9 @@ type ImageURLParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ImageURLParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ImageURLParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ImageURLParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageURLParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -727,9 +727,9 @@ type ImageURLContentBlockParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ImageURLContentBlockParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ImageURLContentBlockParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ImageURLContentBlockParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageURLContentBlockParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1149,9 +1149,9 @@ type MessageContentPartParamUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u MessageContentPartParamUnion) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
+func (u MessageContentPartParamUnion) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
 func (u MessageContentPartParamUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[MessageContentPartParamUnion](u.OfImageFile, u.OfImageURL, u.OfText)
 }
@@ -1395,9 +1395,9 @@ type TextContentBlockParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f TextContentBlockParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f TextContentBlockParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r TextContentBlockParam) MarshalJSON() (data []byte, err error) {
 	type shadow TextContentBlockParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1469,9 +1469,9 @@ type BetaThreadMessageNewParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f BetaThreadMessageNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f BetaThreadMessageNewParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r BetaThreadMessageNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadMessageNewParams
@@ -1487,10 +1487,10 @@ type BetaThreadMessageNewParamsContentUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u BetaThreadMessageNewParamsContentUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u BetaThreadMessageNewParamsContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadMessageNewParamsContentUnion](u.OfString, u.OfArrayOfContentParts)
@@ -1526,10 +1526,10 @@ type BetaThreadMessageNewParamsAttachment struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f BetaThreadMessageNewParamsAttachment) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r BetaThreadMessageNewParamsAttachment) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadMessageNewParamsAttachment
@@ -1545,10 +1545,10 @@ type BetaThreadMessageNewParamsAttachmentsToolUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u BetaThreadMessageNewParamsAttachmentsToolUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u BetaThreadMessageNewParamsAttachmentsToolUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadMessageNewParamsAttachmentsToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
@@ -1598,10 +1598,10 @@ type BetaThreadMessageNewParamsAttachmentsToolsFileSearch struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f BetaThreadMessageNewParamsAttachmentsToolsFileSearch) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r BetaThreadMessageNewParamsAttachmentsToolsFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadMessageNewParamsAttachmentsToolsFileSearch
@@ -1619,9 +1619,9 @@ type BetaThreadMessageUpdateParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f BetaThreadMessageUpdateParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f BetaThreadMessageUpdateParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r BetaThreadMessageUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadMessageUpdateParams
@@ -1652,9 +1652,9 @@ type BetaThreadMessageListParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f BetaThreadMessageListParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f BetaThreadMessageListParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [BetaThreadMessageListParams]'s query parameters as
 // `url.Values`.

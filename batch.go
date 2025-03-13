@@ -292,9 +292,9 @@ type BatchNewParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f BatchNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f BatchNewParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r BatchNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BatchNewParams
@@ -333,9 +333,9 @@ type BatchListParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f BatchListParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f BatchListParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [BatchListParams]'s query parameters as `url.Values`.
 func (r BatchListParams) URLQuery() (v url.Values) {

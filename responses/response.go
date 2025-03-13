@@ -180,9 +180,9 @@ type ComputerToolParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ComputerToolParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ComputerToolParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ComputerToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow ComputerToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -211,9 +211,9 @@ type EasyInputMessageParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f EasyInputMessageParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f EasyInputMessageParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r EasyInputMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow EasyInputMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -228,9 +228,9 @@ type EasyInputMessageContentUnionParam struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u EasyInputMessageContentUnionParam) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
+func (u EasyInputMessageContentUnionParam) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
 func (u EasyInputMessageContentUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[EasyInputMessageContentUnionParam](u.OfString, u.OfInputItemContentList)
 }
@@ -386,9 +386,9 @@ type FileSearchToolParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f FileSearchToolParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f FileSearchToolParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r FileSearchToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow FileSearchToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -403,9 +403,9 @@ type FileSearchToolFiltersUnionParam struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u FileSearchToolFiltersUnionParam) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
+func (u FileSearchToolFiltersUnionParam) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
 func (u FileSearchToolFiltersUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FileSearchToolFiltersUnionParam](u.OfComparisonFilter, u.OfCompoundFilter)
 }
@@ -466,9 +466,9 @@ type FileSearchToolRankingOptionsParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f FileSearchToolRankingOptionsParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f FileSearchToolRankingOptionsParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r FileSearchToolRankingOptionsParam) MarshalJSON() (data []byte, err error) {
 	type shadow FileSearchToolRankingOptionsParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -544,9 +544,9 @@ type FunctionToolParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f FunctionToolParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f FunctionToolParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r FunctionToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow FunctionToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1644,9 +1644,9 @@ type ResponseComputerToolCallParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseComputerToolCallParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseComputerToolCallParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseComputerToolCallParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1668,10 +1668,10 @@ type ResponseComputerToolCallActionUnionParam struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u ResponseComputerToolCallActionUnionParam) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u ResponseComputerToolCallActionUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseComputerToolCallActionUnionParam](u.OfClick,
@@ -1880,10 +1880,10 @@ type ResponseComputerToolCallActionClickParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseComputerToolCallActionClickParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseComputerToolCallActionClickParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionClickParam
@@ -1912,10 +1912,10 @@ type ResponseComputerToolCallActionDoubleClickParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseComputerToolCallActionDoubleClickParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseComputerToolCallActionDoubleClickParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionDoubleClickParam
@@ -1946,10 +1946,10 @@ type ResponseComputerToolCallActionDragParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseComputerToolCallActionDragParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseComputerToolCallActionDragParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionDragParam
@@ -1967,10 +1967,10 @@ type ResponseComputerToolCallActionDragPathParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseComputerToolCallActionDragPathParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseComputerToolCallActionDragPathParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionDragPathParam
@@ -1992,10 +1992,10 @@ type ResponseComputerToolCallActionKeypressParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseComputerToolCallActionKeypressParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseComputerToolCallActionKeypressParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionKeypressParam
@@ -2018,10 +2018,10 @@ type ResponseComputerToolCallActionMoveParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseComputerToolCallActionMoveParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseComputerToolCallActionMoveParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionMoveParam
@@ -2040,10 +2040,10 @@ type ResponseComputerToolCallActionScreenshotParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseComputerToolCallActionScreenshotParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseComputerToolCallActionScreenshotParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionScreenshotParam
@@ -2070,10 +2070,10 @@ type ResponseComputerToolCallActionScrollParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseComputerToolCallActionScrollParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseComputerToolCallActionScrollParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionScrollParam
@@ -2094,10 +2094,10 @@ type ResponseComputerToolCallActionTypeParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseComputerToolCallActionTypeParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseComputerToolCallActionTypeParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionTypeParam
@@ -2116,10 +2116,10 @@ type ResponseComputerToolCallActionWaitParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseComputerToolCallActionWaitParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseComputerToolCallActionWaitParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionWaitParam
@@ -2139,10 +2139,10 @@ type ResponseComputerToolCallPendingSafetyCheckParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseComputerToolCallPendingSafetyCheckParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseComputerToolCallPendingSafetyCheckParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallPendingSafetyCheckParam
@@ -2669,9 +2669,9 @@ type ResponseFileSearchToolCallParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseFileSearchToolCallParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseFileSearchToolCallParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseFileSearchToolCallParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFileSearchToolCallParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -2695,10 +2695,10 @@ type ResponseFileSearchToolCallResultParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseFileSearchToolCallResultParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseFileSearchToolCallResultParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFileSearchToolCallResultParam
@@ -2715,10 +2715,10 @@ type ResponseFileSearchToolCallResultsAttributesUnionParam struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u ResponseFileSearchToolCallResultsAttributesUnionParam) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u ResponseFileSearchToolCallResultsAttributesUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseFileSearchToolCallResultsAttributesUnionParam](u.OfString, u.OfFloat, u.OfBool)
@@ -2828,9 +2828,9 @@ type ResponseFormatTextConfigUnionParam struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u ResponseFormatTextConfigUnionParam) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
+func (u ResponseFormatTextConfigUnionParam) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
 func (u ResponseFormatTextConfigUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseFormatTextConfigUnionParam](u.OfText, u.OfJSONSchema, u.OfJSONObject)
 }
@@ -2988,10 +2988,10 @@ type ResponseFormatTextJSONSchemaConfigParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseFormatTextJSONSchemaConfigParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseFormatTextJSONSchemaConfigParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFormatTextJSONSchemaConfigParam
@@ -3135,9 +3135,9 @@ type ResponseFunctionToolCallParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseFunctionToolCallParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseFunctionToolCallParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseFunctionToolCallParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFunctionToolCallParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -3210,9 +3210,9 @@ type ResponseFunctionWebSearchParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseFunctionWebSearchParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseFunctionWebSearchParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseFunctionWebSearchParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFunctionWebSearchParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -3380,9 +3380,9 @@ type ResponseInputContentUnionParam struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u ResponseInputContentUnionParam) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
+func (u ResponseInputContentUnionParam) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
 func (u ResponseInputContentUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseInputContentUnionParam](u.OfInputText, u.OfInputImage, u.OfInputFile)
 }
@@ -3534,9 +3534,9 @@ type ResponseInputFileParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseInputFileParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseInputFileParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseInputFileParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputFileParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -3615,9 +3615,9 @@ type ResponseInputImageParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseInputImageParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseInputImageParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseInputImageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputImageParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -3710,9 +3710,9 @@ type ResponseInputItemUnionParam struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u ResponseInputItemUnionParam) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
+func (u ResponseInputItemUnionParam) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
 func (u ResponseInputItemUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseInputItemUnionParam](u.OfMessage,
 		u.OfInputMessage,
@@ -4110,9 +4110,9 @@ type ResponseInputItemMessageParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseInputItemMessageParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseInputItemMessageParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseInputItemMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputItemMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -4156,10 +4156,10 @@ type ResponseInputItemComputerCallOutputParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseInputItemComputerCallOutputParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseInputItemComputerCallOutputParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputItemComputerCallOutputParam
@@ -4189,10 +4189,10 @@ type ResponseInputItemComputerCallOutputOutputParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseInputItemComputerCallOutputOutputParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseInputItemComputerCallOutputOutputParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputItemComputerCallOutputOutputParam
@@ -4212,10 +4212,10 @@ type ResponseInputItemComputerCallOutputAcknowledgedSafetyCheckParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseInputItemComputerCallOutputAcknowledgedSafetyCheckParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseInputItemComputerCallOutputAcknowledgedSafetyCheckParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputItemComputerCallOutputAcknowledgedSafetyCheckParam
@@ -4246,10 +4246,10 @@ type ResponseInputItemFunctionCallOutputParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseInputItemFunctionCallOutputParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseInputItemFunctionCallOutputParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputItemFunctionCallOutputParam
@@ -4275,10 +4275,10 @@ type ResponseInputItemItemReferenceParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseInputItemItemReferenceParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseInputItemItemReferenceParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputItemItemReferenceParam
@@ -4332,9 +4332,9 @@ type ResponseInputTextParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseInputTextParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseInputTextParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseInputTextParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputTextParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -4628,9 +4628,9 @@ type ResponseOutputMessageParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseOutputMessageParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseOutputMessageParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseOutputMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseOutputMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -4645,10 +4645,10 @@ type ResponseOutputMessageContentUnionParam struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u ResponseOutputMessageContentUnionParam) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u ResponseOutputMessageContentUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseOutputMessageContentUnionParam](u.OfOutputText, u.OfRefusal)
@@ -4756,9 +4756,9 @@ type ResponseOutputRefusalParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseOutputRefusalParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseOutputRefusalParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseOutputRefusalParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseOutputRefusalParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -4962,9 +4962,9 @@ type ResponseOutputTextParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseOutputTextParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseOutputTextParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseOutputTextParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseOutputTextParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -4980,10 +4980,10 @@ type ResponseOutputTextAnnotationsUnionParam struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u ResponseOutputTextAnnotationsUnionParam) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u ResponseOutputTextAnnotationsUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseOutputTextAnnotationsUnionParam](u.OfFileCitation, u.OfURLCitation, u.OfFilePath)
@@ -5100,10 +5100,10 @@ type ResponseOutputTextAnnotationsFileCitationParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseOutputTextAnnotationsFileCitationParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseOutputTextAnnotationsFileCitationParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseOutputTextAnnotationsFileCitationParam
@@ -5129,10 +5129,10 @@ type ResponseOutputTextAnnotationsURLCitationParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseOutputTextAnnotationsURLCitationParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseOutputTextAnnotationsURLCitationParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseOutputTextAnnotationsURLCitationParam
@@ -5154,10 +5154,10 @@ type ResponseOutputTextAnnotationsFilePathParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f ResponseOutputTextAnnotationsFilePathParam) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 func (r ResponseOutputTextAnnotationsFilePathParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseOutputTextAnnotationsFilePathParam
@@ -5255,9 +5255,9 @@ type ResponseReasoningItemParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseReasoningItemParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseReasoningItemParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseReasoningItemParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseReasoningItemParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -5274,9 +5274,9 @@ type ResponseReasoningItemSummaryParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseReasoningItemSummaryParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseReasoningItemSummaryParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseReasoningItemSummaryParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseReasoningItemSummaryParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -5983,9 +5983,9 @@ type ResponseTextConfigParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseTextConfigParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseTextConfigParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ResponseTextConfigParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseTextConfigParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -6285,9 +6285,9 @@ type ToolUnionParam struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u ToolUnionParam) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
+func (u ToolUnionParam) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
 func (u ToolUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ToolUnionParam](u.OfFileSearch, u.OfFunction, u.OfComputerUsePreview, u.OfWebSearch)
 }
@@ -6497,9 +6497,9 @@ type ToolChoiceFunctionParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ToolChoiceFunctionParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ToolChoiceFunctionParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ToolChoiceFunctionParam) MarshalJSON() (data []byte, err error) {
 	type shadow ToolChoiceFunctionParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -6596,9 +6596,9 @@ type ToolChoiceTypesParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ToolChoiceTypesParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ToolChoiceTypesParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r ToolChoiceTypesParam) MarshalJSON() (data []byte, err error) {
 	type shadow ToolChoiceTypesParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -6720,9 +6720,9 @@ type WebSearchToolParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f WebSearchToolParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f WebSearchToolParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r WebSearchToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow WebSearchToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -6747,9 +6747,9 @@ type WebSearchToolUserLocationParam struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f WebSearchToolUserLocationParam) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f WebSearchToolUserLocationParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 func (r WebSearchToolUserLocationParam) MarshalJSON() (data []byte, err error) {
 	type shadow WebSearchToolUserLocationParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -6865,9 +6865,9 @@ type ResponseNewParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseNewParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r ResponseNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseNewParams
@@ -6883,9 +6883,9 @@ type ResponseNewParamsInputUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u ResponseNewParamsInputUnion) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
+func (u ResponseNewParamsInputUnion) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
 func (u ResponseNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseNewParamsInputUnion](u.OfString, u.OfInputItemList)
 }
@@ -6910,9 +6910,9 @@ type ResponseNewParamsToolChoiceUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u ResponseNewParamsToolChoiceUnion) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
+func (u ResponseNewParamsToolChoiceUnion) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
 func (u ResponseNewParamsToolChoiceUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseNewParamsToolChoiceUnion](u.OfToolChoiceMode, u.OfHostedTool, u.OfFunctionTool)
 }
@@ -6967,9 +6967,9 @@ type ResponseGetParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f ResponseGetParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f ResponseGetParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [ResponseGetParams]'s query parameters as `url.Values`.
 func (r ResponseGetParams) URLQuery() (v url.Values) {

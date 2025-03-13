@@ -153,9 +153,9 @@ type EmbeddingNewParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f EmbeddingNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f EmbeddingNewParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r EmbeddingNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow EmbeddingNewParams
@@ -173,9 +173,9 @@ type EmbeddingNewParamsInputUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u EmbeddingNewParamsInputUnion) IsNullish() bool { return param.IsOmitted(u) && u.IsNull() }
+func (u EmbeddingNewParamsInputUnion) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
 func (u EmbeddingNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[EmbeddingNewParamsInputUnion](u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
 }

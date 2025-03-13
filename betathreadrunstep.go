@@ -1249,9 +1249,9 @@ type BetaThreadRunStepGetParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f BetaThreadRunStepGetParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f BetaThreadRunStepGetParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [BetaThreadRunStepGetParams]'s query parameters as
 // `url.Values`.
@@ -1292,9 +1292,9 @@ type BetaThreadRunStepListParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f BetaThreadRunStepListParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f BetaThreadRunStepListParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 // URLQuery serializes [BetaThreadRunStepListParams]'s query parameters as
 // `url.Values`.

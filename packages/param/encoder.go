@@ -78,10 +78,10 @@ func typeFor[T any]() reflect.Type {
 	return reflect.TypeOf((*T)(nil)).Elem() // only for an interface kind
 }
 
-var richStringType = typeFor[Opt[string]]()
-var richIntType = typeFor[Opt[int64]]()
-var richFloatType = typeFor[Opt[float64]]()
-var richBoolType = typeFor[Opt[bool]]()
+var optStringType = typeFor[Opt[string]]()
+var optIntType = typeFor[Opt[int64]]()
+var optFloatType = typeFor[Opt[float64]]()
+var optBoolType = typeFor[Opt[bool]]()
 
 var OptionalPrimitiveTypes map[reflect.Type][]int
 
@@ -96,10 +96,10 @@ func indexOfUnderlyingValueField(t reflect.Type) []int {
 
 func init() {
 	OptionalPrimitiveTypes = map[reflect.Type][]int{
-		richStringType: indexOfUnderlyingValueField(richStringType),
-		richIntType:    indexOfUnderlyingValueField(richIntType),
-		richFloatType:  indexOfUnderlyingValueField(richFloatType),
-		richBoolType:   indexOfUnderlyingValueField(richBoolType),
+		optStringType: indexOfUnderlyingValueField(optStringType),
+		optIntType:    indexOfUnderlyingValueField(optIntType),
+		optFloatType:  indexOfUnderlyingValueField(optFloatType),
+		optBoolType:   indexOfUnderlyingValueField(optBoolType),
 	}
 }
 

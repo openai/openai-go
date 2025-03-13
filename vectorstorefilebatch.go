@@ -213,9 +213,9 @@ type VectorStoreFileBatchNewParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (f VectorStoreFileBatchNewParams) IsNullish() bool { return param.IsOmitted(f) && f.IsNull() }
+func (f VectorStoreFileBatchNewParams) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
 
 func (r VectorStoreFileBatchNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreFileBatchNewParams
@@ -232,10 +232,10 @@ type VectorStoreFileBatchNewParamsAttributesUnion struct {
 	paramUnion
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (u VectorStoreFileBatchNewParamsAttributesUnion) IsNullish() bool {
-	return param.IsOmitted(u) && u.IsNull()
+	return param.IsOmitted(u) || u.IsNull()
 }
 func (u VectorStoreFileBatchNewParamsAttributesUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreFileBatchNewParamsAttributesUnion](u.OfString, u.OfFloat, u.OfBool)
@@ -278,10 +278,10 @@ type VectorStoreFileBatchListFilesParams struct {
 	paramObj
 }
 
-// IsNullish returns true if the field is omitted or `null`. To check if this field
+// IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
 func (f VectorStoreFileBatchListFilesParams) IsNullish() bool {
-	return param.IsOmitted(f) && f.IsNull()
+	return param.IsOmitted(f) || f.IsNull()
 }
 
 // URLQuery serializes [VectorStoreFileBatchListFilesParams]'s query parameters as
