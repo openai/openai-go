@@ -70,25 +70,25 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 		return mn(r)
 	})
 
-	return func(rc *requestconfig.RequestConfig) error {
+	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
 		if apiVersion == "" {
 			return errors.New("apiVersion is an empty string, but needs to be set. See https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning for details.")
 		}
 
-		if err := withQueryAdd(rc); err != nil {
+		if err := withQueryAdd.Apply(rc); err != nil {
 			return err
 		}
 
-		if err := withEndpoint(rc); err != nil {
+		if err := withEndpoint.Apply(rc); err != nil {
 			return err
 		}
 
-		if err := withModelMiddleware(rc); err != nil {
+		if err := withModelMiddleware.Apply(rc); err != nil {
 			return err
 		}
 
 		return nil
-	}
+	})
 }
 
 // WithTokenCredential configures this client to authenticate using an [Azure Identity] TokenCredential.
