@@ -209,7 +209,7 @@ type VectorStoreFileBatchNewParams struct {
 	Attributes map[string]VectorStoreFileBatchNewParamsAttributesUnion `json:"attributes,omitzero"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
-	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
+	ChunkingStrategy FileChunkingStrategyParam `json:"chunking_strategy,omitzero"`
 	paramObj
 }
 

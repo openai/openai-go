@@ -27,8 +27,8 @@ func TestVectorStoreNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.VectorStores.New(context.TODO(), openai.VectorStoreNewParams{
-		ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
-			OfAuto: &openai.AutoFileChunkingStrategyParam{},
+		ChunkingStrategy: openai.FileChunkingStrategyParam{
+			Type: "auto",
 		},
 		ExpiresAfter: openai.VectorStoreNewParamsExpiresAfter{
 			Days: 1,

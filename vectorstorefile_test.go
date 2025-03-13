@@ -35,8 +35,8 @@ func TestVectorStoreFileNewWithOptionalParams(t *testing.T) {
 					OfString: openai.String("string"),
 				},
 			},
-			ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
-				OfAuto: &openai.AutoFileChunkingStrategyParam{},
+			ChunkingStrategy: openai.FileChunkingStrategyParam{
+				Type: "auto",
 			},
 		},
 	)

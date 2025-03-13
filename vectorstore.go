@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -20,7 +19,6 @@ import (
 	"github.com/openai/openai-go/packages/resp"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
-	"github.com/tidwall/gjson"
 )
 
 // VectorStoreService contains methods and other services that help with
@@ -218,68 +216,30 @@ func (r *FileChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func FileChunkingStrategyParamOfStatic(static StaticFileChunkingStrategyParam) FileChunkingStrategyParamUnion {
-	var variant StaticFileChunkingStrategyObjectParam
-	variant.Static = static
-	return FileChunkingStrategyParamUnion{OfStatic: &variant}
-}
-
-// Only one field can be non-zero.
+// FileChunkingStrategyParam is flattened verion of the values
+// [AutoFileChunkingStrategyParam, StaticFileChunkingStrategyObjectParam]
 //
-// Use [param.IsOmitted] to confirm if a field is set.
-type FileChunkingStrategyParamUnion struct {
-	OfAuto   *AutoFileChunkingStrategyParam
-	OfStatic *StaticFileChunkingStrategyObjectParam
-	paramUnion
+// The property Type is required.
+type FileChunkingStrategyParam struct {
+	// Always `auto`.
+	//
+	// Any of "auto", "static".
+	Type   string                          `json:"type,omitzero,required"`
+	Static StaticFileChunkingStrategyParam `json:"static,omitzero"`
+	paramObj
 }
 
 // IsNullish returns true if the field is omitted or null. To check if this field
 // is omitted, use [param.IsOmitted].
-func (u FileChunkingStrategyParamUnion) IsNullish() bool { return param.IsOmitted(u) || u.IsNull() }
-func (u FileChunkingStrategyParamUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FileChunkingStrategyParamUnion](u.OfAuto, u.OfStatic)
-}
-
-func (u *FileChunkingStrategyParamUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return u.OfAuto
-	} else if !param.IsOmitted(u.OfStatic) {
-		return u.OfStatic
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u FileChunkingStrategyParamUnion) GetStatic() *StaticFileChunkingStrategyParam {
-	if vt := u.OfStatic; vt != nil {
-		return &vt.Static
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u FileChunkingStrategyParamUnion) GetType() *string {
-	if vt := u.OfAuto; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfStatic; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
+func (f FileChunkingStrategyParam) IsNullish() bool { return param.IsOmitted(f) || f.IsNull() }
+func (r FileChunkingStrategyParam) MarshalJSON() (data []byte, err error) {
+	type shadow FileChunkingStrategyParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 func init() {
-	apijson.RegisterUnion[FileChunkingStrategyParamUnion](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AutoFileChunkingStrategyParam{}),
-			DiscriminatorValue: "auto",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(StaticFileChunkingStrategyObjectParam{}),
-			DiscriminatorValue: "static",
-		},
+	apijson.RegisterFieldValidator[FileChunkingStrategyParam](
+		"Type", false, "auto", "static",
 	)
 }
 
@@ -644,7 +604,7 @@ type VectorStoreNewParams struct {
 	Metadata shared.MetadataParam `json:"metadata,omitzero"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
-	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
+	ChunkingStrategy FileChunkingStrategyParam `json:"chunking_strategy,omitzero"`
 	// The expiration policy for a vector store.
 	ExpiresAfter VectorStoreNewParamsExpiresAfter `json:"expires_after,omitzero"`
 	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
