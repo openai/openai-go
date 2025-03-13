@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strings"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -691,6 +692,18 @@ type Response struct {
 		ExtraFields        map[string]resp.Field
 		raw                string
 	} `json:"-"`
+}
+
+func (r Response) OutputText() string {
+	var outputText strings.Builder
+	for _, item := range r.Output {
+		for _, content := range item.Content {
+			if content.Type == "output_text" {
+				outputText.WriteString(content.Text)
+			}
+		}
+	}
+	return outputText.String()
 }
 
 // Returns the unmodified JSON received from the API
