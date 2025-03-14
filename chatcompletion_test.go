@@ -5,7 +5,10 @@ package openai_test
 import (
 	"context"
 	"errors"
+	"net"
+	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/openai/openai-go"
@@ -108,6 +111,54 @@ func TestChatCompletionGet(t *testing.T) {
 	if !testutil.CheckTestServer(t, baseURL) {
 		return
 	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Chat.Completions.Get(context.TODO(), "completion_id")
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestChatCompletionCustomBaseURL(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	srv := &http.Server{}
+
+	ready := make(chan struct{})
+	go func() {
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			if !strings.HasPrefix(r.URL.String(), "/openai/v1") {
+				t.Errorf("expected prefix to be /openai/v1, got %s", r.URL.String())
+			}
+
+			w.Header().Set("content-type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"id": "completion_id"}`))
+		})
+		lstr, err := net.Listen("tcp", "localhost:4011")
+		if err != nil {
+			t.Errorf("net.Listen: %s", err.Error())
+		}
+		close(ready)
+		if err := srv.Serve(lstr); err != http.ErrServerClosed {
+			t.Errorf("srv.Serve: %s", err.Error())
+		}
+	}()
+	// Wait until the server is listening
+	<-ready
+
+	go func() {
+		<-ctx.Done()
+		srv.Shutdown(ctx)
+	}()
+
+	baseURL := "http://localhost:4011/openai/v1"
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),

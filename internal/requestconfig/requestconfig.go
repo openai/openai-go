@@ -353,7 +353,15 @@ func (cfg *RequestConfig) Execute() (err error) {
 		return fmt.Errorf("requestconfig: base url is not set")
 	}
 
-	cfg.Request.URL, err = cfg.BaseURL.Parse(strings.TrimLeft(cfg.Request.URL.String(), "/"))
+	effectiveURL, err := url.JoinPath(cfg.BaseURL.String(), strings.TrimLeft(cfg.Request.URL.Path, "/"))
+	if err != nil {
+		return err
+	}
+	effectiveURL, err = url.PathUnescape(effectiveURL)
+	if err != nil {
+		return err
+	}
+	cfg.Request.URL, err = url.Parse(effectiveURL)
 	if err != nil {
 		return err
 	}
