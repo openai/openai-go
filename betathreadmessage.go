@@ -1952,8 +1952,11 @@ func (r TextDeltaBlockType) IsKnown() bool {
 }
 
 type BetaThreadMessageNewParams struct {
-	// The text contents of the message.
-	Content param.Field[BetaThreadMessageNewParamsContentUnion] `json:"content,required"`
+	// An array of content parts with a defined type, each can be of type `text` or
+	// images can be passed with `image_url` or `image_file`. Image types are only
+	// supported on
+	// [Vision-compatible models](https://platform.openai.com/docs/models).
+	Content param.Field[[]MessageContentPartParamUnion] `json:"content,required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
 	//   - `user`: Indicates the message is sent by an actual user and should be used in
@@ -1974,19 +1977,6 @@ type BetaThreadMessageNewParams struct {
 
 func (r BetaThreadMessageNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The text contents of the message.
-//
-// Satisfied by [shared.UnionString],
-// [BetaThreadMessageNewParamsContentArrayOfContentParts].
-type BetaThreadMessageNewParamsContentUnion interface {
-	ImplementsBetaThreadMessageNewParamsContentUnion()
-}
-
-type BetaThreadMessageNewParamsContentArrayOfContentParts []MessageContentPartParamUnion
-
-func (r BetaThreadMessageNewParamsContentArrayOfContentParts) ImplementsBetaThreadMessageNewParamsContentUnion() {
 }
 
 // The role of the entity that is creating the message. Allowed values include:

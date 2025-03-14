@@ -11,7 +11,6 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
 )
 
 func TestFineTuningJobNewWithOptionalParams(t *testing.T) {
@@ -43,9 +42,6 @@ func TestFineTuningJobNewWithOptionalParams(t *testing.T) {
 				Tags:    openai.F([]string{"custom-tag"}),
 			}),
 		}}),
-		Metadata: openai.F(shared.MetadataParam{
-			"foo": "string",
-		}),
 		Method: openai.F(openai.FineTuningJobNewParamsMethod{
 			Dpo: openai.F(openai.FineTuningJobNewParamsMethodDpo{
 				Hyperparameters: openai.F(openai.FineTuningJobNewParamsMethodDpoHyperparameters{
@@ -114,9 +110,6 @@ func TestFineTuningJobListWithOptionalParams(t *testing.T) {
 	_, err := client.FineTuning.Jobs.List(context.TODO(), openai.FineTuningJobListParams{
 		After: openai.F("after"),
 		Limit: openai.F(int64(0)),
-		Metadata: openai.F(map[string]string{
-			"foo": "string",
-		}),
 	})
 	if err != nil {
 		var apierr *openai.Error

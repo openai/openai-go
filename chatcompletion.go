@@ -4,17 +4,12 @@ package openai
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
 	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/ssestream"
 	"github.com/openai/openai-go/shared"
 )
@@ -26,8 +21,7 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewChatCompletionService] method instead.
 type ChatCompletionService struct {
-	Options  []option.RequestOption
-	Messages *ChatCompletionMessageService
+	Options []option.RequestOption
 }
 
 // NewChatCompletionService generates a new service that applies the given options
@@ -36,17 +30,9 @@ type ChatCompletionService struct {
 func NewChatCompletionService(opts ...option.RequestOption) (r *ChatCompletionService) {
 	r = &ChatCompletionService{}
 	r.Options = opts
-	r.Messages = NewChatCompletionMessageService(opts...)
 	return
 }
 
-// **Starting a new project?** We recommend trying
-// [Responses](https://platform.openai.com/docs/api-reference/responses) to take
-// advantage of the latest OpenAI platform features. Compare
-// [Chat Completions with Responses](https://platform.openai.com/docs/guides/responses-vs-chat-completions?api-mode=responses).
-//
-// ---
-//
 // Creates a model response for the given chat conversation. Learn more in the
 // [text generation](https://platform.openai.com/docs/guides/text-generation),
 // [vision](https://platform.openai.com/docs/guides/vision), and
@@ -64,13 +50,6 @@ func (r *ChatCompletionService) New(ctx context.Context, body ChatCompletionNewP
 	return
 }
 
-// **Starting a new project?** We recommend trying
-// [Responses](https://platform.openai.com/docs/api-reference/responses) to take
-// advantage of the latest OpenAI platform features. Compare
-// [Chat Completions with Responses](https://platform.openai.com/docs/guides/responses-vs-chat-completions?api-mode=responses).
-//
-// ---
-//
 // Creates a model response for the given chat conversation. Learn more in the
 // [text generation](https://platform.openai.com/docs/guides/text-generation),
 // [vision](https://platform.openai.com/docs/guides/vision), and
@@ -91,71 +70,6 @@ func (r *ChatCompletionService) NewStreaming(ctx context.Context, body ChatCompl
 	path := "chat/completions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStream[ChatCompletionChunk](ssestream.NewDecoder(raw), err)
-}
-
-// Get a stored chat completion. Only Chat Completions that have been created with
-// the `store` parameter set to `true` will be returned.
-func (r *ChatCompletionService) Get(ctx context.Context, completionID string, opts ...option.RequestOption) (res *ChatCompletion, err error) {
-	opts = append(r.Options[:], opts...)
-	if completionID == "" {
-		err = errors.New("missing required completion_id parameter")
-		return
-	}
-	path := fmt.Sprintf("chat/completions/%s", completionID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
-}
-
-// Modify a stored chat completion. Only Chat Completions that have been created
-// with the `store` parameter set to `true` can be modified. Currently, the only
-// supported modification is to update the `metadata` field.
-func (r *ChatCompletionService) Update(ctx context.Context, completionID string, body ChatCompletionUpdateParams, opts ...option.RequestOption) (res *ChatCompletion, err error) {
-	opts = append(r.Options[:], opts...)
-	if completionID == "" {
-		err = errors.New("missing required completion_id parameter")
-		return
-	}
-	path := fmt.Sprintf("chat/completions/%s", completionID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
-}
-
-// List stored Chat Completions. Only Chat Completions that have been stored with
-// the `store` parameter set to `true` will be returned.
-func (r *ChatCompletionService) List(ctx context.Context, query ChatCompletionListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ChatCompletion], err error) {
-	var raw *http.Response
-	opts = append(r.Options[:], opts...)
-	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
-	path := "chat/completions"
-	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
-	if err != nil {
-		return nil, err
-	}
-	err = cfg.Execute()
-	if err != nil {
-		return nil, err
-	}
-	res.SetPageConfig(cfg, raw)
-	return res, nil
-}
-
-// List stored Chat Completions. Only Chat Completions that have been stored with
-// the `store` parameter set to `true` will be returned.
-func (r *ChatCompletionService) ListAutoPaging(ctx context.Context, query ChatCompletionListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[ChatCompletion] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
-}
-
-// Delete a stored chat completion. Only Chat Completions that have been created
-// with the `store` parameter set to `true` can be deleted.
-func (r *ChatCompletionService) Delete(ctx context.Context, completionID string, opts ...option.RequestOption) (res *ChatCompletionDeleted, err error) {
-	opts = append(r.Options[:], opts...)
-	if completionID == "" {
-		err = errors.New("missing required completion_id parameter")
-		return
-	}
-	path := fmt.Sprintf("chat/completions/%s", completionID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
 }
 
 // Represents a chat completion response returned by model, based on the provided
@@ -332,7 +246,7 @@ type ChatCompletionAssistantMessageParam struct {
 	Audio param.Field[ChatCompletionAssistantMessageParamAudio] `json:"audio"`
 	// The contents of the assistant message. Required unless `tool_calls` or
 	// `function_call` is specified.
-	Content param.Field[ChatCompletionAssistantMessageParamContentUnion] `json:"content"`
+	Content param.Field[[]ChatCompletionAssistantMessageParamContentUnion] `json:"content"`
 	// Deprecated and replaced by `tool_calls`. The name and arguments of a function
 	// that should be called, as generated by the model.
 	//
@@ -379,36 +293,22 @@ func (r ChatCompletionAssistantMessageParamAudio) MarshalJSON() (data []byte, er
 	return apijson.MarshalRoot(r)
 }
 
-// The contents of the assistant message. Required unless `tool_calls` or
-// `function_call` is specified.
-//
-// Satisfied by [shared.UnionString],
-// [ChatCompletionAssistantMessageParamContentArrayOfContentParts].
-type ChatCompletionAssistantMessageParamContentUnion interface {
-	ImplementsChatCompletionAssistantMessageParamContentUnion()
-}
-
-type ChatCompletionAssistantMessageParamContentArrayOfContentParts []ChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem
-
-func (r ChatCompletionAssistantMessageParamContentArrayOfContentParts) ImplementsChatCompletionAssistantMessageParamContentUnion() {
-}
-
 // Learn about
 // [text inputs](https://platform.openai.com/docs/guides/text-generation).
-type ChatCompletionAssistantMessageParamContentArrayOfContentPart struct {
+type ChatCompletionAssistantMessageParamContent struct {
 	// The type of the content part.
-	Type param.Field[ChatCompletionAssistantMessageParamContentArrayOfContentPartsType] `json:"type,required"`
+	Type param.Field[ChatCompletionAssistantMessageParamContentType] `json:"type,required"`
 	// The refusal message generated by the model.
 	Refusal param.Field[string] `json:"refusal"`
 	// The text content.
 	Text param.Field[string] `json:"text"`
 }
 
-func (r ChatCompletionAssistantMessageParamContentArrayOfContentPart) MarshalJSON() (data []byte, err error) {
+func (r ChatCompletionAssistantMessageParamContent) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-func (r ChatCompletionAssistantMessageParamContentArrayOfContentPart) implementsChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem() {
+func (r ChatCompletionAssistantMessageParamContent) implementsChatCompletionAssistantMessageParamContentUnion() {
 }
 
 // Learn about
@@ -416,22 +316,22 @@ func (r ChatCompletionAssistantMessageParamContentArrayOfContentPart) implements
 //
 // Satisfied by [ChatCompletionContentPartTextParam],
 // [ChatCompletionContentPartRefusalParam],
-// [ChatCompletionAssistantMessageParamContentArrayOfContentPart].
-type ChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem interface {
-	implementsChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem()
+// [ChatCompletionAssistantMessageParamContent].
+type ChatCompletionAssistantMessageParamContentUnion interface {
+	implementsChatCompletionAssistantMessageParamContentUnion()
 }
 
 // The type of the content part.
-type ChatCompletionAssistantMessageParamContentArrayOfContentPartsType string
+type ChatCompletionAssistantMessageParamContentType string
 
 const (
-	ChatCompletionAssistantMessageParamContentArrayOfContentPartsTypeText    ChatCompletionAssistantMessageParamContentArrayOfContentPartsType = "text"
-	ChatCompletionAssistantMessageParamContentArrayOfContentPartsTypeRefusal ChatCompletionAssistantMessageParamContentArrayOfContentPartsType = "refusal"
+	ChatCompletionAssistantMessageParamContentTypeText    ChatCompletionAssistantMessageParamContentType = "text"
+	ChatCompletionAssistantMessageParamContentTypeRefusal ChatCompletionAssistantMessageParamContentType = "refusal"
 )
 
-func (r ChatCompletionAssistantMessageParamContentArrayOfContentPartsType) IsKnown() bool {
+func (r ChatCompletionAssistantMessageParamContentType) IsKnown() bool {
 	switch r {
-	case ChatCompletionAssistantMessageParamContentArrayOfContentPartsTypeText, ChatCompletionAssistantMessageParamContentArrayOfContentPartsTypeRefusal:
+	case ChatCompletionAssistantMessageParamContentTypeText, ChatCompletionAssistantMessageParamContentTypeRefusal:
 		return true
 	}
 	return false
@@ -498,8 +398,9 @@ type ChatCompletionAudioParam struct {
 	// Specifies the output audio format. Must be one of `wav`, `mp3`, `flac`, `opus`,
 	// or `pcm16`.
 	Format param.Field[ChatCompletionAudioParamFormat] `json:"format,required"`
-	// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
-	// `ballad`, `coral`, `echo`, `sage`, and `shimmer`.
+	// The voice the model uses to respond. Supported voices are `ash`, `ballad`,
+	// `coral`, `sage`, and `verse` (also supported but not recommended are `alloy`,
+	// `echo`, and `shimmer`; these voices are less expressive).
 	Voice param.Field[ChatCompletionAudioParamVoice] `json:"voice,required"`
 }
 
@@ -527,8 +428,9 @@ func (r ChatCompletionAudioParamFormat) IsKnown() bool {
 	return false
 }
 
-// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
-// `ballad`, `coral`, `echo`, `sage`, and `shimmer`.
+// The voice the model uses to respond. Supported voices are `ash`, `ballad`,
+// `coral`, `sage`, and `verse` (also supported but not recommended are `alloy`,
+// `echo`, and `shimmer`; these voices are less expressive).
 type ChatCompletionAudioParamVoice string
 
 const (
@@ -550,9 +452,8 @@ func (r ChatCompletionAudioParamVoice) IsKnown() bool {
 	return false
 }
 
-// Represents a streamed chunk of a chat completion response returned by the model,
+// Represents a streamed chunk of a chat completion response returned by model,
 // based on the provided input.
-// [Learn more](https://platform.openai.com/docs/guides/streaming-responses).
 type ChatCompletionChunk struct {
 	// A unique identifier for the chat completion. Each chunk has the same ID.
 	ID string `json:"id,required"`
@@ -886,7 +787,6 @@ func (r ChatCompletionChunkServiceTier) IsKnown() bool {
 type ChatCompletionContentPartParam struct {
 	// The type of the content part.
 	Type       param.Field[ChatCompletionContentPartType] `json:"type,required"`
-	File       param.Field[interface{}]                   `json:"file"`
 	ImageURL   param.Field[interface{}]                   `json:"image_url"`
 	InputAudio param.Field[interface{}]                   `json:"input_audio"`
 	// The text content.
@@ -904,53 +804,9 @@ func (r ChatCompletionContentPartParam) implementsChatCompletionContentPartUnion
 //
 // Satisfied by [ChatCompletionContentPartTextParam],
 // [ChatCompletionContentPartImageParam],
-// [ChatCompletionContentPartInputAudioParam],
-// [ChatCompletionContentPartFileParam], [ChatCompletionContentPartParam].
+// [ChatCompletionContentPartInputAudioParam], [ChatCompletionContentPartParam].
 type ChatCompletionContentPartUnionParam interface {
 	implementsChatCompletionContentPartUnionParam()
-}
-
-// Learn about [file inputs](https://platform.openai.com/docs/guides/text) for text
-// generation.
-type ChatCompletionContentPartFileParam struct {
-	File param.Field[ChatCompletionContentPartFileFileParam] `json:"file,required"`
-	// The type of the content part. Always `file`.
-	Type param.Field[ChatCompletionContentPartFileType] `json:"type,required"`
-}
-
-func (r ChatCompletionContentPartFileParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r ChatCompletionContentPartFileParam) implementsChatCompletionContentPartUnionParam() {}
-
-type ChatCompletionContentPartFileFileParam struct {
-	// The base64 encoded file data, used when passing the file to the model as a
-	// string.
-	FileData param.Field[string] `json:"file_data"`
-	// The ID of an uploaded file to use as input.
-	FileID param.Field[string] `json:"file_id"`
-	// The name of the file, used when passing the file to the model as a string.
-	FileName param.Field[string] `json:"file_name"`
-}
-
-func (r ChatCompletionContentPartFileFileParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// The type of the content part. Always `file`.
-type ChatCompletionContentPartFileType string
-
-const (
-	ChatCompletionContentPartFileTypeFile ChatCompletionContentPartFileType = "file"
-)
-
-func (r ChatCompletionContentPartFileType) IsKnown() bool {
-	switch r {
-	case ChatCompletionContentPartFileTypeFile:
-		return true
-	}
-	return false
 }
 
 // The type of the content part.
@@ -960,12 +816,11 @@ const (
 	ChatCompletionContentPartTypeText       ChatCompletionContentPartType = "text"
 	ChatCompletionContentPartTypeImageURL   ChatCompletionContentPartType = "image_url"
 	ChatCompletionContentPartTypeInputAudio ChatCompletionContentPartType = "input_audio"
-	ChatCompletionContentPartTypeFile       ChatCompletionContentPartType = "file"
 )
 
 func (r ChatCompletionContentPartType) IsKnown() bool {
 	switch r {
-	case ChatCompletionContentPartTypeText, ChatCompletionContentPartTypeImageURL, ChatCompletionContentPartTypeInputAudio, ChatCompletionContentPartTypeFile:
+	case ChatCompletionContentPartTypeText, ChatCompletionContentPartTypeImageURL, ChatCompletionContentPartTypeInputAudio:
 		return true
 	}
 	return false
@@ -1095,7 +950,7 @@ func (r ChatCompletionContentPartRefusalParam) MarshalJSON() (data []byte, err e
 	return apijson.MarshalRoot(r)
 }
 
-func (r ChatCompletionContentPartRefusalParam) implementsChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem() {
+func (r ChatCompletionContentPartRefusalParam) implementsChatCompletionAssistantMessageParamContentUnion() {
 }
 
 // The type of the content part.
@@ -1126,7 +981,7 @@ func (r ChatCompletionContentPartTextParam) MarshalJSON() (data []byte, err erro
 	return apijson.MarshalRoot(r)
 }
 
-func (r ChatCompletionContentPartTextParam) implementsChatCompletionAssistantMessageParamContentArrayOfContentPartsUnionItem() {
+func (r ChatCompletionContentPartTextParam) implementsChatCompletionAssistantMessageParamContentUnion() {
 }
 
 func (r ChatCompletionContentPartTextParam) implementsChatCompletionContentPartUnionParam() {}
@@ -1146,55 +1001,12 @@ func (r ChatCompletionContentPartTextType) IsKnown() bool {
 	return false
 }
 
-type ChatCompletionDeleted struct {
-	// The ID of the chat completion that was deleted.
-	ID string `json:"id,required"`
-	// Whether the chat completion was deleted.
-	Deleted bool `json:"deleted,required"`
-	// The type of object being deleted.
-	Object ChatCompletionDeletedObject `json:"object,required"`
-	JSON   chatCompletionDeletedJSON   `json:"-"`
-}
-
-// chatCompletionDeletedJSON contains the JSON metadata for the struct
-// [ChatCompletionDeleted]
-type chatCompletionDeletedJSON struct {
-	ID          apijson.Field
-	Deleted     apijson.Field
-	Object      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ChatCompletionDeleted) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r chatCompletionDeletedJSON) RawJSON() string {
-	return r.raw
-}
-
-// The type of object being deleted.
-type ChatCompletionDeletedObject string
-
-const (
-	ChatCompletionDeletedObjectChatCompletionDeleted ChatCompletionDeletedObject = "chat.completion.deleted"
-)
-
-func (r ChatCompletionDeletedObject) IsKnown() bool {
-	switch r {
-	case ChatCompletionDeletedObjectChatCompletionDeleted:
-		return true
-	}
-	return false
-}
-
 // Developer-provided instructions that the model should follow, regardless of
 // messages sent by the user. With o1 models and newer, `developer` messages
 // replace the previous `system` messages.
 type ChatCompletionDeveloperMessageParam struct {
 	// The contents of the developer message.
-	Content param.Field[ChatCompletionDeveloperMessageParamContentUnion] `json:"content,required"`
+	Content param.Field[[]ChatCompletionContentPartTextParam] `json:"content,required"`
 	// The role of the messages author, in this case `developer`.
 	Role param.Field[ChatCompletionDeveloperMessageParamRole] `json:"role,required"`
 	// An optional name for the participant. Provides the model information to
@@ -1207,19 +1019,6 @@ func (r ChatCompletionDeveloperMessageParam) MarshalJSON() (data []byte, err err
 }
 
 func (r ChatCompletionDeveloperMessageParam) implementsChatCompletionMessageParamUnion() {}
-
-// The contents of the developer message.
-//
-// Satisfied by [shared.UnionString],
-// [ChatCompletionDeveloperMessageParamContentArrayOfContentParts].
-type ChatCompletionDeveloperMessageParamContentUnion interface {
-	ImplementsChatCompletionDeveloperMessageParamContentUnion()
-}
-
-type ChatCompletionDeveloperMessageParamContentArrayOfContentParts []ChatCompletionContentPartTextParam
-
-func (r ChatCompletionDeveloperMessageParamContentArrayOfContentParts) ImplementsChatCompletionDeveloperMessageParamContentUnion() {
-}
 
 // The role of the messages author, in this case `developer`.
 type ChatCompletionDeveloperMessageParamRole string
@@ -1288,9 +1087,6 @@ type ChatCompletionMessage struct {
 	Refusal string `json:"refusal,required,nullable"`
 	// The role of the author of this message.
 	Role ChatCompletionMessageRole `json:"role,required"`
-	// Annotations for the message, when applicable, as when using the
-	// [web search tool](https://platform.openai.com/docs/guides/tools-web-search?api-mode=chat).
-	Annotations []ChatCompletionMessageAnnotation `json:"annotations"`
 	// If the audio output modality is requested, this object contains data about the
 	// audio response from the model.
 	// [Learn more](https://platform.openai.com/docs/guides/audio).
@@ -1311,7 +1107,6 @@ type chatCompletionMessageJSON struct {
 	Content      apijson.Field
 	Refusal      apijson.Field
 	Role         apijson.Field
-	Annotations  apijson.Field
 	Audio        apijson.Field
 	FunctionCall apijson.Field
 	ToolCalls    apijson.Field
@@ -1340,79 +1135,6 @@ func (r ChatCompletionMessageRole) IsKnown() bool {
 		return true
 	}
 	return false
-}
-
-// A URL citation when using web search.
-type ChatCompletionMessageAnnotation struct {
-	// The type of the URL citation. Always `url_citation`.
-	Type ChatCompletionMessageAnnotationsType `json:"type,required"`
-	// A URL citation when using web search.
-	URLCitation ChatCompletionMessageAnnotationsURLCitation `json:"url_citation,required"`
-	JSON        chatCompletionMessageAnnotationJSON         `json:"-"`
-}
-
-// chatCompletionMessageAnnotationJSON contains the JSON metadata for the struct
-// [ChatCompletionMessageAnnotation]
-type chatCompletionMessageAnnotationJSON struct {
-	Type        apijson.Field
-	URLCitation apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ChatCompletionMessageAnnotation) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r chatCompletionMessageAnnotationJSON) RawJSON() string {
-	return r.raw
-}
-
-// The type of the URL citation. Always `url_citation`.
-type ChatCompletionMessageAnnotationsType string
-
-const (
-	ChatCompletionMessageAnnotationsTypeURLCitation ChatCompletionMessageAnnotationsType = "url_citation"
-)
-
-func (r ChatCompletionMessageAnnotationsType) IsKnown() bool {
-	switch r {
-	case ChatCompletionMessageAnnotationsTypeURLCitation:
-		return true
-	}
-	return false
-}
-
-// A URL citation when using web search.
-type ChatCompletionMessageAnnotationsURLCitation struct {
-	// The index of the last character of the URL citation in the message.
-	EndIndex int64 `json:"end_index,required"`
-	// The index of the first character of the URL citation in the message.
-	StartIndex int64 `json:"start_index,required"`
-	// The title of the web resource.
-	Title string `json:"title,required"`
-	// The URL of the web resource.
-	URL  string                                          `json:"url,required"`
-	JSON chatCompletionMessageAnnotationsURLCitationJSON `json:"-"`
-}
-
-// chatCompletionMessageAnnotationsURLCitationJSON contains the JSON metadata for
-// the struct [ChatCompletionMessageAnnotationsURLCitation]
-type chatCompletionMessageAnnotationsURLCitationJSON struct {
-	EndIndex    apijson.Field
-	StartIndex  apijson.Field
-	Title       apijson.Field
-	URL         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ChatCompletionMessageAnnotationsURLCitation) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r chatCompletionMessageAnnotationsURLCitationJSON) RawJSON() string {
-	return r.raw
 }
 
 // Deprecated and replaced by `tool_calls`. The name and arguments of a function
@@ -1604,6 +1326,21 @@ func (r ChatCompletionMessageToolCallFunctionParam) MarshalJSON() (data []byte, 
 	return apijson.MarshalRoot(r)
 }
 
+type ChatCompletionModality string
+
+const (
+	ChatCompletionModalityText  ChatCompletionModality = "text"
+	ChatCompletionModalityAudio ChatCompletionModality = "audio"
+)
+
+func (r ChatCompletionModality) IsKnown() bool {
+	switch r {
+	case ChatCompletionModalityText, ChatCompletionModalityAudio:
+		return true
+	}
+	return false
+}
+
 // Specifies a tool the model should use. Use to force the model to call a specific
 // function.
 type ChatCompletionNamedToolChoiceParam struct {
@@ -1648,7 +1385,7 @@ type ChatCompletionPredictionContentParam struct {
 	// The content that should be matched when generating a model response. If
 	// generated tokens would match this content, the entire model response can be
 	// returned much more quickly.
-	Content param.Field[ChatCompletionPredictionContentContentUnionParam] `json:"content,required"`
+	Content param.Field[[]ChatCompletionContentPartTextParam] `json:"content,required"`
 	// The type of the predicted content you want to provide. This type is currently
 	// always `content`.
 	Type param.Field[ChatCompletionPredictionContentType] `json:"type,required"`
@@ -1656,21 +1393,6 @@ type ChatCompletionPredictionContentParam struct {
 
 func (r ChatCompletionPredictionContentParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The content that should be matched when generating a model response. If
-// generated tokens would match this content, the entire model response can be
-// returned much more quickly.
-//
-// Satisfied by [shared.UnionString],
-// [ChatCompletionPredictionContentContentArrayOfContentPartsParam].
-type ChatCompletionPredictionContentContentUnionParam interface {
-	ImplementsChatCompletionPredictionContentContentUnionParam()
-}
-
-type ChatCompletionPredictionContentContentArrayOfContentPartsParam []ChatCompletionContentPartTextParam
-
-func (r ChatCompletionPredictionContentContentArrayOfContentPartsParam) ImplementsChatCompletionPredictionContentContentUnionParam() {
 }
 
 // The type of the predicted content you want to provide. This type is currently
@@ -1689,28 +1411,26 @@ func (r ChatCompletionPredictionContentType) IsKnown() bool {
 	return false
 }
 
-// A chat completion message generated by the model.
-type ChatCompletionStoreMessage struct {
-	// The identifier of the chat message.
-	ID   string                         `json:"id,required"`
-	JSON chatCompletionStoreMessageJSON `json:"-"`
-	ChatCompletionMessage
-}
+// **o1 and o3-mini models only**
+//
+// Constrains effort on reasoning for
+// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+// result in faster responses and fewer tokens used on reasoning in a response.
+type ChatCompletionReasoningEffort string
 
-// chatCompletionStoreMessageJSON contains the JSON metadata for the struct
-// [ChatCompletionStoreMessage]
-type chatCompletionStoreMessageJSON struct {
-	ID          apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
+const (
+	ChatCompletionReasoningEffortLow    ChatCompletionReasoningEffort = "low"
+	ChatCompletionReasoningEffortMedium ChatCompletionReasoningEffort = "medium"
+	ChatCompletionReasoningEffortHigh   ChatCompletionReasoningEffort = "high"
+)
 
-func (r *ChatCompletionStoreMessage) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r chatCompletionStoreMessageJSON) RawJSON() string {
-	return r.raw
+func (r ChatCompletionReasoningEffort) IsKnown() bool {
+	switch r {
+	case ChatCompletionReasoningEffortLow, ChatCompletionReasoningEffortMedium, ChatCompletionReasoningEffortHigh:
+		return true
+	}
+	return false
 }
 
 // Options for streaming response. Only set this when you set `stream: true`.
@@ -1731,7 +1451,7 @@ func (r ChatCompletionStreamOptionsParam) MarshalJSON() (data []byte, err error)
 // for this purpose instead.
 type ChatCompletionSystemMessageParam struct {
 	// The contents of the system message.
-	Content param.Field[ChatCompletionSystemMessageParamContentUnion] `json:"content,required"`
+	Content param.Field[[]ChatCompletionContentPartTextParam] `json:"content,required"`
 	// The role of the messages author, in this case `system`.
 	Role param.Field[ChatCompletionSystemMessageParamRole] `json:"role,required"`
 	// An optional name for the participant. Provides the model information to
@@ -1744,19 +1464,6 @@ func (r ChatCompletionSystemMessageParam) MarshalJSON() (data []byte, err error)
 }
 
 func (r ChatCompletionSystemMessageParam) implementsChatCompletionMessageParamUnion() {}
-
-// The contents of the system message.
-//
-// Satisfied by [shared.UnionString],
-// [ChatCompletionSystemMessageParamContentArrayOfContentParts].
-type ChatCompletionSystemMessageParamContentUnion interface {
-	ImplementsChatCompletionSystemMessageParamContentUnion()
-}
-
-type ChatCompletionSystemMessageParamContentArrayOfContentParts []ChatCompletionContentPartTextParam
-
-func (r ChatCompletionSystemMessageParamContentArrayOfContentParts) ImplementsChatCompletionSystemMessageParamContentUnion() {
-}
 
 // The role of the messages author, in this case `system`.
 type ChatCompletionSystemMessageParamRole string
@@ -1908,7 +1615,7 @@ func (r ChatCompletionToolChoiceOptionAuto) implementsChatCompletionToolChoiceOp
 
 type ChatCompletionToolMessageParam struct {
 	// The contents of the tool message.
-	Content param.Field[ChatCompletionToolMessageParamContentUnion] `json:"content,required"`
+	Content param.Field[[]ChatCompletionContentPartTextParam] `json:"content,required"`
 	// The role of the messages author, in this case `tool`.
 	Role param.Field[ChatCompletionToolMessageParamRole] `json:"role,required"`
 	// Tool call that this message is responding to.
@@ -1920,19 +1627,6 @@ func (r ChatCompletionToolMessageParam) MarshalJSON() (data []byte, err error) {
 }
 
 func (r ChatCompletionToolMessageParam) implementsChatCompletionMessageParamUnion() {}
-
-// The contents of the tool message.
-//
-// Satisfied by [shared.UnionString],
-// [ChatCompletionToolMessageParamContentArrayOfContentParts].
-type ChatCompletionToolMessageParamContentUnion interface {
-	ImplementsChatCompletionToolMessageParamContentUnion()
-}
-
-type ChatCompletionToolMessageParamContentArrayOfContentParts []ChatCompletionContentPartTextParam
-
-func (r ChatCompletionToolMessageParamContentArrayOfContentParts) ImplementsChatCompletionToolMessageParamContentUnion() {
-}
 
 // The role of the messages author, in this case `tool`.
 type ChatCompletionToolMessageParamRole string
@@ -1953,7 +1647,7 @@ func (r ChatCompletionToolMessageParamRole) IsKnown() bool {
 // information.
 type ChatCompletionUserMessageParam struct {
 	// The contents of the user message.
-	Content param.Field[ChatCompletionUserMessageParamContentUnion] `json:"content,required"`
+	Content param.Field[[]ChatCompletionContentPartUnionParam] `json:"content,required"`
 	// The role of the messages author, in this case `user`.
 	Role param.Field[ChatCompletionUserMessageParamRole] `json:"role,required"`
 	// An optional name for the participant. Provides the model information to
@@ -1966,19 +1660,6 @@ func (r ChatCompletionUserMessageParam) MarshalJSON() (data []byte, err error) {
 }
 
 func (r ChatCompletionUserMessageParam) implementsChatCompletionMessageParamUnion() {}
-
-// The contents of the user message.
-//
-// Satisfied by [shared.UnionString],
-// [ChatCompletionUserMessageParamContentArrayOfContentParts].
-type ChatCompletionUserMessageParamContentUnion interface {
-	ImplementsChatCompletionUserMessageParamContentUnion()
-}
-
-type ChatCompletionUserMessageParamContentArrayOfContentParts []ChatCompletionContentPartUnionParam
-
-func (r ChatCompletionUserMessageParamContentArrayOfContentParts) ImplementsChatCompletionUserMessageParamContentUnion() {
-}
 
 // The role of the messages author, in this case `user`.
 type ChatCompletionUserMessageParamRole string
@@ -2003,12 +1684,10 @@ type ChatCompletionNewParams struct {
 	// [images](https://platform.openai.com/docs/guides/vision), and
 	// [audio](https://platform.openai.com/docs/guides/audio).
 	Messages param.Field[[]ChatCompletionMessageParamUnion] `json:"messages,required"`
-	// Model ID used to generate the response, like `gpt-4o` or `o1`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
-	Model param.Field[shared.ChatModel] `json:"model,required"`
+	// ID of the model to use. See the
+	// [model endpoint compatibility](https://platform.openai.com/docs/models#model-endpoint-compatibility)
+	// table for details on which models work with the Chat API.
+	Model param.Field[ChatModel] `json:"model,required"`
 	// Parameters for audio output. Required when audio output is requested with
 	// `modalities: ["audio"]`.
 	// [Learn more](https://platform.openai.com/docs/guides/audio).
@@ -2068,8 +1747,8 @@ type ChatCompletionNewParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
-	// Output types that you would like the model to generate. Most models are capable
-	// of generating text, which is the default:
+	// Output types that you would like the model to generate for this request. Most
+	// models are capable of generating text, which is the default:
 	//
 	// `["text"]`
 	//
@@ -2078,7 +1757,7 @@ type ChatCompletionNewParams struct {
 	// this model generate both text and audio responses, you can use:
 	//
 	// `["text", "audio"]`
-	Modalities param.Field[[]ChatCompletionNewParamsModality] `json:"modalities"`
+	Modalities param.Field[[]ChatCompletionModality] `json:"modalities"`
 	// How many chat completion choices to generate for each input message. Note that
 	// you will be charged based on the number of generated tokens across all of the
 	// choices. Keep `n` as `1` to minimize costs.
@@ -2094,13 +1773,13 @@ type ChatCompletionNewParams struct {
 	// whether they appear in the text so far, increasing the model's likelihood to
 	// talk about new topics.
 	PresencePenalty param.Field[float64] `json:"presence_penalty"`
-	// **o-series models only**
+	// **o1 and o3-mini models only**
 	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
 	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
 	// result in faster responses and fewer tokens used on reasoning in a response.
-	ReasoningEffort param.Field[shared.ReasoningEffort] `json:"reasoning_effort"`
+	ReasoningEffort param.Field[ChatCompletionReasoningEffort] `json:"reasoning_effort"`
 	// An object specifying the format that the model must output.
 	//
 	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
@@ -2108,9 +1787,16 @@ type ChatCompletionNewParams struct {
 	// in the
 	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 	//
-	// Setting to `{ "type": "json_object" }` enables the older JSON mode, which
-	// ensures the message the model generates is valid JSON. Using `json_schema` is
-	// preferred for models that support it.
+	// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
+	// message the model generates is valid JSON.
+	//
+	// **Important:** when using JSON mode, you **must** also instruct the model to
+	// produce JSON yourself via a system or user message. Without this, the model may
+	// generate an unending stream of whitespace until the generation reaches the token
+	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
+	// the message content may be partially cut off if `finish_reason="length"`, which
+	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
+	// max context length.
 	ResponseFormat param.Field[ChatCompletionNewParamsResponseFormatUnion] `json:"response_format"`
 	// This feature is in Beta. If specified, our system will make a best effort to
 	// sample deterministically, such that repeated requests with the same `seed` and
@@ -2125,16 +1811,12 @@ type ChatCompletionNewParams struct {
 	//     utilize scale tier credits until they are exhausted.
 	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
 	//     be processed using the default service tier with a lower uptime SLA and no
-	//     latency guarentee.
+	//     latency guarantee.
 	//   - If set to 'default', the request will be processed using the default service
-	//     tier with a lower uptime SLA and no latency guarentee.
+	//     tier with a lower uptime SLA and no latency guarantee.
 	//   - When not set, the default behavior is 'auto'.
-	//
-	// When this parameter is set, the response body will include the `service_tier`
-	// utilized.
 	ServiceTier param.Field[ChatCompletionNewParamsServiceTier] `json:"service_tier"`
-	// Up to 4 sequences where the API will stop generating further tokens. The
-	// returned text will not contain the stop sequence.
+	// Up to 4 sequences where the API will stop generating further tokens.
 	Stop param.Field[ChatCompletionNewParamsStopUnion] `json:"stop"`
 	// Whether or not to store the output of this chat completion request for use in
 	// our [model distillation](https://platform.openai.com/docs/guides/distillation)
@@ -2175,10 +1857,6 @@ type ChatCompletionNewParams struct {
 	// and detect abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
 	User param.Field[string] `json:"user"`
-	// This tool searches the web for relevant results to use in a response. Learn more
-	// about the
-	// [web search tool](https://platform.openai.com/docs/guides/tools-web-search?api-mode=chat).
-	WebSearchOptions param.Field[ChatCompletionNewParamsWebSearchOptions] `json:"web_search_options"`
 }
 
 func (r ChatCompletionNewParams) MarshalJSON() (data []byte, err error) {
@@ -2200,7 +1878,7 @@ func (r ChatCompletionNewParams) MarshalJSON() (data []byte, err error) {
 // `none` is the default when no functions are present. `auto` is the default if
 // functions are present.
 //
-// Satisfied by [ChatCompletionNewParamsFunctionCallFunctionCallMode],
+// Satisfied by [ChatCompletionNewParamsFunctionCallAuto],
 // [ChatCompletionFunctionCallOptionParam].
 //
 // Deprecated: deprecated
@@ -2211,22 +1889,22 @@ type ChatCompletionNewParamsFunctionCallUnion interface {
 // `none` means the model will not call a function and instead generates a message.
 // `auto` means the model can pick between generating a message or calling a
 // function.
-type ChatCompletionNewParamsFunctionCallFunctionCallMode string
+type ChatCompletionNewParamsFunctionCallAuto string
 
 const (
-	ChatCompletionNewParamsFunctionCallFunctionCallModeNone ChatCompletionNewParamsFunctionCallFunctionCallMode = "none"
-	ChatCompletionNewParamsFunctionCallFunctionCallModeAuto ChatCompletionNewParamsFunctionCallFunctionCallMode = "auto"
+	ChatCompletionNewParamsFunctionCallAutoNone ChatCompletionNewParamsFunctionCallAuto = "none"
+	ChatCompletionNewParamsFunctionCallAutoAuto ChatCompletionNewParamsFunctionCallAuto = "auto"
 )
 
-func (r ChatCompletionNewParamsFunctionCallFunctionCallMode) IsKnown() bool {
+func (r ChatCompletionNewParamsFunctionCallAuto) IsKnown() bool {
 	switch r {
-	case ChatCompletionNewParamsFunctionCallFunctionCallModeNone, ChatCompletionNewParamsFunctionCallFunctionCallModeAuto:
+	case ChatCompletionNewParamsFunctionCallAutoNone, ChatCompletionNewParamsFunctionCallAutoAuto:
 		return true
 	}
 	return false
 }
 
-func (r ChatCompletionNewParamsFunctionCallFunctionCallMode) implementsChatCompletionNewParamsFunctionCallUnion() {
+func (r ChatCompletionNewParamsFunctionCallAuto) implementsChatCompletionNewParamsFunctionCallUnion() {
 }
 
 // Deprecated: deprecated
@@ -2251,21 +1929,6 @@ func (r ChatCompletionNewParamsFunction) MarshalJSON() (data []byte, err error) 
 	return apijson.MarshalRoot(r)
 }
 
-type ChatCompletionNewParamsModality string
-
-const (
-	ChatCompletionNewParamsModalityText  ChatCompletionNewParamsModality = "text"
-	ChatCompletionNewParamsModalityAudio ChatCompletionNewParamsModality = "audio"
-)
-
-func (r ChatCompletionNewParamsModality) IsKnown() bool {
-	switch r {
-	case ChatCompletionNewParamsModalityText, ChatCompletionNewParamsModalityAudio:
-		return true
-	}
-	return false
-}
-
 // An object specifying the format that the model must output.
 //
 // Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
@@ -2273,11 +1936,18 @@ func (r ChatCompletionNewParamsModality) IsKnown() bool {
 // in the
 // [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 //
-// Setting to `{ "type": "json_object" }` enables the older JSON mode, which
-// ensures the message the model generates is valid JSON. Using `json_schema` is
-// preferred for models that support it.
+// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
+// message the model generates is valid JSON.
+//
+// **Important:** when using JSON mode, you **must** also instruct the model to
+// produce JSON yourself via a system or user message. Without this, the model may
+// generate an unending stream of whitespace until the generation reaches the token
+// limit, resulting in a long-running and seemingly "stuck" request. Also note that
+// the message content may be partially cut off if `finish_reason="length"`, which
+// indicates the generation exceeded `max_tokens` or the conversation exceeded the
+// max context length.
 type ChatCompletionNewParamsResponseFormat struct {
-	// The type of response format being defined. Always `text`.
+	// The type of response format being defined: `text`
 	Type       param.Field[ChatCompletionNewParamsResponseFormatType] `json:"type,required"`
 	JSONSchema param.Field[interface{}]                               `json:"json_schema"`
 }
@@ -2296,29 +1966,36 @@ func (r ChatCompletionNewParamsResponseFormat) ImplementsChatCompletionNewParams
 // in the
 // [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 //
-// Setting to `{ "type": "json_object" }` enables the older JSON mode, which
-// ensures the message the model generates is valid JSON. Using `json_schema` is
-// preferred for models that support it.
+// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
+// message the model generates is valid JSON.
+//
+// **Important:** when using JSON mode, you **must** also instruct the model to
+// produce JSON yourself via a system or user message. Without this, the model may
+// generate an unending stream of whitespace until the generation reaches the token
+// limit, resulting in a long-running and seemingly "stuck" request. Also note that
+// the message content may be partially cut off if `finish_reason="length"`, which
+// indicates the generation exceeded `max_tokens` or the conversation exceeded the
+// max context length.
 //
 // Satisfied by [shared.ResponseFormatTextParam],
-// [shared.ResponseFormatJSONSchemaParam], [shared.ResponseFormatJSONObjectParam],
+// [shared.ResponseFormatJSONObjectParam], [shared.ResponseFormatJSONSchemaParam],
 // [ChatCompletionNewParamsResponseFormat].
 type ChatCompletionNewParamsResponseFormatUnion interface {
 	ImplementsChatCompletionNewParamsResponseFormatUnion()
 }
 
-// The type of response format being defined. Always `text`.
+// The type of response format being defined: `text`
 type ChatCompletionNewParamsResponseFormatType string
 
 const (
 	ChatCompletionNewParamsResponseFormatTypeText       ChatCompletionNewParamsResponseFormatType = "text"
-	ChatCompletionNewParamsResponseFormatTypeJSONSchema ChatCompletionNewParamsResponseFormatType = "json_schema"
 	ChatCompletionNewParamsResponseFormatTypeJSONObject ChatCompletionNewParamsResponseFormatType = "json_object"
+	ChatCompletionNewParamsResponseFormatTypeJSONSchema ChatCompletionNewParamsResponseFormatType = "json_schema"
 )
 
 func (r ChatCompletionNewParamsResponseFormatType) IsKnown() bool {
 	switch r {
-	case ChatCompletionNewParamsResponseFormatTypeText, ChatCompletionNewParamsResponseFormatTypeJSONSchema, ChatCompletionNewParamsResponseFormatTypeJSONObject:
+	case ChatCompletionNewParamsResponseFormatTypeText, ChatCompletionNewParamsResponseFormatTypeJSONObject, ChatCompletionNewParamsResponseFormatTypeJSONSchema:
 		return true
 	}
 	return false
@@ -2331,13 +2008,10 @@ func (r ChatCompletionNewParamsResponseFormatType) IsKnown() bool {
 //     utilize scale tier credits until they are exhausted.
 //   - If set to 'auto', and the Project is not Scale tier enabled, the request will
 //     be processed using the default service tier with a lower uptime SLA and no
-//     latency guarentee.
+//     latency guarantee.
 //   - If set to 'default', the request will be processed using the default service
-//     tier with a lower uptime SLA and no latency guarentee.
+//     tier with a lower uptime SLA and no latency guarantee.
 //   - When not set, the default behavior is 'auto'.
-//
-// When this parameter is set, the response body will include the `service_tier`
-// utilized.
 type ChatCompletionNewParamsServiceTier string
 
 const (
@@ -2353,8 +2027,7 @@ func (r ChatCompletionNewParamsServiceTier) IsKnown() bool {
 	return false
 }
 
-// Up to 4 sequences where the API will stop generating further tokens. The
-// returned text will not contain the stop sequence.
+// Up to 4 sequences where the API will stop generating further tokens.
 //
 // Satisfied by [shared.UnionString], [ChatCompletionNewParamsStopArray].
 type ChatCompletionNewParamsStopUnion interface {
@@ -2364,137 +2037,3 @@ type ChatCompletionNewParamsStopUnion interface {
 type ChatCompletionNewParamsStopArray []string
 
 func (r ChatCompletionNewParamsStopArray) ImplementsChatCompletionNewParamsStopUnion() {}
-
-// This tool searches the web for relevant results to use in a response. Learn more
-// about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search?api-mode=chat).
-type ChatCompletionNewParamsWebSearchOptions struct {
-	// High level guidance for the amount of context window space to use for the
-	// search. One of `low`, `medium`, or `high`. `medium` is the default.
-	SearchContextSize param.Field[ChatCompletionNewParamsWebSearchOptionsSearchContextSize] `json:"search_context_size"`
-	// Approximate location parameters for the search.
-	UserLocation param.Field[ChatCompletionNewParamsWebSearchOptionsUserLocation] `json:"user_location"`
-}
-
-func (r ChatCompletionNewParamsWebSearchOptions) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// High level guidance for the amount of context window space to use for the
-// search. One of `low`, `medium`, or `high`. `medium` is the default.
-type ChatCompletionNewParamsWebSearchOptionsSearchContextSize string
-
-const (
-	ChatCompletionNewParamsWebSearchOptionsSearchContextSizeLow    ChatCompletionNewParamsWebSearchOptionsSearchContextSize = "low"
-	ChatCompletionNewParamsWebSearchOptionsSearchContextSizeMedium ChatCompletionNewParamsWebSearchOptionsSearchContextSize = "medium"
-	ChatCompletionNewParamsWebSearchOptionsSearchContextSizeHigh   ChatCompletionNewParamsWebSearchOptionsSearchContextSize = "high"
-)
-
-func (r ChatCompletionNewParamsWebSearchOptionsSearchContextSize) IsKnown() bool {
-	switch r {
-	case ChatCompletionNewParamsWebSearchOptionsSearchContextSizeLow, ChatCompletionNewParamsWebSearchOptionsSearchContextSizeMedium, ChatCompletionNewParamsWebSearchOptionsSearchContextSizeHigh:
-		return true
-	}
-	return false
-}
-
-// Approximate location parameters for the search.
-type ChatCompletionNewParamsWebSearchOptionsUserLocation struct {
-	// Approximate location parameters for the search.
-	Approximate param.Field[ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate] `json:"approximate,required"`
-	// The type of location approximation. Always `approximate`.
-	Type param.Field[ChatCompletionNewParamsWebSearchOptionsUserLocationType] `json:"type,required"`
-}
-
-func (r ChatCompletionNewParamsWebSearchOptionsUserLocation) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// Approximate location parameters for the search.
-type ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate struct {
-	// Free text input for the city of the user, e.g. `San Francisco`.
-	City param.Field[string] `json:"city"`
-	// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of
-	// the user, e.g. `US`.
-	Country param.Field[string] `json:"country"`
-	// Free text input for the region of the user, e.g. `California`.
-	Region param.Field[string] `json:"region"`
-	// The [IANA timezone](https://timeapi.io/documentation/iana-timezones) of the
-	// user, e.g. `America/Los_Angeles`.
-	Timezone param.Field[string] `json:"timezone"`
-}
-
-func (r ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// The type of location approximation. Always `approximate`.
-type ChatCompletionNewParamsWebSearchOptionsUserLocationType string
-
-const (
-	ChatCompletionNewParamsWebSearchOptionsUserLocationTypeApproximate ChatCompletionNewParamsWebSearchOptionsUserLocationType = "approximate"
-)
-
-func (r ChatCompletionNewParamsWebSearchOptionsUserLocationType) IsKnown() bool {
-	switch r {
-	case ChatCompletionNewParamsWebSearchOptionsUserLocationTypeApproximate:
-		return true
-	}
-	return false
-}
-
-type ChatCompletionUpdateParams struct {
-	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
-	//
-	// Keys are strings with a maximum length of 64 characters. Values are strings with
-	// a maximum length of 512 characters.
-	Metadata param.Field[shared.MetadataParam] `json:"metadata,required"`
-}
-
-func (r ChatCompletionUpdateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type ChatCompletionListParams struct {
-	// Identifier for the last chat completion from the previous pagination request.
-	After param.Field[string] `query:"after"`
-	// Number of Chat Completions to retrieve.
-	Limit param.Field[int64] `query:"limit"`
-	// A list of metadata keys to filter the Chat Completions by. Example:
-	//
-	// `metadata[key1]=value1&metadata[key2]=value2`
-	Metadata param.Field[shared.MetadataParam] `query:"metadata"`
-	// The model used to generate the Chat Completions.
-	Model param.Field[string] `query:"model"`
-	// Sort order for Chat Completions by timestamp. Use `asc` for ascending order or
-	// `desc` for descending order. Defaults to `asc`.
-	Order param.Field[ChatCompletionListParamsOrder] `query:"order"`
-}
-
-// URLQuery serializes [ChatCompletionListParams]'s query parameters as
-// `url.Values`.
-func (r ChatCompletionListParams) URLQuery() (v url.Values) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
-		NestedFormat: apiquery.NestedQueryFormatBrackets,
-	})
-}
-
-// Sort order for Chat Completions by timestamp. Use `asc` for ascending order or
-// `desc` for descending order. Defaults to `asc`.
-type ChatCompletionListParamsOrder string
-
-const (
-	ChatCompletionListParamsOrderAsc  ChatCompletionListParamsOrder = "asc"
-	ChatCompletionListParamsOrderDesc ChatCompletionListParamsOrder = "desc"
-)
-
-func (r ChatCompletionListParamsOrder) IsKnown() bool {
-	switch r {
-	case ChatCompletionListParamsOrderAsc, ChatCompletionListParamsOrderDesc:
-		return true
-	}
-	return false
-}

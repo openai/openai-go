@@ -47,9 +47,10 @@ func NewUploadService(opts ...option.RequestOption) (r *UploadService) {
 // contains all the parts you uploaded. This File is usable in the rest of our
 // platform as a regular File object.
 //
-// For certain `purpose` values, the correct `mime_type` must be specified. Please
-// refer to documentation for the
-// [supported MIME types for your use case](https://platform.openai.com/docs/assistants/tools/file-search#supported-files).
+// For certain `purpose`s, the correct `mime_type` must be specified. Please refer
+// to documentation for the supported MIME types for your use case:
+//
+// - [Assistants](https://platform.openai.com/docs/assistants/tools/file-search#supported-files)
 //
 // For guidance on the proper filename extensions for each purpose, please follow
 // the documentation on
@@ -105,7 +106,7 @@ type Upload struct {
 	Bytes int64 `json:"bytes,required"`
 	// The Unix timestamp (in seconds) for when the Upload was created.
 	CreatedAt int64 `json:"created_at,required"`
-	// The Unix timestamp (in seconds) for when the Upload will expire.
+	// The Unix timestamp (in seconds) for when the Upload was created.
 	ExpiresAt int64 `json:"expires_at,required"`
 	// The name of the file to be uploaded.
 	Filename string `json:"filename,required"`
