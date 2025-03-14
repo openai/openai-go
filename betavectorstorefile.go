@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -16,25 +15,23 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/shared"
-	"github.com/tidwall/gjson"
 )
 
-// VectorStoreFileService contains methods and other services that help with
+// BetaVectorStoreFileService contains methods and other services that help with
 // interacting with the openai API.
 //
 // Note, unlike clients, this service does not read variables from the environment
 // automatically. You should not instantiate this service directly, and instead use
-// the [NewVectorStoreFileService] method instead.
-type VectorStoreFileService struct {
+// the [NewBetaVectorStoreFileService] method instead.
+type BetaVectorStoreFileService struct {
 	Options []option.RequestOption
 }
 
-// NewVectorStoreFileService generates a new service that applies the given options
-// to each request. These options are applied after the parent client's options (if
-// there is one), and before any request-specific options.
-func NewVectorStoreFileService(opts ...option.RequestOption) (r *VectorStoreFileService) {
-	r = &VectorStoreFileService{}
+// NewBetaVectorStoreFileService generates a new service that applies the given
+// options to each request. These options are applied after the parent client's
+// options (if there is one), and before any request-specific options.
+func NewBetaVectorStoreFileService(opts ...option.RequestOption) (r *BetaVectorStoreFileService) {
+	r = &BetaVectorStoreFileService{}
 	r.Options = opts
 	return
 }
@@ -42,7 +39,7 @@ func NewVectorStoreFileService(opts ...option.RequestOption) (r *VectorStoreFile
 // Create a vector store file by attaching a
 // [File](https://platform.openai.com/docs/api-reference/files) to a
 // [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object).
-func (r *VectorStoreFileService) New(ctx context.Context, vectorStoreID string, body VectorStoreFileNewParams, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
+func (r *BetaVectorStoreFileService) New(ctx context.Context, vectorStoreID string, body BetaVectorStoreFileNewParams, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
@@ -55,7 +52,7 @@ func (r *VectorStoreFileService) New(ctx context.Context, vectorStoreID string, 
 }
 
 // Retrieves a vector store file.
-func (r *VectorStoreFileService) Get(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
+func (r *BetaVectorStoreFileService) Get(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
@@ -71,25 +68,8 @@ func (r *VectorStoreFileService) Get(ctx context.Context, vectorStoreID string, 
 	return
 }
 
-// Update attributes on a vector store file.
-func (r *VectorStoreFileService) Update(ctx context.Context, vectorStoreID string, fileID string, body VectorStoreFileUpdateParams, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
-	opts = append(r.Options[:], opts...)
-	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if vectorStoreID == "" {
-		err = errors.New("missing required vector_store_id parameter")
-		return
-	}
-	if fileID == "" {
-		err = errors.New("missing required file_id parameter")
-		return
-	}
-	path := fmt.Sprintf("vector_stores/%s/files/%s", vectorStoreID, fileID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
-}
-
 // Returns a list of vector store files.
-func (r *VectorStoreFileService) List(ctx context.Context, vectorStoreID string, query VectorStoreFileListParams, opts ...option.RequestOption) (res *pagination.CursorPage[VectorStoreFile], err error) {
+func (r *BetaVectorStoreFileService) List(ctx context.Context, vectorStoreID string, query BetaVectorStoreFileListParams, opts ...option.RequestOption) (res *pagination.CursorPage[VectorStoreFile], err error) {
 	var raw *http.Response
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
@@ -111,7 +91,7 @@ func (r *VectorStoreFileService) List(ctx context.Context, vectorStoreID string,
 }
 
 // Returns a list of vector store files.
-func (r *VectorStoreFileService) ListAutoPaging(ctx context.Context, vectorStoreID string, query VectorStoreFileListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[VectorStoreFile] {
+func (r *BetaVectorStoreFileService) ListAutoPaging(ctx context.Context, vectorStoreID string, query BetaVectorStoreFileListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[VectorStoreFile] {
 	return pagination.NewCursorPageAutoPager(r.List(ctx, vectorStoreID, query, opts...))
 }
 
@@ -119,7 +99,7 @@ func (r *VectorStoreFileService) ListAutoPaging(ctx context.Context, vectorStore
 // the file itself will not be deleted. To delete the file, use the
 // [delete file](https://platform.openai.com/docs/api-reference/files/delete)
 // endpoint.
-func (r *VectorStoreFileService) Delete(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) (res *VectorStoreFileDeleted, err error) {
+func (r *BetaVectorStoreFileService) Delete(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) (res *VectorStoreFileDeleted, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
@@ -133,37 +113,6 @@ func (r *VectorStoreFileService) Delete(ctx context.Context, vectorStoreID strin
 	path := fmt.Sprintf("vector_stores/%s/files/%s", vectorStoreID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return
-}
-
-// Retrieve the parsed contents of a vector store file.
-func (r *VectorStoreFileService) Content(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) (res *pagination.Page[VectorStoreFileContentResponse], err error) {
-	var raw *http.Response
-	opts = append(r.Options[:], opts...)
-	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
-	if vectorStoreID == "" {
-		err = errors.New("missing required vector_store_id parameter")
-		return
-	}
-	if fileID == "" {
-		err = errors.New("missing required file_id parameter")
-		return
-	}
-	path := fmt.Sprintf("vector_stores/%s/files/%s/content", vectorStoreID, fileID)
-	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, nil, &res, opts...)
-	if err != nil {
-		return nil, err
-	}
-	err = cfg.Execute()
-	if err != nil {
-		return nil, err
-	}
-	res.SetPageConfig(cfg, raw)
-	return res, nil
-}
-
-// Retrieve the parsed contents of a vector store file.
-func (r *VectorStoreFileService) ContentAutoPaging(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) *pagination.PageAutoPager[VectorStoreFileContentResponse] {
-	return pagination.NewPageAutoPager(r.Content(ctx, vectorStoreID, fileID, opts...))
 }
 
 // A list of files attached to a vector store.
@@ -189,12 +138,6 @@ type VectorStoreFile struct {
 	// that the [File](https://platform.openai.com/docs/api-reference/files) is
 	// attached to.
 	VectorStoreID string `json:"vector_store_id,required"`
-	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard. Keys are strings with a maximum
-	// length of 64 characters. Values are strings with a maximum length of 512
-	// characters, booleans, or numbers.
-	Attributes map[string]VectorStoreFileAttributesUnion `json:"attributes,nullable"`
 	// The strategy used to chunk the file.
 	ChunkingStrategy FileChunkingStrategy `json:"chunking_strategy"`
 	JSON             vectorStoreFileJSON  `json:"-"`
@@ -209,7 +152,6 @@ type vectorStoreFileJSON struct {
 	Status           apijson.Field
 	UsageBytes       apijson.Field
 	VectorStoreID    apijson.Field
-	Attributes       apijson.Field
 	ChunkingStrategy apijson.Field
 	raw              string
 	ExtraFields      map[string]apijson.Field
@@ -302,35 +244,6 @@ func (r VectorStoreFileStatus) IsKnown() bool {
 	return false
 }
 
-// Union satisfied by [shared.UnionString], [shared.UnionFloat] or
-// [shared.UnionBool].
-type VectorStoreFileAttributesUnion interface {
-	ImplementsVectorStoreFileAttributesUnion()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*VectorStoreFileAttributesUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(shared.UnionString("")),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.Number,
-			Type:       reflect.TypeOf(shared.UnionFloat(0)),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.True,
-			Type:       reflect.TypeOf(shared.UnionBool(false)),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.False,
-			Type:       reflect.TypeOf(shared.UnionBool(false)),
-		},
-	)
-}
-
 type VectorStoreFileDeleted struct {
 	ID      string                       `json:"id,required"`
 	Deleted bool                         `json:"deleted,required"`
@@ -370,75 +283,21 @@ func (r VectorStoreFileDeletedObject) IsKnown() bool {
 	return false
 }
 
-type VectorStoreFileContentResponse struct {
-	// The text content
-	Text string `json:"text"`
-	// The content type (currently only `"text"`)
-	Type string                             `json:"type"`
-	JSON vectorStoreFileContentResponseJSON `json:"-"`
-}
-
-// vectorStoreFileContentResponseJSON contains the JSON metadata for the struct
-// [VectorStoreFileContentResponse]
-type vectorStoreFileContentResponseJSON struct {
-	Text        apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *VectorStoreFileContentResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileContentResponseJSON) RawJSON() string {
-	return r.raw
-}
-
-type VectorStoreFileNewParams struct {
+type BetaVectorStoreFileNewParams struct {
 	// A [File](https://platform.openai.com/docs/api-reference/files) ID that the
 	// vector store should use. Useful for tools like `file_search` that can access
 	// files.
 	FileID param.Field[string] `json:"file_id,required"`
-	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard. Keys are strings with a maximum
-	// length of 64 characters. Values are strings with a maximum length of 512
-	// characters, booleans, or numbers.
-	Attributes param.Field[map[string]VectorStoreFileNewParamsAttributesUnion] `json:"attributes"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
 	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
 }
 
-func (r VectorStoreFileNewParams) MarshalJSON() (data []byte, err error) {
+func (r BetaVectorStoreFileNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-// Satisfied by [shared.UnionString], [shared.UnionFloat], [shared.UnionBool].
-type VectorStoreFileNewParamsAttributesUnion interface {
-	ImplementsVectorStoreFileNewParamsAttributesUnion()
-}
-
-type VectorStoreFileUpdateParams struct {
-	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard. Keys are strings with a maximum
-	// length of 64 characters. Values are strings with a maximum length of 512
-	// characters, booleans, or numbers.
-	Attributes param.Field[map[string]VectorStoreFileUpdateParamsAttributesUnion] `json:"attributes,required"`
-}
-
-func (r VectorStoreFileUpdateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// Satisfied by [shared.UnionString], [shared.UnionFloat], [shared.UnionBool].
-type VectorStoreFileUpdateParamsAttributesUnion interface {
-	ImplementsVectorStoreFileUpdateParamsAttributesUnion()
-}
-
-type VectorStoreFileListParams struct {
+type BetaVectorStoreFileListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
@@ -450,18 +309,18 @@ type VectorStoreFileListParams struct {
 	// to fetch the previous page of the list.
 	Before param.Field[string] `query:"before"`
 	// Filter by file status. One of `in_progress`, `completed`, `failed`, `cancelled`.
-	Filter param.Field[VectorStoreFileListParamsFilter] `query:"filter"`
+	Filter param.Field[BetaVectorStoreFileListParamsFilter] `query:"filter"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
 	Limit param.Field[int64] `query:"limit"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
-	Order param.Field[VectorStoreFileListParamsOrder] `query:"order"`
+	Order param.Field[BetaVectorStoreFileListParamsOrder] `query:"order"`
 }
 
-// URLQuery serializes [VectorStoreFileListParams]'s query parameters as
+// URLQuery serializes [BetaVectorStoreFileListParams]'s query parameters as
 // `url.Values`.
-func (r VectorStoreFileListParams) URLQuery() (v url.Values) {
+func (r BetaVectorStoreFileListParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -469,18 +328,18 @@ func (r VectorStoreFileListParams) URLQuery() (v url.Values) {
 }
 
 // Filter by file status. One of `in_progress`, `completed`, `failed`, `cancelled`.
-type VectorStoreFileListParamsFilter string
+type BetaVectorStoreFileListParamsFilter string
 
 const (
-	VectorStoreFileListParamsFilterInProgress VectorStoreFileListParamsFilter = "in_progress"
-	VectorStoreFileListParamsFilterCompleted  VectorStoreFileListParamsFilter = "completed"
-	VectorStoreFileListParamsFilterFailed     VectorStoreFileListParamsFilter = "failed"
-	VectorStoreFileListParamsFilterCancelled  VectorStoreFileListParamsFilter = "cancelled"
+	BetaVectorStoreFileListParamsFilterInProgress BetaVectorStoreFileListParamsFilter = "in_progress"
+	BetaVectorStoreFileListParamsFilterCompleted  BetaVectorStoreFileListParamsFilter = "completed"
+	BetaVectorStoreFileListParamsFilterFailed     BetaVectorStoreFileListParamsFilter = "failed"
+	BetaVectorStoreFileListParamsFilterCancelled  BetaVectorStoreFileListParamsFilter = "cancelled"
 )
 
-func (r VectorStoreFileListParamsFilter) IsKnown() bool {
+func (r BetaVectorStoreFileListParamsFilter) IsKnown() bool {
 	switch r {
-	case VectorStoreFileListParamsFilterInProgress, VectorStoreFileListParamsFilterCompleted, VectorStoreFileListParamsFilterFailed, VectorStoreFileListParamsFilterCancelled:
+	case BetaVectorStoreFileListParamsFilterInProgress, BetaVectorStoreFileListParamsFilterCompleted, BetaVectorStoreFileListParamsFilterFailed, BetaVectorStoreFileListParamsFilterCancelled:
 		return true
 	}
 	return false
@@ -488,16 +347,16 @@ func (r VectorStoreFileListParamsFilter) IsKnown() bool {
 
 // Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 // order and `desc` for descending order.
-type VectorStoreFileListParamsOrder string
+type BetaVectorStoreFileListParamsOrder string
 
 const (
-	VectorStoreFileListParamsOrderAsc  VectorStoreFileListParamsOrder = "asc"
-	VectorStoreFileListParamsOrderDesc VectorStoreFileListParamsOrder = "desc"
+	BetaVectorStoreFileListParamsOrderAsc  BetaVectorStoreFileListParamsOrder = "asc"
+	BetaVectorStoreFileListParamsOrderDesc BetaVectorStoreFileListParamsOrder = "desc"
 )
 
-func (r VectorStoreFileListParamsOrder) IsKnown() bool {
+func (r BetaVectorStoreFileListParamsOrder) IsKnown() bool {
 	switch r {
-	case VectorStoreFileListParamsOrderAsc, VectorStoreFileListParamsOrderDesc:
+	case BetaVectorStoreFileListParamsOrderAsc, BetaVectorStoreFileListParamsOrderDesc:
 		return true
 	}
 	return false

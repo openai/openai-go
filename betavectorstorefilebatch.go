@@ -17,27 +17,27 @@ import (
 	"github.com/openai/openai-go/packages/pagination"
 )
 
-// VectorStoreFileBatchService contains methods and other services that help with
-// interacting with the openai API.
+// BetaVectorStoreFileBatchService contains methods and other services that help
+// with interacting with the openai API.
 //
 // Note, unlike clients, this service does not read variables from the environment
 // automatically. You should not instantiate this service directly, and instead use
-// the [NewVectorStoreFileBatchService] method instead.
-type VectorStoreFileBatchService struct {
+// the [NewBetaVectorStoreFileBatchService] method instead.
+type BetaVectorStoreFileBatchService struct {
 	Options []option.RequestOption
 }
 
-// NewVectorStoreFileBatchService generates a new service that applies the given
-// options to each request. These options are applied after the parent client's
-// options (if there is one), and before any request-specific options.
-func NewVectorStoreFileBatchService(opts ...option.RequestOption) (r *VectorStoreFileBatchService) {
-	r = &VectorStoreFileBatchService{}
+// NewBetaVectorStoreFileBatchService generates a new service that applies the
+// given options to each request. These options are applied after the parent
+// client's options (if there is one), and before any request-specific options.
+func NewBetaVectorStoreFileBatchService(opts ...option.RequestOption) (r *BetaVectorStoreFileBatchService) {
+	r = &BetaVectorStoreFileBatchService{}
 	r.Options = opts
 	return
 }
 
 // Create a vector store file batch.
-func (r *VectorStoreFileBatchService) New(ctx context.Context, vectorStoreID string, body VectorStoreFileBatchNewParams, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
+func (r *BetaVectorStoreFileBatchService) New(ctx context.Context, vectorStoreID string, body BetaVectorStoreFileBatchNewParams, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
@@ -50,7 +50,7 @@ func (r *VectorStoreFileBatchService) New(ctx context.Context, vectorStoreID str
 }
 
 // Retrieves a vector store file batch.
-func (r *VectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
+func (r *BetaVectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
@@ -68,7 +68,7 @@ func (r *VectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID str
 
 // Cancel a vector store file batch. This attempts to cancel the processing of
 // files in this batch as soon as possible.
-func (r *VectorStoreFileBatchService) Cancel(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
+func (r *BetaVectorStoreFileBatchService) Cancel(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
@@ -85,7 +85,7 @@ func (r *VectorStoreFileBatchService) Cancel(ctx context.Context, vectorStoreID 
 }
 
 // Returns a list of vector store files in a batch.
-func (r *VectorStoreFileBatchService) ListFiles(ctx context.Context, vectorStoreID string, batchID string, query VectorStoreFileBatchListFilesParams, opts ...option.RequestOption) (res *pagination.CursorPage[VectorStoreFile], err error) {
+func (r *BetaVectorStoreFileBatchService) ListFiles(ctx context.Context, vectorStoreID string, batchID string, query BetaVectorStoreFileBatchListFilesParams, opts ...option.RequestOption) (res *pagination.CursorPage[VectorStoreFile], err error) {
 	var raw *http.Response
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
@@ -111,7 +111,7 @@ func (r *VectorStoreFileBatchService) ListFiles(ctx context.Context, vectorStore
 }
 
 // Returns a list of vector store files in a batch.
-func (r *VectorStoreFileBatchService) ListFilesAutoPaging(ctx context.Context, vectorStoreID string, batchID string, query VectorStoreFileBatchListFilesParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[VectorStoreFile] {
+func (r *BetaVectorStoreFileBatchService) ListFilesAutoPaging(ctx context.Context, vectorStoreID string, batchID string, query BetaVectorStoreFileBatchListFilesParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[VectorStoreFile] {
 	return pagination.NewCursorPageAutoPager(r.ListFiles(ctx, vectorStoreID, batchID, query, opts...))
 }
 
@@ -225,32 +225,21 @@ func (r VectorStoreFileBatchStatus) IsKnown() bool {
 	return false
 }
 
-type VectorStoreFileBatchNewParams struct {
+type BetaVectorStoreFileBatchNewParams struct {
 	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
 	// the vector store should use. Useful for tools like `file_search` that can access
 	// files.
 	FileIDs param.Field[[]string] `json:"file_ids,required"`
-	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard. Keys are strings with a maximum
-	// length of 64 characters. Values are strings with a maximum length of 512
-	// characters, booleans, or numbers.
-	Attributes param.Field[map[string]VectorStoreFileBatchNewParamsAttributesUnion] `json:"attributes"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
 	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
 }
 
-func (r VectorStoreFileBatchNewParams) MarshalJSON() (data []byte, err error) {
+func (r BetaVectorStoreFileBatchNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-// Satisfied by [shared.UnionString], [shared.UnionFloat], [shared.UnionBool].
-type VectorStoreFileBatchNewParamsAttributesUnion interface {
-	ImplementsVectorStoreFileBatchNewParamsAttributesUnion()
-}
-
-type VectorStoreFileBatchListFilesParams struct {
+type BetaVectorStoreFileBatchListFilesParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
@@ -262,18 +251,18 @@ type VectorStoreFileBatchListFilesParams struct {
 	// to fetch the previous page of the list.
 	Before param.Field[string] `query:"before"`
 	// Filter by file status. One of `in_progress`, `completed`, `failed`, `cancelled`.
-	Filter param.Field[VectorStoreFileBatchListFilesParamsFilter] `query:"filter"`
+	Filter param.Field[BetaVectorStoreFileBatchListFilesParamsFilter] `query:"filter"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
 	Limit param.Field[int64] `query:"limit"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
-	Order param.Field[VectorStoreFileBatchListFilesParamsOrder] `query:"order"`
+	Order param.Field[BetaVectorStoreFileBatchListFilesParamsOrder] `query:"order"`
 }
 
-// URLQuery serializes [VectorStoreFileBatchListFilesParams]'s query parameters as
-// `url.Values`.
-func (r VectorStoreFileBatchListFilesParams) URLQuery() (v url.Values) {
+// URLQuery serializes [BetaVectorStoreFileBatchListFilesParams]'s query parameters
+// as `url.Values`.
+func (r BetaVectorStoreFileBatchListFilesParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -281,18 +270,18 @@ func (r VectorStoreFileBatchListFilesParams) URLQuery() (v url.Values) {
 }
 
 // Filter by file status. One of `in_progress`, `completed`, `failed`, `cancelled`.
-type VectorStoreFileBatchListFilesParamsFilter string
+type BetaVectorStoreFileBatchListFilesParamsFilter string
 
 const (
-	VectorStoreFileBatchListFilesParamsFilterInProgress VectorStoreFileBatchListFilesParamsFilter = "in_progress"
-	VectorStoreFileBatchListFilesParamsFilterCompleted  VectorStoreFileBatchListFilesParamsFilter = "completed"
-	VectorStoreFileBatchListFilesParamsFilterFailed     VectorStoreFileBatchListFilesParamsFilter = "failed"
-	VectorStoreFileBatchListFilesParamsFilterCancelled  VectorStoreFileBatchListFilesParamsFilter = "cancelled"
+	BetaVectorStoreFileBatchListFilesParamsFilterInProgress BetaVectorStoreFileBatchListFilesParamsFilter = "in_progress"
+	BetaVectorStoreFileBatchListFilesParamsFilterCompleted  BetaVectorStoreFileBatchListFilesParamsFilter = "completed"
+	BetaVectorStoreFileBatchListFilesParamsFilterFailed     BetaVectorStoreFileBatchListFilesParamsFilter = "failed"
+	BetaVectorStoreFileBatchListFilesParamsFilterCancelled  BetaVectorStoreFileBatchListFilesParamsFilter = "cancelled"
 )
 
-func (r VectorStoreFileBatchListFilesParamsFilter) IsKnown() bool {
+func (r BetaVectorStoreFileBatchListFilesParamsFilter) IsKnown() bool {
 	switch r {
-	case VectorStoreFileBatchListFilesParamsFilterInProgress, VectorStoreFileBatchListFilesParamsFilterCompleted, VectorStoreFileBatchListFilesParamsFilterFailed, VectorStoreFileBatchListFilesParamsFilterCancelled:
+	case BetaVectorStoreFileBatchListFilesParamsFilterInProgress, BetaVectorStoreFileBatchListFilesParamsFilterCompleted, BetaVectorStoreFileBatchListFilesParamsFilterFailed, BetaVectorStoreFileBatchListFilesParamsFilterCancelled:
 		return true
 	}
 	return false
@@ -300,16 +289,16 @@ func (r VectorStoreFileBatchListFilesParamsFilter) IsKnown() bool {
 
 // Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 // order and `desc` for descending order.
-type VectorStoreFileBatchListFilesParamsOrder string
+type BetaVectorStoreFileBatchListFilesParamsOrder string
 
 const (
-	VectorStoreFileBatchListFilesParamsOrderAsc  VectorStoreFileBatchListFilesParamsOrder = "asc"
-	VectorStoreFileBatchListFilesParamsOrderDesc VectorStoreFileBatchListFilesParamsOrder = "desc"
+	BetaVectorStoreFileBatchListFilesParamsOrderAsc  BetaVectorStoreFileBatchListFilesParamsOrder = "asc"
+	BetaVectorStoreFileBatchListFilesParamsOrderDesc BetaVectorStoreFileBatchListFilesParamsOrder = "desc"
 )
 
-func (r VectorStoreFileBatchListFilesParamsOrder) IsKnown() bool {
+func (r BetaVectorStoreFileBatchListFilesParamsOrder) IsKnown() bool {
 	switch r {
-	case VectorStoreFileBatchListFilesParamsOrderAsc, VectorStoreFileBatchListFilesParamsOrderDesc:
+	case BetaVectorStoreFileBatchListFilesParamsOrderAsc, BetaVectorStoreFileBatchListFilesParamsOrderDesc:
 		return true
 	}
 	return false

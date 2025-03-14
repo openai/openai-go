@@ -27,15 +27,14 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.Assistants.New(context.TODO(), openai.BetaAssistantNewParams{
-		Model:        openai.F(shared.ChatModelO3Mini),
+		Model:        openai.F(openai.ChatModelO3Mini),
 		Description:  openai.F("description"),
 		Instructions: openai.F("instructions"),
 		Metadata: openai.F(shared.MetadataParam{
 			"foo": "string",
 		}),
 		Name:            openai.F("name"),
-		ReasoningEffort: openai.F(shared.ReasoningEffortLow),
-		ResponseFormat:  openai.F[openai.AssistantResponseFormatOptionUnionParam](openai.AssistantResponseFormatOptionString(openai.AssistantResponseFormatOptionStringAuto)),
+		ReasoningEffort: openai.F(openai.BetaAssistantNewParamsReasoningEffortLow),
 		Temperature:     openai.F(1.000000),
 		ToolResources: openai.F(openai.BetaAssistantNewParamsToolResources{
 			CodeInterpreter: openai.F(openai.BetaAssistantNewParamsToolResourcesCodeInterpreter{
@@ -44,8 +43,8 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 			FileSearch: openai.F(openai.BetaAssistantNewParamsToolResourcesFileSearch{
 				VectorStoreIDs: openai.F([]string{"string"}),
 				VectorStores: openai.F([]openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStore{{
-					ChunkingStrategy: openai.F[openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion](openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto{
-						Type: openai.F(openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto),
+					ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
+						Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
 					}),
 					FileIDs: openai.F([]string{"string"}),
 					Metadata: openai.F(shared.MetadataParam{
@@ -113,8 +112,7 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 			}),
 			Model:           openai.F(openai.BetaAssistantUpdateParamsModelO3Mini),
 			Name:            openai.F("name"),
-			ReasoningEffort: openai.F(shared.ReasoningEffortLow),
-			ResponseFormat:  openai.F[openai.AssistantResponseFormatOptionUnionParam](openai.AssistantResponseFormatOptionString(openai.AssistantResponseFormatOptionStringAuto)),
+			ReasoningEffort: openai.F(openai.BetaAssistantUpdateParamsReasoningEffortLow),
 			Temperature:     openai.F(1.000000),
 			ToolResources: openai.F(openai.BetaAssistantUpdateParamsToolResources{
 				CodeInterpreter: openai.F(openai.BetaAssistantUpdateParamsToolResourcesCodeInterpreter{

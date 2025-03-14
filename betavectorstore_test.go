@@ -14,7 +14,7 @@ import (
 	"github.com/openai/openai-go/shared"
 )
 
-func TestVectorStoreFileBatchNewWithOptionalParams(t *testing.T) {
+func TestBetaVectorStoreNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -26,17 +26,75 @@ func TestVectorStoreFileBatchNewWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.VectorStores.FileBatches.New(
+	_, err := client.Beta.VectorStores.New(context.TODO(), openai.BetaVectorStoreNewParams{
+		ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
+			Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
+		}),
+		ExpiresAfter: openai.F(openai.BetaVectorStoreNewParamsExpiresAfter{
+			Anchor: openai.F(openai.BetaVectorStoreNewParamsExpiresAfterAnchorLastActiveAt),
+			Days:   openai.F(int64(1)),
+		}),
+		FileIDs: openai.F([]string{"string"}),
+		Metadata: openai.F(shared.MetadataParam{
+			"foo": "string",
+		}),
+		Name: openai.F("name"),
+	})
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestBetaVectorStoreGet(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Beta.VectorStores.Get(context.TODO(), "vector_store_id")
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestBetaVectorStoreUpdateWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Beta.VectorStores.Update(
 		context.TODO(),
-		"vs_abc123",
-		openai.VectorStoreFileBatchNewParams{
-			FileIDs: openai.F([]string{"string"}),
-			Attributes: openai.F(map[string]openai.VectorStoreFileBatchNewParamsAttributesUnion{
-				"foo": shared.UnionString("string"),
+		"vector_store_id",
+		openai.BetaVectorStoreUpdateParams{
+			ExpiresAfter: openai.F(openai.BetaVectorStoreUpdateParamsExpiresAfter{
+				Anchor: openai.F(openai.BetaVectorStoreUpdateParamsExpiresAfterAnchorLastActiveAt),
+				Days:   openai.F(int64(1)),
 			}),
-			ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
-				Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
+			Metadata: openai.F(shared.MetadataParam{
+				"foo": "string",
 			}),
+			Name: openai.F("name"),
 		},
 	)
 	if err != nil {
@@ -48,7 +106,7 @@ func TestVectorStoreFileBatchNewWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestVectorStoreFileBatchGet(t *testing.T) {
+func TestBetaVectorStoreListWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -60,11 +118,12 @@ func TestVectorStoreFileBatchGet(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.VectorStores.FileBatches.Get(
-		context.TODO(),
-		"vs_abc123",
-		"vsfb_abc123",
-	)
+	_, err := client.Beta.VectorStores.List(context.TODO(), openai.BetaVectorStoreListParams{
+		After:  openai.F("after"),
+		Before: openai.F("before"),
+		Limit:  openai.F(int64(0)),
+		Order:  openai.F(openai.BetaVectorStoreListParamsOrderAsc),
+	})
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {
@@ -74,7 +133,7 @@ func TestVectorStoreFileBatchGet(t *testing.T) {
 	}
 }
 
-func TestVectorStoreFileBatchCancel(t *testing.T) {
+func TestBetaVectorStoreDelete(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -86,44 +145,7 @@ func TestVectorStoreFileBatchCancel(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.VectorStores.FileBatches.Cancel(
-		context.TODO(),
-		"vector_store_id",
-		"batch_id",
-	)
-	if err != nil {
-		var apierr *openai.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestVectorStoreFileBatchListFilesWithOptionalParams(t *testing.T) {
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := openai.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-	)
-	_, err := client.VectorStores.FileBatches.ListFiles(
-		context.TODO(),
-		"vector_store_id",
-		"batch_id",
-		openai.VectorStoreFileBatchListFilesParams{
-			After:  openai.F("after"),
-			Before: openai.F("before"),
-			Filter: openai.F(openai.VectorStoreFileBatchListFilesParamsFilterInProgress),
-			Limit:  openai.F(int64(0)),
-			Order:  openai.F(openai.VectorStoreFileBatchListFilesParamsOrderAsc),
-		},
-	)
+	_, err := client.Beta.VectorStores.Delete(context.TODO(), "vector_store_id")
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {

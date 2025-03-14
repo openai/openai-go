@@ -702,8 +702,7 @@ func (r fileSearchToolCallFileSearchJSON) RawJSON() string {
 
 // The ranking options for the file search.
 type FileSearchToolCallFileSearchRankingOptions struct {
-	// The ranker to use for the file search. If not specified will use the `auto`
-	// ranker.
+	// The ranker used for the file search.
 	Ranker FileSearchToolCallFileSearchRankingOptionsRanker `json:"ranker,required"`
 	// The score threshold for the file search. All values must be a floating point
 	// number between 0 and 1.
@@ -728,18 +727,16 @@ func (r fileSearchToolCallFileSearchRankingOptionsJSON) RawJSON() string {
 	return r.raw
 }
 
-// The ranker to use for the file search. If not specified will use the `auto`
-// ranker.
+// The ranker used for the file search.
 type FileSearchToolCallFileSearchRankingOptionsRanker string
 
 const (
-	FileSearchToolCallFileSearchRankingOptionsRankerAuto              FileSearchToolCallFileSearchRankingOptionsRanker = "auto"
 	FileSearchToolCallFileSearchRankingOptionsRankerDefault2024_08_21 FileSearchToolCallFileSearchRankingOptionsRanker = "default_2024_08_21"
 )
 
 func (r FileSearchToolCallFileSearchRankingOptionsRanker) IsKnown() bool {
 	switch r {
-	case FileSearchToolCallFileSearchRankingOptionsRankerAuto, FileSearchToolCallFileSearchRankingOptionsRankerDefault2024_08_21:
+	case FileSearchToolCallFileSearchRankingOptionsRankerDefault2024_08_21:
 		return true
 	}
 	return false
