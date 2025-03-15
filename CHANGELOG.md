@@ -1,5 +1,142 @@
 # Changelog
 
+## 0.1.0-alpha.64 (2025-03-15)
+
+Full Changelog: [v0.1.0-alpha.63...v0.1.0-alpha.64](https://github.com/openai/openai-go/compare/v0.1.0-alpha.63...v0.1.0-alpha.64)
+
+### ⚠ BREAKING CHANGES
+
+* **client:** improve naming of some variants ([#89](https://github.com/openai/openai-go/issues/89))
+
+### Features
+
+* add azure, examples, and message constructors ([fb2df0f](https://github.com/openai/openai-go/commit/fb2df0fe22002f1826bfaa1cb008c45db375885c))
+* add SKIP_BREW env var to ./scripts/bootstrap ([#255](https://github.com/openai/openai-go/issues/255)) ([151c5e7](https://github.com/openai/openai-go/commit/151c5e7106b467174703089ca21845780f121c03))
+* add support for error property in stream ([#29](https://github.com/openai/openai-go/issues/29)) ([0c7d6e5](https://github.com/openai/openai-go/commit/0c7d6e5fc62fd0ed686d5fd254376ff35eb9903a))
+* **api:** add chatgpt-4o-latest model ([#24](https://github.com/openai/openai-go/issues/24)) ([110d1f0](https://github.com/openai/openai-go/commit/110d1f025a3e9259ae87b8ed7c4824de32d489fb))
+* **api:** add file search result details to run steps ([#32](https://github.com/openai/openai-go/issues/32)) ([c1862bd](https://github.com/openai/openai-go/commit/c1862bda1d70ce21d4af85583f975a3aa9cc1e1f))
+* **api:** add gpt-4.5-preview ([#242](https://github.com/openai/openai-go/issues/242)) ([961bf16](https://github.com/openai/openai-go/commit/961bf16109133c94298241f1240d2c0203c8ead7))
+* **api:** add gpt-4o-2024-11-20 model ([#131](https://github.com/openai/openai-go/issues/131)) ([8fe1011](https://github.com/openai/openai-go/commit/8fe1011b33c5d05a14fe249e520894eec7c74334))
+* **api:** add gpt-4o-audio-preview model for chat completions ([#88](https://github.com/openai/openai-go/issues/88)) ([f4a76d0](https://github.com/openai/openai-go/commit/f4a76d0aff1127efe4faa8052334a39f6303cada))
+* **api:** add new, expressive voices for Realtime and Audio in Chat Completions ([#101](https://github.com/openai/openai-go/issues/101)) ([f946acc](https://github.com/openai/openai-go/commit/f946acc71a92f885bed87f0d4e724fb40cae0f14))
+* **api:** add o1 models ([#49](https://github.com/openai/openai-go/issues/49)) ([698a0c9](https://github.com/openai/openai-go/commit/698a0c9c09ffc8b070a796bf4b10b4ba39a17815))
+* **api:** add o3-mini ([#195](https://github.com/openai/openai-go/issues/195)) ([1dc8887](https://github.com/openai/openai-go/commit/1dc888754d531b7d18768b17a44c5415fa6bf3ea))
+* **api:** add omni-moderation model ([#63](https://github.com/openai/openai-go/issues/63)) ([7402f24](https://github.com/openai/openai-go/commit/7402f24732a207c67c98248d58431520081bc324))
+* **api:** add support for predicted outputs ([#110](https://github.com/openai/openai-go/issues/110)) ([73c798a](https://github.com/openai/openai-go/commit/73c798a65bd0aa7d241d5a2fa21eb8c880f8e769))
+* **api:** add support for storing chat completions ([#228](https://github.com/openai/openai-go/issues/228)) ([3da23d8](https://github.com/openai/openai-go/commit/3da23d8f861f8c73c91a7d1443a35ea20475f91e))
+* **api:** new o1 and GPT-4o models + preference fine-tuning ([#142](https://github.com/openai/openai-go/issues/142)) ([a9e2f35](https://github.com/openai/openai-go/commit/a9e2f35573f21296a452955d6ded82385812f649))
+* **api:** support storing chat completions, enabling evals and model distillation in the dashboard ([#72](https://github.com/openai/openai-go/issues/72)) ([b0eae50](https://github.com/openai/openai-go/commit/b0eae50c466a7f6628da792ecbef97a398489a69))
+* **api:** update enum values, comments, and examples ([#181](https://github.com/openai/openai-go/issues/181)) ([29e5479](https://github.com/openai/openai-go/commit/29e547924355b3d0cd64bfed807418b7cacc179e))
+* **api:** updates ([#138](https://github.com/openai/openai-go/issues/138)) ([525573e](https://github.com/openai/openai-go/commit/525573e0d8bb0d69b183e418ded2b987f7da7c73))
+* **api:** updates ([#259](https://github.com/openai/openai-go/issues/259)) ([aa5cb47](https://github.com/openai/openai-go/commit/aa5cb47722c42f17808a15cf15dd58a7a3cfa17f))
+* **api:** updates ([#5](https://github.com/openai/openai-go/issues/5)) ([f92a25c](https://github.com/openai/openai-go/commit/f92a25c87da861702e1792b6799b6601861d4d01))
+* **assistants:** add polling helpers and examples ([#84](https://github.com/openai/openai-go/issues/84)) ([eaa9194](https://github.com/openai/openai-go/commit/eaa91946e78c278f0eacffd6f19c4691d9e23eeb))
+* **client:** accept RFC6838 JSON content types ([#256](https://github.com/openai/openai-go/issues/256)) ([9a8f472](https://github.com/openai/openai-go/commit/9a8f472bc60a208f446d5a56a60a3b824e486786))
+* **client:** allow custom baseurls without trailing slash ([#254](https://github.com/openai/openai-go/issues/254)) ([32b7eb4](https://github.com/openai/openai-go/commit/32b7eb453c7d8a7e2982877baff56c46e3e47c50))
+* **client:** improve default client options support ([0c621c0](https://github.com/openai/openai-go/commit/0c621c0572cedf1b2d7976020d037d688c9956b7))
+* **client:** improve default client options support ([#266](https://github.com/openai/openai-go/issues/266)) ([e68b1cd](https://github.com/openai/openai-go/commit/e68b1cd08f7ed7f008b9b006fc3f9ccb2497fa27))
+* **client:** improve naming of some variants ([#89](https://github.com/openai/openai-go/issues/89)) ([6bb0f75](https://github.com/openai/openai-go/commit/6bb0f75b9b00fcdeffa9c19aa5de0cc48e12c168))
+* **client:** send `X-Stainless-Timeout` header ([#204](https://github.com/openai/openai-go/issues/204)) ([72405f0](https://github.com/openai/openai-go/commit/72405f00fbb168f85b9b8b40aee8a0dbadce67f3))
+* **client:** send retry count header ([#60](https://github.com/openai/openai-go/issues/60)) ([01ed6ab](https://github.com/openai/openai-go/commit/01ed6ab70bae02e882cd4ffd4e0455f0ab03511e))
+* **examples/structure-outputs:** created an example for using structured outputs ([d4303e8](https://github.com/openai/openai-go/commit/d4303e8f8c4cfd7f260681ebed600749b6262028))
+* extract out `ImageModel`, `AudioModel`, `SpeechModel` ([#3](https://github.com/openai/openai-go/issues/3)) ([4b90869](https://github.com/openai/openai-go/commit/4b90869569ec034cb78995d9c56720cad5920577))
+* make enums not nominal ([#4](https://github.com/openai/openai-go/issues/4)) ([a559359](https://github.com/openai/openai-go/commit/a55935938f21c2a4b1d682538bd3481861a126a3))
+* move pagination package from internal to packages ([#81](https://github.com/openai/openai-go/issues/81)) ([c7476f7](https://github.com/openai/openai-go/commit/c7476f78f69b23044436236081f0faf405c98b1c))
+* **pagination:** avoid fetching when has_more: false ([#218](https://github.com/openai/openai-go/issues/218)) ([978707d](https://github.com/openai/openai-go/commit/978707dd3b64230c7835e83548167c8617444462))
+* publish ([c329601](https://github.com/openai/openai-go/commit/c329601324226e28ff18d6ccecfdde41cedd3b5a))
+* simplify content union ([#18](https://github.com/openai/openai-go/issues/18)) ([b228103](https://github.com/openai/openai-go/commit/b2281035a6d6abeb02a912a3543c98ac70ff456f))
+* **stream-accumulators:** added streaming accumulator helpers and example ([ecfdb64](https://github.com/openai/openai-go/commit/ecfdb64214f4a8d75bff6a29d068c55357ed7815))
+* support assistants stream ([7c00c63](https://github.com/openai/openai-go/commit/7c00c6340ffed1557b5763bba1790fb0f55c8530))
+* support deprecated markers ([#178](https://github.com/openai/openai-go/issues/178)) ([2c21e34](https://github.com/openai/openai-go/commit/2c21e3404639defedcad990acc1f530bbcb2781f))
+* **vector store:** improve chunking strategy type names ([#40](https://github.com/openai/openai-go/issues/40)) ([5d0740f](https://github.com/openai/openai-go/commit/5d0740f77b32c89fc2bebfea98fe8b939d78a155))
+
+
+### Bug Fixes
+
+* **api/types:** correct audio duration & role types ([#209](https://github.com/openai/openai-go/issues/209)) ([f480273](https://github.com/openai/openai-go/commit/f480273953cb9eef9b367867dfc9a3b4af3ea858))
+* **api:** add missing file rank enum + more metadata ([#248](https://github.com/openai/openai-go/issues/248)) ([a47089e](https://github.com/openai/openai-go/commit/a47089e5d9ce08ba0fc6461e3d4bb8941ca79291))
+* **api:** add missing reasoning effort + model enums ([#215](https://github.com/openai/openai-go/issues/215)) ([5b53a1d](https://github.com/openai/openai-go/commit/5b53a1d531a05599d8d517b3c1e98c8c8e40ccbd))
+* **api:** escape key values when encoding maps ([#116](https://github.com/openai/openai-go/issues/116)) ([a29c08e](https://github.com/openai/openai-go/commit/a29c08e27eb6fb403cfca60247bf1d23d82ec26e))
+* **audio:** correct response_format translations type ([#62](https://github.com/openai/openai-go/issues/62)) ([c46777b](https://github.com/openai/openai-go/commit/c46777ba01b6d0f3be506521ed5c7420f1fd0f20))
+* **beta:** pass beta header by default ([#75](https://github.com/openai/openai-go/issues/75)) ([e0a5caa](https://github.com/openai/openai-go/commit/e0a5caa65f645c3531bc2a9795b0571949305dbd))
+* **client:** don't truncate manually specified filenames ([#230](https://github.com/openai/openai-go/issues/230)) ([86febfc](https://github.com/openai/openai-go/commit/86febfce3ae78704595e4450cb4e1373e7932a78))
+* **client:** no panic on missing BaseURL ([#121](https://github.com/openai/openai-go/issues/121)) ([9e252ee](https://github.com/openai/openai-go/commit/9e252ee90db5549d910d46dd998fd499dac60b22))
+* correct required fields for flattened unions ([#120](https://github.com/openai/openai-go/issues/120)) ([9d6e6f2](https://github.com/openai/openai-go/commit/9d6e6f2ace15ac7c843b0585265b1cea1e46e78d))
+* deserialization of struct unions that implement json.Unmarshaler ([#11](https://github.com/openai/openai-go/issues/11)) ([7c0847a](https://github.com/openai/openai-go/commit/7c0847aa2ae15b4442ab0625d8a780ed684c275e))
+* do not call path.Base on ContentType ([#225](https://github.com/openai/openai-go/issues/225)) ([e1c1a55](https://github.com/openai/openai-go/commit/e1c1a55e7de733fa70194a3475bcf943c0568ba7))
+* **examples/fine-tuning:** used an old constant name ([#34](https://github.com/openai/openai-go/issues/34)) ([fb78f1d](https://github.com/openai/openai-go/commit/fb78f1df84dc5a5187157eeeb9a21b3853c328f6))
+* **example:** use correct model ([#86](https://github.com/openai/openai-go/issues/86)) ([0f3578d](https://github.com/openai/openai-go/commit/0f3578d2c3e4f40bfeea511e385d5c74d2b06e4e))
+* fix apijson.Port for embedded structs ([#174](https://github.com/openai/openai-go/issues/174)) ([13ecf6c](https://github.com/openai/openai-go/commit/13ecf6c0b82085e54e56807cb7dcd981768c50ca))
+* fix apijson.Port for embedded structs ([#177](https://github.com/openai/openai-go/issues/177)) ([1820b25](https://github.com/openai/openai-go/commit/1820b2592eee7aa55212c3b0bcfc3077c5d7f3a7))
+* fix early cancel when RequestTimeout is provided for streaming requests ([#221](https://github.com/openai/openai-go/issues/221)) ([08320be](https://github.com/openai/openai-go/commit/08320be359825fbceb4642aa6a60142ceec8ce2e))
+* fix unicode encoding for json ([#193](https://github.com/openai/openai-go/issues/193)) ([4a905a7](https://github.com/openai/openai-go/commit/4a905a7a596d7e1a7f0de9bec7f49c1026d36621))
+* flush stream response when done event is sent ([#172](https://github.com/openai/openai-go/issues/172)) ([cf1a6a5](https://github.com/openai/openai-go/commit/cf1a6a5b384fbd3de948494d50a1b19cfba79fdd))
+* **requestconfig:** copy over more fields when cloning ([#44](https://github.com/openai/openai-go/issues/44)) ([3c7aa48](https://github.com/openai/openai-go/commit/3c7aa48609798b665b61a222067af0f8bbdc0f40))
+* **responses:** correct computer use enum value ([#261](https://github.com/openai/openai-go/issues/261)) ([73d820b](https://github.com/openai/openai-go/commit/73d820bd96debf858adee674ec330f7b9d477342))
+* **responses:** correct reasoning output type ([#262](https://github.com/openai/openai-go/issues/262)) ([a636da3](https://github.com/openai/openai-go/commit/a636da379ea7f41ed73e320fa85f06219a71e8ac))
+* **stream:** ensure .Close() doesn't panic ([#194](https://github.com/openai/openai-go/issues/194)) ([71821a8](https://github.com/openai/openai-go/commit/71821a8938562f79d859d8939b9d20b2ef2ad3ca))
+* **stream:** ensure .Close() doesn't panic ([#201](https://github.com/openai/openai-go/issues/201)) ([a75c812](https://github.com/openai/openai-go/commit/a75c812270296b3c308b4f044e2b81071bdb8f8b))
+* **streaming:** correctly accumulate tool calls and roles ([#55](https://github.com/openai/openai-go/issues/55)) ([321ff9e](https://github.com/openai/openai-go/commit/321ff9e778b3c70addac90abbbc5e06e63581de2))
+* **types:** correct metadata type + other fixes ([1dc8887](https://github.com/openai/openai-go/commit/1dc888754d531b7d18768b17a44c5415fa6bf3ea))
+* update stream error handling ([#213](https://github.com/openai/openai-go/issues/213)) ([b2a763d](https://github.com/openai/openai-go/commit/b2a763dcde75cc6de5ee2b7d5e18fdcda1aaa90c))
+
+
+### Chores
+
+* add back custom code that was reverted ([4b46d02](https://github.com/openai/openai-go/commit/4b46d02aa506b9b521c88abcd5ea78ffe5083088))
+* **api:** bump spec version ([#154](https://github.com/openai/openai-go/issues/154)) ([4fc775f](https://github.com/openai/openai-go/commit/4fc775fa9bd22a0a0df370e2ef20f6485a11f3e3))
+* **api:** delete deprecated method ([#208](https://github.com/openai/openai-go/issues/208)) ([dcb01cc](https://github.com/openai/openai-go/commit/dcb01cc7ba479e486b6bc57c73b46b634f316dca))
+* bump Go to v1.21 ([#12](https://github.com/openai/openai-go/issues/12)) ([e4c3228](https://github.com/openai/openai-go/commit/e4c322840f7ea441a78dd723e46e27b048d16c1e))
+* bump license year ([#151](https://github.com/openai/openai-go/issues/151)) ([5e724f9](https://github.com/openai/openai-go/commit/5e724f9816b2d9697970c56c62adab3a62f2b6cd))
+* bump openapi url ([#136](https://github.com/openai/openai-go/issues/136)) ([b9bf99d](https://github.com/openai/openai-go/commit/b9bf99dbf047cb3a32efafa7bcf6979ac7ba15ab))
+* **ci:** bump prism mock server version ([#10](https://github.com/openai/openai-go/issues/10)) ([00f9455](https://github.com/openai/openai-go/commit/00f9455692c52fb37544d3f657090b216667d8ec))
+* **ci:** codeowners file ([#9](https://github.com/openai/openai-go/issues/9)) ([be41ac2](https://github.com/openai/openai-go/commit/be41ac2ce87efacf17748cb9dd2d3b1b4a43180e))
+* **docs:** add docstring explaining streaming pattern ([#205](https://github.com/openai/openai-go/issues/205)) ([bfabf9d](https://github.com/openai/openai-go/commit/bfabf9d23191c2050dde7844da06bab321b5a361))
+* **docs:** fix maxium typo ([#69](https://github.com/openai/openai-go/issues/69)) ([29dfb56](https://github.com/openai/openai-go/commit/29dfb56cb755fce02e0d923bcd742f9d780151b7))
+* **docs:** remove some duplicative api.md entries ([#65](https://github.com/openai/openai-go/issues/65)) ([532c9a0](https://github.com/openai/openai-go/commit/532c9a05d7637d891aa76a9ef2ec3254c0f20942))
+* **examples:** minor formatting changes ([#14](https://github.com/openai/openai-go/issues/14)) ([85aaaa5](https://github.com/openai/openai-go/commit/85aaaa5af7242ca6a2d12a61a127d4b1ae08f7d9))
+* fix GetNextPage docstring ([#78](https://github.com/openai/openai-go/issues/78)) ([a736116](https://github.com/openai/openai-go/commit/a736116b2544976afe6a4f95ceb066fc959ece67))
+* **internal:** fix devcontainers setup ([#236](https://github.com/openai/openai-go/issues/236)) ([25b0137](https://github.com/openai/openai-go/commit/25b0137b0d161554ed9ce0cab2b71c60aa7a17e0))
+* **internal:** remove CI condition ([#271](https://github.com/openai/openai-go/issues/271)) ([c61ef3a](https://github.com/openai/openai-go/commit/c61ef3a83a5ac7cf810331c1f5c8b4bffd385b19))
+* **internal:** remove extra empty newlines ([#268](https://github.com/openai/openai-go/issues/268)) ([df22608](https://github.com/openai/openai-go/commit/df2260865fb588c84707a067128ff03561cccef6))
+* **internal:** rename `streaming.go` ([#176](https://github.com/openai/openai-go/issues/176)) ([fb192c6](https://github.com/openai/openai-go/commit/fb192c675b008273962f88ca599dd84f5ddf7823))
+* **internal:** spec update ([#130](https://github.com/openai/openai-go/issues/130)) ([7fd444a](https://github.com/openai/openai-go/commit/7fd444a5724bdeef6cdc4b9e9db4f445eaa020e2))
+* **internal:** spec update ([#145](https://github.com/openai/openai-go/issues/145)) ([b8ba547](https://github.com/openai/openai-go/commit/b8ba547746107d6c2081bc66e746b82114ac9b44))
+* **internal:** spec update ([#146](https://github.com/openai/openai-go/issues/146)) ([d4bcfc0](https://github.com/openai/openai-go/commit/d4bcfc0fd6906d50c2e522e18d3d7cc154b0cc71))
+* **internal:** spec update ([#158](https://github.com/openai/openai-go/issues/158)) ([fd7fe8c](https://github.com/openai/openai-go/commit/fd7fe8c49e12cf2bee9b96b1af0ad509ee745fa0))
+* **internal:** streaming refactors ([#165](https://github.com/openai/openai-go/issues/165)) ([2fbb02c](https://github.com/openai/openai-go/commit/2fbb02c1c18b92e966266b3340ee15deaf408d34))
+* **internal:** update spec link ([#53](https://github.com/openai/openai-go/issues/53)) ([4915187](https://github.com/openai/openai-go/commit/4915187abeec2e3a1e6290004fc4c18a7f1129ca))
+* **internal:** update spec version ([#95](https://github.com/openai/openai-go/issues/95)) ([ba37fcc](https://github.com/openai/openai-go/commit/ba37fcc41ef1c5d63a218b9bf9139029264bc274))
+* **internal:** updates ([#2](https://github.com/openai/openai-go/issues/2)) ([103d454](https://github.com/openai/openai-go/commit/103d454b1d1fab5032c6af54e62ffe65f0cacb35))
+* **internal:** updates ([#6](https://github.com/openai/openai-go/issues/6)) ([316e623](https://github.com/openai/openai-go/commit/316e6231c27728f4031f822287389c67e914739a))
+* move ChatModel type to shared ([#250](https://github.com/openai/openai-go/issues/250)) ([304ec6b](https://github.com/openai/openai-go/commit/304ec6b670cfea141177e098b622d517c2aa3a9d))
+* refactor client tests ([#187](https://github.com/openai/openai-go/issues/187)) ([b956e3a](https://github.com/openai/openai-go/commit/b956e3a350d27965407154319a30eef09131fc3c))
+* **tests:** limit array example length ([#128](https://github.com/openai/openai-go/issues/128)) ([45fa490](https://github.com/openai/openai-go/commit/45fa4909359bbcda7acc6a72a1cf2f1e709c7cf1))
+* **types:** define FilePurpose enum ([#22](https://github.com/openai/openai-go/issues/22)) ([1daff0f](https://github.com/openai/openai-go/commit/1daff0f73ce40ae61e2d4b217d22811cbb373c27))
+* **types:** improve type name for embedding models ([#57](https://github.com/openai/openai-go/issues/57)) ([57736f9](https://github.com/openai/openai-go/commit/57736f9c857865e5a26c62b8cfba3c064a784e7b))
+* **types:** rename vector store chunking strategy ([#169](https://github.com/openai/openai-go/issues/169)) ([6076a58](https://github.com/openai/openai-go/commit/6076a584b57291ae915dd0596c2b6a4331a4f080))
+
+
+### Documentation
+
+* add missing docs for some enums ([#114](https://github.com/openai/openai-go/issues/114)) ([3d9fbd8](https://github.com/openai/openai-go/commit/3d9fbd85098e8ff5ee89872846c8151028179299))
+* document raw responses ([#197](https://github.com/openai/openai-go/issues/197)) ([9d06d7a](https://github.com/openai/openai-go/commit/9d06d7a1a78431ba01e6018fe6c2a9a4b75c3db6))
+* **examples:** fix typo ([#207](https://github.com/openai/openai-go/issues/207)) ([bf8afc3](https://github.com/openai/openai-go/commit/bf8afc3a81676b7675c314aa1c1e7e4941e9430f))
+* improve and reference contributing documentation ([#73](https://github.com/openai/openai-go/issues/73)) ([cd4dcc1](https://github.com/openai/openai-go/commit/cd4dcc17fd18353730c74e9993700423d9df2e0d))
+* **readme:** add an alpha warning ([#27](https://github.com/openai/openai-go/issues/27)) ([42ecbf8](https://github.com/openai/openai-go/commit/42ecbf8bd79d2469896e872b4c97f30cd9b203d8))
+* **readme:** added some examples to readme ([#39](https://github.com/openai/openai-go/issues/39)) ([a714dde](https://github.com/openai/openai-go/commit/a714dde3784397e902208b9b47cf45a83307aa74))
+* **readme:** fix example snippet ([#118](https://github.com/openai/openai-go/issues/118)) ([2af88cb](https://github.com/openai/openai-go/commit/2af88cbdf2fa07f59d7bf929f3df4aac35a579b0))
+* **readme:** fix misplaced period ([#156](https://github.com/openai/openai-go/issues/156)) ([42bbc45](https://github.com/openai/openai-go/commit/42bbc454ba50b88844cac58abfd254f889b56790))
+* **readme:** fix typo ([#148](https://github.com/openai/openai-go/issues/148)) ([07d3e40](https://github.com/openai/openai-go/commit/07d3e40f2e5f605b10818b97b580ebd46589b9b2))
+* **readme:** smaller readme snippets with links to examples ([#46](https://github.com/openai/openai-go/issues/46)) ([082e6ae](https://github.com/openai/openai-go/commit/082e6aedc9b3a80402511c062f3331c90be6d4d0))
+* update CONTRIBUTING.md ([#51](https://github.com/openai/openai-go/issues/51)) ([871b758](https://github.com/openai/openai-go/commit/871b7580fe8da75cc4c2525612a094006cc8bcf8))
+* update URLs from stainlessapi.com to stainless.com ([#243](https://github.com/openai/openai-go/issues/243)) ([fcb72c5](https://github.com/openai/openai-go/commit/fcb72c51429536374d2017e4303c7d90ded7a7b8))
+
+
+### Refactors
+
+* sort fields for squashed union structs ([#111](https://github.com/openai/openai-go/issues/111)) ([e927fb0](https://github.com/openai/openai-go/commit/e927fb06a76a9ad5e6061a24cf78ee2f43b9cb26))
+
 ## 0.1.0-alpha.63 (2025-03-12)
 
 Full Changelog: [v0.1.0-alpha.62...v0.1.0-alpha.63](https://github.com/openai/openai-go/compare/v0.1.0-alpha.62...v0.1.0-alpha.63)
