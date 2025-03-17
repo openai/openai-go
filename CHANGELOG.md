@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-alpha.65 (2025-03-17)
+
+Full Changelog: [v0.1.0-alpha.64...v0.1.0-alpha.65](https://github.com/openai/openai-go/compare/v0.1.0-alpha.64...v0.1.0-alpha.65)
+
+### Bug Fixes
+
+* **ci:** add workflow back in ([f695f00](https://github.com/openai/openai-go/commit/f695f0013d805623548b42c346a167ee15dd9405))
+* revert bad update ([e1ebde6](https://github.com/openai/openai-go/commit/e1ebde6c189d93efd9bae193a8686242446b86f3))
+
 ## 0.1.0-alpha.64 (2025-03-15)
 
 Full Changelog: [v0.1.0-alpha.63...v0.1.0-alpha.64](https://github.com/openai/openai-go/compare/v0.1.0-alpha.63...v0.1.0-alpha.64)
