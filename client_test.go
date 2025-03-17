@@ -42,7 +42,7 @@ func TestUserAgentHeader(t *testing.T) {
 	client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
+			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
 		Model: openai.F(shared.ChatModelO3Mini),
 	})
@@ -71,7 +71,7 @@ func TestRetryAfter(t *testing.T) {
 	_, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
+			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
 		Model: openai.F(shared.ChatModelO3Mini),
 	})
@@ -111,7 +111,7 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 	_, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
+			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
 		Model: openai.F(shared.ChatModelO3Mini),
 	})
@@ -146,7 +146,7 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 	_, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
+			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
 		Model: openai.F(shared.ChatModelO3Mini),
 	})
@@ -180,7 +180,7 @@ func TestRetryAfterMs(t *testing.T) {
 	_, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
+			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
 		Model: openai.F(shared.ChatModelO3Mini),
 	})
@@ -208,7 +208,7 @@ func TestContextCancel(t *testing.T) {
 	_, err := client.Chat.Completions.New(cancelCtx, openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
+			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
 		Model: openai.F(shared.ChatModelO3Mini),
 	})
@@ -233,7 +233,7 @@ func TestContextCancelDelay(t *testing.T) {
 	_, err := client.Chat.Completions.New(cancelCtx, openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
+			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 		}}),
 		Model: openai.F(shared.ChatModelO3Mini),
 	})
@@ -264,7 +264,7 @@ func TestContextDeadline(t *testing.T) {
 		_, err := client.Chat.Completions.New(deadlineCtx, openai.ChatCompletionNewParams{
 			Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
 				Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-				Content: openai.F[openai.ChatCompletionUserMessageParamContentUnion](shared.UnionString("Say this is a test")),
+				Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 			}}),
 			Model: openai.F(shared.ChatModelO3Mini),
 		})
@@ -313,7 +313,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 		)
 		stream := client.Chat.Completions.NewStreaming(deadlineCtx, openai.ChatCompletionNewParams{
 			Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionDeveloperMessageParam{
-				Content: openai.F[openai.ChatCompletionDeveloperMessageParamContentUnion](shared.UnionString("string")),
+				Content: openai.F([]openai.ChatCompletionContentPartTextParam{{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 				Role:    openai.F(openai.ChatCompletionDeveloperMessageParamRoleDeveloper),
 			}}),
 			Model: openai.F(shared.ChatModelO3Mini),
@@ -365,7 +365,7 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 			context.Background(),
 			openai.ChatCompletionNewParams{
 				Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionDeveloperMessageParam{
-					Content: openai.F[openai.ChatCompletionDeveloperMessageParamContentUnion](shared.UnionString("string")),
+					Content: openai.F([]openai.ChatCompletionContentPartTextParam{{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 					Role:    openai.F(openai.ChatCompletionDeveloperMessageParamRoleDeveloper),
 				}}),
 				Model: openai.F(shared.ChatModelO3Mini),

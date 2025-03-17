@@ -28,7 +28,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionDeveloperMessageParam{
-			Content: openai.F[openai.ChatCompletionDeveloperMessageParamContentUnion](shared.UnionString("string")),
+			Content: openai.F([]openai.ChatCompletionContentPartTextParam{{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 			Role:    openai.F(openai.ChatCompletionDeveloperMessageParamRoleDeveloper),
 			Name:    openai.F("name"),
 		}}),
@@ -38,7 +38,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 			Voice:  openai.F(openai.ChatCompletionAudioParamVoiceAlloy),
 		}),
 		FrequencyPenalty: openai.F(-2.000000),
-		FunctionCall:     openai.F[openai.ChatCompletionNewParamsFunctionCallUnion](openai.ChatCompletionNewParamsFunctionCallFunctionCallMode(openai.ChatCompletionNewParamsFunctionCallFunctionCallModeNone)),
+		FunctionCall:     openai.F[openai.ChatCompletionNewParamsFunctionCallUnion](openai.ChatCompletionNewParamsFunctionCallAuto(openai.ChatCompletionNewParamsFunctionCallAutoNone)),
 		Functions: openai.F([]openai.ChatCompletionNewParamsFunction{{
 			Name:        openai.F("name"),
 			Description: openai.F("description"),
@@ -55,21 +55,21 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Metadata: openai.F(shared.MetadataParam{
 			"foo": "string",
 		}),
-		Modalities:        openai.F([]openai.ChatCompletionNewParamsModality{openai.ChatCompletionNewParamsModalityText}),
+		Modalities:        openai.F([]openai.ChatCompletionModality{openai.ChatCompletionModalityText}),
 		N:                 openai.F(int64(1)),
 		ParallelToolCalls: openai.F(true),
 		Prediction: openai.F(openai.ChatCompletionPredictionContentParam{
-			Content: openai.F[openai.ChatCompletionPredictionContentContentUnionParam](shared.UnionString("string")),
+			Content: openai.F([]openai.ChatCompletionContentPartTextParam{{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
 			Type:    openai.F(openai.ChatCompletionPredictionContentTypeContent),
 		}),
 		PresencePenalty: openai.F(-2.000000),
-		ReasoningEffort: openai.F(shared.ReasoningEffortLow),
+		ReasoningEffort: openai.F(openai.ChatCompletionReasoningEffortLow),
 		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](shared.ResponseFormatTextParam{
 			Type: openai.F(shared.ResponseFormatTextTypeText),
 		}),
-		Seed:        openai.F(int64(-9007199254740991)),
+		Seed:        openai.F(int64(0)),
 		ServiceTier: openai.F(openai.ChatCompletionNewParamsServiceTierAuto),
-		Stop:        openai.F[openai.ChatCompletionNewParamsStopUnion](shared.UnionString("\n")),
+		Stop:        openai.F[openai.ChatCompletionNewParamsStopUnion](shared.UnionString("string")),
 		Store:       openai.F(true),
 		StreamOptions: openai.F(openai.ChatCompletionStreamOptionsParam{
 			IncludeUsage: openai.F(true),
@@ -90,18 +90,6 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		TopLogprobs: openai.F(int64(0)),
 		TopP:        openai.F(1.000000),
 		User:        openai.F("user-1234"),
-		WebSearchOptions: openai.F(openai.ChatCompletionNewParamsWebSearchOptions{
-			SearchContextSize: openai.F(openai.ChatCompletionNewParamsWebSearchOptionsSearchContextSizeLow),
-			UserLocation: openai.F(openai.ChatCompletionNewParamsWebSearchOptionsUserLocation{
-				Approximate: openai.F(openai.ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate{
-					City:     openai.F("city"),
-					Country:  openai.F("country"),
-					Region:   openai.F("region"),
-					Timezone: openai.F("timezone"),
-				}),
-				Type: openai.F(openai.ChatCompletionNewParamsWebSearchOptionsUserLocationTypeApproximate),
-			}),
-		}),
 	})
 	if err != nil {
 		var apierr *openai.Error
