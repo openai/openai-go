@@ -343,27 +343,6 @@ type Run struct {
 	// Details on the action required to continue the run. Will be `null` if no action
 	// is required.
 	RequiredAction RunRequiredAction `json:"required_action,required,nullable"`
-	// Specifies the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
-	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
-	//
-	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-	// Outputs which ensures the model will match your supplied JSON schema. Learn more
-	// in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
-	//
-	// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
-	// message the model generates is valid JSON.
-	//
-	// **Important:** when using JSON mode, you **must** also instruct the model to
-	// produce JSON yourself via a system or user message. Without this, the model may
-	// generate an unending stream of whitespace until the generation reaches the token
-	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
-	// the message content may be partially cut off if `finish_reason="length"`, which
-	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
-	// max context length.
-	ResponseFormat AssistantResponseFormatOptionUnion `json:"response_format,required,nullable"`
 	// The Unix timestamp (in seconds) for when the run was started.
 	StartedAt int64 `json:"started_at,required,nullable"`
 	// The status of the run, which can be either `queued`, `in_progress`,
@@ -417,7 +396,6 @@ type runJSON struct {
 	Object              apijson.Field
 	ParallelToolCalls   apijson.Field
 	RequiredAction      apijson.Field
-	ResponseFormat      apijson.Field
 	StartedAt           apijson.Field
 	Status              apijson.Field
 	ThreadID            apijson.Field
@@ -758,34 +736,13 @@ type BetaThreadRunNewParams struct {
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Field[bool] `json:"parallel_tool_calls"`
-	// **o-series models only**
+	// **o1 and o3-mini models only**
 	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
 	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
 	// result in faster responses and fewer tokens used on reasoning in a response.
-	ReasoningEffort param.Field[shared.ReasoningEffort] `json:"reasoning_effort"`
-	// Specifies the format that the model must output. Compatible with
-	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
-	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
-	// and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
-	//
-	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-	// Outputs which ensures the model will match your supplied JSON schema. Learn more
-	// in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
-	//
-	// Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
-	// message the model generates is valid JSON.
-	//
-	// **Important:** when using JSON mode, you **must** also instruct the model to
-	// produce JSON yourself via a system or user message. Without this, the model may
-	// generate an unending stream of whitespace until the generation reaches the token
-	// limit, resulting in a long-running and seemingly "stuck" request. Also note that
-	// the message content may be partially cut off if `finish_reason="length"`, which
-	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
-	// max context length.
-	ResponseFormat param.Field[AssistantResponseFormatOptionUnionParam] `json:"response_format"`
+	ReasoningEffort param.Field[BetaThreadRunNewParamsReasoningEffort] `json:"reasoning_effort"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
 	// focused and deterministic.
@@ -825,8 +782,11 @@ func (r BetaThreadRunNewParams) URLQuery() (v url.Values) {
 }
 
 type BetaThreadRunNewParamsAdditionalMessage struct {
-	// The text contents of the message.
-	Content param.Field[BetaThreadRunNewParamsAdditionalMessagesContentUnion] `json:"content,required"`
+	// An array of content parts with a defined type, each can be of type `text` or
+	// images can be passed with `image_url` or `image_file`. Image types are only
+	// supported on
+	// [Vision-compatible models](https://platform.openai.com/docs/models).
+	Content param.Field[[]MessageContentPartParamUnion] `json:"content,required"`
 	// The role of the entity that is creating the message. Allowed values include:
 	//
 	//   - `user`: Indicates the message is sent by an actual user and should be used in
@@ -847,19 +807,6 @@ type BetaThreadRunNewParamsAdditionalMessage struct {
 
 func (r BetaThreadRunNewParamsAdditionalMessage) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// The text contents of the message.
-//
-// Satisfied by [shared.UnionString],
-// [BetaThreadRunNewParamsAdditionalMessagesContentArrayOfContentParts].
-type BetaThreadRunNewParamsAdditionalMessagesContentUnion interface {
-	ImplementsBetaThreadRunNewParamsAdditionalMessagesContentUnion()
-}
-
-type BetaThreadRunNewParamsAdditionalMessagesContentArrayOfContentParts []MessageContentPartParamUnion
-
-func (r BetaThreadRunNewParamsAdditionalMessagesContentArrayOfContentParts) ImplementsBetaThreadRunNewParamsAdditionalMessagesContentUnion() {
 }
 
 // The role of the entity that is creating the message. Allowed values include:
@@ -951,6 +898,28 @@ const (
 func (r BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolsType) IsKnown() bool {
 	switch r {
 	case BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolsTypeCodeInterpreter, BetaThreadRunNewParamsAdditionalMessagesAttachmentsToolsTypeFileSearch:
+		return true
+	}
+	return false
+}
+
+// **o1 and o3-mini models only**
+//
+// Constrains effort on reasoning for
+// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+// result in faster responses and fewer tokens used on reasoning in a response.
+type BetaThreadRunNewParamsReasoningEffort string
+
+const (
+	BetaThreadRunNewParamsReasoningEffortLow    BetaThreadRunNewParamsReasoningEffort = "low"
+	BetaThreadRunNewParamsReasoningEffortMedium BetaThreadRunNewParamsReasoningEffort = "medium"
+	BetaThreadRunNewParamsReasoningEffortHigh   BetaThreadRunNewParamsReasoningEffort = "high"
+)
+
+func (r BetaThreadRunNewParamsReasoningEffort) IsKnown() bool {
+	switch r {
+	case BetaThreadRunNewParamsReasoningEffortLow, BetaThreadRunNewParamsReasoningEffortMedium, BetaThreadRunNewParamsReasoningEffortHigh:
 		return true
 	}
 	return false
