@@ -28,7 +28,7 @@ func TestBatchNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Batches.New(context.TODO(), openai.BatchNewParams{
 		CompletionWindow: openai.F(openai.BatchNewParamsCompletionWindow24h),
-		Endpoint:         openai.F(openai.BatchNewParamsEndpointV1ChatCompletions),
+		Endpoint:         openai.F(openai.BatchNewParamsEndpointV1Responses),
 		InputFileID:      openai.F("input_file_id"),
 		Metadata: openai.F(shared.MetadataParam{
 			"foo": "string",

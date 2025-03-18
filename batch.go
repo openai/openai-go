@@ -299,9 +299,9 @@ type BatchNewParams struct {
 	// is supported.
 	CompletionWindow param.Field[BatchNewParamsCompletionWindow] `json:"completion_window,required"`
 	// The endpoint to be used for all requests in the batch. Currently
-	// `/v1/chat/completions`, `/v1/embeddings`, and `/v1/completions` are supported.
-	// Note that `/v1/embeddings` batches are also restricted to a maximum of 50,000
-	// embedding inputs across all requests in the batch.
+	// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, and `/v1/completions`
+	// are supported. Note that `/v1/embeddings` batches are also restricted to a
+	// maximum of 50,000 embedding inputs across all requests in the batch.
 	Endpoint param.Field[BatchNewParamsEndpoint] `json:"endpoint,required"`
 	// The ID of an uploaded file that contains requests for the new batch.
 	//
@@ -343,12 +343,13 @@ func (r BatchNewParamsCompletionWindow) IsKnown() bool {
 }
 
 // The endpoint to be used for all requests in the batch. Currently
-// `/v1/chat/completions`, `/v1/embeddings`, and `/v1/completions` are supported.
-// Note that `/v1/embeddings` batches are also restricted to a maximum of 50,000
-// embedding inputs across all requests in the batch.
+// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, and `/v1/completions`
+// are supported. Note that `/v1/embeddings` batches are also restricted to a
+// maximum of 50,000 embedding inputs across all requests in the batch.
 type BatchNewParamsEndpoint string
 
 const (
+	BatchNewParamsEndpointV1Responses       BatchNewParamsEndpoint = "/v1/responses"
 	BatchNewParamsEndpointV1ChatCompletions BatchNewParamsEndpoint = "/v1/chat/completions"
 	BatchNewParamsEndpointV1Embeddings      BatchNewParamsEndpoint = "/v1/embeddings"
 	BatchNewParamsEndpointV1Completions     BatchNewParamsEndpoint = "/v1/completions"
@@ -356,7 +357,7 @@ const (
 
 func (r BatchNewParamsEndpoint) IsKnown() bool {
 	switch r {
-	case BatchNewParamsEndpointV1ChatCompletions, BatchNewParamsEndpointV1Embeddings, BatchNewParamsEndpointV1Completions:
+	case BatchNewParamsEndpointV1Responses, BatchNewParamsEndpointV1ChatCompletions, BatchNewParamsEndpointV1Embeddings, BatchNewParamsEndpointV1Completions:
 		return true
 	}
 	return false
