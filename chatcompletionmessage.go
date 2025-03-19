@@ -35,7 +35,7 @@ func NewChatCompletionMessageService(opts ...option.RequestOption) (r *ChatCompl
 	return
 }
 
-// Get the messages in a stored chat completion. Only chat completions that have
+// Get the messages in a stored chat completion. Only Chat Completions that have
 // been created with the `store` parameter set to `true` will be returned.
 func (r *ChatCompletionMessageService) List(ctx context.Context, completionID string, query ChatCompletionMessageListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ChatCompletionStoreMessage], err error) {
 	var raw *http.Response
@@ -58,7 +58,7 @@ func (r *ChatCompletionMessageService) List(ctx context.Context, completionID st
 	return res, nil
 }
 
-// Get the messages in a stored chat completion. Only chat completions that have
+// Get the messages in a stored chat completion. Only Chat Completions that have
 // been created with the `store` parameter set to `true` will be returned.
 func (r *ChatCompletionMessageService) ListAutoPaging(ctx context.Context, completionID string, query ChatCompletionMessageListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[ChatCompletionStoreMessage] {
 	return pagination.NewCursorPageAutoPager(r.List(ctx, completionID, query, opts...))
