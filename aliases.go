@@ -37,21 +37,6 @@ const ChatModelO1Mini = shared.ChatModelO1Mini
 const ChatModelO1Mini2024_09_12 = shared.ChatModelO1Mini2024_09_12
 
 // This is an alias to an internal value.
-const ChatModelComputerUsePreview = shared.ChatModelComputerUsePreview
-
-// This is an alias to an internal value.
-const ChatModelComputerUsePreview2025_02_04 = shared.ChatModelComputerUsePreview2025_02_04
-
-// This is an alias to an internal value.
-const ChatModelComputerUsePreview2025_03_11 = shared.ChatModelComputerUsePreview2025_03_11
-
-// This is an alias to an internal value.
-const ChatModelGPT4_5Preview = shared.ChatModelGPT4_5Preview
-
-// This is an alias to an internal value.
-const ChatModelGPT4_5Preview2025_02_27 = shared.ChatModelGPT4_5Preview2025_02_27
-
-// This is an alias to an internal value.
 const ChatModelGPT4o = shared.ChatModelGPT4o
 
 // This is an alias to an internal value.
@@ -77,6 +62,18 @@ const ChatModelGPT4oMiniAudioPreview = shared.ChatModelGPT4oMiniAudioPreview
 
 // This is an alias to an internal value.
 const ChatModelGPT4oMiniAudioPreview2024_12_17 = shared.ChatModelGPT4oMiniAudioPreview2024_12_17
+
+// This is an alias to an internal value.
+const ChatModelGPT4oSearchPreview = shared.ChatModelGPT4oSearchPreview
+
+// This is an alias to an internal value.
+const ChatModelGPT4oMiniSearchPreview = shared.ChatModelGPT4oMiniSearchPreview
+
+// This is an alias to an internal value.
+const ChatModelGPT4oSearchPreview2025_03_11 = shared.ChatModelGPT4oSearchPreview2025_03_11
+
+// This is an alias to an internal value.
+const ChatModelGPT4oMiniSearchPreview2025_03_11 = shared.ChatModelGPT4oMiniSearchPreview2025_03_11
 
 // This is an alias to an internal value.
 const ChatModelChatgpt4oLatest = shared.ChatModelChatgpt4oLatest
