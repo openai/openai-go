@@ -27,18 +27,17 @@ func TestVectorStoreNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.VectorStores.New(context.TODO(), openai.VectorStoreNewParams{
-		ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
-			Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
-		}),
-		ExpiresAfter: openai.F(openai.VectorStoreNewParamsExpiresAfter{
-			Anchor: openai.F(openai.VectorStoreNewParamsExpiresAfterAnchorLastActiveAt),
-			Days:   openai.F(int64(1)),
-		}),
-		FileIDs: openai.F([]string{"string"}),
-		Metadata: openai.F(shared.MetadataParam{
+		ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
+			OfAuto: &openai.AutoFileChunkingStrategyParam{},
+		},
+		ExpiresAfter: openai.VectorStoreNewParamsExpiresAfter{
+			Days: 1,
+		},
+		FileIDs: []string{"string"},
+		Metadata: shared.MetadataParam{
 			"foo": "string",
-		}),
-		Name: openai.F("name"),
+		},
+		Name: openai.String("name"),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -87,14 +86,13 @@ func TestVectorStoreUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"vector_store_id",
 		openai.VectorStoreUpdateParams{
-			ExpiresAfter: openai.F(openai.VectorStoreUpdateParamsExpiresAfter{
-				Anchor: openai.F(openai.VectorStoreUpdateParamsExpiresAfterAnchorLastActiveAt),
-				Days:   openai.F(int64(1)),
-			}),
-			Metadata: openai.F(shared.MetadataParam{
+			ExpiresAfter: openai.VectorStoreUpdateParamsExpiresAfter{
+				Days: 1,
+			},
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
-			Name: openai.F("name"),
+			},
+			Name: openai.String("name"),
 		},
 	)
 	if err != nil {
@@ -119,10 +117,10 @@ func TestVectorStoreListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.VectorStores.List(context.TODO(), openai.VectorStoreListParams{
-		After:  openai.F("after"),
-		Before: openai.F("before"),
-		Limit:  openai.F(int64(0)),
-		Order:  openai.F(openai.VectorStoreListParamsOrderAsc),
+		After:  openai.String("after"),
+		Before: openai.String("before"),
+		Limit:  openai.Int(0),
+		Order:  openai.VectorStoreListParamsOrderAsc,
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -171,18 +169,24 @@ func TestVectorStoreSearchWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"vs_abc123",
 		openai.VectorStoreSearchParams{
-			Query: openai.F[openai.VectorStoreSearchParamsQueryUnion](shared.UnionString("string")),
-			Filters: openai.F[openai.VectorStoreSearchParamsFiltersUnion](shared.ComparisonFilterParam{
-				Key:   openai.F("key"),
-				Type:  openai.F(shared.ComparisonFilterTypeEq),
-				Value: openai.F[shared.ComparisonFilterValueUnionParam](shared.UnionString("string")),
-			}),
-			MaxNumResults: openai.F(int64(1)),
-			RankingOptions: openai.F(openai.VectorStoreSearchParamsRankingOptions{
-				Ranker:         openai.F(openai.VectorStoreSearchParamsRankingOptionsRankerAuto),
-				ScoreThreshold: openai.F(0.000000),
-			}),
-			RewriteQuery: openai.F(true),
+			Query: openai.VectorStoreSearchParamsQueryUnion{
+				OfString: openai.String("string"),
+			},
+			Filters: openai.VectorStoreSearchParamsFiltersUnion{
+				OfComparisonFilter: &shared.ComparisonFilterParam{
+					Key:  "key",
+					Type: shared.ComparisonFilterTypeEq,
+					Value: shared.ComparisonFilterValueUnionParam{
+						OfString: openai.String("string"),
+					},
+				},
+			},
+			MaxNumResults: openai.Int(1),
+			RankingOptions: openai.VectorStoreSearchParamsRankingOptions{
+				Ranker:         "auto",
+				ScoreThreshold: openai.Float(0),
+			},
+			RewriteQuery: openai.Bool(true),
 		},
 	)
 	if err != nil {

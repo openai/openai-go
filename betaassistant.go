@@ -4,6 +4,7 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,11 +13,13 @@ import (
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
 	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/shared/constant"
 	"github.com/tidwall/gjson"
 )
 
@@ -33,8 +36,8 @@ type BetaAssistantService struct {
 // NewBetaAssistantService generates a new service that applies the given options
 // to each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewBetaAssistantService(opts ...option.RequestOption) (r *BetaAssistantService) {
-	r = &BetaAssistantService{}
+func NewBetaAssistantService(opts ...option.RequestOption) (r BetaAssistantService) {
+	r = BetaAssistantService{}
 	r.Options = opts
 	return
 }
@@ -117,17 +120,17 @@ type Assistant struct {
 	// The Unix timestamp (in seconds) for when the assistant was created.
 	CreatedAt int64 `json:"created_at,required"`
 	// The description of the assistant. The maximum length is 512 characters.
-	Description string `json:"description,required,nullable"`
+	Description string `json:"description,required"`
 	// The system instructions that the assistant uses. The maximum length is 256,000
 	// characters.
-	Instructions string `json:"instructions,required,nullable"`
+	Instructions string `json:"instructions,required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.Metadata `json:"metadata,required,nullable"`
+	Metadata shared.Metadata `json:"metadata,required"`
 	// ID of the model to use. You can use the
 	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
 	// see all of your available models, or see our
@@ -135,13 +138,13 @@ type Assistant struct {
 	// them.
 	Model string `json:"model,required"`
 	// The name of the assistant. The maximum length is 256 characters.
-	Name string `json:"name,required,nullable"`
+	Name string `json:"name,required"`
 	// The object type, which is always `assistant`.
-	Object AssistantObject `json:"object,required"`
+	Object constant.Assistant `json:"object,required"`
 	// A list of tool enabled on the assistant. There can be a maximum of 128 tools per
 	// assistant. Tools can be of types `code_interpreter`, `file_search`, or
 	// `function`.
-	Tools []AssistantTool `json:"tools,required"`
+	Tools []AssistantToolUnion `json:"tools,required"`
 	// Specifies the format that the model must output. Compatible with
 	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
 	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
@@ -177,50 +180,32 @@ type Assistant struct {
 	// means only the tokens comprising the top 10% probability mass are considered.
 	//
 	// We generally recommend altering this or temperature but not both.
-	TopP float64       `json:"top_p,nullable"`
-	JSON assistantJSON `json:"-"`
+	TopP float64 `json:"top_p,nullable"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		ID             resp.Field
+		CreatedAt      resp.Field
+		Description    resp.Field
+		Instructions   resp.Field
+		Metadata       resp.Field
+		Model          resp.Field
+		Name           resp.Field
+		Object         resp.Field
+		Tools          resp.Field
+		ResponseFormat resp.Field
+		Temperature    resp.Field
+		ToolResources  resp.Field
+		TopP           resp.Field
+		ExtraFields    map[string]resp.Field
+		raw            string
+	} `json:"-"`
 }
 
-// assistantJSON contains the JSON metadata for the struct [Assistant]
-type assistantJSON struct {
-	ID             apijson.Field
-	CreatedAt      apijson.Field
-	Description    apijson.Field
-	Instructions   apijson.Field
-	Metadata       apijson.Field
-	Model          apijson.Field
-	Name           apijson.Field
-	Object         apijson.Field
-	Tools          apijson.Field
-	ResponseFormat apijson.Field
-	Temperature    apijson.Field
-	ToolResources  apijson.Field
-	TopP           apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r *Assistant) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r Assistant) RawJSON() string { return r.JSON.raw }
+func (r *Assistant) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always `assistant`.
-type AssistantObject string
-
-const (
-	AssistantObjectAssistant AssistantObject = "assistant"
-)
-
-func (r AssistantObject) IsKnown() bool {
-	switch r {
-	case AssistantObjectAssistant:
-		return true
-	}
-	return false
 }
 
 // A set of resources that are used by the assistant's tools. The resources are
@@ -230,48 +215,40 @@ func (r AssistantObject) IsKnown() bool {
 type AssistantToolResources struct {
 	CodeInterpreter AssistantToolResourcesCodeInterpreter `json:"code_interpreter"`
 	FileSearch      AssistantToolResourcesFileSearch      `json:"file_search"`
-	JSON            assistantToolResourcesJSON            `json:"-"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		CodeInterpreter resp.Field
+		FileSearch      resp.Field
+		ExtraFields     map[string]resp.Field
+		raw             string
+	} `json:"-"`
 }
 
-// assistantToolResourcesJSON contains the JSON metadata for the struct
-// [AssistantToolResources]
-type assistantToolResourcesJSON struct {
-	CodeInterpreter apijson.Field
-	FileSearch      apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r *AssistantToolResources) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantToolResources) RawJSON() string { return r.JSON.raw }
+func (r *AssistantToolResources) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantToolResourcesJSON) RawJSON() string {
-	return r.raw
 }
 
 type AssistantToolResourcesCodeInterpreter struct {
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
 	// available to the `code_interpreter“ tool. There can be a maximum of 20 files
 	// associated with the tool.
-	FileIDs []string                                  `json:"file_ids"`
-	JSON    assistantToolResourcesCodeInterpreterJSON `json:"-"`
+	FileIDs []string `json:"file_ids"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		FileIDs     resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantToolResourcesCodeInterpreterJSON contains the JSON metadata for the
-// struct [AssistantToolResourcesCodeInterpreter]
-type assistantToolResourcesCodeInterpreterJSON struct {
-	FileIDs     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantToolResourcesCodeInterpreter) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantToolResourcesCodeInterpreter) RawJSON() string { return r.JSON.raw }
+func (r *AssistantToolResourcesCodeInterpreter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantToolResourcesCodeInterpreterJSON) RawJSON() string {
-	return r.raw
 }
 
 type AssistantToolResourcesFileSearch struct {
@@ -279,124 +256,46 @@ type AssistantToolResourcesFileSearch struct {
 	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
 	// attached to this assistant. There can be a maximum of 1 vector store attached to
 	// the assistant.
-	VectorStoreIDs []string                             `json:"vector_store_ids"`
-	JSON           assistantToolResourcesFileSearchJSON `json:"-"`
+	VectorStoreIDs []string `json:"vector_store_ids"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		VectorStoreIDs resp.Field
+		ExtraFields    map[string]resp.Field
+		raw            string
+	} `json:"-"`
 }
 
-// assistantToolResourcesFileSearchJSON contains the JSON metadata for the struct
-// [AssistantToolResourcesFileSearch]
-type assistantToolResourcesFileSearchJSON struct {
-	VectorStoreIDs apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r *AssistantToolResourcesFileSearch) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantToolResourcesFileSearch) RawJSON() string { return r.JSON.raw }
+func (r *AssistantToolResourcesFileSearch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantToolResourcesFileSearchJSON) RawJSON() string {
-	return r.raw
 }
 
 type AssistantDeleted struct {
-	ID      string                 `json:"id,required"`
-	Deleted bool                   `json:"deleted,required"`
-	Object  AssistantDeletedObject `json:"object,required"`
-	JSON    assistantDeletedJSON   `json:"-"`
+	ID      string                    `json:"id,required"`
+	Deleted bool                      `json:"deleted,required"`
+	Object  constant.AssistantDeleted `json:"object,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		ID          resp.Field
+		Deleted     resp.Field
+		Object      resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantDeletedJSON contains the JSON metadata for the struct
-// [AssistantDeleted]
-type assistantDeletedJSON struct {
-	ID          apijson.Field
-	Deleted     apijson.Field
-	Object      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantDeleted) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantDeleted) RawJSON() string { return r.JSON.raw }
+func (r *AssistantDeleted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r assistantDeletedJSON) RawJSON() string {
-	return r.raw
-}
-
-type AssistantDeletedObject string
-
-const (
-	AssistantDeletedObjectAssistantDeleted AssistantDeletedObject = "assistant.deleted"
-)
-
-func (r AssistantDeletedObject) IsKnown() bool {
-	switch r {
-	case AssistantDeletedObjectAssistantDeleted:
-		return true
-	}
-	return false
-}
-
-// Represents an event emitted when streaming a Run.
-//
-// Each event in a server-sent events stream has an `event` and `data` property:
-//
-// ```
-// event: thread.created
-// data: {"id": "thread_123", "object": "thread", ...}
-// ```
-//
-// We emit events whenever a new object is created, transitions to a new state, or
-// is being streamed in parts (deltas). For example, we emit `thread.run.created`
-// when a new run is created, `thread.run.completed` when a run completes, and so
-// on. When an Assistant chooses to create a message during a run, we emit a
-// `thread.message.created event`, a `thread.message.in_progress` event, many
-// `thread.message.delta` events, and finally a `thread.message.completed` event.
-//
-// We may add additional events over time, so we recommend handling unknown events
-// gracefully in your code. See the
-// [Assistants API quickstart](https://platform.openai.com/docs/assistants/overview)
-// to learn how to integrate the Assistants API with streaming.
-type AssistantStreamEvent struct {
-	// This field can have the runtime type of [Thread], [Run], [RunStep],
-	// [RunStepDeltaEvent], [Message], [MessageDeltaEvent], [shared.ErrorObject].
-	Data  interface{}               `json:"data,required"`
-	Event AssistantStreamEventEvent `json:"event,required"`
-	// Whether to enable input audio transcription.
-	Enabled bool                     `json:"enabled"`
-	JSON    assistantStreamEventJSON `json:"-"`
-	union   AssistantStreamEventUnion
-}
-
-// assistantStreamEventJSON contains the JSON metadata for the struct
-// [AssistantStreamEvent]
-type assistantStreamEventJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	Enabled     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r assistantStreamEventJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *AssistantStreamEvent) UnmarshalJSON(data []byte) (err error) {
-	*r = AssistantStreamEvent{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [AssistantStreamEventUnion] interface which you can cast to
-// the specific types for more type safety.
-//
-// Possible runtime types of the union are [AssistantStreamEventThreadCreated],
-// [AssistantStreamEventThreadRunCreated], [AssistantStreamEventThreadRunQueued],
+// AssistantStreamEventUnion contains all possible properties and values from
+// [AssistantStreamEventThreadCreated], [AssistantStreamEventThreadRunCreated],
+// [AssistantStreamEventThreadRunQueued],
 // [AssistantStreamEventThreadRunInProgress],
 // [AssistantStreamEventThreadRunRequiresAction],
 // [AssistantStreamEventThreadRunCompleted],
@@ -417,183 +316,453 @@ func (r *AssistantStreamEvent) UnmarshalJSON(data []byte) (err error) {
 // [AssistantStreamEventThreadMessageDelta],
 // [AssistantStreamEventThreadMessageCompleted],
 // [AssistantStreamEventThreadMessageIncomplete], [AssistantStreamEventErrorEvent].
-func (r AssistantStreamEvent) AsUnion() AssistantStreamEventUnion {
-	return r.union
+//
+// Use the [AssistantStreamEventUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type AssistantStreamEventUnion struct {
+	// This field is a union of [Thread], [Run], [RunStep], [RunStepDeltaEvent],
+	// [Message], [MessageDeltaEvent], [shared.ErrorObject]
+	Data AssistantStreamEventUnionData `json:"data"`
+	// Any of "thread.created", "thread.run.created", "thread.run.queued",
+	// "thread.run.in_progress", "thread.run.requires_action", "thread.run.completed",
+	// "thread.run.incomplete", "thread.run.failed", "thread.run.cancelling",
+	// "thread.run.cancelled", "thread.run.expired", "thread.run.step.created",
+	// "thread.run.step.in_progress", "thread.run.step.delta",
+	// "thread.run.step.completed", "thread.run.step.failed",
+	// "thread.run.step.cancelled", "thread.run.step.expired",
+	// "thread.message.created", "thread.message.in_progress", "thread.message.delta",
+	// "thread.message.completed", "thread.message.incomplete", "error".
+	Event string `json:"event"`
+	// This field is from variant [AssistantStreamEventThreadCreated].
+	Enabled bool `json:"enabled"`
+	JSON    struct {
+		Data    resp.Field
+		Event   resp.Field
+		Enabled resp.Field
+		raw     string
+	} `json:"-"`
 }
 
-// Represents an event emitted when streaming a Run.
+// Use the following switch statement to find the correct variant
 //
-// Each event in a server-sent events stream has an `event` and `data` property:
-//
-// ```
-// event: thread.created
-// data: {"id": "thread_123", "object": "thread", ...}
-// ```
-//
-// We emit events whenever a new object is created, transitions to a new state, or
-// is being streamed in parts (deltas). For example, we emit `thread.run.created`
-// when a new run is created, `thread.run.completed` when a run completes, and so
-// on. When an Assistant chooses to create a message during a run, we emit a
-// `thread.message.created event`, a `thread.message.in_progress` event, many
-// `thread.message.delta` events, and finally a `thread.message.completed` event.
-//
-// We may add additional events over time, so we recommend handling unknown events
-// gracefully in your code. See the
-// [Assistants API quickstart](https://platform.openai.com/docs/assistants/overview)
-// to learn how to integrate the Assistants API with streaming.
-//
-// Union satisfied by [AssistantStreamEventThreadCreated],
-// [AssistantStreamEventThreadRunCreated], [AssistantStreamEventThreadRunQueued],
-// [AssistantStreamEventThreadRunInProgress],
-// [AssistantStreamEventThreadRunRequiresAction],
-// [AssistantStreamEventThreadRunCompleted],
-// [AssistantStreamEventThreadRunIncomplete],
-// [AssistantStreamEventThreadRunFailed],
-// [AssistantStreamEventThreadRunCancelling],
-// [AssistantStreamEventThreadRunCancelled],
-// [AssistantStreamEventThreadRunExpired],
-// [AssistantStreamEventThreadRunStepCreated],
-// [AssistantStreamEventThreadRunStepInProgress],
-// [AssistantStreamEventThreadRunStepDelta],
-// [AssistantStreamEventThreadRunStepCompleted],
-// [AssistantStreamEventThreadRunStepFailed],
-// [AssistantStreamEventThreadRunStepCancelled],
-// [AssistantStreamEventThreadRunStepExpired],
-// [AssistantStreamEventThreadMessageCreated],
-// [AssistantStreamEventThreadMessageInProgress],
-// [AssistantStreamEventThreadMessageDelta],
-// [AssistantStreamEventThreadMessageCompleted],
-// [AssistantStreamEventThreadMessageIncomplete] or
-// [AssistantStreamEventErrorEvent].
-type AssistantStreamEventUnion interface {
-	implementsAssistantStreamEvent()
+//	switch variant := AssistantStreamEventUnion.AsAny().(type) {
+//	case AssistantStreamEventThreadCreated:
+//	case AssistantStreamEventThreadRunCreated:
+//	case AssistantStreamEventThreadRunQueued:
+//	case AssistantStreamEventThreadRunInProgress:
+//	case AssistantStreamEventThreadRunRequiresAction:
+//	case AssistantStreamEventThreadRunCompleted:
+//	case AssistantStreamEventThreadRunIncomplete:
+//	case AssistantStreamEventThreadRunFailed:
+//	case AssistantStreamEventThreadRunCancelling:
+//	case AssistantStreamEventThreadRunCancelled:
+//	case AssistantStreamEventThreadRunExpired:
+//	case AssistantStreamEventThreadRunStepCreated:
+//	case AssistantStreamEventThreadRunStepInProgress:
+//	case AssistantStreamEventThreadRunStepDelta:
+//	case AssistantStreamEventThreadRunStepCompleted:
+//	case AssistantStreamEventThreadRunStepFailed:
+//	case AssistantStreamEventThreadRunStepCancelled:
+//	case AssistantStreamEventThreadRunStepExpired:
+//	case AssistantStreamEventThreadMessageCreated:
+//	case AssistantStreamEventThreadMessageInProgress:
+//	case AssistantStreamEventThreadMessageDelta:
+//	case AssistantStreamEventThreadMessageCompleted:
+//	case AssistantStreamEventThreadMessageIncomplete:
+//	case AssistantStreamEventErrorEvent:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u AssistantStreamEventUnion) AsAny() any {
+	switch u.Event {
+	case "thread.created":
+		return u.AsThreadCreated()
+	case "thread.run.created":
+		return u.AsThreadRunCreated()
+	case "thread.run.queued":
+		return u.AsThreadRunQueued()
+	case "thread.run.in_progress":
+		return u.AsThreadRunInProgress()
+	case "thread.run.requires_action":
+		return u.AsThreadRunRequiresAction()
+	case "thread.run.completed":
+		return u.AsThreadRunCompleted()
+	case "thread.run.incomplete":
+		return u.AsThreadRunIncomplete()
+	case "thread.run.failed":
+		return u.AsThreadRunFailed()
+	case "thread.run.cancelling":
+		return u.AsThreadRunCancelling()
+	case "thread.run.cancelled":
+		return u.AsThreadRunCancelled()
+	case "thread.run.expired":
+		return u.AsThreadRunExpired()
+	case "thread.run.step.created":
+		return u.AsThreadRunStepCreated()
+	case "thread.run.step.in_progress":
+		return u.AsThreadRunStepInProgress()
+	case "thread.run.step.delta":
+		return u.AsThreadRunStepDelta()
+	case "thread.run.step.completed":
+		return u.AsThreadRunStepCompleted()
+	case "thread.run.step.failed":
+		return u.AsThreadRunStepFailed()
+	case "thread.run.step.cancelled":
+		return u.AsThreadRunStepCancelled()
+	case "thread.run.step.expired":
+		return u.AsThreadRunStepExpired()
+	case "thread.message.created":
+		return u.AsThreadMessageCreated()
+	case "thread.message.in_progress":
+		return u.AsThreadMessageInProgress()
+	case "thread.message.delta":
+		return u.AsThreadMessageDelta()
+	case "thread.message.completed":
+		return u.AsThreadMessageCompleted()
+	case "thread.message.incomplete":
+		return u.AsThreadMessageIncomplete()
+	case "error":
+		return u.AsErrorEvent()
+	}
+	return nil
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*AssistantStreamEventUnion)(nil)).Elem(),
-		"event",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadCreated{}),
-			DiscriminatorValue: "thread.created",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunCreated{}),
-			DiscriminatorValue: "thread.run.created",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunQueued{}),
-			DiscriminatorValue: "thread.run.queued",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunInProgress{}),
-			DiscriminatorValue: "thread.run.in_progress",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunRequiresAction{}),
-			DiscriminatorValue: "thread.run.requires_action",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunCompleted{}),
-			DiscriminatorValue: "thread.run.completed",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunIncomplete{}),
-			DiscriminatorValue: "thread.run.incomplete",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunFailed{}),
-			DiscriminatorValue: "thread.run.failed",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunCancelling{}),
-			DiscriminatorValue: "thread.run.cancelling",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunCancelled{}),
-			DiscriminatorValue: "thread.run.cancelled",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunExpired{}),
-			DiscriminatorValue: "thread.run.expired",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunStepCreated{}),
-			DiscriminatorValue: "thread.run.step.created",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunStepInProgress{}),
-			DiscriminatorValue: "thread.run.step.in_progress",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunStepDelta{}),
-			DiscriminatorValue: "thread.run.step.delta",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunStepCompleted{}),
-			DiscriminatorValue: "thread.run.step.completed",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunStepFailed{}),
-			DiscriminatorValue: "thread.run.step.failed",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunStepCancelled{}),
-			DiscriminatorValue: "thread.run.step.cancelled",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadRunStepExpired{}),
-			DiscriminatorValue: "thread.run.step.expired",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadMessageCreated{}),
-			DiscriminatorValue: "thread.message.created",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadMessageInProgress{}),
-			DiscriminatorValue: "thread.message.in_progress",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadMessageDelta{}),
-			DiscriminatorValue: "thread.message.delta",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadMessageCompleted{}),
-			DiscriminatorValue: "thread.message.completed",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventThreadMessageIncomplete{}),
-			DiscriminatorValue: "thread.message.incomplete",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AssistantStreamEventErrorEvent{}),
-			DiscriminatorValue: "error",
-		},
-	)
+func (u AssistantStreamEventUnion) AsThreadCreated() (v AssistantStreamEventThreadCreated) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunCreated() (v AssistantStreamEventThreadRunCreated) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunQueued() (v AssistantStreamEventThreadRunQueued) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunInProgress() (v AssistantStreamEventThreadRunInProgress) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunRequiresAction() (v AssistantStreamEventThreadRunRequiresAction) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunCompleted() (v AssistantStreamEventThreadRunCompleted) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunIncomplete() (v AssistantStreamEventThreadRunIncomplete) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunFailed() (v AssistantStreamEventThreadRunFailed) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunCancelling() (v AssistantStreamEventThreadRunCancelling) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunCancelled() (v AssistantStreamEventThreadRunCancelled) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunExpired() (v AssistantStreamEventThreadRunExpired) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunStepCreated() (v AssistantStreamEventThreadRunStepCreated) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunStepInProgress() (v AssistantStreamEventThreadRunStepInProgress) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunStepDelta() (v AssistantStreamEventThreadRunStepDelta) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunStepCompleted() (v AssistantStreamEventThreadRunStepCompleted) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunStepFailed() (v AssistantStreamEventThreadRunStepFailed) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunStepCancelled() (v AssistantStreamEventThreadRunStepCancelled) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadRunStepExpired() (v AssistantStreamEventThreadRunStepExpired) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadMessageCreated() (v AssistantStreamEventThreadMessageCreated) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadMessageInProgress() (v AssistantStreamEventThreadMessageInProgress) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadMessageDelta() (v AssistantStreamEventThreadMessageDelta) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadMessageCompleted() (v AssistantStreamEventThreadMessageCompleted) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsThreadMessageIncomplete() (v AssistantStreamEventThreadMessageIncomplete) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantStreamEventUnion) AsErrorEvent() (v AssistantStreamEventErrorEvent) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u AssistantStreamEventUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *AssistantStreamEventUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AssistantStreamEventUnionData is an implicit subunion of
+// [AssistantStreamEventUnion]. AssistantStreamEventUnionData provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [AssistantStreamEventUnion].
+type AssistantStreamEventUnionData struct {
+	ID        string `json:"id"`
+	CreatedAt int64  `json:"created_at"`
+	// This field is from variant [Thread].
+	Metadata shared.Metadata `json:"metadata"`
+	Object   string          `json:"object"`
+	// This field is from variant [Thread].
+	ToolResources ThreadToolResources `json:"tool_resources"`
+	AssistantID   string              `json:"assistant_id"`
+	CancelledAt   int64               `json:"cancelled_at"`
+	CompletedAt   int64               `json:"completed_at"`
+	// This field is from variant [Run].
+	ExpiresAt int64 `json:"expires_at"`
+	FailedAt  int64 `json:"failed_at"`
+	// This field is a union of [RunIncompleteDetails], [MessageIncompleteDetails]
+	IncompleteDetails AssistantStreamEventUnionDataIncompleteDetails `json:"incomplete_details"`
+	// This field is from variant [Run].
+	Instructions string `json:"instructions"`
+	// This field is a union of [RunLastError], [RunStepLastError]
+	LastError AssistantStreamEventUnionDataLastError `json:"last_error"`
+	// This field is from variant [Run].
+	MaxCompletionTokens int64 `json:"max_completion_tokens"`
+	// This field is from variant [Run].
+	MaxPromptTokens int64 `json:"max_prompt_tokens"`
+	// This field is from variant [Run].
+	Model string `json:"model"`
+	// This field is from variant [Run].
+	ParallelToolCalls bool `json:"parallel_tool_calls"`
+	// This field is from variant [Run].
+	RequiredAction RunRequiredAction `json:"required_action"`
+	// This field is from variant [Run].
+	ResponseFormat AssistantResponseFormatOptionUnion `json:"response_format"`
+	// This field is from variant [Run].
+	StartedAt int64  `json:"started_at"`
+	Status    string `json:"status"`
+	ThreadID  string `json:"thread_id"`
+	// This field is from variant [Run].
+	ToolChoice AssistantToolChoiceOptionUnion `json:"tool_choice"`
+	// This field is from variant [Run].
+	Tools []AssistantToolUnion `json:"tools"`
+	// This field is from variant [Run].
+	TruncationStrategy RunTruncationStrategy `json:"truncation_strategy"`
+	// This field is a union of [RunUsage], [RunStepUsage]
+	Usage AssistantStreamEventUnionDataUsage `json:"usage"`
+	// This field is from variant [Run].
+	Temperature float64 `json:"temperature"`
+	// This field is from variant [Run].
+	TopP float64 `json:"top_p"`
+	// This field is from variant [RunStep].
+	ExpiredAt int64  `json:"expired_at"`
+	RunID     string `json:"run_id"`
+	// This field is from variant [RunStep].
+	StepDetails RunStepStepDetailsUnion `json:"step_details"`
+	Type        string                  `json:"type"`
+	// This field is a union of [RunStepDelta], [MessageDelta]
+	Delta AssistantStreamEventUnionDataDelta `json:"delta"`
+	// This field is from variant [Message].
+	Attachments []MessageAttachment `json:"attachments"`
+	// This field is from variant [Message].
+	Content []MessageContentUnion `json:"content"`
+	// This field is from variant [Message].
+	IncompleteAt int64 `json:"incomplete_at"`
+	// This field is from variant [Message].
+	Role MessageRole `json:"role"`
+	// This field is from variant [shared.ErrorObject].
+	Code string `json:"code"`
+	// This field is from variant [shared.ErrorObject].
+	Message string `json:"message"`
+	// This field is from variant [shared.ErrorObject].
+	Param string `json:"param"`
+	JSON  struct {
+		ID                  resp.Field
+		CreatedAt           resp.Field
+		Metadata            resp.Field
+		Object              resp.Field
+		ToolResources       resp.Field
+		AssistantID         resp.Field
+		CancelledAt         resp.Field
+		CompletedAt         resp.Field
+		ExpiresAt           resp.Field
+		FailedAt            resp.Field
+		IncompleteDetails   resp.Field
+		Instructions        resp.Field
+		LastError           resp.Field
+		MaxCompletionTokens resp.Field
+		MaxPromptTokens     resp.Field
+		Model               resp.Field
+		ParallelToolCalls   resp.Field
+		RequiredAction      resp.Field
+		ResponseFormat      resp.Field
+		StartedAt           resp.Field
+		Status              resp.Field
+		ThreadID            resp.Field
+		ToolChoice          resp.Field
+		Tools               resp.Field
+		TruncationStrategy  resp.Field
+		Usage               resp.Field
+		Temperature         resp.Field
+		TopP                resp.Field
+		ExpiredAt           resp.Field
+		RunID               resp.Field
+		StepDetails         resp.Field
+		Type                resp.Field
+		Delta               resp.Field
+		Attachments         resp.Field
+		Content             resp.Field
+		IncompleteAt        resp.Field
+		Role                resp.Field
+		Code                resp.Field
+		Message             resp.Field
+		Param               resp.Field
+		raw                 string
+	} `json:"-"`
+}
+
+func (r *AssistantStreamEventUnionData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AssistantStreamEventUnionDataIncompleteDetails is an implicit subunion of
+// [AssistantStreamEventUnion]. AssistantStreamEventUnionDataIncompleteDetails
+// provides convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [AssistantStreamEventUnion].
+type AssistantStreamEventUnionDataIncompleteDetails struct {
+	Reason string `json:"reason"`
+	JSON   struct {
+		Reason resp.Field
+		raw    string
+	} `json:"-"`
+}
+
+func (r *AssistantStreamEventUnionDataIncompleteDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AssistantStreamEventUnionDataLastError is an implicit subunion of
+// [AssistantStreamEventUnion]. AssistantStreamEventUnionDataLastError provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [AssistantStreamEventUnion].
+type AssistantStreamEventUnionDataLastError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	JSON    struct {
+		Code    resp.Field
+		Message resp.Field
+		raw     string
+	} `json:"-"`
+}
+
+func (r *AssistantStreamEventUnionDataLastError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AssistantStreamEventUnionDataUsage is an implicit subunion of
+// [AssistantStreamEventUnion]. AssistantStreamEventUnionDataUsage provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [AssistantStreamEventUnion].
+type AssistantStreamEventUnionDataUsage struct {
+	CompletionTokens int64 `json:"completion_tokens"`
+	PromptTokens     int64 `json:"prompt_tokens"`
+	TotalTokens      int64 `json:"total_tokens"`
+	JSON             struct {
+		CompletionTokens resp.Field
+		PromptTokens     resp.Field
+		TotalTokens      resp.Field
+		raw              string
+	} `json:"-"`
+}
+
+func (r *AssistantStreamEventUnionDataUsage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AssistantStreamEventUnionDataDelta is an implicit subunion of
+// [AssistantStreamEventUnion]. AssistantStreamEventUnionDataDelta provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [AssistantStreamEventUnion].
+type AssistantStreamEventUnionDataDelta struct {
+	// This field is from variant [RunStepDelta].
+	StepDetails RunStepDeltaStepDetailsUnion `json:"step_details"`
+	// This field is from variant [MessageDelta].
+	Content []MessageContentDeltaUnion `json:"content"`
+	// This field is from variant [MessageDelta].
+	Role MessageDeltaRole `json:"role"`
+	JSON struct {
+		StepDetails resp.Field
+		Content     resp.Field
+		Role        resp.Field
+		raw         string
+	} `json:"-"`
+}
+
+func (r *AssistantStreamEventUnionDataDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Occurs when a new
@@ -602,45 +771,25 @@ func init() {
 type AssistantStreamEventThreadCreated struct {
 	// Represents a thread that contains
 	// [messages](https://platform.openai.com/docs/api-reference/messages).
-	Data  Thread                                 `json:"data,required"`
-	Event AssistantStreamEventThreadCreatedEvent `json:"event,required"`
+	Data  Thread                 `json:"data,required"`
+	Event constant.ThreadCreated `json:"event,required"`
 	// Whether to enable input audio transcription.
-	Enabled bool                                  `json:"enabled"`
-	JSON    assistantStreamEventThreadCreatedJSON `json:"-"`
+	Enabled bool `json:"enabled"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		Enabled     resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadCreatedJSON contains the JSON metadata for the struct
-// [AssistantStreamEventThreadCreated]
-type assistantStreamEventThreadCreatedJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	Enabled     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadCreated) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadCreated) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadCreated) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadCreatedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadCreated) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadCreatedEvent string
-
-const (
-	AssistantStreamEventThreadCreatedEventThreadCreated AssistantStreamEventThreadCreatedEvent = "thread.created"
-)
-
-func (r AssistantStreamEventThreadCreatedEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadCreatedEventThreadCreated:
-		return true
-	}
-	return false
 }
 
 // Occurs when a new
@@ -648,42 +797,22 @@ func (r AssistantStreamEventThreadCreatedEvent) IsKnown() bool {
 type AssistantStreamEventThreadRunCreated struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Run                                       `json:"data,required"`
-	Event AssistantStreamEventThreadRunCreatedEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunCreatedJSON  `json:"-"`
+	Data  Run                       `json:"data,required"`
+	Event constant.ThreadRunCreated `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunCreatedJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunCreated]
-type assistantStreamEventThreadRunCreatedJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunCreated) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunCreated) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunCreated) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunCreatedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunCreated) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunCreatedEvent string
-
-const (
-	AssistantStreamEventThreadRunCreatedEventThreadRunCreated AssistantStreamEventThreadRunCreatedEvent = "thread.run.created"
-)
-
-func (r AssistantStreamEventThreadRunCreatedEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunCreatedEventThreadRunCreated:
-		return true
-	}
-	return false
 }
 
 // Occurs when a [run](https://platform.openai.com/docs/api-reference/runs/object)
@@ -691,42 +820,22 @@ func (r AssistantStreamEventThreadRunCreatedEvent) IsKnown() bool {
 type AssistantStreamEventThreadRunQueued struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Run                                      `json:"data,required"`
-	Event AssistantStreamEventThreadRunQueuedEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunQueuedJSON  `json:"-"`
+	Data  Run                      `json:"data,required"`
+	Event constant.ThreadRunQueued `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunQueuedJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunQueued]
-type assistantStreamEventThreadRunQueuedJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunQueued) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunQueued) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunQueued) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunQueuedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunQueued) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunQueuedEvent string
-
-const (
-	AssistantStreamEventThreadRunQueuedEventThreadRunQueued AssistantStreamEventThreadRunQueuedEvent = "thread.run.queued"
-)
-
-func (r AssistantStreamEventThreadRunQueuedEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunQueuedEventThreadRunQueued:
-		return true
-	}
-	return false
 }
 
 // Occurs when a [run](https://platform.openai.com/docs/api-reference/runs/object)
@@ -734,42 +843,22 @@ func (r AssistantStreamEventThreadRunQueuedEvent) IsKnown() bool {
 type AssistantStreamEventThreadRunInProgress struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Run                                          `json:"data,required"`
-	Event AssistantStreamEventThreadRunInProgressEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunInProgressJSON  `json:"-"`
+	Data  Run                          `json:"data,required"`
+	Event constant.ThreadRunInProgress `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunInProgressJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunInProgress]
-type assistantStreamEventThreadRunInProgressJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunInProgress) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunInProgress) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunInProgress) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunInProgressJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunInProgress) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunInProgressEvent string
-
-const (
-	AssistantStreamEventThreadRunInProgressEventThreadRunInProgress AssistantStreamEventThreadRunInProgressEvent = "thread.run.in_progress"
-)
-
-func (r AssistantStreamEventThreadRunInProgressEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunInProgressEventThreadRunInProgress:
-		return true
-	}
-	return false
 }
 
 // Occurs when a [run](https://platform.openai.com/docs/api-reference/runs/object)
@@ -777,42 +866,22 @@ func (r AssistantStreamEventThreadRunInProgressEvent) IsKnown() bool {
 type AssistantStreamEventThreadRunRequiresAction struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Run                                              `json:"data,required"`
-	Event AssistantStreamEventThreadRunRequiresActionEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunRequiresActionJSON  `json:"-"`
+	Data  Run                              `json:"data,required"`
+	Event constant.ThreadRunRequiresAction `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunRequiresActionJSON contains the JSON metadata for
-// the struct [AssistantStreamEventThreadRunRequiresAction]
-type assistantStreamEventThreadRunRequiresActionJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunRequiresAction) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunRequiresAction) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunRequiresAction) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunRequiresActionJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunRequiresAction) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunRequiresActionEvent string
-
-const (
-	AssistantStreamEventThreadRunRequiresActionEventThreadRunRequiresAction AssistantStreamEventThreadRunRequiresActionEvent = "thread.run.requires_action"
-)
-
-func (r AssistantStreamEventThreadRunRequiresActionEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunRequiresActionEventThreadRunRequiresAction:
-		return true
-	}
-	return false
 }
 
 // Occurs when a [run](https://platform.openai.com/docs/api-reference/runs/object)
@@ -820,42 +889,22 @@ func (r AssistantStreamEventThreadRunRequiresActionEvent) IsKnown() bool {
 type AssistantStreamEventThreadRunCompleted struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Run                                         `json:"data,required"`
-	Event AssistantStreamEventThreadRunCompletedEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunCompletedJSON  `json:"-"`
+	Data  Run                         `json:"data,required"`
+	Event constant.ThreadRunCompleted `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunCompletedJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunCompleted]
-type assistantStreamEventThreadRunCompletedJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunCompleted) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunCompleted) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunCompleted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunCompletedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunCompleted) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunCompletedEvent string
-
-const (
-	AssistantStreamEventThreadRunCompletedEventThreadRunCompleted AssistantStreamEventThreadRunCompletedEvent = "thread.run.completed"
-)
-
-func (r AssistantStreamEventThreadRunCompletedEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunCompletedEventThreadRunCompleted:
-		return true
-	}
-	return false
 }
 
 // Occurs when a [run](https://platform.openai.com/docs/api-reference/runs/object)
@@ -863,42 +912,22 @@ func (r AssistantStreamEventThreadRunCompletedEvent) IsKnown() bool {
 type AssistantStreamEventThreadRunIncomplete struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Run                                          `json:"data,required"`
-	Event AssistantStreamEventThreadRunIncompleteEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunIncompleteJSON  `json:"-"`
+	Data  Run                          `json:"data,required"`
+	Event constant.ThreadRunIncomplete `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunIncompleteJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunIncomplete]
-type assistantStreamEventThreadRunIncompleteJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunIncomplete) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunIncomplete) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunIncomplete) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunIncompleteJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunIncomplete) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunIncompleteEvent string
-
-const (
-	AssistantStreamEventThreadRunIncompleteEventThreadRunIncomplete AssistantStreamEventThreadRunIncompleteEvent = "thread.run.incomplete"
-)
-
-func (r AssistantStreamEventThreadRunIncompleteEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunIncompleteEventThreadRunIncomplete:
-		return true
-	}
-	return false
 }
 
 // Occurs when a [run](https://platform.openai.com/docs/api-reference/runs/object)
@@ -906,42 +935,22 @@ func (r AssistantStreamEventThreadRunIncompleteEvent) IsKnown() bool {
 type AssistantStreamEventThreadRunFailed struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Run                                      `json:"data,required"`
-	Event AssistantStreamEventThreadRunFailedEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunFailedJSON  `json:"-"`
+	Data  Run                      `json:"data,required"`
+	Event constant.ThreadRunFailed `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunFailedJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunFailed]
-type assistantStreamEventThreadRunFailedJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunFailed) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunFailed) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunFailed) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunFailedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunFailed) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunFailedEvent string
-
-const (
-	AssistantStreamEventThreadRunFailedEventThreadRunFailed AssistantStreamEventThreadRunFailedEvent = "thread.run.failed"
-)
-
-func (r AssistantStreamEventThreadRunFailedEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunFailedEventThreadRunFailed:
-		return true
-	}
-	return false
 }
 
 // Occurs when a [run](https://platform.openai.com/docs/api-reference/runs/object)
@@ -949,42 +958,22 @@ func (r AssistantStreamEventThreadRunFailedEvent) IsKnown() bool {
 type AssistantStreamEventThreadRunCancelling struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Run                                          `json:"data,required"`
-	Event AssistantStreamEventThreadRunCancellingEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunCancellingJSON  `json:"-"`
+	Data  Run                          `json:"data,required"`
+	Event constant.ThreadRunCancelling `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunCancellingJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunCancelling]
-type assistantStreamEventThreadRunCancellingJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunCancelling) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunCancelling) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunCancelling) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunCancellingJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunCancelling) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunCancellingEvent string
-
-const (
-	AssistantStreamEventThreadRunCancellingEventThreadRunCancelling AssistantStreamEventThreadRunCancellingEvent = "thread.run.cancelling"
-)
-
-func (r AssistantStreamEventThreadRunCancellingEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunCancellingEventThreadRunCancelling:
-		return true
-	}
-	return false
 }
 
 // Occurs when a [run](https://platform.openai.com/docs/api-reference/runs/object)
@@ -992,42 +981,22 @@ func (r AssistantStreamEventThreadRunCancellingEvent) IsKnown() bool {
 type AssistantStreamEventThreadRunCancelled struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Run                                         `json:"data,required"`
-	Event AssistantStreamEventThreadRunCancelledEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunCancelledJSON  `json:"-"`
+	Data  Run                         `json:"data,required"`
+	Event constant.ThreadRunCancelled `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunCancelledJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunCancelled]
-type assistantStreamEventThreadRunCancelledJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunCancelled) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunCancelled) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunCancelled) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunCancelledJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunCancelled) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunCancelledEvent string
-
-const (
-	AssistantStreamEventThreadRunCancelledEventThreadRunCancelled AssistantStreamEventThreadRunCancelledEvent = "thread.run.cancelled"
-)
-
-func (r AssistantStreamEventThreadRunCancelledEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunCancelledEventThreadRunCancelled:
-		return true
-	}
-	return false
 }
 
 // Occurs when a [run](https://platform.openai.com/docs/api-reference/runs/object)
@@ -1035,42 +1004,22 @@ func (r AssistantStreamEventThreadRunCancelledEvent) IsKnown() bool {
 type AssistantStreamEventThreadRunExpired struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Run                                       `json:"data,required"`
-	Event AssistantStreamEventThreadRunExpiredEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunExpiredJSON  `json:"-"`
+	Data  Run                       `json:"data,required"`
+	Event constant.ThreadRunExpired `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunExpiredJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunExpired]
-type assistantStreamEventThreadRunExpiredJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunExpired) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunExpired) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunExpired) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunExpiredJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunExpired) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunExpiredEvent string
-
-const (
-	AssistantStreamEventThreadRunExpiredEventThreadRunExpired AssistantStreamEventThreadRunExpiredEvent = "thread.run.expired"
-)
-
-func (r AssistantStreamEventThreadRunExpiredEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunExpiredEventThreadRunExpired:
-		return true
-	}
-	return false
 }
 
 // Occurs when a
@@ -1078,42 +1027,22 @@ func (r AssistantStreamEventThreadRunExpiredEvent) IsKnown() bool {
 // is created.
 type AssistantStreamEventThreadRunStepCreated struct {
 	// Represents a step in execution of a run.
-	Data  RunStep                                       `json:"data,required"`
-	Event AssistantStreamEventThreadRunStepCreatedEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunStepCreatedJSON  `json:"-"`
+	Data  RunStep                       `json:"data,required"`
+	Event constant.ThreadRunStepCreated `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunStepCreatedJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunStepCreated]
-type assistantStreamEventThreadRunStepCreatedJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunStepCreated) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunStepCreated) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunStepCreated) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunStepCreatedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunStepCreated) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunStepCreatedEvent string
-
-const (
-	AssistantStreamEventThreadRunStepCreatedEventThreadRunStepCreated AssistantStreamEventThreadRunStepCreatedEvent = "thread.run.step.created"
-)
-
-func (r AssistantStreamEventThreadRunStepCreatedEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunStepCreatedEventThreadRunStepCreated:
-		return true
-	}
-	return false
 }
 
 // Occurs when a
@@ -1121,42 +1050,22 @@ func (r AssistantStreamEventThreadRunStepCreatedEvent) IsKnown() bool {
 // moves to an `in_progress` state.
 type AssistantStreamEventThreadRunStepInProgress struct {
 	// Represents a step in execution of a run.
-	Data  RunStep                                          `json:"data,required"`
-	Event AssistantStreamEventThreadRunStepInProgressEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunStepInProgressJSON  `json:"-"`
+	Data  RunStep                          `json:"data,required"`
+	Event constant.ThreadRunStepInProgress `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunStepInProgressJSON contains the JSON metadata for
-// the struct [AssistantStreamEventThreadRunStepInProgress]
-type assistantStreamEventThreadRunStepInProgressJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunStepInProgress) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunStepInProgress) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunStepInProgress) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunStepInProgressJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunStepInProgress) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunStepInProgressEvent string
-
-const (
-	AssistantStreamEventThreadRunStepInProgressEventThreadRunStepInProgress AssistantStreamEventThreadRunStepInProgressEvent = "thread.run.step.in_progress"
-)
-
-func (r AssistantStreamEventThreadRunStepInProgressEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunStepInProgressEventThreadRunStepInProgress:
-		return true
-	}
-	return false
 }
 
 // Occurs when parts of a
@@ -1165,42 +1074,22 @@ func (r AssistantStreamEventThreadRunStepInProgressEvent) IsKnown() bool {
 type AssistantStreamEventThreadRunStepDelta struct {
 	// Represents a run step delta i.e. any changed fields on a run step during
 	// streaming.
-	Data  RunStepDeltaEvent                           `json:"data,required"`
-	Event AssistantStreamEventThreadRunStepDeltaEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunStepDeltaJSON  `json:"-"`
+	Data  RunStepDeltaEvent           `json:"data,required"`
+	Event constant.ThreadRunStepDelta `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunStepDeltaJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunStepDelta]
-type assistantStreamEventThreadRunStepDeltaJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunStepDelta) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunStepDelta) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunStepDelta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunStepDeltaJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunStepDelta) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunStepDeltaEvent string
-
-const (
-	AssistantStreamEventThreadRunStepDeltaEventThreadRunStepDelta AssistantStreamEventThreadRunStepDeltaEvent = "thread.run.step.delta"
-)
-
-func (r AssistantStreamEventThreadRunStepDeltaEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunStepDeltaEventThreadRunStepDelta:
-		return true
-	}
-	return false
 }
 
 // Occurs when a
@@ -1208,42 +1097,22 @@ func (r AssistantStreamEventThreadRunStepDeltaEvent) IsKnown() bool {
 // is completed.
 type AssistantStreamEventThreadRunStepCompleted struct {
 	// Represents a step in execution of a run.
-	Data  RunStep                                         `json:"data,required"`
-	Event AssistantStreamEventThreadRunStepCompletedEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunStepCompletedJSON  `json:"-"`
+	Data  RunStep                         `json:"data,required"`
+	Event constant.ThreadRunStepCompleted `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunStepCompletedJSON contains the JSON metadata for
-// the struct [AssistantStreamEventThreadRunStepCompleted]
-type assistantStreamEventThreadRunStepCompletedJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunStepCompleted) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunStepCompleted) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunStepCompleted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunStepCompletedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunStepCompleted) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunStepCompletedEvent string
-
-const (
-	AssistantStreamEventThreadRunStepCompletedEventThreadRunStepCompleted AssistantStreamEventThreadRunStepCompletedEvent = "thread.run.step.completed"
-)
-
-func (r AssistantStreamEventThreadRunStepCompletedEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunStepCompletedEventThreadRunStepCompleted:
-		return true
-	}
-	return false
 }
 
 // Occurs when a
@@ -1251,42 +1120,22 @@ func (r AssistantStreamEventThreadRunStepCompletedEvent) IsKnown() bool {
 // fails.
 type AssistantStreamEventThreadRunStepFailed struct {
 	// Represents a step in execution of a run.
-	Data  RunStep                                      `json:"data,required"`
-	Event AssistantStreamEventThreadRunStepFailedEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunStepFailedJSON  `json:"-"`
+	Data  RunStep                      `json:"data,required"`
+	Event constant.ThreadRunStepFailed `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunStepFailedJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunStepFailed]
-type assistantStreamEventThreadRunStepFailedJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunStepFailed) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunStepFailed) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunStepFailed) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunStepFailedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunStepFailed) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunStepFailedEvent string
-
-const (
-	AssistantStreamEventThreadRunStepFailedEventThreadRunStepFailed AssistantStreamEventThreadRunStepFailedEvent = "thread.run.step.failed"
-)
-
-func (r AssistantStreamEventThreadRunStepFailedEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunStepFailedEventThreadRunStepFailed:
-		return true
-	}
-	return false
 }
 
 // Occurs when a
@@ -1294,42 +1143,22 @@ func (r AssistantStreamEventThreadRunStepFailedEvent) IsKnown() bool {
 // is cancelled.
 type AssistantStreamEventThreadRunStepCancelled struct {
 	// Represents a step in execution of a run.
-	Data  RunStep                                         `json:"data,required"`
-	Event AssistantStreamEventThreadRunStepCancelledEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunStepCancelledJSON  `json:"-"`
+	Data  RunStep                         `json:"data,required"`
+	Event constant.ThreadRunStepCancelled `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunStepCancelledJSON contains the JSON metadata for
-// the struct [AssistantStreamEventThreadRunStepCancelled]
-type assistantStreamEventThreadRunStepCancelledJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunStepCancelled) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunStepCancelled) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunStepCancelled) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunStepCancelledJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunStepCancelled) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunStepCancelledEvent string
-
-const (
-	AssistantStreamEventThreadRunStepCancelledEventThreadRunStepCancelled AssistantStreamEventThreadRunStepCancelledEvent = "thread.run.step.cancelled"
-)
-
-func (r AssistantStreamEventThreadRunStepCancelledEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunStepCancelledEventThreadRunStepCancelled:
-		return true
-	}
-	return false
 }
 
 // Occurs when a
@@ -1337,42 +1166,22 @@ func (r AssistantStreamEventThreadRunStepCancelledEvent) IsKnown() bool {
 // expires.
 type AssistantStreamEventThreadRunStepExpired struct {
 	// Represents a step in execution of a run.
-	Data  RunStep                                       `json:"data,required"`
-	Event AssistantStreamEventThreadRunStepExpiredEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadRunStepExpiredJSON  `json:"-"`
+	Data  RunStep                       `json:"data,required"`
+	Event constant.ThreadRunStepExpired `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadRunStepExpiredJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadRunStepExpired]
-type assistantStreamEventThreadRunStepExpiredJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadRunStepExpired) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadRunStepExpired) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadRunStepExpired) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadRunStepExpiredJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadRunStepExpired) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadRunStepExpiredEvent string
-
-const (
-	AssistantStreamEventThreadRunStepExpiredEventThreadRunStepExpired AssistantStreamEventThreadRunStepExpiredEvent = "thread.run.step.expired"
-)
-
-func (r AssistantStreamEventThreadRunStepExpiredEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadRunStepExpiredEventThreadRunStepExpired:
-		return true
-	}
-	return false
 }
 
 // Occurs when a
@@ -1381,42 +1190,22 @@ func (r AssistantStreamEventThreadRunStepExpiredEvent) IsKnown() bool {
 type AssistantStreamEventThreadMessageCreated struct {
 	// Represents a message within a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Message                                       `json:"data,required"`
-	Event AssistantStreamEventThreadMessageCreatedEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadMessageCreatedJSON  `json:"-"`
+	Data  Message                       `json:"data,required"`
+	Event constant.ThreadMessageCreated `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadMessageCreatedJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadMessageCreated]
-type assistantStreamEventThreadMessageCreatedJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadMessageCreated) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadMessageCreated) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadMessageCreated) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadMessageCreatedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadMessageCreated) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadMessageCreatedEvent string
-
-const (
-	AssistantStreamEventThreadMessageCreatedEventThreadMessageCreated AssistantStreamEventThreadMessageCreatedEvent = "thread.message.created"
-)
-
-func (r AssistantStreamEventThreadMessageCreatedEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadMessageCreatedEventThreadMessageCreated:
-		return true
-	}
-	return false
 }
 
 // Occurs when a
@@ -1425,42 +1214,22 @@ func (r AssistantStreamEventThreadMessageCreatedEvent) IsKnown() bool {
 type AssistantStreamEventThreadMessageInProgress struct {
 	// Represents a message within a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Message                                          `json:"data,required"`
-	Event AssistantStreamEventThreadMessageInProgressEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadMessageInProgressJSON  `json:"-"`
+	Data  Message                          `json:"data,required"`
+	Event constant.ThreadMessageInProgress `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadMessageInProgressJSON contains the JSON metadata for
-// the struct [AssistantStreamEventThreadMessageInProgress]
-type assistantStreamEventThreadMessageInProgressJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadMessageInProgress) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadMessageInProgress) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadMessageInProgress) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadMessageInProgressJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadMessageInProgress) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadMessageInProgressEvent string
-
-const (
-	AssistantStreamEventThreadMessageInProgressEventThreadMessageInProgress AssistantStreamEventThreadMessageInProgressEvent = "thread.message.in_progress"
-)
-
-func (r AssistantStreamEventThreadMessageInProgressEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadMessageInProgressEventThreadMessageInProgress:
-		return true
-	}
-	return false
 }
 
 // Occurs when parts of a
@@ -1469,42 +1238,22 @@ func (r AssistantStreamEventThreadMessageInProgressEvent) IsKnown() bool {
 type AssistantStreamEventThreadMessageDelta struct {
 	// Represents a message delta i.e. any changed fields on a message during
 	// streaming.
-	Data  MessageDeltaEvent                           `json:"data,required"`
-	Event AssistantStreamEventThreadMessageDeltaEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadMessageDeltaJSON  `json:"-"`
+	Data  MessageDeltaEvent           `json:"data,required"`
+	Event constant.ThreadMessageDelta `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadMessageDeltaJSON contains the JSON metadata for the
-// struct [AssistantStreamEventThreadMessageDelta]
-type assistantStreamEventThreadMessageDeltaJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadMessageDelta) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadMessageDelta) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadMessageDelta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadMessageDeltaJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadMessageDelta) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadMessageDeltaEvent string
-
-const (
-	AssistantStreamEventThreadMessageDeltaEventThreadMessageDelta AssistantStreamEventThreadMessageDeltaEvent = "thread.message.delta"
-)
-
-func (r AssistantStreamEventThreadMessageDeltaEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadMessageDeltaEventThreadMessageDelta:
-		return true
-	}
-	return false
 }
 
 // Occurs when a
@@ -1513,42 +1262,22 @@ func (r AssistantStreamEventThreadMessageDeltaEvent) IsKnown() bool {
 type AssistantStreamEventThreadMessageCompleted struct {
 	// Represents a message within a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Message                                         `json:"data,required"`
-	Event AssistantStreamEventThreadMessageCompletedEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadMessageCompletedJSON  `json:"-"`
+	Data  Message                         `json:"data,required"`
+	Event constant.ThreadMessageCompleted `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadMessageCompletedJSON contains the JSON metadata for
-// the struct [AssistantStreamEventThreadMessageCompleted]
-type assistantStreamEventThreadMessageCompletedJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadMessageCompleted) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadMessageCompleted) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadMessageCompleted) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadMessageCompletedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadMessageCompleted) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadMessageCompletedEvent string
-
-const (
-	AssistantStreamEventThreadMessageCompletedEventThreadMessageCompleted AssistantStreamEventThreadMessageCompletedEvent = "thread.message.completed"
-)
-
-func (r AssistantStreamEventThreadMessageCompletedEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadMessageCompletedEventThreadMessageCompleted:
-		return true
-	}
-	return false
 }
 
 // Occurs when a
@@ -1557,330 +1286,274 @@ func (r AssistantStreamEventThreadMessageCompletedEvent) IsKnown() bool {
 type AssistantStreamEventThreadMessageIncomplete struct {
 	// Represents a message within a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
-	Data  Message                                          `json:"data,required"`
-	Event AssistantStreamEventThreadMessageIncompleteEvent `json:"event,required"`
-	JSON  assistantStreamEventThreadMessageIncompleteJSON  `json:"-"`
+	Data  Message                          `json:"data,required"`
+	Event constant.ThreadMessageIncomplete `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventThreadMessageIncompleteJSON contains the JSON metadata for
-// the struct [AssistantStreamEventThreadMessageIncomplete]
-type assistantStreamEventThreadMessageIncompleteJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventThreadMessageIncomplete) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventThreadMessageIncomplete) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventThreadMessageIncomplete) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r assistantStreamEventThreadMessageIncompleteJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventThreadMessageIncomplete) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventThreadMessageIncompleteEvent string
-
-const (
-	AssistantStreamEventThreadMessageIncompleteEventThreadMessageIncomplete AssistantStreamEventThreadMessageIncompleteEvent = "thread.message.incomplete"
-)
-
-func (r AssistantStreamEventThreadMessageIncompleteEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventThreadMessageIncompleteEventThreadMessageIncomplete:
-		return true
-	}
-	return false
 }
 
 // Occurs when an
 // [error](https://platform.openai.com/docs/guides/error-codes#api-errors) occurs.
 // This can happen due to an internal server error or a timeout.
 type AssistantStreamEventErrorEvent struct {
-	Data  shared.ErrorObject                  `json:"data,required"`
-	Event AssistantStreamEventErrorEventEvent `json:"event,required"`
-	JSON  assistantStreamEventErrorEventJSON  `json:"-"`
+	Data  shared.ErrorObject `json:"data,required"`
+	Event constant.Error     `json:"event,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Event       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// assistantStreamEventErrorEventJSON contains the JSON metadata for the struct
-// [AssistantStreamEventErrorEvent]
-type assistantStreamEventErrorEventJSON struct {
-	Data        apijson.Field
-	Event       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AssistantStreamEventErrorEvent) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AssistantStreamEventErrorEvent) RawJSON() string { return r.JSON.raw }
+func (r *AssistantStreamEventErrorEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r assistantStreamEventErrorEventJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AssistantStreamEventErrorEvent) implementsAssistantStreamEvent() {}
-
-type AssistantStreamEventErrorEventEvent string
-
-const (
-	AssistantStreamEventErrorEventEventError AssistantStreamEventErrorEventEvent = "error"
-)
-
-func (r AssistantStreamEventErrorEventEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventErrorEventEventError:
-		return true
-	}
-	return false
-}
-
-type AssistantStreamEventEvent string
-
-const (
-	AssistantStreamEventEventThreadCreated           AssistantStreamEventEvent = "thread.created"
-	AssistantStreamEventEventThreadRunCreated        AssistantStreamEventEvent = "thread.run.created"
-	AssistantStreamEventEventThreadRunQueued         AssistantStreamEventEvent = "thread.run.queued"
-	AssistantStreamEventEventThreadRunInProgress     AssistantStreamEventEvent = "thread.run.in_progress"
-	AssistantStreamEventEventThreadRunRequiresAction AssistantStreamEventEvent = "thread.run.requires_action"
-	AssistantStreamEventEventThreadRunCompleted      AssistantStreamEventEvent = "thread.run.completed"
-	AssistantStreamEventEventThreadRunIncomplete     AssistantStreamEventEvent = "thread.run.incomplete"
-	AssistantStreamEventEventThreadRunFailed         AssistantStreamEventEvent = "thread.run.failed"
-	AssistantStreamEventEventThreadRunCancelling     AssistantStreamEventEvent = "thread.run.cancelling"
-	AssistantStreamEventEventThreadRunCancelled      AssistantStreamEventEvent = "thread.run.cancelled"
-	AssistantStreamEventEventThreadRunExpired        AssistantStreamEventEvent = "thread.run.expired"
-	AssistantStreamEventEventThreadRunStepCreated    AssistantStreamEventEvent = "thread.run.step.created"
-	AssistantStreamEventEventThreadRunStepInProgress AssistantStreamEventEvent = "thread.run.step.in_progress"
-	AssistantStreamEventEventThreadRunStepDelta      AssistantStreamEventEvent = "thread.run.step.delta"
-	AssistantStreamEventEventThreadRunStepCompleted  AssistantStreamEventEvent = "thread.run.step.completed"
-	AssistantStreamEventEventThreadRunStepFailed     AssistantStreamEventEvent = "thread.run.step.failed"
-	AssistantStreamEventEventThreadRunStepCancelled  AssistantStreamEventEvent = "thread.run.step.cancelled"
-	AssistantStreamEventEventThreadRunStepExpired    AssistantStreamEventEvent = "thread.run.step.expired"
-	AssistantStreamEventEventThreadMessageCreated    AssistantStreamEventEvent = "thread.message.created"
-	AssistantStreamEventEventThreadMessageInProgress AssistantStreamEventEvent = "thread.message.in_progress"
-	AssistantStreamEventEventThreadMessageDelta      AssistantStreamEventEvent = "thread.message.delta"
-	AssistantStreamEventEventThreadMessageCompleted  AssistantStreamEventEvent = "thread.message.completed"
-	AssistantStreamEventEventThreadMessageIncomplete AssistantStreamEventEvent = "thread.message.incomplete"
-	AssistantStreamEventEventError                   AssistantStreamEventEvent = "error"
-)
-
-func (r AssistantStreamEventEvent) IsKnown() bool {
-	switch r {
-	case AssistantStreamEventEventThreadCreated, AssistantStreamEventEventThreadRunCreated, AssistantStreamEventEventThreadRunQueued, AssistantStreamEventEventThreadRunInProgress, AssistantStreamEventEventThreadRunRequiresAction, AssistantStreamEventEventThreadRunCompleted, AssistantStreamEventEventThreadRunIncomplete, AssistantStreamEventEventThreadRunFailed, AssistantStreamEventEventThreadRunCancelling, AssistantStreamEventEventThreadRunCancelled, AssistantStreamEventEventThreadRunExpired, AssistantStreamEventEventThreadRunStepCreated, AssistantStreamEventEventThreadRunStepInProgress, AssistantStreamEventEventThreadRunStepDelta, AssistantStreamEventEventThreadRunStepCompleted, AssistantStreamEventEventThreadRunStepFailed, AssistantStreamEventEventThreadRunStepCancelled, AssistantStreamEventEventThreadRunStepExpired, AssistantStreamEventEventThreadMessageCreated, AssistantStreamEventEventThreadMessageInProgress, AssistantStreamEventEventThreadMessageDelta, AssistantStreamEventEventThreadMessageCompleted, AssistantStreamEventEventThreadMessageIncomplete, AssistantStreamEventEventError:
-		return true
-	}
-	return false
-}
-
-type AssistantTool struct {
-	// The type of tool being defined: `code_interpreter`
-	Type AssistantToolType `json:"type,required"`
-	// This field can have the runtime type of [FileSearchToolFileSearch].
-	FileSearch interface{}               `json:"file_search"`
-	Function   shared.FunctionDefinition `json:"function"`
-	JSON       assistantToolJSON         `json:"-"`
-	union      AssistantToolUnion
-}
-
-// assistantToolJSON contains the JSON metadata for the struct [AssistantTool]
-type assistantToolJSON struct {
-	Type        apijson.Field
-	FileSearch  apijson.Field
-	Function    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r assistantToolJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *AssistantTool) UnmarshalJSON(data []byte) (err error) {
-	*r = AssistantTool{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [AssistantToolUnion] interface which you can cast to the
-// specific types for more type safety.
+// AssistantToolUnion contains all possible properties and values from
+// [CodeInterpreterTool], [FileSearchTool], [FunctionTool].
 //
-// Possible runtime types of the union are [CodeInterpreterTool], [FileSearchTool],
-// [FunctionTool].
-func (r AssistantTool) AsUnion() AssistantToolUnion {
-	return r.union
+// Use the [AssistantToolUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type AssistantToolUnion struct {
+	// Any of "code_interpreter", "file_search", "function".
+	Type string `json:"type"`
+	// This field is from variant [FileSearchTool].
+	FileSearch FileSearchToolFileSearch `json:"file_search"`
+	// This field is from variant [FunctionTool].
+	Function shared.FunctionDefinition `json:"function"`
+	JSON     struct {
+		Type       resp.Field
+		FileSearch resp.Field
+		Function   resp.Field
+		raw        string
+	} `json:"-"`
 }
 
-// Union satisfied by [CodeInterpreterTool], [FileSearchTool] or [FunctionTool].
-type AssistantToolUnion interface {
-	implementsAssistantTool()
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := AssistantToolUnion.AsAny().(type) {
+//	case CodeInterpreterTool:
+//	case FileSearchTool:
+//	case FunctionTool:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u AssistantToolUnion) AsAny() any {
+	switch u.Type {
+	case "code_interpreter":
+		return u.AsCodeInterpreter()
+	case "file_search":
+		return u.AsFileSearch()
+	case "function":
+		return u.AsFunction()
+	}
+	return nil
+}
+
+func (u AssistantToolUnion) AsCodeInterpreter() (v CodeInterpreterTool) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantToolUnion) AsFileSearch() (v FileSearchTool) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AssistantToolUnion) AsFunction() (v FunctionTool) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u AssistantToolUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *AssistantToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this AssistantToolUnion to a AssistantToolUnionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// AssistantToolUnionParam.IsOverridden()
+func (r AssistantToolUnion) ToParam() AssistantToolUnionParam {
+	return param.OverrideObj[AssistantToolUnionParam](r.RawJSON())
+}
+
+func AssistantToolParamOfFunction(function shared.FunctionDefinitionParam) AssistantToolUnionParam {
+	var variant FunctionToolParam
+	variant.Function = function
+	return AssistantToolUnionParam{OfFunction: &variant}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type AssistantToolUnionParam struct {
+	OfCodeInterpreter *CodeInterpreterToolParam `json:",omitzero,inline"`
+	OfFileSearch      *FileSearchToolParam      `json:",omitzero,inline"`
+	OfFunction        *FunctionToolParam        `json:",omitzero,inline"`
+	paramUnion
+}
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (u AssistantToolUnionParam) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
+func (u AssistantToolUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[AssistantToolUnionParam](u.OfCodeInterpreter, u.OfFileSearch, u.OfFunction)
+}
+
+func (u *AssistantToolUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfCodeInterpreter) {
+		return u.OfCodeInterpreter
+	} else if !param.IsOmitted(u.OfFileSearch) {
+		return u.OfFileSearch
+	} else if !param.IsOmitted(u.OfFunction) {
+		return u.OfFunction
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AssistantToolUnionParam) GetFileSearch() *FileSearchToolFileSearchParam {
+	if vt := u.OfFileSearch; vt != nil {
+		return &vt.FileSearch
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AssistantToolUnionParam) GetFunction() *shared.FunctionDefinitionParam {
+	if vt := u.OfFunction; vt != nil {
+		return &vt.Function
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u AssistantToolUnionParam) GetType() *string {
+	if vt := u.OfCodeInterpreter; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFileSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFunction; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
 }
 
 func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*AssistantToolUnion)(nil)).Elem(),
+	apijson.RegisterUnion[AssistantToolUnionParam](
 		"type",
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(CodeInterpreterTool{}),
+			Type:               reflect.TypeOf(CodeInterpreterToolParam{}),
 			DiscriminatorValue: "code_interpreter",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FileSearchTool{}),
+			Type:               reflect.TypeOf(FileSearchToolParam{}),
 			DiscriminatorValue: "file_search",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FunctionTool{}),
+			Type:               reflect.TypeOf(FunctionToolParam{}),
 			DiscriminatorValue: "function",
 		},
 	)
 }
 
-// The type of tool being defined: `code_interpreter`
-type AssistantToolType string
-
-const (
-	AssistantToolTypeCodeInterpreter AssistantToolType = "code_interpreter"
-	AssistantToolTypeFileSearch      AssistantToolType = "file_search"
-	AssistantToolTypeFunction        AssistantToolType = "function"
-)
-
-func (r AssistantToolType) IsKnown() bool {
-	switch r {
-	case AssistantToolTypeCodeInterpreter, AssistantToolTypeFileSearch, AssistantToolTypeFunction:
-		return true
-	}
-	return false
-}
-
-type AssistantToolParam struct {
-	// The type of tool being defined: `code_interpreter`
-	Type       param.Field[AssistantToolType]              `json:"type,required"`
-	FileSearch param.Field[interface{}]                    `json:"file_search"`
-	Function   param.Field[shared.FunctionDefinitionParam] `json:"function"`
-}
-
-func (r AssistantToolParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r AssistantToolParam) implementsAssistantToolUnionParam() {}
-
-// Satisfied by [CodeInterpreterToolParam], [FileSearchToolParam],
-// [FunctionToolParam], [AssistantToolParam].
-type AssistantToolUnionParam interface {
-	implementsAssistantToolUnionParam()
-}
-
 type CodeInterpreterTool struct {
 	// The type of tool being defined: `code_interpreter`
-	Type CodeInterpreterToolType `json:"type,required"`
-	JSON codeInterpreterToolJSON `json:"-"`
+	Type constant.CodeInterpreter `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Type        resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// codeInterpreterToolJSON contains the JSON metadata for the struct
-// [CodeInterpreterTool]
-type codeInterpreterToolJSON struct {
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *CodeInterpreterTool) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r CodeInterpreterTool) RawJSON() string { return r.JSON.raw }
+func (r *CodeInterpreterTool) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r codeInterpreterToolJSON) RawJSON() string {
-	return r.raw
+// ToParam converts this CodeInterpreterTool to a CodeInterpreterToolParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// CodeInterpreterToolParam.IsOverridden()
+func (r CodeInterpreterTool) ToParam() CodeInterpreterToolParam {
+	return param.OverrideObj[CodeInterpreterToolParam](r.RawJSON())
 }
 
-func (r CodeInterpreterTool) implementsAssistantTool() {}
-
-func (r CodeInterpreterTool) implementsMessageAttachmentsTool() {}
-
-// The type of tool being defined: `code_interpreter`
-type CodeInterpreterToolType string
-
-const (
-	CodeInterpreterToolTypeCodeInterpreter CodeInterpreterToolType = "code_interpreter"
-)
-
-func (r CodeInterpreterToolType) IsKnown() bool {
-	switch r {
-	case CodeInterpreterToolTypeCodeInterpreter:
-		return true
-	}
-	return false
-}
-
+// The property Type is required.
 type CodeInterpreterToolParam struct {
 	// The type of tool being defined: `code_interpreter`
-	Type param.Field[CodeInterpreterToolType] `json:"type,required"`
+	//
+	// This field can be elided, and will marshal its zero value as "code_interpreter".
+	Type constant.CodeInterpreter `json:"type,required"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f CodeInterpreterToolParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r CodeInterpreterToolParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow CodeInterpreterToolParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-func (r CodeInterpreterToolParam) implementsAssistantToolUnionParam() {}
-
-func (r CodeInterpreterToolParam) implementsBetaThreadNewParamsMessagesAttachmentsToolUnion() {}
-
-func (r CodeInterpreterToolParam) implementsBetaThreadNewAndRunParamsThreadMessagesAttachmentsToolUnion() {
-}
-
-func (r CodeInterpreterToolParam) implementsBetaThreadNewAndRunParamsToolUnion() {}
-
-func (r CodeInterpreterToolParam) implementsBetaThreadRunNewParamsAdditionalMessagesAttachmentsToolUnion() {
-}
-
-func (r CodeInterpreterToolParam) implementsBetaThreadMessageNewParamsAttachmentsToolUnion() {}
 
 type FileSearchTool struct {
 	// The type of tool being defined: `file_search`
-	Type FileSearchToolType `json:"type,required"`
+	Type constant.FileSearch `json:"type,required"`
 	// Overrides for the file search tool.
 	FileSearch FileSearchToolFileSearch `json:"file_search"`
-	JSON       fileSearchToolJSON       `json:"-"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Type        resp.Field
+		FileSearch  resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// fileSearchToolJSON contains the JSON metadata for the struct [FileSearchTool]
-type fileSearchToolJSON struct {
-	Type        apijson.Field
-	FileSearch  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FileSearchTool) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r FileSearchTool) RawJSON() string { return r.JSON.raw }
+func (r *FileSearchTool) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r fileSearchToolJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r FileSearchTool) implementsAssistantTool() {}
-
-// The type of tool being defined: `file_search`
-type FileSearchToolType string
-
-const (
-	FileSearchToolTypeFileSearch FileSearchToolType = "file_search"
-)
-
-func (r FileSearchToolType) IsKnown() bool {
-	switch r {
-	case FileSearchToolTypeFileSearch:
-		return true
-	}
-	return false
+// ToParam converts this FileSearchTool to a FileSearchToolParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// FileSearchToolParam.IsOverridden()
+func (r FileSearchTool) ToParam() FileSearchToolParam {
+	return param.OverrideObj[FileSearchToolParam](r.RawJSON())
 }
 
 // Overrides for the file search tool.
@@ -1901,24 +1574,20 @@ type FileSearchToolFileSearch struct {
 	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 	// for more information.
 	RankingOptions FileSearchToolFileSearchRankingOptions `json:"ranking_options"`
-	JSON           fileSearchToolFileSearchJSON           `json:"-"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		MaxNumResults  resp.Field
+		RankingOptions resp.Field
+		ExtraFields    map[string]resp.Field
+		raw            string
+	} `json:"-"`
 }
 
-// fileSearchToolFileSearchJSON contains the JSON metadata for the struct
-// [FileSearchToolFileSearch]
-type fileSearchToolFileSearchJSON struct {
-	MaxNumResults  apijson.Field
-	RankingOptions apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r *FileSearchToolFileSearch) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r FileSearchToolFileSearch) RawJSON() string { return r.JSON.raw }
+func (r *FileSearchToolFileSearch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r fileSearchToolFileSearchJSON) RawJSON() string {
-	return r.raw
 }
 
 // The ranking options for the file search. If not specified, the file search tool
@@ -1933,58 +1602,43 @@ type FileSearchToolFileSearchRankingOptions struct {
 	ScoreThreshold float64 `json:"score_threshold,required"`
 	// The ranker to use for the file search. If not specified will use the `auto`
 	// ranker.
-	Ranker FileSearchToolFileSearchRankingOptionsRanker `json:"ranker"`
-	JSON   fileSearchToolFileSearchRankingOptionsJSON   `json:"-"`
+	//
+	// Any of "auto", "default_2024_08_21".
+	Ranker string `json:"ranker"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		ScoreThreshold resp.Field
+		Ranker         resp.Field
+		ExtraFields    map[string]resp.Field
+		raw            string
+	} `json:"-"`
 }
 
-// fileSearchToolFileSearchRankingOptionsJSON contains the JSON metadata for the
-// struct [FileSearchToolFileSearchRankingOptions]
-type fileSearchToolFileSearchRankingOptionsJSON struct {
-	ScoreThreshold apijson.Field
-	Ranker         apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r *FileSearchToolFileSearchRankingOptions) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r FileSearchToolFileSearchRankingOptions) RawJSON() string { return r.JSON.raw }
+func (r *FileSearchToolFileSearchRankingOptions) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r fileSearchToolFileSearchRankingOptionsJSON) RawJSON() string {
-	return r.raw
-}
-
-// The ranker to use for the file search. If not specified will use the `auto`
-// ranker.
-type FileSearchToolFileSearchRankingOptionsRanker string
-
-const (
-	FileSearchToolFileSearchRankingOptionsRankerAuto              FileSearchToolFileSearchRankingOptionsRanker = "auto"
-	FileSearchToolFileSearchRankingOptionsRankerDefault2024_08_21 FileSearchToolFileSearchRankingOptionsRanker = "default_2024_08_21"
-)
-
-func (r FileSearchToolFileSearchRankingOptionsRanker) IsKnown() bool {
-	switch r {
-	case FileSearchToolFileSearchRankingOptionsRankerAuto, FileSearchToolFileSearchRankingOptionsRankerDefault2024_08_21:
-		return true
-	}
-	return false
-}
-
+// The property Type is required.
 type FileSearchToolParam struct {
-	// The type of tool being defined: `file_search`
-	Type param.Field[FileSearchToolType] `json:"type,required"`
 	// Overrides for the file search tool.
-	FileSearch param.Field[FileSearchToolFileSearchParam] `json:"file_search"`
+	FileSearch FileSearchToolFileSearchParam `json:"file_search,omitzero"`
+	// The type of tool being defined: `file_search`
+	//
+	// This field can be elided, and will marshal its zero value as "file_search".
+	Type constant.FileSearch `json:"type,required"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f FileSearchToolParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r FileSearchToolParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow FileSearchToolParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-func (r FileSearchToolParam) implementsAssistantToolUnionParam() {}
-
-func (r FileSearchToolParam) implementsBetaThreadNewAndRunParamsToolUnion() {}
 
 // Overrides for the file search tool.
 type FileSearchToolFileSearchParam struct {
@@ -1996,18 +1650,23 @@ type FileSearchToolFileSearchParam struct {
 	// See the
 	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 	// for more information.
-	MaxNumResults param.Field[int64] `json:"max_num_results"`
+	MaxNumResults param.Opt[int64] `json:"max_num_results,omitzero"`
 	// The ranking options for the file search. If not specified, the file search tool
 	// will use the `auto` ranker and a score_threshold of 0.
 	//
 	// See the
 	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 	// for more information.
-	RankingOptions param.Field[FileSearchToolFileSearchRankingOptionsParam] `json:"ranking_options"`
+	RankingOptions FileSearchToolFileSearchRankingOptionsParam `json:"ranking_options,omitzero"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f FileSearchToolFileSearchParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r FileSearchToolFileSearchParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow FileSearchToolFileSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // The ranking options for the file search. If not specified, the file search tool
@@ -2016,72 +1675,82 @@ func (r FileSearchToolFileSearchParam) MarshalJSON() (data []byte, err error) {
 // See the
 // [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 // for more information.
+//
+// The property ScoreThreshold is required.
 type FileSearchToolFileSearchRankingOptionsParam struct {
 	// The score threshold for the file search. All values must be a floating point
 	// number between 0 and 1.
-	ScoreThreshold param.Field[float64] `json:"score_threshold,required"`
+	ScoreThreshold float64 `json:"score_threshold,required"`
 	// The ranker to use for the file search. If not specified will use the `auto`
 	// ranker.
-	Ranker param.Field[FileSearchToolFileSearchRankingOptionsRanker] `json:"ranker"`
+	//
+	// Any of "auto", "default_2024_08_21".
+	Ranker string `json:"ranker,omitzero"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f FileSearchToolFileSearchRankingOptionsParam) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
+}
 func (r FileSearchToolFileSearchRankingOptionsParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow FileSearchToolFileSearchRankingOptionsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+
+func init() {
+	apijson.RegisterFieldValidator[FileSearchToolFileSearchRankingOptionsParam](
+		"Ranker", false, "auto", "default_2024_08_21",
+	)
 }
 
 type FunctionTool struct {
 	Function shared.FunctionDefinition `json:"function,required"`
 	// The type of tool being defined: `function`
-	Type FunctionToolType `json:"type,required"`
-	JSON functionToolJSON `json:"-"`
+	Type constant.Function `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Function    resp.Field
+		Type        resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// functionToolJSON contains the JSON metadata for the struct [FunctionTool]
-type functionToolJSON struct {
-	Function    apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FunctionTool) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r FunctionTool) RawJSON() string { return r.JSON.raw }
+func (r *FunctionTool) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r functionToolJSON) RawJSON() string {
-	return r.raw
+// ToParam converts this FunctionTool to a FunctionToolParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// FunctionToolParam.IsOverridden()
+func (r FunctionTool) ToParam() FunctionToolParam {
+	return param.OverrideObj[FunctionToolParam](r.RawJSON())
 }
 
-func (r FunctionTool) implementsAssistantTool() {}
-
-// The type of tool being defined: `function`
-type FunctionToolType string
-
-const (
-	FunctionToolTypeFunction FunctionToolType = "function"
-)
-
-func (r FunctionToolType) IsKnown() bool {
-	switch r {
-	case FunctionToolTypeFunction:
-		return true
-	}
-	return false
-}
-
+// The properties Function, Type are required.
 type FunctionToolParam struct {
-	Function param.Field[shared.FunctionDefinitionParam] `json:"function,required"`
+	Function shared.FunctionDefinitionParam `json:"function,omitzero,required"`
 	// The type of tool being defined: `function`
-	Type param.Field[FunctionToolType] `json:"type,required"`
+	//
+	// This field can be elided, and will marshal its zero value as "function".
+	Type constant.Function `json:"type,required"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f FunctionToolParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r FunctionToolParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow FunctionToolParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-func (r FunctionToolParam) implementsAssistantToolUnionParam() {}
-
-func (r FunctionToolParam) implementsBetaThreadNewAndRunParamsToolUnion() {}
 
 type BetaAssistantNewParams struct {
 	// ID of the model to use. You can use the
@@ -2089,28 +1758,45 @@ type BetaAssistantNewParams struct {
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
 	// them.
-	Model param.Field[shared.ChatModel] `json:"model,required"`
+	Model shared.ChatModel `json:"model,omitzero,required"`
 	// The description of the assistant. The maximum length is 512 characters.
-	Description param.Field[string] `json:"description"`
+	Description param.Opt[string] `json:"description,omitzero"`
 	// The system instructions that the assistant uses. The maximum length is 256,000
 	// characters.
-	Instructions param.Field[string] `json:"instructions"`
+	Instructions param.Opt[string] `json:"instructions,omitzero"`
+	// The name of the assistant. The maximum length is 256 characters.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
+	// make the output more random, while lower values like 0.2 will make it more
+	// focused and deterministic.
+	Temperature param.Opt[float64] `json:"temperature,omitzero"`
+	// An alternative to sampling with temperature, called nucleus sampling, where the
+	// model considers the results of the tokens with top_p probability mass. So 0.1
+	// means only the tokens comprising the top 10% probability mass are considered.
+	//
+	// We generally recommend altering this or temperature but not both.
+	TopP param.Opt[float64] `json:"top_p,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
-	// The name of the assistant. The maximum length is 256 characters.
-	Name param.Field[string] `json:"name"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
 	// **o-series models only**
 	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
 	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
 	// result in faster responses and fewer tokens used on reasoning in a response.
-	ReasoningEffort param.Field[shared.ReasoningEffort] `json:"reasoning_effort"`
+	//
+	// Any of "low", "medium", "high".
+	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
+	// A set of resources that are used by the assistant's tools. The resources are
+	// specific to the type of tool. For example, the `code_interpreter` tool requires
+	// a list of file IDs, while the `file_search` tool requires a list of vector store
+	// IDs.
+	ToolResources AssistantToolResourcesParam `json:"tool_resources,omitzero"`
 	// Specifies the format that the model must output. Compatible with
 	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
 	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
@@ -2131,235 +1817,68 @@ type BetaAssistantNewParams struct {
 	// the message content may be partially cut off if `finish_reason="length"`, which
 	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
 	// max context length.
-	ResponseFormat param.Field[AssistantResponseFormatOptionUnionParam] `json:"response_format"`
-	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
-	// make the output more random, while lower values like 0.2 will make it more
-	// focused and deterministic.
-	Temperature param.Field[float64] `json:"temperature"`
-	// A set of resources that are used by the assistant's tools. The resources are
-	// specific to the type of tool. For example, the `code_interpreter` tool requires
-	// a list of file IDs, while the `file_search` tool requires a list of vector store
-	// IDs.
-	ToolResources param.Field[BetaAssistantNewParamsToolResources] `json:"tool_resources"`
+	ResponseFormat AssistantResponseFormatOptionUnionParam `json:"response_format,omitzero"`
 	// A list of tool enabled on the assistant. There can be a maximum of 128 tools per
 	// assistant. Tools can be of types `code_interpreter`, `file_search`, or
 	// `function`.
-	Tools param.Field[[]AssistantToolUnionParam] `json:"tools"`
+	Tools []AssistantToolUnionParam `json:"tools,omitzero"`
+	paramObj
+}
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f BetaAssistantNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+
+func (r BetaAssistantNewParams) MarshalJSON() (data []byte, err error) {
+	type shadow BetaAssistantNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+
+type BetaAssistantUpdateParams struct {
+	// The description of the assistant. The maximum length is 512 characters.
+	Description param.Opt[string] `json:"description,omitzero"`
+	// The system instructions that the assistant uses. The maximum length is 256,000
+	// characters.
+	Instructions param.Opt[string] `json:"instructions,omitzero"`
+	// The name of the assistant. The maximum length is 256 characters.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
+	// make the output more random, while lower values like 0.2 will make it more
+	// focused and deterministic.
+	Temperature param.Opt[float64] `json:"temperature,omitzero"`
 	// An alternative to sampling with temperature, called nucleus sampling, where the
 	// model considers the results of the tokens with top_p probability mass. So 0.1
 	// means only the tokens comprising the top 10% probability mass are considered.
 	//
 	// We generally recommend altering this or temperature but not both.
-	TopP param.Field[float64] `json:"top_p"`
-}
-
-func (r BetaAssistantNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// A set of resources that are used by the assistant's tools. The resources are
-// specific to the type of tool. For example, the `code_interpreter` tool requires
-// a list of file IDs, while the `file_search` tool requires a list of vector store
-// IDs.
-type BetaAssistantNewParamsToolResources struct {
-	CodeInterpreter param.Field[BetaAssistantNewParamsToolResourcesCodeInterpreter] `json:"code_interpreter"`
-	FileSearch      param.Field[BetaAssistantNewParamsToolResourcesFileSearch]      `json:"file_search"`
-}
-
-func (r BetaAssistantNewParamsToolResources) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type BetaAssistantNewParamsToolResourcesCodeInterpreter struct {
-	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
-	// available to the `code_interpreter` tool. There can be a maximum of 20 files
-	// associated with the tool.
-	FileIDs param.Field[[]string] `json:"file_ids"`
-}
-
-func (r BetaAssistantNewParamsToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type BetaAssistantNewParamsToolResourcesFileSearch struct {
-	// The
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
-	// attached to this assistant. There can be a maximum of 1 vector store attached to
-	// the assistant.
-	VectorStoreIDs param.Field[[]string] `json:"vector_store_ids"`
-	// A helper to create a
-	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
-	// with file_ids and attach it to this assistant. There can be a maximum of 1
-	// vector store attached to the assistant.
-	VectorStores param.Field[[]BetaAssistantNewParamsToolResourcesFileSearchVectorStore] `json:"vector_stores"`
-}
-
-func (r BetaAssistantNewParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type BetaAssistantNewParamsToolResourcesFileSearchVectorStore struct {
-	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-	// strategy.
-	ChunkingStrategy param.Field[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion] `json:"chunking_strategy"`
-	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to
-	// add to the vector store. There can be a maximum of 10000 files in a vector
-	// store.
-	FileIDs param.Field[[]string] `json:"file_ids"`
+	TopP param.Opt[float64] `json:"top_p,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
-}
-
-func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy.
-type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy struct {
-	// Always `auto`.
-	Type   param.Field[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType] `json:"type,required"`
-	Static param.Field[interface{}]                                                                   `json:"static"`
-}
-
-func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy) implementsBetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
-}
-
-// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
-// strategy.
-//
-// Satisfied by
-// [BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto],
-// [BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic],
-// [BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategy].
-type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion interface {
-	implementsBetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion()
-}
-
-// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
-// `800` and `chunk_overlap_tokens` of `400`.
-type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto struct {
-	// Always `auto`.
-	Type param.Field[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType] `json:"type,required"`
-}
-
-func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAuto) implementsBetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
-}
-
-// Always `auto`.
-type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType string
-
-const (
-	BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType = "auto"
-)
-
-func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoType) IsKnown() bool {
-	switch r {
-	case BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyAutoTypeAuto:
-		return true
-	}
-	return false
-}
-
-type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic struct {
-	Static param.Field[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic] `json:"static,required"`
-	// Always `static`.
-	Type param.Field[BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType] `json:"type,required"`
-}
-
-func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStatic) implementsBetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyUnion() {
-}
-
-type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic struct {
-	// The number of tokens that overlap between chunks. The default value is `400`.
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	// **o-series models only**
 	//
-	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens param.Field[int64] `json:"chunk_overlap_tokens,required"`
-	// The maximum number of tokens in each chunk. The default value is `800`. The
-	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens param.Field[int64] `json:"max_chunk_size_tokens,required"`
-}
-
-func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// Always `static`.
-type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType string
-
-const (
-	BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType = "static"
-)
-
-func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticType) IsKnown() bool {
-	switch r {
-	case BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyStaticTypeStatic:
-		return true
-	}
-	return false
-}
-
-// Always `auto`.
-type BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType string
-
-const (
-	BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto   BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType = "auto"
-	BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType = "static"
-)
-
-func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyType) IsKnown() bool {
-	switch r {
-	case BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeAuto, BetaAssistantNewParamsToolResourcesFileSearchVectorStoresChunkingStrategyTypeStatic:
-		return true
-	}
-	return false
-}
-
-type BetaAssistantUpdateParams struct {
-	// The description of the assistant. The maximum length is 512 characters.
-	Description param.Field[string] `json:"description"`
-	// The system instructions that the assistant uses. The maximum length is 256,000
-	// characters.
-	Instructions param.Field[string] `json:"instructions"`
-	// Set of 16 key-value pairs that can be attached to an object. This can be useful
-	// for storing additional information about the object in a structured format, and
-	// querying for objects via API or the dashboard.
+	// Constrains effort on reasoning for
+	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+	// result in faster responses and fewer tokens used on reasoning in a response.
 	//
-	// Keys are strings with a maximum length of 64 characters. Values are strings with
-	// a maximum length of 512 characters.
-	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
+	// Any of "low", "medium", "high".
+	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
+	// A set of resources that are used by the assistant's tools. The resources are
+	// specific to the type of tool. For example, the `code_interpreter` tool requires
+	// a list of file IDs, while the `file_search` tool requires a list of vector store
+	// IDs.
+	ToolResources BetaAssistantUpdateParamsToolResources `json:"tool_resources,omitzero"`
 	// ID of the model to use. You can use the
 	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
 	// them.
-	Model param.Field[BetaAssistantUpdateParamsModel] `json:"model"`
-	// The name of the assistant. The maximum length is 256 characters.
-	Name param.Field[string] `json:"name"`
-	// **o-series models only**
-	//
-	// Constrains effort on reasoning for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
-	ReasoningEffort param.Field[shared.ReasoningEffort] `json:"reasoning_effort"`
+	Model string `json:"model,omitzero"`
 	// Specifies the format that the model must output. Compatible with
 	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
 	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
@@ -2380,78 +1899,21 @@ type BetaAssistantUpdateParams struct {
 	// the message content may be partially cut off if `finish_reason="length"`, which
 	// indicates the generation exceeded `max_tokens` or the conversation exceeded the
 	// max context length.
-	ResponseFormat param.Field[AssistantResponseFormatOptionUnionParam] `json:"response_format"`
-	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
-	// make the output more random, while lower values like 0.2 will make it more
-	// focused and deterministic.
-	Temperature param.Field[float64] `json:"temperature"`
-	// A set of resources that are used by the assistant's tools. The resources are
-	// specific to the type of tool. For example, the `code_interpreter` tool requires
-	// a list of file IDs, while the `file_search` tool requires a list of vector store
-	// IDs.
-	ToolResources param.Field[BetaAssistantUpdateParamsToolResources] `json:"tool_resources"`
+	ResponseFormat AssistantResponseFormatOptionUnionParam `json:"response_format,omitzero"`
 	// A list of tool enabled on the assistant. There can be a maximum of 128 tools per
 	// assistant. Tools can be of types `code_interpreter`, `file_search`, or
 	// `function`.
-	Tools param.Field[[]AssistantToolUnionParam] `json:"tools"`
-	// An alternative to sampling with temperature, called nucleus sampling, where the
-	// model considers the results of the tokens with top_p probability mass. So 0.1
-	// means only the tokens comprising the top 10% probability mass are considered.
-	//
-	// We generally recommend altering this or temperature but not both.
-	TopP param.Field[float64] `json:"top_p"`
+	Tools []AssistantToolUnionParam `json:"tools,omitzero"`
+	paramObj
 }
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f BetaAssistantUpdateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r BetaAssistantUpdateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-// ID of the model to use. You can use the
-// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
-// see all of your available models, or see our
-// [Model overview](https://platform.openai.com/docs/models) for descriptions of
-// them.
-type BetaAssistantUpdateParamsModel string
-
-const (
-	BetaAssistantUpdateParamsModelO3Mini                  BetaAssistantUpdateParamsModel = "o3-mini"
-	BetaAssistantUpdateParamsModelO3Mini2025_01_31        BetaAssistantUpdateParamsModel = "o3-mini-2025-01-31"
-	BetaAssistantUpdateParamsModelO1                      BetaAssistantUpdateParamsModel = "o1"
-	BetaAssistantUpdateParamsModelO1_2024_12_17           BetaAssistantUpdateParamsModel = "o1-2024-12-17"
-	BetaAssistantUpdateParamsModelGPT4o                   BetaAssistantUpdateParamsModel = "gpt-4o"
-	BetaAssistantUpdateParamsModelGPT4o2024_11_20         BetaAssistantUpdateParamsModel = "gpt-4o-2024-11-20"
-	BetaAssistantUpdateParamsModelGPT4o2024_08_06         BetaAssistantUpdateParamsModel = "gpt-4o-2024-08-06"
-	BetaAssistantUpdateParamsModelGPT4o2024_05_13         BetaAssistantUpdateParamsModel = "gpt-4o-2024-05-13"
-	BetaAssistantUpdateParamsModelGPT4oMini               BetaAssistantUpdateParamsModel = "gpt-4o-mini"
-	BetaAssistantUpdateParamsModelGPT4oMini2024_07_18     BetaAssistantUpdateParamsModel = "gpt-4o-mini-2024-07-18"
-	BetaAssistantUpdateParamsModelGPT4_5Preview           BetaAssistantUpdateParamsModel = "gpt-4.5-preview"
-	BetaAssistantUpdateParamsModelGPT4_5Preview2025_02_27 BetaAssistantUpdateParamsModel = "gpt-4.5-preview-2025-02-27"
-	BetaAssistantUpdateParamsModelGPT4Turbo               BetaAssistantUpdateParamsModel = "gpt-4-turbo"
-	BetaAssistantUpdateParamsModelGPT4Turbo2024_04_09     BetaAssistantUpdateParamsModel = "gpt-4-turbo-2024-04-09"
-	BetaAssistantUpdateParamsModelGPT4_0125Preview        BetaAssistantUpdateParamsModel = "gpt-4-0125-preview"
-	BetaAssistantUpdateParamsModelGPT4TurboPreview        BetaAssistantUpdateParamsModel = "gpt-4-turbo-preview"
-	BetaAssistantUpdateParamsModelGPT4_1106Preview        BetaAssistantUpdateParamsModel = "gpt-4-1106-preview"
-	BetaAssistantUpdateParamsModelGPT4VisionPreview       BetaAssistantUpdateParamsModel = "gpt-4-vision-preview"
-	BetaAssistantUpdateParamsModelGPT4                    BetaAssistantUpdateParamsModel = "gpt-4"
-	BetaAssistantUpdateParamsModelGPT4_0314               BetaAssistantUpdateParamsModel = "gpt-4-0314"
-	BetaAssistantUpdateParamsModelGPT4_0613               BetaAssistantUpdateParamsModel = "gpt-4-0613"
-	BetaAssistantUpdateParamsModelGPT4_32k                BetaAssistantUpdateParamsModel = "gpt-4-32k"
-	BetaAssistantUpdateParamsModelGPT4_32k0314            BetaAssistantUpdateParamsModel = "gpt-4-32k-0314"
-	BetaAssistantUpdateParamsModelGPT4_32k0613            BetaAssistantUpdateParamsModel = "gpt-4-32k-0613"
-	BetaAssistantUpdateParamsModelGPT3_5Turbo             BetaAssistantUpdateParamsModel = "gpt-3.5-turbo"
-	BetaAssistantUpdateParamsModelGPT3_5Turbo16k          BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-16k"
-	BetaAssistantUpdateParamsModelGPT3_5Turbo0613         BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-0613"
-	BetaAssistantUpdateParamsModelGPT3_5Turbo1106         BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-1106"
-	BetaAssistantUpdateParamsModelGPT3_5Turbo0125         BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-0125"
-	BetaAssistantUpdateParamsModelGPT3_5Turbo16k0613      BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-16k-0613"
-)
-
-func (r BetaAssistantUpdateParamsModel) IsKnown() bool {
-	switch r {
-	case BetaAssistantUpdateParamsModelO3Mini, BetaAssistantUpdateParamsModelO3Mini2025_01_31, BetaAssistantUpdateParamsModelO1, BetaAssistantUpdateParamsModelO1_2024_12_17, BetaAssistantUpdateParamsModelGPT4o, BetaAssistantUpdateParamsModelGPT4o2024_11_20, BetaAssistantUpdateParamsModelGPT4o2024_08_06, BetaAssistantUpdateParamsModelGPT4o2024_05_13, BetaAssistantUpdateParamsModelGPT4oMini, BetaAssistantUpdateParamsModelGPT4oMini2024_07_18, BetaAssistantUpdateParamsModelGPT4_5Preview, BetaAssistantUpdateParamsModelGPT4_5Preview2025_02_27, BetaAssistantUpdateParamsModelGPT4Turbo, BetaAssistantUpdateParamsModelGPT4Turbo2024_04_09, BetaAssistantUpdateParamsModelGPT4_0125Preview, BetaAssistantUpdateParamsModelGPT4TurboPreview, BetaAssistantUpdateParamsModelGPT4_1106Preview, BetaAssistantUpdateParamsModelGPT4VisionPreview, BetaAssistantUpdateParamsModelGPT4, BetaAssistantUpdateParamsModelGPT4_0314, BetaAssistantUpdateParamsModelGPT4_0613, BetaAssistantUpdateParamsModelGPT4_32k, BetaAssistantUpdateParamsModelGPT4_32k0314, BetaAssistantUpdateParamsModelGPT4_32k0613, BetaAssistantUpdateParamsModelGPT3_5Turbo, BetaAssistantUpdateParamsModelGPT3_5Turbo16k, BetaAssistantUpdateParamsModelGPT3_5Turbo0613, BetaAssistantUpdateParamsModelGPT3_5Turbo1106, BetaAssistantUpdateParamsModelGPT3_5Turbo0125, BetaAssistantUpdateParamsModelGPT3_5Turbo16k0613:
-		return true
-	}
-	return false
+	type shadow BetaAssistantUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // A set of resources that are used by the assistant's tools. The resources are
@@ -2459,12 +1921,19 @@ func (r BetaAssistantUpdateParamsModel) IsKnown() bool {
 // a list of file IDs, while the `file_search` tool requires a list of vector store
 // IDs.
 type BetaAssistantUpdateParamsToolResources struct {
-	CodeInterpreter param.Field[BetaAssistantUpdateParamsToolResourcesCodeInterpreter] `json:"code_interpreter"`
-	FileSearch      param.Field[BetaAssistantUpdateParamsToolResourcesFileSearch]      `json:"file_search"`
+	CodeInterpreter BetaAssistantUpdateParamsToolResourcesCodeInterpreter `json:"code_interpreter,omitzero"`
+	FileSearch      BetaAssistantUpdateParamsToolResourcesFileSearch      `json:"file_search,omitzero"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f BetaAssistantUpdateParamsToolResources) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
+}
 func (r BetaAssistantUpdateParamsToolResources) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow BetaAssistantUpdateParamsToolResources
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type BetaAssistantUpdateParamsToolResourcesCodeInterpreter struct {
@@ -2472,11 +1941,18 @@ type BetaAssistantUpdateParamsToolResourcesCodeInterpreter struct {
 	// [file](https://platform.openai.com/docs/api-reference/files) IDs made available
 	// to the `code_interpreter` tool. There can be a maximum of 20 files associated
 	// with the tool.
-	FileIDs param.Field[[]string] `json:"file_ids"`
+	FileIDs []string `json:"file_ids,omitzero"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f BetaAssistantUpdateParamsToolResourcesCodeInterpreter) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
+}
 func (r BetaAssistantUpdateParamsToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow BetaAssistantUpdateParamsToolResourcesCodeInterpreter
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type BetaAssistantUpdateParamsToolResourcesFileSearch struct {
@@ -2484,11 +1960,18 @@ type BetaAssistantUpdateParamsToolResourcesFileSearch struct {
 	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
 	// attached to this assistant. There can be a maximum of 1 vector store attached to
 	// the assistant.
-	VectorStoreIDs param.Field[[]string] `json:"vector_store_ids"`
+	VectorStoreIDs []string `json:"vector_store_ids,omitzero"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f BetaAssistantUpdateParamsToolResourcesFileSearch) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
+}
 func (r BetaAssistantUpdateParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow BetaAssistantUpdateParamsToolResourcesFileSearch
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type BetaAssistantListParams struct {
@@ -2496,19 +1979,26 @@ type BetaAssistantListParams struct {
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
 	// fetch the next page of the list.
-	After param.Field[string] `query:"after"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// A cursor for use in pagination. `before` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// starting with obj_foo, your subsequent call can include before=obj_foo in order
 	// to fetch the previous page of the list.
-	Before param.Field[string] `query:"before"`
+	Before param.Opt[string] `query:"before,omitzero" json:"-"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
-	Limit param.Field[int64] `query:"limit"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
-	Order param.Field[BetaAssistantListParamsOrder] `query:"order"`
+	//
+	// Any of "asc", "desc".
+	Order BetaAssistantListParamsOrder `query:"order,omitzero" json:"-"`
+	paramObj
 }
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f BetaAssistantListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [BetaAssistantListParams]'s query parameters as
 // `url.Values`.
@@ -2527,11 +2017,3 @@ const (
 	BetaAssistantListParamsOrderAsc  BetaAssistantListParamsOrder = "asc"
 	BetaAssistantListParamsOrderDesc BetaAssistantListParamsOrder = "desc"
 )
-
-func (r BetaAssistantListParamsOrder) IsKnown() bool {
-	switch r {
-	case BetaAssistantListParamsOrderAsc, BetaAssistantListParamsOrderDesc:
-		return true
-	}
-	return false
-}

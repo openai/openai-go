@@ -11,11 +11,13 @@ import (
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
 	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // BatchService contains methods and other services that help with interacting with
@@ -31,8 +33,8 @@ type BatchService struct {
 // NewBatchService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewBatchService(opts ...option.RequestOption) (r *BatchService) {
-	r = &BatchService{}
+func NewBatchService(opts ...option.RequestOption) (r BatchService) {
+	r = BatchService{}
 	r.Options = opts
 	return
 }
@@ -105,8 +107,11 @@ type Batch struct {
 	// The ID of the input file for the batch.
 	InputFileID string `json:"input_file_id,required"`
 	// The object type, which is always `batch`.
-	Object BatchObject `json:"object,required"`
+	Object constant.Batch `json:"object,required"`
 	// The current status of the batch.
+	//
+	// Any of "validating", "failed", "in_progress", "finalizing", "completed",
+	// "expired", "cancelling", "cancelled".
 	Status BatchStatus `json:"status,required"`
 	// The Unix timestamp (in seconds) for when the batch was cancelled.
 	CancelledAt int64 `json:"cancelled_at"`
@@ -138,56 +143,38 @@ type Batch struct {
 	OutputFileID string `json:"output_file_id"`
 	// The request counts for different statuses within the batch.
 	RequestCounts BatchRequestCounts `json:"request_counts"`
-	JSON          batchJSON          `json:"-"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		ID               resp.Field
+		CompletionWindow resp.Field
+		CreatedAt        resp.Field
+		Endpoint         resp.Field
+		InputFileID      resp.Field
+		Object           resp.Field
+		Status           resp.Field
+		CancelledAt      resp.Field
+		CancellingAt     resp.Field
+		CompletedAt      resp.Field
+		ErrorFileID      resp.Field
+		Errors           resp.Field
+		ExpiredAt        resp.Field
+		ExpiresAt        resp.Field
+		FailedAt         resp.Field
+		FinalizingAt     resp.Field
+		InProgressAt     resp.Field
+		Metadata         resp.Field
+		OutputFileID     resp.Field
+		RequestCounts    resp.Field
+		ExtraFields      map[string]resp.Field
+		raw              string
+	} `json:"-"`
 }
 
-// batchJSON contains the JSON metadata for the struct [Batch]
-type batchJSON struct {
-	ID               apijson.Field
-	CompletionWindow apijson.Field
-	CreatedAt        apijson.Field
-	Endpoint         apijson.Field
-	InputFileID      apijson.Field
-	Object           apijson.Field
-	Status           apijson.Field
-	CancelledAt      apijson.Field
-	CancellingAt     apijson.Field
-	CompletedAt      apijson.Field
-	ErrorFileID      apijson.Field
-	Errors           apijson.Field
-	ExpiredAt        apijson.Field
-	ExpiresAt        apijson.Field
-	FailedAt         apijson.Field
-	FinalizingAt     apijson.Field
-	InProgressAt     apijson.Field
-	Metadata         apijson.Field
-	OutputFileID     apijson.Field
-	RequestCounts    apijson.Field
-	raw              string
-	ExtraFields      map[string]apijson.Field
-}
-
-func (r *Batch) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r Batch) RawJSON() string { return r.JSON.raw }
+func (r *Batch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r batchJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always `batch`.
-type BatchObject string
-
-const (
-	BatchObjectBatch BatchObject = "batch"
-)
-
-func (r BatchObject) IsKnown() bool {
-	switch r {
-	case BatchObjectBatch:
-		return true
-	}
-	return false
 }
 
 // The current status of the batch.
@@ -204,35 +191,24 @@ const (
 	BatchStatusCancelled  BatchStatus = "cancelled"
 )
 
-func (r BatchStatus) IsKnown() bool {
-	switch r {
-	case BatchStatusValidating, BatchStatusFailed, BatchStatusInProgress, BatchStatusFinalizing, BatchStatusCompleted, BatchStatusExpired, BatchStatusCancelling, BatchStatusCancelled:
-		return true
-	}
-	return false
-}
-
 type BatchErrors struct {
 	Data []BatchError `json:"data"`
 	// The object type, which is always `list`.
-	Object string          `json:"object"`
-	JSON   batchErrorsJSON `json:"-"`
+	Object string `json:"object"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Object      resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// batchErrorsJSON contains the JSON metadata for the struct [BatchErrors]
-type batchErrorsJSON struct {
-	Data        apijson.Field
-	Object      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *BatchErrors) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r BatchErrors) RawJSON() string { return r.JSON.raw }
+func (r *BatchErrors) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r batchErrorsJSON) RawJSON() string {
-	return r.raw
 }
 
 type BatchError struct {
@@ -243,26 +219,23 @@ type BatchError struct {
 	// A human-readable message providing more details about the error.
 	Message string `json:"message"`
 	// The name of the parameter that caused the error, if applicable.
-	Param string         `json:"param,nullable"`
-	JSON  batchErrorJSON `json:"-"`
+	Param string `json:"param,nullable"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Code        resp.Field
+		Line        resp.Field
+		Message     resp.Field
+		Param       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// batchErrorJSON contains the JSON metadata for the struct [BatchError]
-type batchErrorJSON struct {
-	Code        apijson.Field
-	Line        apijson.Field
-	Message     apijson.Field
-	Param       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *BatchError) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r BatchError) RawJSON() string { return r.JSON.raw }
+func (r *BatchError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r batchErrorJSON) RawJSON() string {
-	return r.raw
 }
 
 // The request counts for different statuses within the batch.
@@ -272,37 +245,38 @@ type BatchRequestCounts struct {
 	// Number of requests that have failed.
 	Failed int64 `json:"failed,required"`
 	// Total number of requests in the batch.
-	Total int64                  `json:"total,required"`
-	JSON  batchRequestCountsJSON `json:"-"`
+	Total int64 `json:"total,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Completed   resp.Field
+		Failed      resp.Field
+		Total       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// batchRequestCountsJSON contains the JSON metadata for the struct
-// [BatchRequestCounts]
-type batchRequestCountsJSON struct {
-	Completed   apijson.Field
-	Failed      apijson.Field
-	Total       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *BatchRequestCounts) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r BatchRequestCounts) RawJSON() string { return r.JSON.raw }
+func (r *BatchRequestCounts) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r batchRequestCountsJSON) RawJSON() string {
-	return r.raw
 }
 
 type BatchNewParams struct {
 	// The time frame within which the batch should be processed. Currently only `24h`
 	// is supported.
-	CompletionWindow param.Field[BatchNewParamsCompletionWindow] `json:"completion_window,required"`
+	//
+	// Any of "24h".
+	CompletionWindow BatchNewParamsCompletionWindow `json:"completion_window,omitzero,required"`
 	// The endpoint to be used for all requests in the batch. Currently
 	// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, and `/v1/completions`
 	// are supported. Note that `/v1/embeddings` batches are also restricted to a
 	// maximum of 50,000 embedding inputs across all requests in the batch.
-	Endpoint param.Field[BatchNewParamsEndpoint] `json:"endpoint,required"`
+	//
+	// Any of "/v1/responses", "/v1/chat/completions", "/v1/embeddings",
+	// "/v1/completions".
+	Endpoint BatchNewParamsEndpoint `json:"endpoint,omitzero,required"`
 	// The ID of an uploaded file that contains requests for the new batch.
 	//
 	// See [upload file](https://platform.openai.com/docs/api-reference/files/create)
@@ -312,18 +286,24 @@ type BatchNewParams struct {
 	// [JSONL file](https://platform.openai.com/docs/api-reference/batch/request-input),
 	// and must be uploaded with the purpose `batch`. The file can contain up to 50,000
 	// requests, and can be up to 200 MB in size.
-	InputFileID param.Field[string] `json:"input_file_id,required"`
+	InputFileID string `json:"input_file_id,required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata param.Field[shared.MetadataParam] `json:"metadata"`
+	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f BatchNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+
 func (r BatchNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow BatchNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // The time frame within which the batch should be processed. Currently only `24h`
@@ -333,14 +313,6 @@ type BatchNewParamsCompletionWindow string
 const (
 	BatchNewParamsCompletionWindow24h BatchNewParamsCompletionWindow = "24h"
 )
-
-func (r BatchNewParamsCompletionWindow) IsKnown() bool {
-	switch r {
-	case BatchNewParamsCompletionWindow24h:
-		return true
-	}
-	return false
-}
 
 // The endpoint to be used for all requests in the batch. Currently
 // `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, and `/v1/completions`
@@ -355,24 +327,21 @@ const (
 	BatchNewParamsEndpointV1Completions     BatchNewParamsEndpoint = "/v1/completions"
 )
 
-func (r BatchNewParamsEndpoint) IsKnown() bool {
-	switch r {
-	case BatchNewParamsEndpointV1Responses, BatchNewParamsEndpointV1ChatCompletions, BatchNewParamsEndpointV1Embeddings, BatchNewParamsEndpointV1Completions:
-		return true
-	}
-	return false
-}
-
 type BatchListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
 	// fetch the next page of the list.
-	After param.Field[string] `query:"after"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
-	Limit param.Field[int64] `query:"limit"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	paramObj
 }
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f BatchListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [BatchListParams]'s query parameters as `url.Values`.
 func (r BatchListParams) URLQuery() (v url.Values) {

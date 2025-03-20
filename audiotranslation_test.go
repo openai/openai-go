@@ -28,11 +28,11 @@ func TestAudioTranslationNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Audio.Translations.New(context.TODO(), openai.AudioTranslationNewParams{
-		File:           openai.F(io.Reader(bytes.NewBuffer([]byte("some file contents")))),
-		Model:          openai.F(openai.AudioModelWhisper1),
-		Prompt:         openai.F("prompt"),
-		ResponseFormat: openai.F(openai.AudioTranslationNewParamsResponseFormatJSON),
-		Temperature:    openai.F(0.000000),
+		File:           io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		Model:          openai.AudioModelWhisper1,
+		Prompt:         openai.String("prompt"),
+		ResponseFormat: openai.AudioTranslationNewParamsResponseFormatJSON,
+		Temperature:    openai.Float(0),
 	})
 	if err != nil {
 		var apierr *openai.Error

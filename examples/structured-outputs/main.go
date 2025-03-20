@@ -47,25 +47,22 @@ func main() {
 	println(question)
 
 	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
-		Name:        openai.F("biography"),
-		Description: openai.F("Notable information about a person"),
-		Schema:      openai.F(HistoricalComputerResponseSchema),
+		Name:        "historical_computer",
+		Description: openai.String("Notable information about a computer"),
+		Schema:      HistoricalComputerResponseSchema,
 		Strict:      openai.Bool(true),
 	}
 
 	// Query the Chat Completions API
 	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(question),
-		}),
-		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](
-			openai.ResponseFormatJSONSchemaParam{
-				Type:       openai.F(openai.ResponseFormatJSONSchemaTypeJSONSchema),
-				JSONSchema: openai.F(schemaParam),
-			},
-		),
+		},
+		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
+			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{JSONSchema: schemaParam},
+		},
 		// Only certain models can perform structured outputs
-		Model: openai.F(openai.ChatModelGPT4o2024_08_06),
+		Model: openai.ChatModelGPT4o2024_08_06,
 	})
 
 	if err != nil {
@@ -73,7 +70,7 @@ func main() {
 	}
 
 	// The model responds with a JSON string, so parse it into a struct
-	historicalComputer := HistoricalComputer{}
+	var historicalComputer HistoricalComputer
 	err = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &historicalComputer)
 	if err != nil {
 		panic(err.Error())

@@ -22,7 +22,6 @@ import (
 	"github.com/openai/openai-go/internal/apierror"
 	"github.com/openai/openai-go/internal/apiform"
 	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/tidwall/gjson"
 )
 
@@ -184,13 +183,6 @@ func NewRequestConfig(ctx context.Context, method string, u string, body interfa
 	}
 
 	return &cfg, nil
-}
-
-func UseDefaultParam[T any](dst *param.Field[T], src *T) {
-	if !dst.Present && src != nil {
-		dst.Value = *src
-		dst.Present = true
-	}
 }
 
 // RequestConfig represents all the state related to one request.

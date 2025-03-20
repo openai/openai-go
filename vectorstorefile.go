@@ -4,20 +4,20 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/shared"
-	"github.com/tidwall/gjson"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // VectorStoreFileService contains methods and other services that help with
@@ -33,8 +33,8 @@ type VectorStoreFileService struct {
 // NewVectorStoreFileService generates a new service that applies the given options
 // to each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewVectorStoreFileService(opts ...option.RequestOption) (r *VectorStoreFileService) {
-	r = &VectorStoreFileService{}
+func NewVectorStoreFileService(opts ...option.RequestOption) (r VectorStoreFileService) {
+	r = VectorStoreFileService{}
 	r.Options = opts
 	return
 }
@@ -60,7 +60,7 @@ func (r *VectorStoreFileService) New(ctx context.Context, vectorStoreID string, 
 //
 // Polls the API and blocks until the task is complete.
 // Default polling interval is 1 second.
-func (r *BetaVectorStoreFileService) NewAndPoll(ctx context.Context, vectorStoreId string, body BetaVectorStoreFileNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
+func (r *VectorStoreFileService) NewAndPoll(ctx context.Context, vectorStoreId string, body VectorStoreFileNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
 	file, err := r.New(ctx, vectorStoreId, body, opts...)
 	if err != nil {
 		return nil, err
@@ -72,21 +72,20 @@ func (r *BetaVectorStoreFileService) NewAndPoll(ctx context.Context, vectorStore
 //
 // Note the file will be asynchronously processed (you can use the alternative
 // polling helper method to wait for processing to complete).
-func (r *BetaVectorStoreFileService) Upload(ctx context.Context, vectorStoreID string, body FileNewParams, opts ...option.RequestOption) (*VectorStoreFile, error) {
+func (r *VectorStoreFileService) Upload(ctx context.Context, vectorStoreID string, body FileNewParams, opts ...option.RequestOption) (*VectorStoreFile, error) {
 	filesService := NewFileService(r.Options...)
 	fileObj, err := filesService.New(ctx, body, opts...)
 	if err != nil {
 		return nil, err
 	}
-
-	return r.New(ctx, vectorStoreID, BetaVectorStoreFileNewParams{
-		FileID: F(fileObj.ID),
+	return r.New(ctx, vectorStoreID, VectorStoreFileNewParams{
+		FileID: fileObj.ID,
 	}, opts...)
 }
 
 // Add a file to a vector store and poll until processing is complete.
 // Default polling interval is 1 second.
-func (r *BetaVectorStoreFileService) UploadAndPoll(ctx context.Context, vectorStoreID string, body FileNewParams, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFile, error) {
+func (r *VectorStoreFileService) UploadAndPoll(ctx context.Context, vectorStoreID string, body FileNewParams, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFile, error) {
 	res, err := r.Upload(ctx, vectorStoreID, body, opts...)
 	if err != nil {
 		return nil, err
@@ -214,12 +213,14 @@ type VectorStoreFile struct {
 	CreatedAt int64 `json:"created_at,required"`
 	// The last error associated with this vector store file. Will be `null` if there
 	// are no errors.
-	LastError VectorStoreFileLastError `json:"last_error,required,nullable"`
+	LastError VectorStoreFileLastError `json:"last_error,required"`
 	// The object type, which is always `vector_store.file`.
-	Object VectorStoreFileObject `json:"object,required"`
+	Object constant.VectorStoreFile `json:"object,required"`
 	// The status of the vector store file, which can be either `in_progress`,
 	// `completed`, `cancelled`, or `failed`. The status `completed` indicates that the
 	// vector store file is ready for use.
+	//
+	// Any of "in_progress", "completed", "cancelled", "failed".
 	Status VectorStoreFileStatus `json:"status,required"`
 	// The total vector store usage in bytes. Note that this may be different from the
 	// original file size.
@@ -234,92 +235,55 @@ type VectorStoreFile struct {
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
 	// length of 64 characters. Values are strings with a maximum length of 512
 	// characters, booleans, or numbers.
-	Attributes map[string]VectorStoreFileAttributesUnion `json:"attributes,nullable"`
+	Attributes map[string]VectorStoreFileAttributeUnion `json:"attributes,nullable"`
 	// The strategy used to chunk the file.
-	ChunkingStrategy FileChunkingStrategy `json:"chunking_strategy"`
-	JSON             vectorStoreFileJSON  `json:"-"`
+	ChunkingStrategy FileChunkingStrategyUnion `json:"chunking_strategy"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		ID               resp.Field
+		CreatedAt        resp.Field
+		LastError        resp.Field
+		Object           resp.Field
+		Status           resp.Field
+		UsageBytes       resp.Field
+		VectorStoreID    resp.Field
+		Attributes       resp.Field
+		ChunkingStrategy resp.Field
+		ExtraFields      map[string]resp.Field
+		raw              string
+	} `json:"-"`
 }
 
-// vectorStoreFileJSON contains the JSON metadata for the struct [VectorStoreFile]
-type vectorStoreFileJSON struct {
-	ID               apijson.Field
-	CreatedAt        apijson.Field
-	LastError        apijson.Field
-	Object           apijson.Field
-	Status           apijson.Field
-	UsageBytes       apijson.Field
-	VectorStoreID    apijson.Field
-	Attributes       apijson.Field
-	ChunkingStrategy apijson.Field
-	raw              string
-	ExtraFields      map[string]apijson.Field
-}
-
-func (r *VectorStoreFile) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r VectorStoreFile) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreFile) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileJSON) RawJSON() string {
-	return r.raw
 }
 
 // The last error associated with this vector store file. Will be `null` if there
 // are no errors.
 type VectorStoreFileLastError struct {
 	// One of `server_error` or `rate_limit_exceeded`.
-	Code VectorStoreFileLastErrorCode `json:"code,required"`
+	//
+	// Any of "server_error", "unsupported_file", "invalid_file".
+	Code string `json:"code,required"`
 	// A human-readable description of the error.
-	Message string                       `json:"message,required"`
-	JSON    vectorStoreFileLastErrorJSON `json:"-"`
+	Message string `json:"message,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Code        resp.Field
+		Message     resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// vectorStoreFileLastErrorJSON contains the JSON metadata for the struct
-// [VectorStoreFileLastError]
-type vectorStoreFileLastErrorJSON struct {
-	Code        apijson.Field
-	Message     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *VectorStoreFileLastError) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r VectorStoreFileLastError) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreFileLastError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileLastErrorJSON) RawJSON() string {
-	return r.raw
-}
-
-// One of `server_error` or `rate_limit_exceeded`.
-type VectorStoreFileLastErrorCode string
-
-const (
-	VectorStoreFileLastErrorCodeServerError     VectorStoreFileLastErrorCode = "server_error"
-	VectorStoreFileLastErrorCodeUnsupportedFile VectorStoreFileLastErrorCode = "unsupported_file"
-	VectorStoreFileLastErrorCodeInvalidFile     VectorStoreFileLastErrorCode = "invalid_file"
-)
-
-func (r VectorStoreFileLastErrorCode) IsKnown() bool {
-	switch r {
-	case VectorStoreFileLastErrorCodeServerError, VectorStoreFileLastErrorCodeUnsupportedFile, VectorStoreFileLastErrorCodeInvalidFile:
-		return true
-	}
-	return false
-}
-
-// The object type, which is always `vector_store.file`.
-type VectorStoreFileObject string
-
-const (
-	VectorStoreFileObjectVectorStoreFile VectorStoreFileObject = "vector_store.file"
-)
-
-func (r VectorStoreFileObject) IsKnown() bool {
-	switch r {
-	case VectorStoreFileObjectVectorStoreFile:
-		return true
-	}
-	return false
 }
 
 // The status of the vector store file, which can be either `in_progress`,
@@ -334,130 +298,146 @@ const (
 	VectorStoreFileStatusFailed     VectorStoreFileStatus = "failed"
 )
 
-func (r VectorStoreFileStatus) IsKnown() bool {
-	switch r {
-	case VectorStoreFileStatusInProgress, VectorStoreFileStatusCompleted, VectorStoreFileStatusCancelled, VectorStoreFileStatusFailed:
-		return true
-	}
-	return false
+// VectorStoreFileAttributeUnion contains all possible properties and values from
+// [string], [float64], [bool].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfFloat OfBool]
+type VectorStoreFileAttributeUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [float64] instead of an object.
+	OfFloat float64 `json:",inline"`
+	// This field will be present if the value is a [bool] instead of an object.
+	OfBool bool `json:",inline"`
+	JSON   struct {
+		OfString resp.Field
+		OfFloat  resp.Field
+		OfBool   resp.Field
+		raw      string
+	} `json:"-"`
 }
 
-// Union satisfied by [shared.UnionString], [shared.UnionFloat] or
-// [shared.UnionBool].
-type VectorStoreFileAttributesUnion interface {
-	ImplementsVectorStoreFileAttributesUnion()
+func (u VectorStoreFileAttributeUnion) AsString() (v string) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*VectorStoreFileAttributesUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.String,
-			Type:       reflect.TypeOf(shared.UnionString("")),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.Number,
-			Type:       reflect.TypeOf(shared.UnionFloat(0)),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.True,
-			Type:       reflect.TypeOf(shared.UnionBool(false)),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.False,
-			Type:       reflect.TypeOf(shared.UnionBool(false)),
-		},
-	)
+func (u VectorStoreFileAttributeUnion) AsFloat() (v float64) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-type VectorStoreFileDeleted struct {
-	ID      string                       `json:"id,required"`
-	Deleted bool                         `json:"deleted,required"`
-	Object  VectorStoreFileDeletedObject `json:"object,required"`
-	JSON    vectorStoreFileDeletedJSON   `json:"-"`
+func (u VectorStoreFileAttributeUnion) AsBool() (v bool) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-// vectorStoreFileDeletedJSON contains the JSON metadata for the struct
-// [VectorStoreFileDeleted]
-type vectorStoreFileDeletedJSON struct {
-	ID          apijson.Field
-	Deleted     apijson.Field
-	Object      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
+// Returns the unmodified JSON received from the API
+func (u VectorStoreFileAttributeUnion) RawJSON() string { return u.JSON.raw }
 
-func (r *VectorStoreFileDeleted) UnmarshalJSON(data []byte) (err error) {
+func (r *VectorStoreFileAttributeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r vectorStoreFileDeletedJSON) RawJSON() string {
-	return r.raw
+type VectorStoreFileDeleted struct {
+	ID      string                          `json:"id,required"`
+	Deleted bool                            `json:"deleted,required"`
+	Object  constant.VectorStoreFileDeleted `json:"object,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		ID          resp.Field
+		Deleted     resp.Field
+		Object      resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-type VectorStoreFileDeletedObject string
-
-const (
-	VectorStoreFileDeletedObjectVectorStoreFileDeleted VectorStoreFileDeletedObject = "vector_store.file.deleted"
-)
-
-func (r VectorStoreFileDeletedObject) IsKnown() bool {
-	switch r {
-	case VectorStoreFileDeletedObjectVectorStoreFileDeleted:
-		return true
-	}
-	return false
+// Returns the unmodified JSON received from the API
+func (r VectorStoreFileDeleted) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreFileDeleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type VectorStoreFileContentResponse struct {
 	// The text content
 	Text string `json:"text"`
 	// The content type (currently only `"text"`)
-	Type string                             `json:"type"`
-	JSON vectorStoreFileContentResponseJSON `json:"-"`
+	Type string `json:"type"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Text        resp.Field
+		Type        resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// vectorStoreFileContentResponseJSON contains the JSON metadata for the struct
-// [VectorStoreFileContentResponse]
-type vectorStoreFileContentResponseJSON struct {
-	Text        apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *VectorStoreFileContentResponse) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r VectorStoreFileContentResponse) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreFileContentResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileContentResponseJSON) RawJSON() string {
-	return r.raw
 }
 
 type VectorStoreFileNewParams struct {
 	// A [File](https://platform.openai.com/docs/api-reference/files) ID that the
 	// vector store should use. Useful for tools like `file_search` that can access
 	// files.
-	FileID param.Field[string] `json:"file_id,required"`
+	FileID string `json:"file_id,required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
 	// length of 64 characters. Values are strings with a maximum length of 512
 	// characters, booleans, or numbers.
-	Attributes param.Field[map[string]VectorStoreFileNewParamsAttributesUnion] `json:"attributes"`
+	Attributes map[string]VectorStoreFileNewParamsAttributeUnion `json:"attributes,omitzero"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
-	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
+	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
+	paramObj
 }
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f VectorStoreFileNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r VectorStoreFileNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow VectorStoreFileNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
-// Satisfied by [shared.UnionString], [shared.UnionFloat], [shared.UnionBool].
-type VectorStoreFileNewParamsAttributesUnion interface {
-	ImplementsVectorStoreFileNewParamsAttributesUnion()
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type VectorStoreFileNewParamsAttributeUnion struct {
+	OfString param.Opt[string]  `json:",omitzero,inline"`
+	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
+	OfBool   param.Opt[bool]    `json:",omitzero,inline"`
+	paramUnion
+}
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (u VectorStoreFileNewParamsAttributeUnion) IsPresent() bool {
+	return !param.IsOmitted(u) && !u.IsNull()
+}
+func (u VectorStoreFileNewParamsAttributeUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[VectorStoreFileNewParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+}
+
+func (u *VectorStoreFileNewParamsAttributeUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfFloat) {
+		return &u.OfFloat.Value
+	} else if !param.IsOmitted(u.OfBool) {
+		return &u.OfBool.Value
+	}
+	return nil
 }
 
 type VectorStoreFileUpdateParams struct {
@@ -466,16 +446,47 @@ type VectorStoreFileUpdateParams struct {
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
 	// length of 64 characters. Values are strings with a maximum length of 512
 	// characters, booleans, or numbers.
-	Attributes param.Field[map[string]VectorStoreFileUpdateParamsAttributesUnion] `json:"attributes,required"`
+	Attributes map[string]VectorStoreFileUpdateParamsAttributeUnion `json:"attributes,omitzero,required"`
+	paramObj
 }
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f VectorStoreFileUpdateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r VectorStoreFileUpdateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow VectorStoreFileUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
-// Satisfied by [shared.UnionString], [shared.UnionFloat], [shared.UnionBool].
-type VectorStoreFileUpdateParamsAttributesUnion interface {
-	ImplementsVectorStoreFileUpdateParamsAttributesUnion()
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type VectorStoreFileUpdateParamsAttributeUnion struct {
+	OfString param.Opt[string]  `json:",omitzero,inline"`
+	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
+	OfBool   param.Opt[bool]    `json:",omitzero,inline"`
+	paramUnion
+}
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (u VectorStoreFileUpdateParamsAttributeUnion) IsPresent() bool {
+	return !param.IsOmitted(u) && !u.IsNull()
+}
+func (u VectorStoreFileUpdateParamsAttributeUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[VectorStoreFileUpdateParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+}
+
+func (u *VectorStoreFileUpdateParamsAttributeUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfFloat) {
+		return &u.OfFloat.Value
+	} else if !param.IsOmitted(u.OfBool) {
+		return &u.OfBool.Value
+	}
+	return nil
 }
 
 type VectorStoreFileListParams struct {
@@ -483,21 +494,30 @@ type VectorStoreFileListParams struct {
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
 	// fetch the next page of the list.
-	After param.Field[string] `query:"after"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// A cursor for use in pagination. `before` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// starting with obj_foo, your subsequent call can include before=obj_foo in order
 	// to fetch the previous page of the list.
-	Before param.Field[string] `query:"before"`
-	// Filter by file status. One of `in_progress`, `completed`, `failed`, `cancelled`.
-	Filter param.Field[VectorStoreFileListParamsFilter] `query:"filter"`
+	Before param.Opt[string] `query:"before,omitzero" json:"-"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
-	Limit param.Field[int64] `query:"limit"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// Filter by file status. One of `in_progress`, `completed`, `failed`, `cancelled`.
+	//
+	// Any of "in_progress", "completed", "failed", "cancelled".
+	Filter VectorStoreFileListParamsFilter `query:"filter,omitzero" json:"-"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
-	Order param.Field[VectorStoreFileListParamsOrder] `query:"order"`
+	//
+	// Any of "asc", "desc".
+	Order VectorStoreFileListParamsOrder `query:"order,omitzero" json:"-"`
+	paramObj
 }
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f VectorStoreFileListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [VectorStoreFileListParams]'s query parameters as
 // `url.Values`.
@@ -518,14 +538,6 @@ const (
 	VectorStoreFileListParamsFilterCancelled  VectorStoreFileListParamsFilter = "cancelled"
 )
 
-func (r VectorStoreFileListParamsFilter) IsKnown() bool {
-	switch r {
-	case VectorStoreFileListParamsFilterInProgress, VectorStoreFileListParamsFilterCompleted, VectorStoreFileListParamsFilterFailed, VectorStoreFileListParamsFilterCancelled:
-		return true
-	}
-	return false
-}
-
 // Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 // order and `desc` for descending order.
 type VectorStoreFileListParamsOrder string
@@ -534,11 +546,3 @@ const (
 	VectorStoreFileListParamsOrderAsc  VectorStoreFileListParamsOrder = "asc"
 	VectorStoreFileListParamsOrderDesc VectorStoreFileListParamsOrder = "desc"
 )
-
-func (r VectorStoreFileListParamsOrder) IsKnown() bool {
-	switch r {
-	case VectorStoreFileListParamsOrderAsc, VectorStoreFileListParamsOrderDesc:
-		return true
-	}
-	return false
-}

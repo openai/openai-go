@@ -10,10 +10,10 @@ import (
 	"net/url"
 
 	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/packages/param"
 )
 
 // ChatCompletionMessageService contains methods and other services that help with
@@ -29,8 +29,8 @@ type ChatCompletionMessageService struct {
 // NewChatCompletionMessageService generates a new service that applies the given
 // options to each request. These options are applied after the parent client's
 // options (if there is one), and before any request-specific options.
-func NewChatCompletionMessageService(opts ...option.RequestOption) (r *ChatCompletionMessageService) {
-	r = &ChatCompletionMessageService{}
+func NewChatCompletionMessageService(opts ...option.RequestOption) (r ChatCompletionMessageService) {
+	r = ChatCompletionMessageService{}
 	r.Options = opts
 	return
 }
@@ -66,13 +66,20 @@ func (r *ChatCompletionMessageService) ListAutoPaging(ctx context.Context, compl
 
 type ChatCompletionMessageListParams struct {
 	// Identifier for the last message from the previous pagination request.
-	After param.Field[string] `query:"after"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// Number of messages to retrieve.
-	Limit param.Field[int64] `query:"limit"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	// Sort order for messages by timestamp. Use `asc` for ascending order or `desc`
 	// for descending order. Defaults to `asc`.
-	Order param.Field[ChatCompletionMessageListParamsOrder] `query:"order"`
+	//
+	// Any of "asc", "desc".
+	Order ChatCompletionMessageListParamsOrder `query:"order,omitzero" json:"-"`
+	paramObj
 }
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f ChatCompletionMessageListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [ChatCompletionMessageListParams]'s query parameters as
 // `url.Values`.
@@ -91,11 +98,3 @@ const (
 	ChatCompletionMessageListParamsOrderAsc  ChatCompletionMessageListParamsOrder = "asc"
 	ChatCompletionMessageListParamsOrderDesc ChatCompletionMessageListParamsOrder = "desc"
 )
-
-func (r ChatCompletionMessageListParamsOrder) IsKnown() bool {
-	switch r {
-	case ChatCompletionMessageListParamsOrderAsc, ChatCompletionMessageListParamsOrderDesc:
-		return true
-	}
-	return false
-}

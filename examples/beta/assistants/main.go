@@ -11,7 +11,7 @@ func main() {
 	client := openai.NewClient()
 
 	assistant, err := client.Beta.Assistants.New(ctx, openai.BetaAssistantNewParams{
-		Model:        openai.F(openai.ChatModelGPT4_1106Preview),
+		Model:        openai.ChatModelGPT4_1106Preview,
 		Name:         openai.String("Math tutor"),
 		Instructions: openai.String("You are a personal math tutor. Write and run code to answer math questions."),
 	})
@@ -25,17 +25,14 @@ func main() {
 	prompt := "I need to solve the equation 3x + 11 = 14. Can you help me?"
 
 	thread, err := client.Beta.Threads.New(ctx, openai.BetaThreadNewParams{
-		Messages: openai.F([]openai.BetaThreadNewParamsMessage{
+		Messages: []openai.BetaThreadNewParamsMessage{
 			{
-				Content: openai.F([]openai.MessageContentPartParamUnion{
-					openai.TextContentBlockParam{
-						Text: openai.String(prompt),
-						Type: openai.F(openai.TextContentBlockParamTypeText),
-					},
-				}),
-				Role: openai.F(openai.BetaThreadNewParamsMessagesRoleUser),
+				Content: openai.BetaThreadNewParamsMessageContentUnion{
+					OfString: openai.String(prompt),
+				},
+				Role: "user",
 			},
-		}),
+		},
 	})
 
 	if err != nil {
@@ -46,7 +43,7 @@ func main() {
 
 	// pollIntervalMs of 0 uses default polling interval.
 	run, err := client.Beta.Threads.Runs.NewAndPoll(ctx, thread.ID, openai.BetaThreadRunNewParams{
-		AssistantID:            openai.F(assistant.ID),
+		AssistantID:            assistant.ID,
 		AdditionalInstructions: openai.String("Please address the user as Jane Doe. The user has a premium account."),
 	}, 0)
 

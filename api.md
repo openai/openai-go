@@ -6,20 +6,28 @@
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#FunctionDefinitionParam">FunctionDefinitionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#FunctionParameters">FunctionParameters</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#MetadataParam">MetadataParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ReasoningParam">ReasoningParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ReasoningEffort">ReasoningEffort</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ResponseFormatJSONObjectParam">ResponseFormatJSONObjectParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ResponseFormatJSONSchemaParam">ResponseFormatJSONSchemaParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ResponseFormatTextParam">ResponseFormatTextParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ResponsesModel">ResponsesModel</a>
 
 # Shared Response Types
 
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ChatModel">ChatModel</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ComparisonFilter">ComparisonFilter</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#CompoundFilter">CompoundFilter</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ErrorObject">ErrorObject</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#FunctionDefinition">FunctionDefinition</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#FunctionParameters">FunctionParameters</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#Metadata">Metadata</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#Reasoning">Reasoning</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ReasoningEffort">ReasoningEffort</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ResponseFormatJSONObject">ResponseFormatJSONObject</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ResponseFormatJSONSchema">ResponseFormatJSONSchema</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ResponseFormatText">ResponseFormatText</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/shared#ResponsesModel">ResponsesModel</a>
 
 # Completions
 
@@ -152,7 +160,7 @@ Params Types:
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#Transcription">Transcription</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#TranscriptionStreamEvent">TranscriptionStreamEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#TranscriptionStreamEventUnion">TranscriptionStreamEventUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#TranscriptionTextDeltaEvent">TranscriptionTextDeltaEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#TranscriptionTextDoneEvent">TranscriptionTextDoneEvent</a>
 
@@ -251,7 +259,7 @@ Params Types:
 
 Response Types:
 
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileChunkingStrategy">FileChunkingStrategy</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileChunkingStrategyUnion">FileChunkingStrategyUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#OtherFileChunkingStrategyObject">OtherFileChunkingStrategyObject</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#StaticFileChunkingStrategy">StaticFileChunkingStrategy</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#StaticFileChunkingStrategyObject">StaticFileChunkingStrategyObject</a>
@@ -313,8 +321,8 @@ Response Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#Assistant">Assistant</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantDeleted">AssistantDeleted</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantStreamEvent">AssistantStreamEvent</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantTool">AssistantTool</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantStreamEventUnion">AssistantStreamEventUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantToolUnion">AssistantToolUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#CodeInterpreterTool">CodeInterpreterTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileSearchTool">FileSearchTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FunctionTool">FunctionTool</a>
@@ -331,10 +339,12 @@ Methods:
 
 Params Types:
 
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssisstantVectorStoreChunkingStrategyUnionParam">AssisstantVectorStoreChunkingStrategyUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantResponseFormatOptionUnionParam">AssistantResponseFormatOptionUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantToolChoiceParam">AssistantToolChoiceParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantToolChoiceFunctionParam">AssistantToolChoiceFunctionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantToolChoiceOptionUnionParam">AssistantToolChoiceOptionUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AssistantToolResourcesParam">AssistantToolResourcesParam</a>
 
 Response Types:
 
@@ -391,8 +401,8 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#RunStepDelta">RunStepDelta</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#RunStepDeltaEvent">RunStepDeltaEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#RunStepDeltaMessageDelta">RunStepDeltaMessageDelta</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ToolCall">ToolCall</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ToolCallDelta">ToolCallDelta</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ToolCallUnion">ToolCallUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ToolCallDeltaUnion">ToolCallDeltaUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ToolCallDeltaObject">ToolCallDeltaObject</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ToolCallsStepDetails">ToolCallsStepDetails</a>
 
@@ -414,8 +424,8 @@ Params Types:
 
 Response Types:
 
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#Annotation">Annotation</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AnnotationDelta">AnnotationDelta</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AnnotationUnion">AnnotationUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#AnnotationDeltaUnion">AnnotationDeltaUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileCitationAnnotation">FileCitationAnnotation</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FileCitationDeltaAnnotation">FileCitationDeltaAnnotation</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#FilePathAnnotation">FilePathAnnotation</a>
@@ -429,8 +439,8 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ImageURLDelta">ImageURLDelta</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#ImageURLDeltaBlock">ImageURLDeltaBlock</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#Message">Message</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#MessageContent">MessageContent</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#MessageContentDelta">MessageContentDelta</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#MessageContentUnion">MessageContentUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#MessageContentDeltaUnion">MessageContentDeltaUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#MessageDeleted">MessageDeleted</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#MessageDelta">MessageDelta</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#MessageDeltaEvent">MessageDeltaEvent</a>
@@ -485,3 +495,125 @@ Response Types:
 Methods:
 
 - <code title="post /uploads/{upload_id}/parts">client.Uploads.Parts.<a href="https://pkg.go.dev/github.com/openai/openai-go#UploadPartService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, uploadID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#UploadPartNewParams">UploadPartNewParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#UploadPart">UploadPart</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+# Responses
+
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ComputerToolParam">ComputerToolParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#EasyInputMessageParam">EasyInputMessageParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#FileSearchToolParam">FileSearchToolParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#FunctionToolParam">FunctionToolParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseComputerToolCallParam">ResponseComputerToolCallParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseComputerToolCallOutputScreenshotParam">ResponseComputerToolCallOutputScreenshotParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFileSearchToolCallParam">ResponseFileSearchToolCallParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFormatTextConfigUnionParam">ResponseFormatTextConfigUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFormatTextJSONSchemaConfigParam">ResponseFormatTextJSONSchemaConfigParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFunctionToolCallParam">ResponseFunctionToolCallParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFunctionWebSearchParam">ResponseFunctionWebSearchParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseIncludable">ResponseIncludable</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputParam">ResponseInputParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputContentUnionParam">ResponseInputContentUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputFileParam">ResponseInputFileParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputImageParam">ResponseInputImageParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputItemUnionParam">ResponseInputItemUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputMessageContentListParam">ResponseInputMessageContentListParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputTextParam">ResponseInputTextParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseOutputMessageParam">ResponseOutputMessageParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseOutputRefusalParam">ResponseOutputRefusalParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseOutputTextParam">ResponseOutputTextParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseReasoningItemParam">ResponseReasoningItemParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseTextConfigParam">ResponseTextConfigParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ToolUnionParam">ToolUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ToolChoiceFunctionParam">ToolChoiceFunctionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ToolChoiceOptions">ToolChoiceOptions</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ToolChoiceTypesParam">ToolChoiceTypesParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#WebSearchToolParam">WebSearchToolParam</a>
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ComputerTool">ComputerTool</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#FileSearchTool">FileSearchTool</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#FunctionTool">FunctionTool</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#Response">Response</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseAudioDeltaEvent">ResponseAudioDeltaEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseAudioDoneEvent">ResponseAudioDoneEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseAudioTranscriptDeltaEvent">ResponseAudioTranscriptDeltaEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseAudioTranscriptDoneEvent">ResponseAudioTranscriptDoneEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseCodeInterpreterCallCodeDeltaEvent">ResponseCodeInterpreterCallCodeDeltaEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseCodeInterpreterCallCodeDoneEvent">ResponseCodeInterpreterCallCodeDoneEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseCodeInterpreterCallCompletedEvent">ResponseCodeInterpreterCallCompletedEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseCodeInterpreterCallInProgressEvent">ResponseCodeInterpreterCallInProgressEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseCodeInterpreterCallInterpretingEvent">ResponseCodeInterpreterCallInterpretingEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseCodeInterpreterToolCall">ResponseCodeInterpreterToolCall</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseCompletedEvent">ResponseCompletedEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseComputerToolCall">ResponseComputerToolCall</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseComputerToolCallOutputItem">ResponseComputerToolCallOutputItem</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseComputerToolCallOutputScreenshot">ResponseComputerToolCallOutputScreenshot</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseContentPartAddedEvent">ResponseContentPartAddedEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseContentPartDoneEvent">ResponseContentPartDoneEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseCreatedEvent">ResponseCreatedEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseError">ResponseError</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseErrorEvent">ResponseErrorEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFailedEvent">ResponseFailedEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFileSearchCallCompletedEvent">ResponseFileSearchCallCompletedEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFileSearchCallInProgressEvent">ResponseFileSearchCallInProgressEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFileSearchCallSearchingEvent">ResponseFileSearchCallSearchingEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFileSearchToolCall">ResponseFileSearchToolCall</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFormatTextConfigUnion">ResponseFormatTextConfigUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFormatTextJSONSchemaConfig">ResponseFormatTextJSONSchemaConfig</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFunctionCallArgumentsDeltaEvent">ResponseFunctionCallArgumentsDeltaEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFunctionCallArgumentsDoneEvent">ResponseFunctionCallArgumentsDoneEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFunctionToolCall">ResponseFunctionToolCall</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFunctionToolCallItem">ResponseFunctionToolCallItem</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFunctionToolCallOutputItem">ResponseFunctionToolCallOutputItem</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseFunctionWebSearch">ResponseFunctionWebSearch</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInProgressEvent">ResponseInProgressEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseIncompleteEvent">ResponseIncompleteEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputContentUnion">ResponseInputContentUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputFile">ResponseInputFile</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputImage">ResponseInputImage</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputMessageContentList">ResponseInputMessageContentList</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputMessageItem">ResponseInputMessageItem</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseInputText">ResponseInputText</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseItemUnion">ResponseItemUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseOutputItemUnion">ResponseOutputItemUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseOutputItemAddedEvent">ResponseOutputItemAddedEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseOutputItemDoneEvent">ResponseOutputItemDoneEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseOutputMessage">ResponseOutputMessage</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseOutputRefusal">ResponseOutputRefusal</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseOutputText">ResponseOutputText</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseReasoningItem">ResponseReasoningItem</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseRefusalDeltaEvent">ResponseRefusalDeltaEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseRefusalDoneEvent">ResponseRefusalDoneEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseStatus">ResponseStatus</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseStreamEventUnion">ResponseStreamEventUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseTextAnnotationDeltaEvent">ResponseTextAnnotationDeltaEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseTextConfig">ResponseTextConfig</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseTextDeltaEvent">ResponseTextDeltaEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseTextDoneEvent">ResponseTextDoneEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseUsage">ResponseUsage</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseWebSearchCallCompletedEvent">ResponseWebSearchCallCompletedEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseWebSearchCallInProgressEvent">ResponseWebSearchCallInProgressEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseWebSearchCallSearchingEvent">ResponseWebSearchCallSearchingEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ToolUnion">ToolUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ToolChoiceFunction">ToolChoiceFunction</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ToolChoiceOptions">ToolChoiceOptions</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ToolChoiceTypes">ToolChoiceTypes</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#WebSearchTool">WebSearchTool</a>
+
+Methods:
+
+- <code title="post /responses">client.Responses.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseNewParams">ResponseNewParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#Response">Response</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /responses/{response_id}">client.Responses.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, responseID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseGetParams">ResponseGetParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#Response">Response</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /responses/{response_id}">client.Responses.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, responseID <a href="https://pkg.go.dev/builtin#string">string</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+
+## InputItems
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseItemList">ResponseItemList</a>
+
+Methods:
+
+- <code title="get /responses/{response_id}/input_items">client.Responses.InputItems.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#InputItemService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, responseID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#InputItemListParams">InputItemListParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/packages/pagination#CursorPage">CursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseItemUnion">ResponseItemUnion</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
