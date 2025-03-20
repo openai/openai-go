@@ -77,7 +77,7 @@ type AudioTranslationNewParams struct {
 	Prompt param.Field[string] `json:"prompt"`
 	// The format of the output, in one of these options: `json`, `text`, `srt`,
 	// `verbose_json`, or `vtt`.
-	ResponseFormat param.Field[AudioResponseFormat] `json:"response_format"`
+	ResponseFormat param.Field[AudioTranslationNewParamsResponseFormat] `json:"response_format"`
 	// The sampling temperature, between 0 and 1. Higher values like 0.8 will make the
 	// output more random, while lower values like 0.2 will make it more focused and
 	// deterministic. If set to 0, the model will use
@@ -99,4 +99,24 @@ func (r AudioTranslationNewParams) MarshalMultipart() (data []byte, contentType 
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// The format of the output, in one of these options: `json`, `text`, `srt`,
+// `verbose_json`, or `vtt`.
+type AudioTranslationNewParamsResponseFormat string
+
+const (
+	AudioTranslationNewParamsResponseFormatJSON        AudioTranslationNewParamsResponseFormat = "json"
+	AudioTranslationNewParamsResponseFormatText        AudioTranslationNewParamsResponseFormat = "text"
+	AudioTranslationNewParamsResponseFormatSRT         AudioTranslationNewParamsResponseFormat = "srt"
+	AudioTranslationNewParamsResponseFormatVerboseJSON AudioTranslationNewParamsResponseFormat = "verbose_json"
+	AudioTranslationNewParamsResponseFormatVTT         AudioTranslationNewParamsResponseFormat = "vtt"
+)
+
+func (r AudioTranslationNewParamsResponseFormat) IsKnown() bool {
+	switch r {
+	case AudioTranslationNewParamsResponseFormatJSON, AudioTranslationNewParamsResponseFormatText, AudioTranslationNewParamsResponseFormatSRT, AudioTranslationNewParamsResponseFormatVerboseJSON, AudioTranslationNewParamsResponseFormatVTT:
+		return true
+	}
+	return false
 }
