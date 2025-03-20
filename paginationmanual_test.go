@@ -25,7 +25,7 @@ func TestManualPagination(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	page, err := client.FineTuning.Jobs.List(context.TODO(), openai.FineTuningJobListParams{
-		Limit: openai.F(int64(20)),
+		Limit: openai.Int(20),
 	})
 	if err != nil {
 		t.Fatalf("err should be nil: %s", err.Error())

@@ -27,12 +27,12 @@ func TestBatchNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Batches.New(context.TODO(), openai.BatchNewParams{
-		CompletionWindow: openai.F(openai.BatchNewParamsCompletionWindow24h),
-		Endpoint:         openai.F(openai.BatchNewParamsEndpointV1Responses),
-		InputFileID:      openai.F("input_file_id"),
-		Metadata: openai.F(shared.MetadataParam{
+		CompletionWindow: openai.BatchNewParamsCompletionWindow24h,
+		Endpoint:         openai.BatchNewParamsEndpointV1Responses,
+		InputFileID:      "input_file_id",
+		Metadata: shared.MetadataParam{
 			"foo": "string",
-		}),
+		},
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -78,8 +78,8 @@ func TestBatchListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Batches.List(context.TODO(), openai.BatchListParams{
-		After: openai.F("after"),
-		Limit: openai.F(int64(0)),
+		After: openai.String("after"),
+		Limit: openai.Int(0),
 	})
 	if err != nil {
 		var apierr *openai.Error

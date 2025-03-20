@@ -11,7 +11,6 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
 )
 
 func TestVectorStoreFileBatchNewWithOptionalParams(t *testing.T) {
@@ -30,13 +29,15 @@ func TestVectorStoreFileBatchNewWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"vs_abc123",
 		openai.VectorStoreFileBatchNewParams{
-			FileIDs: openai.F([]string{"string"}),
-			Attributes: openai.F(map[string]openai.VectorStoreFileBatchNewParamsAttributesUnion{
-				"foo": shared.UnionString("string"),
-			}),
-			ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
-				Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
-			}),
+			FileIDs: []string{"string"},
+			Attributes: map[string]openai.VectorStoreFileBatchNewParamsAttributeUnion{
+				"foo": {
+					OfString: openai.String("string"),
+				},
+			},
+			ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
+				OfAuto: &openai.AutoFileChunkingStrategyParam{},
+			},
 		},
 	)
 	if err != nil {
@@ -117,11 +118,11 @@ func TestVectorStoreFileBatchListFilesWithOptionalParams(t *testing.T) {
 		"vector_store_id",
 		"batch_id",
 		openai.VectorStoreFileBatchListFilesParams{
-			After:  openai.F("after"),
-			Before: openai.F("before"),
-			Filter: openai.F(openai.VectorStoreFileBatchListFilesParamsFilterInProgress),
-			Limit:  openai.F(int64(0)),
-			Order:  openai.F(openai.VectorStoreFileBatchListFilesParamsOrderAsc),
+			After:  openai.String("after"),
+			Before: openai.String("before"),
+			Filter: openai.VectorStoreFileBatchListFilesParamsFilterInProgress,
+			Limit:  openai.Int(0),
+			Order:  openai.VectorStoreFileBatchListFilesParamsOrderAsc,
 		},
 	)
 	if err != nil {

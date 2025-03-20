@@ -11,10 +11,12 @@ import (
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // VectorStoreFileBatchService contains methods and other services that help with
@@ -30,8 +32,8 @@ type VectorStoreFileBatchService struct {
 // NewVectorStoreFileBatchService generates a new service that applies the given
 // options to each request. These options are applied after the parent client's
 // options (if there is one), and before any request-specific options.
-func NewVectorStoreFileBatchService(opts ...option.RequestOption) (r *VectorStoreFileBatchService) {
-	r = &VectorStoreFileBatchService{}
+func NewVectorStoreFileBatchService(opts ...option.RequestOption) (r VectorStoreFileBatchService) {
+	r = VectorStoreFileBatchService{}
 	r.Options = opts
 	return
 }
@@ -124,37 +126,35 @@ type VectorStoreFileBatch struct {
 	CreatedAt  int64                          `json:"created_at,required"`
 	FileCounts VectorStoreFileBatchFileCounts `json:"file_counts,required"`
 	// The object type, which is always `vector_store.file_batch`.
-	Object VectorStoreFileBatchObject `json:"object,required"`
+	Object constant.VectorStoreFilesBatch `json:"object,required"`
 	// The status of the vector store files batch, which can be either `in_progress`,
 	// `completed`, `cancelled` or `failed`.
+	//
+	// Any of "in_progress", "completed", "cancelled", "failed".
 	Status VectorStoreFileBatchStatus `json:"status,required"`
 	// The ID of the
 	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
 	// that the [File](https://platform.openai.com/docs/api-reference/files) is
 	// attached to.
-	VectorStoreID string                   `json:"vector_store_id,required"`
-	JSON          vectorStoreFileBatchJSON `json:"-"`
+	VectorStoreID string `json:"vector_store_id,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		ID            resp.Field
+		CreatedAt     resp.Field
+		FileCounts    resp.Field
+		Object        resp.Field
+		Status        resp.Field
+		VectorStoreID resp.Field
+		ExtraFields   map[string]resp.Field
+		raw           string
+	} `json:"-"`
 }
 
-// vectorStoreFileBatchJSON contains the JSON metadata for the struct
-// [VectorStoreFileBatch]
-type vectorStoreFileBatchJSON struct {
-	ID            apijson.Field
-	CreatedAt     apijson.Field
-	FileCounts    apijson.Field
-	Object        apijson.Field
-	Status        apijson.Field
-	VectorStoreID apijson.Field
-	raw           string
-	ExtraFields   map[string]apijson.Field
-}
-
-func (r *VectorStoreFileBatch) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r VectorStoreFileBatch) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreFileBatch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileBatchJSON) RawJSON() string {
-	return r.raw
 }
 
 type VectorStoreFileBatchFileCounts struct {
@@ -167,43 +167,24 @@ type VectorStoreFileBatchFileCounts struct {
 	// The number of files that are currently being processed.
 	InProgress int64 `json:"in_progress,required"`
 	// The total number of files.
-	Total int64                              `json:"total,required"`
-	JSON  vectorStoreFileBatchFileCountsJSON `json:"-"`
+	Total int64 `json:"total,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Cancelled   resp.Field
+		Completed   resp.Field
+		Failed      resp.Field
+		InProgress  resp.Field
+		Total       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// vectorStoreFileBatchFileCountsJSON contains the JSON metadata for the struct
-// [VectorStoreFileBatchFileCounts]
-type vectorStoreFileBatchFileCountsJSON struct {
-	Cancelled   apijson.Field
-	Completed   apijson.Field
-	Failed      apijson.Field
-	InProgress  apijson.Field
-	Total       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *VectorStoreFileBatchFileCounts) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r VectorStoreFileBatchFileCounts) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreFileBatchFileCounts) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r vectorStoreFileBatchFileCountsJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always `vector_store.file_batch`.
-type VectorStoreFileBatchObject string
-
-const (
-	VectorStoreFileBatchObjectVectorStoreFilesBatch VectorStoreFileBatchObject = "vector_store.files_batch"
-)
-
-func (r VectorStoreFileBatchObject) IsKnown() bool {
-	switch r {
-	case VectorStoreFileBatchObjectVectorStoreFilesBatch:
-		return true
-	}
-	return false
 }
 
 // The status of the vector store files batch, which can be either `in_progress`,
@@ -217,37 +198,60 @@ const (
 	VectorStoreFileBatchStatusFailed     VectorStoreFileBatchStatus = "failed"
 )
 
-func (r VectorStoreFileBatchStatus) IsKnown() bool {
-	switch r {
-	case VectorStoreFileBatchStatusInProgress, VectorStoreFileBatchStatusCompleted, VectorStoreFileBatchStatusCancelled, VectorStoreFileBatchStatusFailed:
-		return true
-	}
-	return false
-}
-
 type VectorStoreFileBatchNewParams struct {
 	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
 	// the vector store should use. Useful for tools like `file_search` that can access
 	// files.
-	FileIDs param.Field[[]string] `json:"file_ids,required"`
+	FileIDs []string `json:"file_ids,omitzero,required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
 	// length of 64 characters. Values are strings with a maximum length of 512
 	// characters, booleans, or numbers.
-	Attributes param.Field[map[string]VectorStoreFileBatchNewParamsAttributesUnion] `json:"attributes"`
+	Attributes map[string]VectorStoreFileBatchNewParamsAttributeUnion `json:"attributes,omitzero"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
-	ChunkingStrategy param.Field[FileChunkingStrategyParamUnion] `json:"chunking_strategy"`
+	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
+	paramObj
 }
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f VectorStoreFileBatchNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r VectorStoreFileBatchNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow VectorStoreFileBatchNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
-// Satisfied by [shared.UnionString], [shared.UnionFloat], [shared.UnionBool].
-type VectorStoreFileBatchNewParamsAttributesUnion interface {
-	ImplementsVectorStoreFileBatchNewParamsAttributesUnion()
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type VectorStoreFileBatchNewParamsAttributeUnion struct {
+	OfString param.Opt[string]  `json:",omitzero,inline"`
+	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
+	OfBool   param.Opt[bool]    `json:",omitzero,inline"`
+	paramUnion
+}
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (u VectorStoreFileBatchNewParamsAttributeUnion) IsPresent() bool {
+	return !param.IsOmitted(u) && !u.IsNull()
+}
+func (u VectorStoreFileBatchNewParamsAttributeUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[VectorStoreFileBatchNewParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+}
+
+func (u *VectorStoreFileBatchNewParamsAttributeUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfFloat) {
+		return &u.OfFloat.Value
+	} else if !param.IsOmitted(u.OfBool) {
+		return &u.OfBool.Value
+	}
+	return nil
 }
 
 type VectorStoreFileBatchListFilesParams struct {
@@ -255,20 +259,31 @@ type VectorStoreFileBatchListFilesParams struct {
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
 	// fetch the next page of the list.
-	After param.Field[string] `query:"after"`
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
 	// A cursor for use in pagination. `before` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// starting with obj_foo, your subsequent call can include before=obj_foo in order
 	// to fetch the previous page of the list.
-	Before param.Field[string] `query:"before"`
-	// Filter by file status. One of `in_progress`, `completed`, `failed`, `cancelled`.
-	Filter param.Field[VectorStoreFileBatchListFilesParamsFilter] `query:"filter"`
+	Before param.Opt[string] `query:"before,omitzero" json:"-"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
-	Limit param.Field[int64] `query:"limit"`
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// Filter by file status. One of `in_progress`, `completed`, `failed`, `cancelled`.
+	//
+	// Any of "in_progress", "completed", "failed", "cancelled".
+	Filter VectorStoreFileBatchListFilesParamsFilter `query:"filter,omitzero" json:"-"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
-	Order param.Field[VectorStoreFileBatchListFilesParamsOrder] `query:"order"`
+	//
+	// Any of "asc", "desc".
+	Order VectorStoreFileBatchListFilesParamsOrder `query:"order,omitzero" json:"-"`
+	paramObj
+}
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f VectorStoreFileBatchListFilesParams) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
 }
 
 // URLQuery serializes [VectorStoreFileBatchListFilesParams]'s query parameters as
@@ -290,14 +305,6 @@ const (
 	VectorStoreFileBatchListFilesParamsFilterCancelled  VectorStoreFileBatchListFilesParamsFilter = "cancelled"
 )
 
-func (r VectorStoreFileBatchListFilesParamsFilter) IsKnown() bool {
-	switch r {
-	case VectorStoreFileBatchListFilesParamsFilterInProgress, VectorStoreFileBatchListFilesParamsFilterCompleted, VectorStoreFileBatchListFilesParamsFilterFailed, VectorStoreFileBatchListFilesParamsFilterCancelled:
-		return true
-	}
-	return false
-}
-
 // Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 // order and `desc` for descending order.
 type VectorStoreFileBatchListFilesParamsOrder string
@@ -306,11 +313,3 @@ const (
 	VectorStoreFileBatchListFilesParamsOrderAsc  VectorStoreFileBatchListFilesParamsOrder = "asc"
 	VectorStoreFileBatchListFilesParamsOrderDesc VectorStoreFileBatchListFilesParamsOrder = "desc"
 )
-
-func (r VectorStoreFileBatchListFilesParamsOrder) IsKnown() bool {
-	switch r {
-	case VectorStoreFileBatchListFilesParamsOrderAsc, VectorStoreFileBatchListFilesParamsOrderDesc:
-		return true
-	}
-	return false
-}

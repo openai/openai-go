@@ -14,14 +14,14 @@ import (
 // the [NewChatService] method instead.
 type ChatService struct {
 	Options     []option.RequestOption
-	Completions *ChatCompletionService
+	Completions ChatCompletionService
 }
 
 // NewChatService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewChatService(opts ...option.RequestOption) (r *ChatService) {
-	r = &ChatService{}
+func NewChatService(opts ...option.RequestOption) (r ChatService) {
+	r = ChatService{}
 	r.Options = opts
 	r.Completions = NewChatCompletionService(opts...)
 	return

@@ -11,6 +11,7 @@ const formatStructTag = "format"
 type parsedStructTag struct {
 	name      string
 	omitempty bool
+	omitzero  bool
 	inline    bool
 }
 
@@ -26,6 +27,8 @@ func parseQueryStructTag(field reflect.StructField) (tag parsedStructTag, ok boo
 	tag.name = parts[0]
 	for _, part := range parts[1:] {
 		switch part {
+		case "omitzero":
+			tag.omitzero = true
 		case "omitempty":
 			tag.omitempty = true
 		case "inline":

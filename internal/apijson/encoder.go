@@ -381,7 +381,7 @@ func (e *encoder) encodeMapEntries(json []byte, v reflect.Value) ([]byte, error)
 	return json, nil
 }
 
-func (e *encoder) newMapEncoder(t reflect.Type) encoderFunc {
+func (e *encoder) newMapEncoder(_ reflect.Type) encoderFunc {
 	return func(value reflect.Value) ([]byte, error) {
 		json := []byte("{}")
 		var err error

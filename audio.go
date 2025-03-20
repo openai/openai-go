@@ -14,16 +14,16 @@ import (
 // the [NewAudioService] method instead.
 type AudioService struct {
 	Options        []option.RequestOption
-	Transcriptions *AudioTranscriptionService
-	Translations   *AudioTranslationService
-	Speech         *AudioSpeechService
+	Transcriptions AudioTranscriptionService
+	Translations   AudioTranslationService
+	Speech         AudioSpeechService
 }
 
 // NewAudioService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewAudioService(opts ...option.RequestOption) (r *AudioService) {
-	r = &AudioService{}
+func NewAudioService(opts ...option.RequestOption) (r AudioService) {
+	r = AudioService{}
 	r.Options = opts
 	r.Transcriptions = NewAudioTranscriptionService(opts...)
 	r.Translations = NewAudioTranslationService(opts...)
@@ -51,11 +51,3 @@ const (
 	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json"
 	AudioResponseFormatVTT         AudioResponseFormat = "vtt"
 )
-
-func (r AudioResponseFormat) IsKnown() bool {
-	switch r {
-	case AudioResponseFormatJSON, AudioResponseFormatText, AudioResponseFormatSRT, AudioResponseFormatVerboseJSON, AudioResponseFormatVTT:
-		return true
-	}
-	return false
-}

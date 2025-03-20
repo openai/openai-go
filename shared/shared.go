@@ -3,9 +3,19 @@
 package shared
 
 import (
+	"encoding/json"
+
 	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/param"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/shared/constant"
 )
+
+// aliased to make [param.APIUnion] private when embedding
+type paramUnion = param.APIUnion
+
+// aliased to make [param.APIObject] private when embedding
+type paramObj = param.APIObject
 
 type ChatModel = string
 
@@ -57,9 +67,9 @@ const (
 
 // A filter used to compare a specified attribute key to a given value using a
 // defined comparison operation.
-type ComparisonFilterParam struct {
+type ComparisonFilter struct {
 	// The key to compare against the value.
-	Key param.Field[string] `json:"key,required"`
+	Key string `json:"key,required"`
 	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
 	//
 	// - `eq`: equals
@@ -68,17 +78,37 @@ type ComparisonFilterParam struct {
 	// - `gte`: greater than or equal
 	// - `lt`: less than
 	// - `lte`: less than or equal
-	Type param.Field[ComparisonFilterType] `json:"type,required"`
+	//
+	// Any of "eq", "ne", "gt", "gte", "lt", "lte".
+	Type ComparisonFilterType `json:"type,required"`
 	// The value to compare against the attribute key; supports string, number, or
 	// boolean types.
-	Value param.Field[ComparisonFilterValueUnionParam] `json:"value,required"`
+	Value ComparisonFilterValueUnion `json:"value,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Key         resp.Field
+		Type        resp.Field
+		Value       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-func (r ComparisonFilterParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+// Returns the unmodified JSON received from the API
+func (r ComparisonFilter) RawJSON() string { return r.JSON.raw }
+func (r *ComparisonFilter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r ComparisonFilterParam) ImplementsVectorStoreSearchParamsFiltersUnion() {}
+// ToParam converts this ComparisonFilter to a ComparisonFilterParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ComparisonFilterParam.IsOverridden()
+func (r ComparisonFilter) ToParam() ComparisonFilterParam {
+	return param.OverrideObj[ComparisonFilterParam](r.RawJSON())
+}
 
 // Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
 //
@@ -99,36 +129,143 @@ const (
 	ComparisonFilterTypeLte ComparisonFilterType = "lte"
 )
 
-func (r ComparisonFilterType) IsKnown() bool {
-	switch r {
-	case ComparisonFilterTypeEq, ComparisonFilterTypeNe, ComparisonFilterTypeGt, ComparisonFilterTypeGte, ComparisonFilterTypeLt, ComparisonFilterTypeLte:
-		return true
-	}
-	return false
+// ComparisonFilterValueUnion contains all possible properties and values from
+// [string], [float64], [bool].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfFloat OfBool]
+type ComparisonFilterValueUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [float64] instead of an object.
+	OfFloat float64 `json:",inline"`
+	// This field will be present if the value is a [bool] instead of an object.
+	OfBool bool `json:",inline"`
+	JSON   struct {
+		OfString resp.Field
+		OfFloat  resp.Field
+		OfBool   resp.Field
+		raw      string
+	} `json:"-"`
 }
 
-// The value to compare against the attribute key; supports string, number, or
-// boolean types.
+func (u ComparisonFilterValueUnion) AsString() (v string) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ComparisonFilterValueUnion) AsFloat() (v float64) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ComparisonFilterValueUnion) AsBool() (v bool) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ComparisonFilterValueUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ComparisonFilterValueUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A filter used to compare a specified attribute key to a given value using a
+// defined comparison operation.
 //
-// Satisfied by [shared.UnionString], [shared.UnionFloat], [shared.UnionBool].
-type ComparisonFilterValueUnionParam interface {
-	ImplementsComparisonFilterValueUnionParam()
+// The properties Key, Type, Value are required.
+type ComparisonFilterParam struct {
+	// The key to compare against the value.
+	Key string `json:"key,required"`
+	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+	//
+	// - `eq`: equals
+	// - `ne`: not equal
+	// - `gt`: greater than
+	// - `gte`: greater than or equal
+	// - `lt`: less than
+	// - `lte`: less than or equal
+	//
+	// Any of "eq", "ne", "gt", "gte", "lt", "lte".
+	Type ComparisonFilterType `json:"type,omitzero,required"`
+	// The value to compare against the attribute key; supports string, number, or
+	// boolean types.
+	Value ComparisonFilterValueUnionParam `json:"value,omitzero,required"`
+	paramObj
+}
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f ComparisonFilterParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+func (r ComparisonFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow ComparisonFilterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ComparisonFilterValueUnionParam struct {
+	OfString param.Opt[string]  `json:",omitzero,inline"`
+	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
+	OfBool   param.Opt[bool]    `json:",omitzero,inline"`
+	paramUnion
+}
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (u ComparisonFilterValueUnionParam) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
+func (u ComparisonFilterValueUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[ComparisonFilterValueUnionParam](u.OfString, u.OfFloat, u.OfBool)
+}
+
+func (u *ComparisonFilterValueUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfFloat) {
+		return &u.OfFloat.Value
+	} else if !param.IsOmitted(u.OfBool) {
+		return &u.OfBool.Value
+	}
+	return nil
 }
 
 // Combine multiple filters using `and` or `or`.
-type CompoundFilterParam struct {
+type CompoundFilter struct {
 	// Array of filters to combine. Items can be `ComparisonFilter` or
 	// `CompoundFilter`.
-	Filters param.Field[[]ComparisonFilterParam] `json:"filters,required"`
+	Filters []ComparisonFilter `json:"filters,required"`
 	// Type of operation: `and` or `or`.
-	Type param.Field[CompoundFilterType] `json:"type,required"`
+	//
+	// Any of "and", "or".
+	Type CompoundFilterType `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Filters     resp.Field
+		Type        resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-func (r CompoundFilterParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+// Returns the unmodified JSON received from the API
+func (r CompoundFilter) RawJSON() string { return r.JSON.raw }
+func (r *CompoundFilter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r CompoundFilterParam) ImplementsVectorStoreSearchParamsFiltersUnion() {}
+// ToParam converts this CompoundFilter to a CompoundFilterParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// CompoundFilterParam.IsOverridden()
+func (r CompoundFilter) ToParam() CompoundFilterParam {
+	return param.OverrideObj[CompoundFilterParam](r.RawJSON())
+}
 
 // Type of operation: `and` or `or`.
 type CompoundFilterType string
@@ -138,38 +275,49 @@ const (
 	CompoundFilterTypeOr  CompoundFilterType = "or"
 )
 
-func (r CompoundFilterType) IsKnown() bool {
-	switch r {
-	case CompoundFilterTypeAnd, CompoundFilterTypeOr:
-		return true
-	}
-	return false
+// Combine multiple filters using `and` or `or`.
+//
+// The properties Filters, Type are required.
+type CompoundFilterParam struct {
+	// Array of filters to combine. Items can be `ComparisonFilter` or
+	// `CompoundFilter`.
+	Filters []ComparisonFilterParam `json:"filters,omitzero,required"`
+	// Type of operation: `and` or `or`.
+	//
+	// Any of "and", "or".
+	Type CompoundFilterType `json:"type,omitzero,required"`
+	paramObj
+}
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f CompoundFilterParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+func (r CompoundFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow CompoundFilterParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type ErrorObject struct {
-	Code    string          `json:"code,required,nullable"`
-	Message string          `json:"message,required"`
-	Param   string          `json:"param,required,nullable"`
-	Type    string          `json:"type,required"`
-	JSON    errorObjectJSON `json:"-"`
+	Code    string `json:"code,required"`
+	Message string `json:"message,required"`
+	Param   string `json:"param,required"`
+	Type    string `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Code        resp.Field
+		Message     resp.Field
+		Param       resp.Field
+		Type        resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// errorObjectJSON contains the JSON metadata for the struct [ErrorObject]
-type errorObjectJSON struct {
-	Code        apijson.Field
-	Message     apijson.Field
-	Param       apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ErrorObject) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ErrorObject) RawJSON() string { return r.JSON.raw }
+func (r *ErrorObject) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r errorObjectJSON) RawJSON() string {
-	return r.raw
 }
 
 type FunctionDefinition struct {
@@ -192,36 +340,48 @@ type FunctionDefinition struct {
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
 	// [function calling guide](docs/guides/function-calling).
-	Strict bool                   `json:"strict,nullable"`
-	JSON   functionDefinitionJSON `json:"-"`
+	Strict bool `json:"strict,nullable"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Name        resp.Field
+		Description resp.Field
+		Parameters  resp.Field
+		Strict      resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// functionDefinitionJSON contains the JSON metadata for the struct
-// [FunctionDefinition]
-type functionDefinitionJSON struct {
-	Name        apijson.Field
-	Description apijson.Field
-	Parameters  apijson.Field
-	Strict      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *FunctionDefinition) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r FunctionDefinition) RawJSON() string { return r.JSON.raw }
+func (r *FunctionDefinition) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r functionDefinitionJSON) RawJSON() string {
-	return r.raw
+// ToParam converts this FunctionDefinition to a FunctionDefinitionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// FunctionDefinitionParam.IsOverridden()
+func (r FunctionDefinition) ToParam() FunctionDefinitionParam {
+	return param.OverrideObj[FunctionDefinitionParam](r.RawJSON())
 }
 
+// The property Name is required.
 type FunctionDefinitionParam struct {
 	// The name of the function to be called. Must be a-z, A-Z, 0-9, or contain
 	// underscores and dashes, with a maximum length of 64.
-	Name param.Field[string] `json:"name,required"`
+	Name string `json:"name,required"`
+	// Whether to enable strict schema adherence when generating the function call. If
+	// set to true, the model will follow the exact schema defined in the `parameters`
+	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
+	// more about Structured Outputs in the
+	// [function calling guide](docs/guides/function-calling).
+	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the function does, used by the model to choose when and
 	// how to call the function.
-	Description param.Field[string] `json:"description"`
+	Description param.Opt[string] `json:"description,omitzero"`
 	// The parameters the functions accepts, described as a JSON Schema object. See the
 	// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
 	// and the
@@ -229,17 +389,16 @@ type FunctionDefinitionParam struct {
 	// documentation about the format.
 	//
 	// Omitting `parameters` defines a function with an empty parameter list.
-	Parameters param.Field[FunctionParameters] `json:"parameters"`
-	// Whether to enable strict schema adherence when generating the function call. If
-	// set to true, the model will follow the exact schema defined in the `parameters`
-	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
-	// more about Structured Outputs in the
-	// [function calling guide](docs/guides/function-calling).
-	Strict param.Field[bool] `json:"strict"`
+	Parameters FunctionParameters `json:"parameters,omitzero"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f FunctionDefinitionParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r FunctionDefinitionParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow FunctionDefinitionParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 type FunctionParameters map[string]interface{}
@@ -247,6 +406,98 @@ type FunctionParameters map[string]interface{}
 type Metadata map[string]string
 
 type MetadataParam map[string]string
+
+// **o-series models only**
+//
+// Configuration options for
+// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+type Reasoning struct {
+	// **o-series models only**
+	//
+	// Constrains effort on reasoning for
+	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+	// result in faster responses and fewer tokens used on reasoning in a response.
+	//
+	// Any of "low", "medium", "high".
+	Effort ReasoningEffort `json:"effort,nullable"`
+	// **computer_use_preview only**
+	//
+	// A summary of the reasoning performed by the model. This can be useful for
+	// debugging and understanding the model's reasoning process. One of `concise` or
+	// `detailed`.
+	//
+	// Any of "concise", "detailed".
+	GenerateSummary ReasoningGenerateSummary `json:"generate_summary,nullable"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Effort          resp.Field
+		GenerateSummary resp.Field
+		ExtraFields     map[string]resp.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r Reasoning) RawJSON() string { return r.JSON.raw }
+func (r *Reasoning) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this Reasoning to a ReasoningParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ReasoningParam.IsOverridden()
+func (r Reasoning) ToParam() ReasoningParam {
+	return param.OverrideObj[ReasoningParam](r.RawJSON())
+}
+
+// **computer_use_preview only**
+//
+// A summary of the reasoning performed by the model. This can be useful for
+// debugging and understanding the model's reasoning process. One of `concise` or
+// `detailed`.
+type ReasoningGenerateSummary string
+
+const (
+	ReasoningGenerateSummaryConcise  ReasoningGenerateSummary = "concise"
+	ReasoningGenerateSummaryDetailed ReasoningGenerateSummary = "detailed"
+)
+
+// **o-series models only**
+//
+// Configuration options for
+// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+type ReasoningParam struct {
+	// **o-series models only**
+	//
+	// Constrains effort on reasoning for
+	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
+	// result in faster responses and fewer tokens used on reasoning in a response.
+	//
+	// Any of "low", "medium", "high".
+	Effort ReasoningEffort `json:"effort,omitzero"`
+	// **computer_use_preview only**
+	//
+	// A summary of the reasoning performed by the model. This can be useful for
+	// debugging and understanding the model's reasoning process. One of `concise` or
+	// `detailed`.
+	//
+	// Any of "concise", "detailed".
+	GenerateSummary ReasoningGenerateSummary `json:"generate_summary,omitzero"`
+	paramObj
+}
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f ReasoningParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
+func (r ReasoningParam) MarshalJSON() (data []byte, err error) {
+	type shadow ReasoningParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
 
 // **o-series models only**
 //
@@ -262,71 +513,57 @@ const (
 	ReasoningEffortHigh   ReasoningEffort = "high"
 )
 
-func (r ReasoningEffort) IsKnown() bool {
-	switch r {
-	case ReasoningEffortLow, ReasoningEffortMedium, ReasoningEffortHigh:
-		return true
-	}
-	return false
-}
-
 // JSON object response format. An older method of generating JSON responses. Using
 // `json_schema` is recommended for models that support it. Note that the model
 // will not generate JSON without a system or user message instructing it to do so.
 type ResponseFormatJSONObject struct {
 	// The type of response format being defined. Always `json_object`.
-	Type ResponseFormatJSONObjectType `json:"type,required"`
-	JSON responseFormatJSONObjectJSON `json:"-"`
+	Type constant.JSONObject `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Type        resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// responseFormatJSONObjectJSON contains the JSON metadata for the struct
-// [ResponseFormatJSONObject]
-type responseFormatJSONObjectJSON struct {
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ResponseFormatJSONObject) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ResponseFormatJSONObject) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFormatJSONObject) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r responseFormatJSONObjectJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r ResponseFormatJSONObject) ImplementsAssistantResponseFormatOptionUnion() {}
-
-// The type of response format being defined. Always `json_object`.
-type ResponseFormatJSONObjectType string
-
-const (
-	ResponseFormatJSONObjectTypeJSONObject ResponseFormatJSONObjectType = "json_object"
-)
-
-func (r ResponseFormatJSONObjectType) IsKnown() bool {
-	switch r {
-	case ResponseFormatJSONObjectTypeJSONObject:
-		return true
-	}
-	return false
+// ToParam converts this ResponseFormatJSONObject to a
+// ResponseFormatJSONObjectParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ResponseFormatJSONObjectParam.IsOverridden()
+func (r ResponseFormatJSONObject) ToParam() ResponseFormatJSONObjectParam {
+	return param.OverrideObj[ResponseFormatJSONObjectParam](r.RawJSON())
 }
 
 // JSON object response format. An older method of generating JSON responses. Using
 // `json_schema` is recommended for models that support it. Note that the model
 // will not generate JSON without a system or user message instructing it to do so.
+//
+// The property Type is required.
 type ResponseFormatJSONObjectParam struct {
 	// The type of response format being defined. Always `json_object`.
-	Type param.Field[ResponseFormatJSONObjectType] `json:"type,required"`
+	//
+	// This field can be elided, and will marshal its zero value as "json_object".
+	Type constant.JSONObject `json:"type,required"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f ResponseFormatJSONObjectParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r ResponseFormatJSONObjectParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow ResponseFormatJSONObjectParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-func (r ResponseFormatJSONObjectParam) ImplementsChatCompletionNewParamsResponseFormatUnion() {}
-
-func (r ResponseFormatJSONObjectParam) ImplementsAssistantResponseFormatOptionUnionParam() {}
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
@@ -335,28 +572,32 @@ type ResponseFormatJSONSchema struct {
 	// Structured Outputs configuration options, including a JSON Schema.
 	JSONSchema ResponseFormatJSONSchemaJSONSchema `json:"json_schema,required"`
 	// The type of response format being defined. Always `json_schema`.
-	Type ResponseFormatJSONSchemaType `json:"type,required"`
-	JSON responseFormatJSONSchemaJSON `json:"-"`
+	Type constant.JSONSchema `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		JSONSchema  resp.Field
+		Type        resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// responseFormatJSONSchemaJSON contains the JSON metadata for the struct
-// [ResponseFormatJSONSchema]
-type responseFormatJSONSchemaJSON struct {
-	JSONSchema  apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ResponseFormatJSONSchema) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ResponseFormatJSONSchema) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFormatJSONSchema) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r responseFormatJSONSchemaJSON) RawJSON() string {
-	return r.raw
+// ToParam converts this ResponseFormatJSONSchema to a
+// ResponseFormatJSONSchemaParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ResponseFormatJSONSchemaParam.IsOverridden()
+func (r ResponseFormatJSONSchema) ToParam() ResponseFormatJSONSchemaParam {
+	return param.OverrideObj[ResponseFormatJSONSchemaParam](r.RawJSON())
 }
-
-func (r ResponseFormatJSONSchema) ImplementsAssistantResponseFormatOptionUnion() {}
 
 // Structured Outputs configuration options, including a JSON Schema.
 type ResponseFormatJSONSchemaJSONSchema struct {
@@ -374,135 +615,134 @@ type ResponseFormatJSONSchemaJSONSchema struct {
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
 	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
-	Strict bool                                   `json:"strict,nullable"`
-	JSON   responseFormatJSONSchemaJSONSchemaJSON `json:"-"`
+	Strict bool `json:"strict,nullable"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Name        resp.Field
+		Description resp.Field
+		Schema      resp.Field
+		Strict      resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// responseFormatJSONSchemaJSONSchemaJSON contains the JSON metadata for the struct
-// [ResponseFormatJSONSchemaJSONSchema]
-type responseFormatJSONSchemaJSONSchemaJSON struct {
-	Name        apijson.Field
-	Description apijson.Field
-	Schema      apijson.Field
-	Strict      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ResponseFormatJSONSchemaJSONSchema) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ResponseFormatJSONSchemaJSONSchema) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFormatJSONSchemaJSONSchema) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r responseFormatJSONSchemaJSONSchemaJSON) RawJSON() string {
-	return r.raw
-}
-
-// The type of response format being defined. Always `json_schema`.
-type ResponseFormatJSONSchemaType string
-
-const (
-	ResponseFormatJSONSchemaTypeJSONSchema ResponseFormatJSONSchemaType = "json_schema"
-)
-
-func (r ResponseFormatJSONSchemaType) IsKnown() bool {
-	switch r {
-	case ResponseFormatJSONSchemaTypeJSONSchema:
-		return true
-	}
-	return false
 }
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
 // [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+//
+// The properties JSONSchema, Type are required.
 type ResponseFormatJSONSchemaParam struct {
 	// Structured Outputs configuration options, including a JSON Schema.
-	JSONSchema param.Field[ResponseFormatJSONSchemaJSONSchemaParam] `json:"json_schema,required"`
+	JSONSchema ResponseFormatJSONSchemaJSONSchemaParam `json:"json_schema,omitzero,required"`
 	// The type of response format being defined. Always `json_schema`.
-	Type param.Field[ResponseFormatJSONSchemaType] `json:"type,required"`
+	//
+	// This field can be elided, and will marshal its zero value as "json_schema".
+	Type constant.JSONSchema `json:"type,required"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f ResponseFormatJSONSchemaParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r ResponseFormatJSONSchemaParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow ResponseFormatJSONSchemaParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-func (r ResponseFormatJSONSchemaParam) ImplementsChatCompletionNewParamsResponseFormatUnion() {}
-
-func (r ResponseFormatJSONSchemaParam) ImplementsAssistantResponseFormatOptionUnionParam() {}
 
 // Structured Outputs configuration options, including a JSON Schema.
+//
+// The property Name is required.
 type ResponseFormatJSONSchemaJSONSchemaParam struct {
 	// The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores
 	// and dashes, with a maximum length of 64.
-	Name param.Field[string] `json:"name,required"`
-	// A description of what the response format is for, used by the model to determine
-	// how to respond in the format.
-	Description param.Field[string] `json:"description"`
-	// The schema for the response format, described as a JSON Schema object. Learn how
-	// to build JSON schemas [here](https://json-schema.org/).
-	Schema param.Field[map[string]interface{}] `json:"schema"`
+	Name string `json:"name,required"`
 	// Whether to enable strict schema adherence when generating the output. If set to
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
 	// learn more, read the
 	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
-	Strict param.Field[bool] `json:"strict"`
+	Strict param.Opt[bool] `json:"strict,omitzero"`
+	// A description of what the response format is for, used by the model to determine
+	// how to respond in the format.
+	Description param.Opt[string] `json:"description,omitzero"`
+	// The schema for the response format, described as a JSON Schema object. Learn how
+	// to build JSON schemas [here](https://json-schema.org/).
+	Schema map[string]interface{} `json:"schema,omitzero"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f ResponseFormatJSONSchemaJSONSchemaParam) IsPresent() bool {
+	return !param.IsOmitted(f) && !f.IsNull()
+}
 func (r ResponseFormatJSONSchemaJSONSchemaParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow ResponseFormatJSONSchemaJSONSchemaParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
 // Default response format. Used to generate text responses.
 type ResponseFormatText struct {
 	// The type of response format being defined. Always `text`.
-	Type ResponseFormatTextType `json:"type,required"`
-	JSON responseFormatTextJSON `json:"-"`
+	Type constant.Text `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Type        resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// responseFormatTextJSON contains the JSON metadata for the struct
-// [ResponseFormatText]
-type responseFormatTextJSON struct {
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ResponseFormatText) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ResponseFormatText) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFormatText) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r responseFormatTextJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r ResponseFormatText) ImplementsAssistantResponseFormatOptionUnion() {}
-
-// The type of response format being defined. Always `text`.
-type ResponseFormatTextType string
-
-const (
-	ResponseFormatTextTypeText ResponseFormatTextType = "text"
-)
-
-func (r ResponseFormatTextType) IsKnown() bool {
-	switch r {
-	case ResponseFormatTextTypeText:
-		return true
-	}
-	return false
+// ToParam converts this ResponseFormatText to a ResponseFormatTextParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ResponseFormatTextParam.IsOverridden()
+func (r ResponseFormatText) ToParam() ResponseFormatTextParam {
+	return param.OverrideObj[ResponseFormatTextParam](r.RawJSON())
 }
 
 // Default response format. Used to generate text responses.
+//
+// The property Type is required.
 type ResponseFormatTextParam struct {
 	// The type of response format being defined. Always `text`.
-	Type param.Field[ResponseFormatTextType] `json:"type,required"`
+	//
+	// This field can be elided, and will marshal its zero value as "text".
+	Type constant.Text `json:"type,required"`
+	paramObj
 }
 
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f ResponseFormatTextParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r ResponseFormatTextParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow ResponseFormatTextParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
-func (r ResponseFormatTextParam) ImplementsChatCompletionNewParamsResponseFormatUnion() {}
+// ResponsesModel also accepts any [string] or [ChatModel]
+type ResponsesModel = string
 
-func (r ResponseFormatTextParam) ImplementsAssistantResponseFormatOptionUnionParam() {}
+const (
+	ResponsesModelO1Pro                        ResponsesModel = "o1-pro"
+	ResponsesModelO1Pro2025_03_19              ResponsesModel = "o1-pro-2025-03-19"
+	ResponsesModelComputerUsePreview           ResponsesModel = "computer-use-preview"
+	ResponsesModelComputerUsePreview2025_03_11 ResponsesModel = "computer-use-preview-2025-03-11"
+	// Or some ...[ChatModel]
+)
