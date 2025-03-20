@@ -34,11 +34,14 @@ func NewAudioService(opts ...option.RequestOption) (r *AudioService) {
 type AudioModel = string
 
 const (
-	AudioModelWhisper1 AudioModel = "whisper-1"
+	AudioModelWhisper1            AudioModel = "whisper-1"
+	AudioModelGPT4oTranscribe     AudioModel = "gpt-4o-transcribe"
+	AudioModelGPT4oMiniTranscribe AudioModel = "gpt-4o-mini-transcribe"
 )
 
 // The format of the output, in one of these options: `json`, `text`, `srt`,
-// `verbose_json`, or `vtt`.
+// `verbose_json`, or `vtt`. For `gpt-4o-transcribe` and `gpt-4o-mini-transcribe`,
+// the only supported format is `json`.
 type AudioResponseFormat string
 
 const (
