@@ -53,8 +53,8 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 			FileSearch: openai.BetaThreadNewParamsToolResourcesFileSearch{
 				VectorStoreIDs: []string{"string"},
 				VectorStores: []openai.BetaThreadNewParamsToolResourcesFileSearchVectorStore{{
-					ChunkingStrategy: openai.AssisstantVectorStoreChunkingStrategyUnionParam{
-						OfAuto: &openai.AssisstantVectorStoreChunkingStrategyAutoParam{},
+					ChunkingStrategy: openai.BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion{
+						OfAuto: &openai.BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto{},
 					},
 					FileIDs: []string{"string"},
 					Metadata: shared.MetadataParam{
@@ -207,8 +207,8 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 				FileSearch: openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearch{
 					VectorStoreIDs: []string{"string"},
 					VectorStores: []openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore{{
-						ChunkingStrategy: openai.AssisstantVectorStoreChunkingStrategyUnionParam{
-							OfAuto: &openai.AssisstantVectorStoreChunkingStrategyAutoParam{},
+						ChunkingStrategy: openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion{
+							OfAuto: &openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto{},
 						},
 						FileIDs: []string{"string"},
 						Metadata: shared.MetadataParam{
