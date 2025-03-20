@@ -580,7 +580,7 @@ type ChatCompletionChunk struct {
 	//
 	// **NOTE:** If the stream is interrupted or cancelled, you may not receive the
 	// final usage chunk which contains the total token usage for the request.
-	Usage CompletionUsage         `json:"usage"`
+	Usage CompletionUsage         `json:"usage,nullable"`
 	JSON  chatCompletionChunkJSON `json:"-"`
 }
 
