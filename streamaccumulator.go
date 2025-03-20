@@ -1,5 +1,7 @@
 package openai
 
+import "github.com/openai/openai-go/shared/constant"
+
 // Helper to accumulate chunks from a stream
 type ChatCompletionAccumulator struct {
 	// The up-to-date accumulation of model's responses
@@ -11,6 +13,7 @@ type ChatCompletionAccumulator struct {
 type FinishedChatCompletionToolCall struct {
 	ChatCompletionMessageToolCallFunction
 	Index int
+	Id    string
 }
 
 type chatCompletionResponseState struct {
@@ -81,7 +84,9 @@ func (acc *ChatCompletionAccumulator) JustFinishedRefusal() (refusal string, ok 
 func (acc *ChatCompletionAccumulator) JustFinishedToolCall() (toolcall FinishedChatCompletionToolCall, ok bool) {
 	if acc.justFinished.state == toolResponseState {
 		f := acc.Choices[0].Message.ToolCalls[acc.justFinished.index].Function
+		id := acc.Choices[0].Message.ToolCalls[acc.justFinished.index].ID
 		return FinishedChatCompletionToolCall{
+			Id:    id,
 			Index: acc.justFinished.index,
 			ChatCompletionMessageToolCallFunction: ChatCompletionMessageToolCallFunction{
 				Name:      f.Name,
@@ -108,10 +113,10 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 		choice := &cc.Choices[delta.Index]
 
 		choice.Index = delta.Index
-		choice.FinishReason = ChatCompletionChoicesFinishReason(delta.FinishReason)
+		choice.FinishReason = delta.FinishReason
 
 		if delta.Delta.Role != "" {
-			choice.Message.Role = ChatCompletionMessageRole(delta.Delta.Role)
+			choice.Message.Role = constant.Assistant(delta.Delta.Role)
 		}
 
 		choice.Message.Content += delta.Delta.Content
@@ -127,7 +132,7 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 				tool.ID = deltaTool.ID
 			}
 			if deltaTool.Type != "" {
-				tool.Type = ChatCompletionMessageToolCallType(deltaTool.Type)
+				tool.Type = constant.Function(deltaTool.Type)
 			}
 			tool.Function.Name += deltaTool.Function.Name
 			tool.Function.Arguments += deltaTool.Function.Arguments
@@ -145,7 +150,9 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 	cc.Created = chunk.Created
 	cc.SystemFingerprint = chunk.SystemFingerprint
 	cc.ServiceTier = ChatCompletionServiceTier(chunk.ServiceTier)
-	cc.Object = ChatCompletionObject(chunk.Object)
+	if chunk.Object == chunk.Object.Default() {
+		cc.Object = cc.Object.Default()
+	}
 
 	return true
 }
@@ -156,11 +163,11 @@ func (prev *chatCompletionResponseState) update(chunk ChatCompletionChunk) (just
 	delta := chunk.Choices[0].Delta
 	new := chatCompletionResponseState{}
 	switch {
-	case !delta.JSON.Content.IsNull():
+	case delta.JSON.Content.IsPresent():
 		new.state = contentResponseState
-	case !delta.JSON.Refusal.IsNull():
+	case delta.JSON.Refusal.IsPresent():
 		new.state = refusalResponseState
-	case !delta.JSON.ToolCalls.IsNull():
+	case delta.JSON.ToolCalls.IsPresent():
 		new.state = toolResponseState
 		new.index = int(delta.ToolCalls[0].Index)
 	default:
@@ -172,7 +179,7 @@ func (prev *chatCompletionResponseState) update(chunk ChatCompletionChunk) (just
 	}
 	*prev = new
 
-	return justFinished
+	return
 }
 
 func expandToFit[T any](slice []T, index int) []T {

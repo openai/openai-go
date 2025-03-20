@@ -1,43 +1,28 @@
 package openai
 
 import (
-	"github.com/openai/openai-go/internal/param"
+	"github.com/openai/openai-go/packages/param"
 	"io"
+	"time"
 )
 
-// F is a param field helper used to initialize a [param.Field] generic struct.
-// This helps specify null, zero values, and overrides, as well as normal values.
-// You can read more about this in our [README].
-//
-// [README]: https://pkg.go.dev/github.com/openai/openai-go#readme-request-fields
-func F[T any](value T) param.Field[T] { return param.Field[T]{Value: value, Present: true} }
+func String(s string) param.Opt[string]     { return param.NewOpt(s) }
+func Int(i int64) param.Opt[int64]          { return param.NewOpt(i) }
+func Bool(b bool) param.Opt[bool]           { return param.NewOpt(b) }
+func Float(f float64) param.Opt[float64]    { return param.NewOpt(f) }
+func Time(t time.Time) param.Opt[time.Time] { return param.NewOpt(t) }
 
-// Null is a param field helper which explicitly sends null to the API.
-func Null[T any]() param.Field[T] { return param.Field[T]{Null: true, Present: true} }
+func Opt[T comparable](v T) param.Opt[T] { return param.NewOpt(v) }
+func Ptr[T any](v T) *T                  { return &v }
 
-// Raw is a param field helper for specifying values for fields when the
-// type you are looking to send is different from the type that is specified in
-// the SDK. For example, if the type of the field is an integer, but you want
-// to send a float, you could do that by setting the corresponding field with
-// Raw[int](0.5).
-func Raw[T any](value any) param.Field[T] { return param.Field[T]{Raw: value, Present: true} }
+func IntPtr(v int64) *int64          { return &v }
+func BoolPtr(v bool) *bool           { return &v }
+func FloatPtr(v float64) *float64    { return &v }
+func StringPtr(v string) *string     { return &v }
+func TimePtr(v time.Time) *time.Time { return &v }
 
-// Int is a param field helper which helps specify integers. This is
-// particularly helpful when specifying integer constants for fields.
-func Int(value int64) param.Field[int64] { return F(value) }
-
-// String is a param field helper which helps specify strings.
-func String(value string) param.Field[string] { return F(value) }
-
-// Float is a param field helper which helps specify floats.
-func Float(value float64) param.Field[float64] { return F(value) }
-
-// Bool is a param field helper which helps specify bools.
-func Bool(value bool) param.Field[bool] { return F(value) }
-
-// FileParam is a param field helper which helps files with a mime content-type.
-func FileParam(reader io.Reader, filename string, contentType string) param.Field[io.Reader] {
-	return F[io.Reader](&file{reader, filename, contentType})
+func File(rdr io.Reader, filename string, contentType string) file {
+	return file{rdr, filename, contentType}
 }
 
 type file struct {
@@ -46,5 +31,15 @@ type file struct {
 	contentType string
 }
 
-func (f *file) ContentType() string { return f.contentType }
-func (f *file) Filename() string    { return f.name }
+func (f file) Filename() string {
+	if f.name != "" {
+		return f.name
+	} else if named, ok := f.Reader.(interface{ Name() string }); ok {
+		return named.Name()
+	}
+	return ""
+}
+
+func (f file) ContentType() string {
+	return f.contentType
+}

@@ -27,7 +27,7 @@ func getPollInterval(raw *http.Response) (ms int) {
 
 // PollStatus waits until a VectorStoreFile is no longer in an incomplete state and returns it.
 // Pass 0 as pollIntervalMs to use the default polling interval of 1 second.
-func (r *BetaVectorStoreFileService) PollStatus(ctx context.Context, vectorStoreID string, fileID string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFile, error) {
+func (r *VectorStoreFileService) PollStatus(ctx context.Context, vectorStoreID string, fileID string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFile, error) {
 	var raw *http.Response
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
 	opts = append(opts, option.WithResponseInto(&raw))
@@ -62,7 +62,7 @@ func (r *BetaVectorStoreFileService) PollStatus(ctx context.Context, vectorStore
 
 // PollStatus waits until a BetaVectorStoreFileBatch is no longer in an incomplete state and returns it.
 // Pass 0 as pollIntervalMs to use the default polling interval of 1 second.
-func (r *BetaVectorStoreFileBatchService) PollStatus(ctx context.Context, vectorStoreID string, batchID string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFileBatch, error) {
+func (r *VectorStoreFileBatchService) PollStatus(ctx context.Context, vectorStoreID string, batchID string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFileBatch, error) {
 	var raw *http.Response
 	opts = append(opts, option.WithResponseInto(&raw))
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)

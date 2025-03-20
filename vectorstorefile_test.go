@@ -11,7 +11,6 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
 )
 
 func TestVectorStoreFileNewWithOptionalParams(t *testing.T) {
@@ -30,13 +29,15 @@ func TestVectorStoreFileNewWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"vs_abc123",
 		openai.VectorStoreFileNewParams{
-			FileID: openai.F("file_id"),
-			Attributes: openai.F(map[string]openai.VectorStoreFileNewParamsAttributesUnion{
-				"foo": shared.UnionString("string"),
-			}),
-			ChunkingStrategy: openai.F[openai.FileChunkingStrategyParamUnion](openai.AutoFileChunkingStrategyParam{
-				Type: openai.F(openai.AutoFileChunkingStrategyParamTypeAuto),
-			}),
+			FileID: "file_id",
+			Attributes: map[string]openai.VectorStoreFileNewParamsAttributeUnion{
+				"foo": {
+					OfString: openai.String("string"),
+				},
+			},
+			ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
+				OfAuto: &openai.AutoFileChunkingStrategyParam{},
+			},
 		},
 	)
 	if err != nil {
@@ -91,9 +92,11 @@ func TestVectorStoreFileUpdate(t *testing.T) {
 		"vs_abc123",
 		"file-abc123",
 		openai.VectorStoreFileUpdateParams{
-			Attributes: openai.F(map[string]openai.VectorStoreFileUpdateParamsAttributesUnion{
-				"foo": shared.UnionString("string"),
-			}),
+			Attributes: map[string]openai.VectorStoreFileUpdateParamsAttributeUnion{
+				"foo": {
+					OfString: openai.String("string"),
+				},
+			},
 		},
 	)
 	if err != nil {
@@ -121,11 +124,11 @@ func TestVectorStoreFileListWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"vector_store_id",
 		openai.VectorStoreFileListParams{
-			After:  openai.F("after"),
-			Before: openai.F("before"),
-			Filter: openai.F(openai.VectorStoreFileListParamsFilterInProgress),
-			Limit:  openai.F(int64(0)),
-			Order:  openai.F(openai.VectorStoreFileListParamsOrderAsc),
+			After:  openai.String("after"),
+			Before: openai.String("before"),
+			Filter: openai.VectorStoreFileListParamsFilterInProgress,
+			Limit:  openai.Int(0),
+			Order:  openai.VectorStoreFileListParamsOrderAsc,
 		},
 	)
 	if err != nil {

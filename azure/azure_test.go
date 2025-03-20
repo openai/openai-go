@@ -12,11 +12,11 @@ import (
 
 func TestJSONRoute(t *testing.T) {
 	chatCompletionParams := openai.ChatCompletionNewParams{
-		Model: openai.F(openai.ChatModel("arbitraryDeployment")),
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		Model: openai.ChatModel("arbitraryDeployment"),
+		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.AssistantMessage("You are a helpful assistant"),
 			openai.UserMessage("Can you tell me another word for the universe?"),
-		}),
+		},
 	}
 
 	serializedBytes, err := apijson.MarshalRoot(chatCompletionParams)
@@ -86,11 +86,11 @@ func TestGetAudioMultipartRoute(t *testing.T) {
 
 func TestNoRouteChangeNeeded(t *testing.T) {
 	chatCompletionParams := openai.ChatCompletionNewParams{
-		Model: openai.F(openai.ChatModel("arbitraryDeployment")),
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		Model: openai.ChatModel("arbitraryDeployment"),
+		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.AssistantMessage("You are a helpful assistant"),
 			openai.UserMessage("Can you tell me another word for the universe?"),
-		}),
+		},
 	}
 
 	serializedBytes, err := apijson.MarshalRoot(chatCompletionParams)

@@ -52,21 +52,24 @@ func TestStreamingAccumulatorWithToolCalls(t *testing.T) {
 		}),
 	)
 	stream := client.Chat.Completions.NewStreaming(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionSystemMessageParam{
-			Content: openai.F([]openai.ChatCompletionContentPartTextParam{{Text: openai.F("Tell me a story about a place in Greece, then tell me the weather there."), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
-			Role:    openai.F(openai.ChatCompletionSystemMessageParamRoleSystem),
-			Name:    openai.F("initialization"),
-		}}),
-		Model:    openai.F(openai.ChatModelGPT4o),
-		Logprobs: openai.F(true),
-		StreamOptions: openai.F(openai.ChatCompletionStreamOptionsParam{
-			IncludeUsage: openai.F(true),
-		}),
-		Tools: openai.F([]openai.ChatCompletionToolParam{{
-			Function: openai.F(shared.FunctionDefinitionParam{
-				Name:        openai.F("get_weather"),
-				Description: openai.F("gets weather data"),
-				Parameters: openai.F(openai.FunctionParameters{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			{OfSystem: &openai.ChatCompletionSystemMessageParam{
+				Content: openai.ChatCompletionSystemMessageParamContentUnion{
+					OfString: openai.String("Tell me a story about a place in Greece, then tell me the weather there."),
+				},
+				Name: openai.String("initialization"),
+			}},
+		},
+		Model:    openai.ChatModelGPT4o,
+		Logprobs: openai.Bool(true),
+		StreamOptions: openai.ChatCompletionStreamOptionsParam{
+			IncludeUsage: openai.Bool(true),
+		},
+		Tools: []openai.ChatCompletionToolParam{{
+			Function: shared.FunctionDefinitionParam{
+				Name:        "get_weather",
+				Description: openai.String("gets weather data"),
+				Parameters: openai.FunctionParameters{
 					"type": "object",
 					"properties": map[string]interface{}{
 						"location": map[string]string{
@@ -75,12 +78,11 @@ func TestStreamingAccumulatorWithToolCalls(t *testing.T) {
 					},
 					"required":             []string{"location"},
 					"additionalProperties": false,
-				}),
-				Strict: openai.F(true),
-			}),
-			Type: openai.F(openai.ChatCompletionToolTypeFunction),
-		}}),
-		User: openai.F("user-1234"),
+				},
+				Strict: openai.Bool(true),
+			},
+		}},
+		User: openai.String("user-1234"),
 	})
 
 	acc := openai.ChatCompletionAccumulator{}

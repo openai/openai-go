@@ -29,9 +29,9 @@ func TestChatCompletionMessageListWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"completion_id",
 		openai.ChatCompletionMessageListParams{
-			After: openai.F("after"),
-			Limit: openai.F(int64(0)),
-			Order: openai.F(openai.ChatCompletionMessageListParamsOrderAsc),
+			After: openai.String("after"),
+			Limit: openai.Int(0),
+			Order: openai.ChatCompletionMessageListParamsOrderAsc,
 		},
 	)
 	if err != nil {
