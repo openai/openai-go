@@ -145,9 +145,16 @@ Params Types:
 
 ## Transcriptions
 
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#TranscriptionInclude">TranscriptionInclude</a>
+
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#Transcription">Transcription</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#TranscriptionStreamEvent">TranscriptionStreamEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#TranscriptionTextDeltaEvent">TranscriptionTextDeltaEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go#TranscriptionTextDoneEvent">TranscriptionTextDoneEvent</a>
 
 Methods:
 

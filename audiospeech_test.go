@@ -30,6 +30,7 @@ func TestAudioSpeechNewWithOptionalParams(t *testing.T) {
 		Input:          openai.F("input"),
 		Model:          openai.F(openai.SpeechModelTTS1),
 		Voice:          openai.F(openai.AudioSpeechNewParamsVoiceAlloy),
+		Instructions:   openai.F("instructions"),
 		ResponseFormat: openai.F(openai.AudioSpeechNewParamsResponseFormatMP3),
 		Speed:          openai.F(0.250000),
 	})
