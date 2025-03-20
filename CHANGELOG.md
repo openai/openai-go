@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.0-alpha.66 (2025-03-20)
+
+Full Changelog: [v0.1.0-alpha.65...v0.1.0-alpha.66](https://github.com/openai/openai-go/compare/v0.1.0-alpha.65...v0.1.0-alpha.66)
+
+### Features
+
+* **api:** o1-pro now available through the API ([#296](https://github.com/openai/openai-go/issues/296)) ([c3265ab](https://github.com/openai/openai-go/commit/c3265ab62826e475a61bb951115913a9acdc6947))
+
+
+### Bug Fixes
+
+* **api:** correct some Responses types ([#295](https://github.com/openai/openai-go/issues/295)) ([9ec5b48](https://github.com/openai/openai-go/commit/9ec5b4821800f1312660de85043fe1755f80375f))
+* **types:** improve responses type names ([ffc93bb](https://github.com/openai/openai-go/commit/ffc93bb7b7a9020032693728bd33b6675057a618))
+
+
+### Chores
+
+* **internal:** codegen related update ([#292](https://github.com/openai/openai-go/issues/292)) ([81e7895](https://github.com/openai/openai-go/commit/81e789545a3c6eac8bc56687f8131308735ac8fc))
+
 ## 0.1.0-alpha.65 (2025-03-17)
 
 Full Changelog: [v0.1.0-alpha.64...v0.1.0-alpha.65](https://github.com/openai/openai-go/compare/v0.1.0-alpha.64...v0.1.0-alpha.65)
