@@ -40,15 +40,15 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 			OfAuto: constant.ValueOf[constant.Auto](),
 		},
 		Temperature: openai.Float(1),
-		ToolResources: openai.BetaAssistantNewParamsToolResources{
-			CodeInterpreter: openai.BetaAssistantNewParamsToolResourcesCodeInterpreter{
+		ToolResources: openai.AssistantToolResourcesParam{
+			CodeInterpreter: openai.AssistantToolResourcesCodeInterpreterParam{
 				FileIDs: []string{"string"},
 			},
-			FileSearch: openai.BetaAssistantNewParamsToolResourcesFileSearch{
+			FileSearch: openai.AssistantToolResourcesFileSearchParam{
 				VectorStoreIDs: []string{"string"},
-				VectorStores: []openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStore{{
-					ChunkingStrategy: openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion{
-						OfAuto: &openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto{},
+				VectorStores: []openai.AssistantToolResourcesFileSearchVectorStoreParam{{
+					ChunkingStrategy: openai.AssisstantVectorStoreChunkingStrategyUnionParam{
+						OfAuto: &openai.AssisstantVectorStoreChunkingStrategyAutoParam{},
 					},
 					FileIDs: []string{"string"},
 					Metadata: shared.MetadataParam{
