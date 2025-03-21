@@ -19,16 +19,15 @@ func main() {
 	println(question)
 
 	params := openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(question),
-		}),
-		Tools: openai.F([]openai.ChatCompletionToolParam{
+		},
+		Tools: []openai.ChatCompletionToolParam{
 			{
-				Type: openai.F(openai.ChatCompletionToolTypeFunction),
-				Function: openai.F(openai.FunctionDefinitionParam{
-					Name:        openai.String("get_weather"),
+				Function: openai.FunctionDefinitionParam{
+					Name:        "get_weather",
 					Description: openai.String("Get weather at the given location"),
-					Parameters: openai.F(openai.FunctionParameters{
+					Parameters: openai.FunctionParameters{
 						"type": "object",
 						"properties": map[string]interface{}{
 							"location": map[string]string{
@@ -36,12 +35,12 @@ func main() {
 							},
 						},
 						"required": []string{"location"},
-					}),
-				}),
+					},
+				},
 			},
-		}),
+		},
 		Seed:  openai.Int(0),
-		Model: openai.F(openai.ChatModelGPT4o),
+		Model: openai.ChatModelGPT4o,
 	}
 
 	// Make initial chat completion request
@@ -52,19 +51,20 @@ func main() {
 
 	toolCalls := completion.Choices[0].Message.ToolCalls
 
-	// Abort early if there are no tool calls
+	// Return early if there are no tool calls
 	if len(toolCalls) == 0 {
 		fmt.Printf("No function call")
 		return
 	}
 
-	// If there is a function call, continue the conversation
-	params.Messages.Value = append(params.Messages.Value, completion.Choices[0].Message)
+	// If there is a was a function call, continue the conversation
+	params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
 	for _, toolCall := range toolCalls {
 		if toolCall.Function.Name == "get_weather" {
 			// Extract the location from the function call arguments
 			var args map[string]interface{}
-			if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args); err != nil {
+			err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+			if err != nil {
 				panic(err)
 			}
 			location := args["location"].(string)
@@ -75,7 +75,7 @@ func main() {
 			// Print the weather data
 			fmt.Printf("Weather in %s: %s\n", location, weatherData)
 
-			params.Messages.Value = append(params.Messages.Value, openai.ToolMessage(toolCall.ID, weatherData))
+			params.Messages = append(params.Messages, openai.ToolMessage(weatherData, toolCall.ID))
 		}
 	}
 

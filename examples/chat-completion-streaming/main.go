@@ -18,11 +18,11 @@ func main() {
 	println()
 
 	stream := client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage(question),
-		}),
-		Seed:  openai.Int(1),
-		Model: openai.F(openai.ChatModelGPT4o),
+		},
+		Seed:  openai.Int(0),
+		Model: openai.ChatModelGPT4o,
 	})
 
 	for stream.Next() {
@@ -34,6 +34,6 @@ func main() {
 	println()
 
 	if err := stream.Err(); err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 }

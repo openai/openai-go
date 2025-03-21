@@ -26,10 +26,10 @@ func TestUploadNew(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Uploads.New(context.TODO(), openai.UploadNewParams{
-		Bytes:    openai.F(int64(0)),
-		Filename: openai.F("filename"),
-		MimeType: openai.F("mime_type"),
-		Purpose:  openai.F(openai.FilePurposeAssistants),
+		Bytes:    0,
+		Filename: "filename",
+		MimeType: "mime_type",
+		Purpose:  openai.FilePurposeAssistants,
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -78,8 +78,8 @@ func TestUploadCompleteWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"upload_abc123",
 		openai.UploadCompleteParams{
-			PartIDs: openai.F([]string{"string"}),
-			Md5:     openai.F("md5"),
+			PartIDs: []string{"string"},
+			Md5:     openai.String("md5"),
 		},
 	)
 	if err != nil {

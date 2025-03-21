@@ -13,7 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/openai/openai-go/internal/param"
+	internalparam "github.com/openai/openai-go/internal/param"
+	"github.com/openai/openai-go/packages/param"
 )
 
 var encoders sync.Map // map[encoderEntry]encoderFunc
@@ -180,8 +181,12 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 }
 
 func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
-	if t.Implements(reflect.TypeOf((*param.FieldLike)(nil)).Elem()) {
+	if t.Implements(reflect.TypeOf((*internalparam.FieldLike)(nil)).Elem()) {
 		return e.newFieldTypeEncoder(t)
+	}
+
+	if idx, ok := param.OptionalPrimitiveTypes[t]; ok {
+		return e.newRichFieldTypeEncoder(t, idx)
 	}
 
 	encoderFields := []encoderField{}
@@ -217,7 +222,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 				extraEncoder = &encoderField{ptag, e.typeEncoder(field.Type.Elem()), idx}
 				continue
 			}
-			if ptag.name == "-" {
+			if ptag.name == "-" || ptag.name == "" {
 				continue
 			}
 
@@ -231,7 +236,20 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 					e.dateFormat = "2006-01-02"
 				}
 			}
-			encoderFields = append(encoderFields, encoderField{ptag, e.typeEncoder(field.Type), idx})
+
+			var encoderFn encoderFunc
+			if ptag.omitzero {
+				typeEncoderFn := e.typeEncoder(field.Type)
+				encoderFn = func(key string, value reflect.Value, writer *multipart.Writer) error {
+					if value.IsZero() {
+						return nil
+					}
+					return typeEncoderFn(key, value, writer)
+				}
+			} else {
+				encoderFn = e.typeEncoder(field.Type)
+			}
+			encoderFields = append(encoderFields, encoderField{ptag, encoderFn, idx})
 			e.dateFormat = oldFormat
 		}
 	}

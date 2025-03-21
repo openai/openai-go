@@ -13,9 +13,11 @@ import (
 
 	"github.com/openai/openai-go/internal/apiform"
 	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // UploadPartService contains methods and other services that help with interacting
@@ -31,8 +33,8 @@ type UploadPartService struct {
 // NewUploadPartService generates a new service that applies the given options to
 // each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewUploadPartService(opts ...option.RequestOption) (r *UploadPartService) {
-	r = &UploadPartService{}
+func NewUploadPartService(opts ...option.RequestOption) (r UploadPartService) {
+	r = UploadPartService{}
 	r.Options = opts
 	return
 }
@@ -66,49 +68,36 @@ type UploadPart struct {
 	// The Unix timestamp (in seconds) for when the Part was created.
 	CreatedAt int64 `json:"created_at,required"`
 	// The object type, which is always `upload.part`.
-	Object UploadPartObject `json:"object,required"`
+	Object constant.UploadPart `json:"object,required"`
 	// The ID of the Upload object that this Part was added to.
-	UploadID string         `json:"upload_id,required"`
-	JSON     uploadPartJSON `json:"-"`
+	UploadID string `json:"upload_id,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		ID          resp.Field
+		CreatedAt   resp.Field
+		Object      resp.Field
+		UploadID    resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// uploadPartJSON contains the JSON metadata for the struct [UploadPart]
-type uploadPartJSON struct {
-	ID          apijson.Field
-	CreatedAt   apijson.Field
-	Object      apijson.Field
-	UploadID    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *UploadPart) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r UploadPart) RawJSON() string { return r.JSON.raw }
+func (r *UploadPart) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r uploadPartJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always `upload.part`.
-type UploadPartObject string
-
-const (
-	UploadPartObjectUploadPart UploadPartObject = "upload.part"
-)
-
-func (r UploadPartObject) IsKnown() bool {
-	switch r {
-	case UploadPartObjectUploadPart:
-		return true
-	}
-	return false
 }
 
 type UploadPartNewParams struct {
 	// The chunk of bytes for this Part.
-	Data param.Field[io.Reader] `json:"data,required" format:"binary"`
+	Data io.Reader `json:"data,required" format:"binary"`
+	paramObj
 }
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f UploadPartNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r UploadPartNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)

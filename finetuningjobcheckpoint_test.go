@@ -29,8 +29,8 @@ func TestFineTuningJobCheckpointListWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"ft-AF1WoRqd3aJAHsqc9NY7iL8F",
 		openai.FineTuningJobCheckpointListParams{
-			After: openai.F("after"),
-			Limit: openai.F(int64(0)),
+			After: openai.String("after"),
+			Limit: openai.Int(0),
 		},
 	)
 	if err != nil {

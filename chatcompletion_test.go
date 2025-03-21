@@ -27,81 +27,89 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionDeveloperMessageParam{
-			Content: openai.F[openai.ChatCompletionDeveloperMessageParamContentUnion](shared.UnionString("string")),
-			Role:    openai.F(openai.ChatCompletionDeveloperMessageParamRoleDeveloper),
-			Name:    openai.F("name"),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
-		Audio: openai.F(openai.ChatCompletionAudioParam{
-			Format: openai.F(openai.ChatCompletionAudioParamFormatWAV),
-			Voice:  openai.F(openai.ChatCompletionAudioParamVoiceAlloy),
-		}),
-		FrequencyPenalty: openai.F(-2.000000),
-		FunctionCall:     openai.F[openai.ChatCompletionNewParamsFunctionCallUnion](openai.ChatCompletionNewParamsFunctionCallFunctionCallMode(openai.ChatCompletionNewParamsFunctionCallFunctionCallModeNone)),
-		Functions: openai.F([]openai.ChatCompletionNewParamsFunction{{
-			Name:        openai.F("name"),
-			Description: openai.F("description"),
-			Parameters: openai.F(shared.FunctionParameters{
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfDeveloper: &openai.ChatCompletionDeveloperMessageParam{
+				Content: openai.ChatCompletionDeveloperMessageParamContentUnion{
+					OfString: openai.String("string"),
+				},
+				Name: openai.String("name"),
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
+		Audio: openai.ChatCompletionAudioParam{
+			Format: openai.ChatCompletionAudioParamFormatWAV,
+			Voice:  openai.ChatCompletionAudioParamVoiceAlloy,
+		},
+		FrequencyPenalty: openai.Float(-2),
+		FunctionCall: openai.ChatCompletionNewParamsFunctionCallUnion{
+			OfFunctionCallMode: openai.String("none"),
+		},
+		Functions: []openai.ChatCompletionNewParamsFunction{{
+			Name:        "name",
+			Description: openai.String("description"),
+			Parameters: shared.FunctionParameters{
 				"foo": "bar",
-			}),
-		}}),
-		LogitBias: openai.F(map[string]int64{
-			"foo": int64(0),
-		}),
-		Logprobs:            openai.F(true),
-		MaxCompletionTokens: openai.F(int64(0)),
-		MaxTokens:           openai.F(int64(0)),
-		Metadata: openai.F(shared.MetadataParam{
+			},
+		}},
+		LogitBias: map[string]int64{
+			"foo": 0,
+		},
+		Logprobs:            openai.Bool(true),
+		MaxCompletionTokens: openai.Int(0),
+		MaxTokens:           openai.Int(0),
+		Metadata: shared.MetadataParam{
 			"foo": "string",
-		}),
-		Modalities:        openai.F([]openai.ChatCompletionNewParamsModality{openai.ChatCompletionNewParamsModalityText}),
-		N:                 openai.F(int64(1)),
-		ParallelToolCalls: openai.F(true),
-		Prediction: openai.F(openai.ChatCompletionPredictionContentParam{
-			Content: openai.F[openai.ChatCompletionPredictionContentContentUnionParam](shared.UnionString("string")),
-			Type:    openai.F(openai.ChatCompletionPredictionContentTypeContent),
-		}),
-		PresencePenalty: openai.F(-2.000000),
-		ReasoningEffort: openai.F(shared.ReasoningEffortLow),
-		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](shared.ResponseFormatTextParam{
-			Type: openai.F(shared.ResponseFormatTextTypeText),
-		}),
-		Seed:        openai.F(int64(-9007199254740991)),
-		ServiceTier: openai.F(openai.ChatCompletionNewParamsServiceTierAuto),
-		Stop:        openai.F[openai.ChatCompletionNewParamsStopUnion](shared.UnionString("\n")),
-		Store:       openai.F(true),
-		StreamOptions: openai.F(openai.ChatCompletionStreamOptionsParam{
-			IncludeUsage: openai.F(true),
-		}),
-		Temperature: openai.F(1.000000),
-		ToolChoice:  openai.F[openai.ChatCompletionToolChoiceOptionUnionParam](openai.ChatCompletionToolChoiceOptionAuto(openai.ChatCompletionToolChoiceOptionAutoNone)),
-		Tools: openai.F([]openai.ChatCompletionToolParam{{
-			Function: openai.F(shared.FunctionDefinitionParam{
-				Name:        openai.F("name"),
-				Description: openai.F("description"),
-				Parameters: openai.F(shared.FunctionParameters{
+		},
+		Modalities:        []string{"text"},
+		N:                 openai.Int(1),
+		ParallelToolCalls: openai.Bool(true),
+		Prediction: openai.ChatCompletionPredictionContentParam{
+			Content: openai.ChatCompletionPredictionContentContentUnionParam{
+				OfString: openai.String("string"),
+			},
+		},
+		PresencePenalty: openai.Float(-2),
+		ReasoningEffort: shared.ReasoningEffortLow,
+		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
+			OfText: &shared.ResponseFormatTextParam{},
+		},
+		Seed:        openai.Int(-9007199254740991),
+		ServiceTier: openai.ChatCompletionNewParamsServiceTierAuto,
+		Stop: openai.ChatCompletionNewParamsStopUnion{
+			OfString: openai.String("\n"),
+		},
+		Store: openai.Bool(true),
+		StreamOptions: openai.ChatCompletionStreamOptionsParam{
+			IncludeUsage: openai.Bool(true),
+		},
+		Temperature: openai.Float(1),
+		ToolChoice: openai.ChatCompletionToolChoiceOptionUnionParam{
+			OfAuto: openai.String("none"),
+		},
+		Tools: []openai.ChatCompletionToolParam{{
+			Function: shared.FunctionDefinitionParam{
+				Name:        "name",
+				Description: openai.String("description"),
+				Parameters: shared.FunctionParameters{
 					"foo": "bar",
-				}),
-				Strict: openai.F(true),
-			}),
-			Type: openai.F(openai.ChatCompletionToolTypeFunction),
-		}}),
-		TopLogprobs: openai.F(int64(0)),
-		TopP:        openai.F(1.000000),
-		User:        openai.F("user-1234"),
-		WebSearchOptions: openai.F(openai.ChatCompletionNewParamsWebSearchOptions{
-			SearchContextSize: openai.F(openai.ChatCompletionNewParamsWebSearchOptionsSearchContextSizeLow),
-			UserLocation: openai.F(openai.ChatCompletionNewParamsWebSearchOptionsUserLocation{
-				Approximate: openai.F(openai.ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate{
-					City:     openai.F("city"),
-					Country:  openai.F("country"),
-					Region:   openai.F("region"),
-					Timezone: openai.F("timezone"),
-				}),
-				Type: openai.F(openai.ChatCompletionNewParamsWebSearchOptionsUserLocationTypeApproximate),
-			}),
-		}),
+				},
+				Strict: openai.Bool(true),
+			},
+		}},
+		TopLogprobs: openai.Int(0),
+		TopP:        openai.Float(1),
+		User:        openai.String("user-1234"),
+		WebSearchOptions: openai.ChatCompletionNewParamsWebSearchOptions{
+			SearchContextSize: "low",
+			UserLocation: openai.ChatCompletionNewParamsWebSearchOptionsUserLocation{
+				Approximate: openai.ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate{
+					City:     openai.String("city"),
+					Country:  openai.String("country"),
+					Region:   openai.String("region"),
+					Timezone: openai.String("timezone"),
+				},
+			},
+		},
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -150,9 +158,9 @@ func TestChatCompletionUpdate(t *testing.T) {
 		context.TODO(),
 		"completion_id",
 		openai.ChatCompletionUpdateParams{
-			Metadata: openai.F(shared.MetadataParam{
+			Metadata: shared.MetadataParam{
 				"foo": "string",
-			}),
+			},
 		},
 	)
 	if err != nil {
@@ -177,13 +185,13 @@ func TestChatCompletionListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Chat.Completions.List(context.TODO(), openai.ChatCompletionListParams{
-		After: openai.F("after"),
-		Limit: openai.F(int64(0)),
-		Metadata: openai.F(shared.MetadataParam{
+		After: openai.String("after"),
+		Limit: openai.Int(0),
+		Metadata: shared.MetadataParam{
 			"foo": "string",
-		}),
-		Model: openai.F("model"),
-		Order: openai.F(openai.ChatCompletionListParamsOrderAsc),
+		},
+		Model: openai.String("model"),
+		Order: openai.ChatCompletionListParamsOrderAsc,
 	})
 	if err != nil {
 		var apierr *openai.Error

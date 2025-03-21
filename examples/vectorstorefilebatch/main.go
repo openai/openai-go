@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"io"
 	"os"
 
 	"github.com/openai/openai-go"
@@ -26,8 +25,8 @@ func main() {
 		}
 
 		fileParams = append(fileParams, openai.FileNewParams{
-			File:    openai.F[io.Reader](rdr),
-			Purpose: openai.F(openai.FilePurposeAssistants),
+			File:    rdr,
+			Purpose: openai.FilePurposeAssistants,
 		})
 	}
 
@@ -36,13 +35,12 @@ func main() {
 	ctx := context.Background()
 	client := openai.NewClient()
 
-	vectorStore, err := client.Beta.VectorStores.New(
+	vectorStore, err := client.VectorStores.New(
 		ctx,
-		openai.BetaVectorStoreNewParams{
-			ExpiresAfter: openai.F(openai.BetaVectorStoreNewParamsExpiresAfter{
-				Anchor: openai.F(openai.BetaVectorStoreNewParamsExpiresAfterAnchorLastActiveAt),
-				Days:   openai.Int(1),
-			}),
+		openai.VectorStoreNewParams{
+			ExpiresAfter: openai.VectorStoreNewParamsExpiresAfter{
+				Days: 1,
+			},
 			Name: openai.String("Test vector store"),
 		},
 	)
@@ -52,7 +50,7 @@ func main() {
 	}
 
 	// 0 uses default polling interval
-	batch, err := client.Beta.VectorStores.FileBatches.UploadAndPoll(ctx, vectorStore.ID, fileParams,
+	batch, err := client.VectorStores.FileBatches.UploadAndPoll(ctx, vectorStore.ID, fileParams,
 		[]string{}, 0)
 
 	if err != nil {
@@ -61,8 +59,13 @@ func main() {
 
 	println("Listing the files from the vector store")
 
-	filesCursor, err := client.Beta.VectorStores.FileBatches.ListFiles(ctx, vectorStore.ID, batch.ID,
-		openai.BetaVectorStoreFileBatchListFilesParams{})
+	vector := openai.VectorStoreFileBatchListFilesParams{
+		Order: openai.VectorStoreFileBatchListFilesParamsOrderAsc,
+	}
+
+	println("Vector JSON:", vector.URLQuery())
+
+	filesCursor, err := client.VectorStores.FileBatches.ListFiles(ctx, vectorStore.ID, batch.ID, vector)
 
 	if err != nil {
 		panic(err)

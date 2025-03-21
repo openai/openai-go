@@ -14,16 +14,16 @@ import (
 // the [NewAudioService] method instead.
 type AudioService struct {
 	Options        []option.RequestOption
-	Transcriptions *AudioTranscriptionService
-	Translations   *AudioTranslationService
-	Speech         *AudioSpeechService
+	Transcriptions AudioTranscriptionService
+	Translations   AudioTranslationService
+	Speech         AudioSpeechService
 }
 
 // NewAudioService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewAudioService(opts ...option.RequestOption) (r *AudioService) {
-	r = &AudioService{}
+func NewAudioService(opts ...option.RequestOption) (r AudioService) {
+	r = AudioService{}
 	r.Options = opts
 	r.Transcriptions = NewAudioTranscriptionService(opts...)
 	r.Translations = NewAudioTranslationService(opts...)
@@ -34,11 +34,14 @@ func NewAudioService(opts ...option.RequestOption) (r *AudioService) {
 type AudioModel = string
 
 const (
-	AudioModelWhisper1 AudioModel = "whisper-1"
+	AudioModelWhisper1            AudioModel = "whisper-1"
+	AudioModelGPT4oTranscribe     AudioModel = "gpt-4o-transcribe"
+	AudioModelGPT4oMiniTranscribe AudioModel = "gpt-4o-mini-transcribe"
 )
 
 // The format of the output, in one of these options: `json`, `text`, `srt`,
-// `verbose_json`, or `vtt`.
+// `verbose_json`, or `vtt`. For `gpt-4o-transcribe` and `gpt-4o-mini-transcribe`,
+// the only supported format is `json`.
 type AudioResponseFormat string
 
 const (
@@ -48,11 +51,3 @@ const (
 	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json"
 	AudioResponseFormatVTT         AudioResponseFormat = "vtt"
 )
-
-func (r AudioResponseFormat) IsKnown() bool {
-	switch r {
-	case AudioResponseFormatJSON, AudioResponseFormatText, AudioResponseFormatSRT, AudioResponseFormatVerboseJSON, AudioResponseFormatVTT:
-		return true
-	}
-	return false
-}

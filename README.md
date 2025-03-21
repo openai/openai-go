@@ -2,9 +2,6 @@
 
 <a href="https://pkg.go.dev/github.com/openai/openai-go"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
 
-> [!WARNING]
-> **This release is currently in beta**. Minor breaking changes may occur.
-
 The OpenAI Go library provides convenient access to [the OpenAI REST
 API](https://platform.openai.com/docs) from applications written in Go. The full API of this library can be found in [api.md](api.md).
 
@@ -25,7 +22,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go@v0.1.0-alpha.66'
+go get -u 'github.com/openai/openai-go@v0.1.0-alpha.67'
 ```
 
 <!-- x-release-please-end -->
@@ -37,8 +34,6 @@ This library requires Go 1.18+.
 ## Usage
 
 The full API of this library can be found in [api.md](api.md).
-
-See the [examples](./examples/) directory for complete and runnable examples.
 
 ```go
 package main
@@ -57,10 +52,10 @@ func main() {
 		option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("OPENAI_API_KEY")
 	)
 	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			 openai.UserMessage("Say this is a test"),
-		}),
-		Model: openai.F(openai.ChatModelGPT4o),
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage("Say this is a test"),
+		},
+		Model: openai.ChatModelGPT4o,
 	})
 	if err != nil {
 		panic(err.Error())
@@ -70,23 +65,22 @@ func main() {
 
 ```
 
-
 <details>
 <summary>Conversations</summary>
 
 ```go
 param := openai.ChatCompletionNewParams{
-	Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+	Messages: []openai.ChatCompletionMessageParamUnion{
 		openai.UserMessage("What kind of houseplant is easy to take care of?"),
-  	}),
+	},
 	Seed:     openai.Int(1),
-	Model:    openai.F(openai.ChatModelGPT4o),
+	Model:    openai.ChatModelGPT4o,
 }
 
 completion, err := client.Chat.Completions.New(ctx, param)
 
-param.Messages.Value = append(param.Messages.Value, completion.Choices[0].Message)
-param.Messages.Value = append(param.Messages.Value, openai.UserMessage("How big are those?"))
+param.Messages = append(param.Messages, completion.Choices[0].Message.ToParam())
+param.Messages = append(param.Messages, openai.UserMessage("How big are those?"))
 
 // continue the conversation
 completion, err = client.Chat.Completions.New(ctx, param)
@@ -101,11 +95,11 @@ completion, err = client.Chat.Completions.New(ctx, param)
 question := "Write an epic"
 
 stream := client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
-	Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+	Messages: []openai.ChatCompletionMessageParamUnion{
 		openai.UserMessage(question),
-	}),
+	},
 	Seed:  openai.Int(0),
-	Model: openai.F(openai.ChatModelGPT4o),
+	Model: openai.ChatModelGPT4o,
 })
 
 // optionally, an accumulator helper can be used
@@ -134,15 +128,15 @@ for stream.Next() {
 	}
 }
 
-if err := stream.Err(); err != nil {
-	panic(err)
+if stream.Err() != nil {
+	panic(stream.Err())
 }
 
 // After the stream is finished, acc can be used like a ChatCompletion
 _ = acc.Choices[0].Message.Content
 ```
 
-> See the [full streaming and accumulation example](./examples/chat-completion-accumulating/main.go)
+> See the [full streaming and accumulation example]./examples/chat-completion-accumulating/main.go)
 
 </details>
 
@@ -160,16 +154,15 @@ import (
 question := "What is the weather in New York City?"
 
 params := openai.ChatCompletionNewParams{
-	Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+	Messages: []openai.ChatCompletionMessageParamUnion{
 		openai.UserMessage(question),
-	}),
-	Tools: openai.F([]openai.ChatCompletionToolParam{
+	},
+	Tools: []openai.ChatCompletionToolParam{
 		{
-			Type: openai.F(openai.ChatCompletionToolTypeFunction),
-			Function: openai.F(openai.FunctionDefinitionParam{
-				Name:        openai.String("get_weather"),
+			Function: openai.FunctionDefinitionParam{
+				Name:        "get_weather",
 				Description: openai.String("Get weather at the given location"),
-				Parameters: openai.F(openai.FunctionParameters{
+				Parameters: openai.FunctionParameters{
 					"type": "object",
 					"properties": map[string]interface{}{
 						"location": map[string]string{
@@ -177,32 +170,39 @@ params := openai.ChatCompletionNewParams{
 						},
 					},
 					"required": []string{"location"},
-				}),
-			}),
+				},
+			},
 		},
-	}),
-	Model: openai.F(openai.ChatModelGPT4o),
+	},
+	Model: openai.ChatModelGPT4o,
 }
 
-// chat completion request with tool calls
-completion, _ := client.Chat.Completions.New(ctx, params)
-
-for _, toolCall := range completion.Choices[0].Message.ToolCalls {
+// If there is a was a function call, continue the conversation
+params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
+for _, toolCall := range toolCalls {
 	if toolCall.Function.Name == "get_weather" {
-		// extract the location from the function call arguments
+		// Extract the location from the function call arguments
 		var args map[string]interface{}
-		_ := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+		err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+		if err != nil {
+			panic(err)
+		}
+		location := args["location"].(string)
 
-		// call a weather API with the arguments requested by the model
-		weatherData := getWeather(args["location"].(string))
-		params.Messages.Value = append(params.Messages.Value, openai.ToolMessage(toolCall.ID, weatherData))
+		// Simulate getting weather data
+		weatherData := getWeather(location)
+
+		// Print the weather data
+		fmt.Printf("Weather in %s: %s\n", location, weatherData)
+
+		params.Messages = append(params.Messages, openai.ToolMessage(weatherData, toolCall.ID))
 	}
 }
 
 // ... continue the conversation with the information provided by the tool
 ```
 
-> See the [full tool calling example](./examples/chat-completion-tool-calling/main.go)
+> See the [full tool calling example]./examples/chat-completion-tool-calling/main.go)
 
 </details>
 
@@ -220,6 +220,7 @@ import (
 type HistoricalComputer struct {
 	Origin       Origin   `json:"origin" jsonschema_description:"The origin of the computer"`
 	Name         string   `json:"full_name" jsonschema_description:"The name of the device model"`
+	Legacy       string   `json:"legacy" jsonschema:"enum=positive,enum=neutral,enum=negative" jsonschema_description:"Its influence on the field of computing"`
 	NotableFacts []string `json:"notable_facts" jsonschema_description:"A few key facts about the computer"`
 }
 
@@ -229,6 +230,8 @@ type Origin struct {
 }
 
 func GenerateSchema[T any]() interface{} {
+	// Structured Outputs uses a subset of JSON schema
+	// These flags are necessary to comply with the subset
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
 		DoNotReference:            true,
@@ -248,26 +251,25 @@ func main() {
 	question := "What computer ran the first neural network?"
 
 	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
-		Name:        openai.F("biography"),
-		Description: openai.F("Notable information about a person"),
-		Schema:      openai.F(HistoricalComputerResponseSchema),
+		Name:        "historical_computer",
+		Description: openai.String("Notable information about a computer"),
+		Schema:      HistoricalComputerResponseSchema,
 		Strict:      openai.Bool(true),
 	}
 
 	chat, _ := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		// ...
-		ResponseFormat: openai.F[openai.ChatCompletionNewParamsResponseFormatUnion](
-			openai.ResponseFormatJSONSchemaParam{
-				Type:       openai.F(openai.ResponseFormatJSONSchemaTypeJSONSchema),
-				JSONSchema: openai.F(schemaParam),
+		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
+			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{
+				JSONSchema: schemaParam,
 			},
-		),
+		},
 		// only certain models can perform structured outputs
-		Model: openai.F(openai.ChatModelGPT4o2024_08_06),
+		Model: openai.ChatModelGPT4o2024_08_06,
 	})
 
 	// extract into a well-typed struct
-	historicalComputer := HistoricalComputer{}
+	var historicalComputer HistoricalComputer
 	_ = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &historicalComputer)
 
 	historicalComputer.Name
@@ -283,33 +285,85 @@ func main() {
 
 </details>
 
+
 ### Request fields
 
-All request parameters are wrapped in a generic `Field` type,
-which we use to distinguish zero values from null or omitted fields.
+The openai library uses the [`omitzero`](https://tip.golang.org/doc/go1.24#encodingjsonpkgencodingjson)
+semantics from the Go 1.24+ `encoding/json` release for request fields.
 
-This prevents accidentally sending a zero value if you forget a required parameter,
-and enables explicitly sending `null`, `false`, `''`, or `0` on optional parameters.
-Any field not specified is not sent.
+Required primitive fields (`int64`, `string`, etc.) feature the tag <code>\`json:...,required\`</code>. These
+fields are always serialized, even their zero values.
 
-To construct fields with values, use the helpers `String()`, `Int()`, `Float()`, or most commonly, the generic `F[T]()`.
-To send a null, use `Null[T]()`, and to send a nonconforming value, use `Raw[T](any)`. For example:
+Optional primitive types are wrapped in a `param.Opt[T]`. Use the provided constructors set `param.Opt[T]` fields such as `openai.String(string)`, `openai.Int(int64)`, etc.
+
+Optional primitives, maps, slices and structs and string enums (represented as `string`) always feature the
+tag <code>\`json:"...,omitzero"\`</code>. Their zero values are considered omitted.
+
+Any non-nil slice of length zero will serialize as an empty JSON array, `"[]"`. Similarly, any non-nil map with length zero with serialize as an empty JSON object, `"{}"`.
+
+To send `null` instead of an `param.Opt[T]`, use `param.NullOpt[T]()`.
+To send `null` instead of a struct, use `param.NullObj[T]()`, where `T` is a struct.
+To send a custom value instead of a struct, use `param.OverrideObj[T](value)`.
+
+To override request structs contain a `.WithExtraFields(map[string]any)` method which can be used to
+send non-conforming fields in the request body. Extra fields take higher precedence than normal
+fields.
 
 ```go
 params := FooParams{
-	Name: openai.F("hello"),
+	ID: "id_xxx",                          // required property
+	Name: openai.String("hello"), // optional property
+	Description: param.NullOpt[string](),  // explicit null property
 
-	// Explicitly send `"description": null`
-	Description: openai.Null[string](),
-
-	Point: openai.F(openai.Point{
-		X: openai.Int(0),
-		Y: openai.Int(1),
-
-		// In cases where the API specifies a given type,
-		// but you want to send something else, use `Raw`:
-		Z: openai.Raw[int64](0.01), // sends a float
+	Point: openai.Point{
+		X: 0, // required field will serialize as 0
+		Y: openai.Int(1), // optional field will serialize as 1
+	  // ... omitted non-required fields will not be serialized
 	}),
+
+	Origin: openai.Origin{}, // the zero value of [Origin] is considered omitted
+}
+
+// In cases where the API specifies a given type,
+// but you want to send something else, use [WithExtraFields]:
+params.WithExtraFields(map[string]any{
+	"x": 0.01, // send "x" as a float instead of int
+})
+
+// Send a number instead of an object
+custom := param.OverrideObj[openai.FooParams](12)
+```
+
+When available, use the `.IsPresent()` method to check if an optional parameter is not omitted or `null`.
+Otherwise, the `param.IsOmitted(any)` function can confirm the presence of any `omitzero` field.
+
+### Request unions
+
+Unions are represented as a struct with fields prefixed by "Of" for each of it's variants,
+only one field can be non-zero. The non-zero field will be serialized.
+
+Properties can be accessed via getters on the union struct. These getters return a mutable
+pointer to the underlying data, if present.
+
+```go
+// Only one field can be non-zero, use param.IsOmitted() to check if a field is set
+type AnimalUnionParam struct {
+	OfCat 	 *Cat              `json:",omitzero,inline`
+	OfDog    *Dog              `json:",omitzero,inline`
+}
+
+animal := AnimalUnionParam{
+	OfCat: &Cat{
+		Name: "Whiskers",
+		Owner: PersonParam{
+			Address: AddressParam{Street: "3333 Coyote Hill Rd", Zip: 0},
+		},
+	},
+}
+
+// Mutating a field
+if address := animal.GetOwner().GetAddress(); address != nil {
+	address.ZipCode = 94304
 }
 ```
 
@@ -325,14 +379,14 @@ information about each property, which you can use like so:
 
 ```go
 if res.Name == "" {
-	// true if `"name"` is either not present or explicitly null
-	res.JSON.Name.IsNull()
+	// true if `"name"` was unmarshalled successfully
+	res.JSON.Name.IsPresent()
 
-	// true if the `"name"` key was not present in the response JSON at all
-	res.JSON.Name.IsMissing()
+	res.JSON.Name.IsExplicitNull() // true if `"name"` is explicitly null
+	res.JSON.Name.Raw() == ""          // true if `"name"` field does not exist
 
 	// When the API returns data that cannot be coerced to the expected type:
-	if res.JSON.Name.IsInvalid() {
+	if !res.JSON.Name.IsPresent() && res.JSON.Name.Raw() != "" {
 		raw := res.JSON.Name.Raw()
 
 		legacyName := struct{
@@ -345,13 +399,56 @@ if res.Name == "" {
 }
 ```
 
-These `.JSON` structs also include an `Extras` map containing
+These `.JSON` structs also include an `ExtraFields` map containing
 any properties in the json response that were not specified
 in the struct. This can be useful for API features not yet
 present in the SDK.
 
 ```go
 body := res.JSON.ExtraFields["my_unexpected_field"].Raw()
+```
+
+### Response Unions
+
+In responses, unions are represented by a flattened struct containing all possible fields from each of the
+object variants.
+To convert it to a variant use the `.AsFooVariant()` method or the `.AsAny()` method if present.
+
+If a response value union contains primitive values, primitive fields will be alongside
+the properties but prefixed with `Of` and feature the tag `json:"...,inline"`.
+
+```go
+type AnimalUnion struct {
+	OfString string `json:",inline"`
+	Name     string `json:"name"`
+	Owner    Person `json:"owner"`
+	// ...
+	JSON struct {
+		OfString resp.Field
+		Name     resp.Field
+		Owner    resp.Field
+		// ...
+	}
+}
+
+// If animal variant
+if animal.Owner.Address.JSON.ZipCode == "" {
+	panic("missing zip code")
+}
+
+// If string variant
+if !animal.OfString == "" {
+	panic("expected a name")
+}
+
+// Switch on the variant
+switch variant := animalOrName.AsAny().(type) {
+case string:
+case Dog:
+case Cat:
+default:
+	panic("unexpected type")
+}
 ```
 
 ### RequestOptions
@@ -385,7 +482,7 @@ You can use `.ListAutoPaging()` methods to iterate through items across all page
 
 ```go
 iter := client.FineTuning.Jobs.ListAutoPaging(context.TODO(), openai.FineTuningJobListParams{
-	Limit: openai.F(int64(20)),
+	Limit: openai.Int(20),
 })
 // Automatically fetches more pages as needed.
 for iter.Next() {
@@ -402,7 +499,7 @@ with additional helper methods like `.GetNextPage()`, e.g.:
 
 ```go
 page, err := client.FineTuning.Jobs.List(context.TODO(), openai.FineTuningJobListParams{
-	Limit: openai.F(int64(20)),
+	Limit: openai.Int(20),
 })
 for page != nil {
 	for _, job := range page.Data {
@@ -426,8 +523,8 @@ To handle errors, we recommend that you use the `errors.As` pattern:
 
 ```go
 _, err := client.FineTuning.Jobs.New(context.TODO(), openai.FineTuningJobNewParams{
-	Model:        openai.F(openai.FineTuningJobNewParamsModelBabbage002),
-	TrainingFile: openai.F("file-abc123"),
+	Model:        "babbage-002",
+	TrainingFile: "file-abc123",
 })
 if err != nil {
 	var apierr *openai.Error
@@ -456,10 +553,14 @@ defer cancel()
 client.Chat.Completions.New(
 	ctx,
 	openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			 openai.UserMessage("Say this is a test"),
-		}),
-		Model: openai.F(openai.ChatModelGPT4o),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("How can I list all files in a directory using Python?"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -469,7 +570,7 @@ client.Chat.Completions.New(
 ### File uploads
 
 Request parameters that correspond to file uploads in multipart requests are typed as
-`param.Field[io.Reader]`. The contents of the `io.Reader` will by default be sent as a multipart form
+`io.Reader`. The contents of the `io.Reader` will by default be sent as a multipart form
 part with the file name of "anonymous_file" and content-type of "application/octet-stream".
 
 The file name and content-type can be customized by implementing `Name() string` or `ContentType()
@@ -484,19 +585,19 @@ which can be used to wrap any `io.Reader` with the appropriate file name and con
 file, err := os.Open("input.jsonl")
 openai.FileNewParams{
 	File:    openai.F[io.Reader](file),
-	Purpose: openai.F(openai.FilePurposeFineTune),
+	Purpose: openai.FilePurposeFineTune,
 }
 
 // A file from a string
 openai.FileNewParams{
 	File:    openai.F[io.Reader](strings.NewReader("my file contents")),
-	Purpose: openai.F(openai.FilePurposeFineTune),
+	Purpose: openai.FilePurposeFineTune,
 }
 
 // With a custom filename and contentType
 openai.FileNewParams{
 	File:    openai.FileParam(strings.NewReader(`{"hello": "foo"}`), "file.go", "application/json"),
-	Purpose: openai.F(openai.FilePurposeFineTune),
+	Purpose: openai.FilePurposeFineTune,
 }
 ```
 
@@ -518,10 +619,14 @@ client := openai.NewClient(
 client.Chat.Completions.New(
 	context.TODO(),
 	openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			 openai.UserMessage("Say this is a test"),
-		}),
-		Model: openai.F(openai.ChatModelGPT4o),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("How can I get the name of the current day in JavaScript?"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	},
 	option.WithMaxRetries(5),
 )
@@ -538,11 +643,14 @@ var response *http.Response
 chatCompletion, err := client.Chat.Completions.New(
 	context.TODO(),
 	openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{openai.ChatCompletionUserMessageParam{
-			Role:    openai.F(openai.ChatCompletionUserMessageParamRoleUser),
-			Content: openai.F([]openai.ChatCompletionContentPartUnionParam{openai.ChatCompletionContentPartTextParam{Text: openai.F("text"), Type: openai.F(openai.ChatCompletionContentPartTextTypeText)}}),
-		}}),
-		Model: openai.F(shared.ChatModelO3Mini),
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelO3Mini,
 	},
 	option.WithResponseInto(&response),
 )
@@ -588,10 +696,10 @@ or the `option.WithJSONSet()` methods.
 
 ```go
 params := FooNewParams{
-    ID:   openai.F("id_xxxx"),
-    Data: openai.F(FooNewParamsData{
-        FirstName: openai.F("John"),
-    }),
+    ID:   "id_xxxx",
+    Data: FooNewParamsData{
+        FirstName: openai.String("John"),
+    },
 }
 client.Foo.New(context.Background(), params, option.WithJSONSet("data.last_name", "Doe"))
 ```
@@ -643,7 +751,7 @@ middleware has been applied.
 
 ## Microsoft Azure OpenAI
 
-To use this library with [Azure OpenAI](https://learn.microsoft.com/azure/ai-services/openai/overview), use the option.RequestOption functions in the `azure` package.
+To use this library with [Azure OpenAI]https://learn.microsoft.com/azure/ai-services/openai/overview), use the ption.RequestOption functions in the `azure` package.
 
 ```go
 package main
@@ -658,7 +766,7 @@ func main() {
 	const azureOpenAIEndpoint = "https://<azure-openai-resource>.openai.azure.com"
 
 	// The latest API versions, including previews, can be found here:
-	// https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning
+	// ttps://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versionng
 	const azureOpenAIAPIVersion = "2024-06-01"
 
 	tokenCredential, err := azidentity.NewDefaultAzureCredential(nil)
@@ -677,6 +785,7 @@ func main() {
 	)
 }
 ```
+
 
 ## Semantic versioning
 

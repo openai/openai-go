@@ -9,7 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/openai/openai-go/internal/param"
+	internalparam "github.com/openai/openai-go/internal/param"
+	"github.com/openai/openai-go/packages/param"
 )
 
 var encoders sync.Map // map[reflect.Type]encoderFunc
@@ -85,7 +86,8 @@ func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
 	if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
 		return e.newTimeTypeEncoder(t)
 	}
-	if !e.root && t.Implements(reflect.TypeOf((*json.Marshaler)(nil)).Elem()) {
+
+	if !e.root && t.Implements(reflect.TypeOf((*json.Marshaler)(nil)).Elem()) && param.OptionalPrimitiveTypes[t] == nil {
 		return marshalerEncoder
 	}
 	e.root = false
@@ -115,8 +117,12 @@ func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
 }
 
 func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
-	if t.Implements(reflect.TypeOf((*param.FieldLike)(nil)).Elem()) {
+	if t.Implements(reflect.TypeOf((*internalparam.FieldLike)(nil)).Elem()) {
 		return e.newFieldTypeEncoder(t)
+	}
+
+	if idx, ok := param.OptionalPrimitiveTypes[t]; ok {
+		return e.newRichFieldTypeEncoder(t, idx)
 	}
 
 	encoderFields := []encoderField{}
@@ -145,7 +151,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 				continue
 			}
 
-			if ptag.name == "-" && !ptag.inline {
+			if (ptag.name == "-" || ptag.name == "") && !ptag.inline {
 				continue
 			}
 
@@ -159,7 +165,19 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 					e.dateFormat = "2006-01-02"
 				}
 			}
-			encoderFields = append(encoderFields, encoderField{ptag, e.typeEncoder(field.Type), idx})
+			var encoderFn encoderFunc
+			if ptag.omitzero {
+				typeEncoderFn := e.typeEncoder(field.Type)
+				encoderFn = func(key string, value reflect.Value) []Pair {
+					if value.IsZero() {
+						return nil
+					}
+					return typeEncoderFn(key, value)
+				}
+			} else {
+				encoderFn = e.typeEncoder(field.Type)
+			}
+			encoderFields = append(encoderFields, encoderField{ptag, encoderFn, idx})
 			e.dateFormat = oldFormat
 		}
 	}

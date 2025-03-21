@@ -7,9 +7,11 @@ import (
 	"net/http"
 
 	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 // EmbeddingService contains methods and other services that help with interacting
@@ -25,8 +27,8 @@ type EmbeddingService struct {
 // NewEmbeddingService generates a new service that applies the given options to
 // each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewEmbeddingService(opts ...option.RequestOption) (r *EmbeddingService) {
-	r = &EmbeddingService{}
+func NewEmbeddingService(opts ...option.RequestOption) (r EmbeddingService) {
+	r = EmbeddingService{}
 	r.Options = opts
 	return
 }
@@ -45,44 +47,25 @@ type CreateEmbeddingResponse struct {
 	// The name of the model used to generate the embedding.
 	Model string `json:"model,required"`
 	// The object type, which is always "list".
-	Object CreateEmbeddingResponseObject `json:"object,required"`
+	Object constant.List `json:"object,required"`
 	// The usage information for the request.
 	Usage CreateEmbeddingResponseUsage `json:"usage,required"`
-	JSON  createEmbeddingResponseJSON  `json:"-"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Data        resp.Field
+		Model       resp.Field
+		Object      resp.Field
+		Usage       resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// createEmbeddingResponseJSON contains the JSON metadata for the struct
-// [CreateEmbeddingResponse]
-type createEmbeddingResponseJSON struct {
-	Data        apijson.Field
-	Model       apijson.Field
-	Object      apijson.Field
-	Usage       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *CreateEmbeddingResponse) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r CreateEmbeddingResponse) RawJSON() string { return r.JSON.raw }
+func (r *CreateEmbeddingResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r createEmbeddingResponseJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always "list".
-type CreateEmbeddingResponseObject string
-
-const (
-	CreateEmbeddingResponseObjectList CreateEmbeddingResponseObject = "list"
-)
-
-func (r CreateEmbeddingResponseObject) IsKnown() bool {
-	switch r {
-	case CreateEmbeddingResponseObjectList:
-		return true
-	}
-	return false
 }
 
 // The usage information for the request.
@@ -90,25 +73,21 @@ type CreateEmbeddingResponseUsage struct {
 	// The number of tokens used by the prompt.
 	PromptTokens int64 `json:"prompt_tokens,required"`
 	// The total number of tokens used by the request.
-	TotalTokens int64                            `json:"total_tokens,required"`
-	JSON        createEmbeddingResponseUsageJSON `json:"-"`
+	TotalTokens int64 `json:"total_tokens,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		PromptTokens resp.Field
+		TotalTokens  resp.Field
+		ExtraFields  map[string]resp.Field
+		raw          string
+	} `json:"-"`
 }
 
-// createEmbeddingResponseUsageJSON contains the JSON metadata for the struct
-// [CreateEmbeddingResponseUsage]
-type createEmbeddingResponseUsageJSON struct {
-	PromptTokens apijson.Field
-	TotalTokens  apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
-}
-
-func (r *CreateEmbeddingResponseUsage) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r CreateEmbeddingResponseUsage) RawJSON() string { return r.JSON.raw }
+func (r *CreateEmbeddingResponseUsage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r createEmbeddingResponseUsageJSON) RawJSON() string {
-	return r.raw
 }
 
 // Represents an embedding vector returned by embedding endpoint.
@@ -120,40 +99,22 @@ type Embedding struct {
 	// The index of the embedding in the list of embeddings.
 	Index int64 `json:"index,required"`
 	// The object type, which is always "embedding".
-	Object EmbeddingObject `json:"object,required"`
-	JSON   embeddingJSON   `json:"-"`
+	Object constant.Embedding `json:"object,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Embedding   resp.Field
+		Index       resp.Field
+		Object      resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
 }
 
-// embeddingJSON contains the JSON metadata for the struct [Embedding]
-type embeddingJSON struct {
-	Embedding   apijson.Field
-	Index       apijson.Field
-	Object      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Embedding) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r Embedding) RawJSON() string { return r.JSON.raw }
+func (r *Embedding) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r embeddingJSON) RawJSON() string {
-	return r.raw
-}
-
-// The object type, which is always "embedding".
-type EmbeddingObject string
-
-const (
-	EmbeddingObjectEmbedding EmbeddingObject = "embedding"
-)
-
-func (r EmbeddingObject) IsKnown() bool {
-	switch r {
-	case EmbeddingObjectEmbedding:
-		return true
-	}
-	return false
 }
 
 type EmbeddingModel = string
@@ -173,56 +134,67 @@ type EmbeddingNewParams struct {
 	// [Example Python code](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken)
 	// for counting tokens. Some models may also impose a limit on total number of
 	// tokens summed across inputs.
-	Input param.Field[EmbeddingNewParamsInputUnion] `json:"input,required"`
+	Input EmbeddingNewParamsInputUnion `json:"input,omitzero,required"`
 	// ID of the model to use. You can use the
 	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
 	// them.
-	Model param.Field[EmbeddingModel] `json:"model,required"`
+	Model EmbeddingModel `json:"model,omitzero,required"`
 	// The number of dimensions the resulting output embeddings should have. Only
 	// supported in `text-embedding-3` and later models.
-	Dimensions param.Field[int64] `json:"dimensions"`
-	// The format to return the embeddings in. Can be either `float` or
-	// [`base64`](https://pypi.org/project/pybase64/).
-	EncodingFormat param.Field[EmbeddingNewParamsEncodingFormat] `json:"encoding_format"`
+	Dimensions param.Opt[int64] `json:"dimensions,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
-	User param.Field[string] `json:"user"`
+	User param.Opt[string] `json:"user,omitzero"`
+	// The format to return the embeddings in. Can be either `float` or
+	// [`base64`](https://pypi.org/project/pybase64/).
+	//
+	// Any of "float", "base64".
+	EncodingFormat EmbeddingNewParamsEncodingFormat `json:"encoding_format,omitzero"`
+	paramObj
 }
+
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (f EmbeddingNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r EmbeddingNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow EmbeddingNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
 }
 
-// Input text to embed, encoded as a string or array of tokens. To embed multiple
-// inputs in a single request, pass an array of strings or array of token arrays.
-// The input must not exceed the max input tokens for the model (8192 tokens for
-// `text-embedding-ada-002`), cannot be an empty string, and any array must be 2048
-// dimensions or less.
-// [Example Python code](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken)
-// for counting tokens. Some models may also impose a limit on total number of
-// tokens summed across inputs.
+// Only one field can be non-zero.
 //
-// Satisfied by [shared.UnionString], [EmbeddingNewParamsInputArrayOfStrings],
-// [EmbeddingNewParamsInputArrayOfTokens],
-// [EmbeddingNewParamsInputArrayOfTokenArrays].
-type EmbeddingNewParamsInputUnion interface {
-	ImplementsEmbeddingNewParamsInputUnion()
+// Use [param.IsOmitted] to confirm if a field is set.
+type EmbeddingNewParamsInputUnion struct {
+	OfString             param.Opt[string] `json:",omitzero,inline"`
+	OfArrayOfStrings     []string          `json:",omitzero,inline"`
+	OfArrayOfTokens      []int64           `json:",omitzero,inline"`
+	OfArrayOfTokenArrays [][]int64         `json:",omitzero,inline"`
+	paramUnion
 }
 
-type EmbeddingNewParamsInputArrayOfStrings []string
+// IsPresent returns true if the field's value is not omitted and not the JSON
+// "null". To check if this field is omitted, use [param.IsOmitted].
+func (u EmbeddingNewParamsInputUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
+func (u EmbeddingNewParamsInputUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[EmbeddingNewParamsInputUnion](u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
+}
 
-func (r EmbeddingNewParamsInputArrayOfStrings) ImplementsEmbeddingNewParamsInputUnion() {}
-
-type EmbeddingNewParamsInputArrayOfTokens []int64
-
-func (r EmbeddingNewParamsInputArrayOfTokens) ImplementsEmbeddingNewParamsInputUnion() {}
-
-type EmbeddingNewParamsInputArrayOfTokenArrays [][]int64
-
-func (r EmbeddingNewParamsInputArrayOfTokenArrays) ImplementsEmbeddingNewParamsInputUnion() {}
+func (u *EmbeddingNewParamsInputUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfArrayOfStrings) {
+		return &u.OfArrayOfStrings
+	} else if !param.IsOmitted(u.OfArrayOfTokens) {
+		return &u.OfArrayOfTokens
+	} else if !param.IsOmitted(u.OfArrayOfTokenArrays) {
+		return &u.OfArrayOfTokenArrays
+	}
+	return nil
+}
 
 // The format to return the embeddings in. Can be either `float` or
 // [`base64`](https://pypi.org/project/pybase64/).
@@ -232,11 +204,3 @@ const (
 	EmbeddingNewParamsEncodingFormatFloat  EmbeddingNewParamsEncodingFormat = "float"
 	EmbeddingNewParamsEncodingFormatBase64 EmbeddingNewParamsEncodingFormat = "base64"
 )
-
-func (r EmbeddingNewParamsEncodingFormat) IsKnown() bool {
-	switch r {
-	case EmbeddingNewParamsEncodingFormatFloat, EmbeddingNewParamsEncodingFormatBase64:
-		return true
-	}
-	return false
-}
