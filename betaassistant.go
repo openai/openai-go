@@ -2151,7 +2151,26 @@ type BetaAssistantNewParams struct {
 	//
 	// We generally recommend altering this or temperature but not both.
 	TopP param.Field[float64] `json:"top_p"`
+	ResponseFormat param.Field[BetaAssistantNewParamsResponseFormat] `json:"response_format"`
 }
+
+
+type BetaAssistantNewParamsResponseType string
+
+const (
+	BetaAssistantNewParamsResponseTypeText BetaAssistantNewParamsResponseType = "text"
+	BetaAssistantNewParamsResponseTypeJSONObject BetaAssistantNewParamsResponseType = "json_object"
+	BetaAssistantNewParamsResponseTypeJSONSchema BetaAssistantNewParamsResponseType = "json_schema"
+
+)
+
+
+type BetaAssistantNewParamsResponseFormat struct {
+	// The type of response format being defined: `text`
+	Type       param.Field[BetaAssistantNewParamsResponseType] `json:"type,required"`
+	JSONSchema param.Field[interface{}]                               `json:"json_schema"`
+}
+
 
 func (r BetaAssistantNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
