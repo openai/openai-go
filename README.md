@@ -136,7 +136,7 @@ if stream.Err() != nil {
 _ = acc.Choices[0].Message.Content
 ```
 
-> See the [full streaming and accumulation example]./examples/chat-completion-accumulating/main.go)
+> See the [full streaming and accumulation example](./examples/chat-completion-accumulating/main.go)
 
 </details>
 
@@ -202,7 +202,7 @@ for _, toolCall := range toolCalls {
 // ... continue the conversation with the information provided by the tool
 ```
 
-> See the [full tool calling example]./examples/chat-completion-tool-calling/main.go)
+> See the [full tool calling example](./examples/chat-completion-tool-calling/main.go)
 
 </details>
 
@@ -751,7 +751,7 @@ middleware has been applied.
 
 ## Microsoft Azure OpenAI
 
-To use this library with [Azure OpenAI]https://learn.microsoft.com/azure/ai-services/openai/overview), use the ption.RequestOption functions in the `azure` package.
+To use this library with [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/overview), use the option.RequestOption functions in the `azure` package.
 
 ```go
 package main
