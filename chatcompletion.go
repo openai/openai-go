@@ -1265,17 +1265,24 @@ func (r ChatCompletionMessage) ToParam() ChatCompletionMessageParamUnion {
 
 func (r ChatCompletionMessage) ToAssistantMessageParam() ChatCompletionAssistantMessageParam {
 	var p ChatCompletionAssistantMessageParam
-	p.Content.OfString = toParam(r.Content, r.JSON.Content)
-	p.Refusal = toParam(r.Refusal, r.JSON.Refusal)
+	if r.JSON.Content.IsPresent() {
+		p.Content.OfString.Value = r.Content
+	}
+	if r.JSON.Refusal.IsPresent() {
+		p.Refusal = String(r.Refusal)
+	}
 	p.Audio.ID = r.Audio.ID
 	p.Role = r.Role
 	p.FunctionCall.Arguments = r.FunctionCall.Arguments
 	p.FunctionCall.Name = r.FunctionCall.Name
-	p.ToolCalls = make([]ChatCompletionMessageToolCallParam, len(r.ToolCalls))
-	for i, v := range r.ToolCalls {
-		p.ToolCalls[i].ID = v.ID
-		p.ToolCalls[i].Function.Arguments = v.Function.Arguments
-		p.ToolCalls[i].Function.Name = v.Function.Name
+
+	if len(r.ToolCalls) > 0 {
+		p.ToolCalls = make([]ChatCompletionMessageToolCallParam, len(r.ToolCalls))
+		for i, v := range r.ToolCalls {
+			p.ToolCalls[i].ID = v.ID
+			p.ToolCalls[i].Function.Arguments = v.Function.Arguments
+			p.ToolCalls[i].Function.Name = v.Function.Name
+		}
 	}
 	return p
 }
