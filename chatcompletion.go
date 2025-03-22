@@ -1265,17 +1265,31 @@ func (r ChatCompletionMessage) ToParam() ChatCompletionMessageParamUnion {
 
 func (r ChatCompletionMessage) ToAssistantMessageParam() ChatCompletionAssistantMessageParam {
 	var p ChatCompletionAssistantMessageParam
-	p.Content.OfString = toParam(r.Content, r.JSON.Content)
-	p.Refusal = toParam(r.Refusal, r.JSON.Refusal)
+
+	// It is important to not rely on the JSON metadata property
+	// here, it may be unset if the receiver was generated via a
+	// [ChatCompletionAccumulator].
+	//
+	// Explicit null is intentionally elided from the response.
+	if r.Content != "" {
+		p.Content.OfString = String(r.Content)
+	}
+	if r.Refusal != "" {
+		p.Refusal = String(r.Refusal)
+	}
+
 	p.Audio.ID = r.Audio.ID
 	p.Role = r.Role
 	p.FunctionCall.Arguments = r.FunctionCall.Arguments
 	p.FunctionCall.Name = r.FunctionCall.Name
-	p.ToolCalls = make([]ChatCompletionMessageToolCallParam, len(r.ToolCalls))
-	for i, v := range r.ToolCalls {
-		p.ToolCalls[i].ID = v.ID
-		p.ToolCalls[i].Function.Arguments = v.Function.Arguments
-		p.ToolCalls[i].Function.Name = v.Function.Name
+
+	if len(r.ToolCalls) > 0 {
+		p.ToolCalls = make([]ChatCompletionMessageToolCallParam, len(r.ToolCalls))
+		for i, v := range r.ToolCalls {
+			p.ToolCalls[i].ID = v.ID
+			p.ToolCalls[i].Function.Arguments = v.Function.Arguments
+			p.ToolCalls[i].Function.Name = v.Function.Name
+		}
 	}
 	return p
 }
