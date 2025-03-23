@@ -5,6 +5,10 @@
 The OpenAI Go library provides convenient access to [the OpenAI REST
 API](https://platform.openai.com/docs) from applications written in Go. The full API of this library can be found in [api.md](api.md).
 
+> [!WARNING]
+> The latest version of this package uses a new design with significant breaking changes.
+> Please refer to the [migration guide](./MIGRATION.md) for more information on how to update your code.
+
 ## Installation
 
 <!-- x-release-please-start-version -->
@@ -22,7 +26,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go@v0.1.0-alpha.67'
+go get -u 'github.com/openai/openai-go@v0.1.0-beta.2'
 ```
 
 <!-- x-release-please-end -->
@@ -342,8 +346,8 @@ Otherwise, the `param.IsOmitted(any)` function can confirm the presence of any `
 Unions are represented as a struct with fields prefixed by "Of" for each of it's variants,
 only one field can be non-zero. The non-zero field will be serialized.
 
-Properties can be accessed via getters on the union struct. These getters return a mutable
-pointer to the underlying data, if present.
+Sub-properties of the union can be accessed via methods on the union struct.
+These methods return a mutable pointer to the underlying data, if present.
 
 ```go
 // Only one field can be non-zero, use param.IsOmitted() to check if a field is set
@@ -751,7 +755,8 @@ middleware has been applied.
 
 ## Microsoft Azure OpenAI
 
-To use this library with [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/overview), use the option.RequestOption functions in the `azure` package.
+To use this library with [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/overview),
+use the option.RequestOption functions in the `azure` package.
 
 ```go
 package main
