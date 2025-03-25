@@ -94,8 +94,12 @@ func (m metadata) GetExtraFields() map[string]any {
 	return nil
 }
 
-func (m *metadata) WithExtraFields(fields map[string]any) {
-	m.any = metadataExtraFields(fields)
+// WithExtraFields adds extra fields to the JSON object.
+//
+// WithExtraFields will override any existing fields with the same key.
+// For security reasons, ensure this is only used with trusted input data.
+func (m *metadata) WithExtraFields(extraFields map[string]any) {
+	m.any = metadataExtraFields(extraFields)
 }
 
 func (m *metadata) setMetadata(override any) {
