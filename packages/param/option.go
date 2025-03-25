@@ -2,6 +2,7 @@ package param
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"time"
 )
@@ -76,6 +77,16 @@ func (o Opt[T]) Or(v T) T {
 		return o.Value
 	}
 	return v
+}
+
+func (o Opt[T]) String() string {
+	if o.IsNull() {
+		return "null"
+	}
+	if s, ok := any(o.Value).(fmt.Stringer); ok {
+		return s.String()
+	}
+	return fmt.Sprintf("%v", o.Value)
 }
 
 // This is a sketchy way to implement time Formatting

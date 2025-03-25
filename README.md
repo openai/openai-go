@@ -310,8 +310,8 @@ To send `null` instead of a struct, use `param.NullObj[T]()`, where `T` is a str
 To send a custom value instead of a struct, use `param.OverrideObj[T](value)`.
 
 To override request structs contain a `.WithExtraFields(map[string]any)` method which can be used to
-send non-conforming fields in the request body. Extra fields take higher precedence than normal
-fields.
+send non-conforming fields in the request body. Extra fields overwrite any struct fields with a matching
+key, so only use with trusted data.
 
 ```go
 params := FooParams{
