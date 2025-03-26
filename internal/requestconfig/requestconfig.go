@@ -236,7 +236,7 @@ func shouldRetry(req *http.Request, res *http.Response) bool {
 		return true
 	}
 
-	// If the header explictly wants a retry behavior, respect that over the
+	// If the header explicitly wants a retry behavior, respect that over the
 	// http status code.
 	if res.Header.Get("x-should-retry") == "true" {
 		return true
