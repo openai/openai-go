@@ -500,9 +500,7 @@ type ChatCompletionAudioParam struct {
 	Format ChatCompletionAudioParamFormat `json:"format,omitzero,required"`
 	// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
 	// `ballad`, `coral`, `echo`, `sage`, and `shimmer`.
-	//
-	// Any of "alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse".
-	Voice ChatCompletionAudioParamVoice `json:"voice,omitzero,required"`
+	Voice string `json:"voice,omitzero,required"`
 	paramObj
 }
 
@@ -524,21 +522,6 @@ const (
 	ChatCompletionAudioParamFormatFLAC  ChatCompletionAudioParamFormat = "flac"
 	ChatCompletionAudioParamFormatOpus  ChatCompletionAudioParamFormat = "opus"
 	ChatCompletionAudioParamFormatPcm16 ChatCompletionAudioParamFormat = "pcm16"
-)
-
-// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
-// `ballad`, `coral`, `echo`, `sage`, and `shimmer`.
-type ChatCompletionAudioParamVoice string
-
-const (
-	ChatCompletionAudioParamVoiceAlloy   ChatCompletionAudioParamVoice = "alloy"
-	ChatCompletionAudioParamVoiceAsh     ChatCompletionAudioParamVoice = "ash"
-	ChatCompletionAudioParamVoiceBallad  ChatCompletionAudioParamVoice = "ballad"
-	ChatCompletionAudioParamVoiceCoral   ChatCompletionAudioParamVoice = "coral"
-	ChatCompletionAudioParamVoiceEcho    ChatCompletionAudioParamVoice = "echo"
-	ChatCompletionAudioParamVoiceSage    ChatCompletionAudioParamVoice = "sage"
-	ChatCompletionAudioParamVoiceShimmer ChatCompletionAudioParamVoice = "shimmer"
-	ChatCompletionAudioParamVoiceVerse   ChatCompletionAudioParamVoice = "verse"
 )
 
 // Represents a streamed chunk of a chat completion response returned by the model,
