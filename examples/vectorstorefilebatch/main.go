@@ -26,7 +26,7 @@ func main() {
 
 		fileParams = append(fileParams, openai.FileNewParams{
 			// To specify a custom filename, use:
-			// 	File:	openai.FileParam(rdr, "filename.txt", "text/plain")
+			// 	File:	openai.File(rdr, "filename.txt", "text/plain")
 			//
 			File:    rdr,
 			Purpose: openai.FilePurposeAssistants,
