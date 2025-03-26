@@ -576,8 +576,8 @@ type Response struct {
 	// context.
 	//
 	// When using along with `previous_response_id`, the instructions from a previous
-	// response will be not be carried over to the next response. This makes it simple
-	// to swap out system (or developer) messages in new responses.
+	// response will not be carried over to the next response. This makes it simple to
+	// swap out system (or developer) messages in new responses.
 	Instructions string `json:"instructions,required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
@@ -2958,18 +2958,18 @@ type ResponseFormatTextConfigUnion struct {
 	// Any of "text", "json_schema", "json_object".
 	Type string `json:"type"`
 	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
+	Name string `json:"name"`
+	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
 	Schema map[string]interface{} `json:"schema"`
 	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
 	Description string `json:"description"`
 	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
-	Name string `json:"name"`
-	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
 	Strict bool `json:"strict"`
 	JSON   struct {
 		Type        resp.Field
+		Name        resp.Field
 		Schema      resp.Field
 		Description resp.Field
-		Name        resp.Field
 		Strict      resp.Field
 		raw         string
 	} `json:"-"`
@@ -3028,8 +3028,9 @@ func (r ResponseFormatTextConfigUnion) ToParam() ResponseFormatTextConfigUnionPa
 	return param.OverrideObj[ResponseFormatTextConfigUnionParam](r.RawJSON())
 }
 
-func ResponseFormatTextConfigParamOfJSONSchema(schema map[string]interface{}) ResponseFormatTextConfigUnionParam {
+func ResponseFormatTextConfigParamOfJSONSchema(name string, schema map[string]interface{}) ResponseFormatTextConfigUnionParam {
 	var jsonSchema ResponseFormatTextJSONSchemaConfigParam
+	jsonSchema.Name = name
 	jsonSchema.Schema = schema
 	return ResponseFormatTextConfigUnionParam{OfJSONSchema: &jsonSchema}
 }
@@ -3065,6 +3066,14 @@ func (u *ResponseFormatTextConfigUnionParam) asAny() any {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseFormatTextConfigUnionParam) GetName() *string {
+	if vt := u.OfJSONSchema; vt != nil {
+		return &vt.Name
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseFormatTextConfigUnionParam) GetSchema() map[string]interface{} {
 	if vt := u.OfJSONSchema; vt != nil {
 		return vt.Schema
@@ -3076,14 +3085,6 @@ func (u ResponseFormatTextConfigUnionParam) GetSchema() map[string]interface{} {
 func (u ResponseFormatTextConfigUnionParam) GetDescription() *string {
 	if vt := u.OfJSONSchema; vt != nil && vt.Description.IsPresent() {
 		return &vt.Description.Value
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponseFormatTextConfigUnionParam) GetName() *string {
-	if vt := u.OfJSONSchema; vt != nil && vt.Name.IsPresent() {
-		return &vt.Name.Value
 	}
 	return nil
 }
@@ -3133,6 +3134,9 @@ func init() {
 // more about
 // [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
 type ResponseFormatTextJSONSchemaConfig struct {
+	// The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores
+	// and dashes, with a maximum length of 64.
+	Name string `json:"name,required"`
 	// The schema for the response format, described as a JSON Schema object. Learn how
 	// to build JSON schemas [here](https://json-schema.org/).
 	Schema map[string]interface{} `json:"schema,required"`
@@ -3141,9 +3145,6 @@ type ResponseFormatTextJSONSchemaConfig struct {
 	// A description of what the response format is for, used by the model to determine
 	// how to respond in the format.
 	Description string `json:"description"`
-	// The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores
-	// and dashes, with a maximum length of 64.
-	Name string `json:"name"`
 	// Whether to enable strict schema adherence when generating the output. If set to
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
@@ -3153,10 +3154,10 @@ type ResponseFormatTextJSONSchemaConfig struct {
 	// Metadata for the response, check the presence of optional fields with the
 	// [resp.Field.IsPresent] method.
 	JSON struct {
+		Name        resp.Field
 		Schema      resp.Field
 		Type        resp.Field
 		Description resp.Field
-		Name        resp.Field
 		Strict      resp.Field
 		ExtraFields map[string]resp.Field
 		raw         string
@@ -3183,8 +3184,11 @@ func (r ResponseFormatTextJSONSchemaConfig) ToParam() ResponseFormatTextJSONSche
 // more about
 // [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
 //
-// The properties Schema, Type are required.
+// The properties Name, Schema, Type are required.
 type ResponseFormatTextJSONSchemaConfigParam struct {
+	// The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores
+	// and dashes, with a maximum length of 64.
+	Name string `json:"name,required"`
 	// The schema for the response format, described as a JSON Schema object. Learn how
 	// to build JSON schemas [here](https://json-schema.org/).
 	Schema map[string]interface{} `json:"schema,omitzero,required"`
@@ -3197,9 +3201,6 @@ type ResponseFormatTextJSONSchemaConfigParam struct {
 	// A description of what the response format is for, used by the model to determine
 	// how to respond in the format.
 	Description param.Opt[string] `json:"description,omitzero"`
-	// The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores
-	// and dashes, with a maximum length of 64.
-	Name param.Opt[string] `json:"name,omitzero"`
 	// The type of response format being defined. Always `json_schema`.
 	//
 	// This field can be elided, and will marshal its zero value as "json_schema".
@@ -7425,8 +7426,8 @@ type ResponseNewParams struct {
 	// context.
 	//
 	// When using along with `previous_response_id`, the instructions from a previous
-	// response will be not be carried over to the next response. This makes it simple
-	// to swap out system (or developer) messages in new responses.
+	// response will not be carried over to the next response. This makes it simple to
+	// swap out system (or developer) messages in new responses.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// An upper bound for the number of tokens that can be generated for a response,
 	// including visible output tokens and
