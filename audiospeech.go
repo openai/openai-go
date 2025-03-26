@@ -54,13 +54,10 @@ type AudioSpeechNewParams struct {
 	// `tts-1`, `tts-1-hd` or `gpt-4o-mini-tts`.
 	Model SpeechModel `json:"model,omitzero,required"`
 	// The voice to use when generating the audio. Supported voices are `alloy`, `ash`,
-	// `coral`, `echo`, `fable`, `onyx`, `nova`, `sage` and `shimmer`. Previews of the
-	// voices are available in the
+	// `ballad`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`, `shimmer`, and
+	// `verse`. Previews of the voices are available in the
 	// [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
-	//
-	// Any of "alloy", "ash", "coral", "echo", "fable", "onyx", "nova", "sage",
-	// "shimmer".
-	Voice AudioSpeechNewParamsVoice `json:"voice,omitzero,required"`
+	Voice string `json:"voice,omitzero,required"`
 	// Control the voice of your generated audio with additional instructions. Does not
 	// work with `tts-1` or `tts-1-hd`.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
@@ -83,24 +80,6 @@ func (r AudioSpeechNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow AudioSpeechNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-// The voice to use when generating the audio. Supported voices are `alloy`, `ash`,
-// `coral`, `echo`, `fable`, `onyx`, `nova`, `sage` and `shimmer`. Previews of the
-// voices are available in the
-// [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
-type AudioSpeechNewParamsVoice string
-
-const (
-	AudioSpeechNewParamsVoiceAlloy   AudioSpeechNewParamsVoice = "alloy"
-	AudioSpeechNewParamsVoiceAsh     AudioSpeechNewParamsVoice = "ash"
-	AudioSpeechNewParamsVoiceCoral   AudioSpeechNewParamsVoice = "coral"
-	AudioSpeechNewParamsVoiceEcho    AudioSpeechNewParamsVoice = "echo"
-	AudioSpeechNewParamsVoiceFable   AudioSpeechNewParamsVoice = "fable"
-	AudioSpeechNewParamsVoiceOnyx    AudioSpeechNewParamsVoice = "onyx"
-	AudioSpeechNewParamsVoiceNova    AudioSpeechNewParamsVoice = "nova"
-	AudioSpeechNewParamsVoiceSage    AudioSpeechNewParamsVoice = "sage"
-	AudioSpeechNewParamsVoiceShimmer AudioSpeechNewParamsVoice = "shimmer"
-)
 
 // The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,
 // `wav`, and `pcm`.
