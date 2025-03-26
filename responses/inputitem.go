@@ -104,6 +104,9 @@ type InputItemListParams struct {
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// Additional fields to include in the response. See the `include` parameter for
+	// Response creation above for more information.
+	Include []ResponseIncludable `query:"include,omitzero" json:"-"`
 	// The order to return the input items in. Default is `asc`.
 	//
 	// - `asc`: Return the input items in ascending order.
