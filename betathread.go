@@ -394,6 +394,18 @@ func (r AssistantToolChoiceOptionUnion) ToParam() AssistantToolChoiceOptionUnion
 	return param.OverrideObj[AssistantToolChoiceOptionUnionParam](r.RawJSON())
 }
 
+// `none` means the model will not call any tools and instead generates a message.
+// `auto` means the model can pick between generating a message or calling one or
+// more tools. `required` means the model must call one or more tools before
+// responding to the user.
+type AssistantToolChoiceOptionAuto string
+
+const (
+	AssistantToolChoiceOptionAutoNone     AssistantToolChoiceOptionAuto = "none"
+	AssistantToolChoiceOptionAutoAuto     AssistantToolChoiceOptionAuto = "auto"
+	AssistantToolChoiceOptionAutoRequired AssistantToolChoiceOptionAuto = "required"
+)
+
 func AssistantToolChoiceOptionParamOfAssistantToolChoice(type_ AssistantToolChoiceType) AssistantToolChoiceOptionUnionParam {
 	var variant AssistantToolChoiceParam
 	variant.Type = type_

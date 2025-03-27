@@ -2093,7 +2093,7 @@ type BetaAssistantUpdateParams struct {
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
 	// them.
-	Model string `json:"model,omitzero"`
+	Model BetaAssistantUpdateParamsModel `json:"model,omitzero"`
 	// Specifies the format that the model must output. Compatible with
 	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
 	// [GPT-4 Turbo](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4),
@@ -2130,6 +2130,46 @@ func (r BetaAssistantUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaAssistantUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+
+// ID of the model to use. You can use the
+// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
+// see all of your available models, or see our
+// [Model overview](https://platform.openai.com/docs/models) for descriptions of
+// them.
+type BetaAssistantUpdateParamsModel string
+
+const (
+	BetaAssistantUpdateParamsModelO3Mini                  BetaAssistantUpdateParamsModel = "o3-mini"
+	BetaAssistantUpdateParamsModelO3Mini2025_01_31        BetaAssistantUpdateParamsModel = "o3-mini-2025-01-31"
+	BetaAssistantUpdateParamsModelO1                      BetaAssistantUpdateParamsModel = "o1"
+	BetaAssistantUpdateParamsModelO1_2024_12_17           BetaAssistantUpdateParamsModel = "o1-2024-12-17"
+	BetaAssistantUpdateParamsModelGPT4o                   BetaAssistantUpdateParamsModel = "gpt-4o"
+	BetaAssistantUpdateParamsModelGPT4o2024_11_20         BetaAssistantUpdateParamsModel = "gpt-4o-2024-11-20"
+	BetaAssistantUpdateParamsModelGPT4o2024_08_06         BetaAssistantUpdateParamsModel = "gpt-4o-2024-08-06"
+	BetaAssistantUpdateParamsModelGPT4o2024_05_13         BetaAssistantUpdateParamsModel = "gpt-4o-2024-05-13"
+	BetaAssistantUpdateParamsModelGPT4oMini               BetaAssistantUpdateParamsModel = "gpt-4o-mini"
+	BetaAssistantUpdateParamsModelGPT4oMini2024_07_18     BetaAssistantUpdateParamsModel = "gpt-4o-mini-2024-07-18"
+	BetaAssistantUpdateParamsModelGPT4_5Preview           BetaAssistantUpdateParamsModel = "gpt-4.5-preview"
+	BetaAssistantUpdateParamsModelGPT4_5Preview2025_02_27 BetaAssistantUpdateParamsModel = "gpt-4.5-preview-2025-02-27"
+	BetaAssistantUpdateParamsModelGPT4Turbo               BetaAssistantUpdateParamsModel = "gpt-4-turbo"
+	BetaAssistantUpdateParamsModelGPT4Turbo2024_04_09     BetaAssistantUpdateParamsModel = "gpt-4-turbo-2024-04-09"
+	BetaAssistantUpdateParamsModelGPT4_0125Preview        BetaAssistantUpdateParamsModel = "gpt-4-0125-preview"
+	BetaAssistantUpdateParamsModelGPT4TurboPreview        BetaAssistantUpdateParamsModel = "gpt-4-turbo-preview"
+	BetaAssistantUpdateParamsModelGPT4_1106Preview        BetaAssistantUpdateParamsModel = "gpt-4-1106-preview"
+	BetaAssistantUpdateParamsModelGPT4VisionPreview       BetaAssistantUpdateParamsModel = "gpt-4-vision-preview"
+	BetaAssistantUpdateParamsModelGPT4                    BetaAssistantUpdateParamsModel = "gpt-4"
+	BetaAssistantUpdateParamsModelGPT4_0314               BetaAssistantUpdateParamsModel = "gpt-4-0314"
+	BetaAssistantUpdateParamsModelGPT4_0613               BetaAssistantUpdateParamsModel = "gpt-4-0613"
+	BetaAssistantUpdateParamsModelGPT4_32k                BetaAssistantUpdateParamsModel = "gpt-4-32k"
+	BetaAssistantUpdateParamsModelGPT4_32k0314            BetaAssistantUpdateParamsModel = "gpt-4-32k-0314"
+	BetaAssistantUpdateParamsModelGPT4_32k0613            BetaAssistantUpdateParamsModel = "gpt-4-32k-0613"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo             BetaAssistantUpdateParamsModel = "gpt-3.5-turbo"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo16k          BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-16k"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo0613         BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-0613"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo1106         BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-1106"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo0125         BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-0125"
+	BetaAssistantUpdateParamsModelGPT3_5Turbo16k0613      BetaAssistantUpdateParamsModel = "gpt-3.5-turbo-16k-0613"
+)
 
 // A set of resources that are used by the assistant's tools. The resources are
 // specific to the type of tool. For example, the `code_interpreter` tool requires

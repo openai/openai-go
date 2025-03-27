@@ -258,7 +258,7 @@ type CompletionNewParams struct {
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
 	// them.
-	Model string `json:"model,omitzero,required"`
+	Model CompletionNewParamsModel `json:"model,omitzero,required"`
 	// Generates `best_of` completions server-side and returns the "best" (the one with
 	// the highest log probability per token). Results cannot be streamed.
 	//
@@ -360,6 +360,19 @@ func (r CompletionNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow CompletionNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+
+// ID of the model to use. You can use the
+// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
+// see all of your available models, or see our
+// [Model overview](https://platform.openai.com/docs/models) for descriptions of
+// them.
+type CompletionNewParamsModel string
+
+const (
+	CompletionNewParamsModelGPT3_5TurboInstruct CompletionNewParamsModel = "gpt-3.5-turbo-instruct"
+	CompletionNewParamsModelDavinci002          CompletionNewParamsModel = "davinci-002"
+	CompletionNewParamsModelBabbage002          CompletionNewParamsModel = "babbage-002"
+)
 
 // Only one field can be non-zero.
 //
