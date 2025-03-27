@@ -38,7 +38,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Model: shared.ChatModelO3Mini,
 		Audio: openai.ChatCompletionAudioParam{
 			Format: openai.ChatCompletionAudioParamFormatWAV,
-			Voice:  "alloy",
+			Voice:  openai.ChatCompletionAudioParamVoiceAlloy,
 		},
 		FrequencyPenalty: openai.Float(-2),
 		FunctionCall: openai.ChatCompletionNewParamsFunctionCallUnion{

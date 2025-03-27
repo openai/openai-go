@@ -917,7 +917,7 @@ func (r *FineTuningJobWandbIntegrationObject) UnmarshalJSON(data []byte) error {
 type FineTuningJobNewParams struct {
 	// The name of the model to fine-tune. You can select one of the
 	// [supported models](https://platform.openai.com/docs/guides/fine-tuning#which-models-can-be-fine-tuned).
-	Model string `json:"model,omitzero,required"`
+	Model FineTuningJobNewParamsModel `json:"model,omitzero,required"`
 	// The ID of an uploaded file that contains training data.
 	//
 	// See [upload file](https://platform.openai.com/docs/api-reference/files/create)
@@ -984,6 +984,17 @@ func (r FineTuningJobNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+
+// The name of the model to fine-tune. You can select one of the
+// [supported models](https://platform.openai.com/docs/guides/fine-tuning#which-models-can-be-fine-tuned).
+type FineTuningJobNewParamsModel string
+
+const (
+	FineTuningJobNewParamsModelBabbage002  FineTuningJobNewParamsModel = "babbage-002"
+	FineTuningJobNewParamsModelDavinci002  FineTuningJobNewParamsModel = "davinci-002"
+	FineTuningJobNewParamsModelGPT3_5Turbo FineTuningJobNewParamsModel = "gpt-3.5-turbo"
+	FineTuningJobNewParamsModelGPT4oMini   FineTuningJobNewParamsModel = "gpt-4o-mini"
+)
 
 // The hyperparameters used for the fine-tuning job. This value is now deprecated
 // in favor of `method`, and should be passed in under the `method` parameter.
