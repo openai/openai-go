@@ -500,7 +500,7 @@ type ChatCompletionAudioParam struct {
 	Format ChatCompletionAudioParamFormat `json:"format,omitzero,required"`
 	// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
 	// `ballad`, `coral`, `echo`, `sage`, and `shimmer`.
-	Voice string `json:"voice,omitzero,required"`
+	Voice ChatCompletionAudioParamVoice `json:"voice,omitzero,required"`
 	paramObj
 }
 
@@ -522,6 +522,24 @@ const (
 	ChatCompletionAudioParamFormatFLAC  ChatCompletionAudioParamFormat = "flac"
 	ChatCompletionAudioParamFormatOpus  ChatCompletionAudioParamFormat = "opus"
 	ChatCompletionAudioParamFormatPcm16 ChatCompletionAudioParamFormat = "pcm16"
+)
+
+// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
+// `ballad`, `coral`, `echo`, `sage`, and `shimmer`.
+type ChatCompletionAudioParamVoice string
+
+const (
+	ChatCompletionAudioParamVoiceAlloy   ChatCompletionAudioParamVoice = "alloy"
+	ChatCompletionAudioParamVoiceAsh     ChatCompletionAudioParamVoice = "ash"
+	ChatCompletionAudioParamVoiceBallad  ChatCompletionAudioParamVoice = "ballad"
+	ChatCompletionAudioParamVoiceCoral   ChatCompletionAudioParamVoice = "coral"
+	ChatCompletionAudioParamVoiceEcho    ChatCompletionAudioParamVoice = "echo"
+	ChatCompletionAudioParamVoiceFable   ChatCompletionAudioParamVoice = "fable"
+	ChatCompletionAudioParamVoiceOnyx    ChatCompletionAudioParamVoice = "onyx"
+	ChatCompletionAudioParamVoiceNova    ChatCompletionAudioParamVoice = "nova"
+	ChatCompletionAudioParamVoiceSage    ChatCompletionAudioParamVoice = "sage"
+	ChatCompletionAudioParamVoiceShimmer ChatCompletionAudioParamVoice = "shimmer"
+	ChatCompletionAudioParamVoiceVerse   ChatCompletionAudioParamVoice = "verse"
 )
 
 // Represents a streamed chunk of a chat completion response returned by the model,
@@ -2054,6 +2072,17 @@ func (u ChatCompletionToolChoiceOptionUnionParam) GetType() *string {
 	return nil
 }
 
+// `none` means the model will not call any tool and instead generates a message.
+// `auto` means the model can pick between generating a message or calling one or
+// more tools. `required` means the model must call one or more tools.
+type ChatCompletionToolChoiceOptionAuto string
+
+const (
+	ChatCompletionToolChoiceOptionAutoNone     ChatCompletionToolChoiceOptionAuto = "none"
+	ChatCompletionToolChoiceOptionAutoAuto     ChatCompletionToolChoiceOptionAuto = "auto"
+	ChatCompletionToolChoiceOptionAutoRequired ChatCompletionToolChoiceOptionAuto = "required"
+)
+
 // The properties Content, Role, ToolCallID are required.
 type ChatCompletionToolMessageParam struct {
 	// The contents of the tool message.
@@ -2389,6 +2418,16 @@ func (u ChatCompletionNewParamsFunctionCallUnion) GetName() *string {
 	}
 	return nil
 }
+
+// `none` means the model will not call a function and instead generates a message.
+// `auto` means the model can pick between generating a message or calling a
+// function.
+type ChatCompletionNewParamsFunctionCallFunctionCallMode string
+
+const (
+	ChatCompletionNewParamsFunctionCallFunctionCallModeNone ChatCompletionNewParamsFunctionCallFunctionCallMode = "none"
+	ChatCompletionNewParamsFunctionCallFunctionCallModeAuto ChatCompletionNewParamsFunctionCallFunctionCallMode = "auto"
+)
 
 // Deprecated: deprecated
 //
