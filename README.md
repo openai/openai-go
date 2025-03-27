@@ -310,7 +310,7 @@ To handle errors, we recommend that you use the `errors.As` pattern:
 
 ```go
 _, err := client.FineTuning.Jobs.New(context.TODO(), openai.FineTuningJobNewParams{
-	Model:        "babbage-002",
+	Model:        openai.FineTuningJobNewParamsModelBabbage002,
 	TrainingFile: "file-abc123",
 })
 if err != nil {

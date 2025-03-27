@@ -114,7 +114,7 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 			Metadata: shared.MetadataParam{
 				"foo": "string",
 			},
-			Model:           "o3-mini",
+			Model:           openai.BetaAssistantUpdateParamsModelO3Mini,
 			Name:            openai.String("name"),
 			ReasoningEffort: shared.ReasoningEffortLow,
 			ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{
