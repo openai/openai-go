@@ -147,7 +147,8 @@ func (UnionStructB) union() {}
 
 type UnionTime time.Time
 
-func (UnionTime) union() {}
+func (u UnionTime) UnionTime() time.Time { return time.Time(u) }
+func (UnionTime) union()                 {}
 
 func init() {
 	RegisterUnion[Union]("type",

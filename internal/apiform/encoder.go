@@ -94,10 +94,10 @@ func (e *encoder) typeEncoder(t reflect.Type) encoderFunc {
 }
 
 func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
-	if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
+	if t == timeType || t.Implements(unionTimeType) {
 		return e.newTimeTypeEncoder()
 	}
-	if t.ConvertibleTo(reflect.TypeOf((*io.Reader)(nil)).Elem()) {
+	if t.Implements(reflect.TypeOf((*io.Reader)(nil)).Elem()) {
 		return e.newReaderTypeEncoder()
 	}
 	e.root = false
@@ -305,10 +305,20 @@ func (e *encoder) newFieldTypeEncoder(t reflect.Type) encoderFunc {
 	}
 }
 
+type unionTime interface {
+	UnionTime() time.Time
+}
+
+var unionTimeType = reflect.TypeOf((*unionTime)(nil)).Elem()
+var timeType = reflect.TypeOf(time.Time{})
+
 func (e *encoder) newTimeTypeEncoder() encoderFunc {
 	format := e.dateFormat
 	return func(key string, value reflect.Value, writer *multipart.Writer) error {
-		return writer.WriteField(key, value.Convert(reflect.TypeOf(time.Time{})).Interface().(time.Time).Format(format))
+		if value.Type().Implements(unionTimeType) {
+			value = reflect.ValueOf(value.Interface().(unionTime).UnionTime())
+		}
+		return writer.WriteField(key, value.Interface().(time.Time).Format(format))
 	}
 }
 

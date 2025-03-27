@@ -136,7 +136,7 @@ func unmarshalerDecoder(n gjson.Result, v reflect.Value, state *decoderState) er
 }
 
 func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
-	if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
+	if t == timeType || t.Implements(unionTimeType) {
 		return d.newTimeTypeDecoder(t)
 	}
 	if !d.root && t.Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {
@@ -145,6 +145,7 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 	if !d.root && reflect.PointerTo(t).Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {
 		if _, ok := unionVariants[t]; !ok {
 			return indirectUnmarshalerDecoder
+
 		}
 	}
 	d.root = false
@@ -328,7 +329,7 @@ func (d *decoderBuilder) newArrayTypeDecoder(t reflect.Type) decoderFunc {
 
 		arrayNode := node.Array()
 
-		arrayValue := reflect.MakeSlice(reflect.SliceOf(t.Elem()), len(arrayNode), len(arrayNode))
+		arrayValue := reflect.MakeSlice(t, len(arrayNode), len(arrayNode))
 		for i, itemNode := range arrayNode {
 			err = itemDecoder(itemNode, arrayValue.Index(i), state)
 			if err != nil {

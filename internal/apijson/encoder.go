@@ -101,7 +101,7 @@ func indirectMarshalerEncoder(v reflect.Value) ([]byte, error) {
 }
 
 func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
-	if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
+	if t == timeType || t.Implements(unionTimeType) {
 		return e.newTimeTypeEncoder()
 	}
 	if !e.root && t.Implements(reflect.TypeOf((*json.Marshaler)(nil)).Elem()) {
@@ -313,10 +313,20 @@ func (e *encoder) newFieldTypeEncoder(t reflect.Type) encoderFunc {
 	}
 }
 
+type unionTime interface {
+	UnionTime() time.Time
+}
+
+var unionTimeType = reflect.TypeOf((*unionTime)(nil)).Elem()
+var timeType = reflect.TypeOf(time.Time{})
+
 func (e *encoder) newTimeTypeEncoder() encoderFunc {
 	format := e.dateFormat
 	return func(value reflect.Value) (json []byte, err error) {
-		return []byte(`"` + value.Convert(reflect.TypeOf(time.Time{})).Interface().(time.Time).Format(format) + `"`), nil
+		if value.Type().Implements(unionTimeType) {
+			value = reflect.ValueOf(value.Interface().(unionTime).UnionTime())
+		}
+		return []byte(`"` + value.Interface().(time.Time).Format(format) + `"`), nil
 	}
 }
 

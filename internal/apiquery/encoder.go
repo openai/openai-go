@@ -83,7 +83,7 @@ func marshalerEncoder(key string, value reflect.Value) []Pair {
 }
 
 func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
-	if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
+	if t == timeType || t.Implements(unionTimeType) {
 		return e.newTimeTypeEncoder(t)
 	}
 
@@ -337,12 +337,22 @@ func (e *encoder) newFieldTypeEncoder(t reflect.Type) encoderFunc {
 	}
 }
 
+type unionTime interface {
+	UnionTime() time.Time
+}
+
+var unionTimeType = reflect.TypeOf((*unionTime)(nil)).Elem()
+var timeType = reflect.TypeOf(time.Time{})
+
 func (e *encoder) newTimeTypeEncoder(t reflect.Type) encoderFunc {
 	format := e.dateFormat
 	return func(key string, value reflect.Value) []Pair {
+		if t != timeType && value.Type().Implements(unionTimeType) {
+			value = reflect.ValueOf(value.Interface().(unionTime).UnionTime())
+		}
 		return []Pair{{
 			key,
-			value.Convert(reflect.TypeOf(time.Time{})).Interface().(time.Time).Format(format),
+			value.Interface().(time.Time).Format(format),
 		}}
 	}
 }
