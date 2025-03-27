@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"io"
 	"os"
 
 	"github.com/openai/openai-go"
@@ -18,8 +17,8 @@ func main() {
 	}
 
 	transcription, err := client.Audio.Transcriptions.New(ctx, openai.AudioTranscriptionNewParams{
-		Model: openai.F(openai.AudioTranscriptionNewParamsModelWhisper1),
-		File:  openai.F[io.Reader](file),
+		Model: openai.AudioModelWhisper1,
+		File:  file,
 	})
 	if err != nil {
 		panic(err)
