@@ -364,26 +364,26 @@ The file name and content-type can be customized by implementing `Name() string`
 string` on the run-time type of `io.Reader`. Note that `os.File` implements `Name() string`, so a
 file returned by `os.Open` will be sent with the file name on disk.
 
-We also provide a helper `openai.FileParam(reader io.Reader, filename string, contentType string)`
+We also provide a helper `openai.File(reader io.Reader, filename string, contentType string)`
 which can be used to wrap any `io.Reader` with the appropriate file name and content type.
 
 ```go
 // A file from the file system
 file, err := os.Open("input.jsonl")
 openai.FileNewParams{
-	File:    openai.F[io.Reader](file),
+	File:    file,
 	Purpose: openai.FilePurposeFineTune,
 }
 
 // A file from a string
 openai.FileNewParams{
-	File:    openai.F[io.Reader](strings.NewReader("my file contents")),
+	File:    strings.NewReader("my file contents"),
 	Purpose: openai.FilePurposeFineTune,
 }
 
 // With a custom filename and contentType
 openai.FileNewParams{
-	File:    openai.FileParam(strings.NewReader(`{"hello": "foo"}`), "file.go", "application/json"),
+	File:    openai.File(strings.NewReader(`{"hello": "foo"}`), "file.go", "application/json"),
 	Purpose: openai.FilePurposeFineTune,
 }
 ```
