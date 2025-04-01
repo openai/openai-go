@@ -157,3 +157,37 @@ func TestUnionDateMarshal(t *testing.T) {
 		})
 	}
 }
+
+func TestOverride(t *testing.T) {
+	tests := map[string]struct {
+		value    param.OverridableObject
+		expected string
+	}{
+		"param_struct": {
+			param.OverrideObj[FieldStruct](map[string]any{
+				"a": "hello",
+				"b": 12,
+				"c": nil,
+			}),
+			`{"a":"hello","b":12,"c":null}`,
+		},
+		"param_struct_primitive": {
+			param.OverrideObj[FieldStruct](12),
+			`12`,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			b, err := json.Marshal(test.value)
+			if err != nil {
+				t.Fatalf("didn't expect error %v, expected %s", err, test.expected)
+			}
+			if string(b) != test.expected {
+				t.Fatalf("expected %s, received %s", test.expected, string(b))
+			}
+			if _, ok := test.value.IsOverridden(); !ok {
+				t.Fatalf("expected to be overridden")
+			}
+		})
+	}
+}
