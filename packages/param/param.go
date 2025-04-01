@@ -18,7 +18,7 @@ func NullObj[T NullableObject, PT Settable[T]]() T {
 func OverrideObj[T OverridableObject, PT Settable[T]](v any) T {
 	var t T
 	pt := PT(&t)
-	pt.setMetadata(nil)
+	pt.setMetadata(v)
 	return *pt
 }
 
