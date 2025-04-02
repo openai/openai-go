@@ -19,6 +19,13 @@ type Primitives struct {
 	F []int   `form:"f"`
 }
 
+// These aliases are necessary to bypass the cache.
+// This only relevant during testing.
+type int_ int
+type PrimitivesBrackets struct {
+	F []int_ `form:"f"`
+}
+
 type PrimitivePointers struct {
 	A *bool    `form:"a"`
 	B *int     `form:"b"`
@@ -169,6 +176,27 @@ Content-Disposition: form-data; name="f.3"
 `,
 		Primitives{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
 	},
+	"primitive_struct,brackets": {
+		`--xxx
+Content-Disposition: form-data; name="f[]"
+
+1
+--xxx
+Content-Disposition: form-data; name="f[]"
+
+2
+--xxx
+Content-Disposition: form-data; name="f[]"
+
+3
+--xxx
+Content-Disposition: form-data; name="f[]"
+
+4
+--xxx--
+`,
+		PrimitivesBrackets{F: []int_{1, 2, 3, 4}},
+	},
 
 	"slices": {
 		`--xxx
@@ -213,7 +241,6 @@ Content-Disposition: form-data; name="slices.0.f.3"
 			Slice: []Primitives{{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}}},
 		},
 	},
-
 	"primitive_pointer_struct": {
 		`--xxx
 Content-Disposition: form-data; name="a"
@@ -423,7 +450,13 @@ func TestEncode(t *testing.T) {
 			buf := bytes.NewBuffer(nil)
 			writer := multipart.NewWriter(buf)
 			writer.SetBoundary("xxx")
-			err := Marshal(test.val, writer)
+
+			var arrayFmt string = "indices:dots"
+			if tags := strings.Split(name, ","); len(tags) > 1 {
+				arrayFmt = tags[1]
+			}
+
+			err := MarshalWithSettings(test.val, writer, arrayFmt)
 			if err != nil {
 				t.Errorf("serialization of %v failed with error %v", test.val, err)
 			}
