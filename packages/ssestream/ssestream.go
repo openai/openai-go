@@ -167,10 +167,12 @@ func (s *Stream[T]) Next() bool {
 			s.err = fmt.Errorf("received error while streaming: %s", ep.String())
 			return false
 		}
-		s.err = json.Unmarshal(s.decoder.Event().Data, &s.cur)
+		var nxt T
+		s.err = json.Unmarshal(s.decoder.Event().Data, &nxt)
 		if s.err != nil {
 			return false
 		}
+		s.cur = nxt
 		return true
 	}
 
