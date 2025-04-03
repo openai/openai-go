@@ -482,7 +482,7 @@ func (f VectorStoreFileListParams) IsPresent() bool { return !param.IsOmitted(f)
 
 // URLQuery serializes [VectorStoreFileListParams]'s query parameters as
 // `url.Values`.
-func (r VectorStoreFileListParams) URLQuery() (v url.Values) {
+func (r VectorStoreFileListParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

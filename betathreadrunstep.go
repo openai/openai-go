@@ -1301,7 +1301,7 @@ func (f BetaThreadRunStepGetParams) IsPresent() bool { return !param.IsOmitted(f
 
 // URLQuery serializes [BetaThreadRunStepGetParams]'s query parameters as
 // `url.Values`.
-func (r BetaThreadRunStepGetParams) URLQuery() (v url.Values) {
+func (r BetaThreadRunStepGetParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -1344,7 +1344,7 @@ func (f BetaThreadRunStepListParams) IsPresent() bool { return !param.IsOmitted(
 
 // URLQuery serializes [BetaThreadRunStepListParams]'s query parameters as
 // `url.Values`.
-func (r BetaThreadRunStepListParams) URLQuery() (v url.Values) {
+func (r BetaThreadRunStepListParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

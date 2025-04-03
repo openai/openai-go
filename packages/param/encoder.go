@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"strings"
-	"sync"
 	"time"
 
 	shimjson "github.com/openai/openai-go/internal/encoding/json"
@@ -76,50 +74,4 @@ func typeFor[T any]() reflect.Type {
 		return t // optimize for T being a non-interface kind
 	}
 	return reflect.TypeOf((*T)(nil)).Elem() // only for an interface kind
-}
-
-var optStringType = typeFor[Opt[string]]()
-var optIntType = typeFor[Opt[int64]]()
-var optFloatType = typeFor[Opt[float64]]()
-var optBoolType = typeFor[Opt[bool]]()
-
-var OptionalPrimitiveTypes map[reflect.Type][]int
-
-// indexOfUnderlyingValueField must only be called at initialization time
-func indexOfUnderlyingValueField(t reflect.Type) []int {
-	field, ok := t.FieldByName("Value")
-	if !ok {
-		panic("unreachable: initialization issue, underlying value field not found")
-	}
-	return field.Index
-}
-
-func init() {
-	OptionalPrimitiveTypes = map[reflect.Type][]int{
-		optStringType: indexOfUnderlyingValueField(optStringType),
-		optIntType:    indexOfUnderlyingValueField(optIntType),
-		optFloatType:  indexOfUnderlyingValueField(optFloatType),
-		optBoolType:   indexOfUnderlyingValueField(optBoolType),
-	}
-}
-
-var structFieldsCache sync.Map
-
-func structFields(t reflect.Type) (map[string][]int, error) {
-	if cached, ok := structFieldsCache.Load(t); ok {
-		return cached.(map[string][]int), nil
-	}
-	if t.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("resp: expected struct but got %v of kind %v", t.String(), t.Kind().String())
-	}
-	structFields := map[string][]int{}
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		name := strings.Split(field.Tag.Get("json"), ",")[0]
-		if name == "" || name == "-" || field.Anonymous {
-			continue
-		}
-		structFields[name] = field.Index
-	}
-	return structFields, nil
 }

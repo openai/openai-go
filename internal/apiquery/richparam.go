@@ -5,15 +5,15 @@ import (
 	"reflect"
 )
 
-func (e *encoder) newRichFieldTypeEncoder(t reflect.Type, underlyingValueIdx []int) encoderFunc {
-	underlying := t.FieldByIndex(underlyingValueIdx)
-	primitiveEncoder := e.newPrimitiveTypeEncoder(underlying.Type)
-	return func(key string, value reflect.Value) []Pair {
+func (e *encoder) newRichFieldTypeEncoder(t reflect.Type) encoderFunc {
+	f, _ := t.FieldByName("Value")
+	enc := e.typeEncoder(f.Type)
+	return func(key string, value reflect.Value) ([]Pair, error) {
 		if fielder, ok := value.Interface().(param.Optional); ok && fielder.IsPresent() {
-			return primitiveEncoder(key, value.FieldByIndex(underlyingValueIdx))
+			return enc(key, value.FieldByIndex(f.Index))
 		} else if ok && fielder.IsNull() {
-			return []Pair{{key, "null"}}
+			return []Pair{{key, "null"}}, nil
 		}
-		return nil
+		return nil, nil
 	}
 }

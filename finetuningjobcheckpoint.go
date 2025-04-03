@@ -149,7 +149,7 @@ func (f FineTuningJobCheckpointListParams) IsPresent() bool {
 
 // URLQuery serializes [FineTuningJobCheckpointListParams]'s query parameters as
 // `url.Values`.
-func (r FineTuningJobCheckpointListParams) URLQuery() (v url.Values) {
+func (r FineTuningJobCheckpointListParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
