@@ -44,11 +44,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
 )
 
 func main() {
