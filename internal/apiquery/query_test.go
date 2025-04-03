@@ -111,6 +111,23 @@ type QueryOmitTest struct {
 	B string            `query:"b,omitzero"`
 }
 
+type NamedEnum string
+
+const NamedEnumFoo NamedEnum = "foo"
+
+type StructUnionWrapper struct {
+	Union StructUnion `query:"union"`
+}
+
+type StructUnion struct {
+	OfInt    param.Opt[int64]     `query:",omitzero,inline"`
+	OfString param.Opt[string]    `query:",omitzero,inline"`
+	OfEnum   param.Opt[NamedEnum] `query:",omitzero,inline"`
+	OfA      UnionStructA         `query:",omitzero,inline"`
+	OfB      UnionStructB         `query:",omitzero,inline"`
+	param.APIUnion
+}
+
 var tests = map[string]struct {
 	enc      string
 	val      interface{}
@@ -228,10 +245,26 @@ var tests = map[string]struct {
 		QuerySettings{NestedFormat: NestedQueryFormatDots},
 	},
 
+	"struct_union_string": {
+		`union=hello`,
+		StructUnionWrapper{
+			Union: StructUnion{OfString: param.NewOpt("hello")},
+		},
+		QuerySettings{},
+	},
+
 	"union_string": {
 		`union=hello`,
 		UnionStruct{
 			Union: UnionString("hello"),
+		},
+		QuerySettings{},
+	},
+
+	"struct_union_integer": {
+		`union=12`,
+		StructUnionWrapper{
+			Union: StructUnion{OfInt: param.NewOpt[int64](12)},
 		},
 		QuerySettings{},
 	},
@@ -244,6 +277,26 @@ var tests = map[string]struct {
 		QuerySettings{},
 	},
 
+	"struct_union_enum": {
+		`union=foo`,
+		StructUnionWrapper{
+			Union: StructUnion{OfEnum: param.NewOpt[NamedEnum](NamedEnumFoo)},
+		},
+		QuerySettings{},
+	},
+
+	"struct_union_struct_discriminated_a": {
+		`union[a]=foo&union[b]=bar&union[type]=typeA`,
+		StructUnionWrapper{
+			Union: StructUnion{OfA: UnionStructA{
+				Type: "typeA",
+				A:    "foo",
+				B:    "bar",
+			}},
+		},
+		QuerySettings{},
+	},
+
 	"union_struct_discriminated_a": {
 		`union[a]=foo&union[b]=bar&union[type]=typeA`,
 		UnionStruct{
@@ -252,6 +305,17 @@ var tests = map[string]struct {
 				A:    "foo",
 				B:    "bar",
 			},
+		},
+		QuerySettings{},
+	},
+
+	"struct_union_struct_discriminated_b": {
+		`union[a]=foo&union[type]=typeB`,
+		StructUnionWrapper{
+			Union: StructUnion{OfB: UnionStructB{
+				Type: "typeB",
+				A:    "foo",
+			}},
 		},
 		QuerySettings{},
 	},
@@ -358,7 +422,10 @@ var tests = map[string]struct {
 func TestEncode(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			values := MarshalWithSettings(test.val, test.settings)
+			values, err := MarshalWithSettings(test.val, test.settings)
+			if err != nil {
+				t.Fatalf("failed to marshal url %s", err)
+			}
 			str, _ := url.QueryUnescape(values.Encode())
 			if str != test.enc {
 				t.Fatalf("expected %+#v to serialize to %s but got %s", test.val, test.enc, str)

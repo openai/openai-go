@@ -191,3 +191,24 @@ func TestOverride(t *testing.T) {
 		})
 	}
 }
+
+// Despite implementing the interface, this struct is not an param.Optional
+// since it was defined in a different package.
+type almostOpt struct{}
+
+func (almostOpt) IsPresent() bool { return true }
+func (almostOpt) IsNull() bool    { return false }
+func (almostOpt) IsOmitted() bool { return false }
+func (almostOpt) implOpt()        {}
+
+func TestOptionalInterfaceAssignability(t *testing.T) {
+	optInt := param.Opt[int]{}
+	if _, ok := any(optInt).(param.Optional); !ok {
+		t.Fatalf("failed to assign")
+	}
+
+	notOpt := almostOpt{}
+	if _, ok := any(notOpt).(param.Optional); ok {
+		t.Fatalf("unexpected successful assignment")
+	}
+}

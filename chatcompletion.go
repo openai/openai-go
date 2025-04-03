@@ -2630,7 +2630,7 @@ func (f ChatCompletionListParams) IsPresent() bool { return !param.IsOmitted(f) 
 
 // URLQuery serializes [ChatCompletionListParams]'s query parameters as
 // `url.Values`.
-func (r ChatCompletionListParams) URLQuery() (v url.Values) {
+func (r ChatCompletionListParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

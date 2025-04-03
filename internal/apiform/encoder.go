@@ -226,8 +226,14 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 		return e.newFieldTypeEncoder(t)
 	}
 
-	if idx, ok := param.OptionalPrimitiveTypes[t]; ok {
-		return e.newRichFieldTypeEncoder(t, idx)
+	if t.Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
+		return e.newRichFieldTypeEncoder(t)
+	}
+
+	for i := 0; i < t.NumField(); i++ {
+		if t.Field(i).Type == paramUnionType && t.Field(i).Anonymous {
+			return e.newStructUnionTypeEncoder(t)
+		}
 	}
 
 	encoderFields := []encoderField{}
@@ -322,6 +328,32 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 		}
 
 		return nil
+	}
+}
+
+var paramUnionType = reflect.TypeOf((*param.APIUnion)(nil)).Elem()
+
+func (e *encoder) newStructUnionTypeEncoder(t reflect.Type) encoderFunc {
+	var fieldEncoders []encoderFunc
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if field.Type == paramUnionType && field.Anonymous {
+			fieldEncoders = append(fieldEncoders, nil)
+			continue
+		}
+		fieldEncoders = append(fieldEncoders, e.typeEncoder(field.Type))
+	}
+
+	return func(key string, value reflect.Value, writer *multipart.Writer) error {
+		for i := 0; i < t.NumField(); i++ {
+			if value.Field(i).Type() == paramUnionType {
+				continue
+			}
+			if !value.Field(i).IsZero() {
+				return fieldEncoders[i](key, value.Field(i), writer)
+			}
+		}
+		return fmt.Errorf("apiform: union %s has no field set", t.String())
 	}
 }
 
@@ -435,7 +467,7 @@ func (e *encoder) encodeMapEntries(key string, v reflect.Value, writer *multipar
 	return nil
 }
 
-func (e *encoder) newMapEncoder(t reflect.Type) encoderFunc {
+func (e *encoder) newMapEncoder(_ reflect.Type) encoderFunc {
 	return func(key string, value reflect.Value, writer *multipart.Writer) error {
 		return e.encodeMapEntries(key, value, writer)
 	}

@@ -773,7 +773,7 @@ type VectorStoreListParams struct {
 func (f VectorStoreListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [VectorStoreListParams]'s query parameters as `url.Values`.
-func (r VectorStoreListParams) URLQuery() (v url.Values) {
+func (r VectorStoreListParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
