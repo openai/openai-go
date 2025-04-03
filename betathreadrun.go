@@ -698,7 +698,7 @@ func (r BetaThreadRunNewParams) MarshalJSON() (data []byte, err error) {
 }
 
 // URLQuery serializes [BetaThreadRunNewParams]'s query parameters as `url.Values`.
-func (r BetaThreadRunNewParams) URLQuery() (v url.Values) {
+func (r BetaThreadRunNewParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -945,7 +945,7 @@ func (f BetaThreadRunListParams) IsPresent() bool { return !param.IsOmitted(f) &
 
 // URLQuery serializes [BetaThreadRunListParams]'s query parameters as
 // `url.Values`.
-func (r BetaThreadRunListParams) URLQuery() (v url.Values) {
+func (r BetaThreadRunListParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

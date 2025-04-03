@@ -1498,7 +1498,7 @@ func (f FineTuningJobListParams) IsPresent() bool { return !param.IsOmitted(f) &
 
 // URLQuery serializes [FineTuningJobListParams]'s query parameters as
 // `url.Values`.
-func (r FineTuningJobListParams) URLQuery() (v url.Values) {
+func (r FineTuningJobListParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -1519,7 +1519,7 @@ func (f FineTuningJobListEventsParams) IsPresent() bool { return !param.IsOmitte
 
 // URLQuery serializes [FineTuningJobListEventsParams]'s query parameters as
 // `url.Values`.
-func (r FineTuningJobListEventsParams) URLQuery() (v url.Values) {
+func (r FineTuningJobListEventsParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

@@ -18,6 +18,7 @@ type Opt[T comparable] struct {
 	Value T
 	// indicates whether the field should be omitted, null, or valid
 	Status Status
+	opt
 }
 
 type Status int8
@@ -28,6 +29,11 @@ const (
 	included
 )
 
+// opt helps limit the [Optional] interface to only types in this package
+type opt struct{}
+
+func (opt) closer() {}
+
 type Optional interface {
 	// IsPresent returns true if the value is not "null" or omitted
 	IsPresent() bool
@@ -37,6 +43,8 @@ type Optional interface {
 
 	// IsNull returns true if the value is "null", it returns false if the value is omitted.
 	IsNull() bool
+
+	closer()
 }
 
 // IsPresent returns true if the value is not "null" and not omitted
