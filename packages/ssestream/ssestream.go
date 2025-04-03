@@ -161,17 +161,19 @@ func (s *Stream[T]) Next() bool {
 			s.done = true
 			continue
 		}
-
+		
+		var nxt T
 		if s.decoder.Event().Type == "" || strings.HasPrefix(s.decoder.Event().Type, "response.") {
 			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
 			if ep.Exists() {
 				s.err = fmt.Errorf("received error while streaming: %s", ep.String())
 				return false
 			}
-			s.err = json.Unmarshal(s.decoder.Event().Data, &s.cur)
+			s.err = json.Unmarshal(s.decoder.Event().Data, &nxt)
 			if s.err != nil {
 				return false
 			}
+			s.cur = nxt
 			return true
 		} else {
 			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
@@ -181,10 +183,11 @@ func (s *Stream[T]) Next() bool {
 			}
 			event := s.decoder.Event().Type
 			data := s.decoder.Event().Data
-			s.err = json.Unmarshal([]byte(fmt.Sprintf(`{ "event": %q, "data": %s }`, event, data)), &s.cur)
+			s.err = json.Unmarshal([]byte(fmt.Sprintf(`{ "event": %q, "data": %s }`, event, data)), &nxt)
 			if s.err != nil {
 				return false
 			}
+			s.cur = nxt
 			return true
 		}
 	}
