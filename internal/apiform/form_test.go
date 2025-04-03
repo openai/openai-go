@@ -2,6 +2,7 @@ package apiform
 
 import (
 	"bytes"
+	"github.com/openai/openai-go/packages/param"
 	"mime/multipart"
 	"strings"
 	"testing"
@@ -101,6 +102,23 @@ type UnionTime time.Time
 func (UnionTime) union() {}
 
 type ReaderStruct struct {
+}
+
+type NamedEnum string
+
+const NamedEnumFoo NamedEnum = "foo"
+
+type StructUnionWrapper struct {
+	Union StructUnion `form:"union"`
+}
+
+type StructUnion struct {
+	OfInt    param.Opt[int64]     `form:",omitzero,inline"`
+	OfString param.Opt[string]    `form:",omitzero,inline"`
+	OfEnum   param.Opt[NamedEnum] `form:",omitzero,inline"`
+	OfA      UnionStructA         `form:",omitzero,inline"`
+	OfB      UnionStructB         `form:",omitzero,inline"`
+	param.APIUnion
 }
 
 var tests = map[string]struct {
@@ -375,6 +393,18 @@ bar
 		},
 	},
 
+	"struct_union_integer": {
+		`--xxx
+Content-Disposition: form-data; name="union"
+
+12
+--xxx--
+`,
+		StructUnionWrapper{
+			Union: StructUnion{OfInt: param.NewOpt[int64](12)},
+		},
+	},
+
 	"union_integer": {
 		`--xxx
 Content-Disposition: form-data; name="union"
@@ -384,6 +414,30 @@ Content-Disposition: form-data; name="union"
 `,
 		UnionStruct{
 			Union: UnionInteger(12),
+		},
+	},
+
+	"struct_union_struct_discriminated_a": {
+		`--xxx
+Content-Disposition: form-data; name="union.a"
+
+foo
+--xxx
+Content-Disposition: form-data; name="union.b"
+
+bar
+--xxx
+Content-Disposition: form-data; name="union.type"
+
+typeA
+--xxx--
+`,
+		StructUnionWrapper{
+			Union: StructUnion{OfA: UnionStructA{
+				Type: "typeA",
+				A:    "foo",
+				B:    "bar",
+			}},
 		},
 	},
 
@@ -409,6 +463,25 @@ typeA
 				A:    "foo",
 				B:    "bar",
 			},
+		},
+	},
+
+	"struct_union_struct_discriminated_b": {
+		`--xxx
+Content-Disposition: form-data; name="union.a"
+
+foo
+--xxx
+Content-Disposition: form-data; name="union.type"
+
+typeB
+--xxx--
+`,
+		StructUnionWrapper{
+			Union: StructUnion{OfB: UnionStructB{
+				Type: "typeB",
+				A:    "foo",
+			}},
 		},
 	},
 

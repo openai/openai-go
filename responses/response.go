@@ -7635,7 +7635,7 @@ type ResponseGetParams struct {
 func (f ResponseGetParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [ResponseGetParams]'s query parameters as `url.Values`.
-func (r ResponseGetParams) URLQuery() (v url.Values) {
+func (r ResponseGetParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

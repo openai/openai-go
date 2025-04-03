@@ -122,7 +122,7 @@ type InputItemListParams struct {
 func (f InputItemListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [InputItemListParams]'s query parameters as `url.Values`.
-func (r InputItemListParams) URLQuery() (v url.Values) {
+func (r InputItemListParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
