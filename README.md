@@ -314,16 +314,16 @@ send non-conforming fields in the request body. Extra fields overwrite any struc
 key, so only use with trusted data.
 
 ```go
-params := FooParams{
-	ID: "id_xxx",                          // required property
-	Name: openai.String("hello"), // optional property
-	Description: param.NullOpt[string](),  // explicit null property
+params := openai.ExampleParams{
+	ID:          "id_xxx",                // required property
+	Name:        openai.String("..."),    // optional property
+	Description: param.NullOpt[string](), // explicit null property
 
 	Point: openai.Point{
-		X: 0, // required field will serialize as 0
+		X: 0,             // required field will serialize as 0
 		Y: openai.Int(1), // optional field will serialize as 1
-	  // ... omitted non-required fields will not be serialized
-	}),
+		// ... omitted non-required fields will not be serialized
+	},
 
 	Origin: openai.Origin{}, // the zero value of [Origin] is considered omitted
 }
@@ -352,8 +352,8 @@ These methods return a mutable pointer to the underlying data, if present.
 ```go
 // Only one field can be non-zero, use param.IsOmitted() to check if a field is set
 type AnimalUnionParam struct {
-	OfCat 	 *Cat              `json:",omitzero,inline`
-	OfDog    *Dog              `json:",omitzero,inline`
+	OfCat *Cat `json:",omitzero,inline`
+	OfDog *Dog `json:",omitzero,inline`
 }
 
 animal := AnimalUnionParam{
@@ -376,31 +376,41 @@ if address := animal.GetOwner().GetAddress(); address != nil {
 All fields in response structs are value types (not pointers or wrappers).
 
 If a given field is `null`, not present, or invalid, the corresponding field
-will simply be its zero value.
+will simply be its zero value. To handle optional fields, see the `IsPresent()` method
+below.
 
 All response structs also include a special `JSON` field, containing more detailed
 information about each property, which you can use like so:
 
 ```go
-if res.Name == "" {
-	// true if `"name"` was unmarshalled successfully
-	res.JSON.Name.IsPresent()
-
-	res.JSON.Name.IsExplicitNull() // true if `"name"` is explicitly null
-	res.JSON.Name.Raw() == ""          // true if `"name"` field does not exist
-
-	// When the API returns data that cannot be coerced to the expected type:
-	if !res.JSON.Name.IsPresent() && res.JSON.Name.Raw() != "" {
-		raw := res.JSON.Name.Raw()
-
-		legacyName := struct{
-			First string `json:"first"`
-			Last  string `json:"last"`
-		}{}
-		json.Unmarshal([]byte(raw), &legacyName)
-		name = legacyName.First + " " + legacyName.Last
-	}
+type Animal struct {
+	Name   string `json:"name,nullable"`
+	Owners int    `json:"owners"`
+	Age    int    `json:"age"`
+	JSON   struct {
+		Name  resp.Field
+		Owner resp.Field
+		Age   resp.Field
+	} `json:"-"`
 }
+
+var res Animal
+json.Unmarshal([]byte(`{"name": null, "owners": 0}`), &res)
+
+// Use the IsPresent() method to handle optional fields
+res.Owners                  // 0
+res.JSON.Owners.IsPresent() // true
+res.JSON.Owners.Raw()       // "0"
+
+res.Age                  // 0
+res.JSON.Age.IsPresent() // false
+res.JSON.Age.Raw()       // ""
+
+// Use the IsExplicitNull() method to differentiate null and omitted
+res.Name                       // ""
+res.JSON.Name.IsPresent()      // false
+res.JSON.Name.Raw()            // "null"
+res.JSON.Name.IsExplicitNull() // true
 ```
 
 These `.JSON` structs also include an `ExtraFields` map containing
@@ -423,31 +433,26 @@ the properties but prefixed with `Of` and feature the tag `json:"...,inline"`.
 
 ```go
 type AnimalUnion struct {
-	OfString string `json:",inline"`
-	Name     string `json:"name"`
-	Owner    Person `json:"owner"`
+	// From variants [Dog], [Cat]
+	Owner Person `json:"owner"`
+	// From variant [Dog]
+	DogBreed string `json:"dog_breed"`
+	// From variant [Cat]
+	CatBreed string `json:"cat_breed"`
 	// ...
 	JSON struct {
-		OfString resp.Field
-		Name     resp.Field
-		Owner    resp.Field
+		Owner resp.Field
 		// ...
-	}
+	} `json:"-"`
 }
 
 // If animal variant
-if animal.Owner.Address.JSON.ZipCode == "" {
+if animal.Owner.Address.ZipCode == "" {
 	panic("missing zip code")
 }
 
-// If string variant
-if !animal.OfString == "" {
-	panic("expected a name")
-}
-
 // Switch on the variant
-switch variant := animalOrName.AsAny().(type) {
-case string:
+switch variant := animal.AsAny().(type) {
 case Dog:
 case Cat:
 default:
