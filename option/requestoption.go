@@ -40,11 +40,34 @@ func WithBaseURL(base string) RequestOption {
 	})
 }
 
-// WithHTTPClient returns a RequestOption that changes the underlying [http.Client] used to make this
+// HTTPClient is primarily used to describe an [*http.Client], but also
+// supports custom implementations.
+//
+// For bespoke implementations, prefer using an [*http.Client] with a
+// custom transport. See [http.RoundTripper] for further information.
+type HTTPClient interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
+// WithHTTPClient returns a RequestOption that changes the underlying http client used to make this
 // request, which by default is [http.DefaultClient].
-func WithHTTPClient(client *http.Client) RequestOption {
+//
+// For custom uses cases, it is recommended to provide an [*http.Client] with a custom
+// [http.RoundTripper] as its transport, rather than directly implementing [HTTPClient].
+func WithHTTPClient(client HTTPClient) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		r.HTTPClient = client
+		if client == nil {
+			return fmt.Errorf("requestoption: custom http client cannot be nil")
+		}
+
+		if c, ok := client.(*http.Client); ok {
+			// Prefer the native client if possible.
+			r.HTTPClient = c
+			r.CustomHTTPDoer = nil
+		} else {
+			r.CustomHTTPDoer = client
+		}
+
 		return nil
 	})
 }
