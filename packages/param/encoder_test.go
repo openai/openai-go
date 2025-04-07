@@ -117,6 +117,24 @@ func TestExtraFields(t *testing.T) {
 	}
 }
 
+func TestExtraFieldsForceOmitted(t *testing.T) {
+	v := Struct{
+		// Testing with the zero value.
+		// A: "",
+		// B: 0,
+	}
+	v.WithExtraFields(map[string]any{
+		"b": param.Omit,
+	})
+	bytes, err := json.Marshal(v)
+	if err != nil {
+		t.Fatalf("failed to marshal: %v", err)
+	}
+	if string(bytes) != `{"a":""}` {
+		t.Fatalf("failed to marshal: got %v", string(bytes))
+	}
+}
+
 type UnionWithDates struct {
 	OfDate param.Opt[time.Time]
 	OfTime param.Opt[time.Time]
