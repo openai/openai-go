@@ -344,6 +344,38 @@ type AssistantStreamEventUnion struct {
 	} `json:"-"`
 }
 
+// anyAssistantStreamEvent is implemented by each variant of
+// [AssistantStreamEventUnion] to add type safety for the return type of
+// [AssistantStreamEventUnion.AsAny]
+type anyAssistantStreamEvent interface {
+	implAssistantStreamEventUnion()
+}
+
+func (AssistantStreamEventThreadCreated) implAssistantStreamEventUnion()           {}
+func (AssistantStreamEventThreadRunCreated) implAssistantStreamEventUnion()        {}
+func (AssistantStreamEventThreadRunQueued) implAssistantStreamEventUnion()         {}
+func (AssistantStreamEventThreadRunInProgress) implAssistantStreamEventUnion()     {}
+func (AssistantStreamEventThreadRunRequiresAction) implAssistantStreamEventUnion() {}
+func (AssistantStreamEventThreadRunCompleted) implAssistantStreamEventUnion()      {}
+func (AssistantStreamEventThreadRunIncomplete) implAssistantStreamEventUnion()     {}
+func (AssistantStreamEventThreadRunFailed) implAssistantStreamEventUnion()         {}
+func (AssistantStreamEventThreadRunCancelling) implAssistantStreamEventUnion()     {}
+func (AssistantStreamEventThreadRunCancelled) implAssistantStreamEventUnion()      {}
+func (AssistantStreamEventThreadRunExpired) implAssistantStreamEventUnion()        {}
+func (AssistantStreamEventThreadRunStepCreated) implAssistantStreamEventUnion()    {}
+func (AssistantStreamEventThreadRunStepInProgress) implAssistantStreamEventUnion() {}
+func (AssistantStreamEventThreadRunStepDelta) implAssistantStreamEventUnion()      {}
+func (AssistantStreamEventThreadRunStepCompleted) implAssistantStreamEventUnion()  {}
+func (AssistantStreamEventThreadRunStepFailed) implAssistantStreamEventUnion()     {}
+func (AssistantStreamEventThreadRunStepCancelled) implAssistantStreamEventUnion()  {}
+func (AssistantStreamEventThreadRunStepExpired) implAssistantStreamEventUnion()    {}
+func (AssistantStreamEventThreadMessageCreated) implAssistantStreamEventUnion()    {}
+func (AssistantStreamEventThreadMessageInProgress) implAssistantStreamEventUnion() {}
+func (AssistantStreamEventThreadMessageDelta) implAssistantStreamEventUnion()      {}
+func (AssistantStreamEventThreadMessageCompleted) implAssistantStreamEventUnion()  {}
+func (AssistantStreamEventThreadMessageIncomplete) implAssistantStreamEventUnion() {}
+func (AssistantStreamEventErrorEvent) implAssistantStreamEventUnion()              {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := AssistantStreamEventUnion.AsAny().(type) {
@@ -374,7 +406,7 @@ type AssistantStreamEventUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u AssistantStreamEventUnion) AsAny() any {
+func (u AssistantStreamEventUnion) AsAny() anyAssistantStreamEvent {
 	switch u.Event {
 	case "thread.created":
 		return u.AsThreadCreated()
@@ -1347,6 +1379,16 @@ type AssistantToolUnion struct {
 	} `json:"-"`
 }
 
+// anyAssistantTool is implemented by each variant of [AssistantToolUnion] to add
+// type safety for the return type of [AssistantToolUnion.AsAny]
+type anyAssistantTool interface {
+	implAssistantToolUnion()
+}
+
+func (CodeInterpreterTool) implAssistantToolUnion() {}
+func (FileSearchTool) implAssistantToolUnion()      {}
+func (FunctionTool) implAssistantToolUnion()        {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := AssistantToolUnion.AsAny().(type) {
@@ -1356,7 +1398,7 @@ type AssistantToolUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u AssistantToolUnion) AsAny() any {
+func (u AssistantToolUnion) AsAny() anyAssistantTool {
 	switch u.Type {
 	case "code_interpreter":
 		return u.AsCodeInterpreter()

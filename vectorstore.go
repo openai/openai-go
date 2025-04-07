@@ -184,6 +184,16 @@ type FileChunkingStrategyUnion struct {
 	} `json:"-"`
 }
 
+// anyFileChunkingStrategy is implemented by each variant of
+// [FileChunkingStrategyUnion] to add type safety for the return type of
+// [FileChunkingStrategyUnion.AsAny]
+type anyFileChunkingStrategy interface {
+	implFileChunkingStrategyUnion()
+}
+
+func (StaticFileChunkingStrategyObject) implFileChunkingStrategyUnion() {}
+func (OtherFileChunkingStrategyObject) implFileChunkingStrategyUnion()  {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := FileChunkingStrategyUnion.AsAny().(type) {
@@ -192,7 +202,7 @@ type FileChunkingStrategyUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u FileChunkingStrategyUnion) AsAny() any {
+func (u FileChunkingStrategyUnion) AsAny() anyFileChunkingStrategy {
 	switch u.Type {
 	case "static":
 		return u.AsStatic()
