@@ -300,6 +300,8 @@ func (r *FileSearchTool) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (FileSearchTool) implAssistantToolUnion() {}
+
 // ToParam converts this FileSearchTool to a FileSearchToolParam.
 //
 // Warning: the fields of the param type will not be present. ToParam should only
@@ -524,6 +526,8 @@ func (r FunctionTool) RawJSON() string { return r.JSON.raw }
 func (r *FunctionTool) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (FunctionTool) implAssistantToolUnion() {}
 
 // ToParam converts this FunctionTool to a FunctionToolParam.
 //
@@ -1066,6 +1070,16 @@ type ResponseCodeInterpreterToolCallResultUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseCodeInterpreterToolCallResult is implemented by each variant of
+// [ResponseCodeInterpreterToolCallResultUnion] to add type safety for the return
+// type of [ResponseCodeInterpreterToolCallResultUnion.AsAny]
+type anyResponseCodeInterpreterToolCallResult interface {
+	implResponseCodeInterpreterToolCallResultUnion()
+}
+
+func (ResponseCodeInterpreterToolCallResultLogs) implResponseCodeInterpreterToolCallResultUnion()  {}
+func (ResponseCodeInterpreterToolCallResultFiles) implResponseCodeInterpreterToolCallResultUnion() {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseCodeInterpreterToolCallResultUnion.AsAny().(type) {
@@ -1074,7 +1088,7 @@ type ResponseCodeInterpreterToolCallResultUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseCodeInterpreterToolCallResultUnion) AsAny() any {
+func (u ResponseCodeInterpreterToolCallResultUnion) AsAny() anyResponseCodeInterpreterToolCallResult {
 	switch u.Type {
 	case "logs":
 		return u.AsLogs()
@@ -1292,6 +1306,23 @@ type ResponseComputerToolCallActionUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseComputerToolCallAction is implemented by each variant of
+// [ResponseComputerToolCallActionUnion] to add type safety for the return type of
+// [ResponseComputerToolCallActionUnion.AsAny]
+type anyResponseComputerToolCallAction interface {
+	implResponseComputerToolCallActionUnion()
+}
+
+func (ResponseComputerToolCallActionClick) implResponseComputerToolCallActionUnion()       {}
+func (ResponseComputerToolCallActionDoubleClick) implResponseComputerToolCallActionUnion() {}
+func (ResponseComputerToolCallActionDrag) implResponseComputerToolCallActionUnion()        {}
+func (ResponseComputerToolCallActionKeypress) implResponseComputerToolCallActionUnion()    {}
+func (ResponseComputerToolCallActionMove) implResponseComputerToolCallActionUnion()        {}
+func (ResponseComputerToolCallActionScreenshot) implResponseComputerToolCallActionUnion()  {}
+func (ResponseComputerToolCallActionScroll) implResponseComputerToolCallActionUnion()      {}
+func (ResponseComputerToolCallActionType) implResponseComputerToolCallActionUnion()        {}
+func (ResponseComputerToolCallActionWait) implResponseComputerToolCallActionUnion()        {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseComputerToolCallActionUnion.AsAny().(type) {
@@ -1307,7 +1338,7 @@ type ResponseComputerToolCallActionUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseComputerToolCallActionUnion) AsAny() any {
+func (u ResponseComputerToolCallActionUnion) AsAny() anyResponseComputerToolCallAction {
 	switch u.Type {
 	case "click":
 		return u.AsClick()
@@ -2408,6 +2439,16 @@ type ResponseContentPartAddedEventPartUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseContentPartAddedEventPart is implemented by each variant of
+// [ResponseContentPartAddedEventPartUnion] to add type safety for the return type
+// of [ResponseContentPartAddedEventPartUnion.AsAny]
+type anyResponseContentPartAddedEventPart interface {
+	implResponseContentPartAddedEventPartUnion()
+}
+
+func (ResponseOutputText) implResponseContentPartAddedEventPartUnion()    {}
+func (ResponseOutputRefusal) implResponseContentPartAddedEventPartUnion() {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseContentPartAddedEventPartUnion.AsAny().(type) {
@@ -2416,7 +2457,7 @@ type ResponseContentPartAddedEventPartUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseContentPartAddedEventPartUnion) AsAny() any {
+func (u ResponseContentPartAddedEventPartUnion) AsAny() anyResponseContentPartAddedEventPart {
 	switch u.Type {
 	case "output_text":
 		return u.AsOutputText()
@@ -2499,6 +2540,16 @@ type ResponseContentPartDoneEventPartUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseContentPartDoneEventPart is implemented by each variant of
+// [ResponseContentPartDoneEventPartUnion] to add type safety for the return type
+// of [ResponseContentPartDoneEventPartUnion.AsAny]
+type anyResponseContentPartDoneEventPart interface {
+	implResponseContentPartDoneEventPartUnion()
+}
+
+func (ResponseOutputText) implResponseContentPartDoneEventPartUnion()    {}
+func (ResponseOutputRefusal) implResponseContentPartDoneEventPartUnion() {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseContentPartDoneEventPartUnion.AsAny().(type) {
@@ -2507,7 +2558,7 @@ type ResponseContentPartDoneEventPartUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseContentPartDoneEventPartUnion) AsAny() any {
+func (u ResponseContentPartDoneEventPartUnion) AsAny() anyResponseContentPartDoneEventPart {
 	switch u.Type {
 	case "output_text":
 		return u.AsOutputText()
@@ -2988,6 +3039,15 @@ type ResponseFormatTextConfigUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseFormatTextConfig is implemented by each variant of
+// [ResponseFormatTextConfigUnion] to add type safety for the return type of
+// [ResponseFormatTextConfigUnion.AsAny]
+type anyResponseFormatTextConfig interface {
+	ImplResponseFormatTextConfigUnion()
+}
+
+func (ResponseFormatTextJSONSchemaConfig) ImplResponseFormatTextConfigUnion() {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseFormatTextConfigUnion.AsAny().(type) {
@@ -2997,7 +3057,7 @@ type ResponseFormatTextConfigUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseFormatTextConfigUnion) AsAny() any {
+func (u ResponseFormatTextConfigUnion) AsAny() anyResponseFormatTextConfig {
 	switch u.Type {
 	case "text":
 		return u.AsText()
@@ -3614,6 +3674,17 @@ type ResponseInputContentUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseInputContent is implemented by each variant of
+// [ResponseInputContentUnion] to add type safety for the return type of
+// [ResponseInputContentUnion.AsAny]
+type anyResponseInputContent interface {
+	implResponseInputContentUnion()
+}
+
+func (ResponseInputText) implResponseInputContentUnion()  {}
+func (ResponseInputImage) implResponseInputContentUnion() {}
+func (ResponseInputFile) implResponseInputContentUnion()  {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseInputContentUnion.AsAny().(type) {
@@ -3623,7 +3694,7 @@ type ResponseInputContentUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseInputContentUnion) AsAny() any {
+func (u ResponseInputContentUnion) AsAny() anyResponseInputContent {
 	switch u.Type {
 	case "input_text":
 		return u.AsInputText()
@@ -4753,6 +4824,21 @@ type ResponseItemUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseItem is implemented by each variant of [ResponseItemUnion] to add
+// type safety for the return type of [ResponseItemUnion.AsAny]
+type anyResponseItem interface {
+	implResponseItemUnion()
+}
+
+func (ResponseInputMessageItem) implResponseItemUnion()           {}
+func (ResponseOutputMessage) implResponseItemUnion()              {}
+func (ResponseFileSearchToolCall) implResponseItemUnion()         {}
+func (ResponseComputerToolCall) implResponseItemUnion()           {}
+func (ResponseComputerToolCallOutputItem) implResponseItemUnion() {}
+func (ResponseFunctionWebSearch) implResponseItemUnion()          {}
+func (ResponseFunctionToolCallItem) implResponseItemUnion()       {}
+func (ResponseFunctionToolCallOutputItem) implResponseItemUnion() {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseItemUnion.AsAny().(type) {
@@ -4767,7 +4853,7 @@ type ResponseItemUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseItemUnion) AsAny() any {
+func (u ResponseItemUnion) AsAny() anyResponseItem {
 	switch u.Type {
 	case "message":
 		return u.AsOutputMessage()
@@ -4943,6 +5029,20 @@ type ResponseOutputItemUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseOutputItem is implemented by each variant of
+// [ResponseOutputItemUnion] to add type safety for the return type of
+// [ResponseOutputItemUnion.AsAny]
+type anyResponseOutputItem interface {
+	implResponseOutputItemUnion()
+}
+
+func (ResponseOutputMessage) implResponseOutputItemUnion()      {}
+func (ResponseFileSearchToolCall) implResponseOutputItemUnion() {}
+func (ResponseFunctionToolCall) implResponseOutputItemUnion()   {}
+func (ResponseFunctionWebSearch) implResponseOutputItemUnion()  {}
+func (ResponseComputerToolCall) implResponseOutputItemUnion()   {}
+func (ResponseReasoningItem) implResponseOutputItemUnion()      {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseOutputItemUnion.AsAny().(type) {
@@ -4955,7 +5055,7 @@ type ResponseOutputItemUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseOutputItemUnion) AsAny() any {
+func (u ResponseOutputItemUnion) AsAny() anyResponseOutputItem {
 	switch u.Type {
 	case "message":
 		return u.AsMessage()
@@ -5128,6 +5228,16 @@ type ResponseOutputMessageContentUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseOutputMessageContent is implemented by each variant of
+// [ResponseOutputMessageContentUnion] to add type safety for the return type of
+// [ResponseOutputMessageContentUnion.AsAny]
+type anyResponseOutputMessageContent interface {
+	implResponseOutputMessageContentUnion()
+}
+
+func (ResponseOutputText) implResponseOutputMessageContentUnion()    {}
+func (ResponseOutputRefusal) implResponseOutputMessageContentUnion() {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseOutputMessageContentUnion.AsAny().(type) {
@@ -5136,7 +5246,7 @@ type ResponseOutputMessageContentUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseOutputMessageContentUnion) AsAny() any {
+func (u ResponseOutputMessageContentUnion) AsAny() anyResponseOutputMessageContent {
 	switch u.Type {
 	case "output_text":
 		return u.AsOutputText()
@@ -5402,6 +5512,17 @@ type ResponseOutputTextAnnotationUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseOutputTextAnnotation is implemented by each variant of
+// [ResponseOutputTextAnnotationUnion] to add type safety for the return type of
+// [ResponseOutputTextAnnotationUnion.AsAny]
+type anyResponseOutputTextAnnotation interface {
+	implResponseOutputTextAnnotationUnion()
+}
+
+func (ResponseOutputTextAnnotationFileCitation) implResponseOutputTextAnnotationUnion() {}
+func (ResponseOutputTextAnnotationURLCitation) implResponseOutputTextAnnotationUnion()  {}
+func (ResponseOutputTextAnnotationFilePath) implResponseOutputTextAnnotationUnion()     {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseOutputTextAnnotationUnion.AsAny().(type) {
@@ -5411,7 +5532,7 @@ type ResponseOutputTextAnnotationUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseOutputTextAnnotationUnion) AsAny() any {
+func (u ResponseOutputTextAnnotationUnion) AsAny() anyResponseOutputTextAnnotation {
 	switch u.Type {
 	case "file_citation":
 		return u.AsFileCitation()
@@ -6031,6 +6152,46 @@ type ResponseStreamEventUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseStreamEvent is implemented by each variant of
+// [ResponseStreamEventUnion] to add type safety for the return type of
+// [ResponseStreamEventUnion.AsAny]
+type anyResponseStreamEvent interface {
+	implResponseStreamEventUnion()
+}
+
+func (ResponseAudioDeltaEvent) implResponseStreamEventUnion()                      {}
+func (ResponseAudioDoneEvent) implResponseStreamEventUnion()                       {}
+func (ResponseAudioTranscriptDeltaEvent) implResponseStreamEventUnion()            {}
+func (ResponseAudioTranscriptDoneEvent) implResponseStreamEventUnion()             {}
+func (ResponseCodeInterpreterCallCodeDeltaEvent) implResponseStreamEventUnion()    {}
+func (ResponseCodeInterpreterCallCodeDoneEvent) implResponseStreamEventUnion()     {}
+func (ResponseCodeInterpreterCallCompletedEvent) implResponseStreamEventUnion()    {}
+func (ResponseCodeInterpreterCallInProgressEvent) implResponseStreamEventUnion()   {}
+func (ResponseCodeInterpreterCallInterpretingEvent) implResponseStreamEventUnion() {}
+func (ResponseCompletedEvent) implResponseStreamEventUnion()                       {}
+func (ResponseContentPartAddedEvent) implResponseStreamEventUnion()                {}
+func (ResponseContentPartDoneEvent) implResponseStreamEventUnion()                 {}
+func (ResponseCreatedEvent) implResponseStreamEventUnion()                         {}
+func (ResponseErrorEvent) implResponseStreamEventUnion()                           {}
+func (ResponseFileSearchCallCompletedEvent) implResponseStreamEventUnion()         {}
+func (ResponseFileSearchCallInProgressEvent) implResponseStreamEventUnion()        {}
+func (ResponseFileSearchCallSearchingEvent) implResponseStreamEventUnion()         {}
+func (ResponseFunctionCallArgumentsDeltaEvent) implResponseStreamEventUnion()      {}
+func (ResponseFunctionCallArgumentsDoneEvent) implResponseStreamEventUnion()       {}
+func (ResponseInProgressEvent) implResponseStreamEventUnion()                      {}
+func (ResponseFailedEvent) implResponseStreamEventUnion()                          {}
+func (ResponseIncompleteEvent) implResponseStreamEventUnion()                      {}
+func (ResponseOutputItemAddedEvent) implResponseStreamEventUnion()                 {}
+func (ResponseOutputItemDoneEvent) implResponseStreamEventUnion()                  {}
+func (ResponseRefusalDeltaEvent) implResponseStreamEventUnion()                    {}
+func (ResponseRefusalDoneEvent) implResponseStreamEventUnion()                     {}
+func (ResponseTextAnnotationDeltaEvent) implResponseStreamEventUnion()             {}
+func (ResponseTextDeltaEvent) implResponseStreamEventUnion()                       {}
+func (ResponseTextDoneEvent) implResponseStreamEventUnion()                        {}
+func (ResponseWebSearchCallCompletedEvent) implResponseStreamEventUnion()          {}
+func (ResponseWebSearchCallInProgressEvent) implResponseStreamEventUnion()         {}
+func (ResponseWebSearchCallSearchingEvent) implResponseStreamEventUnion()          {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseStreamEventUnion.AsAny().(type) {
@@ -6069,7 +6230,7 @@ type ResponseStreamEventUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseStreamEventUnion) AsAny() any {
+func (u ResponseStreamEventUnion) AsAny() anyResponseStreamEvent {
 	switch u.Type {
 	case "response.audio.delta":
 		return u.AsResponseAudioDelta()
@@ -6408,6 +6569,20 @@ type ResponseTextAnnotationDeltaEventAnnotationUnion struct {
 	} `json:"-"`
 }
 
+// anyResponseTextAnnotationDeltaEventAnnotation is implemented by each variant of
+// [ResponseTextAnnotationDeltaEventAnnotationUnion] to add type safety for the
+// return type of [ResponseTextAnnotationDeltaEventAnnotationUnion.AsAny]
+type anyResponseTextAnnotationDeltaEventAnnotation interface {
+	implResponseTextAnnotationDeltaEventAnnotationUnion()
+}
+
+func (ResponseTextAnnotationDeltaEventAnnotationFileCitation) implResponseTextAnnotationDeltaEventAnnotationUnion() {
+}
+func (ResponseTextAnnotationDeltaEventAnnotationURLCitation) implResponseTextAnnotationDeltaEventAnnotationUnion() {
+}
+func (ResponseTextAnnotationDeltaEventAnnotationFilePath) implResponseTextAnnotationDeltaEventAnnotationUnion() {
+}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseTextAnnotationDeltaEventAnnotationUnion.AsAny().(type) {
@@ -6417,7 +6592,7 @@ type ResponseTextAnnotationDeltaEventAnnotationUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseTextAnnotationDeltaEventAnnotationUnion) AsAny() any {
+func (u ResponseTextAnnotationDeltaEventAnnotationUnion) AsAny() anyResponseTextAnnotationDeltaEventAnnotation {
 	switch u.Type {
 	case "file_citation":
 		return u.AsFileCitation()
