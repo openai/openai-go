@@ -2288,6 +2288,8 @@ type ChatCompletionNewParams struct {
 	// this model generate both text and audio responses, you can use:
 	//
 	// `["text", "audio"]`
+	//
+	// Any of "text", "audio".
 	Modalities []string `json:"modalities,omitzero"`
 	// **o-series models only**
 	//
