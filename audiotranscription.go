@@ -140,6 +140,16 @@ type TranscriptionStreamEventUnion struct {
 	} `json:"-"`
 }
 
+// anyTranscriptionStreamEvent is implemented by each variant of
+// [TranscriptionStreamEventUnion] to add type safety for the return type of
+// [TranscriptionStreamEventUnion.AsAny]
+type anyTranscriptionStreamEvent interface {
+	implTranscriptionStreamEventUnion()
+}
+
+func (TranscriptionTextDeltaEvent) implTranscriptionStreamEventUnion() {}
+func (TranscriptionTextDoneEvent) implTranscriptionStreamEventUnion()  {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := TranscriptionStreamEventUnion.AsAny().(type) {
@@ -148,7 +158,7 @@ type TranscriptionStreamEventUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u TranscriptionStreamEventUnion) AsAny() any {
+func (u TranscriptionStreamEventUnion) AsAny() anyTranscriptionStreamEvent {
 	switch u.Type {
 	case "transcript.text.delta":
 		return u.AsTranscriptTextDelta()

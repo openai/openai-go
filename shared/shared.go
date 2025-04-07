@@ -534,6 +534,8 @@ func (r *ResponseFormatJSONObject) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (ResponseFormatJSONObject) ImplResponseFormatTextConfigUnion() {}
+
 // ToParam converts this ResponseFormatJSONObject to a
 // ResponseFormatJSONObjectParam.
 //
@@ -707,6 +709,8 @@ func (r ResponseFormatText) RawJSON() string { return r.JSON.raw }
 func (r *ResponseFormatText) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (ResponseFormatText) ImplResponseFormatTextConfigUnion() {}
 
 // ToParam converts this ResponseFormatText to a ResponseFormatTextParam.
 //

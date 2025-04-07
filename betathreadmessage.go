@@ -160,6 +160,15 @@ type AnnotationUnion struct {
 	} `json:"-"`
 }
 
+// anyAnnotation is implemented by each variant of [AnnotationUnion] to add type
+// safety for the return type of [AnnotationUnion.AsAny]
+type anyAnnotation interface {
+	implAnnotationUnion()
+}
+
+func (FileCitationAnnotation) implAnnotationUnion() {}
+func (FilePathAnnotation) implAnnotationUnion()     {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := AnnotationUnion.AsAny().(type) {
@@ -168,7 +177,7 @@ type AnnotationUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u AnnotationUnion) AsAny() any {
+func (u AnnotationUnion) AsAny() anyAnnotation {
 	switch u.Type {
 	case "file_citation":
 		return u.AsFileCitation()
@@ -224,6 +233,15 @@ type AnnotationDeltaUnion struct {
 	} `json:"-"`
 }
 
+// anyAnnotationDelta is implemented by each variant of [AnnotationDeltaUnion] to
+// add type safety for the return type of [AnnotationDeltaUnion.AsAny]
+type anyAnnotationDelta interface {
+	implAnnotationDeltaUnion()
+}
+
+func (FileCitationDeltaAnnotation) implAnnotationDeltaUnion() {}
+func (FilePathDeltaAnnotation) implAnnotationDeltaUnion()     {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := AnnotationDeltaUnion.AsAny().(type) {
@@ -232,7 +250,7 @@ type AnnotationDeltaUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u AnnotationDeltaUnion) AsAny() any {
+func (u AnnotationDeltaUnion) AsAny() anyAnnotationDelta {
 	switch u.Type {
 	case "file_citation":
 		return u.AsFileCitation()
@@ -1022,6 +1040,17 @@ type MessageContentUnion struct {
 	} `json:"-"`
 }
 
+// anyMessageContent is implemented by each variant of [MessageContentUnion] to add
+// type safety for the return type of [MessageContentUnion.AsAny]
+type anyMessageContent interface {
+	implMessageContentUnion()
+}
+
+func (ImageFileContentBlock) implMessageContentUnion() {}
+func (ImageURLContentBlock) implMessageContentUnion()  {}
+func (TextContentBlock) implMessageContentUnion()      {}
+func (RefusalContentBlock) implMessageContentUnion()   {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := MessageContentUnion.AsAny().(type) {
@@ -1032,7 +1061,7 @@ type MessageContentUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u MessageContentUnion) AsAny() any {
+func (u MessageContentUnion) AsAny() anyMessageContent {
 	switch u.Type {
 	case "image_file":
 		return u.AsImageFile()
@@ -1103,6 +1132,18 @@ type MessageContentDeltaUnion struct {
 	} `json:"-"`
 }
 
+// anyMessageContentDelta is implemented by each variant of
+// [MessageContentDeltaUnion] to add type safety for the return type of
+// [MessageContentDeltaUnion.AsAny]
+type anyMessageContentDelta interface {
+	implMessageContentDeltaUnion()
+}
+
+func (ImageFileDeltaBlock) implMessageContentDeltaUnion() {}
+func (TextDeltaBlock) implMessageContentDeltaUnion()      {}
+func (RefusalDeltaBlock) implMessageContentDeltaUnion()   {}
+func (ImageURLDeltaBlock) implMessageContentDeltaUnion()  {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := MessageContentDeltaUnion.AsAny().(type) {
@@ -1113,7 +1154,7 @@ type MessageContentDeltaUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u MessageContentDeltaUnion) AsAny() any {
+func (u MessageContentDeltaUnion) AsAny() anyMessageContentDelta {
 	switch u.Type {
 	case "image_file":
 		return u.AsImageFile()
