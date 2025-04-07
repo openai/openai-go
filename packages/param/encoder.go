@@ -33,7 +33,14 @@ func MarshalObject[T OverridableObject](f T, underlying any) ([]byte, error) {
 			return nil, err
 		}
 		for k, v := range extras {
-			bytes, err = sjson.SetBytes(bytes, k, v)
+			if v == Omit {
+				// Errors handling ForceOmitted are ignored.
+				if b, e := sjson.DeleteBytes(bytes, k); e == nil {
+					bytes = b
+				}
+			} else {
+				bytes, err = sjson.SetBytes(bytes, k, v)
+			}
 			if err != nil {
 				return nil, err
 			}
