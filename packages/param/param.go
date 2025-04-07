@@ -62,6 +62,13 @@ type APIObject struct{ metadata }
 // APIUnion should be embedded in all api unions fields, preferably using an alias to make private
 type APIUnion struct{ metadata }
 
+type forceOmit int
+
+// Omit can be used with [metadata.WithExtraFields] to ensure that a
+// required field is omitted. This is useful as an escape hatch for
+// when a required is unwanted for some unexpected reason.
+const Omit forceOmit = -1
+
 type metadata struct{ any }
 type metadataNull struct{}
 type metadataExtraFields map[string]any
@@ -98,6 +105,10 @@ func (m metadata) GetExtraFields() map[string]any {
 //
 // WithExtraFields will override any existing fields with the same key.
 // For security reasons, ensure this is only used with trusted input data.
+//
+// To intentionally omit a required field, use [Omit].
+//
+//	foo.WithExtraFields(map[string]any{"bar": Omit})
 func (m *metadata) WithExtraFields(extraFields map[string]any) {
 	m.any = metadataExtraFields(extraFields)
 }
