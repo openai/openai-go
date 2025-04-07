@@ -352,6 +352,8 @@ type AudioTranscriptionNewParams struct {
 	// Either or both of these options are supported: `word`, or `segment`. Note: There
 	// is no additional latency for segment timestamps, but generating word timestamps
 	// incurs additional latency.
+	//
+	// Any of "word", "segment".
 	TimestampGranularities []string `json:"timestamp_granularities,omitzero"`
 	paramObj
 }

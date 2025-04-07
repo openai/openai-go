@@ -146,30 +146,56 @@ func (r *ModerationCategories) UnmarshalJSON(data []byte) error {
 // A list of the categories along with the input type(s) that the score applies to.
 type ModerationCategoryAppliedInputTypes struct {
 	// The applied input type(s) for the category 'harassment'.
+	//
+	// Any of "text".
 	Harassment []string `json:"harassment,required"`
 	// The applied input type(s) for the category 'harassment/threatening'.
+	//
+	// Any of "text".
 	HarassmentThreatening []string `json:"harassment/threatening,required"`
 	// The applied input type(s) for the category 'hate'.
+	//
+	// Any of "text".
 	Hate []string `json:"hate,required"`
 	// The applied input type(s) for the category 'hate/threatening'.
+	//
+	// Any of "text".
 	HateThreatening []string `json:"hate/threatening,required"`
 	// The applied input type(s) for the category 'illicit'.
+	//
+	// Any of "text".
 	Illicit []string `json:"illicit,required"`
 	// The applied input type(s) for the category 'illicit/violent'.
+	//
+	// Any of "text".
 	IllicitViolent []string `json:"illicit/violent,required"`
 	// The applied input type(s) for the category 'self-harm'.
+	//
+	// Any of "text", "image".
 	SelfHarm []string `json:"self-harm,required"`
 	// The applied input type(s) for the category 'self-harm/instructions'.
+	//
+	// Any of "text", "image".
 	SelfHarmInstructions []string `json:"self-harm/instructions,required"`
 	// The applied input type(s) for the category 'self-harm/intent'.
+	//
+	// Any of "text", "image".
 	SelfHarmIntent []string `json:"self-harm/intent,required"`
 	// The applied input type(s) for the category 'sexual'.
+	//
+	// Any of "text", "image".
 	Sexual []string `json:"sexual,required"`
 	// The applied input type(s) for the category 'sexual/minors'.
+	//
+	// Any of "text".
 	SexualMinors []string `json:"sexual/minors,required"`
 	// The applied input type(s) for the category 'violence'.
+	//
+	// Any of "text", "image".
 	Violence []string `json:"violence,required"`
 	// The applied input type(s) for the category 'violence/graphic'.
+	//
+	// Any of "text", "image".
 	ViolenceGraphic []string `json:"violence/graphic,required"`
 	// Metadata for the response, check the presence of optional fields with the
 	// [resp.Field.IsPresent] method.
