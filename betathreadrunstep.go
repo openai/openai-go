@@ -232,6 +232,18 @@ type CodeInterpreterToolCallCodeInterpreterOutputUnion struct {
 	} `json:"-"`
 }
 
+// anyCodeInterpreterToolCallCodeInterpreterOutput is implemented by each variant
+// of [CodeInterpreterToolCallCodeInterpreterOutputUnion] to add type safety for
+// the return type of [CodeInterpreterToolCallCodeInterpreterOutputUnion.AsAny]
+type anyCodeInterpreterToolCallCodeInterpreterOutput interface {
+	implCodeInterpreterToolCallCodeInterpreterOutputUnion()
+}
+
+func (CodeInterpreterToolCallCodeInterpreterOutputLogs) implCodeInterpreterToolCallCodeInterpreterOutputUnion() {
+}
+func (CodeInterpreterToolCallCodeInterpreterOutputImage) implCodeInterpreterToolCallCodeInterpreterOutputUnion() {
+}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := CodeInterpreterToolCallCodeInterpreterOutputUnion.AsAny().(type) {
@@ -240,7 +252,7 @@ type CodeInterpreterToolCallCodeInterpreterOutputUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u CodeInterpreterToolCallCodeInterpreterOutputUnion) AsAny() any {
+func (u CodeInterpreterToolCallCodeInterpreterOutputUnion) AsAny() anyCodeInterpreterToolCallCodeInterpreterOutput {
 	switch u.Type {
 	case "logs":
 		return u.AsLogs()
@@ -405,6 +417,17 @@ type CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion struct {
 	} `json:"-"`
 }
 
+// anyCodeInterpreterToolCallDeltaCodeInterpreterOutput is implemented by each
+// variant of [CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion] to add type
+// safety for the return type of
+// [CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion.AsAny]
+type anyCodeInterpreterToolCallDeltaCodeInterpreterOutput interface {
+	implCodeInterpreterToolCallDeltaCodeInterpreterOutputUnion()
+}
+
+func (CodeInterpreterLogs) implCodeInterpreterToolCallDeltaCodeInterpreterOutputUnion()        {}
+func (CodeInterpreterOutputImage) implCodeInterpreterToolCallDeltaCodeInterpreterOutputUnion() {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion.AsAny().(type) {
@@ -413,7 +436,7 @@ type CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion) AsAny() any {
+func (u CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion) AsAny() anyCodeInterpreterToolCallDeltaCodeInterpreterOutput {
 	switch u.Type {
 	case "logs":
 		return u.AsLogs()
@@ -879,6 +902,16 @@ type RunStepStepDetailsUnion struct {
 	} `json:"-"`
 }
 
+// anyRunStepStepDetails is implemented by each variant of
+// [RunStepStepDetailsUnion] to add type safety for the return type of
+// [RunStepStepDetailsUnion.AsAny]
+type anyRunStepStepDetails interface {
+	implRunStepStepDetailsUnion()
+}
+
+func (MessageCreationStepDetails) implRunStepStepDetailsUnion() {}
+func (ToolCallsStepDetails) implRunStepStepDetailsUnion()       {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := RunStepStepDetailsUnion.AsAny().(type) {
@@ -887,7 +920,7 @@ type RunStepStepDetailsUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u RunStepStepDetailsUnion) AsAny() any {
+func (u RunStepStepDetailsUnion) AsAny() anyRunStepStepDetails {
 	switch u.Type {
 	case "message_creation":
 		return u.AsMessageCreation()
@@ -988,6 +1021,16 @@ type RunStepDeltaStepDetailsUnion struct {
 	} `json:"-"`
 }
 
+// anyRunStepDeltaStepDetails is implemented by each variant of
+// [RunStepDeltaStepDetailsUnion] to add type safety for the return type of
+// [RunStepDeltaStepDetailsUnion.AsAny]
+type anyRunStepDeltaStepDetails interface {
+	implRunStepDeltaStepDetailsUnion()
+}
+
+func (RunStepDeltaMessageDelta) implRunStepDeltaStepDetailsUnion() {}
+func (ToolCallDeltaObject) implRunStepDeltaStepDetailsUnion()      {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := RunStepDeltaStepDetailsUnion.AsAny().(type) {
@@ -996,7 +1039,7 @@ type RunStepDeltaStepDetailsUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u RunStepDeltaStepDetailsUnion) AsAny() any {
+func (u RunStepDeltaStepDetailsUnion) AsAny() anyRunStepDeltaStepDetails {
 	switch u.Type {
 	case "message_creation":
 		return u.AsMessageCreation()
@@ -1120,6 +1163,16 @@ type ToolCallUnion struct {
 	} `json:"-"`
 }
 
+// anyToolCall is implemented by each variant of [ToolCallUnion] to add type safety
+// for the return type of [ToolCallUnion.AsAny]
+type anyToolCall interface {
+	implToolCallUnion()
+}
+
+func (CodeInterpreterToolCall) implToolCallUnion() {}
+func (FileSearchToolCall) implToolCallUnion()      {}
+func (FunctionToolCall) implToolCallUnion()        {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ToolCallUnion.AsAny().(type) {
@@ -1129,7 +1182,7 @@ type ToolCallUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ToolCallUnion) AsAny() any {
+func (u ToolCallUnion) AsAny() anyToolCall {
 	switch u.Type {
 	case "code_interpreter":
 		return u.AsCodeInterpreter()
@@ -1192,6 +1245,16 @@ type ToolCallDeltaUnion struct {
 	} `json:"-"`
 }
 
+// anyToolCallDelta is implemented by each variant of [ToolCallDeltaUnion] to add
+// type safety for the return type of [ToolCallDeltaUnion.AsAny]
+type anyToolCallDelta interface {
+	implToolCallDeltaUnion()
+}
+
+func (CodeInterpreterToolCallDelta) implToolCallDeltaUnion() {}
+func (FileSearchToolCallDelta) implToolCallDeltaUnion()      {}
+func (FunctionToolCallDelta) implToolCallDeltaUnion()        {}
+
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ToolCallDeltaUnion.AsAny().(type) {
@@ -1201,7 +1264,7 @@ type ToolCallDeltaUnion struct {
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ToolCallDeltaUnion) AsAny() any {
+func (u ToolCallDeltaUnion) AsAny() anyToolCallDelta {
 	switch u.Type {
 	case "code_interpreter":
 		return u.AsCodeInterpreter()
