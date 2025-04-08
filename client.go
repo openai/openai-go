@@ -31,6 +31,7 @@ type Client struct {
 	Batches      BatchService
 	Uploads      UploadService
 	Responses    responses.ResponseService
+	Evals        EvalService
 }
 
 // DefaultClientOptions read from the environment (OPENAI_API_KEY, OPENAI_ORG_ID,
@@ -72,6 +73,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Batches = NewBatchService(opts...)
 	r.Uploads = NewUploadService(opts...)
 	r.Responses = responses.NewResponseService(opts...)
+	r.Evals = NewEvalService(opts...)
 
 	return
 }
