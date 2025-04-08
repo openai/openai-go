@@ -5275,7 +5275,7 @@ const (
 // The properties ID, Content, Role, Status, Type are required.
 type ResponseOutputMessageParam struct {
 	// The unique ID of the output message.
-	ID string `json:"id,omitzero,required"`
+	ID string `json:"id,required"`
 	// The content of the output message.
 	Content []ResponseOutputMessageContentUnionParam `json:"content,omitzero,required"`
 	// The status of the message input. One of `in_progress`, `completed`, or
