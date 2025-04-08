@@ -13,8 +13,9 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewFineTuningService] method instead.
 type FineTuningService struct {
-	Options []option.RequestOption
-	Jobs    FineTuningJobService
+	Options     []option.RequestOption
+	Jobs        FineTuningJobService
+	Checkpoints FineTuningCheckpointService
 }
 
 // NewFineTuningService generates a new service that applies the given options to
@@ -24,5 +25,6 @@ func NewFineTuningService(opts ...option.RequestOption) (r FineTuningService) {
 	r = FineTuningService{}
 	r.Options = opts
 	r.Jobs = NewFineTuningJobService(opts...)
+	r.Checkpoints = NewFineTuningCheckpointService(opts...)
 	return
 }
