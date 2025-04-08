@@ -73,6 +73,7 @@ func TestFineTuningCheckpointPermissionGetWithOptionalParams(t *testing.T) {
 }
 
 func TestFineTuningCheckpointPermissionDelete(t *testing.T) {
+	t.Skip("OpenAPI spec is slightly incorrect")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
