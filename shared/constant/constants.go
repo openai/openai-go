@@ -34,19 +34,13 @@ type ComputerCallOutput string                      // Always "computer_call_out
 type ComputerScreenshot string                      // Always "computer_screenshot"
 type ComputerUsePreview string                      // Always "computer_use_preview"
 type Content string                                 // Always "content"
-type Custom string                                  // Always "custom"
 type Developer string                               // Always "developer"
 type DoubleClick string                             // Always "double_click"
 type Drag string                                    // Always "drag"
 type Embedding string                               // Always "embedding"
 type Error string                                   // Always "error"
-type Eval string                                    // Always "eval"
-type EvalRun string                                 // Always "eval.run"
-type EvalRunOutputItem string                       // Always "eval.run.output_item"
 type File string                                    // Always "file"
 type FileCitation string                            // Always "file_citation"
-type FileContent string                             // Always "file_content"
-type FileID string                                  // Always "file_id"
 type FilePath string                                // Always "file_path"
 type FileSearch string                              // Always "file_search"
 type FileSearchCall string                          // Always "file_search_call"
@@ -67,9 +61,7 @@ type InputText string                               // Always "input_text"
 type ItemReference string                           // Always "item_reference"
 type JSONObject string                              // Always "json_object"
 type JSONSchema string                              // Always "json_schema"
-type JSONL string                                   // Always "jsonl"
 type Keypress string                                // Always "keypress"
-type LabelModel string                              // Always "label_model"
 type LastActiveAt string                            // Always "last_active_at"
 type List string                                    // Always "list"
 type Logs string                                    // Always "logs"
@@ -117,15 +109,11 @@ type ResponseWebSearchCallSearching string          // Always "response.web_sear
 type Screenshot string                              // Always "screenshot"
 type Scroll string                                  // Always "scroll"
 type Static string                                  // Always "static"
-type StoredCompletions string                       // Always "stored_completions"
-type StringCheck string                             // Always "string_check"
 type SubmitToolOutputs string                       // Always "submit_tool_outputs"
 type SummaryText string                             // Always "summary_text"
 type System string                                  // Always "system"
-type Template string                                // Always "template"
 type Text string                                    // Always "text"
 type TextCompletion string                          // Always "text_completion"
-type TextSimilarity string                          // Always "text_similarity"
 type Thread string                                  // Always "thread"
 type ThreadCreated string                           // Always "thread.created"
 type ThreadDeleted string                           // Always "thread.deleted"
@@ -191,19 +179,13 @@ func (c ComputerCallOutput) Default() ComputerCallOutput       { return "compute
 func (c ComputerScreenshot) Default() ComputerScreenshot       { return "computer_screenshot" }
 func (c ComputerUsePreview) Default() ComputerUsePreview       { return "computer_use_preview" }
 func (c Content) Default() Content                             { return "content" }
-func (c Custom) Default() Custom                               { return "custom" }
 func (c Developer) Default() Developer                         { return "developer" }
 func (c DoubleClick) Default() DoubleClick                     { return "double_click" }
 func (c Drag) Default() Drag                                   { return "drag" }
 func (c Embedding) Default() Embedding                         { return "embedding" }
 func (c Error) Default() Error                                 { return "error" }
-func (c Eval) Default() Eval                                   { return "eval" }
-func (c EvalRun) Default() EvalRun                             { return "eval.run" }
-func (c EvalRunOutputItem) Default() EvalRunOutputItem         { return "eval.run.output_item" }
 func (c File) Default() File                                   { return "file" }
 func (c FileCitation) Default() FileCitation                   { return "file_citation" }
-func (c FileContent) Default() FileContent                     { return "file_content" }
-func (c FileID) Default() FileID                               { return "file_id" }
 func (c FilePath) Default() FilePath                           { return "file_path" }
 func (c FileSearch) Default() FileSearch                       { return "file_search" }
 func (c FileSearchCall) Default() FileSearchCall               { return "file_search_call" }
@@ -226,9 +208,7 @@ func (c InputText) Default() InputText                   { return "input_text" }
 func (c ItemReference) Default() ItemReference           { return "item_reference" }
 func (c JSONObject) Default() JSONObject                 { return "json_object" }
 func (c JSONSchema) Default() JSONSchema                 { return "json_schema" }
-func (c JSONL) Default() JSONL                           { return "jsonl" }
 func (c Keypress) Default() Keypress                     { return "keypress" }
-func (c LabelModel) Default() LabelModel                 { return "label_model" }
 func (c LastActiveAt) Default() LastActiveAt             { return "last_active_at" }
 func (c List) Default() List                             { return "list" }
 func (c Logs) Default() Logs                             { return "logs" }
@@ -316,15 +296,11 @@ func (c ResponseWebSearchCallSearching) Default() ResponseWebSearchCallSearching
 func (c Screenshot) Default() Screenshot                         { return "screenshot" }
 func (c Scroll) Default() Scroll                                 { return "scroll" }
 func (c Static) Default() Static                                 { return "static" }
-func (c StoredCompletions) Default() StoredCompletions           { return "stored_completions" }
-func (c StringCheck) Default() StringCheck                       { return "string_check" }
 func (c SubmitToolOutputs) Default() SubmitToolOutputs           { return "submit_tool_outputs" }
 func (c SummaryText) Default() SummaryText                       { return "summary_text" }
 func (c System) Default() System                                 { return "system" }
-func (c Template) Default() Template                             { return "template" }
 func (c Text) Default() Text                                     { return "text" }
 func (c TextCompletion) Default() TextCompletion                 { return "text_completion" }
-func (c TextSimilarity) Default() TextSimilarity                 { return "text_similarity" }
 func (c Thread) Default() Thread                                 { return "thread" }
 func (c ThreadCreated) Default() ThreadCreated                   { return "thread.created" }
 func (c ThreadDeleted) Default() ThreadDeleted                   { return "thread.deleted" }
@@ -402,19 +378,13 @@ func (c ComputerCallOutput) MarshalJSON() ([]byte, error)                    { r
 func (c ComputerScreenshot) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c ComputerUsePreview) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c Content) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
-func (c Custom) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Developer) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c DoubleClick) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Drag) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c Embedding) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Error) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
-func (c Eval) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
-func (c EvalRun) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
-func (c EvalRunOutputItem) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c File) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c FileCitation) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
-func (c FileContent) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
-func (c FileID) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c FilePath) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c FileSearch) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c FileSearchCall) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
@@ -435,9 +405,7 @@ func (c InputText) MarshalJSON() ([]byte, error)                             { r
 func (c ItemReference) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c JSONObject) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c JSONSchema) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
-func (c JSONL) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c Keypress) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
-func (c LabelModel) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c LastActiveAt) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c List) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c Logs) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
@@ -487,15 +455,11 @@ func (c ResponseWebSearchCallSearching) MarshalJSON() ([]byte, error)     { retu
 func (c Screenshot) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Scroll) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Static) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c StoredCompletions) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
-func (c StringCheck) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SubmitToolOutputs) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c SummaryText) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c System) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c Template) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Text) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c TextCompletion) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
-func (c TextSimilarity) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c Thread) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c ThreadCreated) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c ThreadDeleted) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
