@@ -13,15 +13,17 @@ func main() {
 	ctx := context.Background()
 
 	res, err := client.Audio.Speech.New(ctx, openai.AudioSpeechNewParams{
-		Model:          openai.SpeechModelTTS1,
+		Model:          openai.SpeechModelGPT4oMiniTTS,
 		Input:          `Why did the chicken cross the road? To get to the other side.`,
 		ResponseFormat: openai.AudioSpeechNewParamsResponseFormatPCM,
 		Voice:          openai.AudioSpeechNewParamsVoiceAlloy,
 	})
-	defer res.Body.Close()
+
 	if err != nil {
 		panic(err)
 	}
+
+	defer res.Body.Close()
 
 	op := &oto.NewContextOptions{}
 	op.SampleRate = 24000
