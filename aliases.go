@@ -20,6 +20,24 @@ type Error = apierror.Error
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
 
+// Equals "gpt-4.1"
+const ChatModelGPT4_1 = shared.ChatModelGPT4_1
+
+// Equals "gpt-4.1-mini"
+const ChatModelGPT4_1Mini = shared.ChatModelGPT4_1Mini
+
+// Equals "gpt-4.1-nano"
+const ChatModelGPT4_1Nano = shared.ChatModelGPT4_1Nano
+
+// Equals "gpt-4.1-2025-04-14"
+const ChatModelGPT4_1_2025_04_14 = shared.ChatModelGPT4_1_2025_04_14
+
+// Equals "gpt-4.1-mini-2025-04-14"
+const ChatModelGPT4_1Mini2025_04_14 = shared.ChatModelGPT4_1Mini2025_04_14
+
+// Equals "gpt-4.1-nano-2025-04-14"
+const ChatModelGPT4_1Nano2025_04_14 = shared.ChatModelGPT4_1Nano2025_04_14
+
 // Equals "o3-mini"
 const ChatModelO3Mini = shared.ChatModelO3Mini
 

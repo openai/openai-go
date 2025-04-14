@@ -20,6 +20,12 @@ type paramObj = param.APIObject
 type ChatModel = string
 
 const (
+	ChatModelGPT4_1                           ChatModel = "gpt-4.1"
+	ChatModelGPT4_1Mini                       ChatModel = "gpt-4.1-mini"
+	ChatModelGPT4_1Nano                       ChatModel = "gpt-4.1-nano"
+	ChatModelGPT4_1_2025_04_14                ChatModel = "gpt-4.1-2025-04-14"
+	ChatModelGPT4_1Mini2025_04_14             ChatModel = "gpt-4.1-mini-2025-04-14"
+	ChatModelGPT4_1Nano2025_04_14             ChatModel = "gpt-4.1-nano-2025-04-14"
 	ChatModelO3Mini                           ChatModel = "o3-mini"
 	ChatModelO3Mini2025_01_31                 ChatModel = "o3-mini-2025-01-31"
 	ChatModelO1                               ChatModel = "o1"
