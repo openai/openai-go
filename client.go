@@ -34,9 +34,13 @@ type Client struct {
 }
 
 // DefaultClientOptions read from the environment (OPENAI_API_KEY, OPENAI_ORG_ID,
-// OPENAI_PROJECT_ID). This should be used to initialize new clients.
+// OPENAI_PROJECT_ID, OPENAI_BASE_URL). This should be used to initialize new
+// clients.
 func DefaultClientOptions() []option.RequestOption {
 	defaults := []option.RequestOption{option.WithEnvironmentProduction()}
+	if o, ok := os.LookupEnv("OPENAI_BASE_URL"); ok {
+		defaults = append(defaults, option.WithBaseURL(o))
+	}
 	if o, ok := os.LookupEnv("OPENAI_API_KEY"); ok {
 		defaults = append(defaults, option.WithAPIKey(o))
 	}
@@ -50,9 +54,10 @@ func DefaultClientOptions() []option.RequestOption {
 }
 
 // NewClient generates a new client with the default option read from the
-// environment (OPENAI_API_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID). The option
-// passed in as arguments are applied after these default arguments, and all option
-// will be passed down to the services and requests that this client makes.
+// environment (OPENAI_API_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_BASE_URL).
+// The option passed in as arguments are applied after these default arguments, and
+// all option will be passed down to the services and requests that this client
+// makes.
 func NewClient(opts ...option.RequestOption) (r Client) {
 	opts = append(DefaultClientOptions(), opts...)
 
