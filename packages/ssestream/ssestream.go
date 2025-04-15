@@ -14,6 +14,11 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+const (
+	// ScannerMaxCapacity is the maximum capacity of the scanner buffer used in the decoder.
+	DecoderScannerMaxCapacity = 512 * 1024 // 512 KiB
+)
+
 type Decoder interface {
 	Event() Event
 	Next() bool
@@ -32,6 +37,11 @@ func NewDecoder(res *http.Response) Decoder {
 		decoder = t(res.Body)
 	} else {
 		scanner := bufio.NewScanner(res.Body)
+
+		// adjust the scanner max capacity
+		buf := make([]byte, DecoderScannerMaxCapacity)
+		scanner.Buffer(buf, DecoderScannerMaxCapacity)
+
 		decoder = &eventStreamDecoder{rc: res.Body, scn: scanner}
 	}
 	return decoder
@@ -161,7 +171,7 @@ func (s *Stream[T]) Next() bool {
 			s.done = true
 			continue
 		}
-		
+
 		var nxt T
 		if s.decoder.Event().Type == "" || strings.HasPrefix(s.decoder.Event().Type, "response.") {
 			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
