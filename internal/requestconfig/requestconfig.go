@@ -591,16 +591,20 @@ func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
 	return nil
 }
 
+// PreRequestOptions is used to collect all the options which need to be known before
+// a call to [RequestConfig.ExecuteNewRequest], such as path parameters
+// or global defaults.
+// PreRequestOptions will return a [RequestConfig] with the options applied.
+//
+// Only request option functions of type [PreRequestOptionFunc] are applied.
 func PreRequestOptions(opts ...RequestOption) (RequestConfig, error) {
 	cfg := RequestConfig{}
 	for _, opt := range opts {
-		if _, ok := opt.(PreRequestOptionFunc); !ok {
-			continue
-		}
-
-		err := opt.Apply(&cfg)
-		if err != nil {
-			return cfg, err
+		if opt, ok := opt.(PreRequestOptionFunc); ok {
+			err := opt.Apply(&cfg)
+			if err != nil {
+				return cfg, err
+			}
 		}
 	}
 	return cfg, nil
