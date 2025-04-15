@@ -28,6 +28,12 @@ const (
 	ChatModelO1Preview2024_09_12              ChatModel = "o1-preview-2024-09-12"
 	ChatModelO1Mini                           ChatModel = "o1-mini"
 	ChatModelO1Mini2024_09_12                 ChatModel = "o1-mini-2024-09-12"
+	ChatModelGPT4_1                           ChatModel = "gpt-4.1"
+	ChatModelGPT4_1_2025_04_14                ChatModel = "gpt-4.1-2025-04-14"
+	ChatModelGPT4_1Mini                       ChatModel = "gpt-4.1-mini"
+	ChatModelGPT4_1Mini_2025_04_14            ChatModel = "gpt-4.1-mini-2025-04-14"
+	ChatModelGPT4_1Nano                       ChatModel = "gpt-4.1-nano"
+	ChatModelGPT4_1Nano_2025_04_14            ChatModel = "gpt-4.1-nano-2025-04-14"
 	ChatModelGPT4o                            ChatModel = "gpt-4o"
 	ChatModelGPT4o2024_11_20                  ChatModel = "gpt-4o-2024-11-20"
 	ChatModelGPT4o2024_08_06                  ChatModel = "gpt-4o-2024-08-06"
@@ -168,7 +174,6 @@ func (u ComparisonFilterValueUnion) AsBool() (v bool) {
 
 // Returns the unmodified JSON received from the API
 func (u ComparisonFilterValueUnion) RawJSON() string { return u.JSON.raw }
-
 func (r *ComparisonFilterValueUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
