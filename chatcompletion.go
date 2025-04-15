@@ -1510,32 +1510,25 @@ func (u ChatCompletionMessageParamUnion) GetName() *string {
 // Or use AsAny() to get the underlying value
 func (u ChatCompletionMessageParamUnion) GetContent() (res chatCompletionMessageParamUnionContent) {
 	if vt := u.OfDeveloper; vt != nil {
-		res.ofChatCompletionDeveloperMessageContent = &vt.Content
+		res.any = vt.Content.asAny()
 	} else if vt := u.OfSystem; vt != nil {
-		res.ofChatCompletionSystemMessageContent = &vt.Content
+		res.any = vt.Content.asAny()
 	} else if vt := u.OfUser; vt != nil {
-		res.ofChatCompletionUserMessageContent = &vt.Content
+		res.any = vt.Content.asAny()
 	} else if vt := u.OfAssistant; vt != nil {
-		res.ofChatCompletionAssistantMessageContent = &vt.Content
+		res.any = vt.Content.asAny()
 	} else if vt := u.OfTool; vt != nil {
-		res.ofChatCompletionToolMessageContent = &vt.Content
+		res.any = vt.Content.asAny()
 	} else if vt := u.OfFunction; vt != nil && vt.Content.IsPresent() {
-		res.ofString = &vt.Content.Value
+		res.any = &vt.Content.Value
 	}
 	return
 }
 
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type chatCompletionMessageParamUnionContent struct {
-	ofChatCompletionDeveloperMessageContent *ChatCompletionDeveloperMessageParamContentUnion
-	ofChatCompletionSystemMessageContent    *ChatCompletionSystemMessageParamContentUnion
-	ofChatCompletionUserMessageContent      *ChatCompletionUserMessageParamContentUnion
-	ofChatCompletionAssistantMessageContent *ChatCompletionAssistantMessageParamContentUnion
-	ofChatCompletionToolMessageContent      *ChatCompletionToolMessageParamContentUnion
-	ofString                                *string
-}
+// Can have the runtime types [*string], [_[]ChatCompletionContentPartTextParam],
+// [_[]ChatCompletionContentPartUnionParam],
+// [\*[]ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion]
+type chatCompletionMessageParamUnionContent struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
@@ -1547,22 +1540,7 @@ type chatCompletionMessageParamUnionContent struct {
 //	default:
 //	    fmt.Errorf("not present")
 //	}
-func (u chatCompletionMessageParamUnionContent) AsAny() any {
-	if !param.IsOmitted(u.ofChatCompletionDeveloperMessageContent) {
-		return u.ofChatCompletionDeveloperMessageContent.asAny()
-	} else if !param.IsOmitted(u.ofChatCompletionSystemMessageContent) {
-		return u.ofChatCompletionSystemMessageContent.asAny()
-	} else if !param.IsOmitted(u.ofChatCompletionUserMessageContent) {
-		return u.ofChatCompletionUserMessageContent.asAny()
-	} else if !param.IsOmitted(u.ofChatCompletionAssistantMessageContent) {
-		return u.ofChatCompletionAssistantMessageContent.asAny()
-	} else if !param.IsOmitted(u.ofChatCompletionToolMessageContent) {
-		return u.ofChatCompletionToolMessageContent.asAny()
-	} else if !param.IsOmitted(u.ofString) {
-		return u.ofString
-	}
-	return nil
-}
+func (u chatCompletionMessageParamUnionContent) AsAny() any { return u.any }
 
 func init() {
 	apijson.RegisterUnion[ChatCompletionMessageParamUnion](
@@ -2009,22 +1987,6 @@ func (u *ChatCompletionToolChoiceOptionUnionParam) asAny() any {
 	return nil
 }
 
-// Returns a pointer to the underlying variant's property, if present.
-func (u ChatCompletionToolChoiceOptionUnionParam) GetFunction() *ChatCompletionNamedToolChoiceFunctionParam {
-	if vt := u.OfChatCompletionNamedToolChoice; vt != nil {
-		return &vt.Function
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ChatCompletionToolChoiceOptionUnionParam) GetType() *string {
-	if vt := u.OfChatCompletionNamedToolChoice; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
 // `none` means the model will not call any tool and instead generates a message.
 // `auto` means the model can pick between generating a message or calling one or
 // more tools. `required` means the model must call one or more tools.
@@ -2230,7 +2192,7 @@ type ChatCompletionNewParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	// Output types that you would like the model to generate. Most models are capable
 	// of generating text, which is the default:
 	//
@@ -2362,14 +2324,6 @@ func (u *ChatCompletionNewParamsFunctionCallUnion) asAny() any {
 		return &u.OfFunctionCallMode
 	} else if !param.IsOmitted(u.OfFunctionCallOption) {
 		return u.OfFunctionCallOption
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ChatCompletionNewParamsFunctionCallUnion) GetName() *string {
-	if vt := u.OfFunctionCallOption; vt != nil {
-		return &vt.Name
 	}
 	return nil
 }
@@ -2594,7 +2548,7 @@ type ChatCompletionUpdateParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero,required"`
+	Metadata shared.Metadata `json:"metadata,omitzero,required"`
 	paramObj
 }
 
@@ -2617,7 +2571,7 @@ type ChatCompletionListParams struct {
 	// A list of metadata keys to filter the Chat Completions by. Example:
 	//
 	// `metadata[key1]=value1&metadata[key2]=value2`
-	Metadata shared.MetadataParam `query:"metadata,omitzero" json:"-"`
+	Metadata shared.Metadata `query:"metadata,omitzero" json:"-"`
 	// Sort order for Chat Completions by timestamp. Use `asc` for ascending order or
 	// `desc` for descending order. Defaults to `asc`.
 	//

@@ -247,7 +247,7 @@ type TranscriptionTextDeltaEventLogprob struct {
 	// The token that was used to generate the log probability.
 	Token string `json:"token"`
 	// The bytes that were used to generate the log probability.
-	Bytes []interface{} `json:"bytes"`
+	Bytes []any `json:"bytes"`
 	// The log probability of the token.
 	Logprob float64 `json:"logprob"`
 	// Metadata for the response, check the presence of optional fields with the
@@ -302,7 +302,7 @@ type TranscriptionTextDoneEventLogprob struct {
 	// The token that was used to generate the log probability.
 	Token string `json:"token"`
 	// The bytes that were used to generate the log probability.
-	Bytes []interface{} `json:"bytes"`
+	Bytes []any `json:"bytes"`
 	// The log probability of the token.
 	Logprob float64 `json:"logprob"`
 	// Metadata for the response, check the presence of optional fields with the

@@ -8,12 +8,12 @@ import (
 
 type UnionVariant struct {
 	TypeFilter         gjson.Type
-	DiscriminatorValue interface{}
+	DiscriminatorValue any
 	Type               reflect.Type
 }
 
 var unionRegistry = map[reflect.Type]unionEntry{}
-var unionVariants = map[reflect.Type]interface{}{}
+var unionVariants = map[reflect.Type]any{}
 
 type unionEntry struct {
 	discriminatorKey string

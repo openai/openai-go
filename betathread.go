@@ -440,22 +440,6 @@ func (u *AssistantToolChoiceOptionUnionParam) asAny() any {
 	return nil
 }
 
-// Returns a pointer to the underlying variant's property, if present.
-func (u AssistantToolChoiceOptionUnionParam) GetType() *string {
-	if vt := u.OfAssistantToolChoice; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u AssistantToolChoiceOptionUnionParam) GetFunction() *AssistantToolChoiceFunctionParam {
-	if vt := u.OfAssistantToolChoice; vt != nil {
-		return &vt.Function
-	}
-	return nil
-}
-
 // Represents a thread that contains
 // [messages](https://platform.openai.com/docs/api-reference/messages).
 type Thread struct {
@@ -588,7 +572,7 @@ type BetaThreadNewParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	// A set of resources that are made available to the assistant's tools in this
 	// thread. The resources are specific to the type of tool. For example, the
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
@@ -630,7 +614,7 @@ type BetaThreadNewParamsMessage struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	paramObj
 }
 
@@ -832,7 +816,7 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStore struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy.
 	ChunkingStrategy BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion `json:"chunking_strategy,omitzero"`
@@ -985,7 +969,7 @@ type BetaThreadUpdateParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	// A set of resources that are made available to the assistant's tools in this
 	// thread. The resources are specific to the type of tool. For example, the
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
@@ -1100,7 +1084,7 @@ type BetaThreadNewAndRunParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	// The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
 	// be used to execute this run. If a value is provided here, it will override the
 	// model associated with the assistant. If not, the model associated with the
@@ -1170,7 +1154,7 @@ type BetaThreadNewAndRunParamsThread struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	// A set of resources that are made available to the assistant's tools in this
 	// thread. The resources are specific to the type of tool. For example, the
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
@@ -1211,7 +1195,7 @@ type BetaThreadNewAndRunParamsThreadMessage struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	paramObj
 }
 
@@ -1417,7 +1401,7 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy.
 	ChunkingStrategy BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion `json:"chunking_strategy,omitzero"`

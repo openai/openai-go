@@ -469,7 +469,7 @@ To make requests to undocumented endpoints, you can use `client.Get`, `client.Po
 var (
     // params can be an io.Reader, a []byte, an encoding/json serializable object,
     // or a "…Params" struct defined in this library.
-    params map[string]interface{}
+    params map[string]any
 
     // result can be an []byte, *http.Response, a encoding/json deserializable object,
     // or a model defined in this library.

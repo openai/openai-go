@@ -664,7 +664,7 @@ type VectorStoreNewParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
 	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
@@ -719,7 +719,7 @@ type VectorStoreUpdateParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	paramObj
 }
 

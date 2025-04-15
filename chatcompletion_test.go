@@ -57,7 +57,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Logprobs:            openai.Bool(true),
 		MaxCompletionTokens: openai.Int(0),
 		MaxTokens:           openai.Int(0),
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		Modalities:        []string{"text"},
@@ -158,7 +158,7 @@ func TestChatCompletionUpdate(t *testing.T) {
 		context.TODO(),
 		"completion_id",
 		openai.ChatCompletionUpdateParams{
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
 		},
@@ -187,7 +187,7 @@ func TestChatCompletionListWithOptionalParams(t *testing.T) {
 	_, err := client.Chat.Completions.List(context.TODO(), openai.ChatCompletionListParams{
 		After: openai.String("after"),
 		Limit: openai.Int(0),
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		Model: openai.String("model"),

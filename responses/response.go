@@ -499,7 +499,7 @@ type FunctionTool struct {
 	// The name of the function to call.
 	Name string `json:"name,required"`
 	// A JSON schema object describing the parameters of the function.
-	Parameters map[string]interface{} `json:"parameters,required"`
+	Parameters map[string]any `json:"parameters,required"`
 	// Whether to enforce strict parameter validation. Default `true`.
 	Strict bool `json:"strict,required"`
 	// The type of the function tool. Always `function`.
@@ -546,7 +546,7 @@ type FunctionToolParam struct {
 	// The name of the function to call.
 	Name string `json:"name,required"`
 	// A JSON schema object describing the parameters of the function.
-	Parameters map[string]interface{} `json:"parameters,omitzero,required"`
+	Parameters map[string]any `json:"parameters,omitzero,required"`
 	// Whether to enforce strict parameter validation. Default `true`.
 	Strict bool `json:"strict,required"`
 	// A description of the function. Used by the model to determine whether or not to
@@ -3011,7 +3011,7 @@ type ResponseFormatTextConfigUnion struct {
 	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
 	Name string `json:"name"`
 	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
-	Schema map[string]interface{} `json:"schema"`
+	Schema map[string]any `json:"schema"`
 	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
 	Description string `json:"description"`
 	// This field is from variant [ResponseFormatTextJSONSchemaConfig].
@@ -3088,7 +3088,7 @@ func (r ResponseFormatTextConfigUnion) ToParam() ResponseFormatTextConfigUnionPa
 	return param.OverrideObj[ResponseFormatTextConfigUnionParam](r.RawJSON())
 }
 
-func ResponseFormatTextConfigParamOfJSONSchema(name string, schema map[string]interface{}) ResponseFormatTextConfigUnionParam {
+func ResponseFormatTextConfigParamOfJSONSchema(name string, schema map[string]any) ResponseFormatTextConfigUnionParam {
 	var jsonSchema ResponseFormatTextJSONSchemaConfigParam
 	jsonSchema.Name = name
 	jsonSchema.Schema = schema
@@ -3134,7 +3134,7 @@ func (u ResponseFormatTextConfigUnionParam) GetName() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseFormatTextConfigUnionParam) GetSchema() map[string]interface{} {
+func (u ResponseFormatTextConfigUnionParam) GetSchema() map[string]any {
 	if vt := u.OfJSONSchema; vt != nil {
 		return vt.Schema
 	}
@@ -3199,7 +3199,7 @@ type ResponseFormatTextJSONSchemaConfig struct {
 	Name string `json:"name,required"`
 	// The schema for the response format, described as a JSON Schema object. Learn how
 	// to build JSON schemas [here](https://json-schema.org/).
-	Schema map[string]interface{} `json:"schema,required"`
+	Schema map[string]any `json:"schema,required"`
 	// The type of response format being defined. Always `json_schema`.
 	Type constant.JSONSchema `json:"type,required"`
 	// A description of what the response format is for, used by the model to determine
@@ -3251,7 +3251,7 @@ type ResponseFormatTextJSONSchemaConfigParam struct {
 	Name string `json:"name,required"`
 	// The schema for the response format, described as a JSON Schema object. Learn how
 	// to build JSON schemas [here](https://json-schema.org/).
-	Schema map[string]interface{} `json:"schema,omitzero,required"`
+	Schema map[string]any `json:"schema,omitzero,required"`
 	// Whether to enable strict schema adherence when generating the output. If set to
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
@@ -4302,23 +4302,18 @@ func (u ResponseInputItemUnionParam) GetCallID() *string {
 // Or use AsAny() to get the underlying value
 func (u ResponseInputItemUnionParam) GetContent() (res responseInputItemUnionParamContent) {
 	if vt := u.OfMessage; vt != nil {
-		res.ofEasyInputMessageContentUnion = &vt.Content
+		res.any = vt.Content.asAny()
 	} else if vt := u.OfInputMessage; vt != nil {
-		res.ofResponseInputMessageContentList = &vt.Content
+		res.any = &vt.Content
 	} else if vt := u.OfOutputMessage; vt != nil {
-		res.ofResponseOutputMessageContent = &vt.Content
+		res.any = &vt.Content
 	}
 	return
 }
 
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type responseInputItemUnionParamContent struct {
-	ofEasyInputMessageContentUnion    *EasyInputMessageContentUnionParam
-	ofResponseInputMessageContentList *ResponseInputMessageContentListParam
-	ofResponseOutputMessageContent    *[]ResponseOutputMessageContentUnionParam
-}
+// Can have the runtime types [*string], [*ResponseInputMessageContentListParam],
+// [\*[]ResponseOutputMessageContentUnionParam]
+type responseInputItemUnionParamContent struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
@@ -4329,36 +4324,23 @@ type responseInputItemUnionParamContent struct {
 //	default:
 //	    fmt.Errorf("not present")
 //	}
-func (u responseInputItemUnionParamContent) AsAny() any {
-	if !param.IsOmitted(u.ofEasyInputMessageContentUnion) {
-		return u.ofEasyInputMessageContentUnion.asAny()
-	} else if !param.IsOmitted(u.ofResponseInputMessageContentList) {
-		return u.ofResponseInputMessageContentList
-	} else if !param.IsOmitted(u.ofResponseOutputMessageContent) {
-		return u.ofResponseOutputMessageContent
-	}
-	return nil
-}
+func (u responseInputItemUnionParamContent) AsAny() any { return u.any }
 
 // Returns a subunion which exports methods to access subproperties
 //
 // Or use AsAny() to get the underlying value
 func (u ResponseInputItemUnionParam) GetOutput() (res responseInputItemUnionParamOutput) {
 	if vt := u.OfComputerCallOutput; vt != nil {
-		res.ofResponseComputerToolCallOutputScreenshot = &vt.Output
+		res.any = &vt.Output
 	} else if vt := u.OfFunctionCallOutput; vt != nil {
-		res.ofString = &vt.Output
+		res.any = &vt.Output
 	}
 	return
 }
 
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type responseInputItemUnionParamOutput struct {
-	ofResponseComputerToolCallOutputScreenshot *ResponseComputerToolCallOutputScreenshotParam
-	ofString                                   *string
-}
+// Can have the runtime types [*ResponseComputerToolCallOutputScreenshotParam],
+// [*string]
+type responseInputItemUnionParamOutput struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
@@ -4368,38 +4350,7 @@ type responseInputItemUnionParamOutput struct {
 //	default:
 //	    fmt.Errorf("not present")
 //	}
-func (u responseInputItemUnionParamOutput) AsAny() any {
-	if !param.IsOmitted(u.ofResponseComputerToolCallOutputScreenshot) {
-		return u.ofResponseComputerToolCallOutputScreenshot
-	} else if !param.IsOmitted(u.ofString) {
-		return u.ofString
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamOutput) GetType() *string {
-	if vt := u.ofResponseComputerToolCallOutputScreenshot; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamOutput) GetFileID() *string {
-	if vt := u.ofResponseComputerToolCallOutputScreenshot; vt != nil && vt.FileID.IsPresent() {
-		return &vt.FileID.Value
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamOutput) GetImageURL() *string {
-	if vt := u.ofResponseComputerToolCallOutputScreenshot; vt != nil && vt.ImageURL.IsPresent() {
-		return &vt.ImageURL.Value
-	}
-	return nil
-}
+func (u responseInputItemUnionParamOutput) AsAny() any { return u.any }
 
 func init() {
 	apijson.RegisterUnion[ResponseInputItemUnionParam](
@@ -6997,7 +6948,7 @@ type ToolUnion struct {
 	// This field is from variant [FunctionTool].
 	Name string `json:"name"`
 	// This field is from variant [FunctionTool].
-	Parameters map[string]interface{} `json:"parameters"`
+	Parameters map[string]any `json:"parameters"`
 	// This field is from variant [FunctionTool].
 	Strict bool `json:"strict"`
 	// This field is from variant [FunctionTool].
@@ -7073,7 +7024,7 @@ func ToolParamOfFileSearch(vectorStoreIDs []string) ToolUnionParam {
 	return ToolUnionParam{OfFileSearch: &fileSearch}
 }
 
-func ToolParamOfFunction(name string, parameters map[string]interface{}, strict bool) ToolUnionParam {
+func ToolParamOfFunction(name string, parameters map[string]any, strict bool) ToolUnionParam {
 	var function FunctionToolParam
 	function.Name = name
 	function.Parameters = parameters
@@ -7167,7 +7118,7 @@ func (u ToolUnionParam) GetName() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ToolUnionParam) GetParameters() map[string]interface{} {
+func (u ToolUnionParam) GetParameters() map[string]any {
 	if vt := u.OfFunction; vt != nil {
 		return vt.Parameters
 	}
@@ -7646,7 +7597,7 @@ type ResponseNewParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	// The truncation strategy to use for the model response.
 	//
 	//   - `auto`: If the context of this response and previous ones exceeds the model's

@@ -28,8 +28,8 @@ type PrimitivePointers struct {
 }
 
 type Slices struct {
-	Slice []Primitives  `query:"slices"`
-	Mixed []interface{} `query:"mixed"`
+	Slice []Primitives `query:"slices"`
+	Mixed []any        `query:"mixed"`
 }
 
 type DateTime struct {
@@ -38,8 +38,8 @@ type DateTime struct {
 }
 
 type AdditionalProperties struct {
-	A      bool                   `query:"a"`
-	Extras map[string]interface{} `query:"-,inline"`
+	A      bool           `query:"a"`
+	Extras map[string]any `query:"-,inline"`
 }
 
 type Recursive struct {
@@ -48,7 +48,7 @@ type Recursive struct {
 }
 
 type UnknownStruct struct {
-	Unknown interface{} `query:"unknown"`
+	Unknown any `query:"unknown"`
 }
 
 type UnionStruct struct {
@@ -130,7 +130,7 @@ type StructUnion struct {
 
 var tests = map[string]struct {
 	enc      string
-	val      interface{}
+	val      any
 	settings QuerySettings
 }{
 	"primitives": {
@@ -146,7 +146,7 @@ var tests = map[string]struct {
 				{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
 				{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
 			},
-			Mixed: []interface{}{1, 2.3, "hello"},
+			Mixed: []any{1, 2.3, "hello"},
 		},
 		QuerySettings{ArrayFormat: ArrayQueryFormatBrackets},
 	},
@@ -154,7 +154,7 @@ var tests = map[string]struct {
 	"slices_comma": {
 		`mixed=1,2.3,hello`,
 		Slices{
-			Mixed: []interface{}{1, 2.3, "hello"},
+			Mixed: []any{1, 2.3, "hello"},
 		},
 		QuerySettings{ArrayFormat: ArrayQueryFormatComma},
 	},
@@ -166,7 +166,7 @@ var tests = map[string]struct {
 				{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
 				{A: false, B: 237628372683, C: uint(654), D: 9999.43, E: 43.76, F: []int{1, 2, 3, 4}},
 			},
-			Mixed: []interface{}{1, 2.3, "hello"},
+			Mixed: []any{1, 2.3, "hello"},
 		},
 		QuerySettings{ArrayFormat: ArrayQueryFormatRepeat},
 	},
@@ -197,7 +197,7 @@ var tests = map[string]struct {
 		`a=true&bar=value&foo=true`,
 		AdditionalProperties{
 			A: true,
-			Extras: map[string]interface{}{
+			Extras: map[string]any{
 				"bar": "value",
 				"foo": true,
 			},
@@ -228,7 +228,7 @@ var tests = map[string]struct {
 	"unknown_struct_map_brackets": {
 		`unknown[foo]=bar`,
 		UnknownStruct{
-			Unknown: map[string]interface{}{
+			Unknown: map[string]any{
 				"foo": "bar",
 			},
 		},
@@ -238,7 +238,7 @@ var tests = map[string]struct {
 	"unknown_struct_map_dots": {
 		`unknown.foo=bar`,
 		UnknownStruct{
-			Unknown: map[string]interface{}{
+			Unknown: map[string]any{
 				"foo": "bar",
 			},
 		},

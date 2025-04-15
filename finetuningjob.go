@@ -811,7 +811,7 @@ type FineTuningJobEvent struct {
 	// The object type, which is always "fine_tuning.job.event".
 	Object constant.FineTuningJobEvent `json:"object,required"`
 	// The data associated with the event.
-	Data interface{} `json:"data"`
+	Data any `json:"data"`
 	// The type of event.
 	//
 	// Any of "message", "metrics".
@@ -967,7 +967,7 @@ type FineTuningJobNewParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	// The hyperparameters used for the fine-tuning job. This value is now deprecated
 	// in favor of `method`, and should be passed in under the `method` parameter.
 	Hyperparameters FineTuningJobNewParamsHyperparameters `json:"hyperparameters,omitzero"`

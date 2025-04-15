@@ -37,7 +37,7 @@ func (r FieldStruct) MarshalJSON() (data []byte, err error) {
 
 func TestFieldMarshal(t *testing.T) {
 	tests := map[string]struct {
-		value    interface{}
+		value    any
 		expected string
 	}{
 		"null_string": {param.NullOpt[string](), "null"},
