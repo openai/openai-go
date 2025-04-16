@@ -176,9 +176,25 @@ type ChatCompletion struct {
 	Model string `json:"model,required"`
 	// The object type, which is always `chat.completion`.
 	Object constant.ChatCompletion `json:"object,required"`
-	// The service tier used for processing the request.
+	// Specifies the latency tier to use for processing the request. This parameter is
+	// relevant for customers subscribed to the scale tier service:
 	//
-	// Any of "scale", "default".
+	//   - If set to 'auto', and the Project is Scale tier enabled, the system will
+	//     utilize scale tier credits until they are exhausted.
+	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
+	//     be processed using the default service tier with a lower uptime SLA and no
+	//     latency guarentee.
+	//   - If set to 'default', the request will be processed using the default service
+	//     tier with a lower uptime SLA and no latency guarentee.
+	//   - If set to 'flex', the request will be processed with the Flex Processing
+	//     service tier.
+	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+	//   - When not set, the default behavior is 'auto'.
+	//
+	// When this parameter is set, the response body will include the `service_tier`
+	// utilized.
+	//
+	// Any of "auto", "default", "flex".
 	ServiceTier ChatCompletionServiceTier `json:"service_tier,nullable"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	//
@@ -265,12 +281,29 @@ func (r *ChatCompletionChoiceLogprobs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The service tier used for processing the request.
+// Specifies the latency tier to use for processing the request. This parameter is
+// relevant for customers subscribed to the scale tier service:
+//
+//   - If set to 'auto', and the Project is Scale tier enabled, the system will
+//     utilize scale tier credits until they are exhausted.
+//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
+//     be processed using the default service tier with a lower uptime SLA and no
+//     latency guarentee.
+//   - If set to 'default', the request will be processed using the default service
+//     tier with a lower uptime SLA and no latency guarentee.
+//   - If set to 'flex', the request will be processed with the Flex Processing
+//     service tier.
+//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+//   - When not set, the default behavior is 'auto'.
+//
+// When this parameter is set, the response body will include the `service_tier`
+// utilized.
 type ChatCompletionServiceTier string
 
 const (
-	ChatCompletionServiceTierScale   ChatCompletionServiceTier = "scale"
+	ChatCompletionServiceTierAuto    ChatCompletionServiceTier = "auto"
 	ChatCompletionServiceTierDefault ChatCompletionServiceTier = "default"
+	ChatCompletionServiceTierFlex    ChatCompletionServiceTier = "flex"
 )
 
 // Messages sent by the model in response to user messages.
@@ -496,10 +529,10 @@ type ChatCompletionAudioParam struct {
 	// Specifies the output audio format. Must be one of `wav`, `mp3`, `flac`, `opus`,
 	// or `pcm16`.
 	//
-	// Any of "wav", "mp3", "flac", "opus", "pcm16".
+	// Any of "wav", "aac", "mp3", "flac", "opus", "pcm16".
 	Format ChatCompletionAudioParamFormat `json:"format,omitzero,required"`
 	// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
-	// `ballad`, `coral`, `echo`, `sage`, and `shimmer`.
+	// `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, and `shimmer`.
 	Voice ChatCompletionAudioParamVoice `json:"voice,omitzero,required"`
 	paramObj
 }
@@ -518,6 +551,7 @@ type ChatCompletionAudioParamFormat string
 
 const (
 	ChatCompletionAudioParamFormatWAV   ChatCompletionAudioParamFormat = "wav"
+	ChatCompletionAudioParamFormatAAC   ChatCompletionAudioParamFormat = "aac"
 	ChatCompletionAudioParamFormatMP3   ChatCompletionAudioParamFormat = "mp3"
 	ChatCompletionAudioParamFormatFLAC  ChatCompletionAudioParamFormat = "flac"
 	ChatCompletionAudioParamFormatOpus  ChatCompletionAudioParamFormat = "opus"
@@ -525,7 +559,7 @@ const (
 )
 
 // The voice the model uses to respond. Supported voices are `alloy`, `ash`,
-// `ballad`, `coral`, `echo`, `sage`, and `shimmer`.
+// `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, and `shimmer`.
 type ChatCompletionAudioParamVoice string
 
 const (
@@ -559,9 +593,25 @@ type ChatCompletionChunk struct {
 	Model string `json:"model,required"`
 	// The object type, which is always `chat.completion.chunk`.
 	Object constant.ChatCompletionChunk `json:"object,required"`
-	// The service tier used for processing the request.
+	// Specifies the latency tier to use for processing the request. This parameter is
+	// relevant for customers subscribed to the scale tier service:
 	//
-	// Any of "scale", "default".
+	//   - If set to 'auto', and the Project is Scale tier enabled, the system will
+	//     utilize scale tier credits until they are exhausted.
+	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
+	//     be processed using the default service tier with a lower uptime SLA and no
+	//     latency guarentee.
+	//   - If set to 'default', the request will be processed using the default service
+	//     tier with a lower uptime SLA and no latency guarentee.
+	//   - If set to 'flex', the request will be processed with the Flex Processing
+	//     service tier.
+	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+	//   - When not set, the default behavior is 'auto'.
+	//
+	// When this parameter is set, the response body will include the `service_tier`
+	// utilized.
+	//
+	// Any of "auto", "default", "flex".
 	ServiceTier ChatCompletionChunkServiceTier `json:"service_tier,nullable"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	// Can be used in conjunction with the `seed` request parameter to understand when
@@ -767,12 +817,29 @@ func (r *ChatCompletionChunkChoiceLogprobs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The service tier used for processing the request.
+// Specifies the latency tier to use for processing the request. This parameter is
+// relevant for customers subscribed to the scale tier service:
+//
+//   - If set to 'auto', and the Project is Scale tier enabled, the system will
+//     utilize scale tier credits until they are exhausted.
+//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
+//     be processed using the default service tier with a lower uptime SLA and no
+//     latency guarentee.
+//   - If set to 'default', the request will be processed using the default service
+//     tier with a lower uptime SLA and no latency guarentee.
+//   - If set to 'flex', the request will be processed with the Flex Processing
+//     service tier.
+//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+//   - When not set, the default behavior is 'auto'.
+//
+// When this parameter is set, the response body will include the `service_tier`
+// utilized.
 type ChatCompletionChunkServiceTier string
 
 const (
-	ChatCompletionChunkServiceTierScale   ChatCompletionChunkServiceTier = "scale"
+	ChatCompletionChunkServiceTierAuto    ChatCompletionChunkServiceTier = "auto"
 	ChatCompletionChunkServiceTierDefault ChatCompletionChunkServiceTier = "default"
+	ChatCompletionChunkServiceTierFlex    ChatCompletionChunkServiceTier = "flex"
 )
 
 func TextContentPart(text string) ChatCompletionContentPartUnionParam {
@@ -2106,7 +2173,7 @@ type ChatCompletionNewParams struct {
 	// [images](https://platform.openai.com/docs/guides/vision), and
 	// [audio](https://platform.openai.com/docs/guides/audio).
 	Messages []ChatCompletionMessageParamUnion `json:"messages,omitzero,required"`
-	// Model ID used to generate the response, like `gpt-4o` or `o1`. OpenAI offers a
+	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
 	// wide range of models with different capabilities, performance characteristics,
 	// and price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
@@ -2130,7 +2197,7 @@ type ChatCompletionNewParams struct {
 	//
 	// This value is now deprecated in favor of `max_completion_tokens`, and is not
 	// compatible with
-	// [o1 series models](https://platform.openai.com/docs/guides/reasoning).
+	// [o-series models](https://platform.openai.com/docs/guides/reasoning).
 	MaxTokens param.Opt[int64] `json:"max_tokens,omitzero"`
 	// How many chat completion choices to generate for each input message. Note that
 	// you will be charged based on the number of generated tokens across all of the
@@ -2225,13 +2292,18 @@ type ChatCompletionNewParams struct {
 	//     latency guarentee.
 	//   - If set to 'default', the request will be processed using the default service
 	//     tier with a lower uptime SLA and no latency guarentee.
+	//   - If set to 'flex', the request will be processed with the Flex Processing
+	//     service tier.
+	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When this parameter is set, the response body will include the `service_tier`
 	// utilized.
 	//
-	// Any of "auto", "default".
+	// Any of "auto", "default", "flex".
 	ServiceTier ChatCompletionNewParamsServiceTier `json:"service_tier,omitzero"`
+	// Not supported with latest reasoning models `o3` and `o4-mini`.
+	//
 	// Up to 4 sequences where the API will stop generating further tokens. The
 	// returned text will not contain the stop sequence.
 	Stop ChatCompletionNewParamsStopUnion `json:"stop,omitzero"`
@@ -2427,6 +2499,9 @@ func (u ChatCompletionNewParamsResponseFormatUnion) GetType() *string {
 //     latency guarentee.
 //   - If set to 'default', the request will be processed using the default service
 //     tier with a lower uptime SLA and no latency guarentee.
+//   - If set to 'flex', the request will be processed with the Flex Processing
+//     service tier.
+//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
 //   - When not set, the default behavior is 'auto'.
 //
 // When this parameter is set, the response body will include the `service_tier`
@@ -2436,6 +2511,7 @@ type ChatCompletionNewParamsServiceTier string
 const (
 	ChatCompletionNewParamsServiceTierAuto    ChatCompletionNewParamsServiceTier = "auto"
 	ChatCompletionNewParamsServiceTierDefault ChatCompletionNewParamsServiceTier = "default"
+	ChatCompletionNewParamsServiceTierFlex    ChatCompletionNewParamsServiceTier = "flex"
 )
 
 // Only one field can be non-zero.

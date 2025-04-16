@@ -590,7 +590,7 @@ type Response struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,required"`
-	// Model ID used to generate the response, like `gpt-4o` or `o1`. OpenAI offers a
+	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
 	// wide range of models with different capabilities, performance characteristics,
 	// and price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
@@ -651,6 +651,26 @@ type Response struct {
 	// Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 	Reasoning shared.Reasoning `json:"reasoning,nullable"`
+	// Specifies the latency tier to use for processing the request. This parameter is
+	// relevant for customers subscribed to the scale tier service:
+	//
+	//   - If set to 'auto', and the Project is Scale tier enabled, the system will
+	//     utilize scale tier credits until they are exhausted.
+	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
+	//     be processed using the default service tier with a lower uptime SLA and no
+	//     latency guarentee.
+	//   - If set to 'default', the request will be processed using the default service
+	//     tier with a lower uptime SLA and no latency guarentee.
+	//   - If set to 'flex', the request will be processed with the Flex Processing
+	//     service tier.
+	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+	//   - When not set, the default behavior is 'auto'.
+	//
+	// When this parameter is set, the response body will include the `service_tier`
+	// utilized.
+	//
+	// Any of "auto", "default", "flex".
+	ServiceTier ResponseServiceTier `json:"service_tier,nullable"`
 	// The status of the response generation. One of `completed`, `failed`,
 	// `in_progress`, or `incomplete`.
 	//
@@ -699,6 +719,7 @@ type Response struct {
 		MaxOutputTokens    resp.Field
 		PreviousResponseID resp.Field
 		Reasoning          resp.Field
+		ServiceTier        resp.Field
 		Status             resp.Field
 		Text               resp.Field
 		Truncation         resp.Field
@@ -779,6 +800,31 @@ func (u ResponseToolChoiceUnion) RawJSON() string { return u.JSON.raw }
 func (r *ResponseToolChoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+// Specifies the latency tier to use for processing the request. This parameter is
+// relevant for customers subscribed to the scale tier service:
+//
+//   - If set to 'auto', and the Project is Scale tier enabled, the system will
+//     utilize scale tier credits until they are exhausted.
+//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
+//     be processed using the default service tier with a lower uptime SLA and no
+//     latency guarentee.
+//   - If set to 'default', the request will be processed using the default service
+//     tier with a lower uptime SLA and no latency guarentee.
+//   - If set to 'flex', the request will be processed with the Flex Processing
+//     service tier.
+//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+//   - When not set, the default behavior is 'auto'.
+//
+// When this parameter is set, the response body will include the `service_tier`
+// utilized.
+type ResponseServiceTier string
+
+const (
+	ResponseServiceTierAuto    ResponseServiceTier = "auto"
+	ResponseServiceTierDefault ResponseServiceTier = "default"
+	ResponseServiceTierFlex    ResponseServiceTier = "flex"
+)
 
 // The truncation strategy to use for the model response.
 //
@@ -7542,7 +7588,7 @@ type ResponseNewParams struct {
 	// - [Conversation state](https://platform.openai.com/docs/guides/conversation-state)
 	// - [Function calling](https://platform.openai.com/docs/guides/function-calling)
 	Input ResponseNewParamsInputUnion `json:"input,omitzero,required"`
-	// Model ID used to generate the response, like `gpt-4o` or `o1`. OpenAI offers a
+	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
 	// wide range of models with different capabilities, performance characteristics,
 	// and price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
@@ -7598,6 +7644,26 @@ type ResponseNewParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,omitzero"`
+	// Specifies the latency tier to use for processing the request. This parameter is
+	// relevant for customers subscribed to the scale tier service:
+	//
+	//   - If set to 'auto', and the Project is Scale tier enabled, the system will
+	//     utilize scale tier credits until they are exhausted.
+	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
+	//     be processed using the default service tier with a lower uptime SLA and no
+	//     latency guarentee.
+	//   - If set to 'default', the request will be processed using the default service
+	//     tier with a lower uptime SLA and no latency guarentee.
+	//   - If set to 'flex', the request will be processed with the Flex Processing
+	//     service tier.
+	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+	//   - When not set, the default behavior is 'auto'.
+	//
+	// When this parameter is set, the response body will include the `service_tier`
+	// utilized.
+	//
+	// Any of "auto", "default", "flex".
+	ServiceTier ResponseNewParamsServiceTier `json:"service_tier,omitzero"`
 	// The truncation strategy to use for the model response.
 	//
 	//   - `auto`: If the context of this response and previous ones exceeds the model's
@@ -7674,6 +7740,31 @@ func (u *ResponseNewParamsInputUnion) asAny() any {
 	}
 	return nil
 }
+
+// Specifies the latency tier to use for processing the request. This parameter is
+// relevant for customers subscribed to the scale tier service:
+//
+//   - If set to 'auto', and the Project is Scale tier enabled, the system will
+//     utilize scale tier credits until they are exhausted.
+//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
+//     be processed using the default service tier with a lower uptime SLA and no
+//     latency guarentee.
+//   - If set to 'default', the request will be processed using the default service
+//     tier with a lower uptime SLA and no latency guarentee.
+//   - If set to 'flex', the request will be processed with the Flex Processing
+//     service tier.
+//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+//   - When not set, the default behavior is 'auto'.
+//
+// When this parameter is set, the response body will include the `service_tier`
+// utilized.
+type ResponseNewParamsServiceTier string
+
+const (
+	ResponseNewParamsServiceTierAuto    ResponseNewParamsServiceTier = "auto"
+	ResponseNewParamsServiceTierDefault ResponseNewParamsServiceTier = "default"
+	ResponseNewParamsServiceTierFlex    ResponseNewParamsServiceTier = "flex"
+)
 
 // Only one field can be non-zero.
 //

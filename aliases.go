@@ -37,6 +37,18 @@ const ChatModelGPT4_1Mini2025_04_14 = shared.ChatModelGPT4_1Mini2025_04_14
 // Equals "gpt-4.1-nano-2025-04-14"
 const ChatModelGPT4_1Nano2025_04_14 = shared.ChatModelGPT4_1Nano2025_04_14
 
+// Equals "o4-mini"
+const ChatModelO4Mini = shared.ChatModelO4Mini
+
+// Equals "o4-mini-2025-04-16"
+const ChatModelO4Mini2025_04_16 = shared.ChatModelO4Mini2025_04_16
+
+// Equals "o3"
+const ChatModelO3 = shared.ChatModelO3
+
+// Equals "o3-2025-04-16"
+const ChatModelO3_2025_04_16 = shared.ChatModelO3_2025_04_16
+
 // Equals "o3-mini"
 const ChatModelO3Mini = shared.ChatModelO3Mini
 
@@ -279,20 +291,39 @@ type Metadata = shared.Metadata
 // This is an alias to an internal type.
 type Reasoning = shared.Reasoning
 
-// **computer_use_preview only**
+// **Deprecated:** use `summary` instead.
 //
 // A summary of the reasoning performed by the model. This can be useful for
-// debugging and understanding the model's reasoning process. One of `concise` or
-// `detailed`.
+// debugging and understanding the model's reasoning process. One of `auto`,
+// `concise`, or `detailed`.
 //
 // This is an alias to an internal type.
 type ReasoningGenerateSummary = shared.ReasoningGenerateSummary
+
+// Equals "auto"
+const ReasoningGenerateSummaryAuto = shared.ReasoningGenerateSummaryAuto
 
 // Equals "concise"
 const ReasoningGenerateSummaryConcise = shared.ReasoningGenerateSummaryConcise
 
 // Equals "detailed"
 const ReasoningGenerateSummaryDetailed = shared.ReasoningGenerateSummaryDetailed
+
+// A summary of the reasoning performed by the model. This can be useful for
+// debugging and understanding the model's reasoning process. One of `auto`,
+// `concise`, or `detailed`.
+//
+// This is an alias to an internal type.
+type ReasoningSummary = shared.ReasoningSummary
+
+// Equals "auto"
+const ReasoningSummaryAuto = shared.ReasoningSummaryAuto
+
+// Equals "concise"
+const ReasoningSummaryConcise = shared.ReasoningSummaryConcise
+
+// Equals "detailed"
+const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 
 // **o-series models only**
 //
