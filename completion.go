@@ -338,6 +338,8 @@ type CompletionNewParams struct {
 	// As an example, you can pass `{"50256": -100}` to prevent the <|endoftext|> token
 	// from being generated.
 	LogitBias map[string]int64 `json:"logit_bias,omitzero"`
+	// Not supported with latest reasoning models `o3` and `o4-mini`.
+	//
 	// Up to 4 sequences where the API will stop generating further tokens. The
 	// returned text will not contain the stop sequence.
 	Stop CompletionNewParamsStopUnion `json:"stop,omitzero"`

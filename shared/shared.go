@@ -27,6 +27,10 @@ const (
 	ChatModelGPT4_1_2025_04_14                ChatModel = "gpt-4.1-2025-04-14"
 	ChatModelGPT4_1Mini2025_04_14             ChatModel = "gpt-4.1-mini-2025-04-14"
 	ChatModelGPT4_1Nano2025_04_14             ChatModel = "gpt-4.1-nano-2025-04-14"
+	ChatModelO4Mini                           ChatModel = "o4-mini"
+	ChatModelO4Mini2025_04_16                 ChatModel = "o4-mini-2025-04-16"
+	ChatModelO3                               ChatModel = "o3"
+	ChatModelO3_2025_04_16                    ChatModel = "o3-2025-04-16"
 	ChatModelO3Mini                           ChatModel = "o3-mini"
 	ChatModelO3Mini2025_01_31                 ChatModel = "o3-mini-2025-01-31"
 	ChatModelO1                               ChatModel = "o1"
@@ -422,13 +426,15 @@ type Reasoning struct {
 	//
 	// Any of "low", "medium", "high".
 	Effort ReasoningEffort `json:"effort,nullable"`
-	// **computer_use_preview only**
+	// **Deprecated:** use `summary` instead.
 	//
 	// A summary of the reasoning performed by the model. This can be useful for
-	// debugging and understanding the model's reasoning process. One of `concise` or
-	// `detailed`.
+	// debugging and understanding the model's reasoning process. One of `auto`,
+	// `concise`, or `detailed`.
 	//
-	// Any of "concise", "detailed".
+	// Any of "auto", "concise", "detailed".
+	//
+	// Deprecated: deprecated
 	GenerateSummary ReasoningGenerateSummary `json:"generate_summary,nullable"`
 	// A summary of the reasoning performed by the model. This can be useful for
 	// debugging and understanding the model's reasoning process. One of `auto`,
@@ -440,6 +446,7 @@ type Reasoning struct {
 	JSON struct {
 		Effort          respjson.Field
 		GenerateSummary respjson.Field
+		Summary         respjson.Field
 		ExtraFields     map[string]respjson.Field
 		raw             string
 	} `json:"-"`
@@ -460,16 +467,28 @@ func (r Reasoning) ToParam() ReasoningParam {
 	return param.Override[ReasoningParam](r.RawJSON())
 }
 
-// **computer_use_preview only**
+// **Deprecated:** use `summary` instead.
 //
 // A summary of the reasoning performed by the model. This can be useful for
-// debugging and understanding the model's reasoning process. One of `concise` or
-// `detailed`.
+// debugging and understanding the model's reasoning process. One of `auto`,
+// `concise`, or `detailed`.
 type ReasoningGenerateSummary string
 
 const (
+	ReasoningGenerateSummaryAuto     ReasoningGenerateSummary = "auto"
 	ReasoningGenerateSummaryConcise  ReasoningGenerateSummary = "concise"
 	ReasoningGenerateSummaryDetailed ReasoningGenerateSummary = "detailed"
+)
+
+// A summary of the reasoning performed by the model. This can be useful for
+// debugging and understanding the model's reasoning process. One of `auto`,
+// `concise`, or `detailed`.
+type ReasoningSummary string
+
+const (
+	ReasoningSummaryAuto     ReasoningSummary = "auto"
+	ReasoningSummaryConcise  ReasoningSummary = "concise"
+	ReasoningSummaryDetailed ReasoningSummary = "detailed"
 )
 
 // **o-series models only**
@@ -486,14 +505,22 @@ type ReasoningParam struct {
 	//
 	// Any of "low", "medium", "high".
 	Effort ReasoningEffort `json:"effort,omitzero"`
-	// **computer_use_preview only**
+	// **Deprecated:** use `summary` instead.
 	//
 	// A summary of the reasoning performed by the model. This can be useful for
-	// debugging and understanding the model's reasoning process. One of `concise` or
-	// `detailed`.
+	// debugging and understanding the model's reasoning process. One of `auto`,
+	// `concise`, or `detailed`.
 	//
-	// Any of "concise", "detailed".
+	// Any of "auto", "concise", "detailed".
+	//
+	// Deprecated: deprecated
 	GenerateSummary ReasoningGenerateSummary `json:"generate_summary,omitzero"`
+	// A summary of the reasoning performed by the model. This can be useful for
+	// debugging and understanding the model's reasoning process. One of `auto`,
+	// `concise`, or `detailed`.
+	//
+	// Any of "auto", "concise", "detailed".
+	Summary ReasoningSummary `json:"summary,omitzero"`
 	paramObj
 }
 
