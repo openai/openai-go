@@ -23,7 +23,7 @@ func newTimeEncoder() encoderFunc {
 			fmtted = t.Format(DateFmt)
 		}
 		// Default to RFC3339 if format is invalid
-		if fmtted == "" {
+		if opts.timefmt == "" {
 			fmtted = t.Format(time.RFC3339)
 		}
 		stringEncoder(e, reflect.ValueOf(fmtted), opts)
