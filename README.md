@@ -295,29 +295,18 @@ func main() {
 The openai library uses the [`omitzero`](https://tip.golang.org/doc/go1.24#encodingjsonpkgencodingjson)
 semantics from the Go 1.24+ `encoding/json` release for request fields.
 
-Required primitive fields (`int64`, `string`, etc.) feature the tag <code>\`json:...,required\`</code>. These
+Required primitive fields (`int64`, `string`, etc.) feature the tag <code>\`json:"...,required"\`</code>. These
 fields are always serialized, even their zero values.
 
-Optional primitive types are wrapped in a `param.Opt[T]`. Use the provided constructors set `param.Opt[T]` fields such as `openai.String(string)`, `openai.Int(int64)`, etc.
+Optional primitive types are wrapped in a `param.Opt[T]`. These fields can be set with the provided constructors, `openai.String(string)`, `openai.Int(int64)`, etc.
 
-Optional primitives, maps, slices and structs and string enums (represented as `string`) always feature the
-tag <code>\`json:"...,omitzero"\`</code>. Their zero values are considered omitted.
-
-Any non-nil slice of length zero will serialize as an empty JSON array, `"[]"`. Similarly, any non-nil map with length zero with serialize as an empty JSON object, `"{}"`.
-
-To send `null` instead of an `param.Opt[T]`, use `param.NullOpt[T]()`.
-To send `null` instead of a struct, use `param.NullObj[T]()`, where `T` is a struct.
-To send a custom value instead of a struct, use `param.OverrideObj[T](value)`.
-
-To override request structs contain a `.WithExtraFields(map[string]any)` method which can be used to
-send non-conforming fields in the request body. Extra fields overwrite any struct fields with a matching
-key, so only use with trusted data.
+Any `param.Opt[T]`, map, slice, struct or string enum uses the
+tag <code>\`json:"...,omitzero"\`</code>. Its zero value is considered omitted.
 
 ```go
 params := openai.ExampleParams{
-	ID:          "id_xxx",                // required property
-	Name:        openai.String("..."),    // optional property
-	Description: param.NullOpt[string](), // explicit null property
+	ID:   "id_xxx",             // required property
+	Name: openai.String("..."), // optional property
 
 	Point: openai.Point{
 		X: 0,             // required field will serialize as 0
@@ -327,7 +316,23 @@ params := openai.ExampleParams{
 
 	Origin: openai.Origin{}, // the zero value of [Origin] is considered omitted
 }
+```
 
+To send `null` instead of a `param.Opt[T]`, use `param.NullOpt[T]()`.
+To send `null` instead of a struct `T`, use `param.NullObj[T]()`.
+
+```go
+params.Description = param.NullOpt[string]() // explicit null string property
+params.Point = param.NullObj[Point]()        // explicit null struct property
+```
+
+Request structs contain a `.WithExtraFields(map[string]any)` method which can send non-conforming
+fields in the request body. Extra fields overwrite any struct fields with a matching
+key. For security reasons, only use `WithExtraFields` with trusted data.
+
+To send a custom value instead of a struct, use `param.OverrideObj[T](value)`.
+
+```go
 // In cases where the API specifies a given type,
 // but you want to send something else, use [WithExtraFields]:
 params.WithExtraFields(map[string]any{
@@ -339,7 +344,7 @@ custom := param.OverrideObj[openai.FooParams](12)
 ```
 
 When available, use the `.IsPresent()` method to check if an optional parameter is not omitted or `null`.
-Otherwise, the `param.IsOmitted(any)` function can confirm the presence of any `omitzero` field.
+The `param.IsOmitted(any)` function can confirm the presence of any `omitzero` field.
 
 ### Request unions
 
@@ -373,14 +378,9 @@ if address := animal.GetOwner().GetAddress(); address != nil {
 
 ### Response objects
 
-All fields in response structs are value types (not pointers or wrappers).
-
-If a given field is `null`, not present, or invalid, the corresponding field
-will simply be its zero value. To handle optional fields, see the `IsPresent()` method
-below.
-
-All response structs also include a special `JSON` field, containing more detailed
-information about each property, which you can use like so:
+All fields in response structs are ordinary value types (not pointers or wrappers).
+Response structs also include a special `JSON` field containing metadata about
+each property.
 
 ```go
 type Animal struct {
@@ -388,19 +388,28 @@ type Animal struct {
 	Owners int    `json:"owners"`
 	Age    int    `json:"age"`
 	JSON   struct {
-		Name  resp.Field
-		Owner resp.Field
-		Age   resp.Field
+		Name        resp.Field
+		Owner       resp.Field
+		Age         resp.Field
+		ExtraFields map[string]resp.Field
 	} `json:"-"`
 }
+```
+
+To handle optional data, use the `IsPresent()` method on the JSON field.
+If a field is `null`, not present, or invalid, the corresponding field
+will simply be its zero value.
+
+```go
+raw := `{"owners": 1, "name": null}`
 
 var res Animal
-json.Unmarshal([]byte(`{"name": null, "owners": 0}`), &res)
+json.Unmarshal([]byte(raw), &res)
 
 // Use the IsPresent() method to handle optional fields
-res.Owners                  // 0
+res.Owners                  // 1
 res.JSON.Owners.IsPresent() // true
-res.JSON.Owners.Raw()       // "0"
+res.JSON.Owners.Raw()       // "1"
 
 res.Age                  // 0
 res.JSON.Age.IsPresent() // false
