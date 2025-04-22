@@ -10,6 +10,7 @@ on:
 
 jobs:
   lint:
+    timeout-minutes: 10
     name: lint
     runs-on: ubuntu-latest
     steps:
@@ -23,6 +24,7 @@ jobs:
       - name: Run lints
         run: ./scripts/lint
   test:
+    timeout-minutes: 10
     name: test
     runs-on: ubuntu-latest
     steps:
