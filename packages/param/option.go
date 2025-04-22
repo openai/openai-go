@@ -3,6 +3,7 @@ package param
 import (
 	"encoding/json"
 	"fmt"
+	shimjson "github.com/openai/openai-go/internal/encoding/json"
 	"reflect"
 	"time"
 )
@@ -101,20 +102,17 @@ func (o Opt[T]) String() string {
 var timeType = reflect.TypeOf(time.Time{})
 var timeTimeValueLoc, _ = reflect.TypeOf(Opt[time.Time]{}).FieldByName("Value")
 
-// Don't worry about this function, returns nil to fallback towards [MarshalJSON]
+// MarshalJSONWithTimeLayout is necessary to bypass the internal caching performed
+// by [json.Marshal]. Prefer to use [Opt.MarshalJSON] instead.
+//
+// This function requires that the generic type parameter of [Opt] is not [time.Time].
 func (o Opt[T]) MarshalJSONWithTimeLayout(format string) []byte {
 	t, ok := any(o.Value).(time.Time)
 	if !ok || o.IsNull() {
 		return nil
 	}
 
-	if format == "" {
-		format = time.RFC3339
-	} else if format == "date" {
-		format = "2006-01-02"
-	}
-
-	b, err := json.Marshal(t.Format(format))
+	b, err := json.Marshal(t.Format(shimjson.TimeLayout(format)))
 	if err != nil {
 		return nil
 	}

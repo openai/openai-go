@@ -19,6 +19,9 @@ func (r Struct) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 
+// Note that the order of fields affects the JSON
+// key order. Changing the order of the fields in this struct
+// will fail tests unnecessarily.
 type FieldStruct struct {
 	A param.Opt[string]    `json:"a,omitzero"`
 	B param.Opt[int64]     `json:"b,omitzero"`
@@ -27,6 +30,7 @@ type FieldStruct struct {
 	E time.Time            `json:"e,omitzero"`
 	F param.Opt[time.Time] `json:"f,omitzero" format:"date"`
 	G param.Opt[time.Time] `json:"g,omitzero"`
+	H param.Opt[time.Time] `json:"h,omitzero" format:"date-time"`
 	param.APIObject
 }
 
@@ -69,7 +73,12 @@ func TestFieldMarshal(t *testing.T) {
 			},
 			`{"g":"2023-03-18T14:47:38Z"}`,
 		},
-
+		"optional_datetime_explicit_format": {
+			FieldStruct{
+				H: param.Opt[time.Time]{Value: time.Date(2023, time.March, 18, 14, 47, 38, 0, time.UTC)},
+			},
+			`{"h":"2023-03-18T14:47:38Z"}`,
+		},
 		"param_struct": {
 			FieldStruct{
 				A: param.Opt[string]{Value: "hello"},
@@ -78,8 +87,9 @@ func TestFieldMarshal(t *testing.T) {
 				E: time.Date(2023, time.March, 18, 14, 47, 38, 0, time.UTC),
 				F: param.Opt[time.Time]{Value: time.Date(2023, time.March, 18, 14, 47, 38, 0, time.UTC)},
 				G: param.Opt[time.Time]{Value: time.Date(2023, time.March, 18, 14, 47, 38, 0, time.UTC)},
+				H: param.Opt[time.Time]{Value: time.Date(2023, time.March, 18, 14, 47, 38, 0, time.UTC)},
 			},
-			`{"a":"hello","b":12,"d":"2023-03-18","e":"2023-03-18T14:47:38Z","f":"2023-03-18","g":"2023-03-18T14:47:38Z"}`,
+			`{"a":"hello","b":12,"d":"2023-03-18","e":"2023-03-18T14:47:38Z","f":"2023-03-18","g":"2023-03-18T14:47:38Z","h":"2023-03-18T14:47:38Z"}`,
 		},
 	}
 
