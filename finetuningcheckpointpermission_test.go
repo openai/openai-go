@@ -73,7 +73,6 @@ func TestFineTuningCheckpointPermissionGetWithOptionalParams(t *testing.T) {
 }
 
 func TestFineTuningCheckpointPermissionDelete(t *testing.T) {
-	t.Skip("OpenAPI spec is slightly incorrect")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -85,7 +84,11 @@ func TestFineTuningCheckpointPermissionDelete(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.FineTuning.Checkpoints.Permissions.Delete(context.TODO(), "ft:gpt-4o-mini-2024-07-18:org:weather:B7R9VjQd")
+	_, err := client.FineTuning.Checkpoints.Permissions.Delete(
+		context.TODO(),
+		"ft:gpt-4o-mini-2024-07-18:org:weather:B7R9VjQd",
+		"cp_zc4Q7MP6XxulcVzj4MZdwsAB",
+	)
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {

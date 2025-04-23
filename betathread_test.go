@@ -229,8 +229,8 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 				VectorStoreIDs: []string{"string"},
 			},
 		},
-		Tools: []openai.BetaThreadNewAndRunParamsToolUnion{{
-			OfCodeInterpreterTool: &openai.CodeInterpreterToolParam{},
+		Tools: []openai.AssistantToolUnionParam{{
+			OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
 		}},
 		TopP: openai.Float(1),
 		TruncationStrategy: openai.BetaThreadNewAndRunParamsTruncationStrategy{

@@ -1097,7 +1097,7 @@ type BetaThreadNewAndRunParams struct {
 	ToolResources BetaThreadNewAndRunParamsToolResources `json:"tool_resources,omitzero"`
 	// Override the tools the assistant can use for this run. This is useful for
 	// modifying the behavior on a per-run basis.
-	Tools []BetaThreadNewAndRunParamsToolUnion `json:"tools,omitzero"`
+	Tools []AssistantToolUnionParam `json:"tools,omitzero"`
 	// Controls for how a thread will be truncated prior to the run. Use this to
 	// control the intial context window of the run.
 	TruncationStrategy BetaThreadNewAndRunParamsTruncationStrategy `json:"truncation_strategy,omitzero"`
@@ -1602,64 +1602,6 @@ func (f BetaThreadNewAndRunParamsToolResourcesFileSearch) IsPresent() bool {
 func (r BetaThreadNewAndRunParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsToolResourcesFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type BetaThreadNewAndRunParamsToolUnion struct {
-	OfCodeInterpreterTool *CodeInterpreterToolParam `json:",omitzero,inline"`
-	OfFileSearchTool      *FileSearchToolParam      `json:",omitzero,inline"`
-	OfFunctionTool        *FunctionToolParam        `json:",omitzero,inline"`
-	paramUnion
-}
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadNewAndRunParamsToolUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
-func (u BetaThreadNewAndRunParamsToolUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewAndRunParamsToolUnion](u.OfCodeInterpreterTool, u.OfFileSearchTool, u.OfFunctionTool)
-}
-
-func (u *BetaThreadNewAndRunParamsToolUnion) asAny() any {
-	if !param.IsOmitted(u.OfCodeInterpreterTool) {
-		return u.OfCodeInterpreterTool
-	} else if !param.IsOmitted(u.OfFileSearchTool) {
-		return u.OfFileSearchTool
-	} else if !param.IsOmitted(u.OfFunctionTool) {
-		return u.OfFunctionTool
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u BetaThreadNewAndRunParamsToolUnion) GetFileSearch() *FileSearchToolFileSearchParam {
-	if vt := u.OfFileSearchTool; vt != nil {
-		return &vt.FileSearch
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u BetaThreadNewAndRunParamsToolUnion) GetFunction() *shared.FunctionDefinitionParam {
-	if vt := u.OfFunctionTool; vt != nil {
-		return &vt.Function
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u BetaThreadNewAndRunParamsToolUnion) GetType() *string {
-	if vt := u.OfCodeInterpreterTool; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfFileSearchTool; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfFunctionTool; vt != nil {
-		return (*string)(&vt.Type)
-	}
-	return nil
 }
 
 // Controls for how a thread will be truncated prior to the run. Use this to
