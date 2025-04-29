@@ -169,17 +169,26 @@ func WithQueryDel(key string) RequestOption {
 // [sjson format]: https://github.com/tidwall/sjson
 func WithJSONSet(key string, value interface{}) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) (err error) {
-		if buffer, ok := r.Body.(*bytes.Buffer); ok {
-			b := buffer.Bytes()
+		var b []byte
+
+		if r.Body == nil {
+			b, err = sjson.SetBytes(nil, key, value)
+			if err != nil {
+				return err
+			}
+		} else if buffer, ok := r.Body.(*bytes.Buffer); ok {
+			b = buffer.Bytes()
 			b, err = sjson.SetBytes(b, key, value)
 			if err != nil {
 				return err
 			}
-			r.Body = bytes.NewBuffer(b)
 			return nil
+		} else {
+			return fmt.Errorf("cannot use WithJSONSet on a body that is not serialized as *bytes.Buffer")
 		}
 
-		return fmt.Errorf("cannot use WithJSONSet on a body that is not serialized as *bytes.Buffer")
+		r.Body = bytes.NewBuffer(b)
+		return nil
 	})
 }
 
