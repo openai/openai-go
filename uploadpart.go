@@ -91,7 +91,7 @@ func (r *UploadPart) UnmarshalJSON(data []byte) error {
 
 type UploadPartNewParams struct {
 	// The chunk of bytes for this Part.
-	Data io.Reader `json:"data,required" format:"binary"`
+	Data io.Reader `json:"data,omitzero,required" format:"binary"`
 	paramObj
 }
 

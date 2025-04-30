@@ -3,6 +3,7 @@ package apiform
 import (
 	"bytes"
 	"github.com/openai/openai-go/packages/param"
+	"io"
 	"mime/multipart"
 	"strings"
 	"testing"
@@ -102,6 +103,7 @@ type UnionTime time.Time
 func (UnionTime) union() {}
 
 type ReaderStruct struct {
+	File io.Reader `form:"file"`
 }
 
 type NamedEnum string
@@ -125,6 +127,18 @@ var tests = map[string]struct {
 	buf string
 	val any
 }{
+	"file": {
+		buf: `--xxx
+Content-Disposition: form-data; name="file"; filename="anonymous_file"
+Content-Type: application/octet-stream
+
+some file contents...
+--xxx--
+`,
+		val: ReaderStruct{
+			File: io.Reader(bytes.NewBuffer([]byte("some file contents..."))),
+		},
+	},
 	"map_string": {
 		`--xxx
 Content-Disposition: form-data; name="foo"

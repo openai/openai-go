@@ -325,7 +325,7 @@ func (r *TranscriptionTextDoneEventLogprob) UnmarshalJSON(data []byte) error {
 type AudioTranscriptionNewParams struct {
 	// The audio file object (not file name) to transcribe, in one of these formats:
 	// flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm.
-	File io.Reader `json:"file,required" format:"binary"`
+	File io.Reader `json:"file,omitzero,required" format:"binary"`
 	// ID of the model to use. The options are `gpt-4o-transcribe`,
 	// `gpt-4o-mini-transcribe`, and `whisper-1` (which is powered by our open source
 	// Whisper V2 model).

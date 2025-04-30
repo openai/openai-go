@@ -112,7 +112,7 @@ func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
 	if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
 		return e.newTimeTypeEncoder()
 	}
-	if t.ConvertibleTo(reflect.TypeOf((*io.Reader)(nil)).Elem()) {
+	if t.Implements(reflect.TypeOf((*io.Reader)(nil)).Elem()) {
 		return e.newReaderTypeEncoder()
 	}
 	e.root = false
@@ -352,27 +352,6 @@ func (e *encoder) newStructUnionTypeEncoder(t reflect.Type) encoderFunc {
 	}
 }
 
-func (e *encoder) newFieldTypeEncoder(t reflect.Type) encoderFunc {
-	f, _ := t.FieldByName("Value")
-	enc := e.typeEncoder(f.Type)
-
-	return func(key string, value reflect.Value, writer *multipart.Writer) error {
-		present := value.FieldByName("Present")
-		if !present.Bool() {
-			return nil
-		}
-		null := value.FieldByName("Null")
-		if null.Bool() {
-			return nil
-		}
-		raw := value.FieldByName("Raw")
-		if !raw.IsNil() {
-			return e.typeEncoder(raw.Type())(key, raw, writer)
-		}
-		return enc(key, value.FieldByName("Value"), writer)
-	}
-}
-
 func (e *encoder) newTimeTypeEncoder() encoderFunc {
 	format := e.dateFormat
 	return func(key string, value reflect.Value, writer *multipart.Writer) error {
@@ -398,7 +377,10 @@ func escapeQuotes(s string) string {
 
 func (e *encoder) newReaderTypeEncoder() encoderFunc {
 	return func(key string, value reflect.Value, writer *multipart.Writer) error {
-		reader := value.Convert(reflect.TypeOf((*io.Reader)(nil)).Elem()).Interface().(io.Reader)
+		reader, ok := value.Convert(reflect.TypeOf((*io.Reader)(nil)).Elem()).Interface().(io.Reader)
+		if !ok {
+			return nil
+		}
 		filename := "anonymous_file"
 		contentType := "application/octet-stream"
 		if named, ok := reader.(interface{ Filename() string }); ok {

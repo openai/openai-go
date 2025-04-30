@@ -177,7 +177,7 @@ func (r *ImagesResponseUsageInputTokensDetails) UnmarshalJSON(data []byte) error
 type ImageNewVariationParams struct {
 	// The image to use as the basis for the variation(s). Must be a valid PNG file,
 	// less than 4MB, and square.
-	Image io.Reader `json:"image,required" format:"binary"`
+	Image io.Reader `json:"image,omitzero,required" format:"binary"`
 	// The number of images to generate. Must be between 1 and 10.
 	N param.Opt[int64] `json:"n,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
@@ -282,7 +282,7 @@ type ImageEditParams struct {
 	// indicate where `image` should be edited. If there are multiple images provided,
 	// the mask will be applied on the first image. Must be a valid PNG file, less than
 	// 4MB, and have the same dimensions as `image`.
-	Mask io.Reader `json:"mask" format:"binary"`
+	Mask io.Reader `json:"mask,omitzero" format:"binary"`
 	paramObj
 }
 
@@ -309,8 +309,8 @@ func (r ImageEditParams) MarshalMultipart() (data []byte, contentType string, er
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ImageEditParamsImageUnion struct {
-	OfFile                 param.Opt[io.Reader] `json:",omitzero,inline"`
-	OfImageEditsImageArray []io.Reader          `json:",omitzero,inline"`
+	OfFile                 io.Reader   `json:",omitzero,inline"`
+	OfImageEditsImageArray []io.Reader `json:",omitzero,inline"`
 	paramUnion
 }
 
