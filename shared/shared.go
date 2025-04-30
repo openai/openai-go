@@ -552,15 +552,20 @@ func (r ResponseFormatJSONObject) ToParam() ResponseFormatJSONObjectParam {
 	return param.OverrideObj[ResponseFormatJSONObjectParam](r.RawJSON())
 }
 
+func NewResponseFormatJSONObjectParam() ResponseFormatJSONObjectParam {
+	return ResponseFormatJSONObjectParam{
+		Type: "json_object",
+	}
+}
+
 // JSON object response format. An older method of generating JSON responses. Using
 // `json_schema` is recommended for models that support it. Note that the model
 // will not generate JSON without a system or user message instructing it to do so.
 //
-// The property Type is required.
+// This struct has a constant value, construct it with
+// [NewResponseFormatJSONObjectParam].
 type ResponseFormatJSONObjectParam struct {
 	// The type of response format being defined. Always `json_object`.
-	//
-	// This field can be elided, and will marshal its zero value as "json_object".
 	Type constant.JSONObject `json:"type,required"`
 	paramObj
 }
@@ -727,13 +732,18 @@ func (r ResponseFormatText) ToParam() ResponseFormatTextParam {
 	return param.OverrideObj[ResponseFormatTextParam](r.RawJSON())
 }
 
+func NewResponseFormatTextParam() ResponseFormatTextParam {
+	return ResponseFormatTextParam{
+		Type: "text",
+	}
+}
+
 // Default response format. Used to generate text responses.
 //
-// The property Type is required.
+// This struct has a constant value, construct it with
+// [NewResponseFormatTextParam].
 type ResponseFormatTextParam struct {
 	// The type of response format being defined. Always `text`.
-	//
-	// This field can be elided, and will marshal its zero value as "text".
 	Type constant.Text `json:"type,required"`
 	paramObj
 }

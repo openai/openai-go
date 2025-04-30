@@ -2125,14 +2125,19 @@ func (r ResponseComputerToolCallActionMoveParam) MarshalJSON() (data []byte, err
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 
+func NewResponseComputerToolCallActionScreenshotParam() ResponseComputerToolCallActionScreenshotParam {
+	return ResponseComputerToolCallActionScreenshotParam{
+		Type: "screenshot",
+	}
+}
+
 // A screenshot action.
 //
-// The property Type is required.
+// This struct has a constant value, construct it with
+// [NewResponseComputerToolCallActionScreenshotParam].
 type ResponseComputerToolCallActionScreenshotParam struct {
 	// Specifies the event type. For a screenshot action, this property is always set
 	// to `screenshot`.
-	//
-	// This field can be elided, and will marshal its zero value as "screenshot".
 	Type constant.Screenshot `json:"type,required"`
 	paramObj
 }
@@ -2201,14 +2206,19 @@ func (r ResponseComputerToolCallActionTypeParam) MarshalJSON() (data []byte, err
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 
+func NewResponseComputerToolCallActionWaitParam() ResponseComputerToolCallActionWaitParam {
+	return ResponseComputerToolCallActionWaitParam{
+		Type: "wait",
+	}
+}
+
 // A wait action.
 //
-// The property Type is required.
+// This struct has a constant value, construct it with
+// [NewResponseComputerToolCallActionWaitParam].
 type ResponseComputerToolCallActionWaitParam struct {
 	// Specifies the event type. For a wait action, this property is always set to
 	// `wait`.
-	//
-	// This field can be elided, and will marshal its zero value as "wait".
 	Type constant.Wait `json:"type,required"`
 	paramObj
 }

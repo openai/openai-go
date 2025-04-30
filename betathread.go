@@ -755,11 +755,16 @@ func init() {
 	)
 }
 
-// The property Type is required.
+func NewBetaThreadNewParamsMessageAttachmentToolFileSearch() BetaThreadNewParamsMessageAttachmentToolFileSearch {
+	return BetaThreadNewParamsMessageAttachmentToolFileSearch{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewBetaThreadNewParamsMessageAttachmentToolFileSearch].
 type BetaThreadNewParamsMessageAttachmentToolFileSearch struct {
 	// The type of tool being defined: `file_search`
-	//
-	// This field can be elided, and will marshal its zero value as "file_search".
 	Type constant.FileSearch `json:"type,required"`
 	paramObj
 }
@@ -923,14 +928,19 @@ func init() {
 	)
 }
 
+func NewBetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto() BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto {
+	return BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto{
+		Type: "auto",
+	}
+}
+
 // The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
 // `800` and `chunk_overlap_tokens` of `400`.
 //
-// The property Type is required.
+// This struct has a constant value, construct it with
+// [NewBetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto].
 type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto struct {
 	// Always `auto`.
-	//
-	// This field can be elided, and will marshal its zero value as "auto".
 	Type constant.Auto `json:"type,required"`
 	paramObj
 }
@@ -1338,11 +1348,16 @@ func init() {
 	)
 }
 
-// The property Type is required.
+func NewBetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch() BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch {
+	return BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewBetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch].
 type BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch struct {
 	// The type of tool being defined: `file_search`
-	//
-	// This field can be elided, and will marshal its zero value as "file_search".
 	Type constant.FileSearch `json:"type,required"`
 	paramObj
 }
@@ -1508,14 +1523,19 @@ func init() {
 	)
 }
 
+func NewBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto() BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto {
+	return BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto{
+		Type: "auto",
+	}
+}
+
 // The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
 // `800` and `chunk_overlap_tokens` of `400`.
 //
-// The property Type is required.
+// This struct has a constant value, construct it with
+// [NewBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto].
 type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto struct {
 	// Always `auto`.
-	//
-	// This field can be elided, and will marshal its zero value as "auto".
 	Type constant.Auto `json:"type,required"`
 	paramObj
 }
