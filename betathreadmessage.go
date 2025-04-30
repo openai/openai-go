@@ -1672,11 +1672,16 @@ func init() {
 	)
 }
 
-// The property Type is required.
+func NewBetaThreadMessageNewParamsAttachmentToolFileSearch() BetaThreadMessageNewParamsAttachmentToolFileSearch {
+	return BetaThreadMessageNewParamsAttachmentToolFileSearch{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewBetaThreadMessageNewParamsAttachmentToolFileSearch].
 type BetaThreadMessageNewParamsAttachmentToolFileSearch struct {
 	// The type of tool being defined: `file_search`
-	//
-	// This field can be elided, and will marshal its zero value as "file_search".
 	Type constant.FileSearch `json:"type,required"`
 	paramObj
 }

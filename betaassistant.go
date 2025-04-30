@@ -1551,11 +1551,16 @@ func (r CodeInterpreterTool) ToParam() CodeInterpreterToolParam {
 	return param.OverrideObj[CodeInterpreterToolParam](r.RawJSON())
 }
 
-// The property Type is required.
+func NewCodeInterpreterToolParam() CodeInterpreterToolParam {
+	return CodeInterpreterToolParam{
+		Type: "code_interpreter",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewCodeInterpreterToolParam].
 type CodeInterpreterToolParam struct {
 	// The type of tool being defined: `code_interpreter`
-	//
-	// This field can be elided, and will marshal its zero value as "code_interpreter".
 	Type constant.CodeInterpreter `json:"type,required"`
 	paramObj
 }
@@ -2027,14 +2032,19 @@ func init() {
 	)
 }
 
+func NewBetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto() BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto {
+	return BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto{
+		Type: "auto",
+	}
+}
+
 // The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
 // `800` and `chunk_overlap_tokens` of `400`.
 //
-// The property Type is required.
+// This struct has a constant value, construct it with
+// [NewBetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto].
 type BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto struct {
 	// Always `auto`.
-	//
-	// This field can be elided, and will marshal its zero value as "auto".
 	Type constant.Auto `json:"type,required"`
 	paramObj
 }

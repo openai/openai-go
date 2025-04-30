@@ -146,14 +146,19 @@ func (r *VectorStoreService) SearchAutoPaging(ctx context.Context, vectorStoreID
 	return pagination.NewPageAutoPager(r.Search(ctx, vectorStoreID, body, opts...))
 }
 
+func NewAutoFileChunkingStrategyParam() AutoFileChunkingStrategyParam {
+	return AutoFileChunkingStrategyParam{
+		Type: "auto",
+	}
+}
+
 // The default strategy. This strategy currently uses a `max_chunk_size_tokens` of
 // `800` and `chunk_overlap_tokens` of `400`.
 //
-// The property Type is required.
+// This struct has a constant value, construct it with
+// [NewAutoFileChunkingStrategyParam].
 type AutoFileChunkingStrategyParam struct {
 	// Always `auto`.
-	//
-	// This field can be elided, and will marshal its zero value as "auto".
 	Type constant.Auto `json:"type,required"`
 	paramObj
 }
