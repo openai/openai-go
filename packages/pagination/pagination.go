@@ -149,7 +149,10 @@ func (r *CursorPage[T]) GetNextPage() (res *CursorPage[T], err error) {
 	cfg := r.cfg.Clone(r.cfg.Context)
 	value := reflect.ValueOf(items[len(items)-1])
 	field := value.FieldByName("ID")
-	cfg.Apply(option.WithQuery("after", field.Interface().(string)))
+	err = cfg.Apply(option.WithQuery("after", field.Interface().(string)))
+	if err != nil {
+		return nil, err
+	}
 	var raw *http.Response
 	cfg.ResponseInto = &raw
 	cfg.ResponseBodyInto = &res
