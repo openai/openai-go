@@ -64,7 +64,7 @@ func (r *Translation) UnmarshalJSON(data []byte) error {
 type AudioTranslationNewParams struct {
 	// The audio file object (not file name) translate, in one of these formats: flac,
 	// mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm.
-	File io.Reader `json:"file,required" format:"binary"`
+	File io.Reader `json:"file,omitzero,required" format:"binary"`
 	// ID of the model to use. Only `whisper-1` (which is powered by our open source
 	// Whisper V2 model) is currently available.
 	Model AudioModel `json:"model,omitzero,required"`
