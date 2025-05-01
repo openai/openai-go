@@ -429,11 +429,14 @@ type Reasoning struct {
 	//
 	// Any of "concise", "detailed".
 	GenerateSummary ReasoningGenerateSummary `json:"generate_summary,nullable"`
+
+	Summary ReasoningGenerateSummary `json:"summary,nullable"`
 	// Metadata for the response, check the presence of optional fields with the
 	// [resp.Field.IsPresent] method.
 	JSON struct {
 		Effort          resp.Field
 		GenerateSummary resp.Field
+		Summary         resp.Field
 		ExtraFields     map[string]resp.Field
 		raw             string
 	} `json:"-"`
@@ -488,6 +491,7 @@ type ReasoningParam struct {
 	//
 	// Any of "concise", "detailed".
 	GenerateSummary ReasoningGenerateSummary `json:"generate_summary,omitzero"`
+	Summary         ReasoningGenerateSummary `json:"summary,nullable"`
 	paramObj
 }
 
