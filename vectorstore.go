@@ -832,8 +832,8 @@ func (r VectorStoreSearchParams) MarshalJSON() (data []byte, err error) {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type VectorStoreSearchParamsQueryUnion struct {
-	OfString                       param.Opt[string] `json:",omitzero,inline"`
-	OfVectorStoreSearchsQueryArray []string          `json:",omitzero,inline"`
+	OfString      param.Opt[string] `json:",omitzero,inline"`
+	OfStringArray []string          `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -843,14 +843,14 @@ func (u VectorStoreSearchParamsQueryUnion) IsPresent() bool {
 	return !param.IsOmitted(u) && !u.IsNull()
 }
 func (u VectorStoreSearchParamsQueryUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[VectorStoreSearchParamsQueryUnion](u.OfString, u.OfVectorStoreSearchsQueryArray)
+	return param.MarshalUnion[VectorStoreSearchParamsQueryUnion](u.OfString, u.OfStringArray)
 }
 
 func (u *VectorStoreSearchParamsQueryUnion) asAny() any {
 	if !param.IsOmitted(u.OfString) {
 		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfVectorStoreSearchsQueryArray) {
-		return &u.OfVectorStoreSearchsQueryArray
+	} else if !param.IsOmitted(u.OfStringArray) {
+		return &u.OfStringArray
 	}
 	return nil
 }

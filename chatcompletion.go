@@ -2489,8 +2489,8 @@ const (
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ChatCompletionNewParamsStopUnion struct {
-	OfString                      param.Opt[string] `json:",omitzero,inline"`
-	OfChatCompletionNewsStopArray []string          `json:",omitzero,inline"`
+	OfString      param.Opt[string] `json:",omitzero,inline"`
+	OfStringArray []string          `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -2498,14 +2498,14 @@ type ChatCompletionNewParamsStopUnion struct {
 // "null". To check if this field is omitted, use [param.IsOmitted].
 func (u ChatCompletionNewParamsStopUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
 func (u ChatCompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionNewParamsStopUnion](u.OfString, u.OfChatCompletionNewsStopArray)
+	return param.MarshalUnion[ChatCompletionNewParamsStopUnion](u.OfString, u.OfStringArray)
 }
 
 func (u *ChatCompletionNewParamsStopUnion) asAny() any {
 	if !param.IsOmitted(u.OfString) {
 		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfChatCompletionNewsStopArray) {
-		return &u.OfChatCompletionNewsStopArray
+	} else if !param.IsOmitted(u.OfStringArray) {
+		return &u.OfStringArray
 	}
 	return nil
 }
