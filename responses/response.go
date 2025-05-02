@@ -115,12 +115,12 @@ func (r *ResponseService) Delete(ctx context.Context, responseID string, opts ..
 // [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
 type ComputerTool struct {
 	// The height of the computer display.
-	DisplayHeight float64 `json:"display_height,required"`
+	DisplayHeight int64 `json:"display_height,required"`
 	// The width of the computer display.
-	DisplayWidth float64 `json:"display_width,required"`
+	DisplayWidth int64 `json:"display_width,required"`
 	// The type of computer environment to control.
 	//
-	// Any of "mac", "windows", "ubuntu", "browser".
+	// Any of "windows", "mac", "linux", "ubuntu", "browser".
 	Environment ComputerToolEnvironment `json:"environment,required"`
 	// The type of the computer use tool. Always `computer_use_preview`.
 	Type constant.ComputerUsePreview `json:"type,required"`
@@ -155,8 +155,9 @@ func (r ComputerTool) ToParam() ComputerToolParam {
 type ComputerToolEnvironment string
 
 const (
-	ComputerToolEnvironmentMac     ComputerToolEnvironment = "mac"
 	ComputerToolEnvironmentWindows ComputerToolEnvironment = "windows"
+	ComputerToolEnvironmentMac     ComputerToolEnvironment = "mac"
+	ComputerToolEnvironmentLinux   ComputerToolEnvironment = "linux"
 	ComputerToolEnvironmentUbuntu  ComputerToolEnvironment = "ubuntu"
 	ComputerToolEnvironmentBrowser ComputerToolEnvironment = "browser"
 )
@@ -167,12 +168,12 @@ const (
 // The properties DisplayHeight, DisplayWidth, Environment, Type are required.
 type ComputerToolParam struct {
 	// The height of the computer display.
-	DisplayHeight float64 `json:"display_height,required"`
+	DisplayHeight int64 `json:"display_height,required"`
 	// The width of the computer display.
-	DisplayWidth float64 `json:"display_width,required"`
+	DisplayWidth int64 `json:"display_width,required"`
 	// The type of computer environment to control.
 	//
-	// Any of "mac", "windows", "ubuntu", "browser".
+	// Any of "windows", "mac", "linux", "ubuntu", "browser".
 	Environment ComputerToolEnvironment `json:"environment,omitzero,required"`
 	// The type of the computer use tool. Always `computer_use_preview`.
 	//
@@ -274,8 +275,8 @@ type FileSearchTool struct {
 	Type constant.FileSearch `json:"type,required"`
 	// The IDs of the vector stores to search.
 	VectorStoreIDs []string `json:"vector_store_ids,required"`
-	// A filter to apply based on file attributes.
-	Filters FileSearchToolFiltersUnion `json:"filters"`
+	// A filter to apply.
+	Filters FileSearchToolFiltersUnion `json:"filters,nullable"`
 	// The maximum number of results to return. This number should be between 1 and 50
 	// inclusive.
 	MaxNumResults int64 `json:"max_num_results"`
@@ -386,7 +387,7 @@ type FileSearchToolParam struct {
 	// The maximum number of results to return. This number should be between 1 and 50
 	// inclusive.
 	MaxNumResults param.Opt[int64] `json:"max_num_results,omitzero"`
-	// A filter to apply based on file attributes.
+	// A filter to apply.
 	Filters FileSearchToolFiltersUnionParam `json:"filters,omitzero"`
 	// Ranking options for search.
 	RankingOptions FileSearchToolRankingOptionsParam `json:"ranking_options,omitzero"`
@@ -544,12 +545,12 @@ func (r FunctionTool) ToParam() FunctionToolParam {
 //
 // The properties Name, Parameters, Strict, Type are required.
 type FunctionToolParam struct {
-	// The name of the function to call.
-	Name string `json:"name,required"`
+	// Whether to enforce strict parameter validation. Default `true`.
+	Strict param.Opt[bool] `json:"strict,omitzero,required"`
 	// A JSON schema object describing the parameters of the function.
 	Parameters map[string]any `json:"parameters,omitzero,required"`
-	// Whether to enforce strict parameter validation. Default `true`.
-	Strict bool `json:"strict,required"`
+	// The name of the function to call.
+	Name string `json:"name,required"`
 	// A description of the function. Used by the model to determine whether or not to
 	// call the function.
 	Description param.Opt[string] `json:"description,omitzero"`
@@ -3620,12 +3621,18 @@ func (r *ResponseInProgressEvent) UnmarshalJSON(data []byte) error {
 //   - `message.input_image.image_url`: Include image urls from the input message.
 //   - `computer_call_output.output.image_url`: Include image urls from the computer
 //     call output.
+//   - `reasoning.encrypted_content`: Includes an encrypted version of reasoning
+//     tokens in reasoning item outputs. This enables reasoning items to be used in
+//     multi-turn conversations when using the Responses API statelessly (like when
+//     the `store` parameter is set to `false`, or when an organization is enrolled
+//     in the zero data retention program).
 type ResponseIncludable string
 
 const (
 	ResponseIncludableFileSearchCallResults            ResponseIncludable = "file_search_call.results"
 	ResponseIncludableMessageInputImageImageURL        ResponseIncludable = "message.input_image.image_url"
 	ResponseIncludableComputerCallOutputOutputImageURL ResponseIncludable = "computer_call_output.output.image_url"
+	ResponseIncludableReasoningEncryptedContent        ResponseIncludable = "reasoning.encrypted_content"
 )
 
 // An event that is emitted when a response finishes as incomplete.
@@ -3878,7 +3885,7 @@ type ResponseInputFile struct {
 	// The content of the file to be sent to the model.
 	FileData string `json:"file_data"`
 	// The ID of the file to be sent to the model.
-	FileID string `json:"file_id"`
+	FileID string `json:"file_id,nullable"`
 	// The name of the file to be sent to the model.
 	Filename string `json:"filename"`
 	// Metadata for the response, check the presence of optional fields with the
@@ -3912,10 +3919,10 @@ func (r ResponseInputFile) ToParam() ResponseInputFileParam {
 //
 // The property Type is required.
 type ResponseInputFileParam struct {
-	// The content of the file to be sent to the model.
-	FileData param.Opt[string] `json:"file_data,omitzero"`
 	// The ID of the file to be sent to the model.
 	FileID param.Opt[string] `json:"file_id,omitzero"`
+	// The content of the file to be sent to the model.
+	FileData param.Opt[string] `json:"file_data,omitzero"`
 	// The name of the file to be sent to the model.
 	Filename param.Opt[string] `json:"filename,omitzero"`
 	// The type of the input item. Always `input_file`.
@@ -3939,7 +3946,7 @@ type ResponseInputImage struct {
 	// The detail level of the image to be sent to the model. One of `high`, `low`, or
 	// `auto`. Defaults to `auto`.
 	//
-	// Any of "high", "low", "auto".
+	// Any of "low", "high", "auto".
 	Detail ResponseInputImageDetail `json:"detail,required"`
 	// The type of the input item. Always `input_image`.
 	Type constant.InputImage `json:"type,required"`
@@ -3980,8 +3987,8 @@ func (r ResponseInputImage) ToParam() ResponseInputImageParam {
 type ResponseInputImageDetail string
 
 const (
-	ResponseInputImageDetailHigh ResponseInputImageDetail = "high"
 	ResponseInputImageDetailLow  ResponseInputImageDetail = "low"
+	ResponseInputImageDetailHigh ResponseInputImageDetail = "high"
 	ResponseInputImageDetailAuto ResponseInputImageDetail = "auto"
 )
 
@@ -3993,7 +4000,7 @@ type ResponseInputImageParam struct {
 	// The detail level of the image to be sent to the model. One of `high`, `low`, or
 	// `auto`. Defaults to `auto`.
 	//
-	// Any of "high", "low", "auto".
+	// Any of "low", "high", "auto".
 	Detail ResponseInputImageDetail `json:"detail,omitzero,required"`
 	// The ID of the file to be sent to the model.
 	FileID param.Opt[string] `json:"file_id,omitzero"`
@@ -4214,6 +4221,14 @@ func (u ResponseInputItemUnionParam) GetName() *string {
 func (u ResponseInputItemUnionParam) GetSummary() []ResponseReasoningItemSummaryParam {
 	if vt := u.OfReasoning; vt != nil {
 		return vt.Summary
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetEncryptedContent() *string {
+	if vt := u.OfReasoning; vt != nil && vt.EncryptedContent.IsPresent() {
+		return &vt.EncryptedContent.Value
 	}
 	return nil
 }
@@ -4519,20 +4534,20 @@ func (r ResponseInputItemComputerCallOutputParam) MarshalJSON() (data []byte, er
 
 func init() {
 	apijson.RegisterFieldValidator[ResponseInputItemComputerCallOutputParam](
-		"Status", false, "in_progress", "completed", "incomplete",
+		"Status", true, "in_progress", "completed", "incomplete",
 	)
 }
 
 // A pending safety check for the computer call.
 //
-// The properties ID, Code, Message are required.
+// The property ID is required.
 type ResponseInputItemComputerCallOutputAcknowledgedSafetyCheckParam struct {
 	// The ID of the pending safety check.
 	ID string `json:"id,required"`
 	// The type of the pending safety check.
-	Code string `json:"code,required"`
+	Code param.Opt[string] `json:"code,omitzero"`
 	// Details about the pending safety check.
-	Message string `json:"message,required"`
+	Message param.Opt[string] `json:"message,omitzero"`
 	paramObj
 }
 
@@ -4582,20 +4597,20 @@ func (r ResponseInputItemFunctionCallOutputParam) MarshalJSON() (data []byte, er
 
 func init() {
 	apijson.RegisterFieldValidator[ResponseInputItemFunctionCallOutputParam](
-		"Status", false, "in_progress", "completed", "incomplete",
+		"Status", true, "in_progress", "completed", "incomplete",
 	)
 }
 
 // An internal identifier for an item to reference.
 //
-// The properties ID, Type are required.
+// The property ID is required.
 type ResponseInputItemItemReferenceParam struct {
 	// The ID of the item to reference.
 	ID string `json:"id,required"`
 	// The type of item to reference. Always `item_reference`.
 	//
-	// This field can be elided, and will marshal its zero value as "item_reference".
-	Type constant.ItemReference `json:"type,required"`
+	// Any of "item_reference".
+	Type string `json:"type,omitzero"`
 	paramObj
 }
 
@@ -4607,6 +4622,12 @@ func (f ResponseInputItemItemReferenceParam) IsPresent() bool {
 func (r ResponseInputItemItemReferenceParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputItemItemReferenceParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemItemReferenceParam](
+		"Type", true, "item_reference",
+	)
 }
 
 type ResponseInputMessageContentList []ResponseInputContentUnion
@@ -4972,7 +4993,9 @@ type ResponseOutputItemUnion struct {
 	PendingSafetyChecks []ResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
 	// This field is from variant [ResponseReasoningItem].
 	Summary []ResponseReasoningItemSummary `json:"summary"`
-	JSON    struct {
+	// This field is from variant [ResponseReasoningItem].
+	EncryptedContent string `json:"encrypted_content"`
+	JSON             struct {
 		ID                  resp.Field
 		Content             resp.Field
 		Role                resp.Field
@@ -4986,6 +5009,7 @@ type ResponseOutputItemUnion struct {
 		Action              resp.Field
 		PendingSafetyChecks resp.Field
 		Summary             resp.Field
+		EncryptedContent    resp.Field
 		raw                 string
 	} `json:"-"`
 }
@@ -5826,7 +5850,9 @@ func (r ResponseOutputTextAnnotationFilePathParam) MarshalJSON() (data []byte, e
 }
 
 // A description of the chain of thought used by a reasoning model while generating
-// a response.
+// a response. Be sure to include these items in your `input` to the Responses API
+// for subsequent turns of a conversation if you are manually
+// [managing context](https://platform.openai.com/docs/guides/conversation-state).
 type ResponseReasoningItem struct {
 	// The unique identifier of the reasoning content.
 	ID string `json:"id,required"`
@@ -5834,6 +5860,9 @@ type ResponseReasoningItem struct {
 	Summary []ResponseReasoningItemSummary `json:"summary,required"`
 	// The type of the object. Always `reasoning`.
 	Type constant.Reasoning `json:"type,required"`
+	// The encrypted content of the reasoning item - populated when a response is
+	// generated with `reasoning.encrypted_content` in the `include` parameter.
+	EncryptedContent string `json:"encrypted_content,nullable"`
 	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
 	// Populated when items are returned via API.
 	//
@@ -5842,12 +5871,13 @@ type ResponseReasoningItem struct {
 	// Metadata for the response, check the presence of optional fields with the
 	// [resp.Field.IsPresent] method.
 	JSON struct {
-		ID          resp.Field
-		Summary     resp.Field
-		Type        resp.Field
-		Status      resp.Field
-		ExtraFields map[string]resp.Field
-		raw         string
+		ID               resp.Field
+		Summary          resp.Field
+		Type             resp.Field
+		EncryptedContent resp.Field
+		Status           resp.Field
+		ExtraFields      map[string]resp.Field
+		raw              string
 	} `json:"-"`
 }
 
@@ -5898,7 +5928,9 @@ const (
 )
 
 // A description of the chain of thought used by a reasoning model while generating
-// a response.
+// a response. Be sure to include these items in your `input` to the Responses API
+// for subsequent turns of a conversation if you are manually
+// [managing context](https://platform.openai.com/docs/guides/conversation-state).
 //
 // The properties ID, Summary, Type are required.
 type ResponseReasoningItemParam struct {
@@ -5906,6 +5938,9 @@ type ResponseReasoningItemParam struct {
 	ID string `json:"id,required"`
 	// Reasoning text contents.
 	Summary []ResponseReasoningItemSummaryParam `json:"summary,omitzero,required"`
+	// The encrypted content of the reasoning item - populated when a response is
+	// generated with `reasoning.encrypted_content` in the `include` parameter.
+	EncryptedContent param.Opt[string] `json:"encrypted_content,omitzero"`
 	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
 	// Populated when items are returned via API.
 	//
@@ -7164,13 +7199,13 @@ func (r *ResponseWebSearchCallSearchingEvent) UnmarshalJSON(data []byte) error {
 }
 
 // ToolUnion contains all possible properties and values from [FileSearchTool],
-// [FunctionTool], [ComputerTool], [WebSearchTool].
+// [FunctionTool], [WebSearchTool], [ComputerTool].
 //
 // Use the [ToolUnion.AsAny] method to switch on the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ToolUnion struct {
-	// Any of "file_search", "function", "computer_use_preview", nil.
+	// Any of "file_search", "function", nil, "computer_use_preview".
 	Type string `json:"type"`
 	// This field is from variant [FileSearchTool].
 	VectorStoreIDs []string `json:"vector_store_ids"`
@@ -7188,17 +7223,17 @@ type ToolUnion struct {
 	Strict bool `json:"strict"`
 	// This field is from variant [FunctionTool].
 	Description string `json:"description"`
-	// This field is from variant [ComputerTool].
-	DisplayHeight float64 `json:"display_height"`
-	// This field is from variant [ComputerTool].
-	DisplayWidth float64 `json:"display_width"`
-	// This field is from variant [ComputerTool].
-	Environment ComputerToolEnvironment `json:"environment"`
 	// This field is from variant [WebSearchTool].
 	SearchContextSize WebSearchToolSearchContextSize `json:"search_context_size"`
 	// This field is from variant [WebSearchTool].
 	UserLocation WebSearchToolUserLocation `json:"user_location"`
-	JSON         struct {
+	// This field is from variant [ComputerTool].
+	DisplayHeight int64 `json:"display_height"`
+	// This field is from variant [ComputerTool].
+	DisplayWidth int64 `json:"display_width"`
+	// This field is from variant [ComputerTool].
+	Environment ComputerToolEnvironment `json:"environment"`
+	JSON        struct {
 		Type              resp.Field
 		VectorStoreIDs    resp.Field
 		Filters           resp.Field
@@ -7208,11 +7243,11 @@ type ToolUnion struct {
 		Parameters        resp.Field
 		Strict            resp.Field
 		Description       resp.Field
+		SearchContextSize resp.Field
+		UserLocation      resp.Field
 		DisplayHeight     resp.Field
 		DisplayWidth      resp.Field
 		Environment       resp.Field
-		SearchContextSize resp.Field
-		UserLocation      resp.Field
 		raw               string
 	} `json:"-"`
 }
@@ -7227,12 +7262,12 @@ func (u ToolUnion) AsFunction() (v FunctionTool) {
 	return
 }
 
-func (u ToolUnion) AsComputerUsePreview() (v ComputerTool) {
+func (u ToolUnion) AsWebSearchPreview() (v WebSearchTool) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u ToolUnion) AsWebSearch() (v WebSearchTool) {
+func (u ToolUnion) AsComputerUsePreview() (v ComputerTool) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -7263,22 +7298,22 @@ func ToolParamOfFunction(name string, parameters map[string]any, strict bool) To
 	var function FunctionToolParam
 	function.Name = name
 	function.Parameters = parameters
-	function.Strict = strict
+	function.Strict = param.NewOpt(strict)
 	return ToolUnionParam{OfFunction: &function}
 }
 
-func ToolParamOfComputerUsePreview(displayHeight float64, displayWidth float64, environment ComputerToolEnvironment) ToolUnionParam {
+func ToolParamOfWebSearchPreview(type_ WebSearchToolType) ToolUnionParam {
+	var variant WebSearchToolParam
+	variant.Type = type_
+	return ToolUnionParam{OfWebSearchPreview: &variant}
+}
+
+func ToolParamOfComputerUsePreview(displayHeight int64, displayWidth int64, environment ComputerToolEnvironment) ToolUnionParam {
 	var computerUsePreview ComputerToolParam
 	computerUsePreview.DisplayHeight = displayHeight
 	computerUsePreview.DisplayWidth = displayWidth
 	computerUsePreview.Environment = environment
 	return ToolUnionParam{OfComputerUsePreview: &computerUsePreview}
-}
-
-func ToolParamOfWebSearch(type_ WebSearchToolType) ToolUnionParam {
-	var variant WebSearchToolParam
-	variant.Type = type_
-	return ToolUnionParam{OfWebSearch: &variant}
 }
 
 // Only one field can be non-zero.
@@ -7287,8 +7322,8 @@ func ToolParamOfWebSearch(type_ WebSearchToolType) ToolUnionParam {
 type ToolUnionParam struct {
 	OfFileSearch         *FileSearchToolParam `json:",omitzero,inline"`
 	OfFunction           *FunctionToolParam   `json:",omitzero,inline"`
+	OfWebSearchPreview   *WebSearchToolParam  `json:",omitzero,inline"`
 	OfComputerUsePreview *ComputerToolParam   `json:",omitzero,inline"`
-	OfWebSearch          *WebSearchToolParam  `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -7296,7 +7331,7 @@ type ToolUnionParam struct {
 // "null". To check if this field is omitted, use [param.IsOmitted].
 func (u ToolUnionParam) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
 func (u ToolUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ToolUnionParam](u.OfFileSearch, u.OfFunction, u.OfComputerUsePreview, u.OfWebSearch)
+	return param.MarshalUnion[ToolUnionParam](u.OfFileSearch, u.OfFunction, u.OfWebSearchPreview, u.OfComputerUsePreview)
 }
 
 func (u *ToolUnionParam) asAny() any {
@@ -7304,10 +7339,10 @@ func (u *ToolUnionParam) asAny() any {
 		return u.OfFileSearch
 	} else if !param.IsOmitted(u.OfFunction) {
 		return u.OfFunction
+	} else if !param.IsOmitted(u.OfWebSearchPreview) {
+		return u.OfWebSearchPreview
 	} else if !param.IsOmitted(u.OfComputerUsePreview) {
 		return u.OfComputerUsePreview
-	} else if !param.IsOmitted(u.OfWebSearch) {
-		return u.OfWebSearch
 	}
 	return nil
 }
@@ -7362,8 +7397,8 @@ func (u ToolUnionParam) GetParameters() map[string]any {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ToolUnionParam) GetStrict() *bool {
-	if vt := u.OfFunction; vt != nil {
-		return &vt.Strict
+	if vt := u.OfFunction; vt != nil && vt.Strict.IsPresent() {
+		return &vt.Strict.Value
 	}
 	return nil
 }
@@ -7377,7 +7412,23 @@ func (u ToolUnionParam) GetDescription() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ToolUnionParam) GetDisplayHeight() *float64 {
+func (u ToolUnionParam) GetSearchContextSize() *string {
+	if vt := u.OfWebSearchPreview; vt != nil {
+		return (*string)(&vt.SearchContextSize)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ToolUnionParam) GetUserLocation() *WebSearchToolUserLocationParam {
+	if vt := u.OfWebSearchPreview; vt != nil {
+		return &vt.UserLocation
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ToolUnionParam) GetDisplayHeight() *int64 {
 	if vt := u.OfComputerUsePreview; vt != nil {
 		return &vt.DisplayHeight
 	}
@@ -7385,7 +7436,7 @@ func (u ToolUnionParam) GetDisplayHeight() *float64 {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ToolUnionParam) GetDisplayWidth() *float64 {
+func (u ToolUnionParam) GetDisplayWidth() *int64 {
 	if vt := u.OfComputerUsePreview; vt != nil {
 		return &vt.DisplayWidth
 	}
@@ -7401,30 +7452,14 @@ func (u ToolUnionParam) GetEnvironment() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ToolUnionParam) GetSearchContextSize() *string {
-	if vt := u.OfWebSearch; vt != nil {
-		return (*string)(&vt.SearchContextSize)
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ToolUnionParam) GetUserLocation() *WebSearchToolUserLocationParam {
-	if vt := u.OfWebSearch; vt != nil {
-		return &vt.UserLocation
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u ToolUnionParam) GetType() *string {
 	if vt := u.OfFileSearch; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfComputerUsePreview; vt != nil {
+	} else if vt := u.OfWebSearchPreview; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfWebSearch; vt != nil {
+	} else if vt := u.OfComputerUsePreview; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -7445,11 +7480,6 @@ func init() {
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ComputerToolParam{}),
-			DiscriminatorValue: "computer_use_preview",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
 			Type:               reflect.TypeOf(WebSearchToolParam{}),
 			DiscriminatorValue: "web_search_preview",
 		},
@@ -7457,6 +7487,11 @@ func init() {
 			TypeFilter:         gjson.JSON,
 			Type:               reflect.TypeOf(WebSearchToolParam{}),
 			DiscriminatorValue: "web_search_preview_2025_03_11",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ComputerToolParam{}),
+			DiscriminatorValue: "computer_use_preview",
 		},
 	)
 }
@@ -7617,10 +7652,8 @@ func (r ToolChoiceTypesParam) MarshalJSON() (data []byte, err error) {
 // about the
 // [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
 type WebSearchTool struct {
-	// The type of the web search tool. One of:
-	//
-	// - `web_search_preview`
-	// - `web_search_preview_2025_03_11`
+	// The type of the web search tool. One of `web_search_preview` or
+	// `web_search_preview_2025_03_11`.
 	//
 	// Any of "web_search_preview", "web_search_preview_2025_03_11".
 	Type WebSearchToolType `json:"type,required"`
@@ -7629,7 +7662,8 @@ type WebSearchTool struct {
 	//
 	// Any of "low", "medium", "high".
 	SearchContextSize WebSearchToolSearchContextSize `json:"search_context_size"`
-	UserLocation      WebSearchToolUserLocation      `json:"user_location,nullable"`
+	// The user's location.
+	UserLocation WebSearchToolUserLocation `json:"user_location,nullable"`
 	// Metadata for the response, check the presence of optional fields with the
 	// [resp.Field.IsPresent] method.
 	JSON struct {
@@ -7656,10 +7690,8 @@ func (r WebSearchTool) ToParam() WebSearchToolParam {
 	return param.OverrideObj[WebSearchToolParam](r.RawJSON())
 }
 
-// The type of the web search tool. One of:
-//
-// - `web_search_preview`
-// - `web_search_preview_2025_03_11`
+// The type of the web search tool. One of `web_search_preview` or
+// `web_search_preview_2025_03_11`.
 type WebSearchToolType string
 
 const (
@@ -7677,19 +7709,20 @@ const (
 	WebSearchToolSearchContextSizeHigh   WebSearchToolSearchContextSize = "high"
 )
 
+// The user's location.
 type WebSearchToolUserLocation struct {
 	// The type of location approximation. Always `approximate`.
 	Type constant.Approximate `json:"type,required"`
 	// Free text input for the city of the user, e.g. `San Francisco`.
-	City string `json:"city"`
+	City string `json:"city,nullable"`
 	// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of
 	// the user, e.g. `US`.
-	Country string `json:"country"`
+	Country string `json:"country,nullable"`
 	// Free text input for the region of the user, e.g. `California`.
-	Region string `json:"region"`
+	Region string `json:"region,nullable"`
 	// The [IANA timezone](https://timeapi.io/documentation/iana-timezones) of the
 	// user, e.g. `America/Los_Angeles`.
-	Timezone string `json:"timezone"`
+	Timezone string `json:"timezone,nullable"`
 	// Metadata for the response, check the presence of optional fields with the
 	// [resp.Field.IsPresent] method.
 	JSON struct {
@@ -7715,13 +7748,12 @@ func (r *WebSearchToolUserLocation) UnmarshalJSON(data []byte) error {
 //
 // The property Type is required.
 type WebSearchToolParam struct {
-	// The type of the web search tool. One of:
-	//
-	// - `web_search_preview`
-	// - `web_search_preview_2025_03_11`
+	// The type of the web search tool. One of `web_search_preview` or
+	// `web_search_preview_2025_03_11`.
 	//
 	// Any of "web_search_preview", "web_search_preview_2025_03_11".
-	Type         WebSearchToolType              `json:"type,omitzero,required"`
+	Type WebSearchToolType `json:"type,omitzero,required"`
+	// The user's location.
 	UserLocation WebSearchToolUserLocationParam `json:"user_location,omitzero"`
 	// High level guidance for the amount of context window space to use for the
 	// search. One of `low`, `medium`, or `high`. `medium` is the default.
@@ -7739,6 +7771,8 @@ func (r WebSearchToolParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 
+// The user's location.
+//
 // The property Type is required.
 type WebSearchToolUserLocationParam struct {
 	// Free text input for the city of the user, e.g. `San Francisco`.
@@ -7825,6 +7859,11 @@ type ResponseNewParams struct {
 	//   - `message.input_image.image_url`: Include image urls from the input message.
 	//   - `computer_call_output.output.image_url`: Include image urls from the computer
 	//     call output.
+	//   - `reasoning.encrypted_content`: Includes an encrypted version of reasoning
+	//     tokens in reasoning item outputs. This enables reasoning items to be used in
+	//     multi-turn conversations when using the Responses API statelessly (like when
+	//     the `store` parameter is set to `false`, or when an organization is enrolled
+	//     in the zero data retention program).
 	Include []ResponseIncludable `json:"include,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and

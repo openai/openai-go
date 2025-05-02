@@ -241,10 +241,13 @@ const (
 )
 
 type ImageEditParams struct {
-	// The image(s) to edit. Must be a supported image file or an array of images. For
-	// `gpt-image-1`, each image should be a `png`, `webp`, or `jpg` file less than
-	// 25MB. For `dall-e-2`, you can only provide one image, and it should be a square
-	// `png` file less than 4MB.
+	// The image(s) to edit. Must be a supported image file or an array of images.
+	//
+	// For `gpt-image-1`, each image should be a `png`, `webp`, or `jpg` file less than
+	// 25MB. You can provide up to 16 images.
+	//
+	// For `dall-e-2`, you can only provide one image, and it should be a square `png`
+	// file less than 4MB.
 	Image ImageEditParamsImageUnion `json:"image,omitzero,required" format:"binary"`
 	// A text description of the desired image(s). The maximum length is 1000
 	// characters for `dall-e-2`, and 32000 characters for `gpt-image-1`.
@@ -255,6 +258,16 @@ type ImageEditParams struct {
 	// and detect abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
 	User param.Opt[string] `json:"user,omitzero"`
+	// Allows to set transparency for the background of the generated image(s). This
+	// parameter is only supported for `gpt-image-1`. Must be one of `transparent`,
+	// `opaque` or `auto` (default value). When `auto` is used, the model will
+	// automatically determine the best background for the image.
+	//
+	// If `transparent`, the output format needs to support transparency, so it should
+	// be set to either `png` (default value) or `webp`.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background ImageEditParamsBackground `json:"background,omitzero"`
 	// The model to use for image generation. Only `dall-e-2` and `gpt-image-1` are
 	// supported. Defaults to `dall-e-2` unless a parameter specific to `gpt-image-1`
 	// is used.
@@ -276,7 +289,7 @@ type ImageEditParams struct {
 	// (landscape), `1024x1536` (portrait), or `auto` (default value) for
 	// `gpt-image-1`, and one of `256x256`, `512x512`, or `1024x1024` for `dall-e-2`.
 	//
-	// Any of "256x256", "512x512", "1024x1024".
+	// Any of "256x256", "512x512", "1024x1024", "1536x1024", "1024x1536", "auto".
 	Size ImageEditParamsSize `json:"size,omitzero"`
 	// An additional image whose fully transparent areas (e.g. where alpha is zero)
 	// indicate where `image` should be edited. If there are multiple images provided,
@@ -330,6 +343,21 @@ func (u *ImageEditParamsImageUnion) asAny() any {
 	return nil
 }
 
+// Allows to set transparency for the background of the generated image(s). This
+// parameter is only supported for `gpt-image-1`. Must be one of `transparent`,
+// `opaque` or `auto` (default value). When `auto` is used, the model will
+// automatically determine the best background for the image.
+//
+// If `transparent`, the output format needs to support transparency, so it should
+// be set to either `png` (default value) or `webp`.
+type ImageEditParamsBackground string
+
+const (
+	ImageEditParamsBackgroundTransparent ImageEditParamsBackground = "transparent"
+	ImageEditParamsBackgroundOpaque      ImageEditParamsBackground = "opaque"
+	ImageEditParamsBackgroundAuto        ImageEditParamsBackground = "auto"
+)
+
 // The quality of the image that will be generated. `high`, `medium` and `low` are
 // only supported for `gpt-image-1`. `dall-e-2` only supports `standard` quality.
 // Defaults to `auto`.
@@ -363,6 +391,9 @@ const (
 	ImageEditParamsSize256x256   ImageEditParamsSize = "256x256"
 	ImageEditParamsSize512x512   ImageEditParamsSize = "512x512"
 	ImageEditParamsSize1024x1024 ImageEditParamsSize = "1024x1024"
+	ImageEditParamsSize1536x1024 ImageEditParamsSize = "1536x1024"
+	ImageEditParamsSize1024x1536 ImageEditParamsSize = "1024x1536"
+	ImageEditParamsSizeAuto      ImageEditParamsSize = "auto"
 )
 
 type ImageGenerateParams struct {
