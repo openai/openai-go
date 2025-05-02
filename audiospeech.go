@@ -62,7 +62,7 @@ type AudioSpeechNewParams struct {
 	// work with `tts-1` or `tts-1-hd`.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// The speed of the generated audio. Select a value from `0.25` to `4.0`. `1.0` is
-	// the default.
+	// the default. Does not work with `gpt-4o-mini-tts`.
 	Speed param.Opt[float64] `json:"speed,omitzero"`
 	// The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,
 	// `wav`, and `pcm`.

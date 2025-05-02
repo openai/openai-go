@@ -58,7 +58,6 @@ type InputAudio string                              // Always "input_audio"
 type InputFile string                               // Always "input_file"
 type InputImage string                              // Always "input_image"
 type InputText string                               // Always "input_text"
-type ItemReference string                           // Always "item_reference"
 type JSONObject string                              // Always "json_object"
 type JSONSchema string                              // Always "json_schema"
 type Keypress string                                // Always "keypress"
@@ -209,7 +208,6 @@ func (c InputAudio) Default() InputAudio                 { return "input_audio" 
 func (c InputFile) Default() InputFile                   { return "input_file" }
 func (c InputImage) Default() InputImage                 { return "input_image" }
 func (c InputText) Default() InputText                   { return "input_text" }
-func (c ItemReference) Default() ItemReference           { return "item_reference" }
 func (c JSONObject) Default() JSONObject                 { return "json_object" }
 func (c JSONSchema) Default() JSONSchema                 { return "json_schema" }
 func (c Keypress) Default() Keypress                     { return "keypress" }
@@ -418,7 +416,6 @@ func (c InputAudio) MarshalJSON() ([]byte, error)                            { r
 func (c InputFile) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c InputImage) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c InputText) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c ItemReference) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c JSONObject) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c JSONSchema) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Keypress) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
