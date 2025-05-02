@@ -309,8 +309,8 @@ func (r ImageEditParams) MarshalMultipart() (data []byte, contentType string, er
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ImageEditParamsImageUnion struct {
-	OfFile                 io.Reader   `json:",omitzero,inline"`
-	OfImageEditsImageArray []io.Reader `json:",omitzero,inline"`
+	OfFile        io.Reader   `json:",omitzero,inline"`
+	OfBinaryArray []io.Reader `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -318,14 +318,14 @@ type ImageEditParamsImageUnion struct {
 // "null". To check if this field is omitted, use [param.IsOmitted].
 func (u ImageEditParamsImageUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
 func (u ImageEditParamsImageUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ImageEditParamsImageUnion](u.OfFile, u.OfImageEditsImageArray)
+	return param.MarshalUnion[ImageEditParamsImageUnion](u.OfFile, u.OfBinaryArray)
 }
 
 func (u *ImageEditParamsImageUnion) asAny() any {
 	if !param.IsOmitted(u.OfFile) {
 		return &u.OfFile
-	} else if !param.IsOmitted(u.OfImageEditsImageArray) {
-		return &u.OfImageEditsImageArray
+	} else if !param.IsOmitted(u.OfBinaryArray) {
+		return &u.OfBinaryArray
 	}
 	return nil
 }

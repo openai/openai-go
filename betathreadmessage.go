@@ -926,7 +926,7 @@ func (r *MessageAttachment) UnmarshalJSON(data []byte) error {
 }
 
 // MessageAttachmentToolUnion contains all possible properties and values from
-// [CodeInterpreterTool], [MessageAttachmentToolAssistantToolsFileSearchTypeOnly].
+// [CodeInterpreterTool], [MessageAttachmentToolFileSearchTool].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type MessageAttachmentToolUnion struct {
@@ -942,7 +942,7 @@ func (u MessageAttachmentToolUnion) AsCodeInterpreterTool() (v CodeInterpreterTo
 	return
 }
 
-func (u MessageAttachmentToolUnion) AsFileSearchTool() (v MessageAttachmentToolAssistantToolsFileSearchTypeOnly) {
+func (u MessageAttachmentToolUnion) AsFileSearchTool() (v MessageAttachmentToolFileSearchTool) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -954,7 +954,7 @@ func (r *MessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type MessageAttachmentToolAssistantToolsFileSearchTypeOnly struct {
+type MessageAttachmentToolFileSearchTool struct {
 	// The type of tool being defined: `file_search`
 	Type constant.FileSearch `json:"type,required"`
 	// Metadata for the response, check the presence of optional fields with the
@@ -967,8 +967,8 @@ type MessageAttachmentToolAssistantToolsFileSearchTypeOnly struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r MessageAttachmentToolAssistantToolsFileSearchTypeOnly) RawJSON() string { return r.JSON.raw }
-func (r *MessageAttachmentToolAssistantToolsFileSearchTypeOnly) UnmarshalJSON(data []byte) error {
+func (r MessageAttachmentToolFileSearchTool) RawJSON() string { return r.JSON.raw }
+func (r *MessageAttachmentToolFileSearchTool) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

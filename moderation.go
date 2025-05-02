@@ -481,7 +481,7 @@ func (r ModerationNewParams) MarshalJSON() (data []byte, err error) {
 // Use [param.IsOmitted] to confirm if a field is set.
 type ModerationNewParamsInputUnion struct {
 	OfString                    param.Opt[string]                     `json:",omitzero,inline"`
-	OfModerationNewsInputArray  []string                              `json:",omitzero,inline"`
+	OfStringArray               []string                              `json:",omitzero,inline"`
 	OfModerationMultiModalArray []ModerationMultiModalInputUnionParam `json:",omitzero,inline"`
 	paramUnion
 }
@@ -490,14 +490,14 @@ type ModerationNewParamsInputUnion struct {
 // "null". To check if this field is omitted, use [param.IsOmitted].
 func (u ModerationNewParamsInputUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
 func (u ModerationNewParamsInputUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ModerationNewParamsInputUnion](u.OfString, u.OfModerationNewsInputArray, u.OfModerationMultiModalArray)
+	return param.MarshalUnion[ModerationNewParamsInputUnion](u.OfString, u.OfStringArray, u.OfModerationMultiModalArray)
 }
 
 func (u *ModerationNewParamsInputUnion) asAny() any {
 	if !param.IsOmitted(u.OfString) {
 		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfModerationNewsInputArray) {
-		return &u.OfModerationNewsInputArray
+	} else if !param.IsOmitted(u.OfStringArray) {
+		return &u.OfStringArray
 	} else if !param.IsOmitted(u.OfModerationMultiModalArray) {
 		return &u.OfModerationMultiModalArray
 	}
