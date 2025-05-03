@@ -1,16 +1,51 @@
 package resp
 
-// A Field contains metadata about a JSON field that was
-// unmarshalled from a response.
+// A Field provides metadata to indicate the presence of a value.
 //
-// To check if the field was unmarshalled successfully, use the [Field.IsPresent] method.
+// Use [Field.Valid] to check if an optional value was null or omitted.
 //
-// Use the [Field.IsExplicitNull] method to check if the JSON value is "null".
+// A Field will always occur in the following structure, where it
+// mirrors the original field in it's parent struct:
 //
-// If the [Field.Raw] is the empty string, then the field was omitted.
+//	type ExampleObject struct {
+//		Foo bool	`json:"foo"`
+//		Bar int		`json:"bar"`
+//		// ...
 //
-// Otherwise, if the field was invalid and couldn't be marshalled successfully, [Field.IsPresent] will be false,
-// and [Field.Raw] will not be empty.
+//		// JSON provides metadata about the object.
+//		JSON struct {
+//			Foo Field
+//			Bar Field
+//			// ...
+//		} `json:"-"`
+//	}
+//
+// To differentiate a "nullish" value from the zero value,
+// use the [Field.Valid] method.
+//
+//	if !example.JSON.Foo.Valid() {
+//		println("Foo is null or omitted")
+//	}
+//
+//	if example.Foo {
+//		println("Foo is true")
+//	} else {
+//		println("Foo is false")
+//	}
+//
+// To differentiate if a field was omitted or the JSON value "null",
+// use the [Field.Raw] method.
+//
+//	if example.JSON.Foo.Raw() == resp.Null {
+//		println("Foo is null")
+//	}
+//
+//	if example.JSON.Foo.Raw() == resp.Omitted {
+//		println("Foo was omitted")
+//	}
+//
+// Otherwise, if the field was invalid and couldn't be marshalled successfully,
+// [Field.Valid] will be false and [Field.Raw] will not be empty.
 type Field struct {
 	status
 	raw string
@@ -25,12 +60,13 @@ const (
 
 type status int8
 
-// IsPresent returns true if the field was unmarshalled successfully.
-// If IsPresent is false, the field was either omitted, the JSON value "null", or an unexpected type.
-func (j Field) IsPresent() bool { return j.status > invalid }
+// Valid returns true if the parent field was set.
+// Valid returns false if the value doesn't exist, is JSON null, or
+// is an unexpected type.
+func (j Field) Valid() bool { return j.status > invalid }
 
-// Returns true if the field is the JSON value "null".
-func (j Field) IsExplicitNull() bool { return j.status == null }
+const Null string = "null"
+const Omitted string = ""
 
 // Returns the raw JSON value of the field.
 func (j Field) Raw() string {
@@ -40,15 +76,11 @@ func (j Field) Raw() string {
 	return j.raw
 }
 
-func NewValidField(raw string) Field {
+func NewField(raw string) Field {
 	if raw == "null" {
-		return NewNullField()
+		return Field{status: null, raw: Null}
 	}
-	return Field{raw: raw, status: valid}
-}
-
-func NewNullField() Field {
-	return Field{status: null}
+	return Field{status: valid, raw: raw}
 }
 
 func NewInvalidField(raw string) Field {

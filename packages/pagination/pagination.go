@@ -22,8 +22,7 @@ type paramObj = param.APIObject
 type Page[T any] struct {
 	Data   []T    `json:"data"`
 	Object string `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Data        resp.Field
 		Object      resp.Field
@@ -117,8 +116,7 @@ func (r *PageAutoPager[T]) Index() int {
 type CursorPage[T any] struct {
 	Data    []T  `json:"data"`
 	HasMore bool `json:"has_more"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Data        resp.Field
 		HasMore     resp.Field
@@ -139,7 +137,7 @@ func (r *CursorPage[T]) UnmarshalJSON(data []byte) error {
 // there is no next page, this function will return a 'nil' for the page value, but
 // will not return an error
 func (r *CursorPage[T]) GetNextPage() (res *CursorPage[T], err error) {
-	if r.JSON.HasMore.IsPresent() && r.HasMore == false {
+	if r.JSON.HasMore.Valid() && r.HasMore == false {
 		return nil, nil
 	}
 	items := r.Data

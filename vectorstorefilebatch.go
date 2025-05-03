@@ -137,8 +137,7 @@ type VectorStoreFileBatch struct {
 	// that the [File](https://platform.openai.com/docs/api-reference/files) is
 	// attached to.
 	VectorStoreID string `json:"vector_store_id,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID            resp.Field
 		CreatedAt     resp.Field
@@ -168,8 +167,7 @@ type VectorStoreFileBatchFileCounts struct {
 	InProgress int64 `json:"in_progress,required"`
 	// The total number of files.
 	Total int64 `json:"total,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Cancelled   resp.Field
 		Completed   resp.Field
@@ -215,10 +213,6 @@ type VectorStoreFileBatchNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f VectorStoreFileBatchNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r VectorStoreFileBatchNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreFileBatchNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -234,11 +228,6 @@ type VectorStoreFileBatchNewParamsAttributeUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u VectorStoreFileBatchNewParamsAttributeUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u VectorStoreFileBatchNewParamsAttributeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreFileBatchNewParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
 }
@@ -278,12 +267,6 @@ type VectorStoreFileBatchListFilesParams struct {
 	// Any of "asc", "desc".
 	Order VectorStoreFileBatchListFilesParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
-}
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f VectorStoreFileBatchListFilesParams) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
 }
 
 // URLQuery serializes [VectorStoreFileBatchListFilesParams]'s query parameters as

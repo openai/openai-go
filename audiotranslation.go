@@ -46,8 +46,7 @@ func (r *AudioTranslationService) New(ctx context.Context, body AudioTranslation
 
 type Translation struct {
 	Text string `json:"text,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Text        resp.Field
 		ExtraFields map[string]resp.Field
@@ -86,10 +85,6 @@ type AudioTranslationNewParams struct {
 	ResponseFormat AudioTranslationNewParamsResponseFormat `json:"response_format,omitzero"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f AudioTranslationNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r AudioTranslationNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)

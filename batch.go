@@ -143,8 +143,7 @@ type Batch struct {
 	OutputFileID string `json:"output_file_id"`
 	// The request counts for different statuses within the batch.
 	RequestCounts BatchRequestCounts `json:"request_counts"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID               resp.Field
 		CompletionWindow resp.Field
@@ -195,8 +194,7 @@ type BatchErrors struct {
 	Data []BatchError `json:"data"`
 	// The object type, which is always `list`.
 	Object string `json:"object"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Data        resp.Field
 		Object      resp.Field
@@ -220,8 +218,7 @@ type BatchError struct {
 	Message string `json:"message"`
 	// The name of the parameter that caused the error, if applicable.
 	Param string `json:"param,nullable"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Code        resp.Field
 		Line        resp.Field
@@ -246,8 +243,7 @@ type BatchRequestCounts struct {
 	Failed int64 `json:"failed,required"`
 	// Total number of requests in the batch.
 	Total int64 `json:"total,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Completed   resp.Field
 		Failed      resp.Field
@@ -297,10 +293,6 @@ type BatchNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BatchNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r BatchNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BatchNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -338,10 +330,6 @@ type BatchListParams struct {
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BatchListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [BatchListParams]'s query parameters as `url.Values`.
 func (r BatchListParams) URLQuery() (v url.Values, err error) {

@@ -39,15 +39,65 @@ func (r FieldStruct) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 
+type StructWithAdditionalProperties struct {
+	First       string         `json:"first"`
+	Second      int            `json:"second"`
+	ExtraFields map[string]any `json:"-"`
+	param.APIObject
+}
+
+func (s StructWithAdditionalProperties) MarshalJSON() ([]byte, error) {
+	type shadow StructWithAdditionalProperties
+	return param.MarshalWithExtras(s, (*shadow)(&s), s.ExtraFields)
+}
+
+func TestIsNullish(t *testing.T) {
+	nullTests := map[string]param.ParamNullable{
+		"null_string": param.Null[string](),
+		"null_int64":  param.Null[int64](),
+		"null_time":   param.Null[time.Time](),
+		"null_struct": param.NullStruct[Struct](),
+	}
+
+	for name, test := range nullTests {
+		t.Run(name, func(t *testing.T) {
+			if !param.IsNull(test) {
+				t.Fatalf("expected %s to be null", name)
+			}
+			if param.IsOmitted(test) {
+				t.Fatalf("expected %s to not be omitted", name)
+			}
+		})
+	}
+
+	omitTests := map[string]param.ParamNullable{
+		"omit_string": param.Opt[string]{},
+		"omit_int64":  param.Opt[int64]{},
+		"omit_time":   param.Opt[time.Time]{},
+		"omit_struct": Struct{},
+	}
+
+	for name, test := range omitTests {
+		t.Run(name, func(t *testing.T) {
+			if param.IsNull(test) {
+				t.Fatalf("expected %s to be null", name)
+			}
+			if !param.IsOmitted(test) {
+				t.Fatalf("expected %s to not be omitted", name)
+			}
+		})
+	}
+}
+
 func TestFieldMarshal(t *testing.T) {
 	tests := map[string]struct {
 		value    any
 		expected string
 	}{
-		"null_string": {param.NullOpt[string](), "null"},
-		"null_int64":  {param.NullOpt[int64](), "null"},
-		"null_time":   {param.NullOpt[time.Time](), "null"},
-		"null_struct": {param.NullObj[Struct](), "null"},
+		"null_string": {param.Null[string](), "null"},
+		"null_int64":  {param.Null[int64](), "null"},
+		"null_time":   {param.Null[time.Time](), "null"},
+		"null_struct": {param.NullStruct[Struct](), "null"},
 
 		"float_zero":  {param.NewOpt(float64(0.0)), "0"},
 		"string_zero": {param.NewOpt(""), `""`},
@@ -106,12 +156,32 @@ func TestFieldMarshal(t *testing.T) {
 	}
 }
 
+func TestAdditionalProperties(t *testing.T) {
+	s := StructWithAdditionalProperties{
+		First:  "hello",
+		Second: 14,
+		ExtraFields: map[string]any{
+			"hi": "there",
+		},
+	}
+	exp := `{"first":"hello","second":14,"hi":"there"}`
+
+	bytes, err := json.Marshal(s)
+	if err != nil {
+		t.Fatalf("failed to marshal: %v", err)
+	}
+
+	if string(bytes) != exp {
+		t.Fatalf("expected %s, got %s", exp, string(bytes))
+	}
+}
+
 func TestExtraFields(t *testing.T) {
 	v := Struct{
 		A: "hello",
 		B: 123,
 	}
-	v.WithExtraFields(map[string]any{
+	v.SetExtraFields(map[string]any{
 		"extra": Struct{A: "recursive"},
 		"b":     nil,
 	})
@@ -133,7 +203,7 @@ func TestExtraFieldsForceOmitted(t *testing.T) {
 		// A: "",
 		// B: 0,
 	}
-	v.WithExtraFields(map[string]any{
+	v.SetExtraFields(map[string]any{
 		"b": param.Omit,
 	})
 	bytes, err := json.Marshal(v)
@@ -188,11 +258,11 @@ func TestUnionDateMarshal(t *testing.T) {
 
 func TestOverride(t *testing.T) {
 	tests := map[string]struct {
-		value    param.OverridableObject
+		value    param.ParamStruct
 		expected string
 	}{
 		"param_struct": {
-			param.OverrideObj[FieldStruct](map[string]any{
+			param.Override[FieldStruct](map[string]any{
 				"a": "hello",
 				"b": 12,
 				"c": nil,
@@ -200,10 +270,21 @@ func TestOverride(t *testing.T) {
 			`{"a":"hello","b":12,"c":null}`,
 		},
 		"param_struct_primitive": {
-			param.OverrideObj[FieldStruct](12),
+			param.Override[FieldStruct](12),
 			`12`,
 		},
+		"param_struct_null": {
+			param.Override[FieldStruct](nil),
+			`null`,
+		},
 	}
+
+	f := FieldStruct{}
+
+	f.SetExtraFields(map[string]any{
+		"z": "ok",
+	})
+
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			b, err := json.Marshal(test.value)
@@ -213,7 +294,7 @@ func TestOverride(t *testing.T) {
 			if string(b) != test.expected {
 				t.Fatalf("expected %s, received %s", test.expected, string(b))
 			}
-			if _, ok := test.value.IsOverridden(); !ok {
+			if _, ok := test.value.Overrides(); !ok {
 				t.Fatalf("expected to be overridden")
 			}
 		})
@@ -224,10 +305,11 @@ func TestOverride(t *testing.T) {
 // since it was defined in a different package.
 type almostOpt struct{}
 
-func (almostOpt) IsPresent() bool { return true }
-func (almostOpt) IsNull() bool    { return false }
-func (almostOpt) IsOmitted() bool { return false }
-func (almostOpt) implOpt()        {}
+func (almostOpt) Valid() bool  { return true }
+func (almostOpt) Null() bool   { return false }
+func (almostOpt) isZero() bool { return false }
+
+func (almostOpt) implOpt() {}
 
 func TestOptionalInterfaceAssignability(t *testing.T) {
 	optInt := param.Opt[int]{}
@@ -239,4 +321,6 @@ func TestOptionalInterfaceAssignability(t *testing.T) {
 	if _, ok := any(notOpt).(param.Optional); ok {
 		t.Fatalf("unexpected successful assignment")
 	}
+
+	notOpt.implOpt() // silence the warning
 }

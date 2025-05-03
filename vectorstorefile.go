@@ -199,8 +199,7 @@ type VectorStoreFile struct {
 	Attributes map[string]VectorStoreFileAttributeUnion `json:"attributes,nullable"`
 	// The strategy used to chunk the file.
 	ChunkingStrategy FileChunkingStrategyUnion `json:"chunking_strategy"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID               resp.Field
 		CreatedAt        resp.Field
@@ -231,8 +230,7 @@ type VectorStoreFileLastError struct {
 	Code string `json:"code,required"`
 	// A human-readable description of the error.
 	Message string `json:"message,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Code        resp.Field
 		Message     resp.Field
@@ -307,8 +305,7 @@ type VectorStoreFileDeleted struct {
 	ID      string                          `json:"id,required"`
 	Deleted bool                            `json:"deleted,required"`
 	Object  constant.VectorStoreFileDeleted `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Deleted     resp.Field
@@ -329,8 +326,7 @@ type VectorStoreFileContentResponse struct {
 	Text string `json:"text"`
 	// The content type (currently only `"text"`)
 	Type string `json:"type"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Text        resp.Field
 		Type        resp.Field
@@ -362,10 +358,6 @@ type VectorStoreFileNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f VectorStoreFileNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r VectorStoreFileNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreFileNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -381,11 +373,6 @@ type VectorStoreFileNewParamsAttributeUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u VectorStoreFileNewParamsAttributeUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u VectorStoreFileNewParamsAttributeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreFileNewParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
 }
@@ -411,10 +398,6 @@ type VectorStoreFileUpdateParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f VectorStoreFileUpdateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r VectorStoreFileUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreFileUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -430,11 +413,6 @@ type VectorStoreFileUpdateParamsAttributeUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u VectorStoreFileUpdateParamsAttributeUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u VectorStoreFileUpdateParamsAttributeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreFileUpdateParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
 }
@@ -475,10 +453,6 @@ type VectorStoreFileListParams struct {
 	Order VectorStoreFileListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f VectorStoreFileListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [VectorStoreFileListParams]'s query parameters as
 // `url.Values`.

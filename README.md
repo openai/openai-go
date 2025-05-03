@@ -86,8 +86,10 @@ Optional primitive types are wrapped in a `param.Opt[T]`. These fields can be se
 Any `param.Opt[T]`, map, slice, struct or string enum uses the
 tag <code>\`json:"...,omitzero"\`</code>. Its zero value is considered omitted.
 
+The `param.IsOmitted(any)` function can confirm the presence of any `omitzero` field.
+
 ```go
-params := openai.ExampleParams{
+p := openai.ExampleParams{
 	ID:   "id_xxx",             // required property
 	Name: openai.String("..."), // optional property
 
@@ -101,33 +103,33 @@ params := openai.ExampleParams{
 }
 ```
 
-To send `null` instead of a `param.Opt[T]`, use `param.NullOpt[T]()`.
-To send `null` instead of a struct `T`, use `param.NullObj[T]()`.
+To send `null` instead of a `param.Opt[T]`, use `param.Null[T]()`.
+To send `null` instead of a struct `T`, use `param.NullStruct[T]()`.
 
 ```go
-params.Description = param.NullOpt[string]() // explicit null string property
-params.Point = param.NullObj[Point]()        // explicit null struct property
+p.Name = param.Null[string]()       // 'null' instead of string
+p.Point = param.NullStruct[Point]() // 'null' instead of struct
+
+param.IsNull(p.Name)  // true
+param.IsNull(p.Point) // true
 ```
 
-Request structs contain a `.WithExtraFields(map[string]any)` method which can send non-conforming
+Request structs contain a `.SetExtraFields(map[string]any)` method which can send non-conforming
 fields in the request body. Extra fields overwrite any struct fields with a matching
-key. For security reasons, only use `WithExtraFields` with trusted data.
+key. For security reasons, only use `SetExtraFields` with trusted data.
 
-To send a custom value instead of a struct, use `param.OverrideObj[T](value)`.
+To send a custom value instead of a struct, use `param.Override[T](value)`.
 
 ```go
 // In cases where the API specifies a given type,
-// but you want to send something else, use [WithExtraFields]:
-params.WithExtraFields(map[string]any{
+// but you want to send something else, use [SetExtraFields]:
+p.SetExtraFields(map[string]any{
 	"x": 0.01, // send "x" as a float instead of int
 })
 
 // Send a number instead of an object
-custom := param.OverrideObj[openai.FooParams](12)
+custom := param.Override[openai.FooParams](12)
 ```
-
-When available, use the `.IsPresent()` method to check if an optional parameter is not omitted or `null`.
-The `param.IsOmitted(any)` function can confirm the presence of any `omitzero` field.
 
 ### Request unions
 
@@ -179,9 +181,10 @@ type Animal struct {
 }
 ```
 
-To handle optional data, use the `IsPresent()` method on the JSON field.
-If a field is `null`, not present, or invalid, the corresponding field
-will simply be its zero value.
+To handle optional data, use the `.Valid()` method on the JSON field.
+`.Valid()` returns true if a field is not `null`, not present, or couldn't be marshaled.
+
+If `.Valid()` is false, the corresponding field will simply be its zero value.
 
 ```go
 raw := `{"owners": 1, "name": null}`
@@ -189,20 +192,25 @@ raw := `{"owners": 1, "name": null}`
 var res Animal
 json.Unmarshal([]byte(raw), &res)
 
-// Use the IsPresent() method to handle optional fields
-res.Owners                  // 1
-res.JSON.Owners.IsPresent() // true
-res.JSON.Owners.Raw()       // "1"
+// Accessing regular fields
 
-res.Age                  // 0
-res.JSON.Age.IsPresent() // false
-res.JSON.Age.Raw()       // ""
+res.Owners // 1
+res.Name   // ""
+res.Age    // 0
 
-// Use the IsExplicitNull() method to differentiate null and omitted
-res.Name                       // ""
-res.JSON.Name.IsPresent()      // false
-res.JSON.Name.Raw()            // "null"
-res.JSON.Name.IsExplicitNull() // true
+// Optional field checks
+
+res.JSON.Owners.Valid() // true
+res.JSON.Name.Valid()   // false
+res.JSON.Age.Valid()    // false
+
+// Raw JSON values
+
+res.JSON.Owners.Raw()              // "1"
+res.JSON.Name.Raw() == "null"      // true
+res.JSON.Name.Raw() == resp.Null   // true
+res.JSON.Age.Raw() == ""           // true
+res.JSON.Age.Raw() == resp.Omitted // true
 ```
 
 These `.JSON` structs also include an `ExtraFields` map containing

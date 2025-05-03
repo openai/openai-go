@@ -169,9 +169,9 @@ func (r *AssistantResponseFormatOptionUnion) UnmarshalJSON(data []byte) error {
 //
 // Warning: the fields of the param type will not be present. ToParam should only
 // be used at the last possible moment before sending a request. Test for this with
-// AssistantResponseFormatOptionUnionParam.IsOverridden()
+// AssistantResponseFormatOptionUnionParam.Overrides()
 func (r AssistantResponseFormatOptionUnion) ToParam() AssistantResponseFormatOptionUnionParam {
-	return param.OverrideObj[AssistantResponseFormatOptionUnionParam](r.RawJSON())
+	return param.Override[AssistantResponseFormatOptionUnionParam](r.RawJSON())
 }
 
 func AssistantResponseFormatOptionParamOfAuto() AssistantResponseFormatOptionUnionParam {
@@ -188,8 +188,7 @@ func AssistantResponseFormatOptionParamOfJSONSchema(jsonSchema shared.ResponseFo
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type AssistantResponseFormatOptionUnionParam struct {
-	// Construct this variant with constant.New[constant.Auto]() Check if union is this
-	// variant with !param.IsOmitted(union.OfAuto)
+	// Construct this variant with constant.ValueOf[constant.Auto]()
 	OfAuto       constant.Auto                         `json:",omitzero,inline"`
 	OfText       *shared.ResponseFormatTextParam       `json:",omitzero,inline"`
 	OfJSONObject *shared.ResponseFormatJSONObjectParam `json:",omitzero,inline"`
@@ -197,11 +196,6 @@ type AssistantResponseFormatOptionUnionParam struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u AssistantResponseFormatOptionUnionParam) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u AssistantResponseFormatOptionUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[AssistantResponseFormatOptionUnionParam](u.OfAuto, u.OfText, u.OfJSONObject, u.OfJSONSchema)
 }
@@ -247,8 +241,7 @@ type AssistantToolChoice struct {
 	// Any of "function", "code_interpreter", "file_search".
 	Type     AssistantToolChoiceType     `json:"type,required"`
 	Function AssistantToolChoiceFunction `json:"function"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Type        resp.Field
 		Function    resp.Field
@@ -267,9 +260,9 @@ func (r *AssistantToolChoice) UnmarshalJSON(data []byte) error {
 //
 // Warning: the fields of the param type will not be present. ToParam should only
 // be used at the last possible moment before sending a request. Test for this with
-// AssistantToolChoiceParam.IsOverridden()
+// AssistantToolChoiceParam.Overrides()
 func (r AssistantToolChoice) ToParam() AssistantToolChoiceParam {
-	return param.OverrideObj[AssistantToolChoiceParam](r.RawJSON())
+	return param.Override[AssistantToolChoiceParam](r.RawJSON())
 }
 
 // The type of the tool. If type is `function`, the function name must be set
@@ -294,9 +287,6 @@ type AssistantToolChoiceParam struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f AssistantToolChoiceParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r AssistantToolChoiceParam) MarshalJSON() (data []byte, err error) {
 	type shadow AssistantToolChoiceParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -305,8 +295,7 @@ func (r AssistantToolChoiceParam) MarshalJSON() (data []byte, err error) {
 type AssistantToolChoiceFunction struct {
 	// The name of the function to call.
 	Name string `json:"name,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Name        resp.Field
 		ExtraFields map[string]resp.Field
@@ -325,9 +314,9 @@ func (r *AssistantToolChoiceFunction) UnmarshalJSON(data []byte) error {
 //
 // Warning: the fields of the param type will not be present. ToParam should only
 // be used at the last possible moment before sending a request. Test for this with
-// AssistantToolChoiceFunctionParam.IsOverridden()
+// AssistantToolChoiceFunctionParam.Overrides()
 func (r AssistantToolChoiceFunction) ToParam() AssistantToolChoiceFunctionParam {
-	return param.OverrideObj[AssistantToolChoiceFunctionParam](r.RawJSON())
+	return param.Override[AssistantToolChoiceFunctionParam](r.RawJSON())
 }
 
 // The property Name is required.
@@ -337,9 +326,6 @@ type AssistantToolChoiceFunctionParam struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f AssistantToolChoiceFunctionParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r AssistantToolChoiceFunctionParam) MarshalJSON() (data []byte, err error) {
 	type shadow AssistantToolChoiceFunctionParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -389,9 +375,9 @@ func (r *AssistantToolChoiceOptionUnion) UnmarshalJSON(data []byte) error {
 //
 // Warning: the fields of the param type will not be present. ToParam should only
 // be used at the last possible moment before sending a request. Test for this with
-// AssistantToolChoiceOptionUnionParam.IsOverridden()
+// AssistantToolChoiceOptionUnionParam.Overrides()
 func (r AssistantToolChoiceOptionUnion) ToParam() AssistantToolChoiceOptionUnionParam {
-	return param.OverrideObj[AssistantToolChoiceOptionUnionParam](r.RawJSON())
+	return param.Override[AssistantToolChoiceOptionUnionParam](r.RawJSON())
 }
 
 // `none` means the model will not call any tools and instead generates a message.
@@ -422,11 +408,6 @@ type AssistantToolChoiceOptionUnionParam struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u AssistantToolChoiceOptionUnionParam) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u AssistantToolChoiceOptionUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[AssistantToolChoiceOptionUnionParam](u.OfAuto, u.OfAssistantToolChoice)
 }
@@ -461,8 +442,7 @@ type Thread struct {
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
 	// tool requires a list of vector store IDs.
 	ToolResources ThreadToolResources `json:"tool_resources,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID            resp.Field
 		CreatedAt     resp.Field
@@ -487,8 +467,7 @@ func (r *Thread) UnmarshalJSON(data []byte) error {
 type ThreadToolResources struct {
 	CodeInterpreter ThreadToolResourcesCodeInterpreter `json:"code_interpreter"`
 	FileSearch      ThreadToolResourcesFileSearch      `json:"file_search"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		CodeInterpreter resp.Field
 		FileSearch      resp.Field
@@ -508,8 +487,7 @@ type ThreadToolResourcesCodeInterpreter struct {
 	// available to the `code_interpreter` tool. There can be a maximum of 20 files
 	// associated with the tool.
 	FileIDs []string `json:"file_ids"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FileIDs     resp.Field
 		ExtraFields map[string]resp.Field
@@ -529,8 +507,7 @@ type ThreadToolResourcesFileSearch struct {
 	// attached to this thread. There can be a maximum of 1 vector store attached to
 	// the thread.
 	VectorStoreIDs []string `json:"vector_store_ids"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		VectorStoreIDs resp.Field
 		ExtraFields    map[string]resp.Field
@@ -548,8 +525,7 @@ type ThreadDeleted struct {
 	ID      string                 `json:"id,required"`
 	Deleted bool                   `json:"deleted,required"`
 	Object  constant.ThreadDeleted `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Deleted     resp.Field
@@ -584,10 +560,6 @@ type BetaThreadNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r BetaThreadNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -618,9 +590,6 @@ type BetaThreadNewParamsMessage struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewParamsMessage) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r BetaThreadNewParamsMessage) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsMessage
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -641,11 +610,6 @@ type BetaThreadNewParamsMessageContentUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadNewParamsMessageContentUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadNewParamsMessageContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewParamsMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
 }
@@ -667,11 +631,6 @@ type BetaThreadNewParamsMessageAttachment struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewParamsMessageAttachment) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewParamsMessageAttachment) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsMessageAttachment
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -686,11 +645,6 @@ type BetaThreadNewParamsMessageAttachmentToolUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadNewParamsMessageAttachmentToolUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadNewParamsMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewParamsMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
 }
@@ -744,11 +698,6 @@ type BetaThreadNewParamsMessageAttachmentToolFileSearch struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewParamsMessageAttachmentToolFileSearch) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewParamsMessageAttachmentToolFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsMessageAttachmentToolFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -764,9 +713,6 @@ type BetaThreadNewParamsToolResources struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewParamsToolResources) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r BetaThreadNewParamsToolResources) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsToolResources
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -780,11 +726,6 @@ type BetaThreadNewParamsToolResourcesCodeInterpreter struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewParamsToolResourcesCodeInterpreter) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewParamsToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsToolResourcesCodeInterpreter
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -804,11 +745,6 @@ type BetaThreadNewParamsToolResourcesFileSearch struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewParamsToolResourcesFileSearch) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsToolResourcesFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -832,11 +768,6 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStore struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewParamsToolResourcesFileSearchVectorStore) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewParamsToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsToolResourcesFileSearchVectorStore
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -851,11 +782,6 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion 
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion](u.OfAuto, u.OfStatic)
 }
@@ -920,11 +846,6 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto s
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -940,11 +861,6 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -962,11 +878,6 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -988,10 +899,6 @@ type BetaThreadUpdateParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadUpdateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r BetaThreadUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1007,11 +914,6 @@ type BetaThreadUpdateParamsToolResources struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadUpdateParamsToolResources) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadUpdateParamsToolResources) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadUpdateParamsToolResources
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1025,11 +927,6 @@ type BetaThreadUpdateParamsToolResourcesCodeInterpreter struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadUpdateParamsToolResourcesCodeInterpreter) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadUpdateParamsToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadUpdateParamsToolResourcesCodeInterpreter
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1044,11 +941,6 @@ type BetaThreadUpdateParamsToolResourcesFileSearch struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadUpdateParamsToolResourcesFileSearch) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadUpdateParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadUpdateParamsToolResourcesFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1146,10 +1038,6 @@ type BetaThreadNewAndRunParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r BetaThreadNewAndRunParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1176,9 +1064,6 @@ type BetaThreadNewAndRunParamsThread struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsThread) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r BetaThreadNewAndRunParamsThread) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThread
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1209,11 +1094,6 @@ type BetaThreadNewAndRunParamsThreadMessage struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsThreadMessage) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsThreadMessage) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadMessage
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1234,11 +1114,6 @@ type BetaThreadNewAndRunParamsThreadMessageContentUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadNewAndRunParamsThreadMessageContentUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadNewAndRunParamsThreadMessageContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
 }
@@ -1260,11 +1135,6 @@ type BetaThreadNewAndRunParamsThreadMessageAttachment struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsThreadMessageAttachment) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsThreadMessageAttachment) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadMessageAttachment
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1279,11 +1149,6 @@ type BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
 }
@@ -1337,11 +1202,6 @@ type BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1357,11 +1217,6 @@ type BetaThreadNewAndRunParamsThreadToolResources struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsThreadToolResources) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsThreadToolResources) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadToolResources
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1375,11 +1230,6 @@ type BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1399,11 +1249,6 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearch struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsThreadToolResourcesFileSearch) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1427,11 +1272,6 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1446,11 +1286,6 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingSt
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion](u.OfAuto, u.OfStatic)
 }
@@ -1515,11 +1350,6 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingSt
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1535,11 +1365,6 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingSt
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStatic) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStatic
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1557,11 +1382,6 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingSt
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1577,11 +1397,6 @@ type BetaThreadNewAndRunParamsToolResources struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsToolResources) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsToolResources) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsToolResources
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1595,11 +1410,6 @@ type BetaThreadNewAndRunParamsToolResourcesCodeInterpreter struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsToolResourcesCodeInterpreter) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsToolResourcesCodeInterpreter
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1614,11 +1424,6 @@ type BetaThreadNewAndRunParamsToolResourcesFileSearch struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsToolResourcesFileSearch) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsToolResourcesFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1642,11 +1447,6 @@ type BetaThreadNewAndRunParamsTruncationStrategy struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadNewAndRunParamsTruncationStrategy) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadNewAndRunParamsTruncationStrategy) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsTruncationStrategy
 	return param.MarshalObject(r, (*shadow)(&r))

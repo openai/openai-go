@@ -177,21 +177,21 @@ type testChecks[T any] func(T) map[string]error
 func checkMeta(got resp.Field, raw string, stat metaStatus) error {
 	switch stat {
 	case shouldBePresent:
-		if !got.IsPresent() {
+		if !got.Valid() {
 			return fmt.Errorf("expected field to be present, but got nullish")
 		}
 		if got.Raw() != raw {
 			return fmt.Errorf("expected field to be present with raw value %v, but got %v", raw, got.Raw())
 		}
 	case shouldBeNullish:
-		if got.IsPresent() {
+		if got.Valid() {
 			return fmt.Errorf("expected field to be nullish, but got %v", got.Raw())
 		}
-		if got.Raw() != "" {
+		if got.Raw() != resp.Omitted && got.Raw() != resp.Null {
 			return fmt.Errorf("expected field to be nullish, but got %v", got.Raw())
 		}
 	case shouldBeInvalid:
-		if got.IsPresent() || got.Raw() == "" {
+		if !got.Valid() || got.Raw() == "" {
 			return fmt.Errorf("expected field to be invalid, but got valid value %v", got.Raw())
 		}
 		if got.Raw() != raw {

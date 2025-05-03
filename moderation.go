@@ -53,8 +53,7 @@ type Moderation struct {
 	CategoryScores ModerationCategoryScores `json:"category_scores,required"`
 	// Whether any of the below categories are flagged.
 	Flagged bool `json:"flagged,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Categories                resp.Field
 		CategoryAppliedInputTypes resp.Field
@@ -116,8 +115,7 @@ type ModerationCategories struct {
 	Violence bool `json:"violence,required"`
 	// Content that depicts death, violence, or physical injury in graphic detail.
 	ViolenceGraphic bool `json:"violence/graphic,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Harassment            resp.Field
 		HarassmentThreatening resp.Field
@@ -197,8 +195,7 @@ type ModerationCategoryAppliedInputTypes struct {
 	//
 	// Any of "text", "image".
 	ViolenceGraphic []string `json:"violence/graphic,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Harassment            resp.Field
 		HarassmentThreatening resp.Field
@@ -252,8 +249,7 @@ type ModerationCategoryScores struct {
 	Violence float64 `json:"violence,required"`
 	// The score for the category 'violence/graphic'.
 	ViolenceGraphic float64 `json:"violence/graphic,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Harassment            resp.Field
 		HarassmentThreatening resp.Field
@@ -292,9 +288,6 @@ type ModerationImageURLInputParam struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f ModerationImageURLInputParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r ModerationImageURLInputParam) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationImageURLInputParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -309,11 +302,6 @@ type ModerationImageURLInputImageURLParam struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f ModerationImageURLInputImageURLParam) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r ModerationImageURLInputImageURLParam) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationImageURLInputImageURLParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -349,11 +337,6 @@ type ModerationMultiModalInputUnionParam struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u ModerationMultiModalInputUnionParam) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u ModerationMultiModalInputUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ModerationMultiModalInputUnionParam](u.OfImageURL, u.OfText)
 }
@@ -422,9 +405,6 @@ type ModerationTextInputParam struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f ModerationTextInputParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r ModerationTextInputParam) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationTextInputParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -438,8 +418,7 @@ type ModerationNewResponse struct {
 	Model string `json:"model,required"`
 	// A list of moderation objects.
 	Results []Moderation `json:"results,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Model       resp.Field
@@ -467,10 +446,6 @@ type ModerationNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f ModerationNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r ModerationNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -486,9 +461,6 @@ type ModerationNewParamsInputUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u ModerationNewParamsInputUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
 func (u ModerationNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ModerationNewParamsInputUnion](u.OfString, u.OfStringArray, u.OfModerationMultiModalArray)
 }

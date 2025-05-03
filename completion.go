@@ -75,8 +75,7 @@ type Completion struct {
 	SystemFingerprint string `json:"system_fingerprint"`
 	// Usage statistics for the completion request.
 	Usage CompletionUsage `json:"usage"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID                resp.Field
 		Choices           resp.Field
@@ -107,8 +106,7 @@ type CompletionChoice struct {
 	Index        int64                        `json:"index,required"`
 	Logprobs     CompletionChoiceLogprobs     `json:"logprobs,required"`
 	Text         string                       `json:"text,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FinishReason resp.Field
 		Index        resp.Field
@@ -142,8 +140,7 @@ type CompletionChoiceLogprobs struct {
 	TokenLogprobs []float64            `json:"token_logprobs"`
 	Tokens        []string             `json:"tokens"`
 	TopLogprobs   []map[string]float64 `json:"top_logprobs"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		TextOffset    resp.Field
 		TokenLogprobs resp.Field
@@ -172,8 +169,7 @@ type CompletionUsage struct {
 	CompletionTokensDetails CompletionUsageCompletionTokensDetails `json:"completion_tokens_details"`
 	// Breakdown of tokens used in the prompt.
 	PromptTokensDetails CompletionUsagePromptTokensDetails `json:"prompt_tokens_details"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		CompletionTokens        resp.Field
 		PromptTokens            resp.Field
@@ -205,8 +201,7 @@ type CompletionUsageCompletionTokensDetails struct {
 	// still counted in the total completion tokens for purposes of billing, output,
 	// and context window limits.
 	RejectedPredictionTokens int64 `json:"rejected_prediction_tokens"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		AcceptedPredictionTokens resp.Field
 		AudioTokens              resp.Field
@@ -229,8 +224,7 @@ type CompletionUsagePromptTokensDetails struct {
 	AudioTokens int64 `json:"audio_tokens"`
 	// Cached tokens present in the prompt.
 	CachedTokens int64 `json:"cached_tokens"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		AudioTokens  resp.Field
 		CachedTokens resp.Field
@@ -354,10 +348,6 @@ type CompletionNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f CompletionNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r CompletionNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow CompletionNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -387,9 +377,6 @@ type CompletionNewParamsPromptUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u CompletionNewParamsPromptUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
 func (u CompletionNewParamsPromptUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[CompletionNewParamsPromptUnion](u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
 }
@@ -416,9 +403,6 @@ type CompletionNewParamsStopUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u CompletionNewParamsStopUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
 func (u CompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[CompletionNewParamsStopUnion](u.OfString, u.OfStringArray)
 }
