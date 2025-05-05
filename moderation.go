@@ -11,7 +11,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared/constant"
 	"github.com/tidwall/gjson"
 )
@@ -53,13 +53,13 @@ type Moderation struct {
 	CategoryScores ModerationCategoryScores `json:"category_scores,required"`
 	// Whether any of the below categories are flagged.
 	Flagged bool `json:"flagged,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Categories                resp.Field
-		CategoryAppliedInputTypes resp.Field
-		CategoryScores            resp.Field
-		Flagged                   resp.Field
-		ExtraFields               map[string]resp.Field
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		ExtraFields               map[string]respjson.Field
 		raw                       string
 	} `json:"-"`
 }
@@ -115,22 +115,22 @@ type ModerationCategories struct {
 	Violence bool `json:"violence,required"`
 	// Content that depicts death, violence, or physical injury in graphic detail.
 	ViolenceGraphic bool `json:"violence/graphic,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Harassment            resp.Field
-		HarassmentThreatening resp.Field
-		Hate                  resp.Field
-		HateThreatening       resp.Field
-		Illicit               resp.Field
-		IllicitViolent        resp.Field
-		SelfHarm              resp.Field
-		SelfHarmInstructions  resp.Field
-		SelfHarmIntent        resp.Field
-		Sexual                resp.Field
-		SexualMinors          resp.Field
-		Violence              resp.Field
-		ViolenceGraphic       resp.Field
-		ExtraFields           map[string]resp.Field
+		Harassment            respjson.Field
+		HarassmentThreatening respjson.Field
+		Hate                  respjson.Field
+		HateThreatening       respjson.Field
+		Illicit               respjson.Field
+		IllicitViolent        respjson.Field
+		SelfHarm              respjson.Field
+		SelfHarmInstructions  respjson.Field
+		SelfHarmIntent        respjson.Field
+		Sexual                respjson.Field
+		SexualMinors          respjson.Field
+		Violence              respjson.Field
+		ViolenceGraphic       respjson.Field
+		ExtraFields           map[string]respjson.Field
 		raw                   string
 	} `json:"-"`
 }
@@ -195,22 +195,22 @@ type ModerationCategoryAppliedInputTypes struct {
 	//
 	// Any of "text", "image".
 	ViolenceGraphic []string `json:"violence/graphic,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Harassment            resp.Field
-		HarassmentThreatening resp.Field
-		Hate                  resp.Field
-		HateThreatening       resp.Field
-		Illicit               resp.Field
-		IllicitViolent        resp.Field
-		SelfHarm              resp.Field
-		SelfHarmInstructions  resp.Field
-		SelfHarmIntent        resp.Field
-		Sexual                resp.Field
-		SexualMinors          resp.Field
-		Violence              resp.Field
-		ViolenceGraphic       resp.Field
-		ExtraFields           map[string]resp.Field
+		Harassment            respjson.Field
+		HarassmentThreatening respjson.Field
+		Hate                  respjson.Field
+		HateThreatening       respjson.Field
+		Illicit               respjson.Field
+		IllicitViolent        respjson.Field
+		SelfHarm              respjson.Field
+		SelfHarmInstructions  respjson.Field
+		SelfHarmIntent        respjson.Field
+		Sexual                respjson.Field
+		SexualMinors          respjson.Field
+		Violence              respjson.Field
+		ViolenceGraphic       respjson.Field
+		ExtraFields           map[string]respjson.Field
 		raw                   string
 	} `json:"-"`
 }
@@ -249,22 +249,22 @@ type ModerationCategoryScores struct {
 	Violence float64 `json:"violence,required"`
 	// The score for the category 'violence/graphic'.
 	ViolenceGraphic float64 `json:"violence/graphic,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Harassment            resp.Field
-		HarassmentThreatening resp.Field
-		Hate                  resp.Field
-		HateThreatening       resp.Field
-		Illicit               resp.Field
-		IllicitViolent        resp.Field
-		SelfHarm              resp.Field
-		SelfHarmInstructions  resp.Field
-		SelfHarmIntent        resp.Field
-		Sexual                resp.Field
-		SexualMinors          resp.Field
-		Violence              resp.Field
-		ViolenceGraphic       resp.Field
-		ExtraFields           map[string]resp.Field
+		Harassment            respjson.Field
+		HarassmentThreatening respjson.Field
+		Hate                  respjson.Field
+		HateThreatening       respjson.Field
+		Illicit               respjson.Field
+		IllicitViolent        respjson.Field
+		SelfHarm              respjson.Field
+		SelfHarmInstructions  respjson.Field
+		SelfHarmIntent        respjson.Field
+		Sexual                respjson.Field
+		SexualMinors          respjson.Field
+		Violence              respjson.Field
+		ViolenceGraphic       respjson.Field
+		ExtraFields           map[string]respjson.Field
 		raw                   string
 	} `json:"-"`
 }
@@ -418,12 +418,12 @@ type ModerationNewResponse struct {
 	Model string `json:"model,required"`
 	// A list of moderation objects.
 	Results []Moderation `json:"results,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Model       resp.Field
-		Results     resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Model       respjson.Field
+		Results     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

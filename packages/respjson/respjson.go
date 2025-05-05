@@ -1,4 +1,4 @@
-package resp
+package respjson
 
 // A Field provides metadata to indicate the presence of a value.
 //

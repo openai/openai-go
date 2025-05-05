@@ -16,7 +16,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
 )
@@ -193,28 +193,28 @@ type FineTuningJob struct {
 	Metadata shared.Metadata `json:"metadata,nullable"`
 	// The method used for fine-tuning.
 	Method FineTuningJobMethod `json:"method"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID              resp.Field
-		CreatedAt       resp.Field
-		Error           resp.Field
-		FineTunedModel  resp.Field
-		FinishedAt      resp.Field
-		Hyperparameters resp.Field
-		Model           resp.Field
-		Object          resp.Field
-		OrganizationID  resp.Field
-		ResultFiles     resp.Field
-		Seed            resp.Field
-		Status          resp.Field
-		TrainedTokens   resp.Field
-		TrainingFile    resp.Field
-		ValidationFile  resp.Field
-		EstimatedFinish resp.Field
-		Integrations    resp.Field
-		Metadata        resp.Field
-		Method          resp.Field
-		ExtraFields     map[string]resp.Field
+		ID              respjson.Field
+		CreatedAt       respjson.Field
+		Error           respjson.Field
+		FineTunedModel  respjson.Field
+		FinishedAt      respjson.Field
+		Hyperparameters respjson.Field
+		Model           respjson.Field
+		Object          respjson.Field
+		OrganizationID  respjson.Field
+		ResultFiles     respjson.Field
+		Seed            respjson.Field
+		Status          respjson.Field
+		TrainedTokens   respjson.Field
+		TrainingFile    respjson.Field
+		ValidationFile  respjson.Field
+		EstimatedFinish respjson.Field
+		Integrations    respjson.Field
+		Metadata        respjson.Field
+		Method          respjson.Field
+		ExtraFields     map[string]respjson.Field
 		raw             string
 	} `json:"-"`
 }
@@ -235,12 +235,12 @@ type FineTuningJobError struct {
 	// The parameter that was invalid, usually `training_file` or `validation_file`.
 	// This field will be null if the failure was not parameter-specific.
 	Param string `json:"param,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        resp.Field
-		Message     resp.Field
-		Param       resp.Field
-		ExtraFields map[string]resp.Field
+		Code        respjson.Field
+		Message     respjson.Field
+		Param       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -263,12 +263,12 @@ type FineTuningJobHyperparameters struct {
 	// The number of epochs to train the model for. An epoch refers to one full cycle
 	// through the training dataset.
 	NEpochs FineTuningJobHyperparametersNEpochsUnion `json:"n_epochs"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		BatchSize              resp.Field
-		LearningRateMultiplier resp.Field
-		NEpochs                resp.Field
-		ExtraFields            map[string]resp.Field
+		BatchSize              respjson.Field
+		LearningRateMultiplier respjson.Field
+		NEpochs                respjson.Field
+		ExtraFields            map[string]respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -293,8 +293,8 @@ type FineTuningJobHyperparametersBatchSizeUnion struct {
 	// This field will be present if the value is a [int64] instead of an object.
 	OfInt int64 `json:",inline"`
 	JSON  struct {
-		OfAuto resp.Field
-		OfInt  resp.Field
+		OfAuto respjson.Field
+		OfInt  respjson.Field
 		raw    string
 	} `json:"-"`
 }
@@ -330,8 +330,8 @@ type FineTuningJobHyperparametersLearningRateMultiplierUnion struct {
 	// This field will be present if the value is a [float64] instead of an object.
 	OfFloat float64 `json:",inline"`
 	JSON    struct {
-		OfAuto  resp.Field
-		OfFloat resp.Field
+		OfAuto  respjson.Field
+		OfFloat respjson.Field
 		raw     string
 	} `json:"-"`
 }
@@ -367,8 +367,8 @@ type FineTuningJobHyperparametersNEpochsUnion struct {
 	// This field will be present if the value is a [int64] instead of an object.
 	OfInt int64 `json:",inline"`
 	JSON  struct {
-		OfAuto resp.Field
-		OfInt  resp.Field
+		OfAuto respjson.Field
+		OfInt  respjson.Field
 		raw    string
 	} `json:"-"`
 }
@@ -413,12 +413,12 @@ type FineTuningJobMethod struct {
 	//
 	// Any of "supervised", "dpo".
 	Type string `json:"type"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Dpo         resp.Field
-		Supervised  resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Dpo         respjson.Field
+		Supervised  respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -433,10 +433,10 @@ func (r *FineTuningJobMethod) UnmarshalJSON(data []byte) error {
 type FineTuningJobMethodDpo struct {
 	// The hyperparameters used for the fine-tuning job.
 	Hyperparameters FineTuningJobMethodDpoHyperparameters `json:"hyperparameters"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Hyperparameters resp.Field
-		ExtraFields     map[string]resp.Field
+		Hyperparameters respjson.Field
+		ExtraFields     map[string]respjson.Field
 		raw             string
 	} `json:"-"`
 }
@@ -461,13 +461,13 @@ type FineTuningJobMethodDpoHyperparameters struct {
 	// The number of epochs to train the model for. An epoch refers to one full cycle
 	// through the training dataset.
 	NEpochs FineTuningJobMethodDpoHyperparametersNEpochsUnion `json:"n_epochs"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		BatchSize              resp.Field
-		Beta                   resp.Field
-		LearningRateMultiplier resp.Field
-		NEpochs                resp.Field
-		ExtraFields            map[string]resp.Field
+		BatchSize              respjson.Field
+		Beta                   respjson.Field
+		LearningRateMultiplier respjson.Field
+		NEpochs                respjson.Field
+		ExtraFields            map[string]respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -492,8 +492,8 @@ type FineTuningJobMethodDpoHyperparametersBatchSizeUnion struct {
 	// This field will be present if the value is a [int64] instead of an object.
 	OfInt int64 `json:",inline"`
 	JSON  struct {
-		OfAuto resp.Field
-		OfInt  resp.Field
+		OfAuto respjson.Field
+		OfInt  respjson.Field
 		raw    string
 	} `json:"-"`
 }
@@ -529,8 +529,8 @@ type FineTuningJobMethodDpoHyperparametersBetaUnion struct {
 	// This field will be present if the value is a [float64] instead of an object.
 	OfFloat float64 `json:",inline"`
 	JSON    struct {
-		OfAuto  resp.Field
-		OfFloat resp.Field
+		OfAuto  respjson.Field
+		OfFloat respjson.Field
 		raw     string
 	} `json:"-"`
 }
@@ -566,8 +566,8 @@ type FineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion struct {
 	// This field will be present if the value is a [float64] instead of an object.
 	OfFloat float64 `json:",inline"`
 	JSON    struct {
-		OfAuto  resp.Field
-		OfFloat resp.Field
+		OfAuto  respjson.Field
+		OfFloat respjson.Field
 		raw     string
 	} `json:"-"`
 }
@@ -605,8 +605,8 @@ type FineTuningJobMethodDpoHyperparametersNEpochsUnion struct {
 	// This field will be present if the value is a [int64] instead of an object.
 	OfInt int64 `json:",inline"`
 	JSON  struct {
-		OfAuto resp.Field
-		OfInt  resp.Field
+		OfAuto respjson.Field
+		OfInt  respjson.Field
 		raw    string
 	} `json:"-"`
 }
@@ -632,10 +632,10 @@ func (r *FineTuningJobMethodDpoHyperparametersNEpochsUnion) UnmarshalJSON(data [
 type FineTuningJobMethodSupervised struct {
 	// The hyperparameters used for the fine-tuning job.
 	Hyperparameters FineTuningJobMethodSupervisedHyperparameters `json:"hyperparameters"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Hyperparameters resp.Field
-		ExtraFields     map[string]resp.Field
+		Hyperparameters respjson.Field
+		ExtraFields     map[string]respjson.Field
 		raw             string
 	} `json:"-"`
 }
@@ -657,12 +657,12 @@ type FineTuningJobMethodSupervisedHyperparameters struct {
 	// The number of epochs to train the model for. An epoch refers to one full cycle
 	// through the training dataset.
 	NEpochs FineTuningJobMethodSupervisedHyperparametersNEpochsUnion `json:"n_epochs"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		BatchSize              resp.Field
-		LearningRateMultiplier resp.Field
-		NEpochs                resp.Field
-		ExtraFields            map[string]resp.Field
+		BatchSize              respjson.Field
+		LearningRateMultiplier respjson.Field
+		NEpochs                respjson.Field
+		ExtraFields            map[string]respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -687,8 +687,8 @@ type FineTuningJobMethodSupervisedHyperparametersBatchSizeUnion struct {
 	// This field will be present if the value is a [int64] instead of an object.
 	OfInt int64 `json:",inline"`
 	JSON  struct {
-		OfAuto resp.Field
-		OfInt  resp.Field
+		OfAuto respjson.Field
+		OfInt  respjson.Field
 		raw    string
 	} `json:"-"`
 }
@@ -726,8 +726,8 @@ type FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion str
 	// This field will be present if the value is a [float64] instead of an object.
 	OfFloat float64 `json:",inline"`
 	JSON    struct {
-		OfAuto  resp.Field
-		OfFloat resp.Field
+		OfAuto  respjson.Field
+		OfFloat respjson.Field
 		raw     string
 	} `json:"-"`
 }
@@ -765,8 +765,8 @@ type FineTuningJobMethodSupervisedHyperparametersNEpochsUnion struct {
 	// This field will be present if the value is a [int64] instead of an object.
 	OfInt int64 `json:",inline"`
 	JSON  struct {
-		OfAuto resp.Field
-		OfInt  resp.Field
+		OfAuto respjson.Field
+		OfInt  respjson.Field
 		raw    string
 	} `json:"-"`
 }
@@ -808,16 +808,16 @@ type FineTuningJobEvent struct {
 	//
 	// Any of "message", "metrics".
 	Type FineTuningJobEventType `json:"type"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		CreatedAt   resp.Field
-		Level       resp.Field
-		Message     resp.Field
-		Object      resp.Field
-		Data        resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Level       respjson.Field
+		Message     respjson.Field
+		Object      respjson.Field
+		Data        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -863,13 +863,13 @@ type FineTuningJobWandbIntegration struct {
 	// through directly to WandB. Some default tags are generated by OpenAI:
 	// "openai/finetune", "openai/{base-model}", "openai/{ftjob-abcdef}".
 	Tags []string `json:"tags"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Project     resp.Field
-		Entity      resp.Field
-		Name        resp.Field
-		Tags        resp.Field
-		ExtraFields map[string]resp.Field
+		Project     respjson.Field
+		Entity      respjson.Field
+		Name        respjson.Field
+		Tags        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -888,11 +888,11 @@ type FineTuningJobWandbIntegrationObject struct {
 	// explicit display name for your run, add tags to your run, and set a default
 	// entity (team, username, etc) to be associated with your run.
 	Wandb FineTuningJobWandbIntegration `json:"wandb,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        resp.Field
-		Wandb       resp.Field
-		ExtraFields map[string]resp.Field
+		Type        respjson.Field
+		Wandb       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

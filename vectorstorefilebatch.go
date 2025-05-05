@@ -15,7 +15,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared/constant"
 )
 
@@ -137,15 +137,15 @@ type VectorStoreFileBatch struct {
 	// that the [File](https://platform.openai.com/docs/api-reference/files) is
 	// attached to.
 	VectorStoreID string `json:"vector_store_id,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID            resp.Field
-		CreatedAt     resp.Field
-		FileCounts    resp.Field
-		Object        resp.Field
-		Status        resp.Field
-		VectorStoreID resp.Field
-		ExtraFields   map[string]resp.Field
+		ID            respjson.Field
+		CreatedAt     respjson.Field
+		FileCounts    respjson.Field
+		Object        respjson.Field
+		Status        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`
 }
@@ -167,14 +167,14 @@ type VectorStoreFileBatchFileCounts struct {
 	InProgress int64 `json:"in_progress,required"`
 	// The total number of files.
 	Total int64 `json:"total,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Cancelled   resp.Field
-		Completed   resp.Field
-		Failed      resp.Field
-		InProgress  resp.Field
-		Total       resp.Field
-		ExtraFields map[string]resp.Field
+		Cancelled   respjson.Field
+		Completed   respjson.Field
+		Failed      respjson.Field
+		InProgress  respjson.Field
+		Total       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

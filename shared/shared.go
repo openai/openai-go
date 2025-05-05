@@ -7,7 +7,7 @@ import (
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared/constant"
 )
 
@@ -94,12 +94,12 @@ type ComparisonFilter struct {
 	// The value to compare against the attribute key; supports string, number, or
 	// boolean types.
 	Value ComparisonFilterValueUnion `json:"value,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Key         resp.Field
-		Type        resp.Field
-		Value       resp.Field
-		ExtraFields map[string]resp.Field
+		Key         respjson.Field
+		Type        respjson.Field
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -153,9 +153,9 @@ type ComparisonFilterValueUnion struct {
 	// This field will be present if the value is a [bool] instead of an object.
 	OfBool bool `json:",inline"`
 	JSON   struct {
-		OfString resp.Field
-		OfFloat  resp.Field
-		OfBool   resp.Field
+		OfString respjson.Field
+		OfFloat  respjson.Field
+		OfBool   respjson.Field
 		raw      string
 	} `json:"-"`
 }
@@ -245,11 +245,11 @@ type CompoundFilter struct {
 	//
 	// Any of "and", "or".
 	Type CompoundFilterType `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Filters     resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Filters     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -301,13 +301,13 @@ type ErrorObject struct {
 	Message string `json:"message,required"`
 	Param   string `json:"param,required"`
 	Type    string `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        resp.Field
-		Message     resp.Field
-		Param       resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Code        respjson.Field
+		Message     respjson.Field
+		Param       respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -339,13 +339,13 @@ type FunctionDefinition struct {
 	// more about Structured Outputs in the
 	// [function calling guide](docs/guides/function-calling).
 	Strict bool `json:"strict,nullable"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Name        resp.Field
-		Description resp.Field
-		Parameters  resp.Field
-		Strict      resp.Field
-		ExtraFields map[string]resp.Field
+		Name        respjson.Field
+		Description respjson.Field
+		Parameters  respjson.Field
+		Strict      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -429,12 +429,12 @@ type Reasoning struct {
 	//
 	// Any of "auto", "concise", "detailed".
 	Summary ReasoningSummary `json:"summary,nullable"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Effort          resp.Field
-		GenerateSummary resp.Field
-		Summary         resp.Field
-		ExtraFields     map[string]resp.Field
+		Effort          respjson.Field
+		GenerateSummary respjson.Field
+		Summary         respjson.Field
+		ExtraFields     map[string]respjson.Field
 		raw             string
 	} `json:"-"`
 }
@@ -536,10 +536,10 @@ const (
 type ResponseFormatJSONObject struct {
 	// The type of response format being defined. Always `json_object`.
 	Type constant.JSONObject `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -593,11 +593,11 @@ type ResponseFormatJSONSchema struct {
 	JSONSchema ResponseFormatJSONSchemaJSONSchema `json:"json_schema,required"`
 	// The type of response format being defined. Always `json_schema`.
 	Type constant.JSONSchema `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		JSONSchema  resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		JSONSchema  respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -635,13 +635,13 @@ type ResponseFormatJSONSchemaJSONSchema struct {
 	// learn more, read the
 	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 	Strict bool `json:"strict,nullable"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Name        resp.Field
-		Description resp.Field
-		Schema      resp.Field
-		Strict      resp.Field
-		ExtraFields map[string]resp.Field
+		Name        respjson.Field
+		Description respjson.Field
+		Schema      respjson.Field
+		Strict      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -703,10 +703,10 @@ func (r ResponseFormatJSONSchemaJSONSchemaParam) MarshalJSON() (data []byte, err
 type ResponseFormatText struct {
 	// The type of response format being defined. Always `text`.
 	Type constant.Text `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

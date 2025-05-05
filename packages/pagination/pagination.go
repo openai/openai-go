@@ -10,7 +10,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 )
 
 // aliased to make [param.APIUnion] private when embedding
@@ -22,11 +22,11 @@ type paramObj = param.APIObject
 type Page[T any] struct {
 	Data   []T    `json:"data"`
 	Object string `json:"object,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Object      resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 	cfg *requestconfig.RequestConfig
@@ -116,11 +116,11 @@ func (r *PageAutoPager[T]) Index() int {
 type CursorPage[T any] struct {
 	Data    []T  `json:"data"`
 	HasMore bool `json:"has_more"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		HasMore     resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		HasMore     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 	cfg *requestconfig.RequestConfig

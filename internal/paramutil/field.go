@@ -2,7 +2,7 @@ package paramutil
 
 import (
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 )
 
 func AddrIfPresent[T comparable](v param.Opt[T]) *T {
@@ -12,10 +12,10 @@ func AddrIfPresent[T comparable](v param.Opt[T]) *T {
 	return nil
 }
 
-func ToOpt[T comparable](v T, meta resp.Field) param.Opt[T] {
+func ToOpt[T comparable](v T, meta respjson.Field) param.Opt[T] {
 	if meta.Valid() {
 		return param.NewOpt(v)
-	} else if meta.Raw() == resp.Null {
+	} else if meta.Raw() == respjson.Null {
 		return param.Null[T]()
 	}
 	return param.Opt[T]{}

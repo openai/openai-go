@@ -14,7 +14,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 )
 
 // ImageService contains methods and other services that help with interacting with
@@ -74,12 +74,12 @@ type Image struct {
 	// `response_format` is set to `url` (default value). Unsupported for
 	// `gpt-image-1`.
 	URL string `json:"url"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		B64JSON       resp.Field
-		RevisedPrompt resp.Field
-		URL           resp.Field
-		ExtraFields   map[string]resp.Field
+		B64JSON       respjson.Field
+		RevisedPrompt respjson.Field
+		URL           respjson.Field
+		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`
 }
@@ -106,12 +106,12 @@ type ImagesResponse struct {
 	Data []Image `json:"data"`
 	// For `gpt-image-1` only, the token usage information for the image generation.
 	Usage ImagesResponseUsage `json:"usage"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Created     resp.Field
-		Data        resp.Field
-		Usage       resp.Field
-		ExtraFields map[string]resp.Field
+		Created     respjson.Field
+		Data        respjson.Field
+		Usage       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -132,13 +132,13 @@ type ImagesResponseUsage struct {
 	OutputTokens int64 `json:"output_tokens,required"`
 	// The total number of tokens (images and text) used for the image generation.
 	TotalTokens int64 `json:"total_tokens,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		InputTokens        resp.Field
-		InputTokensDetails resp.Field
-		OutputTokens       resp.Field
-		TotalTokens        resp.Field
-		ExtraFields        map[string]resp.Field
+		InputTokens        respjson.Field
+		InputTokensDetails respjson.Field
+		OutputTokens       respjson.Field
+		TotalTokens        respjson.Field
+		ExtraFields        map[string]respjson.Field
 		raw                string
 	} `json:"-"`
 }
@@ -155,11 +155,11 @@ type ImagesResponseUsageInputTokensDetails struct {
 	ImageTokens int64 `json:"image_tokens,required"`
 	// The number of text tokens in the input prompt.
 	TextTokens int64 `json:"text_tokens,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ImageTokens resp.Field
-		TextTokens  resp.Field
-		ExtraFields map[string]resp.Field
+		ImageTokens respjson.Field
+		TextTokens  respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

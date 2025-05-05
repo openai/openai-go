@@ -17,7 +17,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
 	"github.com/tidwall/gjson"
@@ -180,8 +180,8 @@ type FileChunkingStrategyUnion struct {
 	// Any of "static", "other".
 	Type string `json:"type"`
 	JSON struct {
-		Static resp.Field
-		Type   resp.Field
+		Static respjson.Field
+		Type   respjson.Field
 		raw    string
 	} `json:"-"`
 }
@@ -299,10 +299,10 @@ func init() {
 type OtherFileChunkingStrategyObject struct {
 	// Always `other`.
 	Type constant.Other `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -321,11 +321,11 @@ type StaticFileChunkingStrategy struct {
 	// The maximum number of tokens in each chunk. The default value is `800`. The
 	// minimum value is `100` and the maximum value is `4096`.
 	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ChunkOverlapTokens resp.Field
-		MaxChunkSizeTokens resp.Field
-		ExtraFields        map[string]resp.Field
+		ChunkOverlapTokens respjson.Field
+		MaxChunkSizeTokens respjson.Field
+		ExtraFields        map[string]respjson.Field
 		raw                string
 	} `json:"-"`
 }
@@ -367,11 +367,11 @@ type StaticFileChunkingStrategyObject struct {
 	Static StaticFileChunkingStrategy `json:"static,required"`
 	// Always `static`.
 	Type constant.Static `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Static      resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Static      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -432,20 +432,20 @@ type VectorStore struct {
 	ExpiresAfter VectorStoreExpiresAfter `json:"expires_after"`
 	// The Unix timestamp (in seconds) for when the vector store will expire.
 	ExpiresAt int64 `json:"expires_at,nullable"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID           resp.Field
-		CreatedAt    resp.Field
-		FileCounts   resp.Field
-		LastActiveAt resp.Field
-		Metadata     resp.Field
-		Name         resp.Field
-		Object       resp.Field
-		Status       resp.Field
-		UsageBytes   resp.Field
-		ExpiresAfter resp.Field
-		ExpiresAt    resp.Field
-		ExtraFields  map[string]resp.Field
+		ID           respjson.Field
+		CreatedAt    respjson.Field
+		FileCounts   respjson.Field
+		LastActiveAt respjson.Field
+		Metadata     respjson.Field
+		Name         respjson.Field
+		Object       respjson.Field
+		Status       respjson.Field
+		UsageBytes   respjson.Field
+		ExpiresAfter respjson.Field
+		ExpiresAt    respjson.Field
+		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
 }
@@ -467,14 +467,14 @@ type VectorStoreFileCounts struct {
 	InProgress int64 `json:"in_progress,required"`
 	// The total number of files.
 	Total int64 `json:"total,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Cancelled   resp.Field
-		Completed   resp.Field
-		Failed      resp.Field
-		InProgress  resp.Field
-		Total       resp.Field
-		ExtraFields map[string]resp.Field
+		Cancelled   respjson.Field
+		Completed   respjson.Field
+		Failed      respjson.Field
+		InProgress  respjson.Field
+		Total       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -503,11 +503,11 @@ type VectorStoreExpiresAfter struct {
 	Anchor constant.LastActiveAt `json:"anchor,required"`
 	// The number of days after the anchor time that the vector store will expire.
 	Days int64 `json:"days,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Anchor      resp.Field
-		Days        resp.Field
-		ExtraFields map[string]resp.Field
+		Anchor      respjson.Field
+		Days        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -522,12 +522,12 @@ type VectorStoreDeleted struct {
 	ID      string                      `json:"id,required"`
 	Deleted bool                        `json:"deleted,required"`
 	Object  constant.VectorStoreDeleted `json:"object,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Deleted     resp.Field
-		Object      resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Deleted     respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -553,14 +553,14 @@ type VectorStoreSearchResponse struct {
 	Filename string `json:"filename,required"`
 	// The similarity score for the result.
 	Score float64 `json:"score,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Attributes  resp.Field
-		Content     resp.Field
-		FileID      resp.Field
-		Filename    resp.Field
-		Score       resp.Field
-		ExtraFields map[string]resp.Field
+		Attributes  respjson.Field
+		Content     respjson.Field
+		FileID      respjson.Field
+		Filename    respjson.Field
+		Score       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -586,9 +586,9 @@ type VectorStoreSearchResponseAttributeUnion struct {
 	// This field will be present if the value is a [bool] instead of an object.
 	OfBool bool `json:",inline"`
 	JSON   struct {
-		OfString resp.Field
-		OfFloat  resp.Field
-		OfBool   resp.Field
+		OfString respjson.Field
+		OfFloat  respjson.Field
+		OfBool   respjson.Field
 		raw      string
 	} `json:"-"`
 }
@@ -622,11 +622,11 @@ type VectorStoreSearchResponseContent struct {
 	//
 	// Any of "text".
 	Type string `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Text        resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
