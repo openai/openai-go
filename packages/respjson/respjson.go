@@ -36,11 +36,11 @@ package respjson
 // To differentiate if a field was omitted or the JSON value "null",
 // use the [Field.Raw] method.
 //
-//	if example.JSON.Foo.Raw() == resp.Null {
+//	if example.JSON.Foo.Raw() == "null" {
 //		println("Foo is null")
 //	}
 //
-//	if example.JSON.Foo.Raw() == resp.Omitted {
+//	if example.JSON.Foo.Raw() == "" {
 //		println("Foo was omitted")
 //	}
 //
