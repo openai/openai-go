@@ -31,8 +31,7 @@ func NewDecoder(res *http.Response) Decoder {
 	if t, ok := decoderTypes[contentType]; ok {
 		decoder = t(res.Body)
 	} else {
-		scanner := bufio.NewScanner(res.Body)
-		decoder = &eventStreamDecoder{rc: res.Body, scn: scanner}
+		decoder = &eventStreamDecoder{rc: res.Body, rdr: bufio.NewReader(res.Body)}
 	}
 	return decoder
 }
@@ -52,8 +51,46 @@ type Event struct {
 type eventStreamDecoder struct {
 	evt Event
 	rc  io.ReadCloser
-	scn *bufio.Scanner
+	rdr *bufio.Reader
 	err error
+}
+
+func line(r *bufio.Reader) ([]byte, error) {
+	var overflow bytes.Buffer
+
+	// To prevent infinite loops, the failsafe stops when a line is
+	// 100 times longer than the [io.Reader] default buffer size,
+	// or after 10 failed attempts to find an end of line.
+	for f := 0; f < 100; f++ {
+		part, isPrefix, err := r.ReadLine()
+		if err != nil {
+			return nil, err
+		}
+
+		// Happy case, the line fits in the default buffer.
+		if !isPrefix && overflow.Len() == 0 {
+			return part, nil
+		}
+
+		// Overflow case, append to the buffer.
+		if isPrefix || overflow.Len() > 0 {
+			n, err := overflow.Write(part)
+			if err != nil {
+				return nil, err
+			}
+
+			// Didn't find an end of line, heavily increment the failsafe.
+			if n != r.Size() {
+				f += 10
+			}
+		}
+
+		if !isPrefix {
+			return overflow.Bytes(), nil
+		}
+	}
+
+	return nil, fmt.Errorf("ssestream: too many attempts to read a line")
 }
 
 func (s *eventStreamDecoder) Next() bool {
@@ -64,8 +101,16 @@ func (s *eventStreamDecoder) Next() bool {
 	event := ""
 	data := bytes.NewBuffer(nil)
 
-	for s.scn.Scan() {
-		txt := s.scn.Bytes()
+	for {
+		txt, err := line(s.rdr)
+		if err == io.EOF {
+			return false
+		}
+
+		if err != nil {
+			s.err = err
+			break
+		}
 
 		// Dispatch event on an empty line
 		if len(txt) == 0 {
@@ -100,10 +145,6 @@ func (s *eventStreamDecoder) Next() bool {
 				break
 			}
 		}
-	}
-
-	if s.scn.Err() != nil {
-		s.err = s.scn.Err()
 	}
 
 	return false
