@@ -374,30 +374,30 @@ func (AssistantStreamEventErrorEvent) implAssistantStreamEventUnion()           
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := AssistantStreamEventUnion.AsAny().(type) {
-//	case AssistantStreamEventThreadCreated:
-//	case AssistantStreamEventThreadRunCreated:
-//	case AssistantStreamEventThreadRunQueued:
-//	case AssistantStreamEventThreadRunInProgress:
-//	case AssistantStreamEventThreadRunRequiresAction:
-//	case AssistantStreamEventThreadRunCompleted:
-//	case AssistantStreamEventThreadRunIncomplete:
-//	case AssistantStreamEventThreadRunFailed:
-//	case AssistantStreamEventThreadRunCancelling:
-//	case AssistantStreamEventThreadRunCancelled:
-//	case AssistantStreamEventThreadRunExpired:
-//	case AssistantStreamEventThreadRunStepCreated:
-//	case AssistantStreamEventThreadRunStepInProgress:
-//	case AssistantStreamEventThreadRunStepDelta:
-//	case AssistantStreamEventThreadRunStepCompleted:
-//	case AssistantStreamEventThreadRunStepFailed:
-//	case AssistantStreamEventThreadRunStepCancelled:
-//	case AssistantStreamEventThreadRunStepExpired:
-//	case AssistantStreamEventThreadMessageCreated:
-//	case AssistantStreamEventThreadMessageInProgress:
-//	case AssistantStreamEventThreadMessageDelta:
-//	case AssistantStreamEventThreadMessageCompleted:
-//	case AssistantStreamEventThreadMessageIncomplete:
-//	case AssistantStreamEventErrorEvent:
+//	case openai.AssistantStreamEventThreadCreated:
+//	case openai.AssistantStreamEventThreadRunCreated:
+//	case openai.AssistantStreamEventThreadRunQueued:
+//	case openai.AssistantStreamEventThreadRunInProgress:
+//	case openai.AssistantStreamEventThreadRunRequiresAction:
+//	case openai.AssistantStreamEventThreadRunCompleted:
+//	case openai.AssistantStreamEventThreadRunIncomplete:
+//	case openai.AssistantStreamEventThreadRunFailed:
+//	case openai.AssistantStreamEventThreadRunCancelling:
+//	case openai.AssistantStreamEventThreadRunCancelled:
+//	case openai.AssistantStreamEventThreadRunExpired:
+//	case openai.AssistantStreamEventThreadRunStepCreated:
+//	case openai.AssistantStreamEventThreadRunStepInProgress:
+//	case openai.AssistantStreamEventThreadRunStepDelta:
+//	case openai.AssistantStreamEventThreadRunStepCompleted:
+//	case openai.AssistantStreamEventThreadRunStepFailed:
+//	case openai.AssistantStreamEventThreadRunStepCancelled:
+//	case openai.AssistantStreamEventThreadRunStepExpired:
+//	case openai.AssistantStreamEventThreadMessageCreated:
+//	case openai.AssistantStreamEventThreadMessageInProgress:
+//	case openai.AssistantStreamEventThreadMessageDelta:
+//	case openai.AssistantStreamEventThreadMessageCompleted:
+//	case openai.AssistantStreamEventThreadMessageIncomplete:
+//	case openai.AssistantStreamEventErrorEvent:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1363,9 +1363,9 @@ func (FunctionTool) implAssistantToolUnion()        {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := AssistantToolUnion.AsAny().(type) {
-//	case CodeInterpreterTool:
-//	case FileSearchTool:
-//	case FunctionTool:
+//	case openai.CodeInterpreterTool:
+//	case openai.FileSearchTool:
+//	case openai.FunctionTool:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}

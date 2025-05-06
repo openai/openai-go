@@ -151,8 +151,8 @@ func (TranscriptionTextDoneEvent) implTranscriptionStreamEventUnion()  {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := TranscriptionStreamEventUnion.AsAny().(type) {
-//	case TranscriptionTextDeltaEvent:
-//	case TranscriptionTextDoneEvent:
+//	case openai.TranscriptionTextDeltaEvent:
+//	case openai.TranscriptionTextDoneEvent:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}

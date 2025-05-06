@@ -242,8 +242,8 @@ func (CodeInterpreterToolCallCodeInterpreterOutputImage) implCodeInterpreterTool
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := CodeInterpreterToolCallCodeInterpreterOutputUnion.AsAny().(type) {
-//	case CodeInterpreterToolCallCodeInterpreterOutputLogs:
-//	case CodeInterpreterToolCallCodeInterpreterOutputImage:
+//	case openai.CodeInterpreterToolCallCodeInterpreterOutputLogs:
+//	case openai.CodeInterpreterToolCallCodeInterpreterOutputImage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -421,8 +421,8 @@ func (CodeInterpreterOutputImage) implCodeInterpreterToolCallDeltaCodeInterprete
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion.AsAny().(type) {
-//	case CodeInterpreterLogs:
-//	case CodeInterpreterOutputImage:
+//	case openai.CodeInterpreterLogs:
+//	case openai.CodeInterpreterOutputImage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -891,8 +891,8 @@ func (ToolCallsStepDetails) implRunStepStepDetailsUnion()       {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := RunStepStepDetailsUnion.AsAny().(type) {
-//	case MessageCreationStepDetails:
-//	case ToolCallsStepDetails:
+//	case openai.MessageCreationStepDetails:
+//	case openai.ToolCallsStepDetails:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1008,8 +1008,8 @@ func (ToolCallDeltaObject) implRunStepDeltaStepDetailsUnion()      {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := RunStepDeltaStepDetailsUnion.AsAny().(type) {
-//	case RunStepDeltaMessageDelta:
-//	case ToolCallDeltaObject:
+//	case openai.RunStepDeltaMessageDelta:
+//	case openai.ToolCallDeltaObject:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1147,9 +1147,9 @@ func (FunctionToolCall) implToolCallUnion()        {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ToolCallUnion.AsAny().(type) {
-//	case CodeInterpreterToolCall:
-//	case FileSearchToolCall:
-//	case FunctionToolCall:
+//	case openai.CodeInterpreterToolCall:
+//	case openai.FileSearchToolCall:
+//	case openai.FunctionToolCall:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1229,9 +1229,9 @@ func (FunctionToolCallDelta) implToolCallDeltaUnion()        {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ToolCallDeltaUnion.AsAny().(type) {
-//	case CodeInterpreterToolCallDelta:
-//	case FileSearchToolCallDelta:
-//	case FunctionToolCallDelta:
+//	case openai.CodeInterpreterToolCallDelta:
+//	case openai.FileSearchToolCallDelta:
+//	case openai.FunctionToolCallDelta:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}

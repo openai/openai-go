@@ -288,8 +288,6 @@ func (r *FileSearchTool) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (FileSearchTool) implAssistantToolUnion() {}
-
 // ToParam converts this FileSearchTool to a FileSearchToolParam.
 //
 // Warning: the fields of the param type will not be present. ToParam should only
@@ -759,8 +757,6 @@ func (r FunctionTool) RawJSON() string { return r.JSON.raw }
 func (r *FunctionTool) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-func (FunctionTool) implAssistantToolUnion() {}
 
 // ToParam converts this FunctionTool to a FunctionToolParam.
 //
@@ -1301,8 +1297,8 @@ func (ResponseCodeInterpreterToolCallResultFiles) implResponseCodeInterpreterToo
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseCodeInterpreterToolCallResultUnion.AsAny().(type) {
-//	case ResponseCodeInterpreterToolCallResultLogs:
-//	case ResponseCodeInterpreterToolCallResultFiles:
+//	case responses.ResponseCodeInterpreterToolCallResultLogs:
+//	case responses.ResponseCodeInterpreterToolCallResultFiles:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1539,15 +1535,15 @@ func (ResponseComputerToolCallActionWait) implResponseComputerToolCallActionUnio
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseComputerToolCallActionUnion.AsAny().(type) {
-//	case ResponseComputerToolCallActionClick:
-//	case ResponseComputerToolCallActionDoubleClick:
-//	case ResponseComputerToolCallActionDrag:
-//	case ResponseComputerToolCallActionKeypress:
-//	case ResponseComputerToolCallActionMove:
-//	case ResponseComputerToolCallActionScreenshot:
-//	case ResponseComputerToolCallActionScroll:
-//	case ResponseComputerToolCallActionType:
-//	case ResponseComputerToolCallActionWait:
+//	case responses.ResponseComputerToolCallActionClick:
+//	case responses.ResponseComputerToolCallActionDoubleClick:
+//	case responses.ResponseComputerToolCallActionDrag:
+//	case responses.ResponseComputerToolCallActionKeypress:
+//	case responses.ResponseComputerToolCallActionMove:
+//	case responses.ResponseComputerToolCallActionScreenshot:
+//	case responses.ResponseComputerToolCallActionScroll:
+//	case responses.ResponseComputerToolCallActionType:
+//	case responses.ResponseComputerToolCallActionWait:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -2535,8 +2531,8 @@ func (ResponseOutputRefusal) implResponseContentPartAddedEventPartUnion() {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseContentPartAddedEventPartUnion.AsAny().(type) {
-//	case ResponseOutputText:
-//	case ResponseOutputRefusal:
+//	case responses.ResponseOutputText:
+//	case responses.ResponseOutputRefusal:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -2635,8 +2631,8 @@ func (ResponseOutputRefusal) implResponseContentPartDoneEventPartUnion() {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseContentPartDoneEventPartUnion.AsAny().(type) {
-//	case ResponseOutputText:
-//	case ResponseOutputRefusal:
+//	case responses.ResponseOutputText:
+//	case responses.ResponseOutputRefusal:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -3112,7 +3108,7 @@ func (ResponseFormatTextJSONSchemaConfig) ImplResponseFormatTextConfigUnion() {}
 //
 //	switch variant := ResponseFormatTextConfigUnion.AsAny().(type) {
 //	case shared.ResponseFormatText:
-//	case ResponseFormatTextJSONSchemaConfig:
+//	case responses.ResponseFormatTextJSONSchemaConfig:
 //	case shared.ResponseFormatJSONObject:
 //	default:
 //	  fmt.Errorf("no variant present")
@@ -3708,9 +3704,9 @@ func (ResponseInputFile) implResponseInputContentUnion()  {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseInputContentUnion.AsAny().(type) {
-//	case ResponseInputText:
-//	case ResponseInputImage:
-//	case ResponseInputFile:
+//	case responses.ResponseInputText:
+//	case responses.ResponseInputImage:
+//	case responses.ResponseInputFile:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -4673,14 +4669,14 @@ func (ResponseFunctionToolCallOutputItem) implResponseItemUnion() {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseItemUnion.AsAny().(type) {
-//	case ResponseInputMessageItem:
-//	case ResponseOutputMessage:
-//	case ResponseFileSearchToolCall:
-//	case ResponseComputerToolCall:
-//	case ResponseComputerToolCallOutputItem:
-//	case ResponseFunctionWebSearch:
-//	case ResponseFunctionToolCallItem:
-//	case ResponseFunctionToolCallOutputItem:
+//	case responses.ResponseInputMessageItem:
+//	case responses.ResponseOutputMessage:
+//	case responses.ResponseFileSearchToolCall:
+//	case responses.ResponseComputerToolCall:
+//	case responses.ResponseComputerToolCallOutputItem:
+//	case responses.ResponseFunctionWebSearch:
+//	case responses.ResponseFunctionToolCallItem:
+//	case responses.ResponseFunctionToolCallOutputItem:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -4880,12 +4876,12 @@ func (ResponseReasoningItem) implResponseOutputItemUnion()      {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseOutputItemUnion.AsAny().(type) {
-//	case ResponseOutputMessage:
-//	case ResponseFileSearchToolCall:
-//	case ResponseFunctionToolCall:
-//	case ResponseFunctionWebSearch:
-//	case ResponseComputerToolCall:
-//	case ResponseReasoningItem:
+//	case responses.ResponseOutputMessage:
+//	case responses.ResponseFileSearchToolCall:
+//	case responses.ResponseFunctionToolCall:
+//	case responses.ResponseFunctionWebSearch:
+//	case responses.ResponseComputerToolCall:
+//	case responses.ResponseReasoningItem:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -5072,8 +5068,8 @@ func (ResponseOutputRefusal) implResponseOutputMessageContentUnion() {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseOutputMessageContentUnion.AsAny().(type) {
-//	case ResponseOutputText:
-//	case ResponseOutputRefusal:
+//	case responses.ResponseOutputText:
+//	case responses.ResponseOutputRefusal:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -5328,9 +5324,9 @@ func (ResponseOutputTextAnnotationFilePath) implResponseOutputTextAnnotationUnio
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseOutputTextAnnotationUnion.AsAny().(type) {
-//	case ResponseOutputTextAnnotationFileCitation:
-//	case ResponseOutputTextAnnotationURLCitation:
-//	case ResponseOutputTextAnnotationFilePath:
+//	case responses.ResponseOutputTextAnnotationFileCitation:
+//	case responses.ResponseOutputTextAnnotationURLCitation:
+//	case responses.ResponseOutputTextAnnotationFilePath:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -6125,42 +6121,42 @@ func (ResponseWebSearchCallSearchingEvent) implResponseStreamEventUnion()       
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseStreamEventUnion.AsAny().(type) {
-//	case ResponseAudioDeltaEvent:
-//	case ResponseAudioDoneEvent:
-//	case ResponseAudioTranscriptDeltaEvent:
-//	case ResponseAudioTranscriptDoneEvent:
-//	case ResponseCodeInterpreterCallCodeDeltaEvent:
-//	case ResponseCodeInterpreterCallCodeDoneEvent:
-//	case ResponseCodeInterpreterCallCompletedEvent:
-//	case ResponseCodeInterpreterCallInProgressEvent:
-//	case ResponseCodeInterpreterCallInterpretingEvent:
-//	case ResponseCompletedEvent:
-//	case ResponseContentPartAddedEvent:
-//	case ResponseContentPartDoneEvent:
-//	case ResponseCreatedEvent:
-//	case ResponseErrorEvent:
-//	case ResponseFileSearchCallCompletedEvent:
-//	case ResponseFileSearchCallInProgressEvent:
-//	case ResponseFileSearchCallSearchingEvent:
-//	case ResponseFunctionCallArgumentsDeltaEvent:
-//	case ResponseFunctionCallArgumentsDoneEvent:
-//	case ResponseInProgressEvent:
-//	case ResponseFailedEvent:
-//	case ResponseIncompleteEvent:
-//	case ResponseOutputItemAddedEvent:
-//	case ResponseOutputItemDoneEvent:
-//	case ResponseReasoningSummaryPartAddedEvent:
-//	case ResponseReasoningSummaryPartDoneEvent:
-//	case ResponseReasoningSummaryTextDeltaEvent:
-//	case ResponseReasoningSummaryTextDoneEvent:
-//	case ResponseRefusalDeltaEvent:
-//	case ResponseRefusalDoneEvent:
-//	case ResponseTextAnnotationDeltaEvent:
-//	case ResponseTextDeltaEvent:
-//	case ResponseTextDoneEvent:
-//	case ResponseWebSearchCallCompletedEvent:
-//	case ResponseWebSearchCallInProgressEvent:
-//	case ResponseWebSearchCallSearchingEvent:
+//	case responses.ResponseAudioDeltaEvent:
+//	case responses.ResponseAudioDoneEvent:
+//	case responses.ResponseAudioTranscriptDeltaEvent:
+//	case responses.ResponseAudioTranscriptDoneEvent:
+//	case responses.ResponseCodeInterpreterCallCodeDeltaEvent:
+//	case responses.ResponseCodeInterpreterCallCodeDoneEvent:
+//	case responses.ResponseCodeInterpreterCallCompletedEvent:
+//	case responses.ResponseCodeInterpreterCallInProgressEvent:
+//	case responses.ResponseCodeInterpreterCallInterpretingEvent:
+//	case responses.ResponseCompletedEvent:
+//	case responses.ResponseContentPartAddedEvent:
+//	case responses.ResponseContentPartDoneEvent:
+//	case responses.ResponseCreatedEvent:
+//	case responses.ResponseErrorEvent:
+//	case responses.ResponseFileSearchCallCompletedEvent:
+//	case responses.ResponseFileSearchCallInProgressEvent:
+//	case responses.ResponseFileSearchCallSearchingEvent:
+//	case responses.ResponseFunctionCallArgumentsDeltaEvent:
+//	case responses.ResponseFunctionCallArgumentsDoneEvent:
+//	case responses.ResponseInProgressEvent:
+//	case responses.ResponseFailedEvent:
+//	case responses.ResponseIncompleteEvent:
+//	case responses.ResponseOutputItemAddedEvent:
+//	case responses.ResponseOutputItemDoneEvent:
+//	case responses.ResponseReasoningSummaryPartAddedEvent:
+//	case responses.ResponseReasoningSummaryPartDoneEvent:
+//	case responses.ResponseReasoningSummaryTextDeltaEvent:
+//	case responses.ResponseReasoningSummaryTextDoneEvent:
+//	case responses.ResponseRefusalDeltaEvent:
+//	case responses.ResponseRefusalDoneEvent:
+//	case responses.ResponseTextAnnotationDeltaEvent:
+//	case responses.ResponseTextDeltaEvent:
+//	case responses.ResponseTextDoneEvent:
+//	case responses.ResponseWebSearchCallCompletedEvent:
+//	case responses.ResponseWebSearchCallInProgressEvent:
+//	case responses.ResponseWebSearchCallSearchingEvent:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -6545,9 +6541,9 @@ func (ResponseTextAnnotationDeltaEventAnnotationFilePath) implResponseTextAnnota
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseTextAnnotationDeltaEventAnnotationUnion.AsAny().(type) {
-//	case ResponseTextAnnotationDeltaEventAnnotationFileCitation:
-//	case ResponseTextAnnotationDeltaEventAnnotationURLCitation:
-//	case ResponseTextAnnotationDeltaEventAnnotationFilePath:
+//	case responses.ResponseTextAnnotationDeltaEventAnnotationFileCitation:
+//	case responses.ResponseTextAnnotationDeltaEventAnnotationURLCitation:
+//	case responses.ResponseTextAnnotationDeltaEventAnnotationFilePath:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
