@@ -157,6 +157,9 @@ func (r EmbeddingNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow EmbeddingNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *EmbeddingNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -171,6 +174,9 @@ type EmbeddingNewParamsInputUnion struct {
 
 func (u EmbeddingNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[EmbeddingNewParamsInputUnion](u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
+}
+func (u *EmbeddingNewParamsInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *EmbeddingNewParamsInputUnion) asAny() any {

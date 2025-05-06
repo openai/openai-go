@@ -210,6 +210,9 @@ func (r ComparisonFilterParam) MarshalJSON() (data []byte, err error) {
 	type shadow ComparisonFilterParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ComparisonFilterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -223,6 +226,9 @@ type ComparisonFilterValueUnionParam struct {
 
 func (u ComparisonFilterValueUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ComparisonFilterValueUnionParam](u.OfString, u.OfFloat, u.OfBool)
+}
+func (u *ComparisonFilterValueUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ComparisonFilterValueUnionParam) asAny() any {
@@ -294,6 +300,9 @@ type CompoundFilterParam struct {
 func (r CompoundFilterParam) MarshalJSON() (data []byte, err error) {
 	type shadow CompoundFilterParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *CompoundFilterParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ErrorObject struct {
@@ -393,6 +402,9 @@ type FunctionDefinitionParam struct {
 func (r FunctionDefinitionParam) MarshalJSON() (data []byte, err error) {
 	type shadow FunctionDefinitionParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *FunctionDefinitionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type FunctionParameters map[string]any
@@ -515,6 +527,9 @@ func (r ReasoningParam) MarshalJSON() (data []byte, err error) {
 	type shadow ReasoningParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // **o-series models only**
 //
@@ -583,6 +598,9 @@ type ResponseFormatJSONObjectParam struct {
 func (r ResponseFormatJSONObjectParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFormatJSONObjectParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseFormatJSONObjectParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
@@ -671,6 +689,9 @@ func (r ResponseFormatJSONSchemaParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFormatJSONSchemaParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseFormatJSONSchemaParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Structured Outputs configuration options, including a JSON Schema.
 //
@@ -697,6 +718,9 @@ type ResponseFormatJSONSchemaJSONSchemaParam struct {
 func (r ResponseFormatJSONSchemaJSONSchemaParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFormatJSONSchemaJSONSchemaParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseFormatJSONSchemaJSONSchemaParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Default response format. Used to generate text responses.
@@ -747,6 +771,9 @@ type ResponseFormatTextParam struct {
 func (r ResponseFormatTextParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFormatTextParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseFormatTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // ResponsesModel also accepts any [string] or [ChatModel]

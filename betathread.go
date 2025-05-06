@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/requestconfig"
@@ -18,7 +17,6 @@ import (
 	"github.com/openai/openai-go/packages/ssestream"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
-	"github.com/tidwall/gjson"
 )
 
 // BetaThreadService contains methods and other services that help with interacting
@@ -199,6 +197,9 @@ type AssistantResponseFormatOptionUnionParam struct {
 func (u AssistantResponseFormatOptionUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[AssistantResponseFormatOptionUnionParam](u.OfAuto, u.OfText, u.OfJSONObject, u.OfJSONSchema)
 }
+func (u *AssistantResponseFormatOptionUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *AssistantResponseFormatOptionUnionParam) asAny() any {
 	if !param.IsOmitted(u.OfAuto) {
@@ -291,6 +292,9 @@ func (r AssistantToolChoiceParam) MarshalJSON() (data []byte, err error) {
 	type shadow AssistantToolChoiceParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *AssistantToolChoiceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type AssistantToolChoiceFunction struct {
 	// The name of the function to call.
@@ -329,6 +333,9 @@ type AssistantToolChoiceFunctionParam struct {
 func (r AssistantToolChoiceFunctionParam) MarshalJSON() (data []byte, err error) {
 	type shadow AssistantToolChoiceFunctionParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AssistantToolChoiceFunctionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // AssistantToolChoiceOptionUnion contains all possible properties and values from
@@ -410,6 +417,9 @@ type AssistantToolChoiceOptionUnionParam struct {
 
 func (u AssistantToolChoiceOptionUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[AssistantToolChoiceOptionUnionParam](u.OfAuto, u.OfAssistantToolChoice)
+}
+func (u *AssistantToolChoiceOptionUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *AssistantToolChoiceOptionUnionParam) asAny() any {
@@ -564,6 +574,9 @@ func (r BetaThreadNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The properties Content, Role are required.
 type BetaThreadNewParamsMessage struct {
@@ -594,10 +607,13 @@ func (r BetaThreadNewParamsMessage) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsMessage
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewParamsMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[BetaThreadNewParamsMessage](
-		"Role", false, "user", "assistant",
+		"role", "user", "assistant",
 	)
 }
 
@@ -612,6 +628,9 @@ type BetaThreadNewParamsMessageContentUnion struct {
 
 func (u BetaThreadNewParamsMessageContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewParamsMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
+}
+func (u *BetaThreadNewParamsMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadNewParamsMessageContentUnion) asAny() any {
@@ -635,6 +654,9 @@ func (r BetaThreadNewParamsMessageAttachment) MarshalJSON() (data []byte, err er
 	type shadow BetaThreadNewParamsMessageAttachment
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewParamsMessageAttachment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -647,6 +669,9 @@ type BetaThreadNewParamsMessageAttachmentToolUnion struct {
 
 func (u BetaThreadNewParamsMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewParamsMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+}
+func (u *BetaThreadNewParamsMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadNewParamsMessageAttachmentToolUnion) asAny() any {
@@ -671,16 +696,8 @@ func (u BetaThreadNewParamsMessageAttachmentToolUnion) GetType() *string {
 func init() {
 	apijson.RegisterUnion[BetaThreadNewParamsMessageAttachmentToolUnion](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(CodeInterpreterToolParam{}),
-			DiscriminatorValue: "code_interpreter",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(BetaThreadNewParamsMessageAttachmentToolFileSearch{}),
-			DiscriminatorValue: "file_search",
-		},
+		apijson.Discriminator[CodeInterpreterToolParam]("code_interpreter"),
+		apijson.Discriminator[BetaThreadNewParamsMessageAttachmentToolFileSearch]("file_search"),
 	)
 }
 
@@ -702,6 +719,9 @@ func (r BetaThreadNewParamsMessageAttachmentToolFileSearch) MarshalJSON() (data 
 	type shadow BetaThreadNewParamsMessageAttachmentToolFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewParamsMessageAttachmentToolFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A set of resources that are made available to the assistant's tools in this
 // thread. The resources are specific to the type of tool. For example, the
@@ -717,6 +737,9 @@ func (r BetaThreadNewParamsToolResources) MarshalJSON() (data []byte, err error)
 	type shadow BetaThreadNewParamsToolResources
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewParamsToolResources) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BetaThreadNewParamsToolResourcesCodeInterpreter struct {
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
@@ -729,6 +752,9 @@ type BetaThreadNewParamsToolResourcesCodeInterpreter struct {
 func (r BetaThreadNewParamsToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsToolResourcesCodeInterpreter
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadNewParamsToolResourcesCodeInterpreter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadNewParamsToolResourcesFileSearch struct {
@@ -748,6 +774,9 @@ type BetaThreadNewParamsToolResourcesFileSearch struct {
 func (r BetaThreadNewParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsToolResourcesFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadNewParamsToolResourcesFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadNewParamsToolResourcesFileSearchVectorStore struct {
@@ -772,6 +801,9 @@ func (r BetaThreadNewParamsToolResourcesFileSearchVectorStore) MarshalJSON() (da
 	type shadow BetaThreadNewParamsToolResourcesFileSearchVectorStore
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewParamsToolResourcesFileSearchVectorStore) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -784,6 +816,9 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion 
 
 func (u BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion](u.OfAuto, u.OfStatic)
+}
+func (u *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) asAny() any {
@@ -816,16 +851,8 @@ func (u BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUni
 func init() {
 	apijson.RegisterUnion[BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto{}),
-			DiscriminatorValue: "auto",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic{}),
-			DiscriminatorValue: "static",
-		},
+		apijson.Discriminator[BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto]("auto"),
+		apijson.Discriminator[BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic]("static"),
 	)
 }
 
@@ -850,6 +877,9 @@ func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAut
 	type shadow BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The properties Static, Type are required.
 type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic struct {
@@ -864,6 +894,9 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic
 func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // The properties ChunkOverlapTokens, MaxChunkSizeTokens are required.
@@ -881,6 +914,9 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic
 func (r BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadUpdateParams struct {
@@ -903,6 +939,9 @@ func (r BetaThreadUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A set of resources that are made available to the assistant's tools in this
 // thread. The resources are specific to the type of tool. For example, the
@@ -918,6 +957,9 @@ func (r BetaThreadUpdateParamsToolResources) MarshalJSON() (data []byte, err err
 	type shadow BetaThreadUpdateParamsToolResources
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadUpdateParamsToolResources) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BetaThreadUpdateParamsToolResourcesCodeInterpreter struct {
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
@@ -930,6 +972,9 @@ type BetaThreadUpdateParamsToolResourcesCodeInterpreter struct {
 func (r BetaThreadUpdateParamsToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadUpdateParamsToolResourcesCodeInterpreter
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadUpdateParamsToolResourcesCodeInterpreter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadUpdateParamsToolResourcesFileSearch struct {
@@ -944,6 +989,9 @@ type BetaThreadUpdateParamsToolResourcesFileSearch struct {
 func (r BetaThreadUpdateParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadUpdateParamsToolResourcesFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadUpdateParamsToolResourcesFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadNewAndRunParams struct {
@@ -1042,6 +1090,9 @@ func (r BetaThreadNewAndRunParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewAndRunParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Options to create a new thread. If no thread is provided when running a request,
 // an empty thread will be created.
@@ -1067,6 +1118,9 @@ type BetaThreadNewAndRunParamsThread struct {
 func (r BetaThreadNewAndRunParamsThread) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThread
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadNewAndRunParamsThread) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // The properties Content, Role are required.
@@ -1098,10 +1152,13 @@ func (r BetaThreadNewAndRunParamsThreadMessage) MarshalJSON() (data []byte, err 
 	type shadow BetaThreadNewAndRunParamsThreadMessage
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewAndRunParamsThreadMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[BetaThreadNewAndRunParamsThreadMessage](
-		"Role", false, "user", "assistant",
+		"role", "user", "assistant",
 	)
 }
 
@@ -1116,6 +1173,9 @@ type BetaThreadNewAndRunParamsThreadMessageContentUnion struct {
 
 func (u BetaThreadNewAndRunParamsThreadMessageContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
+}
+func (u *BetaThreadNewAndRunParamsThreadMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadNewAndRunParamsThreadMessageContentUnion) asAny() any {
@@ -1139,6 +1199,9 @@ func (r BetaThreadNewAndRunParamsThreadMessageAttachment) MarshalJSON() (data []
 	type shadow BetaThreadNewAndRunParamsThreadMessageAttachment
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewAndRunParamsThreadMessageAttachment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1151,6 +1214,9 @@ type BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion struct {
 
 func (u BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+}
+func (u *BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) asAny() any {
@@ -1175,16 +1241,8 @@ func (u BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) GetType() *st
 func init() {
 	apijson.RegisterUnion[BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(CodeInterpreterToolParam{}),
-			DiscriminatorValue: "code_interpreter",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch{}),
-			DiscriminatorValue: "file_search",
-		},
+		apijson.Discriminator[CodeInterpreterToolParam]("code_interpreter"),
+		apijson.Discriminator[BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch]("file_search"),
 	)
 }
 
@@ -1206,6 +1264,9 @@ func (r BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch) MarshalJ
 	type shadow BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A set of resources that are made available to the assistant's tools in this
 // thread. The resources are specific to the type of tool. For example, the
@@ -1221,6 +1282,9 @@ func (r BetaThreadNewAndRunParamsThreadToolResources) MarshalJSON() (data []byte
 	type shadow BetaThreadNewAndRunParamsThreadToolResources
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewAndRunParamsThreadToolResources) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter struct {
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
@@ -1233,6 +1297,9 @@ type BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter struct {
 func (r BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadNewAndRunParamsThreadToolResourcesCodeInterpreter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadNewAndRunParamsThreadToolResourcesFileSearch struct {
@@ -1252,6 +1319,9 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearch struct {
 func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadNewAndRunParamsThreadToolResourcesFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore struct {
@@ -1276,6 +1346,9 @@ func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore) Marsh
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStore) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1288,6 +1361,9 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingSt
 
 func (u BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion](u.OfAuto, u.OfStatic)
+}
+func (u *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) asAny() any {
@@ -1320,16 +1396,8 @@ func (u BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkin
 func init() {
 	apijson.RegisterUnion[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto{}),
-			DiscriminatorValue: "auto",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStatic{}),
-			DiscriminatorValue: "static",
-		},
+		apijson.Discriminator[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto]("auto"),
+		apijson.Discriminator[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStatic]("static"),
 	)
 }
 
@@ -1354,6 +1422,9 @@ func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkin
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The properties Static, Type are required.
 type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStatic struct {
@@ -1368,6 +1439,9 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingSt
 func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStatic
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStatic) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // The properties ChunkOverlapTokens, MaxChunkSizeTokens are required.
@@ -1386,6 +1460,9 @@ func (r BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkin
 	type shadow BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A set of resources that are used by the assistant's tools. The resources are
 // specific to the type of tool. For example, the `code_interpreter` tool requires
@@ -1401,6 +1478,9 @@ func (r BetaThreadNewAndRunParamsToolResources) MarshalJSON() (data []byte, err 
 	type shadow BetaThreadNewAndRunParamsToolResources
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewAndRunParamsToolResources) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BetaThreadNewAndRunParamsToolResourcesCodeInterpreter struct {
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
@@ -1413,6 +1493,9 @@ type BetaThreadNewAndRunParamsToolResourcesCodeInterpreter struct {
 func (r BetaThreadNewAndRunParamsToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsToolResourcesCodeInterpreter
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadNewAndRunParamsToolResourcesCodeInterpreter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadNewAndRunParamsToolResourcesFileSearch struct {
@@ -1427,6 +1510,9 @@ type BetaThreadNewAndRunParamsToolResourcesFileSearch struct {
 func (r BetaThreadNewAndRunParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadNewAndRunParamsToolResourcesFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadNewAndRunParamsToolResourcesFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Controls for how a thread will be truncated prior to the run. Use this to
@@ -1451,9 +1537,12 @@ func (r BetaThreadNewAndRunParamsTruncationStrategy) MarshalJSON() (data []byte,
 	type shadow BetaThreadNewAndRunParamsTruncationStrategy
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadNewAndRunParamsTruncationStrategy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[BetaThreadNewAndRunParamsTruncationStrategy](
-		"Type", false, "auto", "last_messages",
+		"type", "auto", "last_messages",
 	)
 }

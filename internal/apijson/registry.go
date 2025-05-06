@@ -20,6 +20,15 @@ type unionEntry struct {
 	variants         []UnionVariant
 }
 
+func Discriminator[T any](value any) UnionVariant {
+	var zero T
+	return UnionVariant{
+		TypeFilter:         gjson.JSON,
+		DiscriminatorValue: value,
+		Type:               reflect.TypeOf(zero),
+	}
+}
+
 func RegisterUnion[T any](discriminator string, variants ...UnionVariant) {
 	typ := reflect.TypeOf((*T)(nil)).Elem()
 	unionRegistry[typ] = unionEntry{

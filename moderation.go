@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"net/http"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/requestconfig"
@@ -13,7 +12,6 @@ import (
 	"github.com/openai/openai-go/packages/param"
 	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared/constant"
-	"github.com/tidwall/gjson"
 )
 
 // ModerationService contains methods and other services that help with interacting
@@ -292,6 +290,9 @@ func (r ModerationImageURLInputParam) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationImageURLInputParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ModerationImageURLInputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Contains either an image URL or a data URL for a base64 encoded image.
 //
@@ -305,6 +306,9 @@ type ModerationImageURLInputImageURLParam struct {
 func (r ModerationImageURLInputImageURLParam) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationImageURLInputImageURLParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ModerationImageURLInputImageURLParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ModerationModel = string
@@ -339,6 +343,9 @@ type ModerationMultiModalInputUnionParam struct {
 
 func (u ModerationMultiModalInputUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ModerationMultiModalInputUnionParam](u.OfImageURL, u.OfText)
+}
+func (u *ModerationMultiModalInputUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ModerationMultiModalInputUnionParam) asAny() any {
@@ -379,16 +386,8 @@ func (u ModerationMultiModalInputUnionParam) GetType() *string {
 func init() {
 	apijson.RegisterUnion[ModerationMultiModalInputUnionParam](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ModerationImageURLInputParam{}),
-			DiscriminatorValue: "image_url",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ModerationTextInputParam{}),
-			DiscriminatorValue: "text",
-		},
+		apijson.Discriminator[ModerationImageURLInputParam]("image_url"),
+		apijson.Discriminator[ModerationTextInputParam]("text"),
 	)
 }
 
@@ -408,6 +407,9 @@ type ModerationTextInputParam struct {
 func (r ModerationTextInputParam) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationTextInputParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ModerationTextInputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Represents if a given text input is potentially harmful.
@@ -450,6 +452,9 @@ func (r ModerationNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow ModerationNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ModerationNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -463,6 +468,9 @@ type ModerationNewParamsInputUnion struct {
 
 func (u ModerationNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ModerationNewParamsInputUnion](u.OfString, u.OfStringArray, u.OfModerationMultiModalArray)
+}
+func (u *ModerationNewParamsInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ModerationNewParamsInputUnion) asAny() any {

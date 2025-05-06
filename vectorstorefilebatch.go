@@ -217,6 +217,9 @@ func (r VectorStoreFileBatchNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreFileBatchNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *VectorStoreFileBatchNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -230,6 +233,9 @@ type VectorStoreFileBatchNewParamsAttributeUnion struct {
 
 func (u VectorStoreFileBatchNewParamsAttributeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreFileBatchNewParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+}
+func (u *VectorStoreFileBatchNewParamsAttributeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *VectorStoreFileBatchNewParamsAttributeUnion) asAny() any {

@@ -318,6 +318,9 @@ type ImageEditParamsImageUnion struct {
 func (u ImageEditParamsImageUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ImageEditParamsImageUnion](u.OfFile, u.OfBinaryArray)
 }
+func (u *ImageEditParamsImageUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *ImageEditParamsImageUnion) asAny() any {
 	if !param.IsOmitted(u.OfFile) {
@@ -459,6 +462,9 @@ type ImageGenerateParams struct {
 func (r ImageGenerateParams) MarshalJSON() (data []byte, err error) {
 	type shadow ImageGenerateParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ImageGenerateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Allows to set transparency for the background of the generated image(s). This
