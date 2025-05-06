@@ -172,8 +172,8 @@ func (FilePathAnnotation) implAnnotationUnion()     {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := AnnotationUnion.AsAny().(type) {
-//	case FileCitationAnnotation:
-//	case FilePathAnnotation:
+//	case openai.FileCitationAnnotation:
+//	case openai.FilePathAnnotation:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -245,8 +245,8 @@ func (FilePathDeltaAnnotation) implAnnotationDeltaUnion()     {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := AnnotationDeltaUnion.AsAny().(type) {
-//	case FileCitationDeltaAnnotation:
-//	case FilePathDeltaAnnotation:
+//	case openai.FileCitationDeltaAnnotation:
+//	case openai.FilePathDeltaAnnotation:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1022,10 +1022,10 @@ func (RefusalContentBlock) implMessageContentUnion()   {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := MessageContentUnion.AsAny().(type) {
-//	case ImageFileContentBlock:
-//	case ImageURLContentBlock:
-//	case TextContentBlock:
-//	case RefusalContentBlock:
+//	case openai.ImageFileContentBlock:
+//	case openai.ImageURLContentBlock:
+//	case openai.TextContentBlock:
+//	case openai.RefusalContentBlock:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1115,10 +1115,10 @@ func (ImageURLDeltaBlock) implMessageContentDeltaUnion()  {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := MessageContentDeltaUnion.AsAny().(type) {
-//	case ImageFileDeltaBlock:
-//	case TextDeltaBlock:
-//	case RefusalDeltaBlock:
-//	case ImageURLDeltaBlock:
+//	case openai.ImageFileDeltaBlock:
+//	case openai.TextDeltaBlock:
+//	case openai.RefusalDeltaBlock:
+//	case openai.ImageURLDeltaBlock:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}

@@ -199,8 +199,8 @@ func (OtherFileChunkingStrategyObject) implFileChunkingStrategyUnion()  {}
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := FileChunkingStrategyUnion.AsAny().(type) {
-//	case StaticFileChunkingStrategyObject:
-//	case OtherFileChunkingStrategyObject:
+//	case openai.StaticFileChunkingStrategyObject:
+//	case openai.OtherFileChunkingStrategyObject:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
