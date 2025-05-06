@@ -55,10 +55,10 @@ func setMetadataExtraFields(root reflect.Value, index []int, name string, metaEx
 }
 
 func (f Field) toRespField() resp.Field {
-	if f.IsNull() {
-		return resp.NewNullField()
-	} else if f.IsMissing() {
+	if f.IsMissing() {
 		return resp.Field{}
+	} else if f.IsNull() {
+		return resp.NewNullField()
 	} else if f.IsInvalid() {
 		return resp.NewInvalidField(f.raw)
 	} else {
