@@ -60,7 +60,7 @@ func line(r *bufio.Reader) ([]byte, error) {
 
 	// To prevent infinite loops, the failsafe stops when a line is
 	// 100 times longer than the [io.Reader] default buffer size,
-	// or after 10 failed attempts to find an end of line.
+	// or after 20 failed attempts to find an end of line.
 	for f := 0; f < 100; f++ {
 		part, isPrefix, err := r.ReadLine()
 		if err != nil {
@@ -81,7 +81,7 @@ func line(r *bufio.Reader) ([]byte, error) {
 
 			// Didn't find an end of line, heavily increment the failsafe.
 			if n != r.Size() {
-				f += 10
+				f += 5
 			}
 		}
 

@@ -182,7 +182,6 @@ func WithJSONSet(key string, value interface{}) RequestOption {
 			if err != nil {
 				return err
 			}
-			return nil
 		} else {
 			return fmt.Errorf("cannot use WithJSONSet on a body that is not serialized as *bytes.Buffer")
 		}
