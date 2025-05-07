@@ -2181,6 +2181,12 @@ func (r BetaAssistantUpdateParams) MarshalJSON() (data []byte, err error) {
 type BetaAssistantUpdateParamsModel string
 
 const (
+	BetaAssistantUpdateParamsModelGPT4_1                  BetaAssistantUpdateParamsModel = "gpt-4.1"
+	BetaAssistantUpdateParamsModelGPT4_1Mini              BetaAssistantUpdateParamsModel = "gpt-4.1-mini"
+	BetaAssistantUpdateParamsModelGPT4_1Nano              BetaAssistantUpdateParamsModel = "gpt-4.1-nano"
+	BetaAssistantUpdateParamsModelGPT4_1_2025_04_14       BetaAssistantUpdateParamsModel = "gpt-4.1-2025-04-14"
+	BetaAssistantUpdateParamsModelGPT4_1Mini2025_04_14    BetaAssistantUpdateParamsModel = "gpt-4.1-mini-2025-04-14"
+	BetaAssistantUpdateParamsModelGPT4_1Nano2025_04_14    BetaAssistantUpdateParamsModel = "gpt-4.1-nano-2025-04-14"
 	BetaAssistantUpdateParamsModelO3Mini                  BetaAssistantUpdateParamsModel = "o3-mini"
 	BetaAssistantUpdateParamsModelO3Mini2025_01_31        BetaAssistantUpdateParamsModel = "o3-mini-2025-01-31"
 	BetaAssistantUpdateParamsModelO1                      BetaAssistantUpdateParamsModel = "o1"
