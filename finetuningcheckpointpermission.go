@@ -90,13 +90,17 @@ func (r *FineTuningCheckpointPermissionService) Get(ctx context.Context, fineTun
 //
 // Organization owners can use this endpoint to delete a permission for a
 // fine-tuned model checkpoint.
-func (r *FineTuningCheckpointPermissionService) Delete(ctx context.Context, fineTunedModelCheckpoint string, opts ...option.RequestOption) (res *FineTuningCheckpointPermissionDeleteResponse, err error) {
+func (r *FineTuningCheckpointPermissionService) Delete(ctx context.Context, fineTunedModelCheckpoint string, permissionID string, opts ...option.RequestOption) (res *FineTuningCheckpointPermissionDeleteResponse, err error) {
 	opts = append(r.Options[:], opts...)
 	if fineTunedModelCheckpoint == "" {
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
 		return
 	}
-	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
+	if permissionID == "" {
+		err = errors.New("missing required permission_id parameter")
+		return
+	}
+	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions/%s", fineTunedModelCheckpoint, permissionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return
 }

@@ -101,6 +101,10 @@ type ResponseOutputItemDone string                  // Always "response.output_i
 type ResponseOutputTextAnnotationAdded string       // Always "response.output_text.annotation.added"
 type ResponseOutputTextDelta string                 // Always "response.output_text.delta"
 type ResponseOutputTextDone string                  // Always "response.output_text.done"
+type ResponseReasoningSummaryPartAdded string       // Always "response.reasoning_summary_part.added"
+type ResponseReasoningSummaryPartDone string        // Always "response.reasoning_summary_part.done"
+type ResponseReasoningSummaryTextDelta string       // Always "response.reasoning_summary_text.delta"
+type ResponseReasoningSummaryTextDone string        // Always "response.reasoning_summary_text.done"
 type ResponseRefusalDelta string                    // Always "response.refusal.delta"
 type ResponseRefusalDone string                     // Always "response.refusal.done"
 type ResponseWebSearchCallCompleted string          // Always "response.web_search_call.completed"
@@ -282,8 +286,20 @@ func (c ResponseOutputTextDelta) Default() ResponseOutputTextDelta {
 	return "response.output_text.delta"
 }
 func (c ResponseOutputTextDone) Default() ResponseOutputTextDone { return "response.output_text.done" }
-func (c ResponseRefusalDelta) Default() ResponseRefusalDelta     { return "response.refusal.delta" }
-func (c ResponseRefusalDone) Default() ResponseRefusalDone       { return "response.refusal.done" }
+func (c ResponseReasoningSummaryPartAdded) Default() ResponseReasoningSummaryPartAdded {
+	return "response.reasoning_summary_part.added"
+}
+func (c ResponseReasoningSummaryPartDone) Default() ResponseReasoningSummaryPartDone {
+	return "response.reasoning_summary_part.done"
+}
+func (c ResponseReasoningSummaryTextDelta) Default() ResponseReasoningSummaryTextDelta {
+	return "response.reasoning_summary_text.delta"
+}
+func (c ResponseReasoningSummaryTextDone) Default() ResponseReasoningSummaryTextDone {
+	return "response.reasoning_summary_text.done"
+}
+func (c ResponseRefusalDelta) Default() ResponseRefusalDelta { return "response.refusal.delta" }
+func (c ResponseRefusalDone) Default() ResponseRefusalDone   { return "response.refusal.done" }
 func (c ResponseWebSearchCallCompleted) Default() ResponseWebSearchCallCompleted {
 	return "response.web_search_call.completed"
 }
@@ -447,6 +463,10 @@ func (c ResponseOutputItemDone) MarshalJSON() ([]byte, error)             { retu
 func (c ResponseOutputTextAnnotationAdded) MarshalJSON() ([]byte, error)  { return marshalString(c) }
 func (c ResponseOutputTextDelta) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c ResponseOutputTextDone) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ResponseReasoningSummaryPartAdded) MarshalJSON() ([]byte, error)  { return marshalString(c) }
+func (c ResponseReasoningSummaryPartDone) MarshalJSON() ([]byte, error)   { return marshalString(c) }
+func (c ResponseReasoningSummaryTextDelta) MarshalJSON() ([]byte, error)  { return marshalString(c) }
+func (c ResponseReasoningSummaryTextDone) MarshalJSON() ([]byte, error)   { return marshalString(c) }
 func (c ResponseRefusalDelta) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ResponseRefusalDone) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c ResponseWebSearchCallCompleted) MarshalJSON() ([]byte, error)     { return marshalString(c) }

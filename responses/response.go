@@ -5947,6 +5947,174 @@ func (r ResponseReasoningItemSummaryParam) MarshalJSON() (data []byte, err error
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 
+// Emitted when a new reasoning summary part is added.
+type ResponseReasoningSummaryPartAddedEvent struct {
+	// The ID of the item this summary part is associated with.
+	ItemID string `json:"item_id,required"`
+	// The index of the output item this summary part is associated with.
+	OutputIndex int64 `json:"output_index,required"`
+	// The summary part that was added.
+	Part ResponseReasoningSummaryPartAddedEventPart `json:"part,required"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index,required"`
+	// The type of the event. Always `response.reasoning_summary_part.added`.
+	Type constant.ResponseReasoningSummaryPartAdded `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		ItemID       resp.Field
+		OutputIndex  resp.Field
+		Part         resp.Field
+		SummaryIndex resp.Field
+		Type         resp.Field
+		ExtraFields  map[string]resp.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseReasoningSummaryPartAddedEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseReasoningSummaryPartAddedEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The summary part that was added.
+type ResponseReasoningSummaryPartAddedEventPart struct {
+	// The text of the summary part.
+	Text string `json:"text,required"`
+	// The type of the summary part. Always `summary_text`.
+	Type constant.SummaryText `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Text        resp.Field
+		Type        resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseReasoningSummaryPartAddedEventPart) RawJSON() string { return r.JSON.raw }
+func (r *ResponseReasoningSummaryPartAddedEventPart) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a reasoning summary part is completed.
+type ResponseReasoningSummaryPartDoneEvent struct {
+	// The ID of the item this summary part is associated with.
+	ItemID string `json:"item_id,required"`
+	// The index of the output item this summary part is associated with.
+	OutputIndex int64 `json:"output_index,required"`
+	// The completed summary part.
+	Part ResponseReasoningSummaryPartDoneEventPart `json:"part,required"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index,required"`
+	// The type of the event. Always `response.reasoning_summary_part.done`.
+	Type constant.ResponseReasoningSummaryPartDone `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		ItemID       resp.Field
+		OutputIndex  resp.Field
+		Part         resp.Field
+		SummaryIndex resp.Field
+		Type         resp.Field
+		ExtraFields  map[string]resp.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseReasoningSummaryPartDoneEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseReasoningSummaryPartDoneEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The completed summary part.
+type ResponseReasoningSummaryPartDoneEventPart struct {
+	// The text of the summary part.
+	Text string `json:"text,required"`
+	// The type of the summary part. Always `summary_text`.
+	Type constant.SummaryText `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Text        resp.Field
+		Type        resp.Field
+		ExtraFields map[string]resp.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseReasoningSummaryPartDoneEventPart) RawJSON() string { return r.JSON.raw }
+func (r *ResponseReasoningSummaryPartDoneEventPart) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a delta is added to a reasoning summary text.
+type ResponseReasoningSummaryTextDeltaEvent struct {
+	// The text delta that was added to the summary.
+	Delta string `json:"delta,required"`
+	// The ID of the item this summary text delta is associated with.
+	ItemID string `json:"item_id,required"`
+	// The index of the output item this summary text delta is associated with.
+	OutputIndex int64 `json:"output_index,required"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index,required"`
+	// The type of the event. Always `response.reasoning_summary_text.delta`.
+	Type constant.ResponseReasoningSummaryTextDelta `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		Delta        resp.Field
+		ItemID       resp.Field
+		OutputIndex  resp.Field
+		SummaryIndex resp.Field
+		Type         resp.Field
+		ExtraFields  map[string]resp.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseReasoningSummaryTextDeltaEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseReasoningSummaryTextDeltaEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Emitted when a reasoning summary text is completed.
+type ResponseReasoningSummaryTextDoneEvent struct {
+	// The ID of the item this summary text is associated with.
+	ItemID string `json:"item_id,required"`
+	// The index of the output item this summary text is associated with.
+	OutputIndex int64 `json:"output_index,required"`
+	// The index of the summary part within the reasoning summary.
+	SummaryIndex int64 `json:"summary_index,required"`
+	// The full text of the completed reasoning summary.
+	Text string `json:"text,required"`
+	// The type of the event. Always `response.reasoning_summary_text.done`.
+	Type constant.ResponseReasoningSummaryTextDone `json:"type,required"`
+	// Metadata for the response, check the presence of optional fields with the
+	// [resp.Field.IsPresent] method.
+	JSON struct {
+		ItemID       resp.Field
+		OutputIndex  resp.Field
+		SummaryIndex resp.Field
+		Text         resp.Field
+		Type         resp.Field
+		ExtraFields  map[string]resp.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseReasoningSummaryTextDoneEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseReasoningSummaryTextDoneEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Emitted when there is a partial refusal text.
 type ResponseRefusalDeltaEvent struct {
 	// The index of the content part that the refusal text is added to.
@@ -6036,10 +6204,14 @@ const (
 // [ResponseFunctionCallArgumentsDoneEvent], [ResponseInProgressEvent],
 // [ResponseFailedEvent], [ResponseIncompleteEvent],
 // [ResponseOutputItemAddedEvent], [ResponseOutputItemDoneEvent],
-// [ResponseRefusalDeltaEvent], [ResponseRefusalDoneEvent],
-// [ResponseTextAnnotationDeltaEvent], [ResponseTextDeltaEvent],
-// [ResponseTextDoneEvent], [ResponseWebSearchCallCompletedEvent],
-// [ResponseWebSearchCallInProgressEvent], [ResponseWebSearchCallSearchingEvent].
+// [ResponseReasoningSummaryPartAddedEvent],
+// [ResponseReasoningSummaryPartDoneEvent],
+// [ResponseReasoningSummaryTextDeltaEvent],
+// [ResponseReasoningSummaryTextDoneEvent], [ResponseRefusalDeltaEvent],
+// [ResponseRefusalDoneEvent], [ResponseTextAnnotationDeltaEvent],
+// [ResponseTextDeltaEvent], [ResponseTextDoneEvent],
+// [ResponseWebSearchCallCompletedEvent], [ResponseWebSearchCallInProgressEvent],
+// [ResponseWebSearchCallSearchingEvent].
 //
 // Use the [ResponseStreamEventUnion.AsAny] method to switch on the variant.
 //
@@ -6059,10 +6231,13 @@ type ResponseStreamEventUnion struct {
 	// "response.function_call_arguments.delta",
 	// "response.function_call_arguments.done", "response.in_progress",
 	// "response.failed", "response.incomplete", "response.output_item.added",
-	// "response.output_item.done", "response.refusal.delta", "response.refusal.done",
-	// "response.output_text.annotation.added", "response.output_text.delta",
-	// "response.output_text.done", "response.web_search_call.completed",
-	// "response.web_search_call.in_progress", "response.web_search_call.searching".
+	// "response.output_item.done", "response.reasoning_summary_part.added",
+	// "response.reasoning_summary_part.done", "response.reasoning_summary_text.delta",
+	// "response.reasoning_summary_text.done", "response.refusal.delta",
+	// "response.refusal.done", "response.output_text.annotation.added",
+	// "response.output_text.delta", "response.output_text.done",
+	// "response.web_search_call.completed", "response.web_search_call.in_progress",
+	// "response.web_search_call.searching".
 	Type        string `json:"type"`
 	OutputIndex int64  `json:"output_index"`
 	Code        string `json:"code"`
@@ -6073,7 +6248,9 @@ type ResponseStreamEventUnion struct {
 	ContentIndex int64    `json:"content_index"`
 	ItemID       string   `json:"item_id"`
 	// This field is a union of [ResponseContentPartAddedEventPartUnion],
-	// [ResponseContentPartDoneEventPartUnion]
+	// [ResponseContentPartDoneEventPartUnion],
+	// [ResponseReasoningSummaryPartAddedEventPart],
+	// [ResponseReasoningSummaryPartDoneEventPart]
 	Part ResponseStreamEventUnionPart `json:"part"`
 	// This field is from variant [ResponseErrorEvent].
 	Message string `json:"message"`
@@ -6082,16 +6259,16 @@ type ResponseStreamEventUnion struct {
 	// This field is from variant [ResponseFunctionCallArgumentsDoneEvent].
 	Arguments string `json:"arguments"`
 	// This field is from variant [ResponseOutputItemAddedEvent].
-	Item ResponseOutputItemUnion `json:"item"`
+	Item         ResponseOutputItemUnion `json:"item"`
+	SummaryIndex int64                   `json:"summary_index"`
+	Text         string                  `json:"text"`
 	// This field is from variant [ResponseRefusalDoneEvent].
 	Refusal string `json:"refusal"`
 	// This field is from variant [ResponseTextAnnotationDeltaEvent].
 	Annotation ResponseTextAnnotationDeltaEventAnnotationUnion `json:"annotation"`
 	// This field is from variant [ResponseTextAnnotationDeltaEvent].
 	AnnotationIndex int64 `json:"annotation_index"`
-	// This field is from variant [ResponseTextDoneEvent].
-	Text string `json:"text"`
-	JSON struct {
+	JSON            struct {
 		Delta               resp.Field
 		Type                resp.Field
 		OutputIndex         resp.Field
@@ -6105,10 +6282,11 @@ type ResponseStreamEventUnion struct {
 		Param               resp.Field
 		Arguments           resp.Field
 		Item                resp.Field
+		SummaryIndex        resp.Field
+		Text                resp.Field
 		Refusal             resp.Field
 		Annotation          resp.Field
 		AnnotationIndex     resp.Field
-		Text                resp.Field
 		raw                 string
 	} `json:"-"`
 }
@@ -6144,6 +6322,10 @@ func (ResponseFailedEvent) implResponseStreamEventUnion()                       
 func (ResponseIncompleteEvent) implResponseStreamEventUnion()                      {}
 func (ResponseOutputItemAddedEvent) implResponseStreamEventUnion()                 {}
 func (ResponseOutputItemDoneEvent) implResponseStreamEventUnion()                  {}
+func (ResponseReasoningSummaryPartAddedEvent) implResponseStreamEventUnion()       {}
+func (ResponseReasoningSummaryPartDoneEvent) implResponseStreamEventUnion()        {}
+func (ResponseReasoningSummaryTextDeltaEvent) implResponseStreamEventUnion()       {}
+func (ResponseReasoningSummaryTextDoneEvent) implResponseStreamEventUnion()        {}
 func (ResponseRefusalDeltaEvent) implResponseStreamEventUnion()                    {}
 func (ResponseRefusalDoneEvent) implResponseStreamEventUnion()                     {}
 func (ResponseTextAnnotationDeltaEvent) implResponseStreamEventUnion()             {}
@@ -6180,6 +6362,10 @@ func (ResponseWebSearchCallSearchingEvent) implResponseStreamEventUnion()       
 //	case ResponseIncompleteEvent:
 //	case ResponseOutputItemAddedEvent:
 //	case ResponseOutputItemDoneEvent:
+//	case ResponseReasoningSummaryPartAddedEvent:
+//	case ResponseReasoningSummaryPartDoneEvent:
+//	case ResponseReasoningSummaryTextDeltaEvent:
+//	case ResponseReasoningSummaryTextDoneEvent:
 //	case ResponseRefusalDeltaEvent:
 //	case ResponseRefusalDoneEvent:
 //	case ResponseTextAnnotationDeltaEvent:
@@ -6241,6 +6427,14 @@ func (u ResponseStreamEventUnion) AsAny() anyResponseStreamEvent {
 		return u.AsResponseOutputItemAdded()
 	case "response.output_item.done":
 		return u.AsResponseOutputItemDone()
+	case "response.reasoning_summary_part.added":
+		return u.AsResponseReasoningSummaryPartAdded()
+	case "response.reasoning_summary_part.done":
+		return u.AsResponseReasoningSummaryPartDone()
+	case "response.reasoning_summary_text.delta":
+		return u.AsResponseReasoningSummaryTextDelta()
+	case "response.reasoning_summary_text.done":
+		return u.AsResponseReasoningSummaryTextDone()
 	case "response.refusal.delta":
 		return u.AsResponseRefusalDelta()
 	case "response.refusal.done":
@@ -6381,6 +6575,26 @@ func (u ResponseStreamEventUnion) AsResponseOutputItemDone() (v ResponseOutputIt
 	return
 }
 
+func (u ResponseStreamEventUnion) AsResponseReasoningSummaryPartAdded() (v ResponseReasoningSummaryPartAddedEvent) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseStreamEventUnion) AsResponseReasoningSummaryPartDone() (v ResponseReasoningSummaryPartDoneEvent) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseStreamEventUnion) AsResponseReasoningSummaryTextDelta() (v ResponseReasoningSummaryTextDeltaEvent) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseStreamEventUnion) AsResponseReasoningSummaryTextDone() (v ResponseReasoningSummaryTextDoneEvent) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 func (u ResponseStreamEventUnion) AsResponseRefusalDelta() (v ResponseRefusalDeltaEvent) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
@@ -6438,10 +6652,8 @@ type ResponseStreamEventUnionPart struct {
 	// This field is from variant [ResponseContentPartAddedEventPartUnion],
 	// [ResponseContentPartDoneEventPartUnion].
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations"`
-	// This field is from variant [ResponseContentPartAddedEventPartUnion],
-	// [ResponseContentPartDoneEventPartUnion].
-	Text string `json:"text"`
-	Type string `json:"type"`
+	Text        string                              `json:"text"`
+	Type        string                              `json:"type"`
 	// This field is from variant [ResponseContentPartAddedEventPartUnion],
 	// [ResponseContentPartDoneEventPartUnion].
 	Refusal string `json:"refusal"`
