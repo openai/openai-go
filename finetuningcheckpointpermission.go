@@ -116,8 +116,7 @@ type FineTuningCheckpointPermissionNewResponse struct {
 	Object constant.CheckpointPermission `json:"object,required"`
 	// The project identifier that the permission is for.
 	ProjectID string `json:"project_id,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		CreatedAt   resp.Field
@@ -140,8 +139,7 @@ type FineTuningCheckpointPermissionGetResponse struct {
 	Object  constant.List                                   `json:"object,required"`
 	FirstID string                                          `json:"first_id,nullable"`
 	LastID  string                                          `json:"last_id,nullable"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Data        resp.Field
 		HasMore     resp.Field
@@ -170,8 +168,7 @@ type FineTuningCheckpointPermissionGetResponseData struct {
 	Object constant.CheckpointPermission `json:"object,required"`
 	// The project identifier that the permission is for.
 	ProjectID string `json:"project_id,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		CreatedAt   resp.Field
@@ -195,8 +192,7 @@ type FineTuningCheckpointPermissionDeleteResponse struct {
 	Deleted bool `json:"deleted,required"`
 	// The object type, which is always "checkpoint.permission".
 	Object constant.CheckpointPermission `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Deleted     resp.Field
@@ -218,12 +214,6 @@ type FineTuningCheckpointPermissionNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f FineTuningCheckpointPermissionNewParams) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
-
 func (r FineTuningCheckpointPermissionNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningCheckpointPermissionNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -241,12 +231,6 @@ type FineTuningCheckpointPermissionGetParams struct {
 	// Any of "ascending", "descending".
 	Order FineTuningCheckpointPermissionGetParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
-}
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f FineTuningCheckpointPermissionGetParams) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
 }
 
 // URLQuery serializes [FineTuningCheckpointPermissionGetParams]'s query parameters

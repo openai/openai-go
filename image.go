@@ -74,8 +74,7 @@ type Image struct {
 	// `response_format` is set to `url` (default value). Unsupported for
 	// `gpt-image-1`.
 	URL string `json:"url"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		B64JSON       resp.Field
 		RevisedPrompt resp.Field
@@ -107,8 +106,7 @@ type ImagesResponse struct {
 	Data []Image `json:"data"`
 	// For `gpt-image-1` only, the token usage information for the image generation.
 	Usage ImagesResponseUsage `json:"usage"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Created     resp.Field
 		Data        resp.Field
@@ -134,8 +132,7 @@ type ImagesResponseUsage struct {
 	OutputTokens int64 `json:"output_tokens,required"`
 	// The total number of tokens (images and text) used for the image generation.
 	TotalTokens int64 `json:"total_tokens,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		InputTokens        resp.Field
 		InputTokensDetails resp.Field
@@ -158,8 +155,7 @@ type ImagesResponseUsageInputTokensDetails struct {
 	ImageTokens int64 `json:"image_tokens,required"`
 	// The number of text tokens in the input prompt.
 	TextTokens int64 `json:"text_tokens,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ImageTokens resp.Field
 		TextTokens  resp.Field
@@ -200,10 +196,6 @@ type ImageNewVariationParams struct {
 	Size ImageNewVariationParamsSize `json:"size,omitzero"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f ImageNewVariationParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r ImageNewVariationParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)
@@ -299,10 +291,6 @@ type ImageEditParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f ImageEditParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r ImageEditParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)
 	writer := multipart.NewWriter(buf)
@@ -327,9 +315,6 @@ type ImageEditParamsImageUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u ImageEditParamsImageUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
 func (u ImageEditParamsImageUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ImageEditParamsImageUnion](u.OfFile, u.OfBinaryArray)
 }
@@ -470,10 +455,6 @@ type ImageGenerateParams struct {
 	Style ImageGenerateParamsStyle `json:"style,omitzero"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f ImageGenerateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r ImageGenerateParams) MarshalJSON() (data []byte, err error) {
 	type shadow ImageGenerateParams

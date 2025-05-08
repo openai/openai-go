@@ -50,8 +50,7 @@ type CreateEmbeddingResponse struct {
 	Object constant.List `json:"object,required"`
 	// The usage information for the request.
 	Usage CreateEmbeddingResponseUsage `json:"usage,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Data        resp.Field
 		Model       resp.Field
@@ -74,8 +73,7 @@ type CreateEmbeddingResponseUsage struct {
 	PromptTokens int64 `json:"prompt_tokens,required"`
 	// The total number of tokens used by the request.
 	TotalTokens int64 `json:"total_tokens,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		PromptTokens resp.Field
 		TotalTokens  resp.Field
@@ -100,8 +98,7 @@ type Embedding struct {
 	Index int64 `json:"index,required"`
 	// The object type, which is always "embedding".
 	Object constant.Embedding `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Embedding   resp.Field
 		Index       resp.Field
@@ -156,10 +153,6 @@ type EmbeddingNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f EmbeddingNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r EmbeddingNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow EmbeddingNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -176,9 +169,6 @@ type EmbeddingNewParamsInputUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u EmbeddingNewParamsInputUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
 func (u EmbeddingNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[EmbeddingNewParamsInputUnion](u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
 }

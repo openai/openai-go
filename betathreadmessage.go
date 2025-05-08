@@ -288,8 +288,7 @@ type FileCitationAnnotation struct {
 	Text string `json:"text,required"`
 	// Always `file_citation`.
 	Type constant.FileCitation `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		EndIndex     resp.Field
 		FileCitation resp.Field
@@ -310,8 +309,7 @@ func (r *FileCitationAnnotation) UnmarshalJSON(data []byte) error {
 type FileCitationAnnotationFileCitation struct {
 	// The ID of the specific File the citation is from.
 	FileID string `json:"file_id,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FileID      resp.Field
 		ExtraFields map[string]resp.Field
@@ -338,8 +336,7 @@ type FileCitationDeltaAnnotation struct {
 	StartIndex   int64                                   `json:"start_index"`
 	// The text in the message content that needs to be replaced.
 	Text string `json:"text"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Index        resp.Field
 		Type         resp.Field
@@ -363,8 +360,7 @@ type FileCitationDeltaAnnotationFileCitation struct {
 	FileID string `json:"file_id"`
 	// The specific quote in the file.
 	Quote string `json:"quote"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FileID      resp.Field
 		Quote       resp.Field
@@ -389,8 +385,7 @@ type FilePathAnnotation struct {
 	Text string `json:"text,required"`
 	// Always `file_path`.
 	Type constant.FilePath `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		EndIndex    resp.Field
 		FilePath    resp.Field
@@ -411,8 +406,7 @@ func (r *FilePathAnnotation) UnmarshalJSON(data []byte) error {
 type FilePathAnnotationFilePath struct {
 	// The ID of the file that was generated.
 	FileID string `json:"file_id,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FileID      resp.Field
 		ExtraFields map[string]resp.Field
@@ -438,8 +432,7 @@ type FilePathDeltaAnnotation struct {
 	StartIndex int64                           `json:"start_index"`
 	// The text in the message content that needs to be replaced.
 	Text string `json:"text"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Index       resp.Field
 		Type        resp.Field
@@ -461,8 +454,7 @@ func (r *FilePathDeltaAnnotation) UnmarshalJSON(data []byte) error {
 type FilePathDeltaAnnotationFilePath struct {
 	// The ID of the file that was generated.
 	FileID string `json:"file_id"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FileID      resp.Field
 		ExtraFields map[string]resp.Field
@@ -486,8 +478,7 @@ type ImageFile struct {
 	//
 	// Any of "auto", "low", "high".
 	Detail ImageFileDetail `json:"detail"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FileID      resp.Field
 		Detail      resp.Field
@@ -506,9 +497,9 @@ func (r *ImageFile) UnmarshalJSON(data []byte) error {
 //
 // Warning: the fields of the param type will not be present. ToParam should only
 // be used at the last possible moment before sending a request. Test for this with
-// ImageFileParam.IsOverridden()
+// ImageFileParam.Overrides()
 func (r ImageFile) ToParam() ImageFileParam {
-	return param.OverrideObj[ImageFileParam](r.RawJSON())
+	return param.Override[ImageFileParam](r.RawJSON())
 }
 
 // Specifies the detail level of the image if specified by the user. `low` uses
@@ -535,9 +526,6 @@ type ImageFileParam struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f ImageFileParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r ImageFileParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageFileParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -549,8 +537,7 @@ type ImageFileContentBlock struct {
 	ImageFile ImageFile `json:"image_file,required"`
 	// Always `image_file`.
 	Type constant.ImageFile `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ImageFile   resp.Field
 		Type        resp.Field
@@ -569,9 +556,9 @@ func (r *ImageFileContentBlock) UnmarshalJSON(data []byte) error {
 //
 // Warning: the fields of the param type will not be present. ToParam should only
 // be used at the last possible moment before sending a request. Test for this with
-// ImageFileContentBlockParam.IsOverridden()
+// ImageFileContentBlockParam.Overrides()
 func (r ImageFileContentBlock) ToParam() ImageFileContentBlockParam {
-	return param.OverrideObj[ImageFileContentBlockParam](r.RawJSON())
+	return param.Override[ImageFileContentBlockParam](r.RawJSON())
 }
 
 // References an image [File](https://platform.openai.com/docs/api-reference/files)
@@ -587,9 +574,6 @@ type ImageFileContentBlockParam struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f ImageFileContentBlockParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r ImageFileContentBlockParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageFileContentBlockParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -605,8 +589,7 @@ type ImageFileDelta struct {
 	// in the message content. Set `purpose="vision"` when uploading the File if you
 	// need to later display the file content.
 	FileID string `json:"file_id"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Detail      resp.Field
 		FileID      resp.Field
@@ -639,8 +622,7 @@ type ImageFileDeltaBlock struct {
 	// Always `image_file`.
 	Type      constant.ImageFile `json:"type,required"`
 	ImageFile ImageFileDelta     `json:"image_file"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Index       resp.Field
 		Type        resp.Field
@@ -665,8 +647,7 @@ type ImageURL struct {
 	//
 	// Any of "auto", "low", "high".
 	Detail ImageURLDetail `json:"detail"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		URL         resp.Field
 		Detail      resp.Field
@@ -685,9 +666,9 @@ func (r *ImageURL) UnmarshalJSON(data []byte) error {
 //
 // Warning: the fields of the param type will not be present. ToParam should only
 // be used at the last possible moment before sending a request. Test for this with
-// ImageURLParam.IsOverridden()
+// ImageURLParam.Overrides()
 func (r ImageURL) ToParam() ImageURLParam {
-	return param.OverrideObj[ImageURLParam](r.RawJSON())
+	return param.Override[ImageURLParam](r.RawJSON())
 }
 
 // Specifies the detail level of the image. `low` uses fewer tokens, you can opt in
@@ -713,9 +694,6 @@ type ImageURLParam struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f ImageURLParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r ImageURLParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageURLParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -726,8 +704,7 @@ type ImageURLContentBlock struct {
 	ImageURL ImageURL `json:"image_url,required"`
 	// The type of the content part.
 	Type constant.ImageURL `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ImageURL    resp.Field
 		Type        resp.Field
@@ -746,9 +723,9 @@ func (r *ImageURLContentBlock) UnmarshalJSON(data []byte) error {
 //
 // Warning: the fields of the param type will not be present. ToParam should only
 // be used at the last possible moment before sending a request. Test for this with
-// ImageURLContentBlockParam.IsOverridden()
+// ImageURLContentBlockParam.Overrides()
 func (r ImageURLContentBlock) ToParam() ImageURLContentBlockParam {
-	return param.OverrideObj[ImageURLContentBlockParam](r.RawJSON())
+	return param.Override[ImageURLContentBlockParam](r.RawJSON())
 }
 
 // References an image URL in the content of a message.
@@ -763,9 +740,6 @@ type ImageURLContentBlockParam struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f ImageURLContentBlockParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r ImageURLContentBlockParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageURLContentBlockParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -780,8 +754,7 @@ type ImageURLDelta struct {
 	// The URL of the image, must be a supported image types: jpeg, jpg, png, gif,
 	// webp.
 	URL string `json:"url"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Detail      resp.Field
 		URL         resp.Field
@@ -813,8 +786,7 @@ type ImageURLDeltaBlock struct {
 	// Always `image_url`.
 	Type     constant.ImageURL `json:"type,required"`
 	ImageURL ImageURLDelta     `json:"image_url"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Index       resp.Field
 		Type        resp.Field
@@ -876,8 +848,7 @@ type Message struct {
 	// The [thread](https://platform.openai.com/docs/api-reference/threads) ID that
 	// this message belongs to.
 	ThreadID string `json:"thread_id,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID                resp.Field
 		AssistantID       resp.Field
@@ -909,8 +880,7 @@ type MessageAttachment struct {
 	FileID string `json:"file_id"`
 	// The tools to add this file to.
 	Tools []MessageAttachmentToolUnion `json:"tools"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FileID      resp.Field
 		Tools       resp.Field
@@ -957,8 +927,7 @@ func (r *MessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 type MessageAttachmentToolFileSearchTool struct {
 	// The type of tool being defined: `file_search`
 	Type constant.FileSearch `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Type        resp.Field
 		ExtraFields map[string]resp.Field
@@ -979,8 +948,7 @@ type MessageIncompleteDetails struct {
 	// Any of "content_filter", "max_tokens", "run_cancelled", "run_expired",
 	// "run_failed".
 	Reason string `json:"reason,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Reason      resp.Field
 		ExtraFields map[string]resp.Field
@@ -1223,9 +1191,6 @@ type MessageContentPartParamUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u MessageContentPartParamUnion) IsPresent() bool { return !param.IsOmitted(u) && !u.IsNull() }
 func (u MessageContentPartParamUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[MessageContentPartParamUnion](u.OfImageFile, u.OfImageURL, u.OfText)
 }
@@ -1302,8 +1267,7 @@ type MessageDeleted struct {
 	ID      string                        `json:"id,required"`
 	Deleted bool                          `json:"deleted,required"`
 	Object  constant.ThreadMessageDeleted `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Deleted     resp.Field
@@ -1327,8 +1291,7 @@ type MessageDelta struct {
 	//
 	// Any of "user", "assistant".
 	Role MessageDeltaRole `json:"role"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Content     resp.Field
 		Role        resp.Field
@@ -1360,8 +1323,7 @@ type MessageDeltaEvent struct {
 	Delta MessageDelta `json:"delta,required"`
 	// The object type, which is always `thread.message.delta`.
 	Object constant.ThreadMessageDelta `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Delta       resp.Field
@@ -1382,8 +1344,7 @@ type RefusalContentBlock struct {
 	Refusal string `json:"refusal,required"`
 	// Always `refusal`.
 	Type constant.Refusal `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Refusal     resp.Field
 		Type        resp.Field
@@ -1405,8 +1366,7 @@ type RefusalDeltaBlock struct {
 	// Always `refusal`.
 	Type    constant.Refusal `json:"type,required"`
 	Refusal string           `json:"refusal"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Index       resp.Field
 		Type        resp.Field
@@ -1426,8 +1386,7 @@ type Text struct {
 	Annotations []AnnotationUnion `json:"annotations,required"`
 	// The data that makes up the text.
 	Value string `json:"value,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Annotations resp.Field
 		Value       resp.Field
@@ -1447,8 +1406,7 @@ type TextContentBlock struct {
 	Text Text `json:"text,required"`
 	// Always `text`.
 	Type constant.Text `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Text        resp.Field
 		Type        resp.Field
@@ -1476,9 +1434,6 @@ type TextContentBlockParam struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f TextContentBlockParam) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 func (r TextContentBlockParam) MarshalJSON() (data []byte, err error) {
 	type shadow TextContentBlockParam
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1488,8 +1443,7 @@ type TextDelta struct {
 	Annotations []AnnotationDeltaUnion `json:"annotations"`
 	// The data that makes up the text.
 	Value string `json:"value"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Annotations resp.Field
 		Value       resp.Field
@@ -1511,8 +1465,7 @@ type TextDeltaBlock struct {
 	// Always `text`.
 	Type constant.Text `json:"type,required"`
 	Text TextDelta     `json:"text"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Index       resp.Field
 		Type        resp.Field
@@ -1552,10 +1505,6 @@ type BetaThreadMessageNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadMessageNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r BetaThreadMessageNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadMessageNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1570,11 +1519,6 @@ type BetaThreadMessageNewParamsContentUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadMessageNewParamsContentUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadMessageNewParamsContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadMessageNewParamsContentUnion](u.OfString, u.OfArrayOfContentParts)
 }
@@ -1609,11 +1553,6 @@ type BetaThreadMessageNewParamsAttachment struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadMessageNewParamsAttachment) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadMessageNewParamsAttachment) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadMessageNewParamsAttachment
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1628,11 +1567,6 @@ type BetaThreadMessageNewParamsAttachmentToolUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadMessageNewParamsAttachmentToolUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadMessageNewParamsAttachmentToolUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadMessageNewParamsAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
 }
@@ -1686,11 +1620,6 @@ type BetaThreadMessageNewParamsAttachmentToolFileSearch struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadMessageNewParamsAttachmentToolFileSearch) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadMessageNewParamsAttachmentToolFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadMessageNewParamsAttachmentToolFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -1706,10 +1635,6 @@ type BetaThreadMessageUpdateParams struct {
 	Metadata shared.Metadata `json:"metadata,omitzero"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadMessageUpdateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r BetaThreadMessageUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadMessageUpdateParams
@@ -1739,10 +1664,6 @@ type BetaThreadMessageListParams struct {
 	Order BetaThreadMessageListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadMessageListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [BetaThreadMessageListParams]'s query parameters as
 // `url.Values`.

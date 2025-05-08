@@ -96,8 +96,7 @@ type Model struct {
 	Object constant.Model `json:"object,required"`
 	// The organization that owns the model.
 	OwnedBy string `json:"owned_by,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Created     resp.Field
@@ -118,8 +117,7 @@ type ModelDeleted struct {
 	ID      string `json:"id,required"`
 	Deleted bool   `json:"deleted,required"`
 	Object  string `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Deleted     resp.Field

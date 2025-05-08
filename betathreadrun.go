@@ -230,8 +230,7 @@ type RequiredActionFunctionToolCall struct {
 	// The type of tool call the output is required for. For now, this is always
 	// `function`.
 	Type constant.Function `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Function    resp.Field
@@ -253,8 +252,7 @@ type RequiredActionFunctionToolCallFunction struct {
 	Arguments string `json:"arguments,required"`
 	// The name of the function.
 	Name string `json:"name,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Arguments   resp.Field
 		Name        resp.Field
@@ -378,8 +376,7 @@ type Run struct {
 	Temperature float64 `json:"temperature,nullable"`
 	// The nucleus sampling value used for this run. If not set, defaults to 1.
 	TopP float64 `json:"top_p,nullable"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID                  resp.Field
 		AssistantID         resp.Field
@@ -427,8 +424,7 @@ type RunIncompleteDetails struct {
 	//
 	// Any of "max_completion_tokens", "max_prompt_tokens".
 	Reason string `json:"reason"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Reason      resp.Field
 		ExtraFields map[string]resp.Field
@@ -450,8 +446,7 @@ type RunLastError struct {
 	Code string `json:"code,required"`
 	// A human-readable description of the error.
 	Message string `json:"message,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Code        resp.Field
 		Message     resp.Field
@@ -473,8 +468,7 @@ type RunRequiredAction struct {
 	SubmitToolOutputs RunRequiredActionSubmitToolOutputs `json:"submit_tool_outputs,required"`
 	// For now, this is always `submit_tool_outputs`.
 	Type constant.SubmitToolOutputs `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		SubmitToolOutputs resp.Field
 		Type              resp.Field
@@ -493,8 +487,7 @@ func (r *RunRequiredAction) UnmarshalJSON(data []byte) error {
 type RunRequiredActionSubmitToolOutputs struct {
 	// A list of the relevant tool calls.
 	ToolCalls []RequiredActionFunctionToolCall `json:"tool_calls,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ToolCalls   resp.Field
 		ExtraFields map[string]resp.Field
@@ -521,8 +514,7 @@ type RunTruncationStrategy struct {
 	// The number of most recent messages from the thread when constructing the context
 	// for the run.
 	LastMessages int64 `json:"last_messages,nullable"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Type         resp.Field
 		LastMessages resp.Field
@@ -546,8 +538,7 @@ type RunUsage struct {
 	PromptTokens int64 `json:"prompt_tokens,required"`
 	// Total number of tokens used (prompt + completion).
 	TotalTokens int64 `json:"total_tokens,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		CompletionTokens resp.Field
 		PromptTokens     resp.Field
@@ -688,10 +679,6 @@ type BetaThreadRunNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r BetaThreadRunNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -730,11 +717,6 @@ type BetaThreadRunNewParamsAdditionalMessage struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunNewParamsAdditionalMessage) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadRunNewParamsAdditionalMessage) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParamsAdditionalMessage
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -755,11 +737,6 @@ type BetaThreadRunNewParamsAdditionalMessageContentUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadRunNewParamsAdditionalMessageContentUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadRunNewParamsAdditionalMessageContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadRunNewParamsAdditionalMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
 }
@@ -781,11 +758,6 @@ type BetaThreadRunNewParamsAdditionalMessageAttachment struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunNewParamsAdditionalMessageAttachment) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadRunNewParamsAdditionalMessageAttachment) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParamsAdditionalMessageAttachment
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -800,11 +772,6 @@ type BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
 }
@@ -858,11 +825,6 @@ type BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -886,11 +848,6 @@ type BetaThreadRunNewParamsTruncationStrategy struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunNewParamsTruncationStrategy) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadRunNewParamsTruncationStrategy) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParamsTruncationStrategy
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -912,10 +869,6 @@ type BetaThreadRunUpdateParams struct {
 	Metadata shared.Metadata `json:"metadata,omitzero"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunUpdateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r BetaThreadRunUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunUpdateParams
@@ -944,10 +897,6 @@ type BetaThreadRunListParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 // URLQuery serializes [BetaThreadRunListParams]'s query parameters as
 // `url.Values`.
 func (r BetaThreadRunListParams) URLQuery() (v url.Values, err error) {
@@ -972,12 +921,6 @@ type BetaThreadRunSubmitToolOutputsParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunSubmitToolOutputsParams) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
-
 func (r BetaThreadRunSubmitToolOutputsParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunSubmitToolOutputsParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -992,11 +935,6 @@ type BetaThreadRunSubmitToolOutputsParamsToolOutput struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunSubmitToolOutputsParamsToolOutput) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadRunSubmitToolOutputsParamsToolOutput) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunSubmitToolOutputsParamsToolOutput
 	return param.MarshalObject(r, (*shadow)(&r))

@@ -69,8 +69,7 @@ type Transcription struct {
 	// models `gpt-4o-transcribe` and `gpt-4o-mini-transcribe` if `logprobs` is added
 	// to the `include` array.
 	Logprobs []TranscriptionLogprob `json:"logprobs"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Text        resp.Field
 		Logprobs    resp.Field
@@ -92,8 +91,7 @@ type TranscriptionLogprob struct {
 	Bytes []float64 `json:"bytes"`
 	// The log probability of the token.
 	Logprob float64 `json:"logprob"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Token       resp.Field
 		Bytes       resp.Field
@@ -226,8 +224,7 @@ type TranscriptionTextDeltaEvent struct {
 	// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
 	// with the `include[]` parameter set to `logprobs`.
 	Logprobs []TranscriptionTextDeltaEventLogprob `json:"logprobs"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Delta       resp.Field
 		Type        resp.Field
@@ -250,8 +247,7 @@ type TranscriptionTextDeltaEventLogprob struct {
 	Bytes []any `json:"bytes"`
 	// The log probability of the token.
 	Logprob float64 `json:"logprob"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Token       resp.Field
 		Bytes       resp.Field
@@ -281,8 +277,7 @@ type TranscriptionTextDoneEvent struct {
 	// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
 	// with the `include[]` parameter set to `logprobs`.
 	Logprobs []TranscriptionTextDoneEventLogprob `json:"logprobs"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Text        resp.Field
 		Type        resp.Field
@@ -305,8 +300,7 @@ type TranscriptionTextDoneEventLogprob struct {
 	Bytes []any `json:"bytes"`
 	// The log probability of the token.
 	Logprob float64 `json:"logprob"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Token       resp.Field
 		Bytes       resp.Field
@@ -367,10 +361,6 @@ type AudioTranscriptionNewParams struct {
 	TimestampGranularities []string `json:"timestamp_granularities,omitzero"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f AudioTranscriptionNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r AudioTranscriptionNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)

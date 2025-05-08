@@ -134,8 +134,7 @@ type FileDeleted struct {
 	ID      string        `json:"id,required"`
 	Deleted bool          `json:"deleted,required"`
 	Object  constant.File `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Deleted     resp.Field
@@ -184,8 +183,7 @@ type FileObject struct {
 	//
 	// Deprecated: deprecated
 	StatusDetails string `json:"status_details"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID            resp.Field
 		Bytes         resp.Field
@@ -260,10 +258,6 @@ type FileNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f FileNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r FileNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)
 	writer := multipart.NewWriter(buf)
@@ -297,10 +291,6 @@ type FileListParams struct {
 	Order FileListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f FileListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [FileListParams]'s query parameters as `url.Values`.
 func (r FileListParams) URLQuery() (v url.Values, err error) {

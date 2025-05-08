@@ -58,10 +58,10 @@ func (f Field) toRespField() resp.Field {
 	if f.IsMissing() {
 		return resp.Field{}
 	} else if f.IsNull() {
-		return resp.NewNullField()
+		return resp.NewField("null")
 	} else if f.IsInvalid() {
 		return resp.NewInvalidField(f.raw)
 	} else {
-		return resp.NewValidField(f.raw)
+		return resp.NewField(f.raw)
 	}
 }

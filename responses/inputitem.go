@@ -77,8 +77,7 @@ type ResponseItemList struct {
 	LastID string `json:"last_id,required"`
 	// The type of object returned, must be `list`.
 	Object constant.List `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Data        resp.Field
 		FirstID     resp.Field
@@ -116,10 +115,6 @@ type InputItemListParams struct {
 	Order InputItemListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f InputItemListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [InputItemListParams]'s query parameters as `url.Values`.
 func (r InputItemListParams) URLQuery() (v url.Values, err error) {

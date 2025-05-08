@@ -19,8 +19,7 @@ type Error struct {
 	Message string `json:"message,required"`
 	Param   string `json:"param,required"`
 	Type    string `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Code        resp.Field
 		Message     resp.Field

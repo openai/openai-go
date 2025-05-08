@@ -15,7 +15,6 @@ import (
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/param"
 	"github.com/openai/openai-go/packages/resp"
 	"github.com/openai/openai-go/shared/constant"
 )
@@ -71,8 +70,7 @@ type UploadPart struct {
 	Object constant.UploadPart `json:"object,required"`
 	// The ID of the Upload object that this Part was added to.
 	UploadID string `json:"upload_id,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		CreatedAt   resp.Field
@@ -94,10 +92,6 @@ type UploadPartNewParams struct {
 	Data io.Reader `json:"data,omitzero,required" format:"binary"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f UploadPartNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r UploadPartNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)

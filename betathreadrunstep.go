@@ -100,8 +100,7 @@ type CodeInterpreterLogs struct {
 	Type constant.Logs `json:"type,required"`
 	// The text output from the Code Interpreter tool call.
 	Logs string `json:"logs"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Index       resp.Field
 		Type        resp.Field
@@ -123,8 +122,7 @@ type CodeInterpreterOutputImage struct {
 	// Always `image`.
 	Type  constant.Image                  `json:"type,required"`
 	Image CodeInterpreterOutputImageImage `json:"image"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Index       resp.Field
 		Type        resp.Field
@@ -144,8 +142,7 @@ type CodeInterpreterOutputImageImage struct {
 	// The [file](https://platform.openai.com/docs/api-reference/files) ID of the
 	// image.
 	FileID string `json:"file_id"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FileID      resp.Field
 		ExtraFields map[string]resp.Field
@@ -168,8 +165,7 @@ type CodeInterpreterToolCall struct {
 	// The type of tool call. This is always going to be `code_interpreter` for this
 	// type of tool call.
 	Type constant.CodeInterpreter `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID              resp.Field
 		CodeInterpreter resp.Field
@@ -193,8 +189,7 @@ type CodeInterpreterToolCallCodeInterpreter struct {
 	// or more items, including text (`logs`) or images (`image`). Each of these are
 	// represented by a different object type.
 	Outputs []CodeInterpreterToolCallCodeInterpreterOutputUnion `json:"outputs,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Input       resp.Field
 		Outputs     resp.Field
@@ -285,8 +280,7 @@ type CodeInterpreterToolCallCodeInterpreterOutputLogs struct {
 	Logs string `json:"logs,required"`
 	// Always `logs`.
 	Type constant.Logs `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Logs        resp.Field
 		Type        resp.Field
@@ -305,8 +299,7 @@ type CodeInterpreterToolCallCodeInterpreterOutputImage struct {
 	Image CodeInterpreterToolCallCodeInterpreterOutputImageImage `json:"image,required"`
 	// Always `image`.
 	Type constant.Image `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Image       resp.Field
 		Type        resp.Field
@@ -325,8 +318,7 @@ type CodeInterpreterToolCallCodeInterpreterOutputImageImage struct {
 	// The [file](https://platform.openai.com/docs/api-reference/files) ID of the
 	// image.
 	FileID string `json:"file_id,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FileID      resp.Field
 		ExtraFields map[string]resp.Field
@@ -351,8 +343,7 @@ type CodeInterpreterToolCallDelta struct {
 	ID string `json:"id"`
 	// The Code Interpreter tool call definition.
 	CodeInterpreter CodeInterpreterToolCallDeltaCodeInterpreter `json:"code_interpreter"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Index           resp.Field
 		Type            resp.Field
@@ -377,8 +368,7 @@ type CodeInterpreterToolCallDeltaCodeInterpreter struct {
 	// or more items, including text (`logs`) or images (`image`). Each of these are
 	// represented by a different object type.
 	Outputs []CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion `json:"outputs"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Input       resp.Field
 		Outputs     resp.Field
@@ -471,8 +461,7 @@ type FileSearchToolCall struct {
 	// The type of tool call. This is always going to be `file_search` for this type of
 	// tool call.
 	Type constant.FileSearch `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		FileSearch  resp.Field
@@ -494,8 +483,7 @@ type FileSearchToolCallFileSearch struct {
 	RankingOptions FileSearchToolCallFileSearchRankingOptions `json:"ranking_options"`
 	// The results of the file search.
 	Results []FileSearchToolCallFileSearchResult `json:"results"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		RankingOptions resp.Field
 		Results        resp.Field
@@ -520,8 +508,7 @@ type FileSearchToolCallFileSearchRankingOptions struct {
 	// The score threshold for the file search. All values must be a floating point
 	// number between 0 and 1.
 	ScoreThreshold float64 `json:"score_threshold,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Ranker         resp.Field
 		ScoreThreshold resp.Field
@@ -548,8 +535,7 @@ type FileSearchToolCallFileSearchResult struct {
 	// The content of the result that was found. The content is only included if
 	// requested via the include query parameter.
 	Content []FileSearchToolCallFileSearchResultContent `json:"content"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FileID      resp.Field
 		FileName    resp.Field
@@ -573,8 +559,7 @@ type FileSearchToolCallFileSearchResultContent struct {
 	//
 	// Any of "text".
 	Type string `json:"type"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Text        resp.Field
 		Type        resp.Field
@@ -599,8 +584,7 @@ type FileSearchToolCallDelta struct {
 	Type constant.FileSearch `json:"type,required"`
 	// The ID of the tool call object.
 	ID string `json:"id"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FileSearch  resp.Field
 		Index       resp.Field
@@ -625,8 +609,7 @@ type FunctionToolCall struct {
 	// The type of tool call. This is always going to be `function` for this type of
 	// tool call.
 	Type constant.Function `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Function    resp.Field
@@ -652,8 +635,7 @@ type FunctionToolCallFunction struct {
 	// [submitted](https://platform.openai.com/docs/api-reference/runs/submitToolOutputs)
 	// yet.
 	Output string `json:"output,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Arguments   resp.Field
 		Name        resp.Field
@@ -679,8 +661,7 @@ type FunctionToolCallDelta struct {
 	ID string `json:"id"`
 	// The definition of the function that was called.
 	Function FunctionToolCallDeltaFunction `json:"function"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Index       resp.Field
 		Type        resp.Field
@@ -707,8 +688,7 @@ type FunctionToolCallDeltaFunction struct {
 	// [submitted](https://platform.openai.com/docs/api-reference/runs/submitToolOutputs)
 	// yet.
 	Output string `json:"output,nullable"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Arguments   resp.Field
 		Name        resp.Field
@@ -729,8 +709,7 @@ type MessageCreationStepDetails struct {
 	MessageCreation MessageCreationStepDetailsMessageCreation `json:"message_creation,required"`
 	// Always `message_creation`.
 	Type constant.MessageCreation `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		MessageCreation resp.Field
 		Type            resp.Field
@@ -748,8 +727,7 @@ func (r *MessageCreationStepDetails) UnmarshalJSON(data []byte) error {
 type MessageCreationStepDetailsMessageCreation struct {
 	// The ID of the message that was created by this run step.
 	MessageID string `json:"message_id,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		MessageID   resp.Field
 		ExtraFields map[string]resp.Field
@@ -814,8 +792,7 @@ type RunStep struct {
 	// Usage statistics related to the run step. This value will be `null` while the
 	// run step's status is `in_progress`.
 	Usage RunStepUsage `json:"usage,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		AssistantID resp.Field
@@ -853,8 +830,7 @@ type RunStepLastError struct {
 	Code string `json:"code,required"`
 	// A human-readable description of the error.
 	Message string `json:"message,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Code        resp.Field
 		Message     resp.Field
@@ -964,8 +940,7 @@ type RunStepUsage struct {
 	PromptTokens int64 `json:"prompt_tokens,required"`
 	// Total number of tokens used (prompt + completion).
 	TotalTokens int64 `json:"total_tokens,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		CompletionTokens resp.Field
 		PromptTokens     resp.Field
@@ -985,8 +960,7 @@ func (r *RunStepUsage) UnmarshalJSON(data []byte) error {
 type RunStepDelta struct {
 	// The details of the run step.
 	StepDetails RunStepDeltaStepDetailsUnion `json:"step_details"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		StepDetails resp.Field
 		ExtraFields map[string]resp.Field
@@ -1075,8 +1049,7 @@ type RunStepDeltaEvent struct {
 	Delta RunStepDelta `json:"delta,required"`
 	// The object type, which is always `thread.run.step.delta`.
 	Object constant.ThreadRunStepDelta `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Delta       resp.Field
@@ -1097,8 +1070,7 @@ type RunStepDeltaMessageDelta struct {
 	// Always `message_creation`.
 	Type            constant.MessageCreation                `json:"type,required"`
 	MessageCreation RunStepDeltaMessageDeltaMessageCreation `json:"message_creation"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Type            resp.Field
 		MessageCreation resp.Field
@@ -1116,8 +1088,7 @@ func (r *RunStepDeltaMessageDelta) UnmarshalJSON(data []byte) error {
 type RunStepDeltaMessageDeltaMessageCreation struct {
 	// The ID of the message that was created by this run step.
 	MessageID string `json:"message_id"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		MessageID   resp.Field
 		ExtraFields map[string]resp.Field
@@ -1306,8 +1277,7 @@ type ToolCallDeltaObject struct {
 	// with one of three types of tools: `code_interpreter`, `file_search`, or
 	// `function`.
 	ToolCalls []ToolCallDeltaUnion `json:"tool_calls"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		Type        resp.Field
 		ToolCalls   resp.Field
@@ -1330,8 +1300,7 @@ type ToolCallsStepDetails struct {
 	ToolCalls []ToolCallUnion `json:"tool_calls,required"`
 	// Always `tool_calls`.
 	Type constant.ToolCalls `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ToolCalls   resp.Field
 		Type        resp.Field
@@ -1357,10 +1326,6 @@ type BetaThreadRunStepGetParams struct {
 	Include []RunStepInclude `query:"include,omitzero" json:"-"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunStepGetParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [BetaThreadRunStepGetParams]'s query parameters as
 // `url.Values`.
@@ -1400,10 +1365,6 @@ type BetaThreadRunStepListParams struct {
 	Order BetaThreadRunStepListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunStepListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [BetaThreadRunStepListParams]'s query parameters as
 // `url.Values`.

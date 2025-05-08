@@ -11,8 +11,10 @@ import (
 	"github.com/tidwall/sjson"
 )
 
-// This type will not be stable and shouldn't be relied upon
+// EncodedAsDate is not be stable and shouldn't be relied upon
 type EncodedAsDate Opt[time.Time]
+
+type forceOmit int
 
 func (m EncodedAsDate) MarshalJSON() ([]byte, error) {
 	underlying := Opt[time.Time](m)
@@ -23,37 +25,48 @@ func (m EncodedAsDate) MarshalJSON() ([]byte, error) {
 	return underlying.MarshalJSON()
 }
 
-// This uses a shimmed 'encoding/json' from Go 1.24, to support the 'omitzero' tag
-func MarshalObject[T OverridableObject](f T, underlying any) ([]byte, error) {
-	if f.IsNull() {
+// MarshalObject uses a shimmed 'encoding/json' from Go 1.24, to support the 'omitzero' tag
+//
+// Stability for the API of MarshalObject is not guaranteed.
+func MarshalObject[T ParamStruct](f T, underlying any) ([]byte, error) {
+	return MarshalWithExtras(f, underlying, f.extraFields())
+}
+
+// MarshalWithExtras is used to marshal a struct with additional properties.
+//
+// Stability for the API of MarshalWithExtras is not guaranteed.
+func MarshalWithExtras[T ParamStruct](f T, underlying any, extras map[string]any) ([]byte, error) {
+	if f.null() {
 		return []byte("null"), nil
-	} else if extras := f.GetExtraFields(); extras != nil {
+	} else if len(extras) > 0 {
 		bytes, err := shimjson.Marshal(underlying)
 		if err != nil {
 			return nil, err
 		}
 		for k, v := range extras {
 			if v == Omit {
-				// Errors handling ForceOmitted are ignored.
+				// Errors when handling ForceOmitted are ignored.
 				if b, e := sjson.DeleteBytes(bytes, k); e == nil {
 					bytes = b
 				}
-			} else {
-				bytes, err = sjson.SetBytes(bytes, k, v)
+				continue
 			}
+			bytes, err = sjson.SetBytes(bytes, k, v)
 			if err != nil {
 				return nil, err
 			}
 		}
 		return bytes, nil
-	} else if ovr, ok := f.IsOverridden(); ok {
+	} else if ovr, ok := f.Overrides(); ok {
 		return shimjson.Marshal(ovr)
 	} else {
 		return shimjson.Marshal(underlying)
 	}
 }
 
-// This uses a shimmed 'encoding/json' from Go 1.24, to support the 'omitzero' tag
+// MarshalUnion uses a shimmed 'encoding/json' from Go 1.24, to support the 'omitzero' tag
+//
+// Stability for the API of MarshalUnion is not guaranteed.
 func MarshalUnion[T any](variants ...any) ([]byte, error) {
 	nPresent := 0
 	presentIdx := -1
@@ -74,7 +87,7 @@ func MarshalUnion[T any](variants ...any) ([]byte, error) {
 	return shimjson.Marshal(variants[presentIdx])
 }
 
-// shimmed from Go 1.23 "reflect" package
+// typeFor is shimmed from Go 1.23 "reflect" package
 func typeFor[T any]() reflect.Type {
 	var v T
 	if t := reflect.TypeOf(v); t != nil {

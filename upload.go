@@ -123,8 +123,7 @@ type Upload struct {
 	Status UploadStatus `json:"status,required"`
 	// The `File` object represents a document that has been uploaded to OpenAI.
 	File FileObject `json:"file,nullable"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID          resp.Field
 		Bytes       resp.Field
@@ -176,10 +175,6 @@ type UploadNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f UploadNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r UploadNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow UploadNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
@@ -193,10 +188,6 @@ type UploadCompleteParams struct {
 	Md5 param.Opt[string] `json:"md5,omitzero"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f UploadCompleteParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r UploadCompleteParams) MarshalJSON() (data []byte, err error) {
 	type shadow UploadCompleteParams

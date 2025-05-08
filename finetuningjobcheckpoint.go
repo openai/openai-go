@@ -82,8 +82,7 @@ type FineTuningJobCheckpoint struct {
 	Object constant.FineTuningJobCheckpoint `json:"object,required"`
 	// The step number that the checkpoint was created at.
 	StepNumber int64 `json:"step_number,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		ID                       resp.Field
 		CreatedAt                resp.Field
@@ -112,8 +111,7 @@ type FineTuningJobCheckpointMetrics struct {
 	TrainMeanTokenAccuracy     float64 `json:"train_mean_token_accuracy"`
 	ValidLoss                  float64 `json:"valid_loss"`
 	ValidMeanTokenAccuracy     float64 `json:"valid_mean_token_accuracy"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
 	JSON struct {
 		FullValidLoss              resp.Field
 		FullValidMeanTokenAccuracy resp.Field
@@ -139,12 +137,6 @@ type FineTuningJobCheckpointListParams struct {
 	// Number of checkpoints to retrieve.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	paramObj
-}
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f FineTuningJobCheckpointListParams) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
 }
 
 // URLQuery serializes [FineTuningJobCheckpointListParams]'s query parameters as
