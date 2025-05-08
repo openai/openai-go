@@ -53,36 +53,67 @@ func TestFineTuningJobNewWithOptionalParams(t *testing.T) {
 			"foo": "string",
 		},
 		Method: openai.FineTuningJobNewParamsMethod{
-			Dpo: openai.FineTuningJobNewParamsMethodDpo{
-				Hyperparameters: openai.FineTuningJobNewParamsMethodDpoHyperparameters{
-					BatchSize: openai.FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion{
-						OfAuto: constant.ValueOf[constant.Auto](),
-					},
-					Beta: openai.FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion{
-						OfAuto: constant.ValueOf[constant.Auto](),
-					},
-					LearningRateMultiplier: openai.FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion{
-						OfAuto: constant.ValueOf[constant.Auto](),
-					},
-					NEpochs: openai.FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion{
-						OfAuto: constant.ValueOf[constant.Auto](),
-					},
-				},
-			},
-			Supervised: openai.FineTuningJobNewParamsMethodSupervised{
-				Hyperparameters: openai.FineTuningJobNewParamsMethodSupervisedHyperparameters{
-					BatchSize: openai.FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion{
-						OfAuto: constant.ValueOf[constant.Auto](),
-					},
-					LearningRateMultiplier: openai.FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion{
-						OfAuto: constant.ValueOf[constant.Auto](),
-					},
-					NEpochs: openai.FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion{
-						OfAuto: constant.ValueOf[constant.Auto](),
-					},
-				},
-			},
 			Type: "supervised",
+			Dpo: openai.DpoMethodParam{
+				Hyperparameters: openai.DpoHyperparameters{
+					BatchSize: openai.DpoHyperparametersBatchSizeUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+					Beta: openai.DpoHyperparametersBetaUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+					LearningRateMultiplier: openai.DpoHyperparametersLearningRateMultiplierUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+					NEpochs: openai.DpoHyperparametersNEpochsUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+				},
+			},
+			Reinforcement: openai.ReinforcementMethodParam{
+				Grader: openai.ReinforcementMethodGraderUnionParam{
+					OfStringCheckGrader: &openai.StringCheckGraderParam{
+						Input:     "input",
+						Name:      "name",
+						Operation: openai.StringCheckGraderOperationEq,
+						Reference: "reference",
+					},
+				},
+				Hyperparameters: openai.ReinforcementHyperparameters{
+					BatchSize: openai.ReinforcementHyperparametersBatchSizeUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+					ComputeMultiplier: openai.ReinforcementHyperparametersComputeMultiplierUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+					EvalInterval: openai.ReinforcementHyperparametersEvalIntervalUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+					EvalSamples: openai.ReinforcementHyperparametersEvalSamplesUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+					LearningRateMultiplier: openai.ReinforcementHyperparametersLearningRateMultiplierUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+					NEpochs: openai.ReinforcementHyperparametersNEpochsUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+					ReasoningEffort: openai.ReinforcementHyperparametersReasoningEffortDefault,
+				},
+			},
+			Supervised: openai.SupervisedMethodParam{
+				Hyperparameters: openai.SupervisedHyperparameters{
+					BatchSize: openai.SupervisedHyperparametersBatchSizeUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+					LearningRateMultiplier: openai.SupervisedHyperparametersLearningRateMultiplierUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+					NEpochs: openai.SupervisedHyperparametersNEpochsUnion{
+						OfAuto: constant.ValueOf[constant.Auto](),
+					},
+				},
+			},
 		},
 		Seed:           openai.Int(42),
 		Suffix:         openai.String("x"),
@@ -189,6 +220,50 @@ func TestFineTuningJobListEventsWithOptionalParams(t *testing.T) {
 			Limit: openai.Int(0),
 		},
 	)
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestFineTuningJobPause(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.FineTuning.Jobs.Pause(context.TODO(), "ft-AF1WoRqd3aJAHsqc9NY7iL8F")
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestFineTuningJobResume(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.FineTuning.Jobs.Resume(context.TODO(), "ft-AF1WoRqd3aJAHsqc9NY7iL8F")
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {
