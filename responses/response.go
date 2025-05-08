@@ -9,13 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-<<<<<<< HEAD
-	"reflect"
 	"strings"
-||||||| 2cb7fc6
-	"reflect"
-=======
->>>>>>> origin/generated--merge-conflict
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -486,264 +480,6 @@ func (r *FileSearchToolRankingOptionsParam) UnmarshalJSON(data []byte) error {
 func init() {
 	apijson.RegisterFieldValidator[FileSearchToolRankingOptionsParam](
 		"ranker", "auto", "default-2024-11-15",
-	)
-}
-
-func init() {
-	apijson.RegisterUnion[ResponseComputerToolCallActionUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionClickParam{}),
-			DiscriminatorValue: "click",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionDoubleClickParam{}),
-			DiscriminatorValue: "double_click",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionDragParam{}),
-			DiscriminatorValue: "drag",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionKeypressParam{}),
-			DiscriminatorValue: "keypress",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionMoveParam{}),
-			DiscriminatorValue: "move",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionScreenshotParam{}),
-			DiscriminatorValue: "screenshot",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionScrollParam{}),
-			DiscriminatorValue: "scroll",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionTypeParam{}),
-			DiscriminatorValue: "type",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionWaitParam{}),
-			DiscriminatorValue: "wait",
-		},
-	)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseComputerToolCallActionClickParam](
-		"Button", false, "left", "right", "wheel", "back", "forward",
-	)
-}
-
-func init() {
-	apijson.RegisterUnion[ResponseFormatTextConfigUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(shared.ResponseFormatTextParam{}),
-			DiscriminatorValue: "text",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseFormatTextJSONSchemaConfigParam{}),
-			DiscriminatorValue: "json_schema",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(shared.ResponseFormatJSONObjectParam{}),
-			DiscriminatorValue: "json_object",
-		},
-	)
-}
-
-func init() {
-	apijson.RegisterUnion[ResponseInputContentUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputTextParam{}),
-			DiscriminatorValue: "input_text",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputImageParam{}),
-			DiscriminatorValue: "input_image",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputFileParam{}),
-			DiscriminatorValue: "input_file",
-		},
-	)
-}
-
-func init() {
-	apijson.RegisterUnion[ResponseInputItemUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(EasyInputMessageParam{}),
-			DiscriminatorValue: "message",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputItemMessageParam{}),
-			DiscriminatorValue: "message",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputMessageParam{}),
-			DiscriminatorValue: "message",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseFileSearchToolCallParam{}),
-			DiscriminatorValue: "file_search_call",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallParam{}),
-			DiscriminatorValue: "computer_call",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputItemComputerCallOutputParam{}),
-			DiscriminatorValue: "computer_call_output",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseFunctionWebSearchParam{}),
-			DiscriminatorValue: "web_search_call",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseFunctionToolCallParam{}),
-			DiscriminatorValue: "function_call",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputItemFunctionCallOutputParam{}),
-			DiscriminatorValue: "function_call_output",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseReasoningItemParam{}),
-			DiscriminatorValue: "reasoning",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputItemItemReferenceParam{}),
-			DiscriminatorValue: "item_reference",
-		},
-	)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
-		"Role", false, "user", "system", "developer",
-	)
-	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
-		"Status", false, "in_progress", "completed", "incomplete",
-	)
-	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
-		"Type", false, "message",
-	)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemComputerCallOutputParam](
-		"Status", true, "in_progress", "completed", "incomplete",
-	)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemFunctionCallOutputParam](
-		"Status", true, "in_progress", "completed", "incomplete",
-	)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemItemReferenceParam](
-		"Type", true, "item_reference",
-	)
-}
-
-func init() {
-	apijson.RegisterUnion[ResponseOutputMessageContentUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputTextParam{}),
-			DiscriminatorValue: "output_text",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputRefusalParam{}),
-			DiscriminatorValue: "refusal",
-		},
-	)
-}
-
-func init() {
-	apijson.RegisterUnion[ResponseOutputTextAnnotationUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputTextAnnotationFileCitationParam{}),
-			DiscriminatorValue: "file_citation",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputTextAnnotationURLCitationParam{}),
-			DiscriminatorValue: "url_citation",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputTextAnnotationFilePathParam{}),
-			DiscriminatorValue: "file_path",
-		},
-	)
-}
-
-func init() {
-	apijson.RegisterUnion[ToolUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FileSearchToolParam{}),
-			DiscriminatorValue: "file_search",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FunctionToolParam{}),
-			DiscriminatorValue: "function",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(WebSearchToolParam{}),
-			DiscriminatorValue: "web_search_preview",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(WebSearchToolParam{}),
-			DiscriminatorValue: "web_search_preview_2025_03_11",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ComputerToolParam{}),
-			DiscriminatorValue: "computer_use_preview",
-		},
 	)
 }
 
@@ -2126,60 +1862,6 @@ func (u ResponseComputerToolCallActionUnionParam) GetY() *int64 {
 	return nil
 }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterUnion[ResponseComputerToolCallActionUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionClickParam{}),
-			DiscriminatorValue: "click",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionDoubleClickParam{}),
-			DiscriminatorValue: "double_click",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionDragParam{}),
-			DiscriminatorValue: "drag",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionKeypressParam{}),
-			DiscriminatorValue: "keypress",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionMoveParam{}),
-			DiscriminatorValue: "move",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionScreenshotParam{}),
-			DiscriminatorValue: "screenshot",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionScrollParam{}),
-			DiscriminatorValue: "scroll",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionTypeParam{}),
-			DiscriminatorValue: "type",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallActionWaitParam{}),
-			DiscriminatorValue: "wait",
-		},
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterUnion[ResponseComputerToolCallActionUnionParam](
 		"type",
@@ -2195,7 +1877,6 @@ func init() {
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 // A click action.
 //
 // The properties Button, Type, X, Y are required.
@@ -2225,22 +1906,12 @@ func (r *ResponseComputerToolCallActionClickParam) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, r)
 }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterFieldValidator[ResponseComputerToolCallActionClickParam](
-		"Button", false, "left", "right", "wheel", "back", "forward",
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterFieldValidator[ResponseComputerToolCallActionClickParam](
 		"button", "left", "right", "wheel", "back", "forward",
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 // A double click action.
 //
 // The properties Type, X, Y are required.
@@ -3398,30 +3069,6 @@ func (u ResponseFormatTextConfigUnionParam) GetType() *string {
 	return nil
 }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterUnion[ResponseFormatTextConfigUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(shared.ResponseFormatTextParam{}),
-			DiscriminatorValue: "text",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseFormatTextJSONSchemaConfigParam{}),
-			DiscriminatorValue: "json_schema",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(shared.ResponseFormatJSONObjectParam{}),
-			DiscriminatorValue: "json_object",
-		},
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterUnion[ResponseFormatTextConfigUnionParam](
 		"type",
@@ -3431,7 +3078,6 @@ func init() {
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
 // [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
@@ -4064,30 +3710,6 @@ func (u ResponseInputContentUnionParam) GetFileID() *string {
 	return nil
 }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterUnion[ResponseInputContentUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputTextParam{}),
-			DiscriminatorValue: "input_text",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputImageParam{}),
-			DiscriminatorValue: "input_image",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputFileParam{}),
-			DiscriminatorValue: "input_file",
-		},
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterUnion[ResponseInputContentUnionParam](
 		"type",
@@ -4097,7 +3719,6 @@ func init() {
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 // A file input to the model.
 type ResponseInputFile struct {
 	// The type of the input item. Always `input_file`.
@@ -4608,70 +4229,6 @@ type responseInputItemUnionParamOutput struct{ any }
 //	}
 func (u responseInputItemUnionParamOutput) AsAny() any { return u.any }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterUnion[ResponseInputItemUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(EasyInputMessageParam{}),
-			DiscriminatorValue: "message",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputItemMessageParam{}),
-			DiscriminatorValue: "message",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputMessageParam{}),
-			DiscriminatorValue: "message",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseFileSearchToolCallParam{}),
-			DiscriminatorValue: "file_search_call",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseComputerToolCallParam{}),
-			DiscriminatorValue: "computer_call",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputItemComputerCallOutputParam{}),
-			DiscriminatorValue: "computer_call_output",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseFunctionWebSearchParam{}),
-			DiscriminatorValue: "web_search_call",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseFunctionToolCallParam{}),
-			DiscriminatorValue: "function_call",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputItemFunctionCallOutputParam{}),
-			DiscriminatorValue: "function_call_output",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseReasoningItemParam{}),
-			DiscriminatorValue: "reasoning",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseInputItemItemReferenceParam{}),
-			DiscriminatorValue: "item_reference",
-		},
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterUnion[ResponseInputItemUnionParam](
 		"type",
@@ -4689,7 +4246,6 @@ func init() {
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 // A message input to the model with a role indicating instruction following
 // hierarchy. Instructions given with the `developer` or `system` role take
 // precedence over instructions given with the `user` role.
@@ -4723,21 +4279,6 @@ func (r *ResponseInputItemMessageParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
-		"Role", false, "user", "system", "developer",
-	)
-	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
-		"Status", false, "in_progress", "completed", "incomplete",
-	)
-	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
-		"Type", false, "message",
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
 		"role", "user", "system", "developer",
@@ -4750,7 +4291,6 @@ func init() {
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 // The output of a computer tool call.
 //
 // The properties CallID, Output, Type are required.
@@ -4785,22 +4325,12 @@ func (r *ResponseInputItemComputerCallOutputParam) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, r)
 }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemComputerCallOutputParam](
-		"Status", true, "in_progress", "completed", "incomplete",
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterFieldValidator[ResponseInputItemComputerCallOutputParam](
 		"status", "in_progress", "completed", "incomplete",
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 // A pending safety check for the computer call.
 //
 // The property ID is required.
@@ -4854,22 +4384,12 @@ func (r *ResponseInputItemFunctionCallOutputParam) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, r)
 }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemFunctionCallOutputParam](
-		"Status", true, "in_progress", "completed", "incomplete",
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterFieldValidator[ResponseInputItemFunctionCallOutputParam](
 		"status", "in_progress", "completed", "incomplete",
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 // An internal identifier for an item to reference.
 //
 // The property ID is required.
@@ -4891,22 +4411,12 @@ func (r *ResponseInputItemItemReferenceParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemItemReferenceParam](
-		"Type", true, "item_reference",
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterFieldValidator[ResponseInputItemItemReferenceParam](
 		"type", "item_reference",
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 type ResponseInputMessageContentList []ResponseInputContentUnion
 
 type ResponseInputMessageContentListParam []ResponseInputContentUnionParam
@@ -5631,25 +5141,6 @@ func (u ResponseOutputMessageContentUnionParam) GetType() *string {
 	return nil
 }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterUnion[ResponseOutputMessageContentUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputTextParam{}),
-			DiscriminatorValue: "output_text",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputRefusalParam{}),
-			DiscriminatorValue: "refusal",
-		},
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterUnion[ResponseOutputMessageContentUnionParam](
 		"type",
@@ -5658,7 +5149,6 @@ func init() {
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 // A refusal from the model.
 type ResponseOutputRefusal struct {
 	// The refusal explanationfrom the model.
@@ -6024,30 +5514,6 @@ func (u ResponseOutputTextAnnotationUnionParam) GetType() *string {
 	return nil
 }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterUnion[ResponseOutputTextAnnotationUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputTextAnnotationFileCitationParam{}),
-			DiscriminatorValue: "file_citation",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputTextAnnotationURLCitationParam{}),
-			DiscriminatorValue: "url_citation",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ResponseOutputTextAnnotationFilePathParam{}),
-			DiscriminatorValue: "file_path",
-		},
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterUnion[ResponseOutputTextAnnotationUnionParam](
 		"type",
@@ -6057,7 +5523,6 @@ func init() {
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 // A citation to a file.
 //
 // The properties FileID, Index, Type are required.
@@ -7722,40 +7187,6 @@ func (u ToolUnionParam) GetType() *string {
 	return nil
 }
 
-<<<<<<< HEAD
-||||||| 2cb7fc6
-func init() {
-	apijson.RegisterUnion[ToolUnionParam](
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FileSearchToolParam{}),
-			DiscriminatorValue: "file_search",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FunctionToolParam{}),
-			DiscriminatorValue: "function",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(WebSearchToolParam{}),
-			DiscriminatorValue: "web_search_preview",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(WebSearchToolParam{}),
-			DiscriminatorValue: "web_search_preview_2025_03_11",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ComputerToolParam{}),
-			DiscriminatorValue: "computer_use_preview",
-		},
-	)
-}
-
-=======
 func init() {
 	apijson.RegisterUnion[ToolUnionParam](
 		"type",
@@ -7767,7 +7198,6 @@ func init() {
 	)
 }
 
->>>>>>> origin/generated--merge-conflict
 // Use this option to force the model to call a specific function.
 type ToolChoiceFunction struct {
 	// The name of the function to call.
