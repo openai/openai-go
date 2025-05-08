@@ -70,7 +70,20 @@ func (o *Opt[T]) UnmarshalJSON(data []byte) error {
 		o.status = null
 		return nil
 	}
-	return json.Unmarshal(data, &o.Value)
+
+	var value *T
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+
+	if value == nil {
+		o.status = omitted
+		return nil
+	}
+
+	o.status = included
+	o.Value = *value
+	return nil
 }
 
 // MarshalJSONWithTimeLayout is necessary to bypass the internal caching performed

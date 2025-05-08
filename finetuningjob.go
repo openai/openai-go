@@ -969,6 +969,9 @@ func (r FineTuningJobNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FineTuningJobNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The name of the model to fine-tune. You can select one of the
 // [supported models](https://platform.openai.com/docs/guides/fine-tuning#which-models-can-be-fine-tuned).
@@ -1002,6 +1005,9 @@ func (r FineTuningJobNewParamsHyperparameters) MarshalJSON() (data []byte, err e
 	type shadow FineTuningJobNewParamsHyperparameters
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FineTuningJobNewParamsHyperparameters) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1015,6 +1021,9 @@ type FineTuningJobNewParamsHyperparametersBatchSizeUnion struct {
 
 func (u FineTuningJobNewParamsHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
+}
+func (u *FineTuningJobNewParamsHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *FineTuningJobNewParamsHyperparametersBatchSizeUnion) asAny() any {
@@ -1039,6 +1048,9 @@ type FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion struct {
 func (u FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
 }
+func (u *FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion) asAny() any {
 	if !param.IsOmitted(u.OfAuto) {
@@ -1061,6 +1073,9 @@ type FineTuningJobNewParamsHyperparametersNEpochsUnion struct {
 
 func (u FineTuningJobNewParamsHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
+}
+func (u *FineTuningJobNewParamsHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *FineTuningJobNewParamsHyperparametersNEpochsUnion) asAny() any {
@@ -1091,6 +1106,9 @@ func (r FineTuningJobNewParamsIntegration) MarshalJSON() (data []byte, err error
 	type shadow FineTuningJobNewParamsIntegration
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FineTuningJobNewParamsIntegration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The settings for your integration with Weights and Biases. This payload
 // specifies the project that metrics will be sent to. Optionally, you can set an
@@ -1119,6 +1137,9 @@ func (r FineTuningJobNewParamsIntegrationWandb) MarshalJSON() (data []byte, err 
 	type shadow FineTuningJobNewParamsIntegrationWandb
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FineTuningJobNewParamsIntegrationWandb) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The method used for fine-tuning.
 type FineTuningJobNewParamsMethod struct {
@@ -1137,10 +1158,13 @@ func (r FineTuningJobNewParamsMethod) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParamsMethod
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FineTuningJobNewParamsMethod) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[FineTuningJobNewParamsMethod](
-		"Type", false, "supervised", "dpo",
+		"type", "supervised", "dpo",
 	)
 }
 
@@ -1154,6 +1178,9 @@ type FineTuningJobNewParamsMethodDpo struct {
 func (r FineTuningJobNewParamsMethodDpo) MarshalJSON() (data []byte, err error) {
 	type shadow FineTuningJobNewParamsMethodDpo
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *FineTuningJobNewParamsMethodDpo) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // The hyperparameters used for the fine-tuning job.
@@ -1177,6 +1204,9 @@ func (r FineTuningJobNewParamsMethodDpoHyperparameters) MarshalJSON() (data []by
 	type shadow FineTuningJobNewParamsMethodDpoHyperparameters
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FineTuningJobNewParamsMethodDpoHyperparameters) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1190,6 +1220,9 @@ type FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion struct {
 
 func (u FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
+}
+func (u *FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion) asAny() any {
@@ -1214,6 +1247,9 @@ type FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion struct {
 func (u FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion](u.OfAuto, u.OfFloat)
 }
+func (u *FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion) asAny() any {
 	if !param.IsOmitted(u.OfAuto) {
@@ -1236,6 +1272,9 @@ type FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion s
 
 func (u FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
+}
+func (u *FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion) asAny() any {
@@ -1260,6 +1299,9 @@ type FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion struct {
 func (u FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
 }
+func (u *FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion) asAny() any {
 	if !param.IsOmitted(u.OfAuto) {
@@ -1281,6 +1323,9 @@ func (r FineTuningJobNewParamsMethodSupervised) MarshalJSON() (data []byte, err 
 	type shadow FineTuningJobNewParamsMethodSupervised
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FineTuningJobNewParamsMethodSupervised) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The hyperparameters used for the fine-tuning job.
 type FineTuningJobNewParamsMethodSupervisedHyperparameters struct {
@@ -1300,6 +1345,9 @@ func (r FineTuningJobNewParamsMethodSupervisedHyperparameters) MarshalJSON() (da
 	type shadow FineTuningJobNewParamsMethodSupervisedHyperparameters
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FineTuningJobNewParamsMethodSupervisedHyperparameters) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1313,6 +1361,9 @@ type FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion struct 
 
 func (u FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
+}
+func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion) asAny() any {
@@ -1337,6 +1388,9 @@ type FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplier
 func (u FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
 }
+func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion) asAny() any {
 	if !param.IsOmitted(u.OfAuto) {
@@ -1359,6 +1413,9 @@ type FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion struct {
 
 func (u FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
+}
+func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion) asAny() any {

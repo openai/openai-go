@@ -350,6 +350,9 @@ func (r CompletionNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow CompletionNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *CompletionNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // ID of the model to use. You can use the
 // [List models](https://platform.openai.com/docs/api-reference/models/list) API to
@@ -378,6 +381,9 @@ type CompletionNewParamsPromptUnion struct {
 func (u CompletionNewParamsPromptUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[CompletionNewParamsPromptUnion](u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
 }
+func (u *CompletionNewParamsPromptUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *CompletionNewParamsPromptUnion) asAny() any {
 	if !param.IsOmitted(u.OfString) {
@@ -403,6 +409,9 @@ type CompletionNewParamsStopUnion struct {
 
 func (u CompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[CompletionNewParamsStopUnion](u.OfString, u.OfStringArray)
+}
+func (u *CompletionNewParamsStopUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *CompletionNewParamsStopUnion) asAny() any {

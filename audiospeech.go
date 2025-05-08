@@ -6,6 +6,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
@@ -75,6 +76,9 @@ type AudioSpeechNewParams struct {
 func (r AudioSpeechNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow AudioSpeechNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AudioSpeechNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // The voice to use when generating the audio. Supported voices are `alloy`, `ash`,

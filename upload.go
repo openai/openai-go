@@ -179,6 +179,9 @@ func (r UploadNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow UploadNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *UploadNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type UploadCompleteParams struct {
 	// The ordered list of Part IDs.
@@ -192,4 +195,7 @@ type UploadCompleteParams struct {
 func (r UploadCompleteParams) MarshalJSON() (data []byte, err error) {
 	type shadow UploadCompleteParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *UploadCompleteParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }

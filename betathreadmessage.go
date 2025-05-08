@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -20,7 +19,6 @@ import (
 	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
-	"github.com/tidwall/gjson"
 )
 
 // BetaThreadMessageService contains methods and other services that help with
@@ -530,6 +528,9 @@ func (r ImageFileParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageFileParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ImageFileParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // References an image [File](https://platform.openai.com/docs/api-reference/files)
 // in the content of a message.
@@ -577,6 +578,9 @@ type ImageFileContentBlockParam struct {
 func (r ImageFileContentBlockParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageFileContentBlockParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ImageFileContentBlockParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ImageFileDelta struct {
@@ -698,6 +702,9 @@ func (r ImageURLParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageURLParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ImageURLParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // References an image URL in the content of a message.
 type ImageURLContentBlock struct {
@@ -743,6 +750,9 @@ type ImageURLContentBlockParam struct {
 func (r ImageURLContentBlockParam) MarshalJSON() (data []byte, err error) {
 	type shadow ImageURLContentBlockParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ImageURLContentBlockParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ImageURLDelta struct {
@@ -1194,6 +1204,9 @@ type MessageContentPartParamUnion struct {
 func (u MessageContentPartParamUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[MessageContentPartParamUnion](u.OfImageFile, u.OfImageURL, u.OfText)
 }
+func (u *MessageContentPartParamUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *MessageContentPartParamUnion) asAny() any {
 	if !param.IsOmitted(u.OfImageFile) {
@@ -1245,21 +1258,9 @@ func (u MessageContentPartParamUnion) GetType() *string {
 func init() {
 	apijson.RegisterUnion[MessageContentPartParamUnion](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ImageFileContentBlockParam{}),
-			DiscriminatorValue: "image_file",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ImageURLContentBlockParam{}),
-			DiscriminatorValue: "image_url",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(TextContentBlockParam{}),
-			DiscriminatorValue: "text",
-		},
+		apijson.Discriminator[ImageFileContentBlockParam]("image_file"),
+		apijson.Discriminator[ImageURLContentBlockParam]("image_url"),
+		apijson.Discriminator[TextContentBlockParam]("text"),
 	)
 }
 
@@ -1438,6 +1439,9 @@ func (r TextContentBlockParam) MarshalJSON() (data []byte, err error) {
 	type shadow TextContentBlockParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *TextContentBlockParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type TextDelta struct {
 	Annotations []AnnotationDeltaUnion `json:"annotations"`
@@ -1509,6 +1513,9 @@ func (r BetaThreadMessageNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadMessageNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadMessageNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1521,6 +1528,9 @@ type BetaThreadMessageNewParamsContentUnion struct {
 
 func (u BetaThreadMessageNewParamsContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadMessageNewParamsContentUnion](u.OfString, u.OfArrayOfContentParts)
+}
+func (u *BetaThreadMessageNewParamsContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadMessageNewParamsContentUnion) asAny() any {
@@ -1557,6 +1567,9 @@ func (r BetaThreadMessageNewParamsAttachment) MarshalJSON() (data []byte, err er
 	type shadow BetaThreadMessageNewParamsAttachment
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadMessageNewParamsAttachment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1569,6 +1582,9 @@ type BetaThreadMessageNewParamsAttachmentToolUnion struct {
 
 func (u BetaThreadMessageNewParamsAttachmentToolUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadMessageNewParamsAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+}
+func (u *BetaThreadMessageNewParamsAttachmentToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadMessageNewParamsAttachmentToolUnion) asAny() any {
@@ -1593,16 +1609,8 @@ func (u BetaThreadMessageNewParamsAttachmentToolUnion) GetType() *string {
 func init() {
 	apijson.RegisterUnion[BetaThreadMessageNewParamsAttachmentToolUnion](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(CodeInterpreterToolParam{}),
-			DiscriminatorValue: "code_interpreter",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(BetaThreadMessageNewParamsAttachmentToolFileSearch{}),
-			DiscriminatorValue: "file_search",
-		},
+		apijson.Discriminator[CodeInterpreterToolParam]("code_interpreter"),
+		apijson.Discriminator[BetaThreadMessageNewParamsAttachmentToolFileSearch]("file_search"),
 	)
 }
 
@@ -1624,6 +1632,9 @@ func (r BetaThreadMessageNewParamsAttachmentToolFileSearch) MarshalJSON() (data 
 	type shadow BetaThreadMessageNewParamsAttachmentToolFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadMessageNewParamsAttachmentToolFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BetaThreadMessageUpdateParams struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
@@ -1639,6 +1650,9 @@ type BetaThreadMessageUpdateParams struct {
 func (r BetaThreadMessageUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadMessageUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadMessageUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadMessageListParams struct {

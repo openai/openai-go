@@ -297,6 +297,9 @@ func (r BatchNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BatchNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BatchNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The time frame within which the batch should be processed. Currently only `24h`
 // is supported.

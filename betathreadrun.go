@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -20,7 +19,6 @@ import (
 	"github.com/openai/openai-go/packages/ssestream"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
-	"github.com/tidwall/gjson"
 )
 
 // BetaThreadRunService contains methods and other services that help with
@@ -683,6 +681,9 @@ func (r BetaThreadRunNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadRunNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // URLQuery serializes [BetaThreadRunNewParams]'s query parameters as `url.Values`.
 func (r BetaThreadRunNewParams) URLQuery() (v url.Values, err error) {
@@ -721,10 +722,13 @@ func (r BetaThreadRunNewParamsAdditionalMessage) MarshalJSON() (data []byte, err
 	type shadow BetaThreadRunNewParamsAdditionalMessage
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadRunNewParamsAdditionalMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[BetaThreadRunNewParamsAdditionalMessage](
-		"Role", false, "user", "assistant",
+		"role", "user", "assistant",
 	)
 }
 
@@ -739,6 +743,9 @@ type BetaThreadRunNewParamsAdditionalMessageContentUnion struct {
 
 func (u BetaThreadRunNewParamsAdditionalMessageContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadRunNewParamsAdditionalMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
+}
+func (u *BetaThreadRunNewParamsAdditionalMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadRunNewParamsAdditionalMessageContentUnion) asAny() any {
@@ -762,6 +769,9 @@ func (r BetaThreadRunNewParamsAdditionalMessageAttachment) MarshalJSON() (data [
 	type shadow BetaThreadRunNewParamsAdditionalMessageAttachment
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadRunNewParamsAdditionalMessageAttachment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -774,6 +784,9 @@ type BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion struct {
 
 func (u BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+}
+func (u *BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) asAny() any {
@@ -798,16 +811,8 @@ func (u BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) GetType() *s
 func init() {
 	apijson.RegisterUnion[BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(CodeInterpreterToolParam{}),
-			DiscriminatorValue: "code_interpreter",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch{}),
-			DiscriminatorValue: "file_search",
-		},
+		apijson.Discriminator[CodeInterpreterToolParam]("code_interpreter"),
+		apijson.Discriminator[BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch]("file_search"),
 	)
 }
 
@@ -828,6 +833,9 @@ type BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch struct {
 func (r BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Controls for how a thread will be truncated prior to the run. Use this to
@@ -852,10 +860,13 @@ func (r BetaThreadRunNewParamsTruncationStrategy) MarshalJSON() (data []byte, er
 	type shadow BetaThreadRunNewParamsTruncationStrategy
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadRunNewParamsTruncationStrategy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[BetaThreadRunNewParamsTruncationStrategy](
-		"Type", false, "auto", "last_messages",
+		"type", "auto", "last_messages",
 	)
 }
 
@@ -873,6 +884,9 @@ type BetaThreadRunUpdateParams struct {
 func (r BetaThreadRunUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadRunUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadRunListParams struct {
@@ -925,6 +939,9 @@ func (r BetaThreadRunSubmitToolOutputsParams) MarshalJSON() (data []byte, err er
 	type shadow BetaThreadRunSubmitToolOutputsParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadRunSubmitToolOutputsParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BetaThreadRunSubmitToolOutputsParamsToolOutput struct {
 	// The output of the tool call to be submitted to continue the run.
@@ -938,4 +955,7 @@ type BetaThreadRunSubmitToolOutputsParamsToolOutput struct {
 func (r BetaThreadRunSubmitToolOutputsParamsToolOutput) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunSubmitToolOutputsParamsToolOutput
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadRunSubmitToolOutputsParamsToolOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -20,7 +19,6 @@ import (
 	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
-	"github.com/tidwall/gjson"
 )
 
 // VectorStoreService contains methods and other services that help with
@@ -167,6 +165,9 @@ func (r AutoFileChunkingStrategyParam) MarshalJSON() (data []byte, err error) {
 	type shadow AutoFileChunkingStrategyParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *AutoFileChunkingStrategyParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // FileChunkingStrategyUnion contains all possible properties and values from
 // [StaticFileChunkingStrategyObject], [OtherFileChunkingStrategyObject].
@@ -249,6 +250,9 @@ type FileChunkingStrategyParamUnion struct {
 func (u FileChunkingStrategyParamUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FileChunkingStrategyParamUnion](u.OfAuto, u.OfStatic)
 }
+func (u *FileChunkingStrategyParamUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *FileChunkingStrategyParamUnion) asAny() any {
 	if !param.IsOmitted(u.OfAuto) {
@@ -280,16 +284,8 @@ func (u FileChunkingStrategyParamUnion) GetType() *string {
 func init() {
 	apijson.RegisterUnion[FileChunkingStrategyParamUnion](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(AutoFileChunkingStrategyParam{}),
-			DiscriminatorValue: "auto",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(StaticFileChunkingStrategyObjectParam{}),
-			DiscriminatorValue: "static",
-		},
+		apijson.Discriminator[AutoFileChunkingStrategyParam]("auto"),
+		apijson.Discriminator[StaticFileChunkingStrategyObjectParam]("static"),
 	)
 }
 
@@ -362,6 +358,9 @@ func (r StaticFileChunkingStrategyParam) MarshalJSON() (data []byte, err error) 
 	type shadow StaticFileChunkingStrategyParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *StaticFileChunkingStrategyParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type StaticFileChunkingStrategyObject struct {
 	Static StaticFileChunkingStrategy `json:"static,required"`
@@ -397,6 +396,9 @@ type StaticFileChunkingStrategyObjectParam struct {
 func (r StaticFileChunkingStrategyObjectParam) MarshalJSON() (data []byte, err error) {
 	type shadow StaticFileChunkingStrategyObjectParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *StaticFileChunkingStrategyObjectParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A vector store is a collection of processed files can be used by the
@@ -663,6 +665,9 @@ func (r VectorStoreNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *VectorStoreNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The expiration policy for a vector store.
 //
@@ -681,6 +686,9 @@ type VectorStoreNewParamsExpiresAfter struct {
 func (r VectorStoreNewParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreNewParamsExpiresAfter
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VectorStoreNewParamsExpiresAfter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type VectorStoreUpdateParams struct {
@@ -702,6 +710,9 @@ func (r VectorStoreUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *VectorStoreUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The expiration policy for a vector store.
 //
@@ -720,6 +731,9 @@ type VectorStoreUpdateParamsExpiresAfter struct {
 func (r VectorStoreUpdateParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreUpdateParamsExpiresAfter
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VectorStoreUpdateParamsExpiresAfter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type VectorStoreListParams struct {
@@ -780,6 +794,9 @@ func (r VectorStoreSearchParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreSearchParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *VectorStoreSearchParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -792,6 +809,9 @@ type VectorStoreSearchParamsQueryUnion struct {
 
 func (u VectorStoreSearchParamsQueryUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreSearchParamsQueryUnion](u.OfString, u.OfStringArray)
+}
+func (u *VectorStoreSearchParamsQueryUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *VectorStoreSearchParamsQueryUnion) asAny() any {
@@ -814,6 +834,9 @@ type VectorStoreSearchParamsFiltersUnion struct {
 
 func (u VectorStoreSearchParamsFiltersUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreSearchParamsFiltersUnion](u.OfComparisonFilter, u.OfCompoundFilter)
+}
+func (u *VectorStoreSearchParamsFiltersUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *VectorStoreSearchParamsFiltersUnion) asAny() any {
@@ -871,9 +894,12 @@ func (r VectorStoreSearchParamsRankingOptions) MarshalJSON() (data []byte, err e
 	type shadow VectorStoreSearchParamsRankingOptions
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *VectorStoreSearchParamsRankingOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[VectorStoreSearchParamsRankingOptions](
-		"Ranker", false, "auto", "default-2024-11-15",
+		"ranker", "auto", "default-2024-11-15",
 	)
 }

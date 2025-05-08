@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -20,7 +19,6 @@ import (
 	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
-	"github.com/tidwall/gjson"
 )
 
 // BetaAssistantService contains methods and other services that help with
@@ -1431,6 +1429,9 @@ type AssistantToolUnionParam struct {
 func (u AssistantToolUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[AssistantToolUnionParam](u.OfCodeInterpreter, u.OfFileSearch, u.OfFunction)
 }
+func (u *AssistantToolUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *AssistantToolUnionParam) asAny() any {
 	if !param.IsOmitted(u.OfCodeInterpreter) {
@@ -1474,21 +1475,9 @@ func (u AssistantToolUnionParam) GetType() *string {
 func init() {
 	apijson.RegisterUnion[AssistantToolUnionParam](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(CodeInterpreterToolParam{}),
-			DiscriminatorValue: "code_interpreter",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FileSearchToolParam{}),
-			DiscriminatorValue: "file_search",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(FunctionToolParam{}),
-			DiscriminatorValue: "function",
-		},
+		apijson.Discriminator[CodeInterpreterToolParam]("code_interpreter"),
+		apijson.Discriminator[FileSearchToolParam]("file_search"),
+		apijson.Discriminator[FunctionToolParam]("function"),
 	)
 }
 
@@ -1535,6 +1524,9 @@ type CodeInterpreterToolParam struct {
 func (r CodeInterpreterToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow CodeInterpreterToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *CodeInterpreterToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type FileSearchTool struct {
@@ -1644,6 +1636,9 @@ func (r FileSearchToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow FileSearchToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FileSearchToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Overrides for the file search tool.
 type FileSearchToolFileSearchParam struct {
@@ -1670,6 +1665,9 @@ func (r FileSearchToolFileSearchParam) MarshalJSON() (data []byte, err error) {
 	type shadow FileSearchToolFileSearchParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FileSearchToolFileSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The ranking options for the file search. If not specified, the file search tool
 // will use the `auto` ranker and a score_threshold of 0.
@@ -1695,10 +1693,13 @@ func (r FileSearchToolFileSearchRankingOptionsParam) MarshalJSON() (data []byte,
 	type shadow FileSearchToolFileSearchRankingOptionsParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FileSearchToolFileSearchRankingOptionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[FileSearchToolFileSearchRankingOptionsParam](
-		"Ranker", false, "auto", "default_2024_08_21",
+		"ranker", "auto", "default_2024_08_21",
 	)
 }
 
@@ -1743,6 +1744,9 @@ type FunctionToolParam struct {
 func (r FunctionToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow FunctionToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *FunctionToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaAssistantNewParams struct {
@@ -1822,6 +1826,9 @@ func (r BetaAssistantNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaAssistantNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaAssistantNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A set of resources that are used by the assistant's tools. The resources are
 // specific to the type of tool. For example, the `code_interpreter` tool requires
@@ -1837,6 +1844,9 @@ func (r BetaAssistantNewParamsToolResources) MarshalJSON() (data []byte, err err
 	type shadow BetaAssistantNewParamsToolResources
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaAssistantNewParamsToolResources) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BetaAssistantNewParamsToolResourcesCodeInterpreter struct {
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs made
@@ -1849,6 +1859,9 @@ type BetaAssistantNewParamsToolResourcesCodeInterpreter struct {
 func (r BetaAssistantNewParamsToolResourcesCodeInterpreter) MarshalJSON() (data []byte, err error) {
 	type shadow BetaAssistantNewParamsToolResourcesCodeInterpreter
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAssistantNewParamsToolResourcesCodeInterpreter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaAssistantNewParamsToolResourcesFileSearch struct {
@@ -1868,6 +1881,9 @@ type BetaAssistantNewParamsToolResourcesFileSearch struct {
 func (r BetaAssistantNewParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaAssistantNewParamsToolResourcesFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAssistantNewParamsToolResourcesFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaAssistantNewParamsToolResourcesFileSearchVectorStore struct {
@@ -1892,6 +1908,9 @@ func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStore) MarshalJSON() 
 	type shadow BetaAssistantNewParamsToolResourcesFileSearchVectorStore
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaAssistantNewParamsToolResourcesFileSearchVectorStore) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1904,6 +1923,9 @@ type BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUni
 
 func (u BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion](u.OfAuto, u.OfStatic)
+}
+func (u *BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) asAny() any {
@@ -1936,16 +1958,8 @@ func (u BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategy
 func init() {
 	apijson.RegisterUnion[BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto{}),
-			DiscriminatorValue: "auto",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic{}),
-			DiscriminatorValue: "static",
-		},
+		apijson.Discriminator[BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto]("auto"),
+		apijson.Discriminator[BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic]("static"),
 	)
 }
 
@@ -1970,6 +1984,9 @@ func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategy
 	type shadow BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The properties Static, Type are required.
 type BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic struct {
@@ -1984,6 +2001,9 @@ type BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategySta
 func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic) MarshalJSON() (data []byte, err error) {
 	type shadow BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // The properties ChunkOverlapTokens, MaxChunkSizeTokens are required.
@@ -2001,6 +2021,9 @@ type BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategySta
 func (r BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic) MarshalJSON() (data []byte, err error) {
 	type shadow BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStaticStatic) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaAssistantUpdateParams struct {
@@ -2080,6 +2103,9 @@ func (r BetaAssistantUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaAssistantUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaAssistantUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // ID of the model to use. You can use the
 // [List models](https://platform.openai.com/docs/api-reference/models/list) API to
@@ -2141,6 +2167,9 @@ func (r BetaAssistantUpdateParamsToolResources) MarshalJSON() (data []byte, err 
 	type shadow BetaAssistantUpdateParamsToolResources
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaAssistantUpdateParamsToolResources) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BetaAssistantUpdateParamsToolResourcesCodeInterpreter struct {
 	// Overrides the list of
@@ -2155,6 +2184,9 @@ func (r BetaAssistantUpdateParamsToolResourcesCodeInterpreter) MarshalJSON() (da
 	type shadow BetaAssistantUpdateParamsToolResourcesCodeInterpreter
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaAssistantUpdateParamsToolResourcesCodeInterpreter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BetaAssistantUpdateParamsToolResourcesFileSearch struct {
 	// Overrides the
@@ -2168,6 +2200,9 @@ type BetaAssistantUpdateParamsToolResourcesFileSearch struct {
 func (r BetaAssistantUpdateParamsToolResourcesFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaAssistantUpdateParamsToolResourcesFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaAssistantUpdateParamsToolResourcesFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaAssistantListParams struct {

@@ -401,6 +401,9 @@ func (r VectorStoreFileNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreFileNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *VectorStoreFileNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -414,6 +417,9 @@ type VectorStoreFileNewParamsAttributeUnion struct {
 
 func (u VectorStoreFileNewParamsAttributeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreFileNewParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+}
+func (u *VectorStoreFileNewParamsAttributeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *VectorStoreFileNewParamsAttributeUnion) asAny() any {
@@ -441,6 +447,9 @@ func (r VectorStoreFileUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreFileUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *VectorStoreFileUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -454,6 +463,9 @@ type VectorStoreFileUpdateParamsAttributeUnion struct {
 
 func (u VectorStoreFileUpdateParamsAttributeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreFileUpdateParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+}
+func (u *VectorStoreFileUpdateParamsAttributeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *VectorStoreFileUpdateParamsAttributeUnion) asAny() any {

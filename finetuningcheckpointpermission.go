@@ -218,6 +218,9 @@ func (r FineTuningCheckpointPermissionNewParams) MarshalJSON() (data []byte, err
 	type shadow FineTuningCheckpointPermissionNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FineTuningCheckpointPermissionNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type FineTuningCheckpointPermissionGetParams struct {
 	// Identifier for the last permission ID from the previous pagination request.

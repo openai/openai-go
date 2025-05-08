@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -20,7 +19,6 @@ import (
 	"github.com/openai/openai-go/packages/ssestream"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
-	"github.com/tidwall/gjson"
 )
 
 // ChatCompletionService contains methods and other services that help with
@@ -303,6 +301,9 @@ func (r ChatCompletionAssistantMessageParam) MarshalJSON() (data []byte, err err
 	type shadow ChatCompletionAssistantMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionAssistantMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Data about a previous audio response from the model.
 // [Learn more](https://platform.openai.com/docs/guides/audio).
@@ -318,6 +319,9 @@ func (r ChatCompletionAssistantMessageParamAudio) MarshalJSON() (data []byte, er
 	type shadow ChatCompletionAssistantMessageParamAudio
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionAssistantMessageParamAudio) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -330,6 +334,9 @@ type ChatCompletionAssistantMessageParamContentUnion struct {
 
 func (u ChatCompletionAssistantMessageParamContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionAssistantMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
+}
+func (u *ChatCompletionAssistantMessageParamContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ChatCompletionAssistantMessageParamContentUnion) asAny() any {
@@ -352,6 +359,9 @@ type ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion struct {
 
 func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](u.OfText, u.OfRefusal)
+}
+func (u *ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) asAny() any {
@@ -392,16 +402,8 @@ func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) GetTy
 func init() {
 	apijson.RegisterUnion[ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionContentPartTextParam{}),
-			DiscriminatorValue: "text",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionContentPartRefusalParam{}),
-			DiscriminatorValue: "refusal",
-		},
+		apijson.Discriminator[ChatCompletionContentPartTextParam]("text"),
+		apijson.Discriminator[ChatCompletionContentPartRefusalParam]("refusal"),
 	)
 }
 
@@ -425,6 +427,9 @@ type ChatCompletionAssistantMessageParamFunctionCall struct {
 func (r ChatCompletionAssistantMessageParamFunctionCall) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionAssistantMessageParamFunctionCall
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionAssistantMessageParamFunctionCall) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // If the audio output modality is requested, this object contains data about the
@@ -478,6 +483,9 @@ type ChatCompletionAudioParam struct {
 func (r ChatCompletionAudioParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionAudioParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionAudioParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Specifies the output audio format. Must be one of `wav`, `mp3`, `flac`, `opus`,
@@ -774,6 +782,9 @@ type ChatCompletionContentPartUnionParam struct {
 func (u ChatCompletionContentPartUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionContentPartUnionParam](u.OfText, u.OfImageURL, u.OfInputAudio, u.OfFile)
 }
+func (u *ChatCompletionContentPartUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *ChatCompletionContentPartUnionParam) asAny() any {
 	if !param.IsOmitted(u.OfText) {
@@ -837,26 +848,10 @@ func (u ChatCompletionContentPartUnionParam) GetType() *string {
 func init() {
 	apijson.RegisterUnion[ChatCompletionContentPartUnionParam](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionContentPartTextParam{}),
-			DiscriminatorValue: "text",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionContentPartImageParam{}),
-			DiscriminatorValue: "image_url",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionContentPartInputAudioParam{}),
-			DiscriminatorValue: "input_audio",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionContentPartFileParam{}),
-			DiscriminatorValue: "file",
-		},
+		apijson.Discriminator[ChatCompletionContentPartTextParam]("text"),
+		apijson.Discriminator[ChatCompletionContentPartImageParam]("image_url"),
+		apijson.Discriminator[ChatCompletionContentPartInputAudioParam]("input_audio"),
+		apijson.Discriminator[ChatCompletionContentPartFileParam]("file"),
 	)
 }
 
@@ -877,6 +872,9 @@ func (r ChatCompletionContentPartFileParam) MarshalJSON() (data []byte, err erro
 	type shadow ChatCompletionContentPartFileParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionContentPartFileParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type ChatCompletionContentPartFileFileParam struct {
 	// The base64 encoded file data, used when passing the file to the model as a
@@ -892,6 +890,9 @@ type ChatCompletionContentPartFileFileParam struct {
 func (r ChatCompletionContentPartFileFileParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionContentPartFileFileParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionContentPartFileFileParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Learn about [image inputs](https://platform.openai.com/docs/guides/vision).
@@ -910,6 +911,9 @@ func (r ChatCompletionContentPartImageParam) MarshalJSON() (data []byte, err err
 	type shadow ChatCompletionContentPartImageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionContentPartImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The property URL is required.
 type ChatCompletionContentPartImageImageURLParam struct {
@@ -927,10 +931,13 @@ func (r ChatCompletionContentPartImageImageURLParam) MarshalJSON() (data []byte,
 	type shadow ChatCompletionContentPartImageImageURLParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionContentPartImageImageURLParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[ChatCompletionContentPartImageImageURLParam](
-		"Detail", false, "auto", "low", "high",
+		"detail", "auto", "low", "high",
 	)
 }
 
@@ -950,6 +957,9 @@ func (r ChatCompletionContentPartInputAudioParam) MarshalJSON() (data []byte, er
 	type shadow ChatCompletionContentPartInputAudioParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionContentPartInputAudioParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The properties Data, Format are required.
 type ChatCompletionContentPartInputAudioInputAudioParam struct {
@@ -966,10 +976,13 @@ func (r ChatCompletionContentPartInputAudioInputAudioParam) MarshalJSON() (data 
 	type shadow ChatCompletionContentPartInputAudioInputAudioParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionContentPartInputAudioInputAudioParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[ChatCompletionContentPartInputAudioInputAudioParam](
-		"Format", false, "wav", "mp3",
+		"format", "wav", "mp3",
 	)
 }
 
@@ -987,6 +1000,9 @@ type ChatCompletionContentPartRefusalParam struct {
 func (r ChatCompletionContentPartRefusalParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionContentPartRefusalParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionContentPartRefusalParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Learn about
@@ -1006,6 +1022,9 @@ type ChatCompletionContentPartTextParam struct {
 func (r ChatCompletionContentPartTextParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionContentPartTextParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionContentPartTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ChatCompletionDeleted struct {
@@ -1053,6 +1072,9 @@ func (r ChatCompletionDeveloperMessageParam) MarshalJSON() (data []byte, err err
 	type shadow ChatCompletionDeveloperMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionDeveloperMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1065,6 +1087,9 @@ type ChatCompletionDeveloperMessageParamContentUnion struct {
 
 func (u ChatCompletionDeveloperMessageParamContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionDeveloperMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
+}
+func (u *ChatCompletionDeveloperMessageParamContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ChatCompletionDeveloperMessageParamContentUnion) asAny() any {
@@ -1090,6 +1115,9 @@ func (r ChatCompletionFunctionCallOptionParam) MarshalJSON() (data []byte, err e
 	type shadow ChatCompletionFunctionCallOptionParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionFunctionCallOptionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Deprecated: deprecated
 //
@@ -1109,6 +1137,9 @@ type ChatCompletionFunctionMessageParam struct {
 func (r ChatCompletionFunctionMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionFunctionMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionFunctionMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A chat completion message generated by the model.
@@ -1348,6 +1379,9 @@ func (u ChatCompletionMessageParamUnion) MarshalJSON() ([]byte, error) {
 		u.OfTool,
 		u.OfFunction)
 }
+func (u *ChatCompletionMessageParamUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *ChatCompletionMessageParamUnion) asAny() any {
 	if !param.IsOmitted(u.OfDeveloper) {
@@ -1480,36 +1514,12 @@ func (u chatCompletionMessageParamUnionContent) AsAny() any { return u.any }
 func init() {
 	apijson.RegisterUnion[ChatCompletionMessageParamUnion](
 		"role",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionDeveloperMessageParam{}),
-			DiscriminatorValue: "developer",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionSystemMessageParam{}),
-			DiscriminatorValue: "system",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionUserMessageParam{}),
-			DiscriminatorValue: "user",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionAssistantMessageParam{}),
-			DiscriminatorValue: "assistant",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionToolMessageParam{}),
-			DiscriminatorValue: "tool",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ChatCompletionFunctionMessageParam{}),
-			DiscriminatorValue: "function",
-		},
+		apijson.Discriminator[ChatCompletionDeveloperMessageParam]("developer"),
+		apijson.Discriminator[ChatCompletionSystemMessageParam]("system"),
+		apijson.Discriminator[ChatCompletionUserMessageParam]("user"),
+		apijson.Discriminator[ChatCompletionAssistantMessageParam]("assistant"),
+		apijson.Discriminator[ChatCompletionToolMessageParam]("tool"),
+		apijson.Discriminator[ChatCompletionFunctionMessageParam]("function"),
 	)
 }
 
@@ -1587,6 +1597,9 @@ func (r ChatCompletionMessageToolCallParam) MarshalJSON() (data []byte, err erro
 	type shadow ChatCompletionMessageToolCallParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionMessageToolCallParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The function that the model called.
 //
@@ -1606,6 +1619,9 @@ func (r ChatCompletionMessageToolCallFunctionParam) MarshalJSON() (data []byte, 
 	type shadow ChatCompletionMessageToolCallFunctionParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionMessageToolCallFunctionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Specifies a tool the model should use. Use to force the model to call a specific
 // function.
@@ -1624,6 +1640,9 @@ func (r ChatCompletionNamedToolChoiceParam) MarshalJSON() (data []byte, err erro
 	type shadow ChatCompletionNamedToolChoiceParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionNamedToolChoiceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The property Name is required.
 type ChatCompletionNamedToolChoiceFunctionParam struct {
@@ -1635,6 +1654,9 @@ type ChatCompletionNamedToolChoiceFunctionParam struct {
 func (r ChatCompletionNamedToolChoiceFunctionParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionNamedToolChoiceFunctionParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionNamedToolChoiceFunctionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Static predicted output content, such as the content of a text file that is
@@ -1658,6 +1680,9 @@ func (r ChatCompletionPredictionContentParam) MarshalJSON() (data []byte, err er
 	type shadow ChatCompletionPredictionContentParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionPredictionContentParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1670,6 +1695,9 @@ type ChatCompletionPredictionContentContentUnionParam struct {
 
 func (u ChatCompletionPredictionContentContentUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionPredictionContentContentUnionParam](u.OfString, u.OfArrayOfContentParts)
+}
+func (u *ChatCompletionPredictionContentContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ChatCompletionPredictionContentContentUnionParam) asAny() any {
@@ -1717,6 +1745,9 @@ func (r ChatCompletionStreamOptionsParam) MarshalJSON() (data []byte, err error)
 	type shadow ChatCompletionStreamOptionsParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionStreamOptionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Developer-provided instructions that the model should follow, regardless of
 // messages sent by the user. With o1 models and newer, use `developer` messages
@@ -1740,6 +1771,9 @@ func (r ChatCompletionSystemMessageParam) MarshalJSON() (data []byte, err error)
 	type shadow ChatCompletionSystemMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionSystemMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1752,6 +1786,9 @@ type ChatCompletionSystemMessageParamContentUnion struct {
 
 func (u ChatCompletionSystemMessageParamContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionSystemMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
+}
+func (u *ChatCompletionSystemMessageParamContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ChatCompletionSystemMessageParamContentUnion) asAny() any {
@@ -1838,6 +1875,9 @@ func (r ChatCompletionToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func ChatCompletionToolChoiceOptionParamOfChatCompletionNamedToolChoice(function ChatCompletionNamedToolChoiceFunctionParam) ChatCompletionToolChoiceOptionUnionParam {
 	var variant ChatCompletionNamedToolChoiceParam
@@ -1857,6 +1897,9 @@ type ChatCompletionToolChoiceOptionUnionParam struct {
 
 func (u ChatCompletionToolChoiceOptionUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionToolChoiceOptionUnionParam](u.OfAuto, u.OfChatCompletionNamedToolChoice)
+}
+func (u *ChatCompletionToolChoiceOptionUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ChatCompletionToolChoiceOptionUnionParam) asAny() any {
@@ -1896,6 +1939,9 @@ func (r ChatCompletionToolMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionToolMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionToolMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1908,6 +1954,9 @@ type ChatCompletionToolMessageParamContentUnion struct {
 
 func (u ChatCompletionToolMessageParamContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionToolMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
+}
+func (u *ChatCompletionToolMessageParamContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ChatCompletionToolMessageParamContentUnion) asAny() any {
@@ -1940,6 +1989,9 @@ func (r ChatCompletionUserMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionUserMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionUserMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1952,6 +2004,9 @@ type ChatCompletionUserMessageParamContentUnion struct {
 
 func (u ChatCompletionUserMessageParamContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionUserMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
+}
+func (u *ChatCompletionUserMessageParamContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ChatCompletionUserMessageParamContentUnion) asAny() any {
@@ -2160,6 +2215,9 @@ func (r ChatCompletionNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -2173,6 +2231,9 @@ type ChatCompletionNewParamsFunctionCallUnion struct {
 
 func (u ChatCompletionNewParamsFunctionCallUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionNewParamsFunctionCallUnion](u.OfFunctionCallMode, u.OfFunctionCallOption)
+}
+func (u *ChatCompletionNewParamsFunctionCallUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ChatCompletionNewParamsFunctionCallUnion) asAny() any {
@@ -2219,6 +2280,9 @@ func (r ChatCompletionNewParamsFunction) MarshalJSON() (data []byte, err error) 
 	type shadow ChatCompletionNewParamsFunction
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionNewParamsFunction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -2232,6 +2296,9 @@ type ChatCompletionNewParamsResponseFormatUnion struct {
 
 func (u ChatCompletionNewParamsResponseFormatUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionNewParamsResponseFormatUnion](u.OfText, u.OfJSONSchema, u.OfJSONObject)
+}
+func (u *ChatCompletionNewParamsResponseFormatUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ChatCompletionNewParamsResponseFormatUnion) asAny() any {
@@ -2298,6 +2365,9 @@ type ChatCompletionNewParamsStopUnion struct {
 func (u ChatCompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ChatCompletionNewParamsStopUnion](u.OfString, u.OfStringArray)
 }
+func (u *ChatCompletionNewParamsStopUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *ChatCompletionNewParamsStopUnion) asAny() any {
 	if !param.IsOmitted(u.OfString) {
@@ -2326,10 +2396,13 @@ func (r ChatCompletionNewParamsWebSearchOptions) MarshalJSON() (data []byte, err
 	type shadow ChatCompletionNewParamsWebSearchOptions
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionNewParamsWebSearchOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[ChatCompletionNewParamsWebSearchOptions](
-		"SearchContextSize", false, "low", "medium", "high",
+		"search_context_size", "low", "medium", "high",
 	)
 }
 
@@ -2349,6 +2422,9 @@ type ChatCompletionNewParamsWebSearchOptionsUserLocation struct {
 func (r ChatCompletionNewParamsWebSearchOptionsUserLocation) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionNewParamsWebSearchOptionsUserLocation
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionNewParamsWebSearchOptionsUserLocation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Approximate location parameters for the search.
@@ -2370,6 +2446,9 @@ func (r ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate) MarshalJ
 	type shadow ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type ChatCompletionUpdateParams struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
@@ -2385,6 +2464,9 @@ type ChatCompletionUpdateParams struct {
 func (r ChatCompletionUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow ChatCompletionUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ChatCompletionListParams struct {

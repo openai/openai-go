@@ -9,8 +9,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+<<<<<<< HEAD
 	"reflect"
 	"strings"
+||||||| 2cb7fc6
+	"reflect"
+=======
+>>>>>>> origin/generated--merge-conflict
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -21,7 +26,6 @@ import (
 	"github.com/openai/openai-go/packages/ssestream"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
-	"github.com/tidwall/gjson"
 )
 
 // ResponseService contains methods and other services that help with interacting
@@ -186,6 +190,9 @@ func (r ComputerToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow ComputerToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ComputerToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A message input to the model with a role indicating instruction following
 // hierarchy. Instructions given with the `developer` or `system` role take
@@ -214,6 +221,9 @@ func (r EasyInputMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow EasyInputMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *EasyInputMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -226,6 +236,9 @@ type EasyInputMessageContentUnionParam struct {
 
 func (u EasyInputMessageContentUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[EasyInputMessageContentUnionParam](u.OfString, u.OfInputItemContentList)
+}
+func (u *EasyInputMessageContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *EasyInputMessageContentUnionParam) asAny() any {
@@ -386,6 +399,9 @@ func (r FileSearchToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow FileSearchToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FileSearchToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -398,6 +414,9 @@ type FileSearchToolFiltersUnionParam struct {
 
 func (u FileSearchToolFiltersUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[FileSearchToolFiltersUnionParam](u.OfComparisonFilter, u.OfCompoundFilter)
+}
+func (u *FileSearchToolFiltersUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *FileSearchToolFiltersUnionParam) asAny() any {
@@ -460,10 +479,13 @@ func (r FileSearchToolRankingOptionsParam) MarshalJSON() (data []byte, err error
 	type shadow FileSearchToolRankingOptionsParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *FileSearchToolRankingOptionsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[FileSearchToolRankingOptionsParam](
-		"Ranker", false, "auto", "default-2024-11-15",
+		"ranker", "auto", "default-2024-11-15",
 	)
 }
 
@@ -792,6 +814,9 @@ type FunctionToolParam struct {
 func (r FunctionToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow FunctionToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *FunctionToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type Response struct {
@@ -1943,6 +1968,9 @@ func (r ResponseComputerToolCallParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseComputerToolCallParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -1970,6 +1998,9 @@ func (u ResponseComputerToolCallActionUnionParam) MarshalJSON() ([]byte, error) 
 		u.OfScroll,
 		u.OfType,
 		u.OfWait)
+}
+func (u *ResponseComputerToolCallActionUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ResponseComputerToolCallActionUnionParam) asAny() any {
@@ -2095,6 +2126,76 @@ func (u ResponseComputerToolCallActionUnionParam) GetY() *int64 {
 	return nil
 }
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterUnion[ResponseComputerToolCallActionUnionParam](
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseComputerToolCallActionClickParam{}),
+			DiscriminatorValue: "click",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseComputerToolCallActionDoubleClickParam{}),
+			DiscriminatorValue: "double_click",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseComputerToolCallActionDragParam{}),
+			DiscriminatorValue: "drag",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseComputerToolCallActionKeypressParam{}),
+			DiscriminatorValue: "keypress",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseComputerToolCallActionMoveParam{}),
+			DiscriminatorValue: "move",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseComputerToolCallActionScreenshotParam{}),
+			DiscriminatorValue: "screenshot",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseComputerToolCallActionScrollParam{}),
+			DiscriminatorValue: "scroll",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseComputerToolCallActionTypeParam{}),
+			DiscriminatorValue: "type",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseComputerToolCallActionWaitParam{}),
+			DiscriminatorValue: "wait",
+		},
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterUnion[ResponseComputerToolCallActionUnionParam](
+		"type",
+		apijson.Discriminator[ResponseComputerToolCallActionClickParam]("click"),
+		apijson.Discriminator[ResponseComputerToolCallActionDoubleClickParam]("double_click"),
+		apijson.Discriminator[ResponseComputerToolCallActionDragParam]("drag"),
+		apijson.Discriminator[ResponseComputerToolCallActionKeypressParam]("keypress"),
+		apijson.Discriminator[ResponseComputerToolCallActionMoveParam]("move"),
+		apijson.Discriminator[ResponseComputerToolCallActionScreenshotParam]("screenshot"),
+		apijson.Discriminator[ResponseComputerToolCallActionScrollParam]("scroll"),
+		apijson.Discriminator[ResponseComputerToolCallActionTypeParam]("type"),
+		apijson.Discriminator[ResponseComputerToolCallActionWaitParam]("wait"),
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 // A click action.
 //
 // The properties Button, Type, X, Y are required.
@@ -2120,7 +2221,26 @@ func (r ResponseComputerToolCallActionClickParam) MarshalJSON() (data []byte, er
 	type shadow ResponseComputerToolCallActionClickParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseComputerToolCallActionClickParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterFieldValidator[ResponseComputerToolCallActionClickParam](
+		"Button", false, "left", "right", "wheel", "back", "forward",
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterFieldValidator[ResponseComputerToolCallActionClickParam](
+		"button", "left", "right", "wheel", "back", "forward",
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 // A double click action.
 //
 // The properties Type, X, Y are required.
@@ -2140,6 +2260,9 @@ type ResponseComputerToolCallActionDoubleClickParam struct {
 func (r ResponseComputerToolCallActionDoubleClickParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionDoubleClickParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseComputerToolCallActionDoubleClickParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A drag action.
@@ -2170,6 +2293,9 @@ func (r ResponseComputerToolCallActionDragParam) MarshalJSON() (data []byte, err
 	type shadow ResponseComputerToolCallActionDragParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseComputerToolCallActionDragParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A series of x/y coordinate pairs in the drag path.
 //
@@ -2185,6 +2311,9 @@ type ResponseComputerToolCallActionDragPathParam struct {
 func (r ResponseComputerToolCallActionDragPathParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionDragPathParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseComputerToolCallActionDragPathParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A collection of keypresses the model would like to perform.
@@ -2205,6 +2334,9 @@ type ResponseComputerToolCallActionKeypressParam struct {
 func (r ResponseComputerToolCallActionKeypressParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionKeypressParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseComputerToolCallActionKeypressParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A mouse move action.
@@ -2227,6 +2359,9 @@ func (r ResponseComputerToolCallActionMoveParam) MarshalJSON() (data []byte, err
 	type shadow ResponseComputerToolCallActionMoveParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseComputerToolCallActionMoveParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func NewResponseComputerToolCallActionScreenshotParam() ResponseComputerToolCallActionScreenshotParam {
 	return ResponseComputerToolCallActionScreenshotParam{
@@ -2248,6 +2383,9 @@ type ResponseComputerToolCallActionScreenshotParam struct {
 func (r ResponseComputerToolCallActionScreenshotParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionScreenshotParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseComputerToolCallActionScreenshotParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A scroll action.
@@ -2274,6 +2412,9 @@ func (r ResponseComputerToolCallActionScrollParam) MarshalJSON() (data []byte, e
 	type shadow ResponseComputerToolCallActionScrollParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseComputerToolCallActionScrollParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // An action to type in text.
 //
@@ -2292,6 +2433,9 @@ type ResponseComputerToolCallActionTypeParam struct {
 func (r ResponseComputerToolCallActionTypeParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallActionTypeParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseComputerToolCallActionTypeParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 func NewResponseComputerToolCallActionWaitParam() ResponseComputerToolCallActionWaitParam {
@@ -2315,6 +2459,9 @@ func (r ResponseComputerToolCallActionWaitParam) MarshalJSON() (data []byte, err
 	type shadow ResponseComputerToolCallActionWaitParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseComputerToolCallActionWaitParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A pending safety check for the computer call.
 //
@@ -2332,6 +2479,9 @@ type ResponseComputerToolCallPendingSafetyCheckParam struct {
 func (r ResponseComputerToolCallPendingSafetyCheckParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallPendingSafetyCheckParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseComputerToolCallPendingSafetyCheckParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ResponseComputerToolCallOutputItem struct {
@@ -2461,6 +2611,9 @@ type ResponseComputerToolCallOutputScreenshotParam struct {
 func (r ResponseComputerToolCallOutputScreenshotParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseComputerToolCallOutputScreenshotParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseComputerToolCallOutputScreenshotParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Emitted when a new content part is added.
@@ -3018,6 +3171,9 @@ func (r ResponseFileSearchToolCallParam) MarshalJSON() (data []byte, err error) 
 	type shadow ResponseFileSearchToolCallParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseFileSearchToolCallParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type ResponseFileSearchToolCallResultParam struct {
 	// The unique ID of the file.
@@ -3041,6 +3197,9 @@ func (r ResponseFileSearchToolCallResultParam) MarshalJSON() (data []byte, err e
 	type shadow ResponseFileSearchToolCallResultParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseFileSearchToolCallResultParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -3054,6 +3213,9 @@ type ResponseFileSearchToolCallResultAttributeUnionParam struct {
 
 func (u ResponseFileSearchToolCallResultAttributeUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseFileSearchToolCallResultAttributeUnionParam](u.OfString, u.OfFloat, u.OfBool)
+}
+func (u *ResponseFileSearchToolCallResultAttributeUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ResponseFileSearchToolCallResultAttributeUnionParam) asAny() any {
@@ -3177,6 +3339,9 @@ type ResponseFormatTextConfigUnionParam struct {
 func (u ResponseFormatTextConfigUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseFormatTextConfigUnionParam](u.OfText, u.OfJSONSchema, u.OfJSONObject)
 }
+func (u *ResponseFormatTextConfigUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *ResponseFormatTextConfigUnionParam) asAny() any {
 	if !param.IsOmitted(u.OfText) {
@@ -3233,6 +3398,40 @@ func (u ResponseFormatTextConfigUnionParam) GetType() *string {
 	return nil
 }
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterUnion[ResponseFormatTextConfigUnionParam](
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(shared.ResponseFormatTextParam{}),
+			DiscriminatorValue: "text",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseFormatTextJSONSchemaConfigParam{}),
+			DiscriminatorValue: "json_schema",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(shared.ResponseFormatJSONObjectParam{}),
+			DiscriminatorValue: "json_object",
+		},
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterUnion[ResponseFormatTextConfigUnionParam](
+		"type",
+		apijson.Discriminator[shared.ResponseFormatTextParam]("text"),
+		apijson.Discriminator[ResponseFormatTextJSONSchemaConfigParam]("json_schema"),
+		apijson.Discriminator[shared.ResponseFormatJSONObjectParam]("json_object"),
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
 // [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
@@ -3313,6 +3512,9 @@ type ResponseFormatTextJSONSchemaConfigParam struct {
 func (r ResponseFormatTextJSONSchemaConfigParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFormatTextJSONSchemaConfigParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseFormatTextJSONSchemaConfigParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Emitted when there is a partial function-call arguments delta.
@@ -3456,6 +3658,9 @@ func (r ResponseFunctionToolCallParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFunctionToolCallParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseFunctionToolCallParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A tool call to run a function. See the
 // [function calling guide](https://platform.openai.com/docs/guides/function-calling)
@@ -3590,6 +3795,9 @@ type ResponseFunctionWebSearchParam struct {
 func (r ResponseFunctionWebSearchParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseFunctionWebSearchParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseFunctionWebSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Emitted when the response is in progress.
@@ -3779,6 +3987,9 @@ type ResponseInputContentUnionParam struct {
 func (u ResponseInputContentUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseInputContentUnionParam](u.OfInputText, u.OfInputImage, u.OfInputFile)
 }
+func (u *ResponseInputContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *ResponseInputContentUnionParam) asAny() any {
 	if !param.IsOmitted(u.OfInputText) {
@@ -3853,6 +4064,40 @@ func (u ResponseInputContentUnionParam) GetFileID() *string {
 	return nil
 }
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterUnion[ResponseInputContentUnionParam](
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseInputTextParam{}),
+			DiscriminatorValue: "input_text",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseInputImageParam{}),
+			DiscriminatorValue: "input_image",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseInputFileParam{}),
+			DiscriminatorValue: "input_file",
+		},
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterUnion[ResponseInputContentUnionParam](
+		"type",
+		apijson.Discriminator[ResponseInputTextParam]("input_text"),
+		apijson.Discriminator[ResponseInputImageParam]("input_image"),
+		apijson.Discriminator[ResponseInputFileParam]("input_file"),
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 // A file input to the model.
 type ResponseInputFile struct {
 	// The type of the input item. Always `input_file`.
@@ -3909,6 +4154,9 @@ type ResponseInputFileParam struct {
 func (r ResponseInputFileParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputFileParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputFileParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // An image input to the model. Learn about
@@ -3987,6 +4235,9 @@ type ResponseInputImageParam struct {
 func (r ResponseInputImageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputImageParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 func ResponseInputItemParamOfMessage[T string | ResponseInputMessageContentListParam](content T, role EasyInputMessageRole) ResponseInputItemUnionParam {
@@ -4096,6 +4347,9 @@ func (u ResponseInputItemUnionParam) MarshalJSON() ([]byte, error) {
 		u.OfFunctionCallOutput,
 		u.OfReasoning,
 		u.OfItemReference)
+}
+func (u *ResponseInputItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ResponseInputItemUnionParam) asAny() any {
@@ -4354,6 +4608,88 @@ type responseInputItemUnionParamOutput struct{ any }
 //	}
 func (u responseInputItemUnionParamOutput) AsAny() any { return u.any }
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterUnion[ResponseInputItemUnionParam](
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(EasyInputMessageParam{}),
+			DiscriminatorValue: "message",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseInputItemMessageParam{}),
+			DiscriminatorValue: "message",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseOutputMessageParam{}),
+			DiscriminatorValue: "message",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseFileSearchToolCallParam{}),
+			DiscriminatorValue: "file_search_call",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseComputerToolCallParam{}),
+			DiscriminatorValue: "computer_call",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseInputItemComputerCallOutputParam{}),
+			DiscriminatorValue: "computer_call_output",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseFunctionWebSearchParam{}),
+			DiscriminatorValue: "web_search_call",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseFunctionToolCallParam{}),
+			DiscriminatorValue: "function_call",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseInputItemFunctionCallOutputParam{}),
+			DiscriminatorValue: "function_call_output",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseReasoningItemParam{}),
+			DiscriminatorValue: "reasoning",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseInputItemItemReferenceParam{}),
+			DiscriminatorValue: "item_reference",
+		},
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterUnion[ResponseInputItemUnionParam](
+		"type",
+		apijson.Discriminator[EasyInputMessageParam]("message"),
+		apijson.Discriminator[ResponseInputItemMessageParam]("message"),
+		apijson.Discriminator[ResponseOutputMessageParam]("message"),
+		apijson.Discriminator[ResponseFileSearchToolCallParam]("file_search_call"),
+		apijson.Discriminator[ResponseComputerToolCallParam]("computer_call"),
+		apijson.Discriminator[ResponseInputItemComputerCallOutputParam]("computer_call_output"),
+		apijson.Discriminator[ResponseFunctionWebSearchParam]("web_search_call"),
+		apijson.Discriminator[ResponseFunctionToolCallParam]("function_call"),
+		apijson.Discriminator[ResponseInputItemFunctionCallOutputParam]("function_call_output"),
+		apijson.Discriminator[ResponseReasoningItemParam]("reasoning"),
+		apijson.Discriminator[ResponseInputItemItemReferenceParam]("item_reference"),
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 // A message input to the model with a role indicating instruction following
 // hierarchy. Instructions given with the `developer` or `system` role take
 // precedence over instructions given with the `user` role.
@@ -4383,7 +4719,38 @@ func (r ResponseInputItemMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputItemMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseInputItemMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"Role", false, "user", "system", "developer",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"Status", false, "in_progress", "completed", "incomplete",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"Type", false, "message",
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"role", "user", "system", "developer",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"type", "message",
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 // The output of a computer tool call.
 //
 // The properties CallID, Output, Type are required.
@@ -4414,7 +4781,26 @@ func (r ResponseInputItemComputerCallOutputParam) MarshalJSON() (data []byte, er
 	type shadow ResponseInputItemComputerCallOutputParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseInputItemComputerCallOutputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemComputerCallOutputParam](
+		"Status", true, "in_progress", "completed", "incomplete",
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemComputerCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 // A pending safety check for the computer call.
 //
 // The property ID is required.
@@ -4431,6 +4817,9 @@ type ResponseInputItemComputerCallOutputAcknowledgedSafetyCheckParam struct {
 func (r ResponseInputItemComputerCallOutputAcknowledgedSafetyCheckParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputItemComputerCallOutputAcknowledgedSafetyCheckParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputItemComputerCallOutputAcknowledgedSafetyCheckParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // The output of a function tool call.
@@ -4461,7 +4850,26 @@ func (r ResponseInputItemFunctionCallOutputParam) MarshalJSON() (data []byte, er
 	type shadow ResponseInputItemFunctionCallOutputParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseInputItemFunctionCallOutputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemFunctionCallOutputParam](
+		"Status", true, "in_progress", "completed", "incomplete",
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemFunctionCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 // An internal identifier for an item to reference.
 //
 // The property ID is required.
@@ -4479,7 +4887,26 @@ func (r ResponseInputItemItemReferenceParam) MarshalJSON() (data []byte, err err
 	type shadow ResponseInputItemItemReferenceParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseInputItemItemReferenceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemItemReferenceParam](
+		"Type", true, "item_reference",
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemItemReferenceParam](
+		"type", "item_reference",
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 type ResponseInputMessageContentList []ResponseInputContentUnion
 
 type ResponseInputMessageContentListParam []ResponseInputContentUnionParam
@@ -4593,6 +5020,9 @@ type ResponseInputTextParam struct {
 func (r ResponseInputTextParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseInputTextParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // ResponseItemUnion contains all possible properties and values from
@@ -5138,6 +5568,9 @@ func (r ResponseOutputMessageParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseOutputMessageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseOutputMessageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -5150,6 +5583,9 @@ type ResponseOutputMessageContentUnionParam struct {
 
 func (u ResponseOutputMessageContentUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseOutputMessageContentUnionParam](u.OfOutputText, u.OfRefusal)
+}
+func (u *ResponseOutputMessageContentUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ResponseOutputMessageContentUnionParam) asAny() any {
@@ -5195,6 +5631,34 @@ func (u ResponseOutputMessageContentUnionParam) GetType() *string {
 	return nil
 }
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterUnion[ResponseOutputMessageContentUnionParam](
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseOutputTextParam{}),
+			DiscriminatorValue: "output_text",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseOutputRefusalParam{}),
+			DiscriminatorValue: "refusal",
+		},
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterUnion[ResponseOutputMessageContentUnionParam](
+		"type",
+		apijson.Discriminator[ResponseOutputTextParam]("output_text"),
+		apijson.Discriminator[ResponseOutputRefusalParam]("refusal"),
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 // A refusal from the model.
 type ResponseOutputRefusal struct {
 	// The refusal explanationfrom the model.
@@ -5241,6 +5705,9 @@ type ResponseOutputRefusalParam struct {
 func (r ResponseOutputRefusalParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseOutputRefusalParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseOutputRefusalParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A text output from the model.
@@ -5461,6 +5928,9 @@ func (r ResponseOutputTextParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseOutputTextParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseOutputTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -5474,6 +5944,9 @@ type ResponseOutputTextAnnotationUnionParam struct {
 
 func (u ResponseOutputTextAnnotationUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseOutputTextAnnotationUnionParam](u.OfFileCitation, u.OfURLCitation, u.OfFilePath)
+}
+func (u *ResponseOutputTextAnnotationUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ResponseOutputTextAnnotationUnionParam) asAny() any {
@@ -5551,6 +6024,40 @@ func (u ResponseOutputTextAnnotationUnionParam) GetType() *string {
 	return nil
 }
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterUnion[ResponseOutputTextAnnotationUnionParam](
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseOutputTextAnnotationFileCitationParam{}),
+			DiscriminatorValue: "file_citation",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseOutputTextAnnotationURLCitationParam{}),
+			DiscriminatorValue: "url_citation",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ResponseOutputTextAnnotationFilePathParam{}),
+			DiscriminatorValue: "file_path",
+		},
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterUnion[ResponseOutputTextAnnotationUnionParam](
+		"type",
+		apijson.Discriminator[ResponseOutputTextAnnotationFileCitationParam]("file_citation"),
+		apijson.Discriminator[ResponseOutputTextAnnotationURLCitationParam]("url_citation"),
+		apijson.Discriminator[ResponseOutputTextAnnotationFilePathParam]("file_path"),
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 // A citation to a file.
 //
 // The properties FileID, Index, Type are required.
@@ -5569,6 +6076,9 @@ type ResponseOutputTextAnnotationFileCitationParam struct {
 func (r ResponseOutputTextAnnotationFileCitationParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseOutputTextAnnotationFileCitationParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseOutputTextAnnotationFileCitationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A citation for a web resource used to generate a model response.
@@ -5594,6 +6104,9 @@ func (r ResponseOutputTextAnnotationURLCitationParam) MarshalJSON() (data []byte
 	type shadow ResponseOutputTextAnnotationURLCitationParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseOutputTextAnnotationURLCitationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A path to a file.
 //
@@ -5613,6 +6126,9 @@ type ResponseOutputTextAnnotationFilePathParam struct {
 func (r ResponseOutputTextAnnotationFilePathParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseOutputTextAnnotationFilePathParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseOutputTextAnnotationFilePathParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // A description of the chain of thought used by a reasoning model while generating
@@ -5721,6 +6237,9 @@ func (r ResponseReasoningItemParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseReasoningItemParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseReasoningItemParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The properties Text, Type are required.
 type ResponseReasoningItemSummaryParam struct {
@@ -5736,6 +6255,9 @@ type ResponseReasoningItemSummaryParam struct {
 func (r ResponseReasoningItemSummaryParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseReasoningItemSummaryParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseReasoningItemSummaryParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Emitted when a new reasoning summary part is added.
@@ -6729,6 +7251,9 @@ func (r ResponseTextConfigParam) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseTextConfigParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseTextConfigParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Emitted when there is an additional text delta.
 type ResponseTextDeltaEvent struct {
@@ -7062,6 +7587,9 @@ type ToolUnionParam struct {
 func (u ToolUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ToolUnionParam](u.OfFileSearch, u.OfFunction, u.OfWebSearchPreview, u.OfComputerUsePreview)
 }
+func (u *ToolUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
 
 func (u *ToolUnionParam) asAny() any {
 	if !param.IsOmitted(u.OfFileSearch) {
@@ -7194,6 +7722,52 @@ func (u ToolUnionParam) GetType() *string {
 	return nil
 }
 
+<<<<<<< HEAD
+||||||| 2cb7fc6
+func init() {
+	apijson.RegisterUnion[ToolUnionParam](
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(FileSearchToolParam{}),
+			DiscriminatorValue: "file_search",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(FunctionToolParam{}),
+			DiscriminatorValue: "function",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(WebSearchToolParam{}),
+			DiscriminatorValue: "web_search_preview",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(WebSearchToolParam{}),
+			DiscriminatorValue: "web_search_preview_2025_03_11",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ComputerToolParam{}),
+			DiscriminatorValue: "computer_use_preview",
+		},
+	)
+}
+
+=======
+func init() {
+	apijson.RegisterUnion[ToolUnionParam](
+		"type",
+		apijson.Discriminator[FileSearchToolParam]("file_search"),
+		apijson.Discriminator[FunctionToolParam]("function"),
+		apijson.Discriminator[WebSearchToolParam]("web_search_preview"),
+		apijson.Discriminator[WebSearchToolParam]("web_search_preview_2025_03_11"),
+		apijson.Discriminator[ComputerToolParam]("computer_use_preview"),
+	)
+}
+
+>>>>>>> origin/generated--merge-conflict
 // Use this option to force the model to call a specific function.
 type ToolChoiceFunction struct {
 	// The name of the function to call.
@@ -7240,6 +7814,9 @@ type ToolChoiceFunctionParam struct {
 func (r ToolChoiceFunctionParam) MarshalJSON() (data []byte, err error) {
 	type shadow ToolChoiceFunctionParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ToolChoiceFunctionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Controls which (if any) tool is called by the model.
@@ -7336,6 +7913,9 @@ type ToolChoiceTypesParam struct {
 func (r ToolChoiceTypesParam) MarshalJSON() (data []byte, err error) {
 	type shadow ToolChoiceTypesParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ToolChoiceTypesParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // This tool searches the web for relevant results to use in a response. Learn more
@@ -7455,6 +8035,9 @@ func (r WebSearchToolParam) MarshalJSON() (data []byte, err error) {
 	type shadow WebSearchToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *WebSearchToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The user's location.
 //
@@ -7480,6 +8063,9 @@ type WebSearchToolUserLocationParam struct {
 func (r WebSearchToolUserLocationParam) MarshalJSON() (data []byte, err error) {
 	type shadow WebSearchToolUserLocationParam
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebSearchToolUserLocationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ResponseNewParams struct {
@@ -7601,6 +8187,9 @@ func (r ResponseNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow ResponseNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *ResponseNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Only one field can be non-zero.
 //
@@ -7613,6 +8202,9 @@ type ResponseNewParamsInputUnion struct {
 
 func (u ResponseNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseNewParamsInputUnion](u.OfString, u.OfInputItemList)
+}
+func (u *ResponseNewParamsInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ResponseNewParamsInputUnion) asAny() any {
@@ -7637,6 +8229,9 @@ type ResponseNewParamsToolChoiceUnion struct {
 
 func (u ResponseNewParamsToolChoiceUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[ResponseNewParamsToolChoiceUnion](u.OfToolChoiceMode, u.OfHostedTool, u.OfFunctionTool)
+}
+func (u *ResponseNewParamsToolChoiceUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *ResponseNewParamsToolChoiceUnion) asAny() any {
