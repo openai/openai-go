@@ -16,7 +16,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared/constant"
 )
 
@@ -238,18 +238,18 @@ type VectorStoreFile struct {
 	Attributes map[string]VectorStoreFileAttributeUnion `json:"attributes,nullable"`
 	// The strategy used to chunk the file.
 	ChunkingStrategy FileChunkingStrategyUnion `json:"chunking_strategy"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID               resp.Field
-		CreatedAt        resp.Field
-		LastError        resp.Field
-		Object           resp.Field
-		Status           resp.Field
-		UsageBytes       resp.Field
-		VectorStoreID    resp.Field
-		Attributes       resp.Field
-		ChunkingStrategy resp.Field
-		ExtraFields      map[string]resp.Field
+		ID               respjson.Field
+		CreatedAt        respjson.Field
+		LastError        respjson.Field
+		Object           respjson.Field
+		Status           respjson.Field
+		UsageBytes       respjson.Field
+		VectorStoreID    respjson.Field
+		Attributes       respjson.Field
+		ChunkingStrategy respjson.Field
+		ExtraFields      map[string]respjson.Field
 		raw              string
 	} `json:"-"`
 }
@@ -269,11 +269,11 @@ type VectorStoreFileLastError struct {
 	Code string `json:"code,required"`
 	// A human-readable description of the error.
 	Message string `json:"message,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        resp.Field
-		Message     resp.Field
-		ExtraFields map[string]resp.Field
+		Code        respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -311,9 +311,9 @@ type VectorStoreFileAttributeUnion struct {
 	// This field will be present if the value is a [bool] instead of an object.
 	OfBool bool `json:",inline"`
 	JSON   struct {
-		OfString resp.Field
-		OfFloat  resp.Field
-		OfBool   resp.Field
+		OfString respjson.Field
+		OfFloat  respjson.Field
+		OfBool   respjson.Field
 		raw      string
 	} `json:"-"`
 }
@@ -344,12 +344,12 @@ type VectorStoreFileDeleted struct {
 	ID      string                          `json:"id,required"`
 	Deleted bool                            `json:"deleted,required"`
 	Object  constant.VectorStoreFileDeleted `json:"object,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Deleted     resp.Field
-		Object      resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Deleted     respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -365,11 +365,11 @@ type VectorStoreFileContentResponse struct {
 	Text string `json:"text"`
 	// The content type (currently only `"text"`)
 	Type string `json:"type"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Text        resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

@@ -15,7 +15,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared/constant"
 )
 
@@ -116,13 +116,13 @@ type FineTuningCheckpointPermissionNewResponse struct {
 	Object constant.CheckpointPermission `json:"object,required"`
 	// The project identifier that the permission is for.
 	ProjectID string `json:"project_id,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		CreatedAt   resp.Field
-		Object      resp.Field
-		ProjectID   resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Object      respjson.Field
+		ProjectID   respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -139,14 +139,14 @@ type FineTuningCheckpointPermissionGetResponse struct {
 	Object  constant.List                                   `json:"object,required"`
 	FirstID string                                          `json:"first_id,nullable"`
 	LastID  string                                          `json:"last_id,nullable"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		HasMore     resp.Field
-		Object      resp.Field
-		FirstID     resp.Field
-		LastID      resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		HasMore     respjson.Field
+		Object      respjson.Field
+		FirstID     respjson.Field
+		LastID      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -168,13 +168,13 @@ type FineTuningCheckpointPermissionGetResponseData struct {
 	Object constant.CheckpointPermission `json:"object,required"`
 	// The project identifier that the permission is for.
 	ProjectID string `json:"project_id,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		CreatedAt   resp.Field
-		Object      resp.Field
-		ProjectID   resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Object      respjson.Field
+		ProjectID   respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -192,12 +192,12 @@ type FineTuningCheckpointPermissionDeleteResponse struct {
 	Deleted bool `json:"deleted,required"`
 	// The object type, which is always "checkpoint.permission".
 	Object constant.CheckpointPermission `json:"object,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Deleted     resp.Field
-		Object      resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Deleted     respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

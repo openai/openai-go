@@ -15,7 +15,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
 )
@@ -143,29 +143,29 @@ type Batch struct {
 	OutputFileID string `json:"output_file_id"`
 	// The request counts for different statuses within the batch.
 	RequestCounts BatchRequestCounts `json:"request_counts"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID               resp.Field
-		CompletionWindow resp.Field
-		CreatedAt        resp.Field
-		Endpoint         resp.Field
-		InputFileID      resp.Field
-		Object           resp.Field
-		Status           resp.Field
-		CancelledAt      resp.Field
-		CancellingAt     resp.Field
-		CompletedAt      resp.Field
-		ErrorFileID      resp.Field
-		Errors           resp.Field
-		ExpiredAt        resp.Field
-		ExpiresAt        resp.Field
-		FailedAt         resp.Field
-		FinalizingAt     resp.Field
-		InProgressAt     resp.Field
-		Metadata         resp.Field
-		OutputFileID     resp.Field
-		RequestCounts    resp.Field
-		ExtraFields      map[string]resp.Field
+		ID               respjson.Field
+		CompletionWindow respjson.Field
+		CreatedAt        respjson.Field
+		Endpoint         respjson.Field
+		InputFileID      respjson.Field
+		Object           respjson.Field
+		Status           respjson.Field
+		CancelledAt      respjson.Field
+		CancellingAt     respjson.Field
+		CompletedAt      respjson.Field
+		ErrorFileID      respjson.Field
+		Errors           respjson.Field
+		ExpiredAt        respjson.Field
+		ExpiresAt        respjson.Field
+		FailedAt         respjson.Field
+		FinalizingAt     respjson.Field
+		InProgressAt     respjson.Field
+		Metadata         respjson.Field
+		OutputFileID     respjson.Field
+		RequestCounts    respjson.Field
+		ExtraFields      map[string]respjson.Field
 		raw              string
 	} `json:"-"`
 }
@@ -194,11 +194,11 @@ type BatchErrors struct {
 	Data []BatchError `json:"data"`
 	// The object type, which is always `list`.
 	Object string `json:"object"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Object      resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -218,13 +218,13 @@ type BatchError struct {
 	Message string `json:"message"`
 	// The name of the parameter that caused the error, if applicable.
 	Param string `json:"param,nullable"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        resp.Field
-		Line        resp.Field
-		Message     resp.Field
-		Param       resp.Field
-		ExtraFields map[string]resp.Field
+		Code        respjson.Field
+		Line        respjson.Field
+		Message     respjson.Field
+		Param       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -243,12 +243,12 @@ type BatchRequestCounts struct {
 	Failed int64 `json:"failed,required"`
 	// Total number of requests in the batch.
 	Total int64 `json:"total,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Completed   resp.Field
-		Failed      resp.Field
-		Total       resp.Field
-		ExtraFields map[string]resp.Field
+		Completed   respjson.Field
+		Failed      respjson.Field
+		Total       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

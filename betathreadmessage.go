@@ -17,7 +17,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
 	"github.com/tidwall/gjson"
@@ -150,12 +150,12 @@ type AnnotationUnion struct {
 	// This field is from variant [FilePathAnnotation].
 	FilePath FilePathAnnotationFilePath `json:"file_path"`
 	JSON     struct {
-		EndIndex     resp.Field
-		FileCitation resp.Field
-		StartIndex   resp.Field
-		Text         resp.Field
-		Type         resp.Field
-		FilePath     resp.Field
+		EndIndex     respjson.Field
+		FileCitation respjson.Field
+		StartIndex   respjson.Field
+		Text         respjson.Field
+		Type         respjson.Field
+		FilePath     respjson.Field
 		raw          string
 	} `json:"-"`
 }
@@ -222,13 +222,13 @@ type AnnotationDeltaUnion struct {
 	// This field is from variant [FilePathDeltaAnnotation].
 	FilePath FilePathDeltaAnnotationFilePath `json:"file_path"`
 	JSON     struct {
-		Index        resp.Field
-		Type         resp.Field
-		EndIndex     resp.Field
-		FileCitation resp.Field
-		StartIndex   resp.Field
-		Text         resp.Field
-		FilePath     resp.Field
+		Index        respjson.Field
+		Type         respjson.Field
+		EndIndex     respjson.Field
+		FileCitation respjson.Field
+		StartIndex   respjson.Field
+		Text         respjson.Field
+		FilePath     respjson.Field
 		raw          string
 	} `json:"-"`
 }
@@ -288,14 +288,14 @@ type FileCitationAnnotation struct {
 	Text string `json:"text,required"`
 	// Always `file_citation`.
 	Type constant.FileCitation `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		EndIndex     resp.Field
-		FileCitation resp.Field
-		StartIndex   resp.Field
-		Text         resp.Field
-		Type         resp.Field
-		ExtraFields  map[string]resp.Field
+		EndIndex     respjson.Field
+		FileCitation respjson.Field
+		StartIndex   respjson.Field
+		Text         respjson.Field
+		Type         respjson.Field
+		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
 }
@@ -309,10 +309,10 @@ func (r *FileCitationAnnotation) UnmarshalJSON(data []byte) error {
 type FileCitationAnnotationFileCitation struct {
 	// The ID of the specific File the citation is from.
 	FileID string `json:"file_id,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		FileID      resp.Field
-		ExtraFields map[string]resp.Field
+		FileID      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -336,15 +336,15 @@ type FileCitationDeltaAnnotation struct {
 	StartIndex   int64                                   `json:"start_index"`
 	// The text in the message content that needs to be replaced.
 	Text string `json:"text"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Index        resp.Field
-		Type         resp.Field
-		EndIndex     resp.Field
-		FileCitation resp.Field
-		StartIndex   resp.Field
-		Text         resp.Field
-		ExtraFields  map[string]resp.Field
+		Index        respjson.Field
+		Type         respjson.Field
+		EndIndex     respjson.Field
+		FileCitation respjson.Field
+		StartIndex   respjson.Field
+		Text         respjson.Field
+		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
 }
@@ -360,11 +360,11 @@ type FileCitationDeltaAnnotationFileCitation struct {
 	FileID string `json:"file_id"`
 	// The specific quote in the file.
 	Quote string `json:"quote"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		FileID      resp.Field
-		Quote       resp.Field
-		ExtraFields map[string]resp.Field
+		FileID      respjson.Field
+		Quote       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -385,14 +385,14 @@ type FilePathAnnotation struct {
 	Text string `json:"text,required"`
 	// Always `file_path`.
 	Type constant.FilePath `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		EndIndex    resp.Field
-		FilePath    resp.Field
-		StartIndex  resp.Field
-		Text        resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		EndIndex    respjson.Field
+		FilePath    respjson.Field
+		StartIndex  respjson.Field
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -406,10 +406,10 @@ func (r *FilePathAnnotation) UnmarshalJSON(data []byte) error {
 type FilePathAnnotationFilePath struct {
 	// The ID of the file that was generated.
 	FileID string `json:"file_id,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		FileID      resp.Field
-		ExtraFields map[string]resp.Field
+		FileID      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -432,15 +432,15 @@ type FilePathDeltaAnnotation struct {
 	StartIndex int64                           `json:"start_index"`
 	// The text in the message content that needs to be replaced.
 	Text string `json:"text"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Index       resp.Field
-		Type        resp.Field
-		EndIndex    resp.Field
-		FilePath    resp.Field
-		StartIndex  resp.Field
-		Text        resp.Field
-		ExtraFields map[string]resp.Field
+		Index       respjson.Field
+		Type        respjson.Field
+		EndIndex    respjson.Field
+		FilePath    respjson.Field
+		StartIndex  respjson.Field
+		Text        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -454,10 +454,10 @@ func (r *FilePathDeltaAnnotation) UnmarshalJSON(data []byte) error {
 type FilePathDeltaAnnotationFilePath struct {
 	// The ID of the file that was generated.
 	FileID string `json:"file_id"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		FileID      resp.Field
-		ExtraFields map[string]resp.Field
+		FileID      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -478,11 +478,11 @@ type ImageFile struct {
 	//
 	// Any of "auto", "low", "high".
 	Detail ImageFileDetail `json:"detail"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		FileID      resp.Field
-		Detail      resp.Field
-		ExtraFields map[string]resp.Field
+		FileID      respjson.Field
+		Detail      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -537,11 +537,11 @@ type ImageFileContentBlock struct {
 	ImageFile ImageFile `json:"image_file,required"`
 	// Always `image_file`.
 	Type constant.ImageFile `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ImageFile   resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		ImageFile   respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -589,11 +589,11 @@ type ImageFileDelta struct {
 	// in the message content. Set `purpose="vision"` when uploading the File if you
 	// need to later display the file content.
 	FileID string `json:"file_id"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Detail      resp.Field
-		FileID      resp.Field
-		ExtraFields map[string]resp.Field
+		Detail      respjson.Field
+		FileID      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -622,12 +622,12 @@ type ImageFileDeltaBlock struct {
 	// Always `image_file`.
 	Type      constant.ImageFile `json:"type,required"`
 	ImageFile ImageFileDelta     `json:"image_file"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Index       resp.Field
-		Type        resp.Field
-		ImageFile   resp.Field
-		ExtraFields map[string]resp.Field
+		Index       respjson.Field
+		Type        respjson.Field
+		ImageFile   respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -647,11 +647,11 @@ type ImageURL struct {
 	//
 	// Any of "auto", "low", "high".
 	Detail ImageURLDetail `json:"detail"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		URL         resp.Field
-		Detail      resp.Field
-		ExtraFields map[string]resp.Field
+		URL         respjson.Field
+		Detail      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -704,11 +704,11 @@ type ImageURLContentBlock struct {
 	ImageURL ImageURL `json:"image_url,required"`
 	// The type of the content part.
 	Type constant.ImageURL `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ImageURL    resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		ImageURL    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -754,11 +754,11 @@ type ImageURLDelta struct {
 	// The URL of the image, must be a supported image types: jpeg, jpg, png, gif,
 	// webp.
 	URL string `json:"url"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Detail      resp.Field
-		URL         resp.Field
-		ExtraFields map[string]resp.Field
+		Detail      respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -786,12 +786,12 @@ type ImageURLDeltaBlock struct {
 	// Always `image_url`.
 	Type     constant.ImageURL `json:"type,required"`
 	ImageURL ImageURLDelta     `json:"image_url"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Index       resp.Field
-		Type        resp.Field
-		ImageURL    resp.Field
-		ExtraFields map[string]resp.Field
+		Index       respjson.Field
+		Type        respjson.Field
+		ImageURL    respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -848,23 +848,23 @@ type Message struct {
 	// The [thread](https://platform.openai.com/docs/api-reference/threads) ID that
 	// this message belongs to.
 	ThreadID string `json:"thread_id,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID                resp.Field
-		AssistantID       resp.Field
-		Attachments       resp.Field
-		CompletedAt       resp.Field
-		Content           resp.Field
-		CreatedAt         resp.Field
-		IncompleteAt      resp.Field
-		IncompleteDetails resp.Field
-		Metadata          resp.Field
-		Object            resp.Field
-		Role              resp.Field
-		RunID             resp.Field
-		Status            resp.Field
-		ThreadID          resp.Field
-		ExtraFields       map[string]resp.Field
+		ID                respjson.Field
+		AssistantID       respjson.Field
+		Attachments       respjson.Field
+		CompletedAt       respjson.Field
+		Content           respjson.Field
+		CreatedAt         respjson.Field
+		IncompleteAt      respjson.Field
+		IncompleteDetails respjson.Field
+		Metadata          respjson.Field
+		Object            respjson.Field
+		Role              respjson.Field
+		RunID             respjson.Field
+		Status            respjson.Field
+		ThreadID          respjson.Field
+		ExtraFields       map[string]respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -880,11 +880,11 @@ type MessageAttachment struct {
 	FileID string `json:"file_id"`
 	// The tools to add this file to.
 	Tools []MessageAttachmentToolUnion `json:"tools"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		FileID      resp.Field
-		Tools       resp.Field
-		ExtraFields map[string]resp.Field
+		FileID      respjson.Field
+		Tools       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -902,7 +902,7 @@ func (r *MessageAttachment) UnmarshalJSON(data []byte) error {
 type MessageAttachmentToolUnion struct {
 	Type string `json:"type"`
 	JSON struct {
-		Type resp.Field
+		Type respjson.Field
 		raw  string
 	} `json:"-"`
 }
@@ -927,10 +927,10 @@ func (r *MessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 type MessageAttachmentToolFileSearchTool struct {
 	// The type of tool being defined: `file_search`
 	Type constant.FileSearch `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -948,10 +948,10 @@ type MessageIncompleteDetails struct {
 	// Any of "content_filter", "max_tokens", "run_cancelled", "run_expired",
 	// "run_failed".
 	Reason string `json:"reason,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Reason      resp.Field
-		ExtraFields map[string]resp.Field
+		Reason      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -999,11 +999,11 @@ type MessageContentUnion struct {
 	// This field is from variant [RefusalContentBlock].
 	Refusal string `json:"refusal"`
 	JSON    struct {
-		ImageFile resp.Field
-		Type      resp.Field
-		ImageURL  resp.Field
-		Text      resp.Field
-		Refusal   resp.Field
+		ImageFile respjson.Field
+		Type      respjson.Field
+		ImageURL  respjson.Field
+		Text      respjson.Field
+		Refusal   respjson.Field
 		raw       string
 	} `json:"-"`
 }
@@ -1090,12 +1090,12 @@ type MessageContentDeltaUnion struct {
 	// This field is from variant [ImageURLDeltaBlock].
 	ImageURL ImageURLDelta `json:"image_url"`
 	JSON     struct {
-		Index     resp.Field
-		Type      resp.Field
-		ImageFile resp.Field
-		Text      resp.Field
-		Refusal   resp.Field
-		ImageURL  resp.Field
+		Index     respjson.Field
+		Type      respjson.Field
+		ImageFile respjson.Field
+		Text      respjson.Field
+		Refusal   respjson.Field
+		ImageURL  respjson.Field
 		raw       string
 	} `json:"-"`
 }
@@ -1267,12 +1267,12 @@ type MessageDeleted struct {
 	ID      string                        `json:"id,required"`
 	Deleted bool                          `json:"deleted,required"`
 	Object  constant.ThreadMessageDeleted `json:"object,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Deleted     resp.Field
-		Object      resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Deleted     respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1291,11 +1291,11 @@ type MessageDelta struct {
 	//
 	// Any of "user", "assistant".
 	Role MessageDeltaRole `json:"role"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Content     resp.Field
-		Role        resp.Field
-		ExtraFields map[string]resp.Field
+		Content     respjson.Field
+		Role        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1323,12 +1323,12 @@ type MessageDeltaEvent struct {
 	Delta MessageDelta `json:"delta,required"`
 	// The object type, which is always `thread.message.delta`.
 	Object constant.ThreadMessageDelta `json:"object,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Delta       resp.Field
-		Object      resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Delta       respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1344,11 +1344,11 @@ type RefusalContentBlock struct {
 	Refusal string `json:"refusal,required"`
 	// Always `refusal`.
 	Type constant.Refusal `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Refusal     resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Refusal     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1366,12 +1366,12 @@ type RefusalDeltaBlock struct {
 	// Always `refusal`.
 	Type    constant.Refusal `json:"type,required"`
 	Refusal string           `json:"refusal"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Index       resp.Field
-		Type        resp.Field
-		Refusal     resp.Field
-		ExtraFields map[string]resp.Field
+		Index       respjson.Field
+		Type        respjson.Field
+		Refusal     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1386,11 +1386,11 @@ type Text struct {
 	Annotations []AnnotationUnion `json:"annotations,required"`
 	// The data that makes up the text.
 	Value string `json:"value,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Annotations resp.Field
-		Value       resp.Field
-		ExtraFields map[string]resp.Field
+		Annotations respjson.Field
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1406,11 +1406,11 @@ type TextContentBlock struct {
 	Text Text `json:"text,required"`
 	// Always `text`.
 	Type constant.Text `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Text        resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1443,11 +1443,11 @@ type TextDelta struct {
 	Annotations []AnnotationDeltaUnion `json:"annotations"`
 	// The data that makes up the text.
 	Value string `json:"value"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Annotations resp.Field
-		Value       resp.Field
-		ExtraFields map[string]resp.Field
+		Annotations respjson.Field
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1465,12 +1465,12 @@ type TextDeltaBlock struct {
 	// Always `text`.
 	Type constant.Text `json:"type,required"`
 	Text TextDelta     `json:"text"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Index       resp.Field
-		Type        resp.Field
-		Text        resp.Field
-		ExtraFields map[string]resp.Field
+		Index       respjson.Field
+		Type        respjson.Field
+		Text        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

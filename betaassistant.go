@@ -17,7 +17,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
 	"github.com/tidwall/gjson"
@@ -181,22 +181,22 @@ type Assistant struct {
 	//
 	// We generally recommend altering this or temperature but not both.
 	TopP float64 `json:"top_p,nullable"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID             resp.Field
-		CreatedAt      resp.Field
-		Description    resp.Field
-		Instructions   resp.Field
-		Metadata       resp.Field
-		Model          resp.Field
-		Name           resp.Field
-		Object         resp.Field
-		Tools          resp.Field
-		ResponseFormat resp.Field
-		Temperature    resp.Field
-		ToolResources  resp.Field
-		TopP           resp.Field
-		ExtraFields    map[string]resp.Field
+		ID             respjson.Field
+		CreatedAt      respjson.Field
+		Description    respjson.Field
+		Instructions   respjson.Field
+		Metadata       respjson.Field
+		Model          respjson.Field
+		Name           respjson.Field
+		Object         respjson.Field
+		Tools          respjson.Field
+		ResponseFormat respjson.Field
+		Temperature    respjson.Field
+		ToolResources  respjson.Field
+		TopP           respjson.Field
+		ExtraFields    map[string]respjson.Field
 		raw            string
 	} `json:"-"`
 }
@@ -214,11 +214,11 @@ func (r *Assistant) UnmarshalJSON(data []byte) error {
 type AssistantToolResources struct {
 	CodeInterpreter AssistantToolResourcesCodeInterpreter `json:"code_interpreter"`
 	FileSearch      AssistantToolResourcesFileSearch      `json:"file_search"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CodeInterpreter resp.Field
-		FileSearch      resp.Field
-		ExtraFields     map[string]resp.Field
+		CodeInterpreter respjson.Field
+		FileSearch      respjson.Field
+		ExtraFields     map[string]respjson.Field
 		raw             string
 	} `json:"-"`
 }
@@ -234,10 +234,10 @@ type AssistantToolResourcesCodeInterpreter struct {
 	// available to the `code_interpreter“ tool. There can be a maximum of 20 files
 	// associated with the tool.
 	FileIDs []string `json:"file_ids"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		FileIDs     resp.Field
-		ExtraFields map[string]resp.Field
+		FileIDs     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -254,10 +254,10 @@ type AssistantToolResourcesFileSearch struct {
 	// attached to this assistant. There can be a maximum of 1 vector store attached to
 	// the assistant.
 	VectorStoreIDs []string `json:"vector_store_ids"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		VectorStoreIDs resp.Field
-		ExtraFields    map[string]resp.Field
+		VectorStoreIDs respjson.Field
+		ExtraFields    map[string]respjson.Field
 		raw            string
 	} `json:"-"`
 }
@@ -272,12 +272,12 @@ type AssistantDeleted struct {
 	ID      string                    `json:"id,required"`
 	Deleted bool                      `json:"deleted,required"`
 	Object  constant.AssistantDeleted `json:"object,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Deleted     resp.Field
-		Object      resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Deleted     respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -332,9 +332,9 @@ type AssistantStreamEventUnion struct {
 	// This field is from variant [AssistantStreamEventThreadCreated].
 	Enabled bool `json:"enabled"`
 	JSON    struct {
-		Data    resp.Field
-		Event   resp.Field
-		Enabled resp.Field
+		Data    respjson.Field
+		Event   respjson.Field
+		Enabled respjson.Field
 		raw     string
 	} `json:"-"`
 }
@@ -659,46 +659,46 @@ type AssistantStreamEventUnionData struct {
 	// This field is from variant [shared.ErrorObject].
 	Param string `json:"param"`
 	JSON  struct {
-		ID                  resp.Field
-		CreatedAt           resp.Field
-		Metadata            resp.Field
-		Object              resp.Field
-		ToolResources       resp.Field
-		AssistantID         resp.Field
-		CancelledAt         resp.Field
-		CompletedAt         resp.Field
-		ExpiresAt           resp.Field
-		FailedAt            resp.Field
-		IncompleteDetails   resp.Field
-		Instructions        resp.Field
-		LastError           resp.Field
-		MaxCompletionTokens resp.Field
-		MaxPromptTokens     resp.Field
-		Model               resp.Field
-		ParallelToolCalls   resp.Field
-		RequiredAction      resp.Field
-		ResponseFormat      resp.Field
-		StartedAt           resp.Field
-		Status              resp.Field
-		ThreadID            resp.Field
-		ToolChoice          resp.Field
-		Tools               resp.Field
-		TruncationStrategy  resp.Field
-		Usage               resp.Field
-		Temperature         resp.Field
-		TopP                resp.Field
-		ExpiredAt           resp.Field
-		RunID               resp.Field
-		StepDetails         resp.Field
-		Type                resp.Field
-		Delta               resp.Field
-		Attachments         resp.Field
-		Content             resp.Field
-		IncompleteAt        resp.Field
-		Role                resp.Field
-		Code                resp.Field
-		Message             resp.Field
-		Param               resp.Field
+		ID                  respjson.Field
+		CreatedAt           respjson.Field
+		Metadata            respjson.Field
+		Object              respjson.Field
+		ToolResources       respjson.Field
+		AssistantID         respjson.Field
+		CancelledAt         respjson.Field
+		CompletedAt         respjson.Field
+		ExpiresAt           respjson.Field
+		FailedAt            respjson.Field
+		IncompleteDetails   respjson.Field
+		Instructions        respjson.Field
+		LastError           respjson.Field
+		MaxCompletionTokens respjson.Field
+		MaxPromptTokens     respjson.Field
+		Model               respjson.Field
+		ParallelToolCalls   respjson.Field
+		RequiredAction      respjson.Field
+		ResponseFormat      respjson.Field
+		StartedAt           respjson.Field
+		Status              respjson.Field
+		ThreadID            respjson.Field
+		ToolChoice          respjson.Field
+		Tools               respjson.Field
+		TruncationStrategy  respjson.Field
+		Usage               respjson.Field
+		Temperature         respjson.Field
+		TopP                respjson.Field
+		ExpiredAt           respjson.Field
+		RunID               respjson.Field
+		StepDetails         respjson.Field
+		Type                respjson.Field
+		Delta               respjson.Field
+		Attachments         respjson.Field
+		Content             respjson.Field
+		IncompleteAt        respjson.Field
+		Role                respjson.Field
+		Code                respjson.Field
+		Message             respjson.Field
+		Param               respjson.Field
 		raw                 string
 	} `json:"-"`
 }
@@ -716,7 +716,7 @@ func (r *AssistantStreamEventUnionData) UnmarshalJSON(data []byte) error {
 type AssistantStreamEventUnionDataIncompleteDetails struct {
 	Reason string `json:"reason"`
 	JSON   struct {
-		Reason resp.Field
+		Reason respjson.Field
 		raw    string
 	} `json:"-"`
 }
@@ -735,8 +735,8 @@ type AssistantStreamEventUnionDataLastError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	JSON    struct {
-		Code    resp.Field
-		Message resp.Field
+		Code    respjson.Field
+		Message respjson.Field
 		raw     string
 	} `json:"-"`
 }
@@ -756,9 +756,9 @@ type AssistantStreamEventUnionDataUsage struct {
 	PromptTokens     int64 `json:"prompt_tokens"`
 	TotalTokens      int64 `json:"total_tokens"`
 	JSON             struct {
-		CompletionTokens resp.Field
-		PromptTokens     resp.Field
-		TotalTokens      resp.Field
+		CompletionTokens respjson.Field
+		PromptTokens     respjson.Field
+		TotalTokens      respjson.Field
 		raw              string
 	} `json:"-"`
 }
@@ -781,9 +781,9 @@ type AssistantStreamEventUnionDataDelta struct {
 	// This field is from variant [MessageDelta].
 	Role MessageDeltaRole `json:"role"`
 	JSON struct {
-		StepDetails resp.Field
-		Content     resp.Field
-		Role        resp.Field
+		StepDetails respjson.Field
+		Content     respjson.Field
+		Role        respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -802,12 +802,12 @@ type AssistantStreamEventThreadCreated struct {
 	Event constant.ThreadCreated `json:"event,required"`
 	// Whether to enable input audio transcription.
 	Enabled bool `json:"enabled"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		Enabled     resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		Enabled     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -825,11 +825,11 @@ type AssistantStreamEventThreadRunCreated struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                       `json:"data,required"`
 	Event constant.ThreadRunCreated `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -847,11 +847,11 @@ type AssistantStreamEventThreadRunQueued struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                      `json:"data,required"`
 	Event constant.ThreadRunQueued `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -869,11 +869,11 @@ type AssistantStreamEventThreadRunInProgress struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                          `json:"data,required"`
 	Event constant.ThreadRunInProgress `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -891,11 +891,11 @@ type AssistantStreamEventThreadRunRequiresAction struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                              `json:"data,required"`
 	Event constant.ThreadRunRequiresAction `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -913,11 +913,11 @@ type AssistantStreamEventThreadRunCompleted struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                         `json:"data,required"`
 	Event constant.ThreadRunCompleted `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -935,11 +935,11 @@ type AssistantStreamEventThreadRunIncomplete struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                          `json:"data,required"`
 	Event constant.ThreadRunIncomplete `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -957,11 +957,11 @@ type AssistantStreamEventThreadRunFailed struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                      `json:"data,required"`
 	Event constant.ThreadRunFailed `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -979,11 +979,11 @@ type AssistantStreamEventThreadRunCancelling struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                          `json:"data,required"`
 	Event constant.ThreadRunCancelling `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1001,11 +1001,11 @@ type AssistantStreamEventThreadRunCancelled struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                         `json:"data,required"`
 	Event constant.ThreadRunCancelled `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1023,11 +1023,11 @@ type AssistantStreamEventThreadRunExpired struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                       `json:"data,required"`
 	Event constant.ThreadRunExpired `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1045,11 +1045,11 @@ type AssistantStreamEventThreadRunStepCreated struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                       `json:"data,required"`
 	Event constant.ThreadRunStepCreated `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1067,11 +1067,11 @@ type AssistantStreamEventThreadRunStepInProgress struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                          `json:"data,required"`
 	Event constant.ThreadRunStepInProgress `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1090,11 +1090,11 @@ type AssistantStreamEventThreadRunStepDelta struct {
 	// streaming.
 	Data  RunStepDeltaEvent           `json:"data,required"`
 	Event constant.ThreadRunStepDelta `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1112,11 +1112,11 @@ type AssistantStreamEventThreadRunStepCompleted struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                         `json:"data,required"`
 	Event constant.ThreadRunStepCompleted `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1134,11 +1134,11 @@ type AssistantStreamEventThreadRunStepFailed struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                      `json:"data,required"`
 	Event constant.ThreadRunStepFailed `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1156,11 +1156,11 @@ type AssistantStreamEventThreadRunStepCancelled struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                         `json:"data,required"`
 	Event constant.ThreadRunStepCancelled `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1178,11 +1178,11 @@ type AssistantStreamEventThreadRunStepExpired struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                       `json:"data,required"`
 	Event constant.ThreadRunStepExpired `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1201,11 +1201,11 @@ type AssistantStreamEventThreadMessageCreated struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Message                       `json:"data,required"`
 	Event constant.ThreadMessageCreated `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1224,11 +1224,11 @@ type AssistantStreamEventThreadMessageInProgress struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Message                          `json:"data,required"`
 	Event constant.ThreadMessageInProgress `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1247,11 +1247,11 @@ type AssistantStreamEventThreadMessageDelta struct {
 	// streaming.
 	Data  MessageDeltaEvent           `json:"data,required"`
 	Event constant.ThreadMessageDelta `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1270,11 +1270,11 @@ type AssistantStreamEventThreadMessageCompleted struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Message                         `json:"data,required"`
 	Event constant.ThreadMessageCompleted `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1293,11 +1293,11 @@ type AssistantStreamEventThreadMessageIncomplete struct {
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Message                          `json:"data,required"`
 	Event constant.ThreadMessageIncomplete `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1314,11 +1314,11 @@ func (r *AssistantStreamEventThreadMessageIncomplete) UnmarshalJSON(data []byte)
 type AssistantStreamEventErrorEvent struct {
 	Data  shared.ErrorObject `json:"data,required"`
 	Event constant.Error     `json:"event,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Event       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Event       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1343,9 +1343,9 @@ type AssistantToolUnion struct {
 	// This field is from variant [FunctionTool].
 	Function shared.FunctionDefinition `json:"function"`
 	JSON     struct {
-		Type       resp.Field
-		FileSearch resp.Field
-		Function   resp.Field
+		Type       respjson.Field
+		FileSearch respjson.Field
+		Function   respjson.Field
 		raw        string
 	} `json:"-"`
 }
@@ -1495,10 +1495,10 @@ func init() {
 type CodeInterpreterTool struct {
 	// The type of tool being defined: `code_interpreter`
 	Type constant.CodeInterpreter `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1542,11 +1542,11 @@ type FileSearchTool struct {
 	Type constant.FileSearch `json:"type,required"`
 	// Overrides for the file search tool.
 	FileSearch FileSearchToolFileSearch `json:"file_search"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        resp.Field
-		FileSearch  resp.Field
-		ExtraFields map[string]resp.Field
+		Type        respjson.Field
+		FileSearch  respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -1584,11 +1584,11 @@ type FileSearchToolFileSearch struct {
 	// [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search#customizing-file-search-settings)
 	// for more information.
 	RankingOptions FileSearchToolFileSearchRankingOptions `json:"ranking_options"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		MaxNumResults  resp.Field
-		RankingOptions resp.Field
-		ExtraFields    map[string]resp.Field
+		MaxNumResults  respjson.Field
+		RankingOptions respjson.Field
+		ExtraFields    map[string]respjson.Field
 		raw            string
 	} `json:"-"`
 }
@@ -1614,11 +1614,11 @@ type FileSearchToolFileSearchRankingOptions struct {
 	//
 	// Any of "auto", "default_2024_08_21".
 	Ranker string `json:"ranker"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ScoreThreshold resp.Field
-		Ranker         resp.Field
-		ExtraFields    map[string]resp.Field
+		ScoreThreshold respjson.Field
+		Ranker         respjson.Field
+		ExtraFields    map[string]respjson.Field
 		raw            string
 	} `json:"-"`
 }
@@ -1706,11 +1706,11 @@ type FunctionTool struct {
 	Function shared.FunctionDefinition `json:"function,required"`
 	// The type of tool being defined: `function`
 	Type constant.Function `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Function    resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Function    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

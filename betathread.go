@@ -14,7 +14,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/packages/ssestream"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
@@ -139,9 +139,9 @@ type AssistantResponseFormatOptionUnion struct {
 	// This field is from variant [shared.ResponseFormatJSONSchema].
 	JSONSchema shared.ResponseFormatJSONSchemaJSONSchema `json:"json_schema"`
 	JSON       struct {
-		OfAuto     resp.Field
-		Type       resp.Field
-		JSONSchema resp.Field
+		OfAuto     respjson.Field
+		Type       respjson.Field
+		JSONSchema respjson.Field
 		raw        string
 	} `json:"-"`
 }
@@ -250,11 +250,11 @@ type AssistantToolChoice struct {
 	// Any of "function", "code_interpreter", "file_search".
 	Type     AssistantToolChoiceType     `json:"type,required"`
 	Function AssistantToolChoiceFunction `json:"function"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        resp.Field
-		Function    resp.Field
-		ExtraFields map[string]resp.Field
+		Type        respjson.Field
+		Function    respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -304,10 +304,10 @@ func (r AssistantToolChoiceParam) MarshalJSON() (data []byte, err error) {
 type AssistantToolChoiceFunction struct {
 	// The name of the function to call.
 	Name string `json:"name,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Name        resp.Field
-		ExtraFields map[string]resp.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -355,9 +355,9 @@ type AssistantToolChoiceOptionUnion struct {
 	// This field is from variant [AssistantToolChoice].
 	Function AssistantToolChoiceFunction `json:"function"`
 	JSON     struct {
-		OfAuto   resp.Field
-		Type     resp.Field
-		Function resp.Field
+		OfAuto   respjson.Field
+		Type     respjson.Field
+		Function respjson.Field
 		raw      string
 	} `json:"-"`
 }
@@ -451,14 +451,14 @@ type Thread struct {
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
 	// tool requires a list of vector store IDs.
 	ToolResources ThreadToolResources `json:"tool_resources,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID            resp.Field
-		CreatedAt     resp.Field
-		Metadata      resp.Field
-		Object        resp.Field
-		ToolResources resp.Field
-		ExtraFields   map[string]resp.Field
+		ID            respjson.Field
+		CreatedAt     respjson.Field
+		Metadata      respjson.Field
+		Object        respjson.Field
+		ToolResources respjson.Field
+		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`
 }
@@ -476,11 +476,11 @@ func (r *Thread) UnmarshalJSON(data []byte) error {
 type ThreadToolResources struct {
 	CodeInterpreter ThreadToolResourcesCodeInterpreter `json:"code_interpreter"`
 	FileSearch      ThreadToolResourcesFileSearch      `json:"file_search"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CodeInterpreter resp.Field
-		FileSearch      resp.Field
-		ExtraFields     map[string]resp.Field
+		CodeInterpreter respjson.Field
+		FileSearch      respjson.Field
+		ExtraFields     map[string]respjson.Field
 		raw             string
 	} `json:"-"`
 }
@@ -496,10 +496,10 @@ type ThreadToolResourcesCodeInterpreter struct {
 	// available to the `code_interpreter` tool. There can be a maximum of 20 files
 	// associated with the tool.
 	FileIDs []string `json:"file_ids"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		FileIDs     resp.Field
-		ExtraFields map[string]resp.Field
+		FileIDs     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -516,10 +516,10 @@ type ThreadToolResourcesFileSearch struct {
 	// attached to this thread. There can be a maximum of 1 vector store attached to
 	// the thread.
 	VectorStoreIDs []string `json:"vector_store_ids"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		VectorStoreIDs resp.Field
-		ExtraFields    map[string]resp.Field
+		VectorStoreIDs respjson.Field
+		ExtraFields    map[string]respjson.Field
 		raw            string
 	} `json:"-"`
 }
@@ -534,12 +534,12 @@ type ThreadDeleted struct {
 	ID      string                 `json:"id,required"`
 	Deleted bool                   `json:"deleted,required"`
 	Object  constant.ThreadDeleted `json:"object,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Deleted     resp.Field
-		Object      resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Deleted     respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

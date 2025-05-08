@@ -8,7 +8,7 @@ import (
 	"net/http/httputil"
 
 	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 )
 
 // Error represents an error that originates from the API, i.e. when a request is
@@ -19,13 +19,13 @@ type Error struct {
 	Message string `json:"message,required"`
 	Param   string `json:"param,required"`
 	Type    string `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        resp.Field
-		Message     resp.Field
-		Param       resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Code        respjson.Field
+		Message     respjson.Field
+		Param       respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 	StatusCode int

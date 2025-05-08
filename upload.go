@@ -12,7 +12,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared/constant"
 )
 
@@ -123,18 +123,18 @@ type Upload struct {
 	Status UploadStatus `json:"status,required"`
 	// The `File` object represents a document that has been uploaded to OpenAI.
 	File FileObject `json:"file,nullable"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Bytes       resp.Field
-		CreatedAt   resp.Field
-		ExpiresAt   resp.Field
-		Filename    resp.Field
-		Object      resp.Field
-		Purpose     resp.Field
-		Status      resp.Field
-		File        resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Bytes       respjson.Field
+		CreatedAt   respjson.Field
+		ExpiresAt   respjson.Field
+		Filename    respjson.Field
+		Object      respjson.Field
+		Purpose     respjson.Field
+		Status      respjson.Field
+		File        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

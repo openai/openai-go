@@ -16,7 +16,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/packages/ssestream"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
@@ -230,12 +230,12 @@ type RequiredActionFunctionToolCall struct {
 	// The type of tool call the output is required for. For now, this is always
 	// `function`.
 	Type constant.Function `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Function    resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Function    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -252,11 +252,11 @@ type RequiredActionFunctionToolCallFunction struct {
 	Arguments string `json:"arguments,required"`
 	// The name of the function.
 	Name string `json:"name,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Arguments   resp.Field
-		Name        resp.Field
-		ExtraFields map[string]resp.Field
+		Arguments   respjson.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -376,36 +376,36 @@ type Run struct {
 	Temperature float64 `json:"temperature,nullable"`
 	// The nucleus sampling value used for this run. If not set, defaults to 1.
 	TopP float64 `json:"top_p,nullable"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID                  resp.Field
-		AssistantID         resp.Field
-		CancelledAt         resp.Field
-		CompletedAt         resp.Field
-		CreatedAt           resp.Field
-		ExpiresAt           resp.Field
-		FailedAt            resp.Field
-		IncompleteDetails   resp.Field
-		Instructions        resp.Field
-		LastError           resp.Field
-		MaxCompletionTokens resp.Field
-		MaxPromptTokens     resp.Field
-		Metadata            resp.Field
-		Model               resp.Field
-		Object              resp.Field
-		ParallelToolCalls   resp.Field
-		RequiredAction      resp.Field
-		ResponseFormat      resp.Field
-		StartedAt           resp.Field
-		Status              resp.Field
-		ThreadID            resp.Field
-		ToolChoice          resp.Field
-		Tools               resp.Field
-		TruncationStrategy  resp.Field
-		Usage               resp.Field
-		Temperature         resp.Field
-		TopP                resp.Field
-		ExtraFields         map[string]resp.Field
+		ID                  respjson.Field
+		AssistantID         respjson.Field
+		CancelledAt         respjson.Field
+		CompletedAt         respjson.Field
+		CreatedAt           respjson.Field
+		ExpiresAt           respjson.Field
+		FailedAt            respjson.Field
+		IncompleteDetails   respjson.Field
+		Instructions        respjson.Field
+		LastError           respjson.Field
+		MaxCompletionTokens respjson.Field
+		MaxPromptTokens     respjson.Field
+		Metadata            respjson.Field
+		Model               respjson.Field
+		Object              respjson.Field
+		ParallelToolCalls   respjson.Field
+		RequiredAction      respjson.Field
+		ResponseFormat      respjson.Field
+		StartedAt           respjson.Field
+		Status              respjson.Field
+		ThreadID            respjson.Field
+		ToolChoice          respjson.Field
+		Tools               respjson.Field
+		TruncationStrategy  respjson.Field
+		Usage               respjson.Field
+		Temperature         respjson.Field
+		TopP                respjson.Field
+		ExtraFields         map[string]respjson.Field
 		raw                 string
 	} `json:"-"`
 }
@@ -424,10 +424,10 @@ type RunIncompleteDetails struct {
 	//
 	// Any of "max_completion_tokens", "max_prompt_tokens".
 	Reason string `json:"reason"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Reason      resp.Field
-		ExtraFields map[string]resp.Field
+		Reason      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -446,11 +446,11 @@ type RunLastError struct {
 	Code string `json:"code,required"`
 	// A human-readable description of the error.
 	Message string `json:"message,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        resp.Field
-		Message     resp.Field
-		ExtraFields map[string]resp.Field
+		Code        respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -468,11 +468,11 @@ type RunRequiredAction struct {
 	SubmitToolOutputs RunRequiredActionSubmitToolOutputs `json:"submit_tool_outputs,required"`
 	// For now, this is always `submit_tool_outputs`.
 	Type constant.SubmitToolOutputs `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		SubmitToolOutputs resp.Field
-		Type              resp.Field
-		ExtraFields       map[string]resp.Field
+		SubmitToolOutputs respjson.Field
+		Type              respjson.Field
+		ExtraFields       map[string]respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -487,10 +487,10 @@ func (r *RunRequiredAction) UnmarshalJSON(data []byte) error {
 type RunRequiredActionSubmitToolOutputs struct {
 	// A list of the relevant tool calls.
 	ToolCalls []RequiredActionFunctionToolCall `json:"tool_calls,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ToolCalls   resp.Field
-		ExtraFields map[string]resp.Field
+		ToolCalls   respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -514,11 +514,11 @@ type RunTruncationStrategy struct {
 	// The number of most recent messages from the thread when constructing the context
 	// for the run.
 	LastMessages int64 `json:"last_messages,nullable"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type         resp.Field
-		LastMessages resp.Field
-		ExtraFields  map[string]resp.Field
+		Type         respjson.Field
+		LastMessages respjson.Field
+		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
 }
@@ -538,12 +538,12 @@ type RunUsage struct {
 	PromptTokens int64 `json:"prompt_tokens,required"`
 	// Total number of tokens used (prompt + completion).
 	TotalTokens int64 `json:"total_tokens,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CompletionTokens resp.Field
-		PromptTokens     resp.Field
-		TotalTokens      resp.Field
-		ExtraFields      map[string]resp.Field
+		CompletionTokens respjson.Field
+		PromptTokens     respjson.Field
+		TotalTokens      respjson.Field
+		ExtraFields      map[string]respjson.Field
 		raw              string
 	} `json:"-"`
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared/constant"
 )
 
@@ -50,13 +50,13 @@ type CreateEmbeddingResponse struct {
 	Object constant.List `json:"object,required"`
 	// The usage information for the request.
 	Usage CreateEmbeddingResponseUsage `json:"usage,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Data        resp.Field
-		Model       resp.Field
-		Object      resp.Field
-		Usage       resp.Field
-		ExtraFields map[string]resp.Field
+		Data        respjson.Field
+		Model       respjson.Field
+		Object      respjson.Field
+		Usage       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -73,11 +73,11 @@ type CreateEmbeddingResponseUsage struct {
 	PromptTokens int64 `json:"prompt_tokens,required"`
 	// The total number of tokens used by the request.
 	TotalTokens int64 `json:"total_tokens,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		PromptTokens resp.Field
-		TotalTokens  resp.Field
-		ExtraFields  map[string]resp.Field
+		PromptTokens respjson.Field
+		TotalTokens  respjson.Field
+		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
 }
@@ -98,12 +98,12 @@ type Embedding struct {
 	Index int64 `json:"index,required"`
 	// The object type, which is always "embedding".
 	Object constant.Embedding `json:"object,required"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Embedding   resp.Field
-		Index       resp.Field
-		Object      resp.Field
-		ExtraFields map[string]resp.Field
+		Embedding   respjson.Field
+		Index       respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }

@@ -15,7 +15,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/packages/ssestream"
 	"github.com/openai/openai-go/shared/constant"
 )
@@ -69,11 +69,11 @@ type Transcription struct {
 	// models `gpt-4o-transcribe` and `gpt-4o-mini-transcribe` if `logprobs` is added
 	// to the `include` array.
 	Logprobs []TranscriptionLogprob `json:"logprobs"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Text        resp.Field
-		Logprobs    resp.Field
-		ExtraFields map[string]resp.Field
+		Text        respjson.Field
+		Logprobs    respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -91,12 +91,12 @@ type TranscriptionLogprob struct {
 	Bytes []float64 `json:"bytes"`
 	// The log probability of the token.
 	Logprob float64 `json:"logprob"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Token       resp.Field
-		Bytes       resp.Field
-		Logprob     resp.Field
-		ExtraFields map[string]resp.Field
+		Token       respjson.Field
+		Bytes       respjson.Field
+		Logprob     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -130,10 +130,10 @@ type TranscriptionStreamEventUnion struct {
 	// This field is from variant [TranscriptionTextDoneEvent].
 	Text string `json:"text"`
 	JSON struct {
-		Delta    resp.Field
-		Type     resp.Field
-		Logprobs resp.Field
-		Text     resp.Field
+		Delta    respjson.Field
+		Type     respjson.Field
+		Logprobs respjson.Field
+		Text     respjson.Field
 		raw      string
 	} `json:"-"`
 }
@@ -201,8 +201,8 @@ type TranscriptionStreamEventUnionLogprobs struct {
 	// [[]TranscriptionTextDoneEventLogprob] instead of an object.
 	OfTranscriptionTextDoneEventLogprobs []TranscriptionTextDoneEventLogprob `json:",inline"`
 	JSON                                 struct {
-		OfTranscriptionTextDeltaEventLogprobs resp.Field
-		OfTranscriptionTextDoneEventLogprobs  resp.Field
+		OfTranscriptionTextDeltaEventLogprobs respjson.Field
+		OfTranscriptionTextDoneEventLogprobs  respjson.Field
 		raw                                   string
 	} `json:"-"`
 }
@@ -224,12 +224,12 @@ type TranscriptionTextDeltaEvent struct {
 	// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
 	// with the `include[]` parameter set to `logprobs`.
 	Logprobs []TranscriptionTextDeltaEventLogprob `json:"logprobs"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Delta       resp.Field
-		Type        resp.Field
-		Logprobs    resp.Field
-		ExtraFields map[string]resp.Field
+		Delta       respjson.Field
+		Type        respjson.Field
+		Logprobs    respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -247,12 +247,12 @@ type TranscriptionTextDeltaEventLogprob struct {
 	Bytes []any `json:"bytes"`
 	// The log probability of the token.
 	Logprob float64 `json:"logprob"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Token       resp.Field
-		Bytes       resp.Field
-		Logprob     resp.Field
-		ExtraFields map[string]resp.Field
+		Token       respjson.Field
+		Bytes       respjson.Field
+		Logprob     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -277,12 +277,12 @@ type TranscriptionTextDoneEvent struct {
 	// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
 	// with the `include[]` parameter set to `logprobs`.
 	Logprobs []TranscriptionTextDoneEventLogprob `json:"logprobs"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Text        resp.Field
-		Type        resp.Field
-		Logprobs    resp.Field
-		ExtraFields map[string]resp.Field
+		Text        respjson.Field
+		Type        respjson.Field
+		Logprobs    respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -300,12 +300,12 @@ type TranscriptionTextDoneEventLogprob struct {
 	Bytes []any `json:"bytes"`
 	// The log probability of the token.
 	Logprob float64 `json:"logprob"`
-	// JSON contains metadata for fields, check presence with [resp.Field.Valid].
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Token       resp.Field
-		Bytes       resp.Field
-		Logprob     resp.Field
-		ExtraFields map[string]resp.Field
+		Token       respjson.Field
+		Bytes       respjson.Field
+		Logprob     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
