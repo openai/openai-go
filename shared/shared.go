@@ -407,11 +407,9 @@ func (r FunctionDefinitionParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 
-type FunctionParameters map[string]interface{}
+type FunctionParameters map[string]any
 
 type Metadata map[string]string
-
-type MetadataParam map[string]string
 
 // **o-series models only**
 //
@@ -622,7 +620,7 @@ type ResponseFormatJSONSchemaJSONSchema struct {
 	Description string `json:"description"`
 	// The schema for the response format, described as a JSON Schema object. Learn how
 	// to build JSON schemas [here](https://json-schema.org/).
-	Schema map[string]interface{} `json:"schema"`
+	Schema map[string]any `json:"schema"`
 	// Whether to enable strict schema adherence when generating the output. If set to
 	// true, the model will always follow the exact schema defined in the `schema`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
@@ -688,7 +686,7 @@ type ResponseFormatJSONSchemaJSONSchemaParam struct {
 	Description param.Opt[string] `json:"description,omitzero"`
 	// The schema for the response format, described as a JSON Schema object. Learn how
 	// to build JSON schemas [here](https://json-schema.org/).
-	Schema interface{} `json:"schema,omitzero"`
+	Schema any `json:"schema,omitzero"`
 	paramObj
 }
 

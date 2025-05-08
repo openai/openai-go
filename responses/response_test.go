@@ -35,7 +35,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		Include:         []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		Instructions:    openai.String("instructions"),
 		MaxOutputTokens: openai.Int(0),
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		ParallelToolCalls:  openai.Bool(true),

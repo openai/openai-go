@@ -40,7 +40,7 @@ func TestBetaThreadMessageNewWithOptionalParams(t *testing.T) {
 					OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
 				}},
 			}},
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
 		},
@@ -97,7 +97,7 @@ func TestBetaThreadMessageUpdateWithOptionalParams(t *testing.T) {
 		"thread_id",
 		"message_id",
 		openai.BetaThreadMessageUpdateParams{
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
 		},

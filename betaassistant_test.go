@@ -31,7 +31,7 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 		Model:        shared.ChatModelGPT4_1,
 		Description:  openai.String("description"),
 		Instructions: openai.String("instructions"),
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		Name:            openai.String("name"),
@@ -51,7 +51,7 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 						OfAuto: &openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto{},
 					},
 					FileIDs: []string{"string"},
-					Metadata: shared.MetadataParam{
+					Metadata: shared.Metadata{
 						"foo": "string",
 					},
 				}},
@@ -111,7 +111,7 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 		openai.BetaAssistantUpdateParams{
 			Description:  openai.String("description"),
 			Instructions: openai.String("instructions"),
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
 			Model:           openai.BetaAssistantUpdateParamsModelGPT4_1,

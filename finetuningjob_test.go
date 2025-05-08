@@ -49,7 +49,7 @@ func TestFineTuningJobNewWithOptionalParams(t *testing.T) {
 				Tags:    []string{"custom-tag"},
 			},
 		}},
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		Method: openai.FineTuningJobNewParamsMethod{

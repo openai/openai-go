@@ -46,8 +46,8 @@ type DateTime struct {
 }
 
 type AdditionalProperties struct {
-	A      bool                   `form:"a"`
-	Extras map[string]interface{} `form:"-,extras"`
+	A      bool           `form:"a"`
+	Extras map[string]any `form:"-,extras"`
 }
 
 type TypedAdditionalProperties struct {
@@ -57,8 +57,8 @@ type TypedAdditionalProperties struct {
 
 type EmbeddedStructs struct {
 	AdditionalProperties
-	A      *int                   `form:"number2"`
-	Extras map[string]interface{} `form:"-,extras"`
+	A      *int           `form:"number2"`
+	Extras map[string]any `form:"-,extras"`
 }
 
 type Recursive struct {
@@ -67,7 +67,7 @@ type Recursive struct {
 }
 
 type UnknownStruct struct {
-	Unknown interface{} `form:"unknown"`
+	Unknown any `form:"unknown"`
 }
 
 type UnionStruct struct {
@@ -123,7 +123,7 @@ type StructUnion struct {
 
 var tests = map[string]struct {
 	buf string
-	val interface{}
+	val any
 }{
 	"map_string": {
 		`--xxx
@@ -150,7 +150,7 @@ Content-Disposition: form-data; name="c"
 false
 --xxx--
 `,
-		map[string]interface{}{"a": float64(1), "b": "str", "c": false},
+		map[string]any{"a": float64(1), "b": "str", "c": false},
 	},
 
 	"primitive_struct": {
@@ -346,7 +346,7 @@ true
 `,
 		AdditionalProperties{
 			A: true,
-			Extras: map[string]interface{}{
+			Extras: map[string]any{
 				"bar": "value",
 				"foo": true,
 			},
@@ -387,7 +387,7 @@ bar
 --xxx--
 `,
 		UnknownStruct{
-			Unknown: map[string]interface{}{
+			Unknown: map[string]any{
 				"foo": "bar",
 			},
 		},

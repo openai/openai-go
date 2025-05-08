@@ -16,7 +16,7 @@ type Card struct {
 	IsFoo     bool          `json:"is_foo"`
 	IsBar     bool          `json:"is_bar"`
 	Metadata  Metadata      `json:"metadata"`
-	Value     interface{}   `json:"value"`
+	Value     any           `json:"value"`
 
 	JSON cardJSON
 }
