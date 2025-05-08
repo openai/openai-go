@@ -26,6 +26,7 @@ type Client struct {
 	Moderations  ModerationService
 	Models       ModelService
 	FineTuning   FineTuningService
+	Graders      GraderService
 	VectorStores VectorStoreService
 	Beta         BetaService
 	Batches      BatchService
@@ -72,6 +73,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Moderations = NewModerationService(opts...)
 	r.Models = NewModelService(opts...)
 	r.FineTuning = NewFineTuningService(opts...)
+	r.Graders = NewGraderService(opts...)
 	r.VectorStores = NewVectorStoreService(opts...)
 	r.Beta = NewBetaService(opts...)
 	r.Batches = NewBatchService(opts...)

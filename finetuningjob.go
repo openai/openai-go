@@ -132,6 +132,30 @@ func (r *FineTuningJobService) ListEventsAutoPaging(ctx context.Context, fineTun
 	return pagination.NewCursorPageAutoPager(r.ListEvents(ctx, fineTuningJobID, query, opts...))
 }
 
+// Pause a fine-tune job.
+func (r *FineTuningJobService) Pause(ctx context.Context, fineTuningJobID string, opts ...option.RequestOption) (res *FineTuningJob, err error) {
+	opts = append(r.Options[:], opts...)
+	if fineTuningJobID == "" {
+		err = errors.New("missing required fine_tuning_job_id parameter")
+		return
+	}
+	path := fmt.Sprintf("fine_tuning/jobs/%s/pause", fineTuningJobID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
+	return
+}
+
+// Resume a fine-tune job.
+func (r *FineTuningJobService) Resume(ctx context.Context, fineTuningJobID string, opts ...option.RequestOption) (res *FineTuningJob, err error) {
+	opts = append(r.Options[:], opts...)
+	if fineTuningJobID == "" {
+		err = errors.New("missing required fine_tuning_job_id parameter")
+		return
+	}
+	path := fmt.Sprintf("fine_tuning/jobs/%s/resume", fineTuningJobID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
+	return
+}
+
 // The `fine_tuning.job` object represents a fine-tuning job that has been created
 // through the API.
 type FineTuningJob struct {
@@ -405,386 +429,30 @@ const (
 
 // The method used for fine-tuning.
 type FineTuningJobMethod struct {
-	// Configuration for the DPO fine-tuning method.
-	Dpo FineTuningJobMethodDpo `json:"dpo"`
-	// Configuration for the supervised fine-tuning method.
-	Supervised FineTuningJobMethodSupervised `json:"supervised"`
-	// The type of method. Is either `supervised` or `dpo`.
+	// The type of method. Is either `supervised`, `dpo`, or `reinforcement`.
 	//
-	// Any of "supervised", "dpo".
-	Type string `json:"type"`
+	// Any of "supervised", "dpo", "reinforcement".
+	Type string `json:"type,required"`
+	// Configuration for the DPO fine-tuning method.
+	Dpo DpoMethod `json:"dpo"`
+	// Configuration for the reinforcement fine-tuning method.
+	Reinforcement ReinforcementMethod `json:"reinforcement"`
+	// Configuration for the supervised fine-tuning method.
+	Supervised SupervisedMethod `json:"supervised"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Dpo         respjson.Field
-		Supervised  respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Type          respjson.Field
+		Dpo           respjson.Field
+		Reinforcement respjson.Field
+		Supervised    respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
 func (r FineTuningJobMethod) RawJSON() string { return r.JSON.raw }
 func (r *FineTuningJobMethod) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Configuration for the DPO fine-tuning method.
-type FineTuningJobMethodDpo struct {
-	// The hyperparameters used for the fine-tuning job.
-	Hyperparameters FineTuningJobMethodDpoHyperparameters `json:"hyperparameters"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Hyperparameters respjson.Field
-		ExtraFields     map[string]respjson.Field
-		raw             string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r FineTuningJobMethodDpo) RawJSON() string { return r.JSON.raw }
-func (r *FineTuningJobMethodDpo) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The hyperparameters used for the fine-tuning job.
-type FineTuningJobMethodDpoHyperparameters struct {
-	// Number of examples in each batch. A larger batch size means that model
-	// parameters are updated less frequently, but with lower variance.
-	BatchSize FineTuningJobMethodDpoHyperparametersBatchSizeUnion `json:"batch_size"`
-	// The beta value for the DPO method. A higher beta value will increase the weight
-	// of the penalty between the policy and reference model.
-	Beta FineTuningJobMethodDpoHyperparametersBetaUnion `json:"beta"`
-	// Scaling factor for the learning rate. A smaller learning rate may be useful to
-	// avoid overfitting.
-	LearningRateMultiplier FineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion `json:"learning_rate_multiplier"`
-	// The number of epochs to train the model for. An epoch refers to one full cycle
-	// through the training dataset.
-	NEpochs FineTuningJobMethodDpoHyperparametersNEpochsUnion `json:"n_epochs"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		BatchSize              respjson.Field
-		Beta                   respjson.Field
-		LearningRateMultiplier respjson.Field
-		NEpochs                respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r FineTuningJobMethodDpoHyperparameters) RawJSON() string { return r.JSON.raw }
-func (r *FineTuningJobMethodDpoHyperparameters) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// FineTuningJobMethodDpoHyperparametersBatchSizeUnion contains all possible
-// properties and values from [constant.Auto], [int64].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfAuto OfInt]
-type FineTuningJobMethodDpoHyperparametersBatchSizeUnion struct {
-	// This field will be present if the value is a [constant.Auto] instead of an
-	// object.
-	OfAuto constant.Auto `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfAuto respjson.Field
-		OfInt  respjson.Field
-		raw    string
-	} `json:"-"`
-}
-
-func (u FineTuningJobMethodDpoHyperparametersBatchSizeUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u FineTuningJobMethodDpoHyperparametersBatchSizeUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u FineTuningJobMethodDpoHyperparametersBatchSizeUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *FineTuningJobMethodDpoHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// FineTuningJobMethodDpoHyperparametersBetaUnion contains all possible properties
-// and values from [constant.Auto], [float64].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfAuto OfFloat]
-type FineTuningJobMethodDpoHyperparametersBetaUnion struct {
-	// This field will be present if the value is a [constant.Auto] instead of an
-	// object.
-	OfAuto constant.Auto `json:",inline"`
-	// This field will be present if the value is a [float64] instead of an object.
-	OfFloat float64 `json:",inline"`
-	JSON    struct {
-		OfAuto  respjson.Field
-		OfFloat respjson.Field
-		raw     string
-	} `json:"-"`
-}
-
-func (u FineTuningJobMethodDpoHyperparametersBetaUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u FineTuningJobMethodDpoHyperparametersBetaUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u FineTuningJobMethodDpoHyperparametersBetaUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *FineTuningJobMethodDpoHyperparametersBetaUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// FineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion contains all
-// possible properties and values from [constant.Auto], [float64].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfAuto OfFloat]
-type FineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion struct {
-	// This field will be present if the value is a [constant.Auto] instead of an
-	// object.
-	OfAuto constant.Auto `json:",inline"`
-	// This field will be present if the value is a [float64] instead of an object.
-	OfFloat float64 `json:",inline"`
-	JSON    struct {
-		OfAuto  respjson.Field
-		OfFloat respjson.Field
-		raw     string
-	} `json:"-"`
-}
-
-func (u FineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u FineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u FineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion) RawJSON() string {
-	return u.JSON.raw
-}
-
-func (r *FineTuningJobMethodDpoHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// FineTuningJobMethodDpoHyperparametersNEpochsUnion contains all possible
-// properties and values from [constant.Auto], [int64].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfAuto OfInt]
-type FineTuningJobMethodDpoHyperparametersNEpochsUnion struct {
-	// This field will be present if the value is a [constant.Auto] instead of an
-	// object.
-	OfAuto constant.Auto `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfAuto respjson.Field
-		OfInt  respjson.Field
-		raw    string
-	} `json:"-"`
-}
-
-func (u FineTuningJobMethodDpoHyperparametersNEpochsUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u FineTuningJobMethodDpoHyperparametersNEpochsUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u FineTuningJobMethodDpoHyperparametersNEpochsUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *FineTuningJobMethodDpoHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Configuration for the supervised fine-tuning method.
-type FineTuningJobMethodSupervised struct {
-	// The hyperparameters used for the fine-tuning job.
-	Hyperparameters FineTuningJobMethodSupervisedHyperparameters `json:"hyperparameters"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Hyperparameters respjson.Field
-		ExtraFields     map[string]respjson.Field
-		raw             string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r FineTuningJobMethodSupervised) RawJSON() string { return r.JSON.raw }
-func (r *FineTuningJobMethodSupervised) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The hyperparameters used for the fine-tuning job.
-type FineTuningJobMethodSupervisedHyperparameters struct {
-	// Number of examples in each batch. A larger batch size means that model
-	// parameters are updated less frequently, but with lower variance.
-	BatchSize FineTuningJobMethodSupervisedHyperparametersBatchSizeUnion `json:"batch_size"`
-	// Scaling factor for the learning rate. A smaller learning rate may be useful to
-	// avoid overfitting.
-	LearningRateMultiplier FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion `json:"learning_rate_multiplier"`
-	// The number of epochs to train the model for. An epoch refers to one full cycle
-	// through the training dataset.
-	NEpochs FineTuningJobMethodSupervisedHyperparametersNEpochsUnion `json:"n_epochs"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		BatchSize              respjson.Field
-		LearningRateMultiplier respjson.Field
-		NEpochs                respjson.Field
-		ExtraFields            map[string]respjson.Field
-		raw                    string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r FineTuningJobMethodSupervisedHyperparameters) RawJSON() string { return r.JSON.raw }
-func (r *FineTuningJobMethodSupervisedHyperparameters) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// FineTuningJobMethodSupervisedHyperparametersBatchSizeUnion contains all possible
-// properties and values from [constant.Auto], [int64].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfAuto OfInt]
-type FineTuningJobMethodSupervisedHyperparametersBatchSizeUnion struct {
-	// This field will be present if the value is a [constant.Auto] instead of an
-	// object.
-	OfAuto constant.Auto `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfAuto respjson.Field
-		OfInt  respjson.Field
-		raw    string
-	} `json:"-"`
-}
-
-func (u FineTuningJobMethodSupervisedHyperparametersBatchSizeUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u FineTuningJobMethodSupervisedHyperparametersBatchSizeUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u FineTuningJobMethodSupervisedHyperparametersBatchSizeUnion) RawJSON() string {
-	return u.JSON.raw
-}
-
-func (r *FineTuningJobMethodSupervisedHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion contains
-// all possible properties and values from [constant.Auto], [float64].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfAuto OfFloat]
-type FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion struct {
-	// This field will be present if the value is a [constant.Auto] instead of an
-	// object.
-	OfAuto constant.Auto `json:",inline"`
-	// This field will be present if the value is a [float64] instead of an object.
-	OfFloat float64 `json:",inline"`
-	JSON    struct {
-		OfAuto  respjson.Field
-		OfFloat respjson.Field
-		raw     string
-	} `json:"-"`
-}
-
-func (u FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion) RawJSON() string {
-	return u.JSON.raw
-}
-
-func (r *FineTuningJobMethodSupervisedHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// FineTuningJobMethodSupervisedHyperparametersNEpochsUnion contains all possible
-// properties and values from [constant.Auto], [int64].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfAuto OfInt]
-type FineTuningJobMethodSupervisedHyperparametersNEpochsUnion struct {
-	// This field will be present if the value is a [constant.Auto] instead of an
-	// object.
-	OfAuto constant.Auto `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfAuto respjson.Field
-		OfInt  respjson.Field
-		raw    string
-	} `json:"-"`
-}
-
-func (u FineTuningJobMethodSupervisedHyperparametersNEpochsUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u FineTuningJobMethodSupervisedHyperparametersNEpochsUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u FineTuningJobMethodSupervisedHyperparametersNEpochsUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *FineTuningJobMethodSupervisedHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1142,15 +810,19 @@ func (r *FineTuningJobNewParamsIntegrationWandb) UnmarshalJSON(data []byte) erro
 }
 
 // The method used for fine-tuning.
+//
+// The property Type is required.
 type FineTuningJobNewParamsMethod struct {
-	// Configuration for the DPO fine-tuning method.
-	Dpo FineTuningJobNewParamsMethodDpo `json:"dpo,omitzero"`
-	// Configuration for the supervised fine-tuning method.
-	Supervised FineTuningJobNewParamsMethodSupervised `json:"supervised,omitzero"`
-	// The type of method. Is either `supervised` or `dpo`.
+	// The type of method. Is either `supervised`, `dpo`, or `reinforcement`.
 	//
-	// Any of "supervised", "dpo".
-	Type string `json:"type,omitzero"`
+	// Any of "supervised", "dpo", "reinforcement".
+	Type string `json:"type,omitzero,required"`
+	// Configuration for the DPO fine-tuning method.
+	Dpo DpoMethodParam `json:"dpo,omitzero"`
+	// Configuration for the reinforcement fine-tuning method.
+	Reinforcement ReinforcementMethodParam `json:"reinforcement,omitzero"`
+	// Configuration for the supervised fine-tuning method.
+	Supervised SupervisedMethodParam `json:"supervised,omitzero"`
 	paramObj
 }
 
@@ -1164,267 +836,8 @@ func (r *FineTuningJobNewParamsMethod) UnmarshalJSON(data []byte) error {
 
 func init() {
 	apijson.RegisterFieldValidator[FineTuningJobNewParamsMethod](
-		"type", "supervised", "dpo",
+		"type", "supervised", "dpo", "reinforcement",
 	)
-}
-
-// Configuration for the DPO fine-tuning method.
-type FineTuningJobNewParamsMethodDpo struct {
-	// The hyperparameters used for the fine-tuning job.
-	Hyperparameters FineTuningJobNewParamsMethodDpoHyperparameters `json:"hyperparameters,omitzero"`
-	paramObj
-}
-
-func (r FineTuningJobNewParamsMethodDpo) MarshalJSON() (data []byte, err error) {
-	type shadow FineTuningJobNewParamsMethodDpo
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *FineTuningJobNewParamsMethodDpo) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The hyperparameters used for the fine-tuning job.
-type FineTuningJobNewParamsMethodDpoHyperparameters struct {
-	// Number of examples in each batch. A larger batch size means that model
-	// parameters are updated less frequently, but with lower variance.
-	BatchSize FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion `json:"batch_size,omitzero"`
-	// The beta value for the DPO method. A higher beta value will increase the weight
-	// of the penalty between the policy and reference model.
-	Beta FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion `json:"beta,omitzero"`
-	// Scaling factor for the learning rate. A smaller learning rate may be useful to
-	// avoid overfitting.
-	LearningRateMultiplier FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion `json:"learning_rate_multiplier,omitzero"`
-	// The number of epochs to train the model for. An epoch refers to one full cycle
-	// through the training dataset.
-	NEpochs FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion `json:"n_epochs,omitzero"`
-	paramObj
-}
-
-func (r FineTuningJobNewParamsMethodDpoHyperparameters) MarshalJSON() (data []byte, err error) {
-	type shadow FineTuningJobNewParamsMethodDpoHyperparameters
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *FineTuningJobNewParamsMethodDpoHyperparameters) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion struct {
-	// Construct this variant with constant.ValueOf[constant.Auto]()
-	OfAuto constant.Auto    `json:",omitzero,inline"`
-	OfInt  param.Opt[int64] `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
-}
-func (u *FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningJobNewParamsMethodDpoHyperparametersBatchSizeUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion struct {
-	// Construct this variant with constant.ValueOf[constant.Auto]()
-	OfAuto  constant.Auto      `json:",omitzero,inline"`
-	OfFloat param.Opt[float64] `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion](u.OfAuto, u.OfFloat)
-}
-func (u *FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningJobNewParamsMethodDpoHyperparametersBetaUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion struct {
-	// Construct this variant with constant.ValueOf[constant.Auto]()
-	OfAuto  constant.Auto      `json:",omitzero,inline"`
-	OfFloat param.Opt[float64] `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
-}
-func (u *FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningJobNewParamsMethodDpoHyperparametersLearningRateMultiplierUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion struct {
-	// Construct this variant with constant.ValueOf[constant.Auto]()
-	OfAuto constant.Auto    `json:",omitzero,inline"`
-	OfInt  param.Opt[int64] `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
-}
-func (u *FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningJobNewParamsMethodDpoHyperparametersNEpochsUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
-}
-
-// Configuration for the supervised fine-tuning method.
-type FineTuningJobNewParamsMethodSupervised struct {
-	// The hyperparameters used for the fine-tuning job.
-	Hyperparameters FineTuningJobNewParamsMethodSupervisedHyperparameters `json:"hyperparameters,omitzero"`
-	paramObj
-}
-
-func (r FineTuningJobNewParamsMethodSupervised) MarshalJSON() (data []byte, err error) {
-	type shadow FineTuningJobNewParamsMethodSupervised
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *FineTuningJobNewParamsMethodSupervised) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The hyperparameters used for the fine-tuning job.
-type FineTuningJobNewParamsMethodSupervisedHyperparameters struct {
-	// Number of examples in each batch. A larger batch size means that model
-	// parameters are updated less frequently, but with lower variance.
-	BatchSize FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion `json:"batch_size,omitzero"`
-	// Scaling factor for the learning rate. A smaller learning rate may be useful to
-	// avoid overfitting.
-	LearningRateMultiplier FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion `json:"learning_rate_multiplier,omitzero"`
-	// The number of epochs to train the model for. An epoch refers to one full cycle
-	// through the training dataset.
-	NEpochs FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion `json:"n_epochs,omitzero"`
-	paramObj
-}
-
-func (r FineTuningJobNewParamsMethodSupervisedHyperparameters) MarshalJSON() (data []byte, err error) {
-	type shadow FineTuningJobNewParamsMethodSupervisedHyperparameters
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *FineTuningJobNewParamsMethodSupervisedHyperparameters) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion struct {
-	// Construct this variant with constant.ValueOf[constant.Auto]()
-	OfAuto constant.Auto    `json:",omitzero,inline"`
-	OfInt  param.Opt[int64] `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
-}
-func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersBatchSizeUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion struct {
-	// Construct this variant with constant.ValueOf[constant.Auto]()
-	OfAuto  constant.Auto      `json:",omitzero,inline"`
-	OfFloat param.Opt[float64] `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
-}
-func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersLearningRateMultiplierUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion struct {
-	// Construct this variant with constant.ValueOf[constant.Auto]()
-	OfAuto constant.Auto    `json:",omitzero,inline"`
-	OfInt  param.Opt[int64] `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
-}
-func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningJobNewParamsMethodSupervisedHyperparametersNEpochsUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
 }
 
 type FineTuningJobListParams struct {
