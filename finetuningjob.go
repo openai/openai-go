@@ -280,7 +280,7 @@ func (r *FineTuningJobError) UnmarshalJSON(data []byte) error {
 type FineTuningJobHyperparameters struct {
 	// Number of examples in each batch. A larger batch size means that model
 	// parameters are updated less frequently, but with lower variance.
-	BatchSize FineTuningJobHyperparametersBatchSizeUnion `json:"batch_size"`
+	BatchSize FineTuningJobHyperparametersBatchSizeUnion `json:"batch_size,nullable"`
 	// Scaling factor for the learning rate. A smaller learning rate may be useful to
 	// avoid overfitting.
 	LearningRateMultiplier FineTuningJobHyperparametersLearningRateMultiplierUnion `json:"learning_rate_multiplier"`
@@ -309,21 +309,21 @@ func (r *FineTuningJobHyperparameters) UnmarshalJSON(data []byte) error {
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfAuto OfInt]
+// will be valid: OfManual OfInt]
 type FineTuningJobHyperparametersBatchSizeUnion struct {
 	// This field will be present if the value is a [constant.Auto] instead of an
 	// object.
-	OfAuto constant.Auto `json:",inline"`
+	OfManual constant.Auto `json:",inline"`
 	// This field will be present if the value is a [int64] instead of an object.
 	OfInt int64 `json:",inline"`
 	JSON  struct {
-		OfAuto respjson.Field
-		OfInt  respjson.Field
-		raw    string
+		OfManual respjson.Field
+		OfInt    respjson.Field
+		raw      string
 	} `json:"-"`
 }
 
-func (u FineTuningJobHyperparametersBatchSizeUnion) AsAuto() (v constant.Auto) {
+func (u FineTuningJobHyperparametersBatchSizeUnion) AsManual() (v constant.Auto) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }

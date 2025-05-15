@@ -339,6 +339,11 @@ type AudioTranscriptionNewParams struct {
 	// [log probability](https://en.wikipedia.org/wiki/Log_probability) to
 	// automatically increase the temperature until certain thresholds are hit.
 	Temperature param.Opt[float64] `json:"temperature,omitzero"`
+	// Controls how the audio is cut into chunks. When set to `"auto"`, the server
+	// first normalizes loudness and then uses voice activity detection (VAD) to choose
+	// boundaries. `server_vad` object can be provided to tweak VAD detection
+	// parameters manually. If unset, the audio is transcribed as a single block.
+	ChunkingStrategy AudioTranscriptionNewParamsChunkingStrategyUnion `json:"chunking_strategy,omitzero"`
 	// Additional information to include in the transcription response. `logprobs` will
 	// return the log probabilities of the tokens in the response to understand the
 	// model's confidence in the transcription. `logprobs` only works with
@@ -375,4 +380,63 @@ func (r AudioTranscriptionNewParams) MarshalMultipart() (data []byte, contentTyp
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type AudioTranscriptionNewParamsChunkingStrategyUnion struct {
+	// Construct this variant with constant.ValueOf[constant.Auto]()
+	OfAuto                                            constant.Auto                                         `json:",omitzero,inline"`
+	OfAudioTranscriptionNewsChunkingStrategyVadConfig *AudioTranscriptionNewParamsChunkingStrategyVadConfig `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u AudioTranscriptionNewParamsChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[AudioTranscriptionNewParamsChunkingStrategyUnion](u.OfAuto, u.OfAudioTranscriptionNewsChunkingStrategyVadConfig)
+}
+func (u *AudioTranscriptionNewParamsChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *AudioTranscriptionNewParamsChunkingStrategyUnion) asAny() any {
+	if !param.IsOmitted(u.OfAuto) {
+		return &u.OfAuto
+	} else if !param.IsOmitted(u.OfAudioTranscriptionNewsChunkingStrategyVadConfig) {
+		return u.OfAudioTranscriptionNewsChunkingStrategyVadConfig
+	}
+	return nil
+}
+
+// The property Type is required.
+type AudioTranscriptionNewParamsChunkingStrategyVadConfig struct {
+	// Must be set to `server_vad` to enable manual chunking using server side VAD.
+	//
+	// Any of "server_vad".
+	Type string `json:"type,omitzero,required"`
+	// Amount of audio to include before the VAD detected speech (in milliseconds).
+	PrefixPaddingMs param.Opt[int64] `json:"prefix_padding_ms,omitzero"`
+	// Duration of silence to detect speech stop (in milliseconds). With shorter values
+	// the model will respond more quickly, but may jump in on short pauses from the
+	// user.
+	SilenceDurationMs param.Opt[int64] `json:"silence_duration_ms,omitzero"`
+	// Sensitivity threshold (0.0 to 1.0) for voice activity detection. A higher
+	// threshold will require louder audio to activate the model, and thus might
+	// perform better in noisy environments.
+	Threshold param.Opt[float64] `json:"threshold,omitzero"`
+	paramObj
+}
+
+func (r AudioTranscriptionNewParamsChunkingStrategyVadConfig) MarshalJSON() (data []byte, err error) {
+	type shadow AudioTranscriptionNewParamsChunkingStrategyVadConfig
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AudioTranscriptionNewParamsChunkingStrategyVadConfig) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[AudioTranscriptionNewParamsChunkingStrategyVadConfig](
+		"type", "server_vad",
+	)
 }
