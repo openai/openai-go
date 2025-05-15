@@ -627,7 +627,7 @@ type AssistantStreamEventUnionData struct {
 	// This field is from variant [Run].
 	Tools []AssistantToolUnion `json:"tools"`
 	// This field is from variant [Run].
-	TruncationStrategy RunTruncationStrategy `json:"truncation_strategy"`
+	TruncationStrategy TruncationObject `json:"truncation_strategy"`
 	// This field is a union of [RunUsage], [RunStepUsage]
 	Usage AssistantStreamEventUnionDataUsage `json:"usage"`
 	// This field is from variant [Run].

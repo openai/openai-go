@@ -12,6 +12,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
 	"github.com/openai/openai-go/packages/respjson"
+	"github.com/openai/openai-go/shared"
 )
 
 // FineTuningAlphaGraderService contains methods and other services that help with
@@ -164,7 +165,7 @@ func (r *FineTuningAlphaGraderValidateResponse) UnmarshalJSON(data []byte) error
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type FineTuningAlphaGraderValidateResponseGraderUnion struct {
-	// This field is a union of [string], [string], [[]ScoreModelGraderInput]
+	// This field is a union of [string], [string], [[]shared.EvalItem]
 	Input FineTuningAlphaGraderValidateResponseGraderUnionInput `json:"input"`
 	Name  string                                                `json:"name"`
 	// This field is from variant [StringCheckGrader].
@@ -250,9 +251,9 @@ func (r *FineTuningAlphaGraderValidateResponseGraderUnion) UnmarshalJSON(data []
 type FineTuningAlphaGraderValidateResponseGraderUnionInput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	// This field will be present if the value is a [[]ScoreModelGraderInput] instead
-	// of an object.
-	OfScoreModelGraderInput []ScoreModelGraderInput `json:",inline"`
+	// This field will be present if the value is a [[]shared.EvalItem] instead of an
+	// object.
+	OfScoreModelGraderInput []shared.EvalItem `json:",inline"`
 	JSON                    struct {
 		OfString                respjson.Field
 		OfScoreModelGraderInput respjson.Field
@@ -448,14 +449,14 @@ func (u FineTuningAlphaGraderRunParamsGraderUnion) GetInput() (res fineTuningAlp
 	return
 }
 
-// Can have the runtime types [*string], [\*[]ScoreModelGraderInputParam]
+// Can have the runtime types [*string], [\*[]shared.EvalItemParam]
 type fineTuningAlphaGraderRunParamsGraderUnionInput struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
 //	switch u.AsAny().(type) {
 //	case *string:
-//	case *[]openai.ScoreModelGraderInputParam:
+//	case *[]shared.EvalItemParam:
 //	default:
 //	    fmt.Errorf("not present")
 //	}
@@ -680,14 +681,14 @@ func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetInput() (res fineTuni
 	return
 }
 
-// Can have the runtime types [*string], [\*[]ScoreModelGraderInputParam]
+// Can have the runtime types [*string], [\*[]shared.EvalItemParam]
 type fineTuningAlphaGraderValidateParamsGraderUnionInput struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
 //	switch u.AsAny().(type) {
 //	case *string:
-//	case *[]openai.ScoreModelGraderInputParam:
+//	case *[]shared.EvalItemParam:
 //	default:
 //	    fmt.Errorf("not present")
 //	}
