@@ -9,6 +9,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
 	"github.com/openai/openai-go/packages/respjson"
+	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
 )
 
@@ -899,7 +900,7 @@ func (r ReinforcementMethod) ToParam() ReinforcementMethodParam {
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ReinforcementMethodGraderUnion struct {
-	// This field is a union of [string], [string], [[]ScoreModelGraderInput]
+	// This field is a union of [string], [string], [[]shared.EvalItem]
 	Input ReinforcementMethodGraderUnionInput `json:"input"`
 	Name  string                              `json:"name"`
 	// This field is from variant [StringCheckGrader].
@@ -984,9 +985,9 @@ func (r *ReinforcementMethodGraderUnion) UnmarshalJSON(data []byte) error {
 type ReinforcementMethodGraderUnionInput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	// This field will be present if the value is a [[]ScoreModelGraderInput] instead
-	// of an object.
-	OfScoreModelGraderInput []ScoreModelGraderInput `json:",inline"`
+	// This field will be present if the value is a [[]shared.EvalItem] instead of an
+	// object.
+	OfScoreModelGraderInput []shared.EvalItem `json:",inline"`
 	JSON                    struct {
 		OfString                respjson.Field
 		OfScoreModelGraderInput respjson.Field
@@ -1183,14 +1184,14 @@ func (u ReinforcementMethodGraderUnionParam) GetInput() (res reinforcementMethod
 	return
 }
 
-// Can have the runtime types [*string], [\*[]ScoreModelGraderInputParam]
+// Can have the runtime types [*string], [\*[]shared.EvalItemParam]
 type reinforcementMethodGraderUnionParamInput struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
 //	switch u.AsAny().(type) {
 //	case *string:
-//	case *[]openai.ScoreModelGraderInputParam:
+//	case *[]shared.EvalItemParam:
 //	default:
 //	    fmt.Errorf("not present")
 //	}

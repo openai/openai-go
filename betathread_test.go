@@ -233,8 +233,8 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 			OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
 		}},
 		TopP: openai.Float(1),
-		TruncationStrategy: openai.BetaThreadNewAndRunParamsTruncationStrategy{
-			Type:         "auto",
+		TruncationStrategy: openai.TruncationObjectParam{
+			Type:         openai.TruncationObjectTypeAuto,
 			LastMessages: openai.Int(1),
 		},
 	})

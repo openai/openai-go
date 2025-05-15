@@ -30,7 +30,7 @@ func TestVectorStoreNewWithOptionalParams(t *testing.T) {
 		ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
 			OfAuto: &openai.AutoFileChunkingStrategyParam{},
 		},
-		ExpiresAfter: openai.VectorStoreNewParamsExpiresAfter{
+		ExpiresAfter: openai.VectorStoreExpirationAfterParam{
 			Days: 1,
 		},
 		FileIDs: []string{"string"},
@@ -86,7 +86,7 @@ func TestVectorStoreUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"vector_store_id",
 		openai.VectorStoreUpdateParams{
-			ExpiresAfter: openai.VectorStoreUpdateParamsExpiresAfter{
+			ExpiresAfter: openai.VectorStoreExpirationAfterParam{
 				Days: 1,
 			},
 			Metadata: shared.Metadata{

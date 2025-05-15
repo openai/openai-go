@@ -431,7 +431,7 @@ type VectorStore struct {
 	// The total number of bytes used by the files in the vector store.
 	UsageBytes int64 `json:"usage_bytes,required"`
 	// The expiration policy for a vector store.
-	ExpiresAfter VectorStoreExpiresAfter `json:"expires_after"`
+	ExpiresAfter VectorStoreExpirationAfter `json:"expires_after"`
 	// The Unix timestamp (in seconds) for when the vector store will expire.
 	ExpiresAt int64 `json:"expires_at,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -498,28 +498,6 @@ const (
 	VectorStoreStatusCompleted  VectorStoreStatus = "completed"
 )
 
-// The expiration policy for a vector store.
-type VectorStoreExpiresAfter struct {
-	// Anchor timestamp after which the expiration policy applies. Supported anchors:
-	// `last_active_at`.
-	Anchor constant.LastActiveAt `json:"anchor,required"`
-	// The number of days after the anchor time that the vector store will expire.
-	Days int64 `json:"days,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Anchor      respjson.Field
-		Days        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r VectorStoreExpiresAfter) RawJSON() string { return r.JSON.raw }
-func (r *VectorStoreExpiresAfter) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type VectorStoreDeleted struct {
 	ID      string                      `json:"id,required"`
 	Deleted bool                        `json:"deleted,required"`
@@ -537,6 +515,60 @@ type VectorStoreDeleted struct {
 // Returns the unmodified JSON received from the API
 func (r VectorStoreDeleted) RawJSON() string { return r.JSON.raw }
 func (r *VectorStoreDeleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The expiration policy for a vector store.
+type VectorStoreExpirationAfter struct {
+	// Anchor timestamp after which the expiration policy applies. Supported anchors:
+	// `last_active_at`.
+	Anchor constant.LastActiveAt `json:"anchor,required"`
+	// The number of days after the anchor time that the vector store will expire.
+	Days int64 `json:"days,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Anchor      respjson.Field
+		Days        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r VectorStoreExpirationAfter) RawJSON() string { return r.JSON.raw }
+func (r *VectorStoreExpirationAfter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this VectorStoreExpirationAfter to a
+// VectorStoreExpirationAfterParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// VectorStoreExpirationAfterParam.Overrides()
+func (r VectorStoreExpirationAfter) ToParam() VectorStoreExpirationAfterParam {
+	return param.Override[VectorStoreExpirationAfterParam](r.RawJSON())
+}
+
+// The expiration policy for a vector store.
+//
+// The properties Anchor, Days are required.
+type VectorStoreExpirationAfterParam struct {
+	// The number of days after the anchor time that the vector store will expire.
+	Days int64 `json:"days,required"`
+	// Anchor timestamp after which the expiration policy applies. Supported anchors:
+	// `last_active_at`.
+	//
+	// This field can be elided, and will marshal its zero value as "last_active_at".
+	Anchor constant.LastActiveAt `json:"anchor,required"`
+	paramObj
+}
+
+func (r VectorStoreExpirationAfterParam) MarshalJSON() (data []byte, err error) {
+	type shadow VectorStoreExpirationAfterParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VectorStoreExpirationAfterParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -653,7 +685,7 @@ type VectorStoreNewParams struct {
 	// strategy. Only applicable if `file_ids` is non-empty.
 	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
 	// The expiration policy for a vector store.
-	ExpiresAfter VectorStoreNewParamsExpiresAfter `json:"expires_after,omitzero"`
+	ExpiresAfter VectorStoreExpirationAfterParam `json:"expires_after,omitzero"`
 	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
 	// the vector store should use. Useful for tools like `file_search` that can access
 	// files.
@@ -669,33 +701,9 @@ func (r *VectorStoreNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The expiration policy for a vector store.
-//
-// The properties Anchor, Days are required.
-type VectorStoreNewParamsExpiresAfter struct {
-	// The number of days after the anchor time that the vector store will expire.
-	Days int64 `json:"days,required"`
-	// Anchor timestamp after which the expiration policy applies. Supported anchors:
-	// `last_active_at`.
-	//
-	// This field can be elided, and will marshal its zero value as "last_active_at".
-	Anchor constant.LastActiveAt `json:"anchor,required"`
-	paramObj
-}
-
-func (r VectorStoreNewParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
-	type shadow VectorStoreNewParamsExpiresAfter
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *VectorStoreNewParamsExpiresAfter) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 type VectorStoreUpdateParams struct {
 	// The name of the vector store.
 	Name param.Opt[string] `json:"name,omitzero"`
-	// The expiration policy for a vector store.
-	ExpiresAfter VectorStoreUpdateParamsExpiresAfter `json:"expires_after,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
@@ -703,6 +711,8 @@ type VectorStoreUpdateParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,omitzero"`
+	// The expiration policy for a vector store.
+	ExpiresAfter VectorStoreExpirationAfterParam `json:"expires_after,omitzero"`
 	paramObj
 }
 
@@ -711,28 +721,6 @@ func (r VectorStoreUpdateParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *VectorStoreUpdateParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The expiration policy for a vector store.
-//
-// The properties Anchor, Days are required.
-type VectorStoreUpdateParamsExpiresAfter struct {
-	// The number of days after the anchor time that the vector store will expire.
-	Days int64 `json:"days,required"`
-	// Anchor timestamp after which the expiration policy applies. Supported anchors:
-	// `last_active_at`.
-	//
-	// This field can be elided, and will marshal its zero value as "last_active_at".
-	Anchor constant.LastActiveAt `json:"anchor,required"`
-	paramObj
-}
-
-func (r VectorStoreUpdateParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
-	type shadow VectorStoreUpdateParamsExpiresAfter
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *VectorStoreUpdateParamsExpiresAfter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
