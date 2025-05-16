@@ -3,6 +3,7 @@ package apiform
 import (
 	"bytes"
 	"github.com/openai/openai-go/packages/param"
+	"io"
 	"mime/multipart"
 	"strings"
 	"testing"
@@ -46,8 +47,8 @@ type DateTime struct {
 }
 
 type AdditionalProperties struct {
-	A      bool                   `form:"a"`
-	Extras map[string]interface{} `form:"-,extras"`
+	A      bool           `form:"a"`
+	Extras map[string]any `form:"-,extras"`
 }
 
 type TypedAdditionalProperties struct {
@@ -57,8 +58,8 @@ type TypedAdditionalProperties struct {
 
 type EmbeddedStructs struct {
 	AdditionalProperties
-	A      *int                   `form:"number2"`
-	Extras map[string]interface{} `form:"-,extras"`
+	A      *int           `form:"number2"`
+	Extras map[string]any `form:"-,extras"`
 }
 
 type Recursive struct {
@@ -67,7 +68,7 @@ type Recursive struct {
 }
 
 type UnknownStruct struct {
-	Unknown interface{} `form:"unknown"`
+	Unknown any `form:"unknown"`
 }
 
 type UnionStruct struct {
@@ -102,6 +103,7 @@ type UnionTime time.Time
 func (UnionTime) union() {}
 
 type ReaderStruct struct {
+	File io.Reader `form:"file"`
 }
 
 type NamedEnum string
@@ -123,8 +125,20 @@ type StructUnion struct {
 
 var tests = map[string]struct {
 	buf string
-	val interface{}
+	val any
 }{
+	"file": {
+		buf: `--xxx
+Content-Disposition: form-data; name="file"; filename="anonymous_file"
+Content-Type: application/octet-stream
+
+some file contents...
+--xxx--
+`,
+		val: ReaderStruct{
+			File: io.Reader(bytes.NewBuffer([]byte("some file contents..."))),
+		},
+	},
 	"map_string": {
 		`--xxx
 Content-Disposition: form-data; name="foo"
@@ -150,7 +164,7 @@ Content-Disposition: form-data; name="c"
 false
 --xxx--
 `,
-		map[string]interface{}{"a": float64(1), "b": "str", "c": false},
+		map[string]any{"a": float64(1), "b": "str", "c": false},
 	},
 
 	"primitive_struct": {
@@ -346,7 +360,7 @@ true
 `,
 		AdditionalProperties{
 			A: true,
-			Extras: map[string]interface{}{
+			Extras: map[string]any{
 				"bar": "value",
 				"foo": true,
 			},
@@ -387,7 +401,7 @@ bar
 --xxx--
 `,
 		UnknownStruct{
-			Unknown: map[string]interface{}{
+			Unknown: map[string]any{
 				"foo": "bar",
 			},
 		},

@@ -45,17 +45,17 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 						OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
 					}},
 				}},
-				Metadata: shared.MetadataParam{
+				Metadata: shared.Metadata{
 					"foo": "string",
 				},
 			}},
 			Instructions:        openai.String("instructions"),
 			MaxCompletionTokens: openai.Int(256),
 			MaxPromptTokens:     openai.Int(256),
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
-			Model:             shared.ChatModelO3Mini,
+			Model:             shared.ChatModelGPT4_1,
 			ParallelToolCalls: openai.Bool(true),
 			ReasoningEffort:   shared.ReasoningEffortLow,
 			ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{
@@ -127,7 +127,7 @@ func TestBetaThreadRunUpdateWithOptionalParams(t *testing.T) {
 		"thread_id",
 		"run_id",
 		openai.BetaThreadRunUpdateParams{
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
 		},

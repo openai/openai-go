@@ -58,10 +58,10 @@ type InputAudio string                              // Always "input_audio"
 type InputFile string                               // Always "input_file"
 type InputImage string                              // Always "input_image"
 type InputText string                               // Always "input_text"
-type ItemReference string                           // Always "item_reference"
 type JSONObject string                              // Always "json_object"
 type JSONSchema string                              // Always "json_schema"
 type Keypress string                                // Always "keypress"
+type LabelModel string                              // Always "label_model"
 type LastActiveAt string                            // Always "last_active_at"
 type List string                                    // Always "list"
 type Logs string                                    // Always "logs"
@@ -69,9 +69,11 @@ type Message string                                 // Always "message"
 type MessageCreation string                         // Always "message_creation"
 type Model string                                   // Always "model"
 type Move string                                    // Always "move"
+type Multi string                                   // Always "multi"
 type Other string                                   // Always "other"
 type OutputAudio string                             // Always "output_audio"
 type OutputText string                              // Always "output_text"
+type Python string                                  // Always "python"
 type Reasoning string                               // Always "reasoning"
 type Refusal string                                 // Always "refusal"
 type Response string                                // Always "response"
@@ -101,19 +103,26 @@ type ResponseOutputItemDone string                  // Always "response.output_i
 type ResponseOutputTextAnnotationAdded string       // Always "response.output_text.annotation.added"
 type ResponseOutputTextDelta string                 // Always "response.output_text.delta"
 type ResponseOutputTextDone string                  // Always "response.output_text.done"
+type ResponseReasoningSummaryPartAdded string       // Always "response.reasoning_summary_part.added"
+type ResponseReasoningSummaryPartDone string        // Always "response.reasoning_summary_part.done"
+type ResponseReasoningSummaryTextDelta string       // Always "response.reasoning_summary_text.delta"
+type ResponseReasoningSummaryTextDone string        // Always "response.reasoning_summary_text.done"
 type ResponseRefusalDelta string                    // Always "response.refusal.delta"
 type ResponseRefusalDone string                     // Always "response.refusal.done"
 type ResponseWebSearchCallCompleted string          // Always "response.web_search_call.completed"
 type ResponseWebSearchCallInProgress string         // Always "response.web_search_call.in_progress"
 type ResponseWebSearchCallSearching string          // Always "response.web_search_call.searching"
+type ScoreModel string                              // Always "score_model"
 type Screenshot string                              // Always "screenshot"
 type Scroll string                                  // Always "scroll"
 type Static string                                  // Always "static"
+type StringCheck string                             // Always "string_check"
 type SubmitToolOutputs string                       // Always "submit_tool_outputs"
 type SummaryText string                             // Always "summary_text"
 type System string                                  // Always "system"
 type Text string                                    // Always "text"
 type TextCompletion string                          // Always "text_completion"
+type TextSimilarity string                          // Always "text_similarity"
 type Thread string                                  // Always "thread"
 type ThreadCreated string                           // Always "thread.created"
 type ThreadDeleted string                           // Always "thread.deleted"
@@ -205,10 +214,10 @@ func (c InputAudio) Default() InputAudio                 { return "input_audio" 
 func (c InputFile) Default() InputFile                   { return "input_file" }
 func (c InputImage) Default() InputImage                 { return "input_image" }
 func (c InputText) Default() InputText                   { return "input_text" }
-func (c ItemReference) Default() ItemReference           { return "item_reference" }
 func (c JSONObject) Default() JSONObject                 { return "json_object" }
 func (c JSONSchema) Default() JSONSchema                 { return "json_schema" }
 func (c Keypress) Default() Keypress                     { return "keypress" }
+func (c LabelModel) Default() LabelModel                 { return "label_model" }
 func (c LastActiveAt) Default() LastActiveAt             { return "last_active_at" }
 func (c List) Default() List                             { return "list" }
 func (c Logs) Default() Logs                             { return "logs" }
@@ -216,9 +225,11 @@ func (c Message) Default() Message                       { return "message" }
 func (c MessageCreation) Default() MessageCreation       { return "message_creation" }
 func (c Model) Default() Model                           { return "model" }
 func (c Move) Default() Move                             { return "move" }
+func (c Multi) Default() Multi                           { return "multi" }
 func (c Other) Default() Other                           { return "other" }
 func (c OutputAudio) Default() OutputAudio               { return "output_audio" }
 func (c OutputText) Default() OutputText                 { return "output_text" }
+func (c Python) Default() Python                         { return "python" }
 func (c Reasoning) Default() Reasoning                   { return "reasoning" }
 func (c Refusal) Default() Refusal                       { return "refusal" }
 func (c Response) Default() Response                     { return "response" }
@@ -282,8 +293,20 @@ func (c ResponseOutputTextDelta) Default() ResponseOutputTextDelta {
 	return "response.output_text.delta"
 }
 func (c ResponseOutputTextDone) Default() ResponseOutputTextDone { return "response.output_text.done" }
-func (c ResponseRefusalDelta) Default() ResponseRefusalDelta     { return "response.refusal.delta" }
-func (c ResponseRefusalDone) Default() ResponseRefusalDone       { return "response.refusal.done" }
+func (c ResponseReasoningSummaryPartAdded) Default() ResponseReasoningSummaryPartAdded {
+	return "response.reasoning_summary_part.added"
+}
+func (c ResponseReasoningSummaryPartDone) Default() ResponseReasoningSummaryPartDone {
+	return "response.reasoning_summary_part.done"
+}
+func (c ResponseReasoningSummaryTextDelta) Default() ResponseReasoningSummaryTextDelta {
+	return "response.reasoning_summary_text.delta"
+}
+func (c ResponseReasoningSummaryTextDone) Default() ResponseReasoningSummaryTextDone {
+	return "response.reasoning_summary_text.done"
+}
+func (c ResponseRefusalDelta) Default() ResponseRefusalDelta { return "response.refusal.delta" }
+func (c ResponseRefusalDone) Default() ResponseRefusalDone   { return "response.refusal.done" }
 func (c ResponseWebSearchCallCompleted) Default() ResponseWebSearchCallCompleted {
 	return "response.web_search_call.completed"
 }
@@ -293,14 +316,17 @@ func (c ResponseWebSearchCallInProgress) Default() ResponseWebSearchCallInProgre
 func (c ResponseWebSearchCallSearching) Default() ResponseWebSearchCallSearching {
 	return "response.web_search_call.searching"
 }
+func (c ScoreModel) Default() ScoreModel                         { return "score_model" }
 func (c Screenshot) Default() Screenshot                         { return "screenshot" }
 func (c Scroll) Default() Scroll                                 { return "scroll" }
 func (c Static) Default() Static                                 { return "static" }
+func (c StringCheck) Default() StringCheck                       { return "string_check" }
 func (c SubmitToolOutputs) Default() SubmitToolOutputs           { return "submit_tool_outputs" }
 func (c SummaryText) Default() SummaryText                       { return "summary_text" }
 func (c System) Default() System                                 { return "system" }
 func (c Text) Default() Text                                     { return "text" }
 func (c TextCompletion) Default() TextCompletion                 { return "text_completion" }
+func (c TextSimilarity) Default() TextSimilarity                 { return "text_similarity" }
 func (c Thread) Default() Thread                                 { return "thread" }
 func (c ThreadCreated) Default() ThreadCreated                   { return "thread.created" }
 func (c ThreadDeleted) Default() ThreadDeleted                   { return "thread.deleted" }
@@ -402,10 +428,10 @@ func (c InputAudio) MarshalJSON() ([]byte, error)                            { r
 func (c InputFile) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c InputImage) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c InputText) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c ItemReference) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c JSONObject) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c JSONSchema) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Keypress) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c LabelModel) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c LastActiveAt) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c List) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c Logs) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
@@ -413,9 +439,11 @@ func (c Message) MarshalJSON() ([]byte, error)                               { r
 func (c MessageCreation) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c Model) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c Move) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
+func (c Multi) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c Other) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c OutputAudio) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c OutputText) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
+func (c Python) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Reasoning) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Refusal) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Response) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
@@ -447,19 +475,26 @@ func (c ResponseOutputItemDone) MarshalJSON() ([]byte, error)             { retu
 func (c ResponseOutputTextAnnotationAdded) MarshalJSON() ([]byte, error)  { return marshalString(c) }
 func (c ResponseOutputTextDelta) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c ResponseOutputTextDone) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ResponseReasoningSummaryPartAdded) MarshalJSON() ([]byte, error)  { return marshalString(c) }
+func (c ResponseReasoningSummaryPartDone) MarshalJSON() ([]byte, error)   { return marshalString(c) }
+func (c ResponseReasoningSummaryTextDelta) MarshalJSON() ([]byte, error)  { return marshalString(c) }
+func (c ResponseReasoningSummaryTextDone) MarshalJSON() ([]byte, error)   { return marshalString(c) }
 func (c ResponseRefusalDelta) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ResponseRefusalDone) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c ResponseWebSearchCallCompleted) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c ResponseWebSearchCallInProgress) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c ResponseWebSearchCallSearching) MarshalJSON() ([]byte, error)     { return marshalString(c) }
+func (c ScoreModel) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Screenshot) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Scroll) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Static) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
+func (c StringCheck) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SubmitToolOutputs) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c SummaryText) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c System) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Text) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c TextCompletion) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c TextSimilarity) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c Thread) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c ThreadCreated) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c ThreadDeleted) MarshalJSON() ([]byte, error)                      { return marshalString(c) }

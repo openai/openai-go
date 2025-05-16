@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 
 	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/apiquery"
@@ -16,11 +15,10 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/packages/ssestream"
 	"github.com/openai/openai-go/shared"
 	"github.com/openai/openai-go/shared/constant"
-	"github.com/tidwall/gjson"
 )
 
 // BetaThreadRunService contains methods and other services that help with
@@ -230,13 +228,12 @@ type RequiredActionFunctionToolCall struct {
 	// The type of tool call the output is required for. For now, this is always
 	// `function`.
 	Type constant.Function `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Function    resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Function    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -253,12 +250,11 @@ type RequiredActionFunctionToolCallFunction struct {
 	Arguments string `json:"arguments,required"`
 	// The name of the function.
 	Name string `json:"name,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Arguments   resp.Field
-		Name        resp.Field
-		ExtraFields map[string]resp.Field
+		Arguments   respjson.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -378,37 +374,36 @@ type Run struct {
 	Temperature float64 `json:"temperature,nullable"`
 	// The nucleus sampling value used for this run. If not set, defaults to 1.
 	TopP float64 `json:"top_p,nullable"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID                  resp.Field
-		AssistantID         resp.Field
-		CancelledAt         resp.Field
-		CompletedAt         resp.Field
-		CreatedAt           resp.Field
-		ExpiresAt           resp.Field
-		FailedAt            resp.Field
-		IncompleteDetails   resp.Field
-		Instructions        resp.Field
-		LastError           resp.Field
-		MaxCompletionTokens resp.Field
-		MaxPromptTokens     resp.Field
-		Metadata            resp.Field
-		Model               resp.Field
-		Object              resp.Field
-		ParallelToolCalls   resp.Field
-		RequiredAction      resp.Field
-		ResponseFormat      resp.Field
-		StartedAt           resp.Field
-		Status              resp.Field
-		ThreadID            resp.Field
-		ToolChoice          resp.Field
-		Tools               resp.Field
-		TruncationStrategy  resp.Field
-		Usage               resp.Field
-		Temperature         resp.Field
-		TopP                resp.Field
-		ExtraFields         map[string]resp.Field
+		ID                  respjson.Field
+		AssistantID         respjson.Field
+		CancelledAt         respjson.Field
+		CompletedAt         respjson.Field
+		CreatedAt           respjson.Field
+		ExpiresAt           respjson.Field
+		FailedAt            respjson.Field
+		IncompleteDetails   respjson.Field
+		Instructions        respjson.Field
+		LastError           respjson.Field
+		MaxCompletionTokens respjson.Field
+		MaxPromptTokens     respjson.Field
+		Metadata            respjson.Field
+		Model               respjson.Field
+		Object              respjson.Field
+		ParallelToolCalls   respjson.Field
+		RequiredAction      respjson.Field
+		ResponseFormat      respjson.Field
+		StartedAt           respjson.Field
+		Status              respjson.Field
+		ThreadID            respjson.Field
+		ToolChoice          respjson.Field
+		Tools               respjson.Field
+		TruncationStrategy  respjson.Field
+		Usage               respjson.Field
+		Temperature         respjson.Field
+		TopP                respjson.Field
+		ExtraFields         map[string]respjson.Field
 		raw                 string
 	} `json:"-"`
 }
@@ -427,11 +422,10 @@ type RunIncompleteDetails struct {
 	//
 	// Any of "max_completion_tokens", "max_prompt_tokens".
 	Reason string `json:"reason"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Reason      resp.Field
-		ExtraFields map[string]resp.Field
+		Reason      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -450,12 +444,11 @@ type RunLastError struct {
 	Code string `json:"code,required"`
 	// A human-readable description of the error.
 	Message string `json:"message,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        resp.Field
-		Message     resp.Field
-		ExtraFields map[string]resp.Field
+		Code        respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -473,12 +466,11 @@ type RunRequiredAction struct {
 	SubmitToolOutputs RunRequiredActionSubmitToolOutputs `json:"submit_tool_outputs,required"`
 	// For now, this is always `submit_tool_outputs`.
 	Type constant.SubmitToolOutputs `json:"type,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		SubmitToolOutputs resp.Field
-		Type              resp.Field
-		ExtraFields       map[string]resp.Field
+		SubmitToolOutputs respjson.Field
+		Type              respjson.Field
+		ExtraFields       map[string]respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -493,11 +485,10 @@ func (r *RunRequiredAction) UnmarshalJSON(data []byte) error {
 type RunRequiredActionSubmitToolOutputs struct {
 	// A list of the relevant tool calls.
 	ToolCalls []RequiredActionFunctionToolCall `json:"tool_calls,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ToolCalls   resp.Field
-		ExtraFields map[string]resp.Field
+		ToolCalls   respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -521,12 +512,11 @@ type RunTruncationStrategy struct {
 	// The number of most recent messages from the thread when constructing the context
 	// for the run.
 	LastMessages int64 `json:"last_messages,nullable"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type         resp.Field
-		LastMessages resp.Field
-		ExtraFields  map[string]resp.Field
+		Type         respjson.Field
+		LastMessages respjson.Field
+		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
 }
@@ -546,13 +536,12 @@ type RunUsage struct {
 	PromptTokens int64 `json:"prompt_tokens,required"`
 	// Total number of tokens used (prompt + completion).
 	TotalTokens int64 `json:"total_tokens,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CompletionTokens resp.Field
-		PromptTokens     resp.Field
-		TotalTokens      resp.Field
-		ExtraFields      map[string]resp.Field
+		CompletionTokens respjson.Field
+		PromptTokens     respjson.Field
+		TotalTokens      respjson.Field
+		ExtraFields      map[string]respjson.Field
 		raw              string
 	} `json:"-"`
 }
@@ -627,7 +616,7 @@ type BetaThreadRunNewParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	// The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
 	// be used to execute this run. If a value is provided here, it will override the
 	// model associated with the assistant. If not, the model associated with the
@@ -688,13 +677,12 @@ type BetaThreadRunNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r BetaThreadRunNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadRunNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // URLQuery serializes [BetaThreadRunNewParams]'s query parameters as `url.Values`.
@@ -726,23 +714,21 @@ type BetaThreadRunNewParamsAdditionalMessage struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunNewParamsAdditionalMessage) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadRunNewParamsAdditionalMessage) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParamsAdditionalMessage
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadRunNewParamsAdditionalMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[BetaThreadRunNewParamsAdditionalMessage](
-		"Role", false, "user", "assistant",
+		"role", "user", "assistant",
 	)
 }
 
@@ -755,13 +741,11 @@ type BetaThreadRunNewParamsAdditionalMessageContentUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadRunNewParamsAdditionalMessageContentUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadRunNewParamsAdditionalMessageContentUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadRunNewParamsAdditionalMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
+}
+func (u *BetaThreadRunNewParamsAdditionalMessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadRunNewParamsAdditionalMessageContentUnion) asAny() any {
@@ -781,14 +765,12 @@ type BetaThreadRunNewParamsAdditionalMessageAttachment struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunNewParamsAdditionalMessageAttachment) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadRunNewParamsAdditionalMessageAttachment) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParamsAdditionalMessageAttachment
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadRunNewParamsAdditionalMessageAttachment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Only one field can be non-zero.
@@ -800,13 +782,11 @@ type BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+}
+func (u *BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) asAny() any {
@@ -831,36 +811,31 @@ func (u BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) GetType() *s
 func init() {
 	apijson.RegisterUnion[BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion](
 		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(CodeInterpreterToolParam{}),
-			DiscriminatorValue: "code_interpreter",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch{}),
-			DiscriminatorValue: "file_search",
-		},
+		apijson.Discriminator[CodeInterpreterToolParam]("code_interpreter"),
+		apijson.Discriminator[BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch]("file_search"),
 	)
 }
 
-// The property Type is required.
+func NewBetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch() BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch {
+	return BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch{
+		Type: "file_search",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewBetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch].
 type BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch struct {
 	// The type of tool being defined: `file_search`
-	//
-	// This field can be elided, and will marshal its zero value as "file_search".
 	Type constant.FileSearch `json:"type,required"`
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Controls for how a thread will be truncated prior to the run. Use this to
@@ -881,19 +856,17 @@ type BetaThreadRunNewParamsTruncationStrategy struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunNewParamsTruncationStrategy) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadRunNewParamsTruncationStrategy) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunNewParamsTruncationStrategy
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *BetaThreadRunNewParamsTruncationStrategy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 func init() {
 	apijson.RegisterFieldValidator[BetaThreadRunNewParamsTruncationStrategy](
-		"Type", false, "auto", "last_messages",
+		"type", "auto", "last_messages",
 	)
 }
 
@@ -904,17 +877,16 @@ type BetaThreadRunUpdateParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.MetadataParam `json:"metadata,omitzero"`
+	Metadata shared.Metadata `json:"metadata,omitzero"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunUpdateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r BetaThreadRunUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadRunUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadRunListParams struct {
@@ -938,10 +910,6 @@ type BetaThreadRunListParams struct {
 	Order BetaThreadRunListParamsOrder `query:"order,omitzero" json:"-"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 // URLQuery serializes [BetaThreadRunListParams]'s query parameters as
 // `url.Values`.
@@ -967,15 +935,12 @@ type BetaThreadRunSubmitToolOutputsParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunSubmitToolOutputsParams) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
-
 func (r BetaThreadRunSubmitToolOutputsParams) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunSubmitToolOutputsParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadRunSubmitToolOutputsParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type BetaThreadRunSubmitToolOutputsParamsToolOutput struct {
@@ -987,12 +952,10 @@ type BetaThreadRunSubmitToolOutputsParamsToolOutput struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f BetaThreadRunSubmitToolOutputsParamsToolOutput) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
 func (r BetaThreadRunSubmitToolOutputsParamsToolOutput) MarshalJSON() (data []byte, err error) {
 	type shadow BetaThreadRunSubmitToolOutputsParamsToolOutput
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadRunSubmitToolOutputsParamsToolOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }

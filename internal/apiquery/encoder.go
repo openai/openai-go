@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	internalparam "github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/packages/param"
 )
 
@@ -124,10 +123,6 @@ func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
 }
 
 func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
-	if t.Implements(reflect.TypeOf((*internalparam.FieldLike)(nil)).Elem()) {
-		return e.newFieldTypeEncoder(t)
-	}
-
 	if t.Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
 		return e.newRichFieldTypeEncoder(t)
 	}

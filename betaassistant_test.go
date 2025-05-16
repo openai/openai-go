@@ -28,10 +28,10 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.Assistants.New(context.TODO(), openai.BetaAssistantNewParams{
-		Model:        shared.ChatModelO3Mini,
+		Model:        shared.ChatModelGPT4_1,
 		Description:  openai.String("description"),
 		Instructions: openai.String("instructions"),
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		Name:            openai.String("name"),
@@ -51,7 +51,7 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 						OfAuto: &openai.BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto{},
 					},
 					FileIDs: []string{"string"},
-					Metadata: shared.MetadataParam{
+					Metadata: shared.Metadata{
 						"foo": "string",
 					},
 				}},
@@ -111,10 +111,10 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 		openai.BetaAssistantUpdateParams{
 			Description:  openai.String("description"),
 			Instructions: openai.String("instructions"),
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
-			Model:           openai.BetaAssistantUpdateParamsModelO3Mini,
+			Model:           openai.BetaAssistantUpdateParamsModelGPT4_1,
 			Name:            openai.String("name"),
 			ReasoningEffort: shared.ReasoningEffortLow,
 			ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{

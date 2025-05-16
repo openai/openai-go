@@ -39,11 +39,11 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 					OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
 				}},
 			}},
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
 		}},
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		ToolResources: openai.BetaThreadNewParamsToolResources{
@@ -57,7 +57,7 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 						OfAuto: &openai.BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto{},
 					},
 					FileIDs: []string{"string"},
-					Metadata: shared.MetadataParam{
+					Metadata: shared.Metadata{
 						"foo": "string",
 					},
 				}},
@@ -111,7 +111,7 @@ func TestBetaThreadUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"thread_id",
 		openai.BetaThreadUpdateParams{
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
 			ToolResources: openai.BetaThreadUpdateParamsToolResources{
@@ -172,10 +172,10 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 		Instructions:        openai.String("instructions"),
 		MaxCompletionTokens: openai.Int(256),
 		MaxPromptTokens:     openai.Int(256),
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
-		Model:             shared.ChatModelO3Mini,
+		Model:             shared.ChatModelGPT4_1,
 		ParallelToolCalls: openai.Bool(true),
 		ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{
 			OfAuto: constant.ValueOf[constant.Auto](),
@@ -193,11 +193,11 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 						OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
 					}},
 				}},
-				Metadata: shared.MetadataParam{
+				Metadata: shared.Metadata{
 					"foo": "string",
 				},
 			}},
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
 			ToolResources: openai.BetaThreadNewAndRunParamsThreadToolResources{
@@ -211,7 +211,7 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 							OfAuto: &openai.BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto{},
 						},
 						FileIDs: []string{"string"},
-						Metadata: shared.MetadataParam{
+						Metadata: shared.Metadata{
 							"foo": "string",
 						},
 					}},
@@ -229,8 +229,8 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 				VectorStoreIDs: []string{"string"},
 			},
 		},
-		Tools: []openai.BetaThreadNewAndRunParamsToolUnion{{
-			OfCodeInterpreterTool: &openai.CodeInterpreterToolParam{},
+		Tools: []openai.AssistantToolUnionParam{{
+			OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
 		}},
 		TopP: openai.Float(1),
 		TruncationStrategy: openai.BetaThreadNewAndRunParamsTruncationStrategy{

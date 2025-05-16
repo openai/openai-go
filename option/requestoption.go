@@ -167,19 +167,27 @@ func WithQueryDel(key string) RequestOption {
 // The key accepts a string as defined by the [sjson format].
 //
 // [sjson format]: https://github.com/tidwall/sjson
-func WithJSONSet(key string, value interface{}) RequestOption {
+func WithJSONSet(key string, value any) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) (err error) {
-		if buffer, ok := r.Body.(*bytes.Buffer); ok {
-			b := buffer.Bytes()
+		var b []byte
+
+		if r.Body == nil {
+			b, err = sjson.SetBytes(nil, key, value)
+			if err != nil {
+				return err
+			}
+		} else if buffer, ok := r.Body.(*bytes.Buffer); ok {
+			b = buffer.Bytes()
 			b, err = sjson.SetBytes(b, key, value)
 			if err != nil {
 				return err
 			}
-			r.Body = bytes.NewBuffer(b)
-			return nil
+		} else {
+			return fmt.Errorf("cannot use WithJSONSet on a body that is not serialized as *bytes.Buffer")
 		}
 
-		return fmt.Errorf("cannot use WithJSONSet on a body that is not serialized as *bytes.Buffer")
+		r.Body = bytes.NewBuffer(b)
+		return nil
 	})
 }
 
@@ -254,7 +262,7 @@ func WithRequestTimeout(dur time.Duration) RequestOption {
 // environment to be the "production" environment. An environment specifies which base URL
 // to use by default.
 func WithEnvironmentProduction() RequestOption {
-	return WithBaseURL("https://api.openai.com/v1/")
+	return requestconfig.WithDefaultBaseURL("https://api.openai.com/v1/")
 }
 
 // WithAPIKey returns a RequestOption that sets the client setting "api_key".

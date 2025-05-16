@@ -6,6 +6,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
@@ -62,7 +63,7 @@ type AudioSpeechNewParams struct {
 	// work with `tts-1` or `tts-1-hd`.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// The speed of the generated audio. Select a value from `0.25` to `4.0`. `1.0` is
-	// the default.
+	// the default. Does not work with `gpt-4o-mini-tts`.
 	Speed param.Opt[float64] `json:"speed,omitzero"`
 	// The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,
 	// `wav`, and `pcm`.
@@ -72,13 +73,12 @@ type AudioSpeechNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f AudioSpeechNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r AudioSpeechNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow AudioSpeechNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AudioSpeechNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // The voice to use when generating the audio. Supported voices are `alloy`, `ash`,

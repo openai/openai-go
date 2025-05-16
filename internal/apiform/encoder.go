@@ -13,13 +13,12 @@ import (
 	"sync"
 	"time"
 
-	internalparam "github.com/openai/openai-go/internal/param"
 	"github.com/openai/openai-go/packages/param"
 )
 
 var encoders sync.Map // map[encoderEntry]encoderFunc
 
-func Marshal(value interface{}, writer *multipart.Writer) error {
+func Marshal(value any, writer *multipart.Writer) error {
 	e := &encoder{
 		dateFormat: time.RFC3339,
 		arrayFmt:   "brackets",
@@ -27,7 +26,7 @@ func Marshal(value interface{}, writer *multipart.Writer) error {
 	return e.marshal(value, writer)
 }
 
-func MarshalRoot(value interface{}, writer *multipart.Writer) error {
+func MarshalRoot(value any, writer *multipart.Writer) error {
 	e := &encoder{
 		root:       true,
 		dateFormat: time.RFC3339,
@@ -36,7 +35,7 @@ func MarshalRoot(value interface{}, writer *multipart.Writer) error {
 	return e.marshal(value, writer)
 }
 
-func MarshalWithSettings(value interface{}, writer *multipart.Writer, arrayFormat string) error {
+func MarshalWithSettings(value any, writer *multipart.Writer, arrayFormat string) error {
 	e := &encoder{
 		arrayFmt:   arrayFormat,
 		dateFormat: time.RFC3339,
@@ -64,7 +63,7 @@ type encoderEntry struct {
 	root       bool
 }
 
-func (e *encoder) marshal(value interface{}, writer *multipart.Writer) error {
+func (e *encoder) marshal(value any, writer *multipart.Writer) error {
 	val := reflect.ValueOf(value)
 	if !val.IsValid() {
 		return nil
@@ -113,7 +112,7 @@ func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
 	if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
 		return e.newTimeTypeEncoder()
 	}
-	if t.ConvertibleTo(reflect.TypeOf((*io.Reader)(nil)).Elem()) {
+	if t.Implements(reflect.TypeOf((*io.Reader)(nil)).Elem()) {
 		return e.newReaderTypeEncoder()
 	}
 	e.root = false
@@ -222,10 +221,6 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 }
 
 func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
-	if t.Implements(reflect.TypeOf((*internalparam.FieldLike)(nil)).Elem()) {
-		return e.newFieldTypeEncoder(t)
-	}
-
 	if t.Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
 		return e.newRichFieldTypeEncoder(t)
 	}
@@ -357,27 +352,6 @@ func (e *encoder) newStructUnionTypeEncoder(t reflect.Type) encoderFunc {
 	}
 }
 
-func (e *encoder) newFieldTypeEncoder(t reflect.Type) encoderFunc {
-	f, _ := t.FieldByName("Value")
-	enc := e.typeEncoder(f.Type)
-
-	return func(key string, value reflect.Value, writer *multipart.Writer) error {
-		present := value.FieldByName("Present")
-		if !present.Bool() {
-			return nil
-		}
-		null := value.FieldByName("Null")
-		if null.Bool() {
-			return nil
-		}
-		raw := value.FieldByName("Raw")
-		if !raw.IsNil() {
-			return e.typeEncoder(raw.Type())(key, raw, writer)
-		}
-		return enc(key, value.FieldByName("Value"), writer)
-	}
-}
-
 func (e *encoder) newTimeTypeEncoder() encoderFunc {
 	format := e.dateFormat
 	return func(key string, value reflect.Value, writer *multipart.Writer) error {
@@ -403,7 +377,10 @@ func escapeQuotes(s string) string {
 
 func (e *encoder) newReaderTypeEncoder() encoderFunc {
 	return func(key string, value reflect.Value, writer *multipart.Writer) error {
-		reader := value.Convert(reflect.TypeOf((*io.Reader)(nil)).Elem()).Interface().(io.Reader)
+		reader, ok := value.Convert(reflect.TypeOf((*io.Reader)(nil)).Elem()).Interface().(io.Reader)
+		if !ok {
+			return nil
+		}
 		filename := "anonymous_file"
 		contentType := "application/octet-stream"
 		if named, ok := reader.(interface{ Filename() string }); ok {

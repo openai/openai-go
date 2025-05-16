@@ -34,7 +34,7 @@ func TestVectorStoreNewWithOptionalParams(t *testing.T) {
 			Days: 1,
 		},
 		FileIDs: []string{"string"},
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		Name: openai.String("name"),
@@ -89,7 +89,7 @@ func TestVectorStoreUpdateWithOptionalParams(t *testing.T) {
 			ExpiresAfter: openai.VectorStoreUpdateParamsExpiresAfter{
 				Days: 1,
 			},
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
 			Name: openai.String("name"),
