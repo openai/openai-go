@@ -4728,18 +4728,18 @@ func (r *ResponseItemUnion) UnmarshalJSON(data []byte) error {
 // [ResponseItemUnion].
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfInputItemContentList OfResponseOutputMessageContent]
+// will be valid: OfInputItemContentList OfResponseOutputMessageContentArray]
 type ResponseItemUnionContent struct {
 	// This field will be present if the value is a [ResponseInputMessageContentList]
 	// instead of an object.
 	OfInputItemContentList ResponseInputMessageContentList `json:",inline"`
 	// This field will be present if the value is a
 	// [[]ResponseOutputMessageContentUnion] instead of an object.
-	OfResponseOutputMessageContent []ResponseOutputMessageContentUnion `json:",inline"`
-	JSON                           struct {
-		OfInputItemContentList         respjson.Field
-		OfResponseOutputMessageContent respjson.Field
-		raw                            string
+	OfResponseOutputMessageContentArray []ResponseOutputMessageContentUnion `json:",inline"`
+	JSON                                struct {
+		OfInputItemContentList              respjson.Field
+		OfResponseOutputMessageContentArray respjson.Field
+		raw                                 string
 	} `json:"-"`
 }
 

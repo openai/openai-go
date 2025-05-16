@@ -431,21 +431,22 @@ func (r *MultiGraderGraderUnion) UnmarshalJSON(data []byte) error {
 // [MultiGraderGraderUnion].
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfScoreModelGraderInput OfLabelModelGraderInput]
+// will be valid: OfString OfScoreModelGraderInputArray
+// OfLabelModelGraderInputArray]
 type MultiGraderGraderUnionInput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
 	// This field will be present if the value is a [[]ScoreModelGraderInput] instead
 	// of an object.
-	OfScoreModelGraderInput []ScoreModelGraderInput `json:",inline"`
+	OfScoreModelGraderInputArray []ScoreModelGraderInput `json:",inline"`
 	// This field will be present if the value is a [[]LabelModelGraderInput] instead
 	// of an object.
-	OfLabelModelGraderInput []LabelModelGraderInput `json:",inline"`
-	JSON                    struct {
-		OfString                respjson.Field
-		OfScoreModelGraderInput respjson.Field
-		OfLabelModelGraderInput respjson.Field
-		raw                     string
+	OfLabelModelGraderInputArray []LabelModelGraderInput `json:",inline"`
+	JSON                         struct {
+		OfString                     respjson.Field
+		OfScoreModelGraderInputArray respjson.Field
+		OfLabelModelGraderInputArray respjson.Field
+		raw                          string
 	} `json:"-"`
 }
 

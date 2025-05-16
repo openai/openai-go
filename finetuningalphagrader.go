@@ -246,17 +246,17 @@ func (r *FineTuningAlphaGraderValidateResponseGraderUnion) UnmarshalJSON(data []
 // [FineTuningAlphaGraderValidateResponseGraderUnion].
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfScoreModelGraderInput]
+// will be valid: OfString OfScoreModelGraderInputArray]
 type FineTuningAlphaGraderValidateResponseGraderUnionInput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
 	// This field will be present if the value is a [[]ScoreModelGraderInput] instead
 	// of an object.
-	OfScoreModelGraderInput []ScoreModelGraderInput `json:",inline"`
-	JSON                    struct {
-		OfString                respjson.Field
-		OfScoreModelGraderInput respjson.Field
-		raw                     string
+	OfScoreModelGraderInputArray []ScoreModelGraderInput `json:",inline"`
+	JSON                         struct {
+		OfString                     respjson.Field
+		OfScoreModelGraderInputArray respjson.Field
+		raw                          string
 	} `json:"-"`
 }
 
