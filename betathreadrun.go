@@ -366,7 +366,7 @@ type Run struct {
 	Tools []AssistantToolUnion `json:"tools,required"`
 	// Controls for how a thread will be truncated prior to the run. Use this to
 	// control the intial context window of the run.
-	TruncationStrategy TruncationObject `json:"truncation_strategy,required"`
+	TruncationStrategy RunTruncationStrategy `json:"truncation_strategy,required"`
 	// Usage statistics related to the run. This value will be `null` if the run is not
 	// in a terminal state (i.e. `in_progress`, `queued`, etc.).
 	Usage RunUsage `json:"usage,required"`
@@ -499,6 +499,34 @@ func (r *RunRequiredActionSubmitToolOutputs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Controls for how a thread will be truncated prior to the run. Use this to
+// control the intial context window of the run.
+type RunTruncationStrategy struct {
+	// The truncation strategy to use for the thread. The default is `auto`. If set to
+	// `last_messages`, the thread will be truncated to the n most recent messages in
+	// the thread. When set to `auto`, messages in the middle of the thread will be
+	// dropped to fit the context length of the model, `max_prompt_tokens`.
+	//
+	// Any of "auto", "last_messages".
+	Type string `json:"type,required"`
+	// The number of most recent messages from the thread when constructing the context
+	// for the run.
+	LastMessages int64 `json:"last_messages,nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type         respjson.Field
+		LastMessages respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RunTruncationStrategy) RawJSON() string { return r.JSON.raw }
+func (r *RunTruncationStrategy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Usage statistics related to the run. This value will be `null` if the run is not
 // in a terminal state (i.e. `in_progress`, `queued`, etc.).
 type RunUsage struct {
@@ -606,6 +634,9 @@ type BetaThreadRunNewParams struct {
 	// Override the tools the assistant can use for this run. This is useful for
 	// modifying the behavior on a per-run basis.
 	Tools []AssistantToolUnionParam `json:"tools,omitzero"`
+	// Controls for how a thread will be truncated prior to the run. Use this to
+	// control the intial context window of the run.
+	TruncationStrategy BetaThreadRunNewParamsTruncationStrategy `json:"truncation_strategy,omitzero"`
 	// A list of additional fields to include in the response. Currently the only
 	// supported value is `step_details.tool_calls[*].file_search.results[*].content`
 	// to fetch the file search result content.
@@ -643,9 +674,6 @@ type BetaThreadRunNewParams struct {
 	// `{"type": "function", "function": {"name": "my_function"}}` forces the model to
 	// call that tool.
 	ToolChoice AssistantToolChoiceOptionUnionParam `json:"tool_choice,omitzero"`
-	// Controls for how a thread will be truncated prior to the run. Use this to
-	// control the intial context window of the run.
-	TruncationStrategy TruncationObjectParam `json:"truncation_strategy,omitzero"`
 	paramObj
 }
 
@@ -808,6 +836,38 @@ func (r BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch) Marshal
 }
 func (r *BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Controls for how a thread will be truncated prior to the run. Use this to
+// control the intial context window of the run.
+//
+// The property Type is required.
+type BetaThreadRunNewParamsTruncationStrategy struct {
+	// The truncation strategy to use for the thread. The default is `auto`. If set to
+	// `last_messages`, the thread will be truncated to the n most recent messages in
+	// the thread. When set to `auto`, messages in the middle of the thread will be
+	// dropped to fit the context length of the model, `max_prompt_tokens`.
+	//
+	// Any of "auto", "last_messages".
+	Type string `json:"type,omitzero,required"`
+	// The number of most recent messages from the thread when constructing the context
+	// for the run.
+	LastMessages param.Opt[int64] `json:"last_messages,omitzero"`
+	paramObj
+}
+
+func (r BetaThreadRunNewParamsTruncationStrategy) MarshalJSON() (data []byte, err error) {
+	type shadow BetaThreadRunNewParamsTruncationStrategy
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaThreadRunNewParamsTruncationStrategy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[BetaThreadRunNewParamsTruncationStrategy](
+		"type", "auto", "last_messages",
+	)
 }
 
 type BetaThreadRunUpdateParams struct {
