@@ -1,5 +1,68 @@
 # Changelog
 
+## 0.1.0-beta.11 (2025-05-16)
+
+Full Changelog: [v0.1.0-beta.10...v0.1.0-beta.11](https://github.com/openai/openai-go/compare/v0.1.0-beta.10...v0.1.0-beta.11)
+
+### ⚠ BREAKING CHANGES
+
+* **client:** clearer array variant names
+* **client:** rename resp package
+* **client:** improve core function names
+* **client:** improve union variant names
+* **client:** improve param subunions & deduplicate types
+
+### Features
+
+* **api:** add image sizes, reasoning encryption ([0852fb3](https://github.com/openai/openai-go/commit/0852fb3101dc940761f9e4f32875bfcf3669eada))
+* **api:** add o3 and o4-mini model IDs ([3fabca6](https://github.com/openai/openai-go/commit/3fabca6b5c610edfb7bcd0cab5334a06444df0b0))
+* **api:** Add reinforcement fine-tuning api support ([831a124](https://github.com/openai/openai-go/commit/831a12451cfce907b5ae4d294b9c2ac95f40d97a))
+* **api:** adding gpt-4.1 family of model IDs ([1ef19d4](https://github.com/openai/openai-go/commit/1ef19d4cc94992dc435d7d5f28b30c9b1d255cd4))
+* **api:** adding new image model support ([bf17880](https://github.com/openai/openai-go/commit/bf17880e182549c5c0fc34ec05df3184f223bc00))
+* **api:** manual updates ([11f5716](https://github.com/openai/openai-go/commit/11f5716afa86aa100f80f3fa127e1d49203e5e21))
+* **api:** responses x eval api ([183aaf7](https://github.com/openai/openai-go/commit/183aaf700f1d7ffad4ac847627d9ace65379c459))
+* **api:** Updating Assistants and Evals API schemas ([47ca619](https://github.com/openai/openai-go/commit/47ca619fa1b439cf3a68c98e48e9bf1942f0568b))
+* **client:** add dynamic streaming buffer to handle large lines ([8e6aad6](https://github.com/openai/openai-go/commit/8e6aad6d54fc73f1fcc174e1f06c9b3cf00c2689))
+* **client:** add helper method to generate constant structs ([ff82809](https://github.com/openai/openai-go/commit/ff828094b561fc11184fed83f04424b6f68f7781))
+* **client:** add support for endpoint-specific base URLs in python ([072dce4](https://github.com/openai/openai-go/commit/072dce46486d373fa0f0de5415f5270b01c2d972))
+* **client:** add support for reading base URL from environment variable ([0d37268](https://github.com/openai/openai-go/commit/0d372687d673990290bad583f1906a2b121960b2))
+* **client:** clearer array variant names ([a5d8b5d](https://github.com/openai/openai-go/commit/a5d8b5d6b161e3083184586840b2cbe0606d8de1))
+* **client:** experimental support for unmarshalling into param structs ([5234875](https://github.com/openai/openai-go/commit/523487582e15a47e2f409f183568551258f4b8fe))
+* **client:** improve param subunions & deduplicate types ([8a78f37](https://github.com/openai/openai-go/commit/8a78f37c25abf10498d16d210de3078f491ff23e))
+* **client:** rename resp package ([4433516](https://github.com/openai/openai-go/commit/443351625ee290937a25425719b099ce785bd21b))
+* **client:** support more time formats ([ec171b2](https://github.com/openai/openai-go/commit/ec171b2405c46f9cf04560760da001f7133d2fec))
+* fix lint ([9c50a1e](https://github.com/openai/openai-go/commit/9c50a1eb9f93b578cb78085616f6bfab69f21dbc))
+
+
+### Bug Fixes
+
+* **client:** clean up reader resources ([710b92e](https://github.com/openai/openai-go/commit/710b92eaa7e94c03aeeca7479668677b32acb154))
+* **client:** correctly update body in WithJSONSet ([f2d7118](https://github.com/openai/openai-go/commit/f2d7118295dd3073aa449426801d02e6f60bdaa3))
+* **client:** improve core function names ([9f312a9](https://github.com/openai/openai-go/commit/9f312a9b14f5424d44d5834f1b82f3d3fcd57db2))
+* **client:** improve union variant names ([a2c3de9](https://github.com/openai/openai-go/commit/a2c3de9e6c9f6e406b953f6de2eb78d1e72ec1b5))
+* **client:** include path for type names in example code ([69561c5](https://github.com/openai/openai-go/commit/69561c549e18bd16a3641d62769479b125a4e955))
+* **client:** resolve issue with optional multipart files ([910d173](https://github.com/openai/openai-go/commit/910d1730e97a03898e5dee7c889844a2ccec3e56))
+* **client:** time format encoding fix ([ca17553](https://github.com/openai/openai-go/commit/ca175533ac8a17d36be1f531bbaa89c770da3f58))
+* **client:** unmarshal responses properly ([fc9fec3](https://github.com/openai/openai-go/commit/fc9fec3c466ba9f633c3f7a4eebb5ebd3b85e8ac))
+* handle empty bodies in WithJSONSet ([8372464](https://github.com/openai/openai-go/commit/83724640c6c00dcef1547dcabace309f17d14afc))
+* **pagination:** handle errors when applying options ([eebf84b](https://github.com/openai/openai-go/commit/eebf84bf19f0eb6d9fa21e64bb83b0258e8cb42c))
+
+
+### Chores
+
+* **ci:** add timeout thresholds for CI jobs ([26b0dd7](https://github.com/openai/openai-go/commit/26b0dd760c142ca3aa287e8441bbe44cc8b3be0b))
+* **ci:** only use depot for staging repos ([7682154](https://github.com/openai/openai-go/commit/7682154fdbcbe2a2ffdb2df590647a1712d52275))
+* **ci:** run on more branches and use depot runners ([d7badbc](https://github.com/openai/openai-go/commit/d7badbc0d17bcf3cffec332f65cb68e531cb3176))
+* **docs:** document pre-request options ([4befa5a](https://github.com/openai/openai-go/commit/4befa5a48ca61372715f36c45e72eb159d95bf2d))
+* **docs:** update respjson package name ([9a00229](https://github.com/openai/openai-go/commit/9a002299a91e1145f053c51b1a4de10298fd2f43))
+* **readme:** improve formatting ([a847e8d](https://github.com/openai/openai-go/commit/a847e8df45f725f9652fcea53ce57d3b9046efc7))
+* **utils:** add internal resp to param utility ([239c4e2](https://github.com/openai/openai-go/commit/239c4e2cb32c7af71ab14668ccc2f52ea59653f9))
+
+
+### Documentation
+
+* update documentation links to be more uniform ([f5f0bb0](https://github.com/openai/openai-go/commit/f5f0bb05ee705d84119806f8e703bf2e0becb1fa))
+
 ## 0.1.0-beta.10 (2025-04-14)
 
 Full Changelog: [v0.1.0-beta.9...v0.1.0-beta.10](https://github.com/openai/openai-go/compare/v0.1.0-beta.9...v0.1.0-beta.10)
