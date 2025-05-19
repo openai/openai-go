@@ -52,7 +52,7 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 	return true
 }
 
-// JustFinishedRefusal retrieves the chat completion refusal when it is known to have just been completed.
+// JustFinishedContent retrieves the chat completion content when it is known to have just been completed.
 // The content is "just completed" when the last added chunk no longer contains a content
 // delta. If the content is just completed, the content is returned and the boolean is true. Otherwise,
 // an empty string is returned and the boolean will be false.
