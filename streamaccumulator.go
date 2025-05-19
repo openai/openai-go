@@ -13,7 +13,7 @@ type ChatCompletionAccumulator struct {
 type FinishedChatCompletionToolCall struct {
 	ChatCompletionMessageToolCallFunction
 	Index int
-	Id    string
+	ID    string
 }
 
 type chatCompletionResponseState struct {
@@ -86,7 +86,7 @@ func (acc *ChatCompletionAccumulator) JustFinishedToolCall() (toolcall FinishedC
 		f := acc.Choices[0].Message.ToolCalls[acc.justFinished.index].Function
 		id := acc.Choices[0].Message.ToolCalls[acc.justFinished.index].ID
 		return FinishedChatCompletionToolCall{
-			Id:    id,
+			ID:    id,
 			Index: acc.justFinished.index,
 			ChatCompletionMessageToolCallFunction: ChatCompletionMessageToolCallFunction{
 				Name:      f.Name,
