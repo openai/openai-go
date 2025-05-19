@@ -360,8 +360,8 @@ func (r *ChatCompletionAssistantMessageParamAudio) UnmarshalJSON(data []byte) er
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ChatCompletionAssistantMessageParamContentUnion struct {
-	OfString              param.Opt[string]                                                   `json:",omitzero,inline"`
-	OfArrayOfContentParts []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion `json:",omitzero,inline"`
+	OfString              param.Opt[string]                         `json:",omitzero,inline"`
+	OfArrayOfContentParts []ChatCompletionAssistantMessagePartUnion `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -384,20 +384,20 @@ func (u *ChatCompletionAssistantMessageParamContentUnion) asAny() any {
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion struct {
+type ChatCompletionAssistantMessagePartUnion struct {
 	OfText    *ChatCompletionContentPartTextParam    `json:",omitzero,inline"`
 	OfRefusal *ChatCompletionContentPartRefusalParam `json:",omitzero,inline"`
 	paramUnion
 }
 
-func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](u.OfText, u.OfRefusal)
+func (u ChatCompletionAssistantMessagePartUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[ChatCompletionAssistantMessagePartUnion](u.OfText, u.OfRefusal)
 }
-func (u *ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) UnmarshalJSON(data []byte) error {
+func (u *ChatCompletionAssistantMessagePartUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) asAny() any {
+func (u *ChatCompletionAssistantMessagePartUnion) asAny() any {
 	if !param.IsOmitted(u.OfText) {
 		return u.OfText
 	} else if !param.IsOmitted(u.OfRefusal) {
@@ -407,7 +407,7 @@ func (u *ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) asAn
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) GetText() *string {
+func (u ChatCompletionAssistantMessagePartUnion) GetText() *string {
 	if vt := u.OfText; vt != nil {
 		return &vt.Text
 	}
@@ -415,7 +415,7 @@ func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) GetTe
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) GetRefusal() *string {
+func (u ChatCompletionAssistantMessagePartUnion) GetRefusal() *string {
 	if vt := u.OfRefusal; vt != nil {
 		return &vt.Refusal
 	}
@@ -423,7 +423,7 @@ func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) GetRe
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) GetType() *string {
+func (u ChatCompletionAssistantMessagePartUnion) GetType() *string {
 	if vt := u.OfText; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfRefusal; vt != nil {
@@ -433,7 +433,7 @@ func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) GetTy
 }
 
 func init() {
-	apijson.RegisterUnion[ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](
+	apijson.RegisterUnion[ChatCompletionAssistantMessagePartUnion](
 		"type",
 		apijson.Discriminator[ChatCompletionContentPartTextParam]("text"),
 		apijson.Discriminator[ChatCompletionContentPartRefusalParam]("refusal"),
@@ -669,8 +669,8 @@ type ChatCompletionChunkChoiceDelta struct {
 	// The role of the author of this message.
 	//
 	// Any of "developer", "system", "user", "assistant", "tool".
-	Role      string                                   `json:"role"`
-	ToolCalls []ChatCompletionChunkChoiceDeltaToolCall `json:"tool_calls"`
+	Role      string                        `json:"role"`
+	ToolCalls []ChatCompletionToolCallDelta `json:"tool_calls"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Content      respjson.Field
@@ -716,7 +716,7 @@ func (r *ChatCompletionChunkChoiceDeltaFunctionCall) UnmarshalJSON(data []byte) 
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ChatCompletionChunkChoiceDeltaToolCall struct {
+type ChatCompletionToolCallDelta struct {
 	Index int64 `json:"index,required"`
 	// The ID of the tool call.
 	ID       string                                         `json:"id"`
@@ -737,8 +737,8 @@ type ChatCompletionChunkChoiceDeltaToolCall struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ChatCompletionChunkChoiceDeltaToolCall) RawJSON() string { return r.JSON.raw }
-func (r *ChatCompletionChunkChoiceDeltaToolCall) UnmarshalJSON(data []byte) error {
+func (r ChatCompletionToolCallDelta) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionToolCallDelta) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -823,13 +823,13 @@ func ImageContentPart(imageURL ChatCompletionContentPartImageImageURLParam) Chat
 	return ChatCompletionContentPartUnionParam{OfImageURL: &variant}
 }
 
-func InputAudioContentPart(inputAudio ChatCompletionContentPartInputAudioInputAudioParam) ChatCompletionContentPartUnionParam {
+func InputAudioContentPart(inputAudio ChatCompletionInputAudioDataParam) ChatCompletionContentPartUnionParam {
 	var variant ChatCompletionContentPartInputAudioParam
 	variant.InputAudio = inputAudio
 	return ChatCompletionContentPartUnionParam{OfInputAudio: &variant}
 }
 
-func FileContentPart(file ChatCompletionContentPartFileFileParam) ChatCompletionContentPartUnionParam {
+func FileContentPart(file ChatCompletionFileContentPartParam) ChatCompletionContentPartUnionParam {
 	var variant ChatCompletionContentPartFileParam
 	variant.File = file
 	return ChatCompletionContentPartUnionParam{OfFile: &variant}
@@ -883,7 +883,7 @@ func (u ChatCompletionContentPartUnionParam) GetImageURL() *ChatCompletionConten
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ChatCompletionContentPartUnionParam) GetInputAudio() *ChatCompletionContentPartInputAudioInputAudioParam {
+func (u ChatCompletionContentPartUnionParam) GetInputAudio() *ChatCompletionInputAudioDataParam {
 	if vt := u.OfInputAudio; vt != nil {
 		return &vt.InputAudio
 	}
@@ -891,7 +891,7 @@ func (u ChatCompletionContentPartUnionParam) GetInputAudio() *ChatCompletionCont
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ChatCompletionContentPartUnionParam) GetFile() *ChatCompletionContentPartFileFileParam {
+func (u ChatCompletionContentPartUnionParam) GetFile() *ChatCompletionFileContentPartParam {
 	if vt := u.OfFile; vt != nil {
 		return &vt.File
 	}
@@ -927,7 +927,7 @@ func init() {
 //
 // The properties File, Type are required.
 type ChatCompletionContentPartFileParam struct {
-	File ChatCompletionContentPartFileFileParam `json:"file,omitzero,required"`
+	File ChatCompletionFileContentPartParam `json:"file,omitzero,required"`
 	// The type of the content part. Always `file`.
 	//
 	// This field can be elided, and will marshal its zero value as "file".
@@ -943,7 +943,7 @@ func (r *ChatCompletionContentPartFileParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ChatCompletionContentPartFileFileParam struct {
+type ChatCompletionFileContentPartParam struct {
 	// The base64 encoded file data, used when passing the file to the model as a
 	// string.
 	FileData param.Opt[string] `json:"file_data,omitzero"`
@@ -954,11 +954,11 @@ type ChatCompletionContentPartFileFileParam struct {
 	paramObj
 }
 
-func (r ChatCompletionContentPartFileFileParam) MarshalJSON() (data []byte, err error) {
-	type shadow ChatCompletionContentPartFileFileParam
+func (r ChatCompletionFileContentPartParam) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionFileContentPartParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ChatCompletionContentPartFileFileParam) UnmarshalJSON(data []byte) error {
+func (r *ChatCompletionFileContentPartParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1012,7 +1012,7 @@ func init() {
 //
 // The properties InputAudio, Type are required.
 type ChatCompletionContentPartInputAudioParam struct {
-	InputAudio ChatCompletionContentPartInputAudioInputAudioParam `json:"input_audio,omitzero,required"`
+	InputAudio ChatCompletionInputAudioDataParam `json:"input_audio,omitzero,required"`
 	// The type of the content part. Always `input_audio`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_audio".
@@ -1029,7 +1029,7 @@ func (r *ChatCompletionContentPartInputAudioParam) UnmarshalJSON(data []byte) er
 }
 
 // The properties Data, Format are required.
-type ChatCompletionContentPartInputAudioInputAudioParam struct {
+type ChatCompletionInputAudioDataParam struct {
 	// Base64 encoded audio data.
 	Data string `json:"data,required"`
 	// The format of the encoded audio data. Currently supports "wav" and "mp3".
@@ -1039,16 +1039,16 @@ type ChatCompletionContentPartInputAudioInputAudioParam struct {
 	paramObj
 }
 
-func (r ChatCompletionContentPartInputAudioInputAudioParam) MarshalJSON() (data []byte, err error) {
-	type shadow ChatCompletionContentPartInputAudioInputAudioParam
+func (r ChatCompletionInputAudioDataParam) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionInputAudioDataParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ChatCompletionContentPartInputAudioInputAudioParam) UnmarshalJSON(data []byte) error {
+func (r *ChatCompletionInputAudioDataParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 func init() {
-	apijson.RegisterFieldValidator[ChatCompletionContentPartInputAudioInputAudioParam](
+	apijson.RegisterFieldValidator[ChatCompletionInputAudioDataParam](
 		"format", "wav", "mp3",
 	)
 }
@@ -1362,12 +1362,12 @@ func (r *ChatCompletionMessageFunctionCall) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func AssistantMessage[T string | []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](content T) ChatCompletionMessageParamUnion {
+func AssistantMessage[T string | []ChatCompletionAssistantMessagePartUnion](content T) ChatCompletionMessageParamUnion {
 	var assistant ChatCompletionAssistantMessageParam
 	switch v := any(content).(type) {
 	case string:
 		assistant.Content.OfString = param.NewOpt(v)
-	case []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion:
+	case []ChatCompletionAssistantMessagePartUnion:
 		assistant.Content.OfArrayOfContentParts = v
 	}
 	return ChatCompletionMessageParamUnion{OfAssistant: &assistant}
@@ -1563,7 +1563,7 @@ func (u ChatCompletionMessageParamUnion) GetContent() (res chatCompletionMessage
 
 // Can have the runtime types [*string], [_[]ChatCompletionContentPartTextParam],
 // [_[]ChatCompletionContentPartUnionParam],
-// [\*[]ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion]
+// [\*[]ChatCompletionAssistantMessagePartUnion]
 type chatCompletionMessageParamUnionContent struct{ any }
 
 // Use the following switch statement to get the type of the union:
@@ -1572,7 +1572,7 @@ type chatCompletionMessageParamUnionContent struct{ any }
 //	case *string:
 //	case *[]openai.ChatCompletionContentPartTextParam:
 //	case *[]openai.ChatCompletionContentPartUnionParam:
-//	case *[]openai.ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion:
+//	case *[]openai.ChatCompletionAssistantMessagePartUnion:
 //	default:
 //	    fmt.Errorf("not present")
 //	}
@@ -1946,7 +1946,7 @@ func (r *ChatCompletionToolParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func ChatCompletionToolChoiceOptionParamOfChatCompletionNamedToolChoice(function ChatCompletionNamedToolChoiceFunctionParam) ChatCompletionToolChoiceOptionUnionParam {
+func ToolChoiceNamedFunction(function ChatCompletionNamedToolChoiceFunctionParam) ChatCompletionToolChoiceOptionUnionParam {
 	var variant ChatCompletionNamedToolChoiceParam
 	variant.Function = function
 	return ChatCompletionToolChoiceOptionUnionParam{OfChatCompletionNamedToolChoice: &variant}
@@ -2459,7 +2459,7 @@ func (u *ChatCompletionNewParamsStopUnion) asAny() any {
 // [web search tool](https://platform.openai.com/docs/guides/tools-web-search?api-mode=chat).
 type ChatCompletionNewParamsWebSearchOptions struct {
 	// Approximate location parameters for the search.
-	UserLocation ChatCompletionNewParamsWebSearchOptionsUserLocation `json:"user_location,omitzero"`
+	UserLocation ChatCompletionWebSearchUserLocation `json:"user_location,omitzero"`
 	// High level guidance for the amount of context window space to use for the
 	// search. One of `low`, `medium`, or `high`. `medium` is the default.
 	//
@@ -2485,9 +2485,9 @@ func init() {
 // Approximate location parameters for the search.
 //
 // The properties Approximate, Type are required.
-type ChatCompletionNewParamsWebSearchOptionsUserLocation struct {
+type ChatCompletionWebSearchUserLocation struct {
 	// Approximate location parameters for the search.
-	Approximate ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate `json:"approximate,omitzero,required"`
+	Approximate ChatCompletionWebSearchApproximateUserLocation `json:"approximate,omitzero,required"`
 	// The type of location approximation. Always `approximate`.
 	//
 	// This field can be elided, and will marshal its zero value as "approximate".
@@ -2495,16 +2495,16 @@ type ChatCompletionNewParamsWebSearchOptionsUserLocation struct {
 	paramObj
 }
 
-func (r ChatCompletionNewParamsWebSearchOptionsUserLocation) MarshalJSON() (data []byte, err error) {
-	type shadow ChatCompletionNewParamsWebSearchOptionsUserLocation
+func (r ChatCompletionWebSearchUserLocation) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionWebSearchUserLocation
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ChatCompletionNewParamsWebSearchOptionsUserLocation) UnmarshalJSON(data []byte) error {
+func (r *ChatCompletionWebSearchUserLocation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // Approximate location parameters for the search.
-type ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate struct {
+type ChatCompletionWebSearchApproximateUserLocation struct {
 	// Free text input for the city of the user, e.g. `San Francisco`.
 	City param.Opt[string] `json:"city,omitzero"`
 	// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of
@@ -2518,11 +2518,11 @@ type ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate struct {
 	paramObj
 }
 
-func (r ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate) MarshalJSON() (data []byte, err error) {
-	type shadow ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate
+func (r ChatCompletionWebSearchApproximateUserLocation) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionWebSearchApproximateUserLocation
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate) UnmarshalJSON(data []byte) error {
+func (r *ChatCompletionWebSearchApproximateUserLocation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

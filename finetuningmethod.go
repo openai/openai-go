@@ -396,14 +396,14 @@ type ReinforcementHyperparametersResp struct {
 	// parameters are updated less frequently, but with lower variance.
 	BatchSize ReinforcementHyperparametersBatchSizeUnionResp `json:"batch_size"`
 	// Multiplier on amount of compute used for exploring search space during training.
-	ComputeMultiplier ReinforcementHyperparametersComputeMultiplierUnionResp `json:"compute_multiplier"`
+	ComputeMultiplier ReinforcementComputeMultiplierUnionResp `json:"compute_multiplier"`
 	// The number of training steps between evaluation runs.
 	EvalInterval ReinforcementHyperparametersEvalIntervalUnionResp `json:"eval_interval"`
 	// Number of evaluation samples to generate per training step.
-	EvalSamples ReinforcementHyperparametersEvalSamplesUnionResp `json:"eval_samples"`
+	EvalSamples ReinforcementEvalSamplesUnionResp `json:"eval_samples"`
 	// Scaling factor for the learning rate. A smaller learning rate may be useful to
 	// avoid overfitting.
-	LearningRateMultiplier ReinforcementHyperparametersLearningRateMultiplierUnionResp `json:"learning_rate_multiplier"`
+	LearningRateMultiplier ReinforcementLearningRateMultiplierUnionResp `json:"learning_rate_multiplier"`
 	// The number of epochs to train the model for. An epoch refers to one full cycle
 	// through the training dataset.
 	NEpochs ReinforcementHyperparametersNEpochsUnionResp `json:"n_epochs"`
@@ -478,14 +478,14 @@ func (r *ReinforcementHyperparametersBatchSizeUnionResp) UnmarshalJSON(data []by
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// ReinforcementHyperparametersComputeMultiplierUnionResp contains all possible
-// properties and values from [constant.Auto], [float64].
+// ReinforcementComputeMultiplierUnionResp contains all possible properties and
+// values from [constant.Auto], [float64].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
 // If the underlying value is not a json object, one of the following properties
 // will be valid: OfAuto OfFloat]
-type ReinforcementHyperparametersComputeMultiplierUnionResp struct {
+type ReinforcementComputeMultiplierUnionResp struct {
 	// This field will be present if the value is a [constant.Auto] instead of an
 	// object.
 	OfAuto constant.Auto `json:",inline"`
@@ -498,20 +498,20 @@ type ReinforcementHyperparametersComputeMultiplierUnionResp struct {
 	} `json:"-"`
 }
 
-func (u ReinforcementHyperparametersComputeMultiplierUnionResp) AsAuto() (v constant.Auto) {
+func (u ReinforcementComputeMultiplierUnionResp) AsAuto() (v constant.Auto) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u ReinforcementHyperparametersComputeMultiplierUnionResp) AsFloat() (v float64) {
+func (u ReinforcementComputeMultiplierUnionResp) AsFloat() (v float64) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 // Returns the unmodified JSON received from the API
-func (u ReinforcementHyperparametersComputeMultiplierUnionResp) RawJSON() string { return u.JSON.raw }
+func (u ReinforcementComputeMultiplierUnionResp) RawJSON() string { return u.JSON.raw }
 
-func (r *ReinforcementHyperparametersComputeMultiplierUnionResp) UnmarshalJSON(data []byte) error {
+func (r *ReinforcementComputeMultiplierUnionResp) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -552,14 +552,14 @@ func (r *ReinforcementHyperparametersEvalIntervalUnionResp) UnmarshalJSON(data [
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// ReinforcementHyperparametersEvalSamplesUnionResp contains all possible
-// properties and values from [constant.Auto], [int64].
+// ReinforcementEvalSamplesUnionResp contains all possible properties and values
+// from [constant.Auto], [int64].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
 // If the underlying value is not a json object, one of the following properties
 // will be valid: OfAuto OfInt]
-type ReinforcementHyperparametersEvalSamplesUnionResp struct {
+type ReinforcementEvalSamplesUnionResp struct {
 	// This field will be present if the value is a [constant.Auto] instead of an
 	// object.
 	OfAuto constant.Auto `json:",inline"`
@@ -572,31 +572,31 @@ type ReinforcementHyperparametersEvalSamplesUnionResp struct {
 	} `json:"-"`
 }
 
-func (u ReinforcementHyperparametersEvalSamplesUnionResp) AsAuto() (v constant.Auto) {
+func (u ReinforcementEvalSamplesUnionResp) AsAuto() (v constant.Auto) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u ReinforcementHyperparametersEvalSamplesUnionResp) AsInt() (v int64) {
+func (u ReinforcementEvalSamplesUnionResp) AsInt() (v int64) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 // Returns the unmodified JSON received from the API
-func (u ReinforcementHyperparametersEvalSamplesUnionResp) RawJSON() string { return u.JSON.raw }
+func (u ReinforcementEvalSamplesUnionResp) RawJSON() string { return u.JSON.raw }
 
-func (r *ReinforcementHyperparametersEvalSamplesUnionResp) UnmarshalJSON(data []byte) error {
+func (r *ReinforcementEvalSamplesUnionResp) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// ReinforcementHyperparametersLearningRateMultiplierUnionResp contains all
-// possible properties and values from [constant.Auto], [float64].
+// ReinforcementLearningRateMultiplierUnionResp contains all possible properties
+// and values from [constant.Auto], [float64].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
 // If the underlying value is not a json object, one of the following properties
 // will be valid: OfAuto OfFloat]
-type ReinforcementHyperparametersLearningRateMultiplierUnionResp struct {
+type ReinforcementLearningRateMultiplierUnionResp struct {
 	// This field will be present if the value is a [constant.Auto] instead of an
 	// object.
 	OfAuto constant.Auto `json:",inline"`
@@ -609,22 +609,20 @@ type ReinforcementHyperparametersLearningRateMultiplierUnionResp struct {
 	} `json:"-"`
 }
 
-func (u ReinforcementHyperparametersLearningRateMultiplierUnionResp) AsAuto() (v constant.Auto) {
+func (u ReinforcementLearningRateMultiplierUnionResp) AsAuto() (v constant.Auto) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u ReinforcementHyperparametersLearningRateMultiplierUnionResp) AsFloat() (v float64) {
+func (u ReinforcementLearningRateMultiplierUnionResp) AsFloat() (v float64) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 // Returns the unmodified JSON received from the API
-func (u ReinforcementHyperparametersLearningRateMultiplierUnionResp) RawJSON() string {
-	return u.JSON.raw
-}
+func (u ReinforcementLearningRateMultiplierUnionResp) RawJSON() string { return u.JSON.raw }
 
-func (r *ReinforcementHyperparametersLearningRateMultiplierUnionResp) UnmarshalJSON(data []byte) error {
+func (r *ReinforcementLearningRateMultiplierUnionResp) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -681,14 +679,14 @@ type ReinforcementHyperparameters struct {
 	// parameters are updated less frequently, but with lower variance.
 	BatchSize ReinforcementHyperparametersBatchSizeUnion `json:"batch_size,omitzero"`
 	// Multiplier on amount of compute used for exploring search space during training.
-	ComputeMultiplier ReinforcementHyperparametersComputeMultiplierUnion `json:"compute_multiplier,omitzero"`
+	ComputeMultiplier ReinforcementComputeMultiplierUnion `json:"compute_multiplier,omitzero"`
 	// The number of training steps between evaluation runs.
 	EvalInterval ReinforcementHyperparametersEvalIntervalUnion `json:"eval_interval,omitzero"`
 	// Number of evaluation samples to generate per training step.
-	EvalSamples ReinforcementHyperparametersEvalSamplesUnion `json:"eval_samples,omitzero"`
+	EvalSamples ReinforcementEvalSamplesUnion `json:"eval_samples,omitzero"`
 	// Scaling factor for the learning rate. A smaller learning rate may be useful to
 	// avoid overfitting.
-	LearningRateMultiplier ReinforcementHyperparametersLearningRateMultiplierUnion `json:"learning_rate_multiplier,omitzero"`
+	LearningRateMultiplier ReinforcementLearningRateMultiplierUnion `json:"learning_rate_multiplier,omitzero"`
 	// The number of epochs to train the model for. An epoch refers to one full cycle
 	// through the training dataset.
 	NEpochs ReinforcementHyperparametersNEpochsUnion `json:"n_epochs,omitzero"`
@@ -736,21 +734,21 @@ func (u *ReinforcementHyperparametersBatchSizeUnion) asAny() any {
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type ReinforcementHyperparametersComputeMultiplierUnion struct {
+type ReinforcementComputeMultiplierUnion struct {
 	// Construct this variant with constant.ValueOf[constant.Auto]()
 	OfAuto  constant.Auto      `json:",omitzero,inline"`
 	OfFloat param.Opt[float64] `json:",omitzero,inline"`
 	paramUnion
 }
 
-func (u ReinforcementHyperparametersComputeMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersComputeMultiplierUnion](u.OfAuto, u.OfFloat)
+func (u ReinforcementComputeMultiplierUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[ReinforcementComputeMultiplierUnion](u.OfAuto, u.OfFloat)
 }
-func (u *ReinforcementHyperparametersComputeMultiplierUnion) UnmarshalJSON(data []byte) error {
+func (u *ReinforcementComputeMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ReinforcementHyperparametersComputeMultiplierUnion) asAny() any {
+func (u *ReinforcementComputeMultiplierUnion) asAny() any {
 	if !param.IsOmitted(u.OfAuto) {
 		return &u.OfAuto
 	} else if !param.IsOmitted(u.OfFloat) {
@@ -788,21 +786,21 @@ func (u *ReinforcementHyperparametersEvalIntervalUnion) asAny() any {
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type ReinforcementHyperparametersEvalSamplesUnion struct {
+type ReinforcementEvalSamplesUnion struct {
 	// Construct this variant with constant.ValueOf[constant.Auto]()
 	OfAuto constant.Auto    `json:",omitzero,inline"`
 	OfInt  param.Opt[int64] `json:",omitzero,inline"`
 	paramUnion
 }
 
-func (u ReinforcementHyperparametersEvalSamplesUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersEvalSamplesUnion](u.OfAuto, u.OfInt)
+func (u ReinforcementEvalSamplesUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[ReinforcementEvalSamplesUnion](u.OfAuto, u.OfInt)
 }
-func (u *ReinforcementHyperparametersEvalSamplesUnion) UnmarshalJSON(data []byte) error {
+func (u *ReinforcementEvalSamplesUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ReinforcementHyperparametersEvalSamplesUnion) asAny() any {
+func (u *ReinforcementEvalSamplesUnion) asAny() any {
 	if !param.IsOmitted(u.OfAuto) {
 		return &u.OfAuto
 	} else if !param.IsOmitted(u.OfInt) {
@@ -814,21 +812,21 @@ func (u *ReinforcementHyperparametersEvalSamplesUnion) asAny() any {
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type ReinforcementHyperparametersLearningRateMultiplierUnion struct {
+type ReinforcementLearningRateMultiplierUnion struct {
 	// Construct this variant with constant.ValueOf[constant.Auto]()
 	OfAuto  constant.Auto      `json:",omitzero,inline"`
 	OfFloat param.Opt[float64] `json:",omitzero,inline"`
 	paramUnion
 }
 
-func (u ReinforcementHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
+func (u ReinforcementLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[ReinforcementLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
 }
-func (u *ReinforcementHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
+func (u *ReinforcementLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ReinforcementHyperparametersLearningRateMultiplierUnion) asAny() any {
+func (u *ReinforcementLearningRateMultiplierUnion) asAny() any {
 	if !param.IsOmitted(u.OfAuto) {
 		return &u.OfAuto
 	} else if !param.IsOmitted(u.OfFloat) {
