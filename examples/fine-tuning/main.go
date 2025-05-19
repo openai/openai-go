@@ -41,7 +41,7 @@ func main() {
 	fmt.Println("")
 	fmt.Println("==> Starting fine-tuning")
 	fineTune, err := client.FineTuning.Jobs.New(ctx, openai.FineTuningJobNewParams{
-		Model:        "gpt-4o-mini",
+		Model:        openai.FineTuningJobNewParamsModelGPT4oMini,
 		TrainingFile: file.ID,
 	})
 	if err != nil {
