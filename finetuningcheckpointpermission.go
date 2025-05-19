@@ -90,9 +90,9 @@ func (r *FineTuningCheckpointPermissionService) Get(ctx context.Context, fineTun
 //
 // Organization owners can use this endpoint to delete a permission for a
 // fine-tuned model checkpoint.
-func (r *FineTuningCheckpointPermissionService) Delete(ctx context.Context, fineTunedModelCheckpoint string, permissionID string, opts ...option.RequestOption) (res *FineTuningCheckpointPermissionDeleteResponse, err error) {
+func (r *FineTuningCheckpointPermissionService) Delete(ctx context.Context, permissionID string, body FineTuningCheckpointPermissionDeleteParams, opts ...option.RequestOption) (res *FineTuningCheckpointPermissionDeleteResponse, err error) {
 	opts = append(r.Options[:], opts...)
-	if fineTunedModelCheckpoint == "" {
+	if body.FineTunedModelCheckpoint == "" {
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
 		return
 	}
@@ -100,7 +100,7 @@ func (r *FineTuningCheckpointPermissionService) Delete(ctx context.Context, fine
 		err = errors.New("missing required permission_id parameter")
 		return
 	}
-	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions/%s", fineTunedModelCheckpoint, permissionID)
+	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions/%s", body.FineTunedModelCheckpoint, permissionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return
 }
@@ -252,3 +252,8 @@ const (
 	FineTuningCheckpointPermissionGetParamsOrderAscending  FineTuningCheckpointPermissionGetParamsOrder = "ascending"
 	FineTuningCheckpointPermissionGetParamsOrderDescending FineTuningCheckpointPermissionGetParamsOrder = "descending"
 )
+
+type FineTuningCheckpointPermissionDeleteParams struct {
+	FineTunedModelCheckpoint string `path:"fine_tuned_model_checkpoint,required" json:"-"`
+	paramObj
+}

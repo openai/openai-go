@@ -5,10 +5,6 @@
 The OpenAI Go library provides convenient access to the [OpenAI REST API](https://platform.openai.com/docs)
 from applications written in Go.
 
-> [!WARNING]
-> The latest version of this package uses a new design with significant breaking changes.
-> Please refer to the [migration guide](./MIGRATION.md) for more information on how to update your code.
-
 ## Installation
 
 <!-- x-release-please-start-version -->
@@ -26,7 +22,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go@v0.1.0-beta.11'
+go get -u 'github.com/openai/openai-go@v1.0.0'
 ```
 
 <!-- x-release-please-end -->

@@ -16,6 +16,9 @@ func main() {
 	fmt.Println("==> Uploading file")
 
 	data, err := os.Open("./fine-tuning-data.jsonl")
+	if err != nil {
+		panic(err)
+	}
 	file, err := client.Files.New(ctx, openai.FileNewParams{
 		File:    data,
 		Purpose: openai.FilePurposeFineTune,
@@ -41,7 +44,7 @@ func main() {
 	fmt.Println("")
 	fmt.Println("==> Starting fine-tuning")
 	fineTune, err := client.FineTuning.Jobs.New(ctx, openai.FineTuningJobNewParams{
-		Model:        openai.ChatModelGPT3_5Turbo,
+		Model:        openai.FineTuningJobNewParamsModelGPT3_5Turbo,
 		TrainingFile: file.ID,
 	})
 	if err != nil {

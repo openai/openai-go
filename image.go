@@ -201,6 +201,9 @@ func (r ImageNewVariationParams) MarshalMultipart() (data []byte, contentType st
 	buf := bytes.NewBuffer(nil)
 	writer := multipart.NewWriter(buf)
 	err = apiform.MarshalRoot(r, writer)
+	if err == nil {
+		err = apiform.WriteExtras(writer, r.ExtraFields())
+	}
 	if err != nil {
 		writer.Close()
 		return nil, "", err
@@ -295,6 +298,9 @@ func (r ImageEditParams) MarshalMultipart() (data []byte, contentType string, er
 	buf := bytes.NewBuffer(nil)
 	writer := multipart.NewWriter(buf)
 	err = apiform.MarshalRoot(r, writer)
+	if err == nil {
+		err = apiform.WriteExtras(writer, r.ExtraFields())
+	}
 	if err != nil {
 		writer.Close()
 		return nil, "", err
@@ -310,13 +316,13 @@ func (r ImageEditParams) MarshalMultipart() (data []byte, contentType string, er
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ImageEditParamsImageUnion struct {
-	OfFile        io.Reader   `json:",omitzero,inline"`
-	OfBinaryArray []io.Reader `json:",omitzero,inline"`
+	OfFile      io.Reader   `json:",omitzero,inline"`
+	OfFileArray []io.Reader `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ImageEditParamsImageUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ImageEditParamsImageUnion](u.OfFile, u.OfBinaryArray)
+	return param.MarshalUnion[ImageEditParamsImageUnion](u.OfFile, u.OfFileArray)
 }
 func (u *ImageEditParamsImageUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -325,8 +331,8 @@ func (u *ImageEditParamsImageUnion) UnmarshalJSON(data []byte) error {
 func (u *ImageEditParamsImageUnion) asAny() any {
 	if !param.IsOmitted(u.OfFile) {
 		return &u.OfFile
-	} else if !param.IsOmitted(u.OfBinaryArray) {
-		return &u.OfBinaryArray
+	} else if !param.IsOmitted(u.OfFileArray) {
+		return &u.OfFileArray
 	}
 	return nil
 }

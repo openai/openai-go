@@ -23,7 +23,7 @@ func main() {
 	for stream.Next() {
 		data := stream.Current()
 		print(data.Delta)
-		if data.JSON.Text.IsPresent() {
+		if data.JSON.Text.Valid() {
 			println()
 			println("Finished Content")
 			completeText = data.Text

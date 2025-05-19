@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.0.0 (2025-05-19)
+
+Full Changelog: [v0.1.0-beta.11...v1.0.0](https://github.com/openai/openai-go/compare/v0.1.0-beta.11...v1.0.0)
+
+### ⚠ BREAKING CHANGES
+
+* **client:** rename file array param variant
+* **api:** improve naming and remove assistants
+* **accumulator:** update casing ([#401](https://github.com/openai/openai-go/issues/401))
+
+### Features
+
+* **api:** improve naming and remove assistants ([4c623b8](https://github.com/openai/openai-go/commit/4c623b88a9025db1961cc57985eb7374342f43e7))
+
+
+### Bug Fixes
+
+* **accumulator:** update casing ([#401](https://github.com/openai/openai-go/issues/401)) ([d59453c](https://github.com/openai/openai-go/commit/d59453c95b89fdd0b51305778dec0a39ce3a9d2a))
+* **client:** correctly set stream key for multipart ([0ec68f0](https://github.com/openai/openai-go/commit/0ec68f0d779e7726931b1115eca9ae81eab59ba8))
+* **client:** don't panic on marshal with extra null field ([9c15332](https://github.com/openai/openai-go/commit/9c153320272d212beaa516d4c70d54ae8053a958))
+* **client:** increase max stream buffer size ([9456455](https://github.com/openai/openai-go/commit/945645559c5d68d9e28cf445d9c3b83e5fc6bd35))
+* **client:** rename file array param variant ([4cfcf86](https://github.com/openai/openai-go/commit/4cfcf869280e7531fbbc8c00db0dd9271d07c423))
+* **client:** use scanner for streaming ([aa58806](https://github.com/openai/openai-go/commit/aa58806bffc3aed68425c480414ddbb4dac3fa78))
+
+
+### Chores
+
+* **docs:** typo fix ([#400](https://github.com/openai/openai-go/issues/400)) ([bececf2](https://github.com/openai/openai-go/commit/bececf24cd0324b7c991b7d7f1d3eff6bf71f996))
+* **examples:** migrate enum ([#447](https://github.com/openai/openai-go/issues/447)) ([814dd8b](https://github.com/openai/openai-go/commit/814dd8b6cfe4eeb535dc8ecd161a409ea2eb6698))
+* **examples:** migrate to latest version ([#444](https://github.com/openai/openai-go/issues/444)) ([1c8754f](https://github.com/openai/openai-go/commit/1c8754ff905ed023f6381c8493910d63039407de))
+* **examples:** remove beta assisstants examples ([#445](https://github.com/openai/openai-go/issues/445)) ([5891583](https://github.com/openai/openai-go/commit/589158372be9c0517b5508f9ccd872fdb1fe480b))
+* **example:** update fine-tuning ([#450](https://github.com/openai/openai-go/issues/450)) ([421e3c5](https://github.com/openai/openai-go/commit/421e3c5065ace2d5ddd3d13a036477fff9123e5f))
+
 ## 0.1.0-beta.11 (2025-05-16)
 
 Full Changelog: [v0.1.0-beta.10...v0.1.0-beta.11](https://github.com/openai/openai-go/compare/v0.1.0-beta.10...v0.1.0-beta.11)

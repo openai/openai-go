@@ -83,16 +83,16 @@ func TestFineTuningJobNewWithOptionalParams(t *testing.T) {
 					BatchSize: openai.ReinforcementHyperparametersBatchSizeUnion{
 						OfAuto: constant.ValueOf[constant.Auto](),
 					},
-					ComputeMultiplier: openai.ReinforcementHyperparametersComputeMultiplierUnion{
+					ComputeMultiplier: openai.ReinforcementComputeMultiplierUnion{
 						OfAuto: constant.ValueOf[constant.Auto](),
 					},
 					EvalInterval: openai.ReinforcementHyperparametersEvalIntervalUnion{
 						OfAuto: constant.ValueOf[constant.Auto](),
 					},
-					EvalSamples: openai.ReinforcementHyperparametersEvalSamplesUnion{
+					EvalSamples: openai.ReinforcementEvalSamplesUnion{
 						OfAuto: constant.ValueOf[constant.Auto](),
 					},
-					LearningRateMultiplier: openai.ReinforcementHyperparametersLearningRateMultiplierUnion{
+					LearningRateMultiplier: openai.ReinforcementLearningRateMultiplierUnion{
 						OfAuto: constant.ValueOf[constant.Auto](),
 					},
 					NEpochs: openai.ReinforcementHyperparametersNEpochsUnion{
