@@ -32,7 +32,7 @@ func NewDecoder(res *http.Response) Decoder {
 		decoder = t(res.Body)
 	} else {
 		scn := bufio.NewScanner(res.Body)
-		scn.Buffer(nil, bufio.MaxScanTokenSize<<2)
+		scn.Buffer(nil, bufio.MaxScanTokenSize<<4)
 		decoder = &eventStreamDecoder{rc: res.Body, scn: scn}
 	}
 	return decoder
