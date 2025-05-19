@@ -54,7 +54,9 @@ func (r *AudioTranscriptionService) NewStreaming(ctx context.Context, body Audio
 		err error
 	)
 	opts = append(r.Options[:], opts...)
-	opts = append([]option.RequestOption{option.WithJSONSet("stream", true)}, opts...)
+	body.SetExtraFields(map[string]any{
+		"stream": "true",
+	})
 	path := "audio/transcriptions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStream[TranscriptionStreamEventUnion](ssestream.NewDecoder(raw), err)
@@ -371,6 +373,9 @@ func (r AudioTranscriptionNewParams) MarshalMultipart() (data []byte, contentTyp
 	buf := bytes.NewBuffer(nil)
 	writer := multipart.NewWriter(buf)
 	err = apiform.MarshalRoot(r, writer)
+	if err == nil {
+		err = apiform.WriteExtras(writer, r.ExtraFields())
+	}
 	if err != nil {
 		writer.Close()
 		return nil, "", err

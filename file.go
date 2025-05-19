@@ -262,6 +262,9 @@ func (r FileNewParams) MarshalMultipart() (data []byte, contentType string, err 
 	buf := bytes.NewBuffer(nil)
 	writer := multipart.NewWriter(buf)
 	err = apiform.MarshalRoot(r, writer)
+	if err == nil {
+		err = apiform.WriteExtras(writer, r.ExtraFields())
+	}
 	if err != nil {
 		writer.Close()
 		return nil, "", err
