@@ -461,7 +461,7 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 			}
 
 			// Handle null [param.Opt]
-			if itemNode.Type == gjson.Null && dest.Type().Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
+			if itemNode.Type == gjson.Null && dest.IsValid() && dest.Type().Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
 				dest.Addr().Interface().(json.Unmarshaler).UnmarshalJSON([]byte(itemNode.Raw))
 				continue
 			}
