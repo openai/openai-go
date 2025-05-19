@@ -257,12 +257,6 @@ const CompoundFilterTypeOr = shared.CompoundFilterTypeOr
 type CompoundFilterParam = shared.CompoundFilterParam
 
 // This is an alias to an internal type.
-type ErrorObject = shared.ErrorObject
-
-// This is an alias to an internal type.
-type FunctionDefinition = shared.FunctionDefinition
-
-// This is an alias to an internal type.
 type FunctionDefinitionParam = shared.FunctionDefinitionParam
 
 // The parameters the functions accepts, described as a JSON Schema object. See the
@@ -368,18 +362,6 @@ type ResponseFormatJSONObject = shared.ResponseFormatJSONObject
 //
 // This is an alias to an internal type.
 type ResponseFormatJSONObjectParam = shared.ResponseFormatJSONObjectParam
-
-// JSON Schema response format. Used to generate structured JSON responses. Learn
-// more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
-//
-// This is an alias to an internal type.
-type ResponseFormatJSONSchema = shared.ResponseFormatJSONSchema
-
-// Structured Outputs configuration options, including a JSON Schema.
-//
-// This is an alias to an internal type.
-type ResponseFormatJSONSchemaJSONSchema = shared.ResponseFormatJSONSchemaJSONSchema
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
