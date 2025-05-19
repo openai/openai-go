@@ -1082,7 +1082,7 @@ type ResponseCodeInterpreterToolCallResultUnion struct {
 	// Any of "logs", "files".
 	Type string `json:"type"`
 	// This field is from variant [ResponseCodeInterpreterToolCallResultFiles].
-	Files []ResponseCodeInterpreterToolCallResultFilesFile `json:"files"`
+	Files []ResponseCodeInterpreterFile `json:"files"`
 	JSON  struct {
 		Logs  respjson.Field
 		Type  respjson.Field
@@ -1159,7 +1159,7 @@ func (r *ResponseCodeInterpreterToolCallResultLogs) UnmarshalJSON(data []byte) e
 
 // The output of a code interpreter tool call that is a file.
 type ResponseCodeInterpreterToolCallResultFiles struct {
-	Files []ResponseCodeInterpreterToolCallResultFilesFile `json:"files,required"`
+	Files []ResponseCodeInterpreterFile `json:"files,required"`
 	// The type of the code interpreter file output. Always `files`.
 	Type constant.Files `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -1177,7 +1177,7 @@ func (r *ResponseCodeInterpreterToolCallResultFiles) UnmarshalJSON(data []byte) 
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ResponseCodeInterpreterToolCallResultFilesFile struct {
+type ResponseCodeInterpreterFile struct {
 	// The ID of the file.
 	FileID string `json:"file_id,required"`
 	// The MIME type of the file.
@@ -1192,8 +1192,8 @@ type ResponseCodeInterpreterToolCallResultFilesFile struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ResponseCodeInterpreterToolCallResultFilesFile) RawJSON() string { return r.JSON.raw }
-func (r *ResponseCodeInterpreterToolCallResultFilesFile) UnmarshalJSON(data []byte) error {
+func (r ResponseCodeInterpreterFile) RawJSON() string { return r.JSON.raw }
+func (r *ResponseCodeInterpreterFile) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
