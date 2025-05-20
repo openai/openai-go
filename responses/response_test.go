@@ -35,15 +35,17 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		Include:         []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		Instructions:    openai.String("instructions"),
 		MaxOutputTokens: openai.Int(0),
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		ParallelToolCalls:  openai.Bool(true),
 		PreviousResponseID: openai.String("previous_response_id"),
 		Reasoning: shared.ReasoningParam{
 			Effort:          shared.ReasoningEffortLow,
-			GenerateSummary: shared.ReasoningGenerateSummaryConcise,
+			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
+			Summary:         shared.ReasoningSummaryAuto,
 		},
+		ServiceTier: responses.ResponseNewParamsServiceTierAuto,
 		Store:       openai.Bool(true),
 		Temperature: openai.Float(1),
 		Text: responses.ResponseTextConfigParam{

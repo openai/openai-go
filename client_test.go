@@ -28,6 +28,7 @@ func (t *closureTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 func TestUserAgentHeader(t *testing.T) {
 	var userAgent string
 	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -47,7 +48,7 @@ func TestUserAgentHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelO3Mini,
+		Model: shared.ChatModelGPT4_1,
 	})
 	if userAgent != fmt.Sprintf("OpenAI/Go %s", internal.PackageVersion) {
 		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
@@ -57,6 +58,7 @@ func TestUserAgentHeader(t *testing.T) {
 func TestRetryAfter(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
 	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -79,7 +81,7 @@ func TestRetryAfter(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelO3Mini,
+		Model: shared.ChatModelGPT4_1,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -99,6 +101,7 @@ func TestRetryAfter(t *testing.T) {
 func TestDeleteRetryCountHeader(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
 	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -122,7 +125,7 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelO3Mini,
+		Model: shared.ChatModelGPT4_1,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -137,6 +140,7 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 func TestOverwriteRetryCountHeader(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
 	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -160,7 +164,7 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelO3Mini,
+		Model: shared.ChatModelGPT4_1,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -175,6 +179,7 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 func TestRetryAfterMs(t *testing.T) {
 	attempts := 0
 	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -197,7 +202,7 @@ func TestRetryAfterMs(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelO3Mini,
+		Model: shared.ChatModelGPT4_1,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -209,6 +214,7 @@ func TestRetryAfterMs(t *testing.T) {
 
 func TestContextCancel(t *testing.T) {
 	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -228,7 +234,7 @@ func TestContextCancel(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelO3Mini,
+		Model: shared.ChatModelGPT4_1,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -237,6 +243,7 @@ func TestContextCancel(t *testing.T) {
 
 func TestContextCancelDelay(t *testing.T) {
 	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -256,7 +263,7 @@ func TestContextCancelDelay(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelO3Mini,
+		Model: shared.ChatModelGPT4_1,
 	})
 	if err == nil {
 		t.Error("expected there to be a cancel error")
@@ -273,6 +280,7 @@ func TestContextDeadline(t *testing.T) {
 
 	go func() {
 		client := openai.NewClient(
+			option.WithAPIKey("My API Key"),
 			option.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
@@ -290,7 +298,7 @@ func TestContextDeadline(t *testing.T) {
 					},
 				},
 			}},
-			Model: shared.ChatModelO3Mini,
+			Model: shared.ChatModelGPT4_1,
 		})
 		if err == nil {
 			t.Error("expected there to be a deadline error")
@@ -318,6 +326,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 
 	go func() {
 		client := openai.NewClient(
+			option.WithAPIKey("My API Key"),
 			option.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
@@ -343,7 +352,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 					},
 				},
 			}},
-			Model: shared.ChatModelO3Mini,
+			Model: shared.ChatModelGPT4_1,
 		})
 		for stream.Next() {
 			_ = stream.Current()
@@ -371,6 +380,7 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 
 	go func() {
 		client := openai.NewClient(
+			option.WithAPIKey("My API Key"),
 			option.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
@@ -398,7 +408,7 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 						},
 					},
 				}},
-				Model: shared.ChatModelO3Mini,
+				Model: shared.ChatModelGPT4_1,
 			},
 			option.WithRequestTimeout((100 * time.Millisecond)),
 		)

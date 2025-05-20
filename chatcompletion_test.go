@@ -35,7 +35,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 				Name: openai.String("name"),
 			},
 		}},
-		Model: shared.ChatModelO3Mini,
+		Model: shared.ChatModelGPT4_1,
 		Audio: openai.ChatCompletionAudioParam{
 			Format: openai.ChatCompletionAudioParamFormatWAV,
 			Voice:  openai.ChatCompletionAudioParamVoiceAlloy,
@@ -57,7 +57,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Logprobs:            openai.Bool(true),
 		MaxCompletionTokens: openai.Int(0),
 		MaxTokens:           openai.Int(0),
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		Modalities:        []string{"text"},
@@ -101,8 +101,8 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		User:        openai.String("user-1234"),
 		WebSearchOptions: openai.ChatCompletionNewParamsWebSearchOptions{
 			SearchContextSize: "low",
-			UserLocation: openai.ChatCompletionNewParamsWebSearchOptionsUserLocation{
-				Approximate: openai.ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate{
+			UserLocation: openai.ChatCompletionWebSearchUserLocation{
+				Approximate: openai.ChatCompletionWebSearchApproximateUserLocation{
 					City:     openai.String("city"),
 					Country:  openai.String("country"),
 					Region:   openai.String("region"),
@@ -158,7 +158,7 @@ func TestChatCompletionUpdate(t *testing.T) {
 		context.TODO(),
 		"completion_id",
 		openai.ChatCompletionUpdateParams{
-			Metadata: shared.MetadataParam{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
 		},
@@ -187,7 +187,7 @@ func TestChatCompletionListWithOptionalParams(t *testing.T) {
 	_, err := client.Chat.Completions.List(context.TODO(), openai.ChatCompletionListParams{
 		After: openai.String("after"),
 		Limit: openai.Int(0),
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		Model: openai.String("model"),

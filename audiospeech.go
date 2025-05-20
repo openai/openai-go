@@ -6,6 +6,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/openai/openai-go/internal/apijson"
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/param"
@@ -54,18 +55,15 @@ type AudioSpeechNewParams struct {
 	// `tts-1`, `tts-1-hd` or `gpt-4o-mini-tts`.
 	Model SpeechModel `json:"model,omitzero,required"`
 	// The voice to use when generating the audio. Supported voices are `alloy`, `ash`,
-	// `coral`, `echo`, `fable`, `onyx`, `nova`, `sage` and `shimmer`. Previews of the
-	// voices are available in the
+	// `ballad`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`, `shimmer`, and
+	// `verse`. Previews of the voices are available in the
 	// [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
-	//
-	// Any of "alloy", "ash", "coral", "echo", "fable", "onyx", "nova", "sage",
-	// "shimmer".
 	Voice AudioSpeechNewParamsVoice `json:"voice,omitzero,required"`
 	// Control the voice of your generated audio with additional instructions. Does not
 	// work with `tts-1` or `tts-1-hd`.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// The speed of the generated audio. Select a value from `0.25` to `4.0`. `1.0` is
-	// the default.
+	// the default. Does not work with `gpt-4o-mini-tts`.
 	Speed param.Opt[float64] `json:"speed,omitzero"`
 	// The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,
 	// `wav`, and `pcm`.
@@ -75,24 +73,24 @@ type AudioSpeechNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f AudioSpeechNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r AudioSpeechNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow AudioSpeechNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
 }
+func (r *AudioSpeechNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The voice to use when generating the audio. Supported voices are `alloy`, `ash`,
-// `coral`, `echo`, `fable`, `onyx`, `nova`, `sage` and `shimmer`. Previews of the
-// voices are available in the
+// `ballad`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`, `shimmer`, and
+// `verse`. Previews of the voices are available in the
 // [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
 type AudioSpeechNewParamsVoice string
 
 const (
 	AudioSpeechNewParamsVoiceAlloy   AudioSpeechNewParamsVoice = "alloy"
 	AudioSpeechNewParamsVoiceAsh     AudioSpeechNewParamsVoice = "ash"
+	AudioSpeechNewParamsVoiceBallad  AudioSpeechNewParamsVoice = "ballad"
 	AudioSpeechNewParamsVoiceCoral   AudioSpeechNewParamsVoice = "coral"
 	AudioSpeechNewParamsVoiceEcho    AudioSpeechNewParamsVoice = "echo"
 	AudioSpeechNewParamsVoiceFable   AudioSpeechNewParamsVoice = "fable"
@@ -100,6 +98,7 @@ const (
 	AudioSpeechNewParamsVoiceNova    AudioSpeechNewParamsVoice = "nova"
 	AudioSpeechNewParamsVoiceSage    AudioSpeechNewParamsVoice = "sage"
 	AudioSpeechNewParamsVoiceShimmer AudioSpeechNewParamsVoice = "shimmer"
+	AudioSpeechNewParamsVoiceVerse   AudioSpeechNewParamsVoice = "verse"
 )
 
 // The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,

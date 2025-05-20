@@ -16,7 +16,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared/constant"
 )
 
@@ -94,10 +94,10 @@ func (r *VectorStoreFileService) UploadAndPoll(ctx context.Context, vectorStoreI
 }
 
 // Retrieves a vector store file.
-func (r *VectorStoreFileService) Get(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
+func (r *VectorStoreFileService) Get(ctx context.Context, fileID string, query VectorStoreFileGetParams, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if vectorStoreID == "" {
+	if query.VectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
 		return
 	}
@@ -105,16 +105,16 @@ func (r *VectorStoreFileService) Get(ctx context.Context, vectorStoreID string, 
 		err = errors.New("missing required file_id parameter")
 		return
 	}
-	path := fmt.Sprintf("vector_stores/%s/files/%s", vectorStoreID, fileID)
+	path := fmt.Sprintf("vector_stores/%s/files/%s", query.VectorStoreID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
 
 // Update attributes on a vector store file.
-func (r *VectorStoreFileService) Update(ctx context.Context, vectorStoreID string, fileID string, body VectorStoreFileUpdateParams, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
+func (r *VectorStoreFileService) Update(ctx context.Context, fileID string, params VectorStoreFileUpdateParams, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if vectorStoreID == "" {
+	if params.VectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
 		return
 	}
@@ -122,8 +122,8 @@ func (r *VectorStoreFileService) Update(ctx context.Context, vectorStoreID strin
 		err = errors.New("missing required file_id parameter")
 		return
 	}
-	path := fmt.Sprintf("vector_stores/%s/files/%s", vectorStoreID, fileID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	path := fmt.Sprintf("vector_stores/%s/files/%s", params.VectorStoreID, fileID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return
 }
 
@@ -158,10 +158,10 @@ func (r *VectorStoreFileService) ListAutoPaging(ctx context.Context, vectorStore
 // the file itself will not be deleted. To delete the file, use the
 // [delete file](https://platform.openai.com/docs/api-reference/files/delete)
 // endpoint.
-func (r *VectorStoreFileService) Delete(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) (res *VectorStoreFileDeleted, err error) {
+func (r *VectorStoreFileService) Delete(ctx context.Context, fileID string, body VectorStoreFileDeleteParams, opts ...option.RequestOption) (res *VectorStoreFileDeleted, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if vectorStoreID == "" {
+	if body.VectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
 		return
 	}
@@ -169,17 +169,17 @@ func (r *VectorStoreFileService) Delete(ctx context.Context, vectorStoreID strin
 		err = errors.New("missing required file_id parameter")
 		return
 	}
-	path := fmt.Sprintf("vector_stores/%s/files/%s", vectorStoreID, fileID)
+	path := fmt.Sprintf("vector_stores/%s/files/%s", body.VectorStoreID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return
 }
 
 // Retrieve the parsed contents of a vector store file.
-func (r *VectorStoreFileService) Content(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) (res *pagination.Page[VectorStoreFileContentResponse], err error) {
+func (r *VectorStoreFileService) Content(ctx context.Context, fileID string, query VectorStoreFileContentParams, opts ...option.RequestOption) (res *pagination.Page[VectorStoreFileContentResponse], err error) {
 	var raw *http.Response
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
-	if vectorStoreID == "" {
+	if query.VectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
 		return
 	}
@@ -187,7 +187,7 @@ func (r *VectorStoreFileService) Content(ctx context.Context, vectorStoreID stri
 		err = errors.New("missing required file_id parameter")
 		return
 	}
-	path := fmt.Sprintf("vector_stores/%s/files/%s/content", vectorStoreID, fileID)
+	path := fmt.Sprintf("vector_stores/%s/files/%s/content", query.VectorStoreID, fileID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, nil, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -201,8 +201,8 @@ func (r *VectorStoreFileService) Content(ctx context.Context, vectorStoreID stri
 }
 
 // Retrieve the parsed contents of a vector store file.
-func (r *VectorStoreFileService) ContentAutoPaging(ctx context.Context, vectorStoreID string, fileID string, opts ...option.RequestOption) *pagination.PageAutoPager[VectorStoreFileContentResponse] {
-	return pagination.NewPageAutoPager(r.Content(ctx, vectorStoreID, fileID, opts...))
+func (r *VectorStoreFileService) ContentAutoPaging(ctx context.Context, fileID string, query VectorStoreFileContentParams, opts ...option.RequestOption) *pagination.PageAutoPager[VectorStoreFileContentResponse] {
+	return pagination.NewPageAutoPager(r.Content(ctx, fileID, query, opts...))
 }
 
 // A list of files attached to a vector store.
@@ -238,19 +238,18 @@ type VectorStoreFile struct {
 	Attributes map[string]VectorStoreFileAttributeUnion `json:"attributes,nullable"`
 	// The strategy used to chunk the file.
 	ChunkingStrategy FileChunkingStrategyUnion `json:"chunking_strategy"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID               resp.Field
-		CreatedAt        resp.Field
-		LastError        resp.Field
-		Object           resp.Field
-		Status           resp.Field
-		UsageBytes       resp.Field
-		VectorStoreID    resp.Field
-		Attributes       resp.Field
-		ChunkingStrategy resp.Field
-		ExtraFields      map[string]resp.Field
+		ID               respjson.Field
+		CreatedAt        respjson.Field
+		LastError        respjson.Field
+		Object           respjson.Field
+		Status           respjson.Field
+		UsageBytes       respjson.Field
+		VectorStoreID    respjson.Field
+		Attributes       respjson.Field
+		ChunkingStrategy respjson.Field
+		ExtraFields      map[string]respjson.Field
 		raw              string
 	} `json:"-"`
 }
@@ -270,12 +269,11 @@ type VectorStoreFileLastError struct {
 	Code string `json:"code,required"`
 	// A human-readable description of the error.
 	Message string `json:"message,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        resp.Field
-		Message     resp.Field
-		ExtraFields map[string]resp.Field
+		Code        respjson.Field
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -313,9 +311,9 @@ type VectorStoreFileAttributeUnion struct {
 	// This field will be present if the value is a [bool] instead of an object.
 	OfBool bool `json:",inline"`
 	JSON   struct {
-		OfString resp.Field
-		OfFloat  resp.Field
-		OfBool   resp.Field
+		OfString respjson.Field
+		OfFloat  respjson.Field
+		OfBool   respjson.Field
 		raw      string
 	} `json:"-"`
 }
@@ -346,13 +344,12 @@ type VectorStoreFileDeleted struct {
 	ID      string                          `json:"id,required"`
 	Deleted bool                            `json:"deleted,required"`
 	Object  constant.VectorStoreFileDeleted `json:"object,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          resp.Field
-		Deleted     resp.Field
-		Object      resp.Field
-		ExtraFields map[string]resp.Field
+		ID          respjson.Field
+		Deleted     respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -368,12 +365,11 @@ type VectorStoreFileContentResponse struct {
 	Text string `json:"text"`
 	// The content type (currently only `"text"`)
 	Type string `json:"type"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Text        resp.Field
-		Type        resp.Field
-		ExtraFields map[string]resp.Field
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -401,13 +397,12 @@ type VectorStoreFileNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f VectorStoreFileNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r VectorStoreFileNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreFileNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VectorStoreFileNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Only one field can be non-zero.
@@ -420,13 +415,11 @@ type VectorStoreFileNewParamsAttributeUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u VectorStoreFileNewParamsAttributeUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u VectorStoreFileNewParamsAttributeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreFileNewParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+}
+func (u *VectorStoreFileNewParamsAttributeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *VectorStoreFileNewParamsAttributeUnion) asAny() any {
@@ -440,23 +433,28 @@ func (u *VectorStoreFileNewParamsAttributeUnion) asAny() any {
 	return nil
 }
 
+type VectorStoreFileGetParams struct {
+	VectorStoreID string `path:"vector_store_id,required" json:"-"`
+	paramObj
+}
+
 type VectorStoreFileUpdateParams struct {
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
 	// length of 64 characters. Values are strings with a maximum length of 512
 	// characters, booleans, or numbers.
-	Attributes map[string]VectorStoreFileUpdateParamsAttributeUnion `json:"attributes,omitzero,required"`
+	Attributes    map[string]VectorStoreFileUpdateParamsAttributeUnion `json:"attributes,omitzero,required"`
+	VectorStoreID string                                               `path:"vector_store_id,required" json:"-"`
 	paramObj
 }
-
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f VectorStoreFileUpdateParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
 
 func (r VectorStoreFileUpdateParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreFileUpdateParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VectorStoreFileUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Only one field can be non-zero.
@@ -469,13 +467,11 @@ type VectorStoreFileUpdateParamsAttributeUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u VectorStoreFileUpdateParamsAttributeUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u VectorStoreFileUpdateParamsAttributeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreFileUpdateParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+}
+func (u *VectorStoreFileUpdateParamsAttributeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *VectorStoreFileUpdateParamsAttributeUnion) asAny() any {
@@ -515,13 +511,9 @@ type VectorStoreFileListParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f VectorStoreFileListParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 // URLQuery serializes [VectorStoreFileListParams]'s query parameters as
 // `url.Values`.
-func (r VectorStoreFileListParams) URLQuery() (v url.Values) {
+func (r VectorStoreFileListParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -546,3 +538,13 @@ const (
 	VectorStoreFileListParamsOrderAsc  VectorStoreFileListParamsOrder = "asc"
 	VectorStoreFileListParamsOrderDesc VectorStoreFileListParamsOrder = "desc"
 )
+
+type VectorStoreFileDeleteParams struct {
+	VectorStoreID string `path:"vector_store_id,required" json:"-"`
+	paramObj
+}
+
+type VectorStoreFileContentParams struct {
+	VectorStoreID string `path:"vector_store_id,required" json:"-"`
+	paramObj
+}

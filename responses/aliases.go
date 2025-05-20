@@ -5,7 +5,6 @@ package responses
 import (
 	"github.com/openai/openai-go/internal/apierror"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
 	"github.com/openai/openai-go/shared"
 )
 
@@ -19,6 +18,36 @@ type Error = apierror.Error
 
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
+
+// Equals "gpt-4.1"
+const ChatModelGPT4_1 = shared.ChatModelGPT4_1
+
+// Equals "gpt-4.1-mini"
+const ChatModelGPT4_1Mini = shared.ChatModelGPT4_1Mini
+
+// Equals "gpt-4.1-nano"
+const ChatModelGPT4_1Nano = shared.ChatModelGPT4_1Nano
+
+// Equals "gpt-4.1-2025-04-14"
+const ChatModelGPT4_1_2025_04_14 = shared.ChatModelGPT4_1_2025_04_14
+
+// Equals "gpt-4.1-mini-2025-04-14"
+const ChatModelGPT4_1Mini2025_04_14 = shared.ChatModelGPT4_1Mini2025_04_14
+
+// Equals "gpt-4.1-nano-2025-04-14"
+const ChatModelGPT4_1Nano2025_04_14 = shared.ChatModelGPT4_1Nano2025_04_14
+
+// Equals "o4-mini"
+const ChatModelO4Mini = shared.ChatModelO4Mini
+
+// Equals "o4-mini-2025-04-16"
+const ChatModelO4Mini2025_04_16 = shared.ChatModelO4Mini2025_04_16
+
+// Equals "o3"
+const ChatModelO3 = shared.ChatModelO3
+
+// Equals "o3-2025-04-16"
+const ChatModelO3_2025_04_16 = shared.ChatModelO3_2025_04_16
 
 // Equals "o3-mini"
 const ChatModelO3Mini = shared.ChatModelO3Mini
@@ -85,6 +114,9 @@ const ChatModelGPT4oMiniSearchPreview2025_03_11 = shared.ChatModelGPT4oMiniSearc
 
 // Equals "chatgpt-4o-latest"
 const ChatModelChatgpt4oLatest = shared.ChatModelChatgpt4oLatest
+
+// Equals "codex-mini-latest"
+const ChatModelCodexMiniLatest = shared.ChatModelCodexMiniLatest
 
 // Equals "gpt-4o-mini"
 const ChatModelGPT4oMini = shared.ChatModelGPT4oMini
@@ -225,12 +257,6 @@ const CompoundFilterTypeOr = shared.CompoundFilterTypeOr
 type CompoundFilterParam = shared.CompoundFilterParam
 
 // This is an alias to an internal type.
-type ErrorObject = shared.ErrorObject
-
-// This is an alias to an internal type.
-type FunctionDefinition = shared.FunctionDefinition
-
-// This is an alias to an internal type.
 type FunctionDefinitionParam = shared.FunctionDefinitionParam
 
 // The parameters the functions accepts, described as a JSON Schema object. See the
@@ -254,16 +280,6 @@ type FunctionParameters = shared.FunctionParameters
 // This is an alias to an internal type.
 type Metadata = shared.Metadata
 
-// Set of 16 key-value pairs that can be attached to an object. This can be useful
-// for storing additional information about the object in a structured format, and
-// querying for objects via API or the dashboard.
-//
-// Keys are strings with a maximum length of 64 characters. Values are strings with
-// a maximum length of 512 characters.
-//
-// This is an alias to an internal type.
-type MetadataParam = shared.MetadataParam
-
 // **o-series models only**
 //
 // Configuration options for
@@ -272,20 +288,39 @@ type MetadataParam = shared.MetadataParam
 // This is an alias to an internal type.
 type Reasoning = shared.Reasoning
 
-// **computer_use_preview only**
+// **Deprecated:** use `summary` instead.
 //
 // A summary of the reasoning performed by the model. This can be useful for
-// debugging and understanding the model's reasoning process. One of `concise` or
-// `detailed`.
+// debugging and understanding the model's reasoning process. One of `auto`,
+// `concise`, or `detailed`.
 //
 // This is an alias to an internal type.
 type ReasoningGenerateSummary = shared.ReasoningGenerateSummary
+
+// Equals "auto"
+const ReasoningGenerateSummaryAuto = shared.ReasoningGenerateSummaryAuto
 
 // Equals "concise"
 const ReasoningGenerateSummaryConcise = shared.ReasoningGenerateSummaryConcise
 
 // Equals "detailed"
 const ReasoningGenerateSummaryDetailed = shared.ReasoningGenerateSummaryDetailed
+
+// A summary of the reasoning performed by the model. This can be useful for
+// debugging and understanding the model's reasoning process. One of `auto`,
+// `concise`, or `detailed`.
+//
+// This is an alias to an internal type.
+type ReasoningSummary = shared.ReasoningSummary
+
+// Equals "auto"
+const ReasoningSummaryAuto = shared.ReasoningSummaryAuto
+
+// Equals "concise"
+const ReasoningSummaryConcise = shared.ReasoningSummaryConcise
+
+// Equals "detailed"
+const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 
 // **o-series models only**
 //
@@ -333,18 +368,6 @@ type ResponseFormatJSONObjectParam = shared.ResponseFormatJSONObjectParam
 // [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
 //
 // This is an alias to an internal type.
-type ResponseFormatJSONSchema = shared.ResponseFormatJSONSchema
-
-// Structured Outputs configuration options, including a JSON Schema.
-//
-// This is an alias to an internal type.
-type ResponseFormatJSONSchemaJSONSchema = shared.ResponseFormatJSONSchemaJSONSchema
-
-// JSON Schema response format. Used to generate structured JSON responses. Learn
-// more about
-// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
-//
-// This is an alias to an internal type.
 type ResponseFormatJSONSchemaParam = shared.ResponseFormatJSONSchemaParam
 
 // Structured Outputs configuration options, including a JSON Schema.
@@ -376,13 +399,3 @@ const ResponsesModelComputerUsePreview = shared.ResponsesModelComputerUsePreview
 
 // Equals "computer-use-preview-2025-03-11"
 const ResponsesModelComputerUsePreview2025_03_11 = shared.ResponsesModelComputerUsePreview2025_03_11
-
-func toParam[T comparable](value T, meta resp.Field) param.Opt[T] {
-	if meta.IsPresent() {
-		return param.NewOpt(value)
-	}
-	if meta.IsExplicitNull() {
-		return param.NullOpt[T]()
-	}
-	return param.Opt[T]{}
-}

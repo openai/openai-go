@@ -30,7 +30,7 @@ func TestBatchNewWithOptionalParams(t *testing.T) {
 		CompletionWindow: openai.BatchNewParamsCompletionWindow24h,
 		Endpoint:         openai.BatchNewParamsEndpointV1Responses,
 		InputFileID:      "input_file_id",
-		Metadata: shared.MetadataParam{
+		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 	})

@@ -13,7 +13,7 @@ import (
 	"github.com/openai/openai-go/option"
 )
 
-func TestBetaThreadRunStepGetWithOptionalParams(t *testing.T) {
+func TestFineTuningAlphaGraderRunWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -25,15 +25,20 @@ func TestBetaThreadRunStepGetWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Beta.Threads.Runs.Steps.Get(
-		context.TODO(),
-		"thread_id",
-		"run_id",
-		"step_id",
-		openai.BetaThreadRunStepGetParams{
-			Include: []openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent},
+	_, err := client.FineTuning.Alpha.Graders.Run(context.TODO(), openai.FineTuningAlphaGraderRunParams{
+		Grader: openai.FineTuningAlphaGraderRunParamsGraderUnion{
+			OfStringCheck: &openai.StringCheckGraderParam{
+				Input:     "input",
+				Name:      "name",
+				Operation: openai.StringCheckGraderOperationEq,
+				Reference: "reference",
+			},
 		},
-	)
+		ModelSample: "model_sample",
+		ReferenceAnswer: openai.FineTuningAlphaGraderRunParamsReferenceAnswerUnion{
+			OfString: openai.String("string"),
+		},
+	})
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {
@@ -43,7 +48,7 @@ func TestBetaThreadRunStepGetWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestBetaThreadRunStepListWithOptionalParams(t *testing.T) {
+func TestFineTuningAlphaGraderValidateWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -55,18 +60,16 @@ func TestBetaThreadRunStepListWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Beta.Threads.Runs.Steps.List(
-		context.TODO(),
-		"thread_id",
-		"run_id",
-		openai.BetaThreadRunStepListParams{
-			After:   openai.String("after"),
-			Before:  openai.String("before"),
-			Include: []openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent},
-			Limit:   openai.Int(0),
-			Order:   openai.BetaThreadRunStepListParamsOrderAsc,
+	_, err := client.FineTuning.Alpha.Graders.Validate(context.TODO(), openai.FineTuningAlphaGraderValidateParams{
+		Grader: openai.FineTuningAlphaGraderValidateParamsGraderUnion{
+			OfStringCheckGrader: &openai.StringCheckGraderParam{
+				Input:     "input",
+				Name:      "name",
+				Operation: openai.StringCheckGraderOperationEq,
+				Reference: "reference",
+			},
 		},
-	)
+	})
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {

@@ -16,7 +16,7 @@ import (
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/packages/pagination"
 	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/resp"
+	"github.com/openai/openai-go/packages/respjson"
 	"github.com/openai/openai-go/shared/constant"
 )
 
@@ -112,10 +112,10 @@ func (r *VectorStoreFileBatchService) UploadAndPoll(ctx context.Context, vectorS
 }
 
 // Retrieves a vector store file batch.
-func (r *VectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
+func (r *VectorStoreFileBatchService) Get(ctx context.Context, batchID string, query VectorStoreFileBatchGetParams, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if vectorStoreID == "" {
+	if query.VectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
 		return
 	}
@@ -123,17 +123,17 @@ func (r *VectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID str
 		err = errors.New("missing required batch_id parameter")
 		return
 	}
-	path := fmt.Sprintf("vector_stores/%s/file_batches/%s", vectorStoreID, batchID)
+	path := fmt.Sprintf("vector_stores/%s/file_batches/%s", query.VectorStoreID, batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
 
 // Cancel a vector store file batch. This attempts to cancel the processing of
 // files in this batch as soon as possible.
-func (r *VectorStoreFileBatchService) Cancel(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
+func (r *VectorStoreFileBatchService) Cancel(ctx context.Context, batchID string, body VectorStoreFileBatchCancelParams, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if vectorStoreID == "" {
+	if body.VectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
 		return
 	}
@@ -141,17 +141,17 @@ func (r *VectorStoreFileBatchService) Cancel(ctx context.Context, vectorStoreID 
 		err = errors.New("missing required batch_id parameter")
 		return
 	}
-	path := fmt.Sprintf("vector_stores/%s/file_batches/%s/cancel", vectorStoreID, batchID)
+	path := fmt.Sprintf("vector_stores/%s/file_batches/%s/cancel", body.VectorStoreID, batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return
 }
 
 // Returns a list of vector store files in a batch.
-func (r *VectorStoreFileBatchService) ListFiles(ctx context.Context, vectorStoreID string, batchID string, query VectorStoreFileBatchListFilesParams, opts ...option.RequestOption) (res *pagination.CursorPage[VectorStoreFile], err error) {
+func (r *VectorStoreFileBatchService) ListFiles(ctx context.Context, batchID string, params VectorStoreFileBatchListFilesParams, opts ...option.RequestOption) (res *pagination.CursorPage[VectorStoreFile], err error) {
 	var raw *http.Response
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
-	if vectorStoreID == "" {
+	if params.VectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
 		return
 	}
@@ -159,8 +159,8 @@ func (r *VectorStoreFileBatchService) ListFiles(ctx context.Context, vectorStore
 		err = errors.New("missing required batch_id parameter")
 		return
 	}
-	path := fmt.Sprintf("vector_stores/%s/file_batches/%s/files", vectorStoreID, batchID)
-	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
+	path := fmt.Sprintf("vector_stores/%s/file_batches/%s/files", params.VectorStoreID, batchID)
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -173,8 +173,8 @@ func (r *VectorStoreFileBatchService) ListFiles(ctx context.Context, vectorStore
 }
 
 // Returns a list of vector store files in a batch.
-func (r *VectorStoreFileBatchService) ListFilesAutoPaging(ctx context.Context, vectorStoreID string, batchID string, query VectorStoreFileBatchListFilesParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[VectorStoreFile] {
-	return pagination.NewCursorPageAutoPager(r.ListFiles(ctx, vectorStoreID, batchID, query, opts...))
+func (r *VectorStoreFileBatchService) ListFilesAutoPaging(ctx context.Context, batchID string, params VectorStoreFileBatchListFilesParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[VectorStoreFile] {
+	return pagination.NewCursorPageAutoPager(r.ListFiles(ctx, batchID, params, opts...))
 }
 
 // A batch of files attached to a vector store.
@@ -197,16 +197,15 @@ type VectorStoreFileBatch struct {
 	// that the [File](https://platform.openai.com/docs/api-reference/files) is
 	// attached to.
 	VectorStoreID string `json:"vector_store_id,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID            resp.Field
-		CreatedAt     resp.Field
-		FileCounts    resp.Field
-		Object        resp.Field
-		Status        resp.Field
-		VectorStoreID resp.Field
-		ExtraFields   map[string]resp.Field
+		ID            respjson.Field
+		CreatedAt     respjson.Field
+		FileCounts    respjson.Field
+		Object        respjson.Field
+		Status        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`
 }
@@ -228,15 +227,14 @@ type VectorStoreFileBatchFileCounts struct {
 	InProgress int64 `json:"in_progress,required"`
 	// The total number of files.
 	Total int64 `json:"total,required"`
-	// Metadata for the response, check the presence of optional fields with the
-	// [resp.Field.IsPresent] method.
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Cancelled   resp.Field
-		Completed   resp.Field
-		Failed      resp.Field
-		InProgress  resp.Field
-		Total       resp.Field
-		ExtraFields map[string]resp.Field
+		Cancelled   respjson.Field
+		Completed   respjson.Field
+		Failed      respjson.Field
+		InProgress  respjson.Field
+		Total       respjson.Field
+		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
@@ -275,13 +273,12 @@ type VectorStoreFileBatchNewParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f VectorStoreFileBatchNewParams) IsPresent() bool { return !param.IsOmitted(f) && !f.IsNull() }
-
 func (r VectorStoreFileBatchNewParams) MarshalJSON() (data []byte, err error) {
 	type shadow VectorStoreFileBatchNewParams
 	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VectorStoreFileBatchNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Only one field can be non-zero.
@@ -294,13 +291,11 @@ type VectorStoreFileBatchNewParamsAttributeUnion struct {
 	paramUnion
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (u VectorStoreFileBatchNewParamsAttributeUnion) IsPresent() bool {
-	return !param.IsOmitted(u) && !u.IsNull()
-}
 func (u VectorStoreFileBatchNewParamsAttributeUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion[VectorStoreFileBatchNewParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+}
+func (u *VectorStoreFileBatchNewParamsAttributeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *VectorStoreFileBatchNewParamsAttributeUnion) asAny() any {
@@ -314,7 +309,18 @@ func (u *VectorStoreFileBatchNewParamsAttributeUnion) asAny() any {
 	return nil
 }
 
+type VectorStoreFileBatchGetParams struct {
+	VectorStoreID string `path:"vector_store_id,required" json:"-"`
+	paramObj
+}
+
+type VectorStoreFileBatchCancelParams struct {
+	VectorStoreID string `path:"vector_store_id,required" json:"-"`
+	paramObj
+}
+
 type VectorStoreFileBatchListFilesParams struct {
+	VectorStoreID string `path:"vector_store_id,required" json:"-"`
 	// A cursor for use in pagination. `after` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to
@@ -340,15 +346,9 @@ type VectorStoreFileBatchListFilesParams struct {
 	paramObj
 }
 
-// IsPresent returns true if the field's value is not omitted and not the JSON
-// "null". To check if this field is omitted, use [param.IsOmitted].
-func (f VectorStoreFileBatchListFilesParams) IsPresent() bool {
-	return !param.IsOmitted(f) && !f.IsNull()
-}
-
 // URLQuery serializes [VectorStoreFileBatchListFilesParams]'s query parameters as
 // `url.Values`.
-func (r VectorStoreFileBatchListFilesParams) URLQuery() (v url.Values) {
+func (r VectorStoreFileBatchListFilesParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

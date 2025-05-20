@@ -1,4 +1,4 @@
-package param
+package paramutil
 
 import (
 	"github.com/openai/openai-go/internal/encoding/json/sentinel"
