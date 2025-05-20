@@ -1046,9 +1046,10 @@ client := openai.NewClient(
 )
 ```
 
-## Microsoft Azure OpenAI
+## Azure OpenAI in Azure AI Foundry Models
 
-To use this library with [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/overview), use the option.RequestOption functions in the `azure` package.
+To use this library with [Azure OpenAI in Azure AI Foundry Models](https://learn.microsoft.com/azure/ai-services/openai/overview),
+use the option.RequestOption functions in the `azure` package.
 
 ```go
 package main
