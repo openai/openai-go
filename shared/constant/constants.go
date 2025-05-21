@@ -33,6 +33,7 @@ type CodeInterpreterCall string                     // Always "code_interpreter_
 type ComputerCallOutput string                      // Always "computer_call_output"
 type ComputerScreenshot string                      // Always "computer_screenshot"
 type ComputerUsePreview string                      // Always "computer_use_preview"
+type ContainerFile string                           // Always "container.file"
 type Content string                                 // Always "content"
 type Developer string                               // Always "developer"
 type DoubleClick string                             // Always "double_click"
@@ -216,6 +217,7 @@ func (c CodeInterpreterCall) Default() CodeInterpreterCall     { return "code_in
 func (c ComputerCallOutput) Default() ComputerCallOutput       { return "computer_call_output" }
 func (c ComputerScreenshot) Default() ComputerScreenshot       { return "computer_screenshot" }
 func (c ComputerUsePreview) Default() ComputerUsePreview       { return "computer_use_preview" }
+func (c ContainerFile) Default() ContainerFile                 { return "container.file" }
 func (c Content) Default() Content                             { return "content" }
 func (c Developer) Default() Developer                         { return "developer" }
 func (c DoubleClick) Default() DoubleClick                     { return "double_click" }
@@ -489,6 +491,7 @@ func (c CodeInterpreterCall) MarshalJSON() ([]byte, error)                   { r
 func (c ComputerCallOutput) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c ComputerScreenshot) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c ComputerUsePreview) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c ContainerFile) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Content) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Developer) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c DoubleClick) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
