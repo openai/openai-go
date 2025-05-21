@@ -306,6 +306,75 @@ func (r *CompoundFilterParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type ErrorObject struct {
+	Code    string `json:"code,required"`
+	Message string `json:"message,required"`
+	Param   string `json:"param,required"`
+	Type    string `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Param       respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ErrorObject) RawJSON() string { return r.JSON.raw }
+func (r *ErrorObject) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type FunctionDefinition struct {
+	// The name of the function to be called. Must be a-z, A-Z, 0-9, or contain
+	// underscores and dashes, with a maximum length of 64.
+	Name string `json:"name,required"`
+	// A description of what the function does, used by the model to choose when and
+	// how to call the function.
+	Description string `json:"description"`
+	// The parameters the functions accepts, described as a JSON Schema object. See the
+	// [guide](https://platform.openai.com/docs/guides/function-calling) for examples,
+	// and the
+	// [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for
+	// documentation about the format.
+	//
+	// Omitting `parameters` defines a function with an empty parameter list.
+	Parameters FunctionParameters `json:"parameters"`
+	// Whether to enable strict schema adherence when generating the function call. If
+	// set to true, the model will follow the exact schema defined in the `parameters`
+	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
+	// more about Structured Outputs in the
+	// [function calling guide](docs/guides/function-calling).
+	Strict bool `json:"strict,nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Description respjson.Field
+		Parameters  respjson.Field
+		Strict      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r FunctionDefinition) RawJSON() string { return r.JSON.raw }
+func (r *FunctionDefinition) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this FunctionDefinition to a FunctionDefinitionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// FunctionDefinitionParam.Overrides()
+func (r FunctionDefinition) ToParam() FunctionDefinitionParam {
+	return param.Override[FunctionDefinitionParam](r.RawJSON())
+}
+
 // The property Name is required.
 type FunctionDefinitionParam struct {
 	// The name of the function to be called. Must be a-z, A-Z, 0-9, or contain
@@ -532,6 +601,73 @@ func (r ResponseFormatJSONObjectParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ResponseFormatJSONObjectParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// JSON Schema response format. Used to generate structured JSON responses. Learn
+// more about
+// [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
+type ResponseFormatJSONSchema struct {
+	// Structured Outputs configuration options, including a JSON Schema.
+	JSONSchema ResponseFormatJSONSchemaJSONSchema `json:"json_schema,required"`
+	// The type of response format being defined. Always `json_schema`.
+	Type constant.JSONSchema `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		JSONSchema  respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseFormatJSONSchema) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFormatJSONSchema) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this ResponseFormatJSONSchema to a
+// ResponseFormatJSONSchemaParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ResponseFormatJSONSchemaParam.Overrides()
+func (r ResponseFormatJSONSchema) ToParam() ResponseFormatJSONSchemaParam {
+	return param.Override[ResponseFormatJSONSchemaParam](r.RawJSON())
+}
+
+// Structured Outputs configuration options, including a JSON Schema.
+type ResponseFormatJSONSchemaJSONSchema struct {
+	// The name of the response format. Must be a-z, A-Z, 0-9, or contain underscores
+	// and dashes, with a maximum length of 64.
+	Name string `json:"name,required"`
+	// A description of what the response format is for, used by the model to determine
+	// how to respond in the format.
+	Description string `json:"description"`
+	// The schema for the response format, described as a JSON Schema object. Learn how
+	// to build JSON schemas [here](https://json-schema.org/).
+	Schema map[string]any `json:"schema"`
+	// Whether to enable strict schema adherence when generating the output. If set to
+	// true, the model will always follow the exact schema defined in the `schema`
+	// field. Only a subset of JSON Schema is supported when `strict` is `true`. To
+	// learn more, read the
+	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	Strict bool `json:"strict,nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		Description respjson.Field
+		Schema      respjson.Field
+		Strict      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseFormatJSONSchemaJSONSchema) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFormatJSONSchemaJSONSchema) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

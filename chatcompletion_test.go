@@ -101,8 +101,8 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		User:        openai.String("user-1234"),
 		WebSearchOptions: openai.ChatCompletionNewParamsWebSearchOptions{
 			SearchContextSize: "low",
-			UserLocation: openai.ChatCompletionWebSearchUserLocation{
-				Approximate: openai.ChatCompletionWebSearchApproximateUserLocation{
+			UserLocation: openai.ChatCompletionNewParamsWebSearchOptionsUserLocation{
+				Approximate: openai.ChatCompletionNewParamsWebSearchOptionsUserLocationApproximate{
 					City:     openai.String("city"),
 					Country:  openai.String("country"),
 					Region:   openai.String("region"),

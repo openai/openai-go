@@ -32,6 +32,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			OfString: openai.String("string"),
 		},
 		Model:           shared.ResponsesModel("gpt-4o"),
+		Background:      openai.Bool(true),
 		Include:         []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		Instructions:    openai.String("instructions"),
 		MaxOutputTokens: openai.Int(0),
@@ -57,22 +58,13 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
 		},
 		Tools: []responses.ToolUnionParam{{
-			OfFileSearch: &responses.FileSearchToolParam{
-				VectorStoreIDs: []string{"string"},
-				Filters: responses.FileSearchToolFiltersUnionParam{
-					OfComparisonFilter: &shared.ComparisonFilterParam{
-						Key:  "key",
-						Type: shared.ComparisonFilterTypeEq,
-						Value: shared.ComparisonFilterValueUnionParam{
-							OfString: openai.String("string"),
-						},
-					},
+			OfFunction: &responses.FunctionToolParam{
+				Name: "name",
+				Parameters: map[string]any{
+					"foo": "bar",
 				},
-				MaxNumResults: openai.Int(0),
-				RankingOptions: responses.FileSearchToolRankingOptionsParam{
-					Ranker:         "auto",
-					ScoreThreshold: openai.Float(0),
-				},
+				Strict:      openai.Bool(true),
+				Description: openai.String("description"),
 			},
 		}},
 		TopP:       openai.Float(1),
