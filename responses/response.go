@@ -109,6 +109,21 @@ func (r *ResponseService) Delete(ctx context.Context, responseID string, opts ..
 	return
 }
 
+// Cancels a model response with the given ID. Only responses created with the
+// `background` parameter set to `true` can be cancelled.
+// [Learn more](https://platform.openai.com/docs/guides/background).
+func (r *ResponseService) Cancel(ctx context.Context, responseID string, opts ...option.RequestOption) (err error) {
+	opts = append(r.Options[:], opts...)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	if responseID == "" {
+		err = errors.New("missing required response_id parameter")
+		return
+	}
+	path := fmt.Sprintf("responses/%s/cancel", responseID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, nil, opts...)
+	return
+}
+
 // A tool that controls a virtual computer. Learn more about the
 // [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
 type ComputerTool struct {
@@ -835,14 +850,17 @@ const (
 type ResponseAudioDeltaEvent struct {
 	// A chunk of Base64 encoded response audio bytes.
 	Delta string `json:"delta,required"`
+	// A sequence number for this chunk of the stream response.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.audio.delta`.
 	Type constant.ResponseAudioDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Delta       respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Delta          respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -854,13 +872,16 @@ func (r *ResponseAudioDeltaEvent) UnmarshalJSON(data []byte) error {
 
 // Emitted when the audio response is complete.
 type ResponseAudioDoneEvent struct {
+	// The sequence number of the delta.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.audio.done`.
 	Type constant.ResponseAudioDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -874,14 +895,17 @@ func (r *ResponseAudioDoneEvent) UnmarshalJSON(data []byte) error {
 type ResponseAudioTranscriptDeltaEvent struct {
 	// The partial transcript of the audio response.
 	Delta string `json:"delta,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.audio.transcript.delta`.
 	Type constant.ResponseAudioTranscriptDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Delta       respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Delta          respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -893,13 +917,16 @@ func (r *ResponseAudioTranscriptDeltaEvent) UnmarshalJSON(data []byte) error {
 
 // Emitted when the full audio transcript is completed.
 type ResponseAudioTranscriptDoneEvent struct {
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.audio.transcript.done`.
 	Type constant.ResponseAudioTranscriptDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -915,15 +942,18 @@ type ResponseCodeInterpreterCallCodeDeltaEvent struct {
 	Delta string `json:"delta,required"`
 	// The index of the output item that the code interpreter call is in progress.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.code_interpreter_call.code.delta`.
 	Type constant.ResponseCodeInterpreterCallCodeDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Delta       respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Delta          respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -939,15 +969,18 @@ type ResponseCodeInterpreterCallCodeDoneEvent struct {
 	Code string `json:"code,required"`
 	// The index of the output item that the code interpreter call is in progress.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.code_interpreter_call.code.done`.
 	Type constant.ResponseCodeInterpreterCallCodeDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Code           respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -963,12 +996,15 @@ type ResponseCodeInterpreterCallCompletedEvent struct {
 	CodeInterpreterCall ResponseCodeInterpreterToolCall `json:"code_interpreter_call,required"`
 	// The index of the output item that the code interpreter call is in progress.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.code_interpreter_call.completed`.
 	Type constant.ResponseCodeInterpreterCallCompleted `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		CodeInterpreterCall respjson.Field
 		OutputIndex         respjson.Field
+		SequenceNumber      respjson.Field
 		Type                respjson.Field
 		ExtraFields         map[string]respjson.Field
 		raw                 string
@@ -987,12 +1023,15 @@ type ResponseCodeInterpreterCallInProgressEvent struct {
 	CodeInterpreterCall ResponseCodeInterpreterToolCall `json:"code_interpreter_call,required"`
 	// The index of the output item that the code interpreter call is in progress.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.code_interpreter_call.in_progress`.
 	Type constant.ResponseCodeInterpreterCallInProgress `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		CodeInterpreterCall respjson.Field
 		OutputIndex         respjson.Field
+		SequenceNumber      respjson.Field
 		Type                respjson.Field
 		ExtraFields         map[string]respjson.Field
 		raw                 string
@@ -1011,12 +1050,15 @@ type ResponseCodeInterpreterCallInterpretingEvent struct {
 	CodeInterpreterCall ResponseCodeInterpreterToolCall `json:"code_interpreter_call,required"`
 	// The index of the output item that the code interpreter call is in progress.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.code_interpreter_call.interpreting`.
 	Type constant.ResponseCodeInterpreterCallInterpreting `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		CodeInterpreterCall respjson.Field
 		OutputIndex         respjson.Field
+		SequenceNumber      respjson.Field
 		Type                respjson.Field
 		ExtraFields         map[string]respjson.Field
 		raw                 string
@@ -1365,14 +1407,17 @@ func (r *ResponseCodeInterpreterToolCallResultFilesFileParam) UnmarshalJSON(data
 type ResponseCompletedEvent struct {
 	// Properties of the completed response.
 	Response Response `json:"response,required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.completed`.
 	Type constant.ResponseCompleted `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Response    respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -2498,17 +2543,20 @@ type ResponseContentPartAddedEvent struct {
 	OutputIndex int64 `json:"output_index,required"`
 	// The content part that was added.
 	Part ResponseContentPartAddedEventPartUnion `json:"part,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.content_part.added`.
 	Type constant.ResponseContentPartAdded `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ContentIndex respjson.Field
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		Part         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -2598,17 +2646,20 @@ type ResponseContentPartDoneEvent struct {
 	OutputIndex int64 `json:"output_index,required"`
 	// The content part that is done.
 	Part ResponseContentPartDoneEventPartUnion `json:"part,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.content_part.done`.
 	Type constant.ResponseContentPartDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ContentIndex respjson.Field
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		Part         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -2692,14 +2743,17 @@ func (r *ResponseContentPartDoneEventPartUnion) UnmarshalJSON(data []byte) error
 type ResponseCreatedEvent struct {
 	// The response that was created.
 	Response Response `json:"response,required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.created`.
 	Type constant.ResponseCreated `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Response    respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -2769,16 +2823,19 @@ type ResponseErrorEvent struct {
 	Message string `json:"message,required"`
 	// The error parameter.
 	Param string `json:"param,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `error`.
 	Type constant.Error `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        respjson.Field
-		Message     respjson.Field
-		Param       respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Code           respjson.Field
+		Message        respjson.Field
+		Param          respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -2792,14 +2849,17 @@ func (r *ResponseErrorEvent) UnmarshalJSON(data []byte) error {
 type ResponseFailedEvent struct {
 	// The response that failed.
 	Response Response `json:"response,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.failed`.
 	Type constant.ResponseFailed `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Response    respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -2815,15 +2875,18 @@ type ResponseFileSearchCallCompletedEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item that the file search call is initiated.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.file_search_call.completed`.
 	Type constant.ResponseFileSearchCallCompleted `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -2839,15 +2902,18 @@ type ResponseFileSearchCallInProgressEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item that the file search call is initiated.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.file_search_call.in_progress`.
 	Type constant.ResponseFileSearchCallInProgress `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -2863,15 +2929,18 @@ type ResponseFileSearchCallSearchingEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item that the file search call is searching.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.file_search_call.searching`.
 	Type constant.ResponseFileSearchCallSearching `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -3372,16 +3441,19 @@ type ResponseFunctionCallArgumentsDeltaEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item that the function-call arguments delta is added to.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.function_call_arguments.delta`.
 	Type constant.ResponseFunctionCallArgumentsDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Delta       respjson.Field
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -3398,16 +3470,19 @@ type ResponseFunctionCallArgumentsDoneEvent struct {
 	// The ID of the item.
 	ItemID string `json:"item_id,required"`
 	// The index of the output item.
-	OutputIndex int64                                      `json:"output_index,required"`
-	Type        constant.ResponseFunctionCallArgumentsDone `json:"type,required"`
+	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64                                      `json:"sequence_number,required"`
+	Type           constant.ResponseFunctionCallArgumentsDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Arguments   respjson.Field
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Arguments      respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -3654,15 +3729,18 @@ type ResponseImageGenCallCompletedEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item in the response's output array.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.image_generation_call.completed'.
 	Type constant.ResponseImageGenerationCallCompleted `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -3679,16 +3757,16 @@ type ResponseImageGenCallGeneratingEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item in the response's output array.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of the image generation item being processed.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.image_generation_call.generating'.
 	Type constant.ResponseImageGenerationCallGenerating `json:"type,required"`
-	// The sequence number of the image generation item being processed.
-	SequenceNumber int64 `json:"sequence_number"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
 		OutputIndex    respjson.Field
-		Type           respjson.Field
 		SequenceNumber respjson.Field
+		Type           respjson.Field
 		ExtraFields    map[string]respjson.Field
 		raw            string
 	} `json:"-"`
@@ -3765,14 +3843,17 @@ func (r *ResponseImageGenCallPartialImageEvent) UnmarshalJSON(data []byte) error
 type ResponseInProgressEvent struct {
 	// The response that is in progress.
 	Response Response `json:"response,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.in_progress`.
 	Type constant.ResponseInProgress `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Response    respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -3808,14 +3889,17 @@ const (
 type ResponseIncompleteEvent struct {
 	// The response that was incomplete.
 	Response Response `json:"response,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.incomplete`.
 	Type constant.ResponseIncomplete `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Response    respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -6183,16 +6267,19 @@ type ResponseMcpCallArgumentsDeltaEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item in the response's output array.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.mcp_call.arguments_delta'.
 	Type constant.ResponseMcpCallArgumentsDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Delta       respjson.Field
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -6210,16 +6297,19 @@ type ResponseMcpCallArgumentsDoneEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item in the response's output array.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.mcp_call.arguments_done'.
 	Type constant.ResponseMcpCallArgumentsDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Arguments   respjson.Field
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Arguments      respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -6231,13 +6321,16 @@ func (r *ResponseMcpCallArgumentsDoneEvent) UnmarshalJSON(data []byte) error {
 
 // Emitted when an MCP tool call has completed successfully.
 type ResponseMcpCallCompletedEvent struct {
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.mcp_call.completed'.
 	Type constant.ResponseMcpCallCompleted `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -6249,13 +6342,16 @@ func (r *ResponseMcpCallCompletedEvent) UnmarshalJSON(data []byte) error {
 
 // Emitted when an MCP tool call has failed.
 type ResponseMcpCallFailedEvent struct {
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.mcp_call.failed'.
 	Type constant.ResponseMcpCallFailed `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -6271,15 +6367,18 @@ type ResponseMcpCallInProgressEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item in the response's output array.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.mcp_call.in_progress'.
 	Type constant.ResponseMcpCallInProgress `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -6291,13 +6390,16 @@ func (r *ResponseMcpCallInProgressEvent) UnmarshalJSON(data []byte) error {
 
 // Emitted when the list of available MCP tools has been successfully retrieved.
 type ResponseMcpListToolsCompletedEvent struct {
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.mcp_list_tools.completed'.
 	Type constant.ResponseMcpListToolsCompleted `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -6309,13 +6411,16 @@ func (r *ResponseMcpListToolsCompletedEvent) UnmarshalJSON(data []byte) error {
 
 // Emitted when the attempt to list available MCP tools has failed.
 type ResponseMcpListToolsFailedEvent struct {
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.mcp_list_tools.failed'.
 	Type constant.ResponseMcpListToolsFailed `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -6328,13 +6433,16 @@ func (r *ResponseMcpListToolsFailedEvent) UnmarshalJSON(data []byte) error {
 // Emitted when the system is in the process of retrieving the list of available
 // MCP tools.
 type ResponseMcpListToolsInProgressEvent struct {
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.mcp_list_tools.in_progress'.
 	Type constant.ResponseMcpListToolsInProgress `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -6862,15 +6970,18 @@ type ResponseOutputItemAddedEvent struct {
 	Item ResponseOutputItemUnion `json:"item,required"`
 	// The index of the output item that was added.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.output_item.added`.
 	Type constant.ResponseOutputItemAdded `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Item        respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Item           respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -6886,15 +6997,18 @@ type ResponseOutputItemDoneEvent struct {
 	Item ResponseOutputItemUnion `json:"item,required"`
 	// The index of the output item that was marked done.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.output_item.done`.
 	Type constant.ResponseOutputItemDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Item        respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Item           respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -7584,6 +7698,8 @@ type ResponseOutputTextAnnotationAddedEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item in the response's output array.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.output_text_annotation.added'.
 	Type constant.ResponseOutputTextAnnotationAdded `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -7593,6 +7709,7 @@ type ResponseOutputTextAnnotationAddedEvent struct {
 		ContentIndex    respjson.Field
 		ItemID          respjson.Field
 		OutputIndex     respjson.Field
+		SequenceNumber  respjson.Field
 		Type            respjson.Field
 		ExtraFields     map[string]respjson.Field
 		raw             string
@@ -7609,14 +7726,17 @@ func (r *ResponseOutputTextAnnotationAddedEvent) UnmarshalJSON(data []byte) erro
 type ResponseQueuedEvent struct {
 	// The full response object that is queued.
 	Response Response `json:"response,required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.queued'.
 	Type constant.ResponseQueued `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Response    respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Response       respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -7636,17 +7756,20 @@ type ResponseReasoningDeltaEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item in the response's output array.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always 'response.reasoning.delta'.
 	Type constant.ResponseReasoningDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ContentIndex respjson.Field
-		Delta        respjson.Field
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ContentIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -7664,19 +7787,22 @@ type ResponseReasoningDoneEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item in the response's output array.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The finalized reasoning text.
 	Text string `json:"text,required"`
 	// The type of the event. Always 'response.reasoning.done'.
 	Type constant.ResponseReasoningDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ContentIndex respjson.Field
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		Text         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Text           respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -7824,19 +7950,22 @@ type ResponseReasoningSummaryDeltaEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item in the response's output array.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The index of the summary part within the output item.
 	SummaryIndex int64 `json:"summary_index,required"`
 	// The type of the event. Always 'response.reasoning_summary.delta'.
 	Type constant.ResponseReasoningSummaryDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Delta        respjson.Field
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		SummaryIndex respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		SummaryIndex   respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -7852,6 +7981,8 @@ type ResponseReasoningSummaryDoneEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item in the response's output array.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The index of the summary part within the output item.
 	SummaryIndex int64 `json:"summary_index,required"`
 	// The finalized reasoning summary text.
@@ -7860,13 +7991,14 @@ type ResponseReasoningSummaryDoneEvent struct {
 	Type constant.ResponseReasoningSummaryDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		SummaryIndex respjson.Field
-		Text         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		SummaryIndex   respjson.Field
+		Text           respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -7884,19 +8016,22 @@ type ResponseReasoningSummaryPartAddedEvent struct {
 	OutputIndex int64 `json:"output_index,required"`
 	// The summary part that was added.
 	Part ResponseReasoningSummaryPartAddedEventPart `json:"part,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The index of the summary part within the reasoning summary.
 	SummaryIndex int64 `json:"summary_index,required"`
 	// The type of the event. Always `response.reasoning_summary_part.added`.
 	Type constant.ResponseReasoningSummaryPartAdded `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		Part         respjson.Field
-		SummaryIndex respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		SummaryIndex   respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -7935,19 +8070,22 @@ type ResponseReasoningSummaryPartDoneEvent struct {
 	OutputIndex int64 `json:"output_index,required"`
 	// The completed summary part.
 	Part ResponseReasoningSummaryPartDoneEventPart `json:"part,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The index of the summary part within the reasoning summary.
 	SummaryIndex int64 `json:"summary_index,required"`
 	// The type of the event. Always `response.reasoning_summary_part.done`.
 	Type constant.ResponseReasoningSummaryPartDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		Part         respjson.Field
-		SummaryIndex respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Part           respjson.Field
+		SequenceNumber respjson.Field
+		SummaryIndex   respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -7986,19 +8124,22 @@ type ResponseReasoningSummaryTextDeltaEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item this summary text delta is associated with.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The index of the summary part within the reasoning summary.
 	SummaryIndex int64 `json:"summary_index,required"`
 	// The type of the event. Always `response.reasoning_summary_text.delta`.
 	Type constant.ResponseReasoningSummaryTextDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Delta        respjson.Field
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		SummaryIndex respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		SummaryIndex   respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -8014,6 +8155,8 @@ type ResponseReasoningSummaryTextDoneEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item this summary text is associated with.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The index of the summary part within the reasoning summary.
 	SummaryIndex int64 `json:"summary_index,required"`
 	// The full text of the completed reasoning summary.
@@ -8022,13 +8165,14 @@ type ResponseReasoningSummaryTextDoneEvent struct {
 	Type constant.ResponseReasoningSummaryTextDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		SummaryIndex respjson.Field
-		Text         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		SummaryIndex   respjson.Field
+		Text           respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -8048,17 +8192,20 @@ type ResponseRefusalDeltaEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item that the refusal text is added to.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.refusal.delta`.
 	Type constant.ResponseRefusalDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ContentIndex respjson.Field
-		Delta        respjson.Field
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ContentIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -8078,17 +8225,20 @@ type ResponseRefusalDoneEvent struct {
 	OutputIndex int64 `json:"output_index,required"`
 	// The refusal text that is finalized.
 	Refusal string `json:"refusal,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.refusal.done`.
 	Type constant.ResponseRefusalDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ContentIndex respjson.Field
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		Refusal      respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		Refusal        respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -8151,7 +8301,8 @@ const (
 type ResponseStreamEventUnion struct {
 	// This field is a union of [string], [string], [string], [string], [string],
 	// [string], [string], [any], [any], [any]
-	Delta ResponseStreamEventUnionDelta `json:"delta"`
+	Delta          ResponseStreamEventUnionDelta `json:"delta"`
+	SequenceNumber int64                         `json:"sequence_number"`
 	// Any of "response.audio.delta", "response.audio.done",
 	// "response.audio.transcript.delta", "response.audio.transcript.done",
 	// "response.code_interpreter_call.code.delta",
@@ -8213,13 +8364,13 @@ type ResponseStreamEventUnion struct {
 	// [any]
 	Annotation      ResponseStreamEventUnionAnnotation `json:"annotation"`
 	AnnotationIndex int64                              `json:"annotation_index"`
-	SequenceNumber  int64                              `json:"sequence_number"`
 	// This field is from variant [ResponseImageGenCallPartialImageEvent].
 	PartialImageB64 string `json:"partial_image_b64"`
 	// This field is from variant [ResponseImageGenCallPartialImageEvent].
 	PartialImageIndex int64 `json:"partial_image_index"`
 	JSON              struct {
 		Delta               respjson.Field
+		SequenceNumber      respjson.Field
 		Type                respjson.Field
 		OutputIndex         respjson.Field
 		Code                respjson.Field
@@ -8237,7 +8388,6 @@ type ResponseStreamEventUnion struct {
 		Refusal             respjson.Field
 		Annotation          respjson.Field
 		AnnotationIndex     respjson.Field
-		SequenceNumber      respjson.Field
 		PartialImageB64     respjson.Field
 		PartialImageIndex   respjson.Field
 		raw                 string
@@ -8887,6 +9037,8 @@ type ResponseTextAnnotationDeltaEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item that the text annotation was added to.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.output_text.annotation.added`.
 	Type constant.ResponseOutputTextAnnotationAdded `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -8896,6 +9048,7 @@ type ResponseTextAnnotationDeltaEvent struct {
 		ContentIndex    respjson.Field
 		ItemID          respjson.Field
 		OutputIndex     respjson.Field
+		SequenceNumber  respjson.Field
 		Type            respjson.Field
 		ExtraFields     map[string]respjson.Field
 		raw             string
@@ -9165,17 +9318,20 @@ type ResponseTextDeltaEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item that the text delta was added to.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.output_text.delta`.
 	Type constant.ResponseOutputTextDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ContentIndex respjson.Field
-		Delta        respjson.Field
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ContentIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -9193,19 +9349,22 @@ type ResponseTextDoneEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item that the text content is finalized.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number for this event.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The text content that is finalized.
 	Text string `json:"text,required"`
 	// The type of the event. Always `response.output_text.done`.
 	Type constant.ResponseOutputTextDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ContentIndex respjson.Field
-		ItemID       respjson.Field
-		OutputIndex  respjson.Field
-		Text         respjson.Field
-		Type         respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ContentIndex   respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Text           respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
