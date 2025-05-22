@@ -106,7 +106,7 @@ type InputItemListParams struct {
 	// Additional fields to include in the response. See the `include` parameter for
 	// Response creation above for more information.
 	Include []ResponseIncludable `query:"include,omitzero" json:"-"`
-	// The order to return the input items in. Default is `asc`.
+	// The order to return the input items in. Default is `desc`.
 	//
 	// - `asc`: Return the input items in ascending order.
 	// - `desc`: Return the input items in descending order.
@@ -124,7 +124,7 @@ func (r InputItemListParams) URLQuery() (v url.Values, err error) {
 	})
 }
 
-// The order to return the input items in. Default is `asc`.
+// The order to return the input items in. Default is `desc`.
 //
 // - `asc`: Return the input items in ascending order.
 // - `desc`: Return the input items in descending order.

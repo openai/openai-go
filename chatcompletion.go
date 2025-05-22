@@ -2109,8 +2109,8 @@ type ChatCompletionNewParams struct {
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
-	// A unique identifier representing your end-user, which can help OpenAI to monitor
-	// and detect abuse.
+	// A stable identifier for your end-users. Used to boost cache hit rates by better
+	// bucketing similar requests and to help OpenAI detect and prevent abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Parameters for audio output. Required when audio output is requested with

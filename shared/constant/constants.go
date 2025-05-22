@@ -125,7 +125,6 @@ type ResponseMcpListToolsInProgress string          // Always "response.mcp_list
 type ResponseOutputItemAdded string                 // Always "response.output_item.added"
 type ResponseOutputItemDone string                  // Always "response.output_item.done"
 type ResponseOutputTextAnnotationAdded string       // Always "response.output_text_annotation.added"
-type ResponseOutputTextAnnotationAdded string       // Always "response.output_text.annotation.added"
 type ResponseOutputTextDelta string                 // Always "response.output_text.delta"
 type ResponseOutputTextDone string                  // Always "response.output_text.done"
 type ResponseQueued string                          // Always "response.queued"
@@ -365,9 +364,6 @@ func (c ResponseOutputItemDone) Default() ResponseOutputItemDone { return "respo
 func (c ResponseOutputTextAnnotationAdded) Default() ResponseOutputTextAnnotationAdded {
 	return "response.output_text_annotation.added"
 }
-func (c ResponseOutputTextAnnotationAdded) Default() ResponseOutputTextAnnotationAdded {
-	return "response.output_text.annotation.added"
-}
 func (c ResponseOutputTextDelta) Default() ResponseOutputTextDelta {
 	return "response.output_text.delta"
 }
@@ -586,7 +582,6 @@ func (c ResponseMcpListToolsFailed) MarshalJSON() ([]byte, error)        { retur
 func (c ResponseMcpListToolsInProgress) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c ResponseOutputItemAdded) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c ResponseOutputItemDone) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c ResponseOutputTextAnnotationAdded) MarshalJSON() ([]byte, error) { return marshalString(c) }
 func (c ResponseOutputTextAnnotationAdded) MarshalJSON() ([]byte, error) { return marshalString(c) }
 func (c ResponseOutputTextDelta) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c ResponseOutputTextDone) MarshalJSON() ([]byte, error)            { return marshalString(c) }
