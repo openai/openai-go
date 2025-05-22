@@ -11,9 +11,11 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/shared/constant"
 )
 
-func TestVectorStoreFileNewWithOptionalParams(t *testing.T) {
+func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -25,18 +27,51 @@ func TestVectorStoreFileNewWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.VectorStores.Files.New(
+	_, err := client.Beta.Threads.Runs.New(
 		context.TODO(),
-		"vs_abc123",
-		openai.VectorStoreFileNewParams{
-			FileID: "file_id",
-			Attributes: map[string]openai.VectorStoreFileNewParamsAttributeUnion{
-				"foo": {
+		"thread_id",
+		openai.BetaThreadRunNewParams{
+			AssistantID:            "assistant_id",
+			Include:                []openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent},
+			AdditionalInstructions: openai.String("additional_instructions"),
+			AdditionalMessages: []openai.BetaThreadRunNewParamsAdditionalMessage{{
+				Content: openai.BetaThreadRunNewParamsAdditionalMessageContentUnion{
 					OfString: openai.String("string"),
 				},
+				Role: "user",
+				Attachments: []openai.BetaThreadRunNewParamsAdditionalMessageAttachment{{
+					FileID: openai.String("file_id"),
+					Tools: []openai.BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion{{
+						OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
+					}},
+				}},
+				Metadata: shared.Metadata{
+					"foo": "string",
+				},
+			}},
+			Instructions:        openai.String("instructions"),
+			MaxCompletionTokens: openai.Int(256),
+			MaxPromptTokens:     openai.Int(256),
+			Metadata: shared.Metadata{
+				"foo": "string",
 			},
-			ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
-				OfAuto: &openai.AutoFileChunkingStrategyParam{},
+			Model:             shared.ChatModelGPT4_1,
+			ParallelToolCalls: openai.Bool(true),
+			ReasoningEffort:   shared.ReasoningEffortLow,
+			ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{
+				OfAuto: constant.ValueOf[constant.Auto](),
+			},
+			Temperature: openai.Float(1),
+			ToolChoice: openai.AssistantToolChoiceOptionUnionParam{
+				OfAuto: openai.String("none"),
+			},
+			Tools: []openai.AssistantToolUnionParam{{
+				OfCodeInterpreter: &openai.CodeInterpreterToolParam{},
+			}},
+			TopP: openai.Float(1),
+			TruncationStrategy: openai.BetaThreadRunNewParamsTruncationStrategy{
+				Type:         "auto",
+				LastMessages: openai.Int(1),
 			},
 		},
 	)
@@ -49,7 +84,7 @@ func TestVectorStoreFileNewWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestVectorStoreFileGet(t *testing.T) {
+func TestBetaThreadRunGet(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -61,10 +96,10 @@ func TestVectorStoreFileGet(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.VectorStores.Files.Get(
+	_, err := client.Beta.Threads.Runs.Get(
 		context.TODO(),
-		"vs_abc123",
-		"file-abc123",
+		"thread_id",
+		"run_id",
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -75,7 +110,7 @@ func TestVectorStoreFileGet(t *testing.T) {
 	}
 }
 
-func TestVectorStoreFileUpdate(t *testing.T) {
+func TestBetaThreadRunUpdateWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -87,15 +122,13 @@ func TestVectorStoreFileUpdate(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.VectorStores.Files.Update(
+	_, err := client.Beta.Threads.Runs.Update(
 		context.TODO(),
-		"vs_abc123",
-		"file-abc123",
-		openai.VectorStoreFileUpdateParams{
-			Attributes: map[string]openai.VectorStoreFileUpdateParamsAttributeUnion{
-				"foo": {
-					OfString: openai.String("string"),
-				},
+		"thread_id",
+		"run_id",
+		openai.BetaThreadRunUpdateParams{
+			Metadata: shared.Metadata{
+				"foo": "string",
 			},
 		},
 	)
@@ -108,7 +141,7 @@ func TestVectorStoreFileUpdate(t *testing.T) {
 	}
 }
 
-func TestVectorStoreFileListWithOptionalParams(t *testing.T) {
+func TestBetaThreadRunListWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -120,15 +153,14 @@ func TestVectorStoreFileListWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.VectorStores.Files.List(
+	_, err := client.Beta.Threads.Runs.List(
 		context.TODO(),
-		"vector_store_id",
-		openai.VectorStoreFileListParams{
+		"thread_id",
+		openai.BetaThreadRunListParams{
 			After:  openai.String("after"),
 			Before: openai.String("before"),
-			Filter: openai.VectorStoreFileListParamsFilterInProgress,
 			Limit:  openai.Int(0),
-			Order:  openai.VectorStoreFileListParamsOrderAsc,
+			Order:  openai.BetaThreadRunListParamsOrderAsc,
 		},
 	)
 	if err != nil {
@@ -140,7 +172,7 @@ func TestVectorStoreFileListWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestVectorStoreFileDelete(t *testing.T) {
+func TestBetaThreadRunCancel(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -152,10 +184,10 @@ func TestVectorStoreFileDelete(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.VectorStores.Files.Delete(
+	_, err := client.Beta.Threads.Runs.Cancel(
 		context.TODO(),
-		"vector_store_id",
-		"file_id",
+		"thread_id",
+		"run_id",
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -166,7 +198,7 @@ func TestVectorStoreFileDelete(t *testing.T) {
 	}
 }
 
-func TestVectorStoreFileContent(t *testing.T) {
+func TestBetaThreadRunSubmitToolOutputsWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -178,10 +210,16 @@ func TestVectorStoreFileContent(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.VectorStores.Files.Content(
+	_, err := client.Beta.Threads.Runs.SubmitToolOutputs(
 		context.TODO(),
-		"vs_abc123",
-		"file-abc123",
+		"thread_id",
+		"run_id",
+		openai.BetaThreadRunSubmitToolOutputsParams{
+			ToolOutputs: []openai.BetaThreadRunSubmitToolOutputsParamsToolOutput{{
+				Output:     openai.String("output"),
+				ToolCallID: openai.String("tool_call_id"),
+			}},
+		},
 	)
 	if err != nil {
 		var apierr *openai.Error

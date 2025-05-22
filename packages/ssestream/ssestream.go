@@ -162,7 +162,7 @@ func (s *Stream[T]) Next() bool {
 			s.done = true
 			continue
 		}
-		
+
 		var nxt T
 		if s.decoder.Event().Type == "" || strings.HasPrefix(s.decoder.Event().Type, "response.") {
 			ep := gjson.GetBytes(s.decoder.Event().Data, "error")

@@ -3,8 +3,10 @@
 package openai_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io"
 	"os"
 	"testing"
 
@@ -13,7 +15,7 @@ import (
 	"github.com/openai/openai-go/option"
 )
 
-func TestFineTuningCheckpointPermissionNew(t *testing.T) {
+func TestContainerFileNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -25,11 +27,12 @@ func TestFineTuningCheckpointPermissionNew(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.FineTuning.Checkpoints.Permissions.New(
+	_, err := client.Containers.Files.New(
 		context.TODO(),
-		"ft:gpt-4o-mini-2024-07-18:org:weather:B7R9VjQd",
-		openai.FineTuningCheckpointPermissionNewParams{
-			ProjectIDs: []string{"string"},
+		"container_id",
+		openai.ContainerFileNewParams{
+			File:   io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+			FileID: openai.String("file_id"),
 		},
 	)
 	if err != nil {
@@ -41,7 +44,7 @@ func TestFineTuningCheckpointPermissionNew(t *testing.T) {
 	}
 }
 
-func TestFineTuningCheckpointPermissionGetWithOptionalParams(t *testing.T) {
+func TestContainerFileGet(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -53,14 +56,39 @@ func TestFineTuningCheckpointPermissionGetWithOptionalParams(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.FineTuning.Checkpoints.Permissions.Get(
+	_, err := client.Containers.Files.Get(
 		context.TODO(),
-		"ft-AF1WoRqd3aJAHsqc9NY7iL8F",
-		openai.FineTuningCheckpointPermissionGetParams{
-			After:     openai.String("after"),
-			Limit:     openai.Int(0),
-			Order:     openai.FineTuningCheckpointPermissionGetParamsOrderAscending,
-			ProjectID: openai.String("project_id"),
+		"container_id",
+		"file_id",
+	)
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestContainerFileListWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Containers.Files.List(
+		context.TODO(),
+		"container_id",
+		openai.ContainerFileListParams{
+			After: openai.String("after"),
+			Limit: openai.Int(0),
+			Order: openai.ContainerFileListParamsOrderAsc,
 		},
 	)
 	if err != nil {
@@ -72,7 +100,7 @@ func TestFineTuningCheckpointPermissionGetWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestFineTuningCheckpointPermissionDelete(t *testing.T) {
+func TestContainerFileDelete(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -84,10 +112,10 @@ func TestFineTuningCheckpointPermissionDelete(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.FineTuning.Checkpoints.Permissions.Delete(
+	err := client.Containers.Files.Delete(
 		context.TODO(),
-		"ft:gpt-4o-mini-2024-07-18:org:weather:B7R9VjQd",
-		"cp_zc4Q7MP6XxulcVzj4MZdwsAB",
+		"container_id",
+		"file_id",
 	)
 	if err != nil {
 		var apierr *openai.Error
