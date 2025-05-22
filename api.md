@@ -683,7 +683,6 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseRefusalDoneEvent">ResponseRefusalDoneEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseStatus">ResponseStatus</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseStreamEventUnion">ResponseStreamEventUnion</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseTextAnnotationDeltaEvent">ResponseTextAnnotationDeltaEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseTextConfig">ResponseTextConfig</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseTextDeltaEvent">ResponseTextDeltaEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseTextDoneEvent">ResponseTextDoneEvent</a>

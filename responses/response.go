@@ -703,8 +703,8 @@ type Response struct {
 	// Represents token usage details including input tokens, output tokens, a
 	// breakdown of output tokens, and the total tokens used.
 	Usage ResponseUsage `json:"usage"`
-	// A unique identifier representing your end-user, which can help OpenAI to monitor
-	// and detect abuse.
+	// A stable identifier for your end-users. Used to boost cache hit rates by better
+	// bucketing similar requests and to help OpenAI detect and prevent abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
 	User string `json:"user"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -8294,8 +8294,7 @@ const (
 // [ResponseReasoningSummaryPartDoneEvent],
 // [ResponseReasoningSummaryTextDeltaEvent],
 // [ResponseReasoningSummaryTextDoneEvent], [ResponseRefusalDeltaEvent],
-// [ResponseRefusalDoneEvent], [ResponseTextAnnotationDeltaEvent],
-// [ResponseTextDeltaEvent], [ResponseTextDoneEvent],
+// [ResponseRefusalDoneEvent], [ResponseTextDeltaEvent], [ResponseTextDoneEvent],
 // [ResponseWebSearchCallCompletedEvent], [ResponseWebSearchCallInProgressEvent],
 // [ResponseWebSearchCallSearchingEvent], [ResponseImageGenCallCompletedEvent],
 // [ResponseImageGenCallGeneratingEvent], [ResponseImageGenCallInProgressEvent],
@@ -8332,10 +8331,9 @@ type ResponseStreamEventUnion struct {
 	// "response.output_item.done", "response.reasoning_summary_part.added",
 	// "response.reasoning_summary_part.done", "response.reasoning_summary_text.delta",
 	// "response.reasoning_summary_text.done", "response.refusal.delta",
-	// "response.refusal.done", "response.output_text.annotation.added",
-	// "response.output_text.delta", "response.output_text.done",
-	// "response.web_search_call.completed", "response.web_search_call.in_progress",
-	// "response.web_search_call.searching",
+	// "response.refusal.done", "response.output_text.delta",
+	// "response.output_text.done", "response.web_search_call.completed",
+	// "response.web_search_call.in_progress", "response.web_search_call.searching",
 	// "response.image_generation_call.completed",
 	// "response.image_generation_call.generating",
 	// "response.image_generation_call.in_progress",
@@ -8373,15 +8371,15 @@ type ResponseStreamEventUnion struct {
 	Text         string                  `json:"text"`
 	// This field is from variant [ResponseRefusalDoneEvent].
 	Refusal string `json:"refusal"`
-	// This field is a union of [ResponseTextAnnotationDeltaEventAnnotationUnion],
-	// [any]
-	Annotation      ResponseStreamEventUnionAnnotation `json:"annotation"`
-	AnnotationIndex int64                              `json:"annotation_index"`
 	// This field is from variant [ResponseImageGenCallPartialImageEvent].
 	PartialImageB64 string `json:"partial_image_b64"`
 	// This field is from variant [ResponseImageGenCallPartialImageEvent].
 	PartialImageIndex int64 `json:"partial_image_index"`
-	JSON              struct {
+	// This field is from variant [ResponseOutputTextAnnotationAddedEvent].
+	Annotation any `json:"annotation"`
+	// This field is from variant [ResponseOutputTextAnnotationAddedEvent].
+	AnnotationIndex int64 `json:"annotation_index"`
+	JSON            struct {
 		Delta               respjson.Field
 		SequenceNumber      respjson.Field
 		Type                respjson.Field
@@ -8399,10 +8397,10 @@ type ResponseStreamEventUnion struct {
 		SummaryIndex        respjson.Field
 		Text                respjson.Field
 		Refusal             respjson.Field
-		Annotation          respjson.Field
-		AnnotationIndex     respjson.Field
 		PartialImageB64     respjson.Field
 		PartialImageIndex   respjson.Field
+		Annotation          respjson.Field
+		AnnotationIndex     respjson.Field
 		raw                 string
 	} `json:"-"`
 }
@@ -8444,7 +8442,6 @@ func (ResponseReasoningSummaryTextDeltaEvent) implResponseStreamEventUnion()    
 func (ResponseReasoningSummaryTextDoneEvent) implResponseStreamEventUnion()        {}
 func (ResponseRefusalDeltaEvent) implResponseStreamEventUnion()                    {}
 func (ResponseRefusalDoneEvent) implResponseStreamEventUnion()                     {}
-func (ResponseTextAnnotationDeltaEvent) implResponseStreamEventUnion()             {}
 func (ResponseTextDeltaEvent) implResponseStreamEventUnion()                       {}
 func (ResponseTextDoneEvent) implResponseStreamEventUnion()                        {}
 func (ResponseWebSearchCallCompletedEvent) implResponseStreamEventUnion()          {}
@@ -8502,7 +8499,6 @@ func (ResponseReasoningSummaryDoneEvent) implResponseStreamEventUnion()         
 //	case responses.ResponseReasoningSummaryTextDoneEvent:
 //	case responses.ResponseRefusalDeltaEvent:
 //	case responses.ResponseRefusalDoneEvent:
-//	case responses.ResponseTextAnnotationDeltaEvent:
 //	case responses.ResponseTextDeltaEvent:
 //	case responses.ResponseTextDoneEvent:
 //	case responses.ResponseWebSearchCallCompletedEvent:
@@ -8591,8 +8587,6 @@ func (u ResponseStreamEventUnion) AsAny() anyResponseStreamEvent {
 		return u.AsResponseRefusalDelta()
 	case "response.refusal.done":
 		return u.AsResponseRefusalDone()
-	case "response.output_text.annotation.added":
-		return u.AsResponseOutputTextAnnotationAdded()
 	case "response.output_text.delta":
 		return u.AsResponseOutputTextDelta()
 	case "response.output_text.done":
@@ -8628,7 +8622,7 @@ func (u ResponseStreamEventUnion) AsAny() anyResponseStreamEvent {
 	case "response.mcp_list_tools.in_progress":
 		return u.AsResponseMcpListToolsInProgress()
 	case "response.output_text_annotation.added":
-		return u.AsResponseOutputTextAnnotationAddedEvent()
+		return u.AsResponseOutputTextAnnotationAdded()
 	case "response.queued":
 		return u.AsResponseQueued()
 	case "response.reasoning.delta":
@@ -8793,11 +8787,6 @@ func (u ResponseStreamEventUnion) AsResponseRefusalDone() (v ResponseRefusalDone
 	return
 }
 
-func (u ResponseStreamEventUnion) AsResponseOutputTextAnnotationAdded() (v ResponseTextAnnotationDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
 func (u ResponseStreamEventUnion) AsResponseOutputTextDelta() (v ResponseTextDeltaEvent) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
@@ -8883,7 +8872,7 @@ func (u ResponseStreamEventUnion) AsResponseMcpListToolsInProgress() (v Response
 	return
 }
 
-func (u ResponseStreamEventUnion) AsResponseOutputTextAnnotationAddedEvent() (v ResponseOutputTextAnnotationAddedEvent) {
+func (u ResponseStreamEventUnion) AsResponseOutputTextAnnotationAdded() (v ResponseOutputTextAnnotationAddedEvent) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -8995,255 +8984,6 @@ type ResponseStreamEventUnionArguments struct {
 }
 
 func (r *ResponseStreamEventUnionArguments) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ResponseStreamEventUnionAnnotation is an implicit subunion of
-// [ResponseStreamEventUnion]. ResponseStreamEventUnionAnnotation provides
-// convenient access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ResponseStreamEventUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfResponseOutputTextAnnotationAddedEventAnnotation]
-type ResponseStreamEventUnionAnnotation struct {
-	// This field will be present if the value is a [any] instead of an object.
-	OfResponseOutputTextAnnotationAddedEventAnnotation any    `json:",inline"`
-	FileID                                             string `json:"file_id"`
-	Index                                              int64  `json:"index"`
-	Type                                               string `json:"type"`
-	// This field is from variant [ResponseTextAnnotationDeltaEventAnnotationUnion].
-	EndIndex int64 `json:"end_index"`
-	// This field is from variant [ResponseTextAnnotationDeltaEventAnnotationUnion].
-	StartIndex int64 `json:"start_index"`
-	// This field is from variant [ResponseTextAnnotationDeltaEventAnnotationUnion].
-	Title string `json:"title"`
-	// This field is from variant [ResponseTextAnnotationDeltaEventAnnotationUnion].
-	URL  string `json:"url"`
-	JSON struct {
-		OfResponseOutputTextAnnotationAddedEventAnnotation respjson.Field
-		FileID                                             respjson.Field
-		Index                                              respjson.Field
-		Type                                               respjson.Field
-		EndIndex                                           respjson.Field
-		StartIndex                                         respjson.Field
-		Title                                              respjson.Field
-		URL                                                respjson.Field
-		raw                                                string
-	} `json:"-"`
-}
-
-func (r *ResponseStreamEventUnionAnnotation) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Emitted when a text annotation is added.
-type ResponseTextAnnotationDeltaEvent struct {
-	// A citation to a file.
-	Annotation ResponseTextAnnotationDeltaEventAnnotationUnion `json:"annotation,required"`
-	// The index of the annotation that was added.
-	AnnotationIndex int64 `json:"annotation_index,required"`
-	// The index of the content part that the text annotation was added to.
-	ContentIndex int64 `json:"content_index,required"`
-	// The ID of the output item that the text annotation was added to.
-	ItemID string `json:"item_id,required"`
-	// The index of the output item that the text annotation was added to.
-	OutputIndex int64 `json:"output_index,required"`
-	// The sequence number of this event.
-	SequenceNumber int64 `json:"sequence_number,required"`
-	// The type of the event. Always `response.output_text.annotation.added`.
-	Type constant.ResponseOutputTextAnnotationAdded `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Annotation      respjson.Field
-		AnnotationIndex respjson.Field
-		ContentIndex    respjson.Field
-		ItemID          respjson.Field
-		OutputIndex     respjson.Field
-		SequenceNumber  respjson.Field
-		Type            respjson.Field
-		ExtraFields     map[string]respjson.Field
-		raw             string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ResponseTextAnnotationDeltaEvent) RawJSON() string { return r.JSON.raw }
-func (r *ResponseTextAnnotationDeltaEvent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ResponseTextAnnotationDeltaEventAnnotationUnion contains all possible properties
-// and values from [ResponseTextAnnotationDeltaEventAnnotationFileCitation],
-// [ResponseTextAnnotationDeltaEventAnnotationURLCitation],
-// [ResponseTextAnnotationDeltaEventAnnotationFilePath].
-//
-// Use the [ResponseTextAnnotationDeltaEventAnnotationUnion.AsAny] method to switch
-// on the variant.
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-type ResponseTextAnnotationDeltaEventAnnotationUnion struct {
-	FileID string `json:"file_id"`
-	Index  int64  `json:"index"`
-	// Any of "file_citation", "url_citation", "file_path".
-	Type string `json:"type"`
-	// This field is from variant
-	// [ResponseTextAnnotationDeltaEventAnnotationURLCitation].
-	EndIndex int64 `json:"end_index"`
-	// This field is from variant
-	// [ResponseTextAnnotationDeltaEventAnnotationURLCitation].
-	StartIndex int64 `json:"start_index"`
-	// This field is from variant
-	// [ResponseTextAnnotationDeltaEventAnnotationURLCitation].
-	Title string `json:"title"`
-	// This field is from variant
-	// [ResponseTextAnnotationDeltaEventAnnotationURLCitation].
-	URL  string `json:"url"`
-	JSON struct {
-		FileID     respjson.Field
-		Index      respjson.Field
-		Type       respjson.Field
-		EndIndex   respjson.Field
-		StartIndex respjson.Field
-		Title      respjson.Field
-		URL        respjson.Field
-		raw        string
-	} `json:"-"`
-}
-
-// anyResponseTextAnnotationDeltaEventAnnotation is implemented by each variant of
-// [ResponseTextAnnotationDeltaEventAnnotationUnion] to add type safety for the
-// return type of [ResponseTextAnnotationDeltaEventAnnotationUnion.AsAny]
-type anyResponseTextAnnotationDeltaEventAnnotation interface {
-	implResponseTextAnnotationDeltaEventAnnotationUnion()
-}
-
-func (ResponseTextAnnotationDeltaEventAnnotationFileCitation) implResponseTextAnnotationDeltaEventAnnotationUnion() {
-}
-func (ResponseTextAnnotationDeltaEventAnnotationURLCitation) implResponseTextAnnotationDeltaEventAnnotationUnion() {
-}
-func (ResponseTextAnnotationDeltaEventAnnotationFilePath) implResponseTextAnnotationDeltaEventAnnotationUnion() {
-}
-
-// Use the following switch statement to find the correct variant
-//
-//	switch variant := ResponseTextAnnotationDeltaEventAnnotationUnion.AsAny().(type) {
-//	case responses.ResponseTextAnnotationDeltaEventAnnotationFileCitation:
-//	case responses.ResponseTextAnnotationDeltaEventAnnotationURLCitation:
-//	case responses.ResponseTextAnnotationDeltaEventAnnotationFilePath:
-//	default:
-//	  fmt.Errorf("no variant present")
-//	}
-func (u ResponseTextAnnotationDeltaEventAnnotationUnion) AsAny() anyResponseTextAnnotationDeltaEventAnnotation {
-	switch u.Type {
-	case "file_citation":
-		return u.AsFileCitation()
-	case "url_citation":
-		return u.AsURLCitation()
-	case "file_path":
-		return u.AsFilePath()
-	}
-	return nil
-}
-
-func (u ResponseTextAnnotationDeltaEventAnnotationUnion) AsFileCitation() (v ResponseTextAnnotationDeltaEventAnnotationFileCitation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ResponseTextAnnotationDeltaEventAnnotationUnion) AsURLCitation() (v ResponseTextAnnotationDeltaEventAnnotationURLCitation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ResponseTextAnnotationDeltaEventAnnotationUnion) AsFilePath() (v ResponseTextAnnotationDeltaEventAnnotationFilePath) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u ResponseTextAnnotationDeltaEventAnnotationUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *ResponseTextAnnotationDeltaEventAnnotationUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A citation to a file.
-type ResponseTextAnnotationDeltaEventAnnotationFileCitation struct {
-	// The ID of the file.
-	FileID string `json:"file_id,required"`
-	// The index of the file in the list of files.
-	Index int64 `json:"index,required"`
-	// The type of the file citation. Always `file_citation`.
-	Type constant.FileCitation `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		FileID      respjson.Field
-		Index       respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ResponseTextAnnotationDeltaEventAnnotationFileCitation) RawJSON() string { return r.JSON.raw }
-func (r *ResponseTextAnnotationDeltaEventAnnotationFileCitation) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A citation for a web resource used to generate a model response.
-type ResponseTextAnnotationDeltaEventAnnotationURLCitation struct {
-	// The index of the last character of the URL citation in the message.
-	EndIndex int64 `json:"end_index,required"`
-	// The index of the first character of the URL citation in the message.
-	StartIndex int64 `json:"start_index,required"`
-	// The title of the web resource.
-	Title string `json:"title,required"`
-	// The type of the URL citation. Always `url_citation`.
-	Type constant.URLCitation `json:"type,required"`
-	// The URL of the web resource.
-	URL string `json:"url,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		EndIndex    respjson.Field
-		StartIndex  respjson.Field
-		Title       respjson.Field
-		Type        respjson.Field
-		URL         respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ResponseTextAnnotationDeltaEventAnnotationURLCitation) RawJSON() string { return r.JSON.raw }
-func (r *ResponseTextAnnotationDeltaEventAnnotationURLCitation) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A path to a file.
-type ResponseTextAnnotationDeltaEventAnnotationFilePath struct {
-	// The ID of the file.
-	FileID string `json:"file_id,required"`
-	// The index of the file in the list of files.
-	Index int64 `json:"index,required"`
-	// The type of the file path. Always `file_path`.
-	Type constant.FilePath `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		FileID      respjson.Field
-		Index       respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ResponseTextAnnotationDeltaEventAnnotationFilePath) RawJSON() string { return r.JSON.raw }
-func (r *ResponseTextAnnotationDeltaEventAnnotationFilePath) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -9461,15 +9201,18 @@ type ResponseWebSearchCallCompletedEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item that the web search call is associated with.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of the web search call being processed.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.web_search_call.completed`.
 	Type constant.ResponseWebSearchCallCompleted `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -9485,15 +9228,18 @@ type ResponseWebSearchCallInProgressEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item that the web search call is associated with.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of the web search call being processed.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.web_search_call.in_progress`.
 	Type constant.ResponseWebSearchCallInProgress `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -9509,15 +9255,18 @@ type ResponseWebSearchCallSearchingEvent struct {
 	ItemID string `json:"item_id,required"`
 	// The index of the output item that the web search call is associated with.
 	OutputIndex int64 `json:"output_index,required"`
+	// The sequence number of the web search call being processed.
+	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.web_search_call.searching`.
 	Type constant.ResponseWebSearchCallSearching `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ItemID      respjson.Field
-		OutputIndex respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -9788,13 +9537,10 @@ type ToolMcpRequireApprovalUnion struct {
 	Always ToolMcpRequireApprovalMcpToolApprovalFilterAlways `json:"always"`
 	// This field is from variant [ToolMcpRequireApprovalMcpToolApprovalFilter].
 	Never ToolMcpRequireApprovalMcpToolApprovalFilterNever `json:"never"`
-	// This field is from variant [ToolMcpRequireApprovalMcpToolApprovalFilter].
-	ToolNames []string `json:"tool_names"`
-	JSON      struct {
+	JSON  struct {
 		OfMcpToolApprovalSetting respjson.Field
 		Always                   respjson.Field
 		Never                    respjson.Field
-		ToolNames                respjson.Field
 		raw                      string
 	} `json:"-"`
 }
@@ -9821,13 +9567,10 @@ type ToolMcpRequireApprovalMcpToolApprovalFilter struct {
 	Always ToolMcpRequireApprovalMcpToolApprovalFilterAlways `json:"always"`
 	// A list of tools that never require approval.
 	Never ToolMcpRequireApprovalMcpToolApprovalFilterNever `json:"never"`
-	// List of allowed tool names.
-	ToolNames []string `json:"tool_names"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Always      respjson.Field
 		Never       respjson.Field
-		ToolNames   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -10536,8 +10279,6 @@ type ToolMcpRequireApprovalMcpToolApprovalFilterParam struct {
 	Always ToolMcpRequireApprovalMcpToolApprovalFilterAlwaysParam `json:"always,omitzero"`
 	// A list of tools that never require approval.
 	Never ToolMcpRequireApprovalMcpToolApprovalFilterNeverParam `json:"never,omitzero"`
-	// List of allowed tool names.
-	ToolNames []string `json:"tool_names,omitzero"`
 	paramObj
 }
 
@@ -11127,8 +10868,8 @@ type ResponseNewParams struct {
 	//
 	// We generally recommend altering this or `temperature` but not both.
 	TopP param.Opt[float64] `json:"top_p,omitzero"`
-	// A unique identifier representing your end-user, which can help OpenAI to monitor
-	// and detect abuse.
+	// A stable identifier for your end-users. Used to boost cache hit rates by better
+	// bucketing similar requests and to help OpenAI detect and prevent abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Specify additional output data to include in the model response. Currently
