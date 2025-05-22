@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.0 (2025-05-22)
+
+Full Changelog: [v1.0.0...v1.1.0](https://github.com/openai/openai-go/compare/v1.0.0...v1.1.0)
+
+### Features
+
+* **api:** add container endpoint ([2bd777d](https://github.com/openai/openai-go/commit/2bd777d6813b5dfcd3a2d339047a944c478dcd64))
+* **api:** new API tools ([e7e2123](https://github.com/openai/openai-go/commit/e7e2123de7cafef515e07adde6edd45a7035b610))
+* **api:** new streaming helpers for background responses ([422a0db](https://github.com/openai/openai-go/commit/422a0db3c674135e23dd200f5d8d785bd0be33e6))
+
+
+### Chores
+
+* **docs:** grammar improvements ([f4b23dd](https://github.com/openai/openai-go/commit/f4b23dd31facfc8839310854521b48060ef76be2))
+* improve devcontainer setup ([dfdaeec](https://github.com/openai/openai-go/commit/dfdaeec2d6dd5cd679514d60c49b68c5df9e1b1e))
+
 ## 1.0.0 (2025-05-19)
 
 Full Changelog: [v0.1.0-beta.11...v1.0.0](https://github.com/openai/openai-go/compare/v0.1.0-beta.11...v1.0.0)
