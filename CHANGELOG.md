@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1 (2025-05-23)
+
+Full Changelog: [v1.1.0...v1.1.1](https://github.com/openai/openai-go/compare/v1.1.0...v1.1.1)
+
+### Chores
+
+* **internal:** fix release workflows ([fd46533](https://github.com/openai/openai-go/commit/fd4653316312755ccab7435fca9fb0a2d8bf8fbb))
+
 ## 1.1.0 (2025-05-22)
 
 Full Changelog: [v1.0.0...v1.1.0](https://github.com/openai/openai-go/compare/v1.0.0...v1.1.0)
