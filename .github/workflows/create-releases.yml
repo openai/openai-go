@@ -1,0 +1,29 @@
+name: Create releases
+on:
+  schedule:
+    - cron: '0 5 * * *' # every day at 5am UTC
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    name: release
+    if: github.ref == 'refs/heads/main' && github.repository == 'openai/openai-go'
+    runs-on: ubuntu-latest
+    environment: publish
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: stainless-api/trigger-release-please@v1
+        id: release
+        with:
+          repo: ${{ github.event.repository.full_name }}
+          stainless-api-key: ${{ secrets.STAINLESS_API_KEY }}
+
+      - name: Generate godocs
+        if: ${{ steps.release.outputs.releases_created }}
+        run: |
+          version=$(jq -r '. | to_entries[0] | .value' .release-please-manifest.json)
+          curl -X POST https://pkg.go.dev/fetch/github.com/openai/openai-go@v${version}
