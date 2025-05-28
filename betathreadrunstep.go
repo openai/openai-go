@@ -27,6 +27,8 @@ import (
 // Note, unlike clients, this service does not read variables from the environment
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaThreadRunStepService] method instead.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 type BetaThreadRunStepService struct {
 	Options []option.RequestOption
 }
@@ -41,6 +43,8 @@ func NewBetaThreadRunStepService(opts ...option.RequestOption) (r BetaThreadRunS
 }
 
 // Retrieves a run step.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunStepService) Get(ctx context.Context, threadID string, runID string, stepID string, query BetaThreadRunStepGetParams, opts ...option.RequestOption) (res *RunStep, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -62,6 +66,8 @@ func (r *BetaThreadRunStepService) Get(ctx context.Context, threadID string, run
 }
 
 // Returns a list of run steps belonging to a run.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunStepService) List(ctx context.Context, threadID string, runID string, query BetaThreadRunStepListParams, opts ...option.RequestOption) (res *pagination.CursorPage[RunStep], err error) {
 	var raw *http.Response
 	opts = append(r.Options[:], opts...)
@@ -88,6 +94,8 @@ func (r *BetaThreadRunStepService) List(ctx context.Context, threadID string, ru
 }
 
 // Returns a list of run steps belonging to a run.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunStepService) ListAutoPaging(ctx context.Context, threadID string, runID string, query BetaThreadRunStepListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[RunStep] {
 	return pagination.NewCursorPageAutoPager(r.List(ctx, threadID, runID, query, opts...))
 }
