@@ -96,7 +96,8 @@ func TestResponseGetWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"resp_677efb5139a88190b512bc3fef8e535d",
 		responses.ResponseGetParams{
-			Include: []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
+			Include:       []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
+			StartingAfter: openai.Int(0),
 		},
 	)
 	if err != nil {

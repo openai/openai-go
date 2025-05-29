@@ -25,9 +25,13 @@ import (
 // Note, unlike clients, this service does not read variables from the environment
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaThreadService] method instead.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 type BetaThreadService struct {
-	Options  []option.RequestOption
-	Runs     BetaThreadRunService
+	Options []option.RequestOption
+	// Deprecated: The Assistants API is deprecated in favor of the Responses API
+	Runs BetaThreadRunService
+	// Deprecated: The Assistants API is deprecated in favor of the Responses API
 	Messages BetaThreadMessageService
 }
 
@@ -43,6 +47,8 @@ func NewBetaThreadService(opts ...option.RequestOption) (r BetaThreadService) {
 }
 
 // Create a thread.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadService) New(ctx context.Context, body BetaThreadNewParams, opts ...option.RequestOption) (res *Thread, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -52,6 +58,8 @@ func (r *BetaThreadService) New(ctx context.Context, body BetaThreadNewParams, o
 }
 
 // Retrieves a thread.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadService) Get(ctx context.Context, threadID string, opts ...option.RequestOption) (res *Thread, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -65,6 +73,8 @@ func (r *BetaThreadService) Get(ctx context.Context, threadID string, opts ...op
 }
 
 // Modifies a thread.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadService) Update(ctx context.Context, threadID string, body BetaThreadUpdateParams, opts ...option.RequestOption) (res *Thread, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -78,6 +88,8 @@ func (r *BetaThreadService) Update(ctx context.Context, threadID string, body Be
 }
 
 // Delete a thread.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadService) Delete(ctx context.Context, threadID string, opts ...option.RequestOption) (res *ThreadDeleted, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -91,6 +103,8 @@ func (r *BetaThreadService) Delete(ctx context.Context, threadID string, opts ..
 }
 
 // Create a thread and run it in one request.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadService) NewAndRun(ctx context.Context, body BetaThreadNewAndRunParams, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -100,6 +114,8 @@ func (r *BetaThreadService) NewAndRun(ctx context.Context, body BetaThreadNewAnd
 }
 
 // Create a thread and run it in one request.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadService) NewAndRunStreaming(ctx context.Context, body BetaThreadNewAndRunParams, opts ...option.RequestOption) (stream *ssestream.Stream[AssistantStreamEventUnion]) {
 	var (
 		raw *http.Response

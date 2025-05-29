@@ -97,6 +97,23 @@ func (r *ResponseService) Get(ctx context.Context, responseID string, query Resp
 	return
 }
 
+// Retrieves a model response with the given ID.
+func (r *ResponseService) GetStreaming(ctx context.Context, responseID string, query ResponseGetParams, opts ...option.RequestOption) (stream *ssestream.Stream[ResponseStreamEventUnion]) {
+	var (
+		raw *http.Response
+		err error
+	)
+	opts = append(r.Options[:], opts...)
+	opts = append([]option.RequestOption{option.WithJSONSet("stream", true)}, opts...)
+	if responseID == "" {
+		err = errors.New("missing required response_id parameter")
+		return
+	}
+	path := fmt.Sprintf("responses/%s", responseID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &raw, opts...)
+	return ssestream.NewStream[ResponseStreamEventUnion](ssestream.NewDecoder(raw), err)
+}
+
 // Deletes a model response with the given ID.
 func (r *ResponseService) Delete(ctx context.Context, responseID string, opts ...option.RequestOption) (err error) {
 	opts = append(r.Options[:], opts...)
@@ -2593,12 +2610,15 @@ type ResponseContentPartAddedEventPartUnion struct {
 	Text string `json:"text"`
 	// Any of "output_text", "refusal".
 	Type string `json:"type"`
+	// This field is from variant [ResponseOutputText].
+	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
 	// This field is from variant [ResponseOutputRefusal].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
+		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2696,12 +2716,15 @@ type ResponseContentPartDoneEventPartUnion struct {
 	Text string `json:"text"`
 	// Any of "output_text", "refusal".
 	Type string `json:"type"`
+	// This field is from variant [ResponseOutputText].
+	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
 	// This field is from variant [ResponseOutputRefusal].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
+		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
@@ -7087,12 +7110,15 @@ type ResponseOutputMessageContentUnion struct {
 	Text string `json:"text"`
 	// Any of "output_text", "refusal".
 	Type string `json:"type"`
+	// This field is from variant [ResponseOutputText].
+	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
 	// This field is from variant [ResponseOutputRefusal].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
+		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
@@ -7227,6 +7253,14 @@ func (u ResponseOutputMessageContentUnionParam) GetText() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseOutputMessageContentUnionParam) GetLogprobs() []ResponseOutputTextLogprobParam {
+	if vt := u.OfOutputText; vt != nil {
+		return vt.Logprobs
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseOutputMessageContentUnionParam) GetRefusal() *string {
 	if vt := u.OfRefusal; vt != nil {
 		return &vt.Refusal
@@ -7310,12 +7344,14 @@ type ResponseOutputText struct {
 	// The text output from the model.
 	Text string `json:"text,required"`
 	// The type of the output text. Always `output_text`.
-	Type constant.OutputText `json:"type,required"`
+	Type     constant.OutputText         `json:"type,required"`
+	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Annotations respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
+		Logprobs    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -7502,6 +7538,50 @@ func (r *ResponseOutputTextAnnotationFilePath) UnmarshalJSON(data []byte) error 
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The log probability of a token.
+type ResponseOutputTextLogprob struct {
+	Token       string                                `json:"token,required"`
+	Bytes       []int64                               `json:"bytes,required"`
+	Logprob     float64                               `json:"logprob,required"`
+	TopLogprobs []ResponseOutputTextLogprobTopLogprob `json:"top_logprobs,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Token       respjson.Field
+		Bytes       respjson.Field
+		Logprob     respjson.Field
+		TopLogprobs respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseOutputTextLogprob) RawJSON() string { return r.JSON.raw }
+func (r *ResponseOutputTextLogprob) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The top log probability of a token.
+type ResponseOutputTextLogprobTopLogprob struct {
+	Token   string  `json:"token,required"`
+	Bytes   []int64 `json:"bytes,required"`
+	Logprob float64 `json:"logprob,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Token       respjson.Field
+		Bytes       respjson.Field
+		Logprob     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseOutputTextLogprobTopLogprob) RawJSON() string { return r.JSON.raw }
+func (r *ResponseOutputTextLogprobTopLogprob) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // A text output from the model.
 //
 // The properties Annotations, Text, Type are required.
@@ -7509,7 +7589,8 @@ type ResponseOutputTextParam struct {
 	// The annotations of the text output.
 	Annotations []ResponseOutputTextAnnotationUnionParam `json:"annotations,omitzero,required"`
 	// The text output from the model.
-	Text string `json:"text,required"`
+	Text     string                           `json:"text,required"`
+	Logprobs []ResponseOutputTextLogprobParam `json:"logprobs,omitzero"`
 	// The type of the output text. Always `output_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "output_text".
@@ -7696,6 +7777,43 @@ func (r ResponseOutputTextAnnotationFilePathParam) MarshalJSON() (data []byte, e
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ResponseOutputTextAnnotationFilePathParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The log probability of a token.
+//
+// The properties Token, Bytes, Logprob, TopLogprobs are required.
+type ResponseOutputTextLogprobParam struct {
+	Token       string                                     `json:"token,required"`
+	Bytes       []int64                                    `json:"bytes,omitzero,required"`
+	Logprob     float64                                    `json:"logprob,required"`
+	TopLogprobs []ResponseOutputTextLogprobTopLogprobParam `json:"top_logprobs,omitzero,required"`
+	paramObj
+}
+
+func (r ResponseOutputTextLogprobParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseOutputTextLogprobParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseOutputTextLogprobParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The top log probability of a token.
+//
+// The properties Token, Bytes, Logprob are required.
+type ResponseOutputTextLogprobTopLogprobParam struct {
+	Token   string  `json:"token,required"`
+	Bytes   []int64 `json:"bytes,omitzero,required"`
+	Logprob float64 `json:"logprob,required"`
+	paramObj
+}
+
+func (r ResponseOutputTextLogprobTopLogprobParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseOutputTextLogprobTopLogprobParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseOutputTextLogprobTopLogprobParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -8948,11 +9066,15 @@ type ResponseStreamEventUnionPart struct {
 	Type        string                              `json:"type"`
 	// This field is from variant [ResponseContentPartAddedEventPartUnion],
 	// [ResponseContentPartDoneEventPartUnion].
+	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
+	// This field is from variant [ResponseContentPartAddedEventPartUnion],
+	// [ResponseContentPartDoneEventPartUnion].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
+		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
@@ -11076,6 +11198,8 @@ const (
 )
 
 type ResponseGetParams struct {
+	// The sequence number of the event after which to start streaming.
+	StartingAfter param.Opt[int64] `query:"starting_after,omitzero" json:"-"`
 	// Additional fields to include in the response. See the `include` parameter for
 	// Response creation above for more information.
 	Include []ResponseIncludable `query:"include,omitzero" json:"-"`

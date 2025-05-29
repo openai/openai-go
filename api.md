@@ -747,4 +747,4 @@ Methods:
 
 Methods:
 
-- <code title="get /containers/{container_id}/files/{file_id}/content">client.Containers.Files.Content.<a href="https://pkg.go.dev/github.com/openai/openai-go#ContainerFileContentService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, containerID <a href="https://pkg.go.dev/builtin#string">string</a>, fileID <a href="https://pkg.go.dev/builtin#string">string</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+- <code title="get /containers/{container_id}/files/{file_id}/content">client.Containers.Files.Content.<a href="https://pkg.go.dev/github.com/openai/openai-go#ContainerFileContentService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, containerID <a href="https://pkg.go.dev/builtin#string">string</a>, fileID <a href="https://pkg.go.dev/builtin#string">string</a>) (http.Response, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>

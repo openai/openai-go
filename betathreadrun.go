@@ -27,9 +27,12 @@ import (
 // Note, unlike clients, this service does not read variables from the environment
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaThreadRunService] method instead.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 type BetaThreadRunService struct {
 	Options []option.RequestOption
-	Steps   BetaThreadRunStepService
+	// Deprecated: The Assistants API is deprecated in favor of the Responses API
+	Steps BetaThreadRunStepService
 }
 
 // NewBetaThreadRunService generates a new service that applies the given options
@@ -43,6 +46,8 @@ func NewBetaThreadRunService(opts ...option.RequestOption) (r BetaThreadRunServi
 }
 
 // Create a run.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) New(ctx context.Context, threadID string, params BetaThreadRunNewParams, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -56,6 +61,8 @@ func (r *BetaThreadRunService) New(ctx context.Context, threadID string, params 
 }
 
 // Create a run.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string, params BetaThreadRunNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[AssistantStreamEventUnion]) {
 	var (
 		raw *http.Response
@@ -73,6 +80,8 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 }
 
 // Retrieves a run.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) Get(ctx context.Context, threadID string, runID string, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -90,6 +99,8 @@ func (r *BetaThreadRunService) Get(ctx context.Context, threadID string, runID s
 }
 
 // Modifies a run.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) Update(ctx context.Context, threadID string, runID string, body BetaThreadRunUpdateParams, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -107,6 +118,8 @@ func (r *BetaThreadRunService) Update(ctx context.Context, threadID string, runI
 }
 
 // Returns a list of runs belonging to a thread.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) List(ctx context.Context, threadID string, query BetaThreadRunListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Run], err error) {
 	var raw *http.Response
 	opts = append(r.Options[:], opts...)
@@ -129,11 +142,15 @@ func (r *BetaThreadRunService) List(ctx context.Context, threadID string, query 
 }
 
 // Returns a list of runs belonging to a thread.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) ListAutoPaging(ctx context.Context, threadID string, query BetaThreadRunListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[Run] {
 	return pagination.NewCursorPageAutoPager(r.List(ctx, threadID, query, opts...))
 }
 
 // Cancels a run that is `in_progress`.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) Cancel(ctx context.Context, threadID string, runID string, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -154,6 +171,8 @@ func (r *BetaThreadRunService) Cancel(ctx context.Context, threadID string, runI
 // `submit_tool_outputs`, this endpoint can be used to submit the outputs from the
 // tool calls once they're all completed. All outputs must be submitted in a single
 // request.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) SubmitToolOutputs(ctx context.Context, threadID string, runID string, body BetaThreadRunSubmitToolOutputsParams, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -174,6 +193,8 @@ func (r *BetaThreadRunService) SubmitToolOutputs(ctx context.Context, threadID s
 // `submit_tool_outputs`, this endpoint can be used to submit the outputs from the
 // tool calls once they're all completed. All outputs must be submitted in a single
 // request.
+//
+// Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) SubmitToolOutputsStreaming(ctx context.Context, threadID string, runID string, body BetaThreadRunSubmitToolOutputsParams, opts ...option.RequestOption) (stream *ssestream.Stream[AssistantStreamEventUnion]) {
 	var (
 		raw *http.Response
