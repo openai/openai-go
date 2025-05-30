@@ -13,4 +13,4 @@ fi
 
 echo "==> Installing Go dependencies…"
 
-go mod tidy
+go mod tidy -e
