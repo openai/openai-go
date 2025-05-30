@@ -35,7 +35,7 @@ func MarshalObject[T ParamStruct](f T, underlying any) ([]byte, error) {
 // MarshalWithExtras is used to marshal a struct with additional properties.
 //
 // Stability for the API of MarshalWithExtras is not guaranteed.
-func MarshalWithExtras[T ParamStruct](f T, underlying any, extras map[string]any) ([]byte, error) {
+func MarshalWithExtras[T ParamStruct, R any](f T, underlying any, extras map[string]R) ([]byte, error) {
 	if f.null() {
 		return []byte("null"), nil
 	} else if len(extras) > 0 {
@@ -44,7 +44,8 @@ func MarshalWithExtras[T ParamStruct](f T, underlying any, extras map[string]any
 			return nil, err
 		}
 		for k, v := range extras {
-			if v == Omit {
+			var a any = v
+			if a == Omit {
 				// Errors when handling ForceOmitted are ignored.
 				if b, e := sjson.DeleteBytes(bytes, k); e == nil {
 					bytes = b
