@@ -33,6 +33,7 @@ type CodeInterpreterCall string                     // Always "code_interpreter_
 type ComputerCallOutput string                      // Always "computer_call_output"
 type ComputerScreenshot string                      // Always "computer_screenshot"
 type ComputerUsePreview string                      // Always "computer_use_preview"
+type ContainerFileCitation string                   // Always "container_file_citation"
 type ContainerFile string                           // Always "container.file"
 type Content string                                 // Always "content"
 type Developer string                               // Always "developer"
@@ -93,8 +94,8 @@ type ResponseAudioDelta string                      // Always "response.audio.de
 type ResponseAudioDone string                       // Always "response.audio.done"
 type ResponseAudioTranscriptDelta string            // Always "response.audio.transcript.delta"
 type ResponseAudioTranscriptDone string             // Always "response.audio.transcript.done"
-type ResponseCodeInterpreterCallCodeDelta string    // Always "response.code_interpreter_call.code.delta"
-type ResponseCodeInterpreterCallCodeDone string     // Always "response.code_interpreter_call.code.done"
+type ResponseCodeInterpreterCallCodeDelta string    // Always "response.code_interpreter_call_code.delta"
+type ResponseCodeInterpreterCallCodeDone string     // Always "response.code_interpreter_call_code.done"
 type ResponseCodeInterpreterCallCompleted string    // Always "response.code_interpreter_call.completed"
 type ResponseCodeInterpreterCallInProgress string   // Always "response.code_interpreter_call.in_progress"
 type ResponseCodeInterpreterCallInterpreting string // Always "response.code_interpreter_call.interpreting"
@@ -216,6 +217,7 @@ func (c CodeInterpreterCall) Default() CodeInterpreterCall     { return "code_in
 func (c ComputerCallOutput) Default() ComputerCallOutput       { return "computer_call_output" }
 func (c ComputerScreenshot) Default() ComputerScreenshot       { return "computer_screenshot" }
 func (c ComputerUsePreview) Default() ComputerUsePreview       { return "computer_use_preview" }
+func (c ContainerFileCitation) Default() ContainerFileCitation { return "container_file_citation" }
 func (c ContainerFile) Default() ContainerFile                 { return "container.file" }
 func (c Content) Default() Content                             { return "content" }
 func (c Developer) Default() Developer                         { return "developer" }
@@ -283,10 +285,10 @@ func (c ResponseAudioTranscriptDone) Default() ResponseAudioTranscriptDone {
 	return "response.audio.transcript.done"
 }
 func (c ResponseCodeInterpreterCallCodeDelta) Default() ResponseCodeInterpreterCallCodeDelta {
-	return "response.code_interpreter_call.code.delta"
+	return "response.code_interpreter_call_code.delta"
 }
 func (c ResponseCodeInterpreterCallCodeDone) Default() ResponseCodeInterpreterCallCodeDone {
-	return "response.code_interpreter_call.code.done"
+	return "response.code_interpreter_call_code.done"
 }
 func (c ResponseCodeInterpreterCallCompleted) Default() ResponseCodeInterpreterCallCompleted {
 	return "response.code_interpreter_call.completed"
@@ -487,6 +489,7 @@ func (c CodeInterpreterCall) MarshalJSON() ([]byte, error)                   { r
 func (c ComputerCallOutput) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c ComputerScreenshot) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c ComputerUsePreview) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c ContainerFileCitation) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c ContainerFile) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Content) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Developer) MarshalJSON() ([]byte, error)                             { return marshalString(c) }

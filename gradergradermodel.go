@@ -312,8 +312,10 @@ func (r *LabelModelGraderInputContentOutputTextParam) UnmarshalJSON(data []byte)
 // score.
 type MultiGrader struct {
 	// A formula to calculate the output based on grader results.
-	CalculateOutput string                            `json:"calculate_output,required"`
-	Graders         map[string]MultiGraderGraderUnion `json:"graders,required"`
+	CalculateOutput string `json:"calculate_output,required"`
+	// A StringCheckGrader object that performs a string comparison between input and
+	// reference using a specified operation.
+	Graders MultiGraderGradersUnion `json:"graders,required"`
 	// The name of the grader.
 	Name string `json:"name,required"`
 	// The object type, which is always `multi`.
@@ -344,16 +346,16 @@ func (r MultiGrader) ToParam() MultiGraderParam {
 	return param.Override[MultiGraderParam](r.RawJSON())
 }
 
-// MultiGraderGraderUnion contains all possible properties and values from
+// MultiGraderGradersUnion contains all possible properties and values from
 // [StringCheckGrader], [TextSimilarityGrader], [PythonGrader], [ScoreModelGrader],
 // [LabelModelGrader].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
-type MultiGraderGraderUnion struct {
+type MultiGraderGradersUnion struct {
 	// This field is a union of [string], [string], [[]ScoreModelGraderInput],
 	// [[]LabelModelGraderInput]
-	Input MultiGraderGraderUnionInput `json:"input"`
-	Name  string                      `json:"name"`
+	Input MultiGraderGradersUnionInput `json:"input"`
+	Name  string                       `json:"name"`
 	// This field is from variant [StringCheckGrader].
 	Operation StringCheckGraderOperation `json:"operation"`
 	Reference string                     `json:"reference"`
@@ -391,49 +393,49 @@ type MultiGraderGraderUnion struct {
 	} `json:"-"`
 }
 
-func (u MultiGraderGraderUnion) AsStringCheckGrader() (v StringCheckGrader) {
+func (u MultiGraderGradersUnion) AsStringCheckGrader() (v StringCheckGrader) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u MultiGraderGraderUnion) AsTextSimilarityGrader() (v TextSimilarityGrader) {
+func (u MultiGraderGradersUnion) AsTextSimilarityGrader() (v TextSimilarityGrader) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u MultiGraderGraderUnion) AsPythonGrader() (v PythonGrader) {
+func (u MultiGraderGradersUnion) AsPythonGrader() (v PythonGrader) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u MultiGraderGraderUnion) AsScoreModelGrader() (v ScoreModelGrader) {
+func (u MultiGraderGradersUnion) AsScoreModelGrader() (v ScoreModelGrader) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u MultiGraderGraderUnion) AsLabelModelGrader() (v LabelModelGrader) {
+func (u MultiGraderGradersUnion) AsLabelModelGrader() (v LabelModelGrader) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 // Returns the unmodified JSON received from the API
-func (u MultiGraderGraderUnion) RawJSON() string { return u.JSON.raw }
+func (u MultiGraderGradersUnion) RawJSON() string { return u.JSON.raw }
 
-func (r *MultiGraderGraderUnion) UnmarshalJSON(data []byte) error {
+func (r *MultiGraderGradersUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// MultiGraderGraderUnionInput is an implicit subunion of [MultiGraderGraderUnion].
-// MultiGraderGraderUnionInput provides convenient access to the sub-properties of
-// the union.
+// MultiGraderGradersUnionInput is an implicit subunion of
+// [MultiGraderGradersUnion]. MultiGraderGradersUnionInput provides convenient
+// access to the sub-properties of the union.
 //
 // For type safety it is recommended to directly use a variant of the
-// [MultiGraderGraderUnion].
+// [MultiGraderGradersUnion].
 //
 // If the underlying value is not a json object, one of the following properties
 // will be valid: OfString OfScoreModelGraderInputArray
 // OfLabelModelGraderInputArray]
-type MultiGraderGraderUnionInput struct {
+type MultiGraderGradersUnionInput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
 	// This field will be present if the value is a [[]ScoreModelGraderInput] instead
@@ -450,7 +452,7 @@ type MultiGraderGraderUnionInput struct {
 	} `json:"-"`
 }
 
-func (r *MultiGraderGraderUnionInput) UnmarshalJSON(data []byte) error {
+func (r *MultiGraderGradersUnionInput) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -460,8 +462,10 @@ func (r *MultiGraderGraderUnionInput) UnmarshalJSON(data []byte) error {
 // The properties CalculateOutput, Graders, Name, Type are required.
 type MultiGraderParam struct {
 	// A formula to calculate the output based on grader results.
-	CalculateOutput string                                 `json:"calculate_output,required"`
-	Graders         map[string]MultiGraderGraderUnionParam `json:"graders,omitzero,required"`
+	CalculateOutput string `json:"calculate_output,required"`
+	// A StringCheckGrader object that performs a string comparison between input and
+	// reference using a specified operation.
+	Graders MultiGraderGradersUnionParam `json:"graders,omitzero,required"`
 	// The name of the grader.
 	Name string `json:"name,required"`
 	// The object type, which is always `multi`.
@@ -482,7 +486,7 @@ func (r *MultiGraderParam) UnmarshalJSON(data []byte) error {
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type MultiGraderGraderUnionParam struct {
+type MultiGraderGradersUnionParam struct {
 	OfStringCheckGrader    *StringCheckGraderParam    `json:",omitzero,inline"`
 	OfTextSimilarityGrader *TextSimilarityGraderParam `json:",omitzero,inline"`
 	OfPythonGrader         *PythonGraderParam         `json:",omitzero,inline"`
@@ -491,18 +495,18 @@ type MultiGraderGraderUnionParam struct {
 	paramUnion
 }
 
-func (u MultiGraderGraderUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[MultiGraderGraderUnionParam](u.OfStringCheckGrader,
+func (u MultiGraderGradersUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion[MultiGraderGradersUnionParam](u.OfStringCheckGrader,
 		u.OfTextSimilarityGrader,
 		u.OfPythonGrader,
 		u.OfScoreModelGrader,
 		u.OfLabelModelGrader)
 }
-func (u *MultiGraderGraderUnionParam) UnmarshalJSON(data []byte) error {
+func (u *MultiGraderGradersUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *MultiGraderGraderUnionParam) asAny() any {
+func (u *MultiGraderGradersUnionParam) asAny() any {
 	if !param.IsOmitted(u.OfStringCheckGrader) {
 		return u.OfStringCheckGrader
 	} else if !param.IsOmitted(u.OfTextSimilarityGrader) {
@@ -518,7 +522,7 @@ func (u *MultiGraderGraderUnionParam) asAny() any {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetOperation() *string {
+func (u MultiGraderGradersUnionParam) GetOperation() *string {
 	if vt := u.OfStringCheckGrader; vt != nil {
 		return (*string)(&vt.Operation)
 	}
@@ -526,7 +530,7 @@ func (u MultiGraderGraderUnionParam) GetOperation() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetEvaluationMetric() *string {
+func (u MultiGraderGradersUnionParam) GetEvaluationMetric() *string {
 	if vt := u.OfTextSimilarityGrader; vt != nil {
 		return (*string)(&vt.EvaluationMetric)
 	}
@@ -534,7 +538,7 @@ func (u MultiGraderGraderUnionParam) GetEvaluationMetric() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetSource() *string {
+func (u MultiGraderGradersUnionParam) GetSource() *string {
 	if vt := u.OfPythonGrader; vt != nil {
 		return &vt.Source
 	}
@@ -542,7 +546,7 @@ func (u MultiGraderGraderUnionParam) GetSource() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetImageTag() *string {
+func (u MultiGraderGradersUnionParam) GetImageTag() *string {
 	if vt := u.OfPythonGrader; vt != nil && vt.ImageTag.Valid() {
 		return &vt.ImageTag.Value
 	}
@@ -550,7 +554,7 @@ func (u MultiGraderGraderUnionParam) GetImageTag() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetRange() []float64 {
+func (u MultiGraderGradersUnionParam) GetRange() []float64 {
 	if vt := u.OfScoreModelGrader; vt != nil {
 		return vt.Range
 	}
@@ -558,7 +562,7 @@ func (u MultiGraderGraderUnionParam) GetRange() []float64 {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetSamplingParams() *any {
+func (u MultiGraderGradersUnionParam) GetSamplingParams() *any {
 	if vt := u.OfScoreModelGrader; vt != nil {
 		return &vt.SamplingParams
 	}
@@ -566,7 +570,7 @@ func (u MultiGraderGraderUnionParam) GetSamplingParams() *any {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetLabels() []string {
+func (u MultiGraderGradersUnionParam) GetLabels() []string {
 	if vt := u.OfLabelModelGrader; vt != nil {
 		return vt.Labels
 	}
@@ -574,7 +578,7 @@ func (u MultiGraderGraderUnionParam) GetLabels() []string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetPassingLabels() []string {
+func (u MultiGraderGradersUnionParam) GetPassingLabels() []string {
 	if vt := u.OfLabelModelGrader; vt != nil {
 		return vt.PassingLabels
 	}
@@ -582,7 +586,7 @@ func (u MultiGraderGraderUnionParam) GetPassingLabels() []string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetName() *string {
+func (u MultiGraderGradersUnionParam) GetName() *string {
 	if vt := u.OfStringCheckGrader; vt != nil {
 		return (*string)(&vt.Name)
 	} else if vt := u.OfTextSimilarityGrader; vt != nil {
@@ -598,7 +602,7 @@ func (u MultiGraderGraderUnionParam) GetName() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetReference() *string {
+func (u MultiGraderGradersUnionParam) GetReference() *string {
 	if vt := u.OfStringCheckGrader; vt != nil {
 		return (*string)(&vt.Reference)
 	} else if vt := u.OfTextSimilarityGrader; vt != nil {
@@ -608,7 +612,7 @@ func (u MultiGraderGraderUnionParam) GetReference() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetType() *string {
+func (u MultiGraderGradersUnionParam) GetType() *string {
 	if vt := u.OfStringCheckGrader; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfTextSimilarityGrader; vt != nil {
@@ -624,7 +628,7 @@ func (u MultiGraderGraderUnionParam) GetType() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGraderUnionParam) GetModel() *string {
+func (u MultiGraderGradersUnionParam) GetModel() *string {
 	if vt := u.OfScoreModelGrader; vt != nil {
 		return (*string)(&vt.Model)
 	} else if vt := u.OfLabelModelGrader; vt != nil {
@@ -636,7 +640,7 @@ func (u MultiGraderGraderUnionParam) GetModel() *string {
 // Returns a subunion which exports methods to access subproperties
 //
 // Or use AsAny() to get the underlying value
-func (u MultiGraderGraderUnionParam) GetInput() (res multiGraderGraderUnionParamInput) {
+func (u MultiGraderGradersUnionParam) GetInput() (res multiGraderGradersUnionParamInput) {
 	if vt := u.OfStringCheckGrader; vt != nil {
 		res.any = &vt.Input
 	} else if vt := u.OfTextSimilarityGrader; vt != nil {
@@ -651,7 +655,7 @@ func (u MultiGraderGraderUnionParam) GetInput() (res multiGraderGraderUnionParam
 
 // Can have the runtime types [*string], [_[]ScoreModelGraderInputParam],
 // [_[]LabelModelGraderInputParam]
-type multiGraderGraderUnionParamInput struct{ any }
+type multiGraderGradersUnionParamInput struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
@@ -662,7 +666,7 @@ type multiGraderGraderUnionParamInput struct{ any }
 //	default:
 //	    fmt.Errorf("not present")
 //	}
-func (u multiGraderGraderUnionParamInput) AsAny() any { return u.any }
+func (u multiGraderGradersUnionParamInput) AsAny() any { return u.any }
 
 // A PythonGrader object that runs a python script on the input.
 type PythonGrader struct {
