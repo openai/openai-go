@@ -35,9 +35,7 @@ func TestFineTuningAlphaGraderRunWithOptionalParams(t *testing.T) {
 			},
 		},
 		ModelSample: "model_sample",
-		ReferenceAnswer: openai.FineTuningAlphaGraderRunParamsReferenceAnswerUnion{
-			OfString: openai.String("string"),
-		},
+		Item:        map[string]interface{}{},
 	})
 	if err != nil {
 		var apierr *openai.Error
