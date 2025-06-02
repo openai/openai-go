@@ -309,21 +309,21 @@ func (r *FineTuningJobHyperparameters) UnmarshalJSON(data []byte) error {
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfManual OfInt]
+// will be valid: OfAuto OfInt]
 type FineTuningJobHyperparametersBatchSizeUnion struct {
 	// This field will be present if the value is a [constant.Auto] instead of an
 	// object.
-	OfManual constant.Auto `json:",inline"`
+	OfAuto constant.Auto `json:",inline"`
 	// This field will be present if the value is a [int64] instead of an object.
 	OfInt int64 `json:",inline"`
 	JSON  struct {
-		OfManual respjson.Field
-		OfInt    respjson.Field
-		raw      string
+		OfAuto respjson.Field
+		OfInt  respjson.Field
+		raw    string
 	} `json:"-"`
 }
 
-func (u FineTuningJobHyperparametersBatchSizeUnion) AsManual() (v constant.Auto) {
+func (u FineTuningJobHyperparametersBatchSizeUnion) AsAuto() (v constant.Auto) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }

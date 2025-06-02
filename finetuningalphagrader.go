@@ -186,7 +186,7 @@ type FineTuningAlphaGraderValidateResponseGraderUnion struct {
 	// This field is from variant [MultiGrader].
 	CalculateOutput string `json:"calculate_output"`
 	// This field is from variant [MultiGrader].
-	Graders map[string]MultiGraderGraderUnion `json:"graders"`
+	Graders MultiGraderGradersUnion `json:"graders"`
 	JSON    struct {
 		Input            respjson.Field
 		Name             respjson.Field
@@ -267,10 +267,16 @@ func (r *FineTuningAlphaGraderValidateResponseGraderUnionInput) UnmarshalJSON(da
 type FineTuningAlphaGraderRunParams struct {
 	// The grader used for the fine-tuning job.
 	Grader FineTuningAlphaGraderRunParamsGraderUnion `json:"grader,omitzero,required"`
-	// The model sample to be evaluated.
+	// The model sample to be evaluated. This value will be used to populate the
+	// `sample` namespace. See
+	// [the guide](https://platform.openai.com/docs/guides/graders) for more details.
+	// The `output_json` variable will be populated if the model sample is a valid JSON
+	// string.
 	ModelSample string `json:"model_sample,required"`
-	// The reference answer for the evaluation.
-	ReferenceAnswer FineTuningAlphaGraderRunParamsReferenceAnswerUnion `json:"reference_answer,omitzero,required"`
+	// The dataset item provided to the grader. This will be used to populate the
+	// `item` namespace. See
+	// [the guide](https://platform.openai.com/docs/guides/graders) for more details.
+	Item any `json:"item,omitzero"`
 	paramObj
 }
 
@@ -385,9 +391,9 @@ func (u FineTuningAlphaGraderRunParamsGraderUnion) GetCalculateOutput() *string 
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u FineTuningAlphaGraderRunParamsGraderUnion) GetGraders() map[string]MultiGraderGraderUnionParam {
+func (u FineTuningAlphaGraderRunParamsGraderUnion) GetGraders() *MultiGraderGradersUnionParam {
 	if vt := u.OfMulti; vt != nil {
-		return vt.Graders
+		return &vt.Graders
 	}
 	return nil
 }
@@ -470,34 +476,6 @@ func init() {
 		apijson.Discriminator[ScoreModelGraderParam]("score_model"),
 		apijson.Discriminator[MultiGraderParam]("multi"),
 	)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type FineTuningAlphaGraderRunParamsReferenceAnswerUnion struct {
-	OfString   param.Opt[string]  `json:",omitzero,inline"`
-	OfAnyArray []any              `json:",omitzero,inline"`
-	OfFloat    param.Opt[float64] `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u FineTuningAlphaGraderRunParamsReferenceAnswerUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningAlphaGraderRunParamsReferenceAnswerUnion](u.OfString, u.OfAnyArray, u.OfFloat)
-}
-func (u *FineTuningAlphaGraderRunParamsReferenceAnswerUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningAlphaGraderRunParamsReferenceAnswerUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfAnyArray) {
-		return &u.OfAnyArray
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
 }
 
 type FineTuningAlphaGraderValidateParams struct {
@@ -617,9 +595,9 @@ func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetCalculateOutput() *st
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetGraders() map[string]MultiGraderGraderUnionParam {
+func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetGraders() *MultiGraderGradersUnionParam {
 	if vt := u.OfMultiGrader; vt != nil {
-		return vt.Graders
+		return &vt.Graders
 	}
 	return nil
 }
