@@ -211,7 +211,7 @@ type AssistantResponseFormatOptionUnionParam struct {
 }
 
 func (u AssistantResponseFormatOptionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[AssistantResponseFormatOptionUnionParam](u.OfAuto, u.OfText, u.OfJSONObject, u.OfJSONSchema)
+	return param.MarshalUnion(u, u.OfAuto, u.OfText, u.OfJSONObject, u.OfJSONSchema)
 }
 func (u *AssistantResponseFormatOptionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -432,7 +432,7 @@ type AssistantToolChoiceOptionUnionParam struct {
 }
 
 func (u AssistantToolChoiceOptionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[AssistantToolChoiceOptionUnionParam](u.OfAuto, u.OfAssistantToolChoice)
+	return param.MarshalUnion(u, u.OfAuto, u.OfAssistantToolChoice)
 }
 func (u *AssistantToolChoiceOptionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -643,7 +643,7 @@ type BetaThreadNewParamsMessageContentUnion struct {
 }
 
 func (u BetaThreadNewParamsMessageContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewParamsMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *BetaThreadNewParamsMessageContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -684,7 +684,7 @@ type BetaThreadNewParamsMessageAttachmentToolUnion struct {
 }
 
 func (u BetaThreadNewParamsMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewParamsMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+	return param.MarshalUnion(u, u.OfCodeInterpreter, u.OfFileSearch)
 }
 func (u *BetaThreadNewParamsMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -831,7 +831,7 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion 
 }
 
 func (u BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion](u.OfAuto, u.OfStatic)
+	return param.MarshalUnion(u, u.OfAuto, u.OfStatic)
 }
 func (u *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1188,7 +1188,7 @@ type BetaThreadNewAndRunParamsThreadMessageContentUnion struct {
 }
 
 func (u BetaThreadNewAndRunParamsThreadMessageContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *BetaThreadNewAndRunParamsThreadMessageContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1229,7 +1229,7 @@ type BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion struct {
 }
 
 func (u BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+	return param.MarshalUnion(u, u.OfCodeInterpreter, u.OfFileSearch)
 }
 func (u *BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1376,7 +1376,7 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingSt
 }
 
 func (u BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion](u.OfAuto, u.OfStatic)
+	return param.MarshalUnion(u, u.OfAuto, u.OfStatic)
 }
 func (u *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

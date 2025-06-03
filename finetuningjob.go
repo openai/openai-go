@@ -688,7 +688,7 @@ type FineTuningJobNewParamsHyperparametersBatchSizeUnion struct {
 }
 
 func (u FineTuningJobNewParamsHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *FineTuningJobNewParamsHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -714,7 +714,7 @@ type FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion struct {
 }
 
 func (u FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -740,7 +740,7 @@ type FineTuningJobNewParamsHyperparametersNEpochsUnion struct {
 }
 
 func (u FineTuningJobNewParamsHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *FineTuningJobNewParamsHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

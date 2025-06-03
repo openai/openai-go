@@ -68,7 +68,7 @@ func MarshalWithExtras[T ParamStruct, R any](f T, underlying any, extras map[str
 // MarshalUnion uses a shimmed 'encoding/json' from Go 1.24, to support the 'omitzero' tag
 //
 // Stability for the API of MarshalUnion is not guaranteed.
-func MarshalUnion[T any](variants ...any) ([]byte, error) {
+func MarshalUnion[T ParamStruct](metadata T, variants ...any) ([]byte, error) {
 	nPresent := 0
 	presentIdx := -1
 	for i, variant := range variants {
@@ -78,6 +78,9 @@ func MarshalUnion[T any](variants ...any) ([]byte, error) {
 		}
 	}
 	if nPresent == 0 || presentIdx == -1 {
+		if ovr, ok := metadata.Overrides(); ok {
+			return shimjson.Marshal(ovr)
+		}
 		return []byte(`null`), nil
 	} else if nPresent > 1 {
 		return nil, &json.MarshalerError{

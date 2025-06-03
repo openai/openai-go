@@ -250,7 +250,7 @@ type LabelModelGraderInputContentUnionParam struct {
 }
 
 func (u LabelModelGraderInputContentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[LabelModelGraderInputContentUnionParam](u.OfString, u.OfInputText, u.OfOutputText)
+	return param.MarshalUnion(u, u.OfString, u.OfInputText, u.OfOutputText)
 }
 func (u *LabelModelGraderInputContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -496,7 +496,7 @@ type MultiGraderGradersUnionParam struct {
 }
 
 func (u MultiGraderGradersUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[MultiGraderGradersUnionParam](u.OfStringCheckGrader,
+	return param.MarshalUnion(u, u.OfStringCheckGrader,
 		u.OfTextSimilarityGrader,
 		u.OfPythonGrader,
 		u.OfScoreModelGrader,
@@ -947,7 +947,7 @@ type ScoreModelGraderInputContentUnionParam struct {
 }
 
 func (u ScoreModelGraderInputContentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ScoreModelGraderInputContentUnionParam](u.OfString, u.OfInputText, u.OfOutputText)
+	return param.MarshalUnion(u, u.OfString, u.OfInputText, u.OfOutputText)
 }
 func (u *ScoreModelGraderInputContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

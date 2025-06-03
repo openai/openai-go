@@ -1216,7 +1216,7 @@ type MessageContentPartParamUnion struct {
 }
 
 func (u MessageContentPartParamUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[MessageContentPartParamUnion](u.OfImageFile, u.OfImageURL, u.OfText)
+	return param.MarshalUnion(u, u.OfImageFile, u.OfImageURL, u.OfText)
 }
 func (u *MessageContentPartParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1541,7 +1541,7 @@ type BetaThreadMessageNewParamsContentUnion struct {
 }
 
 func (u BetaThreadMessageNewParamsContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadMessageNewParamsContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *BetaThreadMessageNewParamsContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1595,7 +1595,7 @@ type BetaThreadMessageNewParamsAttachmentToolUnion struct {
 }
 
 func (u BetaThreadMessageNewParamsAttachmentToolUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadMessageNewParamsAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+	return param.MarshalUnion(u, u.OfCodeInterpreter, u.OfFileSearch)
 }
 func (u *BetaThreadMessageNewParamsAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
