@@ -176,7 +176,7 @@ func (r *ComputerTool) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ComputerToolParam.Overrides()
 func (r ComputerTool) ToParam() ComputerToolParam {
-	return param.Override[ComputerToolParam](r.RawJSON())
+	return param.Override[ComputerToolParam](json.RawMessage(r.RawJSON()))
 }
 
 // The type of computer environment to control.
@@ -332,7 +332,7 @@ func (r *FileSearchTool) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // FileSearchToolParam.Overrides()
 func (r FileSearchTool) ToParam() FileSearchToolParam {
-	return param.Override[FileSearchToolParam](r.RawJSON())
+	return param.Override[FileSearchToolParam](json.RawMessage(r.RawJSON()))
 }
 
 // FileSearchToolFiltersUnion contains all possible properties and values from
@@ -553,7 +553,7 @@ func (r *FunctionTool) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // FunctionToolParam.Overrides()
 func (r FunctionTool) ToParam() FunctionToolParam {
-	return param.Override[FunctionToolParam](r.RawJSON())
+	return param.Override[FunctionToolParam](json.RawMessage(r.RawJSON()))
 }
 
 // Defines a function in your own code the model can choose to call. Learn more
@@ -1129,7 +1129,7 @@ func (r *ResponseCodeInterpreterToolCall) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseCodeInterpreterToolCallParam.Overrides()
 func (r ResponseCodeInterpreterToolCall) ToParam() ResponseCodeInterpreterToolCallParam {
-	return param.Override[ResponseCodeInterpreterToolCallParam](r.RawJSON())
+	return param.Override[ResponseCodeInterpreterToolCallParam](json.RawMessage(r.RawJSON()))
 }
 
 // ResponseCodeInterpreterToolCallResultUnion contains all possible properties and
@@ -1490,7 +1490,7 @@ func (r *ResponseComputerToolCall) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseComputerToolCallParam.Overrides()
 func (r ResponseComputerToolCall) ToParam() ResponseComputerToolCallParam {
-	return param.Override[ResponseComputerToolCallParam](r.RawJSON())
+	return param.Override[ResponseComputerToolCallParam](json.RawMessage(r.RawJSON()))
 }
 
 // ResponseComputerToolCallActionUnion contains all possible properties and values
@@ -2521,7 +2521,7 @@ func (r *ResponseComputerToolCallOutputScreenshot) UnmarshalJSON(data []byte) er
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseComputerToolCallOutputScreenshotParam.Overrides()
 func (r ResponseComputerToolCallOutputScreenshot) ToParam() ResponseComputerToolCallOutputScreenshotParam {
-	return param.Override[ResponseComputerToolCallOutputScreenshotParam](r.RawJSON())
+	return param.Override[ResponseComputerToolCallOutputScreenshotParam](json.RawMessage(r.RawJSON()))
 }
 
 // A computer screenshot image used with the computer use tool.
@@ -3014,7 +3014,7 @@ func (r *ResponseFileSearchToolCall) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseFileSearchToolCallParam.Overrides()
 func (r ResponseFileSearchToolCall) ToParam() ResponseFileSearchToolCallParam {
-	return param.Override[ResponseFileSearchToolCallParam](r.RawJSON())
+	return param.Override[ResponseFileSearchToolCallParam](json.RawMessage(r.RawJSON()))
 }
 
 // The status of the file search tool call. One of `in_progress`, `searching`,
@@ -3279,7 +3279,7 @@ func (r *ResponseFormatTextConfigUnion) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseFormatTextConfigUnionParam.Overrides()
 func (r ResponseFormatTextConfigUnion) ToParam() ResponseFormatTextConfigUnionParam {
-	return param.Override[ResponseFormatTextConfigUnionParam](r.RawJSON())
+	return param.Override[ResponseFormatTextConfigUnionParam](json.RawMessage(r.RawJSON()))
 }
 
 func ResponseFormatTextConfigParamOfJSONSchema(name string, schema map[string]any) ResponseFormatTextConfigUnionParam {
@@ -3416,7 +3416,7 @@ func (r *ResponseFormatTextJSONSchemaConfig) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseFormatTextJSONSchemaConfigParam.Overrides()
 func (r ResponseFormatTextJSONSchemaConfig) ToParam() ResponseFormatTextJSONSchemaConfigParam {
-	return param.Override[ResponseFormatTextJSONSchemaConfigParam](r.RawJSON())
+	return param.Override[ResponseFormatTextJSONSchemaConfigParam](json.RawMessage(r.RawJSON()))
 }
 
 // JSON Schema response format. Used to generate structured JSON responses. Learn
@@ -3559,7 +3559,7 @@ func (r *ResponseFunctionToolCall) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseFunctionToolCallParam.Overrides()
 func (r ResponseFunctionToolCall) ToParam() ResponseFunctionToolCallParam {
-	return param.Override[ResponseFunctionToolCallParam](r.RawJSON())
+	return param.Override[ResponseFunctionToolCallParam](json.RawMessage(r.RawJSON()))
 }
 
 // The status of the item. One of `in_progress`, `completed`, or `incomplete`.
@@ -3704,7 +3704,7 @@ func (r *ResponseFunctionWebSearch) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseFunctionWebSearchParam.Overrides()
 func (r ResponseFunctionWebSearch) ToParam() ResponseFunctionWebSearchParam {
-	return param.Override[ResponseFunctionWebSearchParam](r.RawJSON())
+	return param.Override[ResponseFunctionWebSearchParam](json.RawMessage(r.RawJSON()))
 }
 
 // The status of the web search tool call.
@@ -4029,7 +4029,7 @@ func (r *ResponseInputContentUnion) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseInputContentUnionParam.Overrides()
 func (r ResponseInputContentUnion) ToParam() ResponseInputContentUnionParam {
-	return param.Override[ResponseInputContentUnionParam](r.RawJSON())
+	return param.Override[ResponseInputContentUnionParam](json.RawMessage(r.RawJSON()))
 }
 
 func ResponseInputContentParamOfInputText(text string) ResponseInputContentUnionParam {
@@ -4176,7 +4176,7 @@ func (r *ResponseInputFile) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseInputFileParam.Overrides()
 func (r ResponseInputFile) ToParam() ResponseInputFileParam {
-	return param.Override[ResponseInputFileParam](r.RawJSON())
+	return param.Override[ResponseInputFileParam](json.RawMessage(r.RawJSON()))
 }
 
 // A file input to the model.
@@ -4242,7 +4242,7 @@ func (r *ResponseInputImage) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseInputImageParam.Overrides()
 func (r ResponseInputImage) ToParam() ResponseInputImageParam {
-	return param.Override[ResponseInputImageParam](r.RawJSON())
+	return param.Override[ResponseInputImageParam](json.RawMessage(r.RawJSON()))
 }
 
 // The detail level of the image to be sent to the model. One of `high`, `low`, or
@@ -5586,7 +5586,7 @@ func (r *ResponseInputText) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseInputTextParam.Overrides()
 func (r ResponseInputText) ToParam() ResponseInputTextParam {
-	return param.Override[ResponseInputTextParam](r.RawJSON())
+	return param.Override[ResponseInputTextParam](json.RawMessage(r.RawJSON()))
 }
 
 // A text input to the model.
@@ -7082,7 +7082,7 @@ func (r *ResponseOutputMessage) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseOutputMessageParam.Overrides()
 func (r ResponseOutputMessage) ToParam() ResponseOutputMessageParam {
-	return param.Override[ResponseOutputMessageParam](r.RawJSON())
+	return param.Override[ResponseOutputMessageParam](json.RawMessage(r.RawJSON()))
 }
 
 // ResponseOutputMessageContentUnion contains all possible properties and values
@@ -7302,7 +7302,7 @@ func (r *ResponseOutputRefusal) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseOutputRefusalParam.Overrides()
 func (r ResponseOutputRefusal) ToParam() ResponseOutputRefusalParam {
-	return param.Override[ResponseOutputRefusalParam](r.RawJSON())
+	return param.Override[ResponseOutputRefusalParam](json.RawMessage(r.RawJSON()))
 }
 
 // A refusal from the model.
@@ -7358,7 +7358,7 @@ func (r *ResponseOutputText) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseOutputTextParam.Overrides()
 func (r ResponseOutputText) ToParam() ResponseOutputTextParam {
-	return param.Override[ResponseOutputTextParam](r.RawJSON())
+	return param.Override[ResponseOutputTextParam](json.RawMessage(r.RawJSON()))
 }
 
 // ResponseOutputTextAnnotationUnion contains all possible properties and values
@@ -8064,7 +8064,7 @@ func (r *ResponseReasoningItem) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseReasoningItemParam.Overrides()
 func (r ResponseReasoningItem) ToParam() ResponseReasoningItemParam {
-	return param.Override[ResponseReasoningItemParam](r.RawJSON())
+	return param.Override[ResponseReasoningItemParam](json.RawMessage(r.RawJSON()))
 }
 
 type ResponseReasoningItemSummary struct {
@@ -9227,7 +9227,7 @@ func (r *ResponseTextConfig) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseTextConfigParam.Overrides()
 func (r ResponseTextConfig) ToParam() ResponseTextConfigParam {
-	return param.Override[ResponseTextConfigParam](r.RawJSON())
+	return param.Override[ResponseTextConfigParam](json.RawMessage(r.RawJSON()))
 }
 
 // Configuration options for a text response from the model. Can be plain text or
@@ -9630,7 +9630,7 @@ func (r *ToolUnion) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ToolUnionParam.Overrides()
 func (r ToolUnion) ToParam() ToolUnionParam {
-	return param.Override[ToolUnionParam](r.RawJSON())
+	return param.Override[ToolUnionParam](json.RawMessage(r.RawJSON()))
 }
 
 // Give the model access to additional tools via remote Model Context Protocol
@@ -10733,7 +10733,7 @@ func (r *ToolChoiceFunction) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ToolChoiceFunctionParam.Overrides()
 func (r ToolChoiceFunction) ToParam() ToolChoiceFunctionParam {
-	return param.Override[ToolChoiceFunctionParam](r.RawJSON())
+	return param.Override[ToolChoiceFunctionParam](json.RawMessage(r.RawJSON()))
 }
 
 // Use this option to force the model to call a specific function.
@@ -10811,7 +10811,7 @@ func (r *ToolChoiceTypes) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ToolChoiceTypesParam.Overrides()
 func (r ToolChoiceTypes) ToParam() ToolChoiceTypesParam {
-	return param.Override[ToolChoiceTypesParam](r.RawJSON())
+	return param.Override[ToolChoiceTypesParam](json.RawMessage(r.RawJSON()))
 }
 
 // The type of hosted tool the model should to use. Learn more about
@@ -10906,7 +10906,7 @@ func (r *WebSearchTool) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // WebSearchToolParam.Overrides()
 func (r WebSearchTool) ToParam() WebSearchToolParam {
-	return param.Override[WebSearchToolParam](r.RawJSON())
+	return param.Override[WebSearchToolParam](json.RawMessage(r.RawJSON()))
 }
 
 // The type of the web search tool. One of `web_search_preview` or

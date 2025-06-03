@@ -118,7 +118,7 @@ func (r *ComparisonFilter) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ComparisonFilterParam.Overrides()
 func (r ComparisonFilter) ToParam() ComparisonFilterParam {
-	return param.Override[ComparisonFilterParam](r.RawJSON())
+	return param.Override[ComparisonFilterParam](json.RawMessage(r.RawJSON()))
 }
 
 // Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
@@ -274,7 +274,7 @@ func (r *CompoundFilter) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // CompoundFilterParam.Overrides()
 func (r CompoundFilter) ToParam() CompoundFilterParam {
-	return param.Override[CompoundFilterParam](r.RawJSON())
+	return param.Override[CompoundFilterParam](json.RawMessage(r.RawJSON()))
 }
 
 // Type of operation: `and` or `or`.
@@ -373,7 +373,7 @@ func (r *FunctionDefinition) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // FunctionDefinitionParam.Overrides()
 func (r FunctionDefinition) ToParam() FunctionDefinitionParam {
-	return param.Override[FunctionDefinitionParam](r.RawJSON())
+	return param.Override[FunctionDefinitionParam](json.RawMessage(r.RawJSON()))
 }
 
 // The property Name is required.
@@ -465,7 +465,7 @@ func (r *Reasoning) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ReasoningParam.Overrides()
 func (r Reasoning) ToParam() ReasoningParam {
-	return param.Override[ReasoningParam](r.RawJSON())
+	return param.Override[ReasoningParam](json.RawMessage(r.RawJSON()))
 }
 
 // **Deprecated:** use `summary` instead.
@@ -576,7 +576,7 @@ func (ResponseFormatJSONObject) ImplResponseFormatTextConfigUnion() {}
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseFormatJSONObjectParam.Overrides()
 func (r ResponseFormatJSONObject) ToParam() ResponseFormatJSONObjectParam {
-	return param.Override[ResponseFormatJSONObjectParam](r.RawJSON())
+	return param.Override[ResponseFormatJSONObjectParam](json.RawMessage(r.RawJSON()))
 }
 
 func NewResponseFormatJSONObjectParam() ResponseFormatJSONObjectParam {
@@ -635,7 +635,7 @@ func (r *ResponseFormatJSONSchema) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseFormatJSONSchemaParam.Overrides()
 func (r ResponseFormatJSONSchema) ToParam() ResponseFormatJSONSchemaParam {
-	return param.Override[ResponseFormatJSONSchemaParam](r.RawJSON())
+	return param.Override[ResponseFormatJSONSchemaParam](json.RawMessage(r.RawJSON()))
 }
 
 // Structured Outputs configuration options, including a JSON Schema.
@@ -751,7 +751,7 @@ func (ResponseFormatText) ImplResponseFormatTextConfigUnion() {}
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseFormatTextParam.Overrides()
 func (r ResponseFormatText) ToParam() ResponseFormatTextParam {
-	return param.Override[ResponseFormatTextParam](r.RawJSON())
+	return param.Override[ResponseFormatTextParam](json.RawMessage(r.RawJSON()))
 }
 
 func NewResponseFormatTextParam() ResponseFormatTextParam {

@@ -339,7 +339,7 @@ func (r *StaticFileChunkingStrategy) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // StaticFileChunkingStrategyParam.Overrides()
 func (r StaticFileChunkingStrategy) ToParam() StaticFileChunkingStrategyParam {
-	return param.Override[StaticFileChunkingStrategyParam](r.RawJSON())
+	return param.Override[StaticFileChunkingStrategyParam](json.RawMessage(r.RawJSON()))
 }
 
 // The properties ChunkOverlapTokens, MaxChunkSizeTokens are required.

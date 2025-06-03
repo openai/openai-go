@@ -1407,7 +1407,7 @@ func (r *AssistantToolUnion) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // AssistantToolUnionParam.Overrides()
 func (r AssistantToolUnion) ToParam() AssistantToolUnionParam {
-	return param.Override[AssistantToolUnionParam](r.RawJSON())
+	return param.Override[AssistantToolUnionParam](json.RawMessage(r.RawJSON()))
 }
 
 func AssistantToolParamOfFunction(function shared.FunctionDefinitionParam) AssistantToolUnionParam {
@@ -1504,7 +1504,7 @@ func (r *CodeInterpreterTool) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // CodeInterpreterToolParam.Overrides()
 func (r CodeInterpreterTool) ToParam() CodeInterpreterToolParam {
-	return param.Override[CodeInterpreterToolParam](r.RawJSON())
+	return param.Override[CodeInterpreterToolParam](json.RawMessage(r.RawJSON()))
 }
 
 func NewCodeInterpreterToolParam() CodeInterpreterToolParam {
@@ -1555,7 +1555,7 @@ func (r *FileSearchTool) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // FileSearchToolParam.Overrides()
 func (r FileSearchTool) ToParam() FileSearchToolParam {
-	return param.Override[FileSearchToolParam](r.RawJSON())
+	return param.Override[FileSearchToolParam](json.RawMessage(r.RawJSON()))
 }
 
 // Overrides for the file search tool.
@@ -1728,7 +1728,7 @@ func (r *FunctionTool) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // FunctionToolParam.Overrides()
 func (r FunctionTool) ToParam() FunctionToolParam {
-	return param.Override[FunctionToolParam](r.RawJSON())
+	return param.Override[FunctionToolParam](json.RawMessage(r.RawJSON()))
 }
 
 // The properties Function, Type are required.
