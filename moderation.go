@@ -342,7 +342,7 @@ type ModerationMultiModalInputUnionParam struct {
 }
 
 func (u ModerationMultiModalInputUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ModerationMultiModalInputUnionParam](u.OfImageURL, u.OfText)
+	return param.MarshalUnion(u, u.OfImageURL, u.OfText)
 }
 func (u *ModerationMultiModalInputUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -467,7 +467,7 @@ type ModerationNewParamsInputUnion struct {
 }
 
 func (u ModerationNewParamsInputUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ModerationNewParamsInputUnion](u.OfString, u.OfStringArray, u.OfModerationMultiModalArray)
+	return param.MarshalUnion(u, u.OfString, u.OfStringArray, u.OfModerationMultiModalArray)
 }
 func (u *ModerationNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

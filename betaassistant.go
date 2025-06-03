@@ -1427,7 +1427,7 @@ type AssistantToolUnionParam struct {
 }
 
 func (u AssistantToolUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[AssistantToolUnionParam](u.OfCodeInterpreter, u.OfFileSearch, u.OfFunction)
+	return param.MarshalUnion(u, u.OfCodeInterpreter, u.OfFileSearch, u.OfFunction)
 }
 func (u *AssistantToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1922,7 +1922,7 @@ type BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUni
 }
 
 func (u BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion](u.OfAuto, u.OfStatic)
+	return param.MarshalUnion(u, u.OfAuto, u.OfStatic)
 }
 func (u *BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

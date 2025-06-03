@@ -416,7 +416,7 @@ type VectorStoreFileNewParamsAttributeUnion struct {
 }
 
 func (u VectorStoreFileNewParamsAttributeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[VectorStoreFileNewParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool)
 }
 func (u *VectorStoreFileNewParamsAttributeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -462,7 +462,7 @@ type VectorStoreFileUpdateParamsAttributeUnion struct {
 }
 
 func (u VectorStoreFileUpdateParamsAttributeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[VectorStoreFileUpdateParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool)
 }
 func (u *VectorStoreFileUpdateParamsAttributeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

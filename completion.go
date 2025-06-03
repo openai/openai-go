@@ -381,7 +381,7 @@ type CompletionNewParamsPromptUnion struct {
 }
 
 func (u CompletionNewParamsPromptUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[CompletionNewParamsPromptUnion](u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
 }
 func (u *CompletionNewParamsPromptUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -410,7 +410,7 @@ type CompletionNewParamsStopUnion struct {
 }
 
 func (u CompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[CompletionNewParamsStopUnion](u.OfString, u.OfStringArray)
+	return param.MarshalUnion(u, u.OfString, u.OfStringArray)
 }
 func (u *CompletionNewParamsStopUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

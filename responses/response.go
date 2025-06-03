@@ -261,7 +261,7 @@ type EasyInputMessageContentUnionParam struct {
 }
 
 func (u EasyInputMessageContentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[EasyInputMessageContentUnionParam](u.OfString, u.OfInputItemContentList)
+	return param.MarshalUnion(u, u.OfString, u.OfInputItemContentList)
 }
 func (u *EasyInputMessageContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -439,7 +439,7 @@ type FileSearchToolFiltersUnionParam struct {
 }
 
 func (u FileSearchToolFiltersUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FileSearchToolFiltersUnionParam](u.OfComparisonFilter, u.OfCompoundFilter)
+	return param.MarshalUnion(u, u.OfComparisonFilter, u.OfCompoundFilter)
 }
 func (u *FileSearchToolFiltersUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1325,7 +1325,7 @@ type ResponseCodeInterpreterToolCallResultUnionParam struct {
 }
 
 func (u ResponseCodeInterpreterToolCallResultUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ResponseCodeInterpreterToolCallResultUnionParam](u.OfLogs, u.OfFiles)
+	return param.MarshalUnion(u, u.OfLogs, u.OfFiles)
 }
 func (u *ResponseCodeInterpreterToolCallResultUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -2000,7 +2000,7 @@ type ResponseComputerToolCallActionUnionParam struct {
 }
 
 func (u ResponseComputerToolCallActionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ResponseComputerToolCallActionUnionParam](u.OfClick,
+	return param.MarshalUnion(u, u.OfClick,
 		u.OfDoubleClick,
 		u.OfDrag,
 		u.OfKeypress,
@@ -3188,7 +3188,7 @@ type ResponseFileSearchToolCallResultAttributeUnionParam struct {
 }
 
 func (u ResponseFileSearchToolCallResultAttributeUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ResponseFileSearchToolCallResultAttributeUnionParam](u.OfString, u.OfFloat, u.OfBool)
+	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool)
 }
 func (u *ResponseFileSearchToolCallResultAttributeUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -3313,7 +3313,7 @@ type ResponseFormatTextConfigUnionParam struct {
 }
 
 func (u ResponseFormatTextConfigUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ResponseFormatTextConfigUnionParam](u.OfText, u.OfJSONSchema, u.OfJSONObject)
+	return param.MarshalUnion(u, u.OfText, u.OfJSONSchema, u.OfJSONObject)
 }
 func (u *ResponseFormatTextConfigUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -4068,7 +4068,7 @@ type ResponseInputContentUnionParam struct {
 }
 
 func (u ResponseInputContentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ResponseInputContentUnionParam](u.OfInputText, u.OfInputImage, u.OfInputFile)
+	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage, u.OfInputFile)
 }
 func (u *ResponseInputContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -4432,7 +4432,7 @@ type ResponseInputItemUnionParam struct {
 }
 
 func (u ResponseInputItemUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ResponseInputItemUnionParam](u.OfMessage,
+	return param.MarshalUnion(u, u.OfMessage,
 		u.OfInputMessage,
 		u.OfOutputMessage,
 		u.OfFileSearchCall,
@@ -7223,7 +7223,7 @@ type ResponseOutputMessageContentUnionParam struct {
 }
 
 func (u ResponseOutputMessageContentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ResponseOutputMessageContentUnionParam](u.OfOutputText, u.OfRefusal)
+	return param.MarshalUnion(u, u.OfOutputText, u.OfRefusal)
 }
 func (u *ResponseOutputMessageContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -7661,7 +7661,7 @@ type ResponseOutputTextAnnotationUnionParam struct {
 }
 
 func (u ResponseOutputTextAnnotationUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ResponseOutputTextAnnotationUnionParam](u.OfFileCitation, u.OfURLCitation, u.OfContainerFileCitation, u.OfFilePath)
+	return param.MarshalUnion(u, u.OfFileCitation, u.OfURLCitation, u.OfContainerFileCitation, u.OfFilePath)
 }
 func (u *ResponseOutputTextAnnotationUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -10093,7 +10093,7 @@ type ToolUnionParam struct {
 }
 
 func (u ToolUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ToolUnionParam](u.OfFunction,
+	return param.MarshalUnion(u, u.OfFunction,
 		u.OfFileSearch,
 		u.OfWebSearchPreview,
 		u.OfComputerUsePreview,
@@ -10430,7 +10430,7 @@ type ToolMcpAllowedToolsUnionParam struct {
 }
 
 func (u ToolMcpAllowedToolsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ToolMcpAllowedToolsUnionParam](u.OfMcpAllowedTools, u.OfMcpAllowedToolsFilter)
+	return param.MarshalUnion(u, u.OfMcpAllowedTools, u.OfMcpAllowedToolsFilter)
 }
 func (u *ToolMcpAllowedToolsUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -10472,7 +10472,7 @@ type ToolMcpRequireApprovalUnionParam struct {
 }
 
 func (u ToolMcpRequireApprovalUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ToolMcpRequireApprovalUnionParam](u.OfMcpToolApprovalFilter, u.OfMcpToolApprovalSetting)
+	return param.MarshalUnion(u, u.OfMcpToolApprovalFilter, u.OfMcpToolApprovalSetting)
 }
 func (u *ToolMcpRequireApprovalUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -10565,7 +10565,7 @@ type ToolCodeInterpreterContainerUnionParam struct {
 }
 
 func (u ToolCodeInterpreterContainerUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ToolCodeInterpreterContainerUnionParam](u.OfString, u.OfCodeInterpreterContainerAuto)
+	return param.MarshalUnion(u, u.OfString, u.OfCodeInterpreterContainerAuto)
 }
 func (u *ToolCodeInterpreterContainerUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -11189,7 +11189,7 @@ type ResponseNewParamsInputUnion struct {
 }
 
 func (u ResponseNewParamsInputUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ResponseNewParamsInputUnion](u.OfString, u.OfInputItemList)
+	return param.MarshalUnion(u, u.OfString, u.OfInputItemList)
 }
 func (u *ResponseNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -11241,7 +11241,7 @@ type ResponseNewParamsToolChoiceUnion struct {
 }
 
 func (u ResponseNewParamsToolChoiceUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ResponseNewParamsToolChoiceUnion](u.OfToolChoiceMode, u.OfHostedTool, u.OfFunctionTool)
+	return param.MarshalUnion(u, u.OfToolChoiceMode, u.OfHostedTool, u.OfFunctionTool)
 }
 func (u *ResponseNewParamsToolChoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

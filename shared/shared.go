@@ -228,7 +228,7 @@ type ComparisonFilterValueUnionParam struct {
 }
 
 func (u ComparisonFilterValueUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ComparisonFilterValueUnionParam](u.OfString, u.OfFloat, u.OfBool)
+	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool)
 }
 func (u *ComparisonFilterValueUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
