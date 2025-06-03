@@ -4,6 +4,7 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -1620,7 +1621,7 @@ func (r *ChatCompletionMessageToolCall) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ChatCompletionMessageToolCallParam.Overrides()
 func (r ChatCompletionMessageToolCall) ToParam() ChatCompletionMessageToolCallParam {
-	return param.Override[ChatCompletionMessageToolCallParam](r.RawJSON())
+	return param.Override[ChatCompletionMessageToolCallParam](json.RawMessage(r.RawJSON()))
 }
 
 // The function that the model called.
