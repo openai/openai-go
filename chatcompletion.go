@@ -366,7 +366,7 @@ type ChatCompletionAssistantMessageParamContentUnion struct {
 }
 
 func (u ChatCompletionAssistantMessageParamContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionAssistantMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *ChatCompletionAssistantMessageParamContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -391,7 +391,7 @@ type ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion struct {
 }
 
 func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](u.OfText, u.OfRefusal)
+	return param.MarshalUnion(u, u.OfText, u.OfRefusal)
 }
 func (u *ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -847,7 +847,7 @@ type ChatCompletionContentPartUnionParam struct {
 }
 
 func (u ChatCompletionContentPartUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionContentPartUnionParam](u.OfText, u.OfImageURL, u.OfInputAudio, u.OfFile)
+	return param.MarshalUnion(u, u.OfText, u.OfImageURL, u.OfInputAudio, u.OfFile)
 }
 func (u *ChatCompletionContentPartUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1153,7 +1153,7 @@ type ChatCompletionDeveloperMessageParamContentUnion struct {
 }
 
 func (u ChatCompletionDeveloperMessageParamContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionDeveloperMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *ChatCompletionDeveloperMessageParamContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1439,7 +1439,7 @@ type ChatCompletionMessageParamUnion struct {
 }
 
 func (u ChatCompletionMessageParamUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionMessageParamUnion](u.OfDeveloper,
+	return param.MarshalUnion(u, u.OfDeveloper,
 		u.OfSystem,
 		u.OfUser,
 		u.OfAssistant,
@@ -1761,7 +1761,7 @@ type ChatCompletionPredictionContentContentUnionParam struct {
 }
 
 func (u ChatCompletionPredictionContentContentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionPredictionContentContentUnionParam](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *ChatCompletionPredictionContentContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1852,7 +1852,7 @@ type ChatCompletionSystemMessageParamContentUnion struct {
 }
 
 func (u ChatCompletionSystemMessageParamContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionSystemMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *ChatCompletionSystemMessageParamContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1963,7 +1963,7 @@ type ChatCompletionToolChoiceOptionUnionParam struct {
 }
 
 func (u ChatCompletionToolChoiceOptionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionToolChoiceOptionUnionParam](u.OfAuto, u.OfChatCompletionNamedToolChoice)
+	return param.MarshalUnion(u, u.OfAuto, u.OfChatCompletionNamedToolChoice)
 }
 func (u *ChatCompletionToolChoiceOptionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -2020,7 +2020,7 @@ type ChatCompletionToolMessageParamContentUnion struct {
 }
 
 func (u ChatCompletionToolMessageParamContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionToolMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *ChatCompletionToolMessageParamContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -2070,7 +2070,7 @@ type ChatCompletionUserMessageParamContentUnion struct {
 }
 
 func (u ChatCompletionUserMessageParamContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionUserMessageParamContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *ChatCompletionUserMessageParamContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -2302,7 +2302,7 @@ type ChatCompletionNewParamsFunctionCallUnion struct {
 }
 
 func (u ChatCompletionNewParamsFunctionCallUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionNewParamsFunctionCallUnion](u.OfFunctionCallMode, u.OfFunctionCallOption)
+	return param.MarshalUnion(u, u.OfFunctionCallMode, u.OfFunctionCallOption)
 }
 func (u *ChatCompletionNewParamsFunctionCallUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -2367,7 +2367,7 @@ type ChatCompletionNewParamsResponseFormatUnion struct {
 }
 
 func (u ChatCompletionNewParamsResponseFormatUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionNewParamsResponseFormatUnion](u.OfText, u.OfJSONSchema, u.OfJSONObject)
+	return param.MarshalUnion(u, u.OfText, u.OfJSONSchema, u.OfJSONObject)
 }
 func (u *ChatCompletionNewParamsResponseFormatUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -2439,7 +2439,7 @@ type ChatCompletionNewParamsStopUnion struct {
 }
 
 func (u ChatCompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ChatCompletionNewParamsStopUnion](u.OfString, u.OfStringArray)
+	return param.MarshalUnion(u, u.OfString, u.OfStringArray)
 }
 func (u *ChatCompletionNewParamsStopUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

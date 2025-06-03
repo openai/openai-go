@@ -255,7 +255,7 @@ type DpoHyperparametersBatchSizeUnion struct {
 }
 
 func (u DpoHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[DpoHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *DpoHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -281,7 +281,7 @@ type DpoHyperparametersBetaUnion struct {
 }
 
 func (u DpoHyperparametersBetaUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[DpoHyperparametersBetaUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *DpoHyperparametersBetaUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -307,7 +307,7 @@ type DpoHyperparametersLearningRateMultiplierUnion struct {
 }
 
 func (u DpoHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[DpoHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *DpoHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -333,7 +333,7 @@ type DpoHyperparametersNEpochsUnion struct {
 }
 
 func (u DpoHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[DpoHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *DpoHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -718,7 +718,7 @@ type ReinforcementHyperparametersBatchSizeUnion struct {
 }
 
 func (u ReinforcementHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *ReinforcementHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -744,7 +744,7 @@ type ReinforcementHyperparametersComputeMultiplierUnion struct {
 }
 
 func (u ReinforcementHyperparametersComputeMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersComputeMultiplierUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *ReinforcementHyperparametersComputeMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -770,7 +770,7 @@ type ReinforcementHyperparametersEvalIntervalUnion struct {
 }
 
 func (u ReinforcementHyperparametersEvalIntervalUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersEvalIntervalUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *ReinforcementHyperparametersEvalIntervalUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -796,7 +796,7 @@ type ReinforcementHyperparametersEvalSamplesUnion struct {
 }
 
 func (u ReinforcementHyperparametersEvalSamplesUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersEvalSamplesUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *ReinforcementHyperparametersEvalSamplesUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -822,7 +822,7 @@ type ReinforcementHyperparametersLearningRateMultiplierUnion struct {
 }
 
 func (u ReinforcementHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *ReinforcementHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -848,7 +848,7 @@ type ReinforcementHyperparametersNEpochsUnion struct {
 }
 
 func (u ReinforcementHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *ReinforcementHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1030,7 +1030,7 @@ type ReinforcementMethodGraderUnionParam struct {
 }
 
 func (u ReinforcementMethodGraderUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementMethodGraderUnionParam](u.OfStringCheckGrader,
+	return param.MarshalUnion(u, u.OfStringCheckGrader,
 		u.OfTextSimilarityGrader,
 		u.OfPythonGrader,
 		u.OfScoreModelGrader,
@@ -1377,7 +1377,7 @@ type SupervisedHyperparametersBatchSizeUnion struct {
 }
 
 func (u SupervisedHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[SupervisedHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *SupervisedHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1403,7 +1403,7 @@ type SupervisedHyperparametersLearningRateMultiplierUnion struct {
 }
 
 func (u SupervisedHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[SupervisedHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *SupervisedHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1429,7 +1429,7 @@ type SupervisedHyperparametersNEpochsUnion struct {
 }
 
 func (u SupervisedHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[SupervisedHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *SupervisedHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

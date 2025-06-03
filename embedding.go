@@ -174,7 +174,7 @@ type EmbeddingNewParamsInputUnion struct {
 }
 
 func (u EmbeddingNewParamsInputUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[EmbeddingNewParamsInputUnion](u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
 }
 func (u *EmbeddingNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
