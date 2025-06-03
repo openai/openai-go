@@ -45,6 +45,7 @@ const (
 	ChatModelGPT4oAudioPreview                ChatModel = "gpt-4o-audio-preview"
 	ChatModelGPT4oAudioPreview2024_10_01      ChatModel = "gpt-4o-audio-preview-2024-10-01"
 	ChatModelGPT4oAudioPreview2024_12_17      ChatModel = "gpt-4o-audio-preview-2024-12-17"
+	ChatModelGPT4oAudioPreview2025_06_03      ChatModel = "gpt-4o-audio-preview-2025-06-03"
 	ChatModelGPT4oMiniAudioPreview            ChatModel = "gpt-4o-mini-audio-preview"
 	ChatModelGPT4oMiniAudioPreview2024_12_17  ChatModel = "gpt-4o-mini-audio-preview-2024-12-17"
 	ChatModelGPT4oSearchPreview               ChatModel = "gpt-4o-search-preview"
