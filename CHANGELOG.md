@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 (2025-06-03)
+
+Full Changelog: [v1.2.1...v1.3.0](https://github.com/openai/openai-go/compare/v1.2.1...v1.3.0)
+
+### Features
+
+* **api:** add new realtime and audio models, realtime session options ([8b8f62b](https://github.com/openai/openai-go/commit/8b8f62b8e185f3fe4aaa99e892df5d35638931a1))
+
 ## 1.2.1 (2025-06-02)
 
 Full Changelog: [v1.2.0...v1.2.1](https://github.com/openai/openai-go/compare/v1.2.0...v1.2.1)
