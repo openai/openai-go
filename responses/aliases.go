@@ -94,6 +94,9 @@ const ChatModelGPT4oAudioPreview2024_10_01 = shared.ChatModelGPT4oAudioPreview20
 // Equals "gpt-4o-audio-preview-2024-12-17"
 const ChatModelGPT4oAudioPreview2024_12_17 = shared.ChatModelGPT4oAudioPreview2024_12_17
 
+// Equals "gpt-4o-audio-preview-2025-06-03"
+const ChatModelGPT4oAudioPreview2025_06_03 = shared.ChatModelGPT4oAudioPreview2025_06_03
+
 // Equals "gpt-4o-mini-audio-preview"
 const ChatModelGPT4oMiniAudioPreview = shared.ChatModelGPT4oMiniAudioPreview
 
