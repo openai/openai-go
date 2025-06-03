@@ -511,7 +511,7 @@ func (r *ImageFile) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ImageFileParam.Overrides()
 func (r ImageFile) ToParam() ImageFileParam {
-	return param.Override[ImageFileParam](r.RawJSON())
+	return param.Override[ImageFileParam](json.RawMessage(r.RawJSON()))
 }
 
 // Specifies the detail level of the image if specified by the user. `low` uses
@@ -573,7 +573,7 @@ func (r *ImageFileContentBlock) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ImageFileContentBlockParam.Overrides()
 func (r ImageFileContentBlock) ToParam() ImageFileContentBlockParam {
-	return param.Override[ImageFileContentBlockParam](r.RawJSON())
+	return param.Override[ImageFileContentBlockParam](json.RawMessage(r.RawJSON()))
 }
 
 // References an image [File](https://platform.openai.com/docs/api-reference/files)
@@ -686,7 +686,7 @@ func (r *ImageURL) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ImageURLParam.Overrides()
 func (r ImageURL) ToParam() ImageURLParam {
-	return param.Override[ImageURLParam](r.RawJSON())
+	return param.Override[ImageURLParam](json.RawMessage(r.RawJSON()))
 }
 
 // Specifies the detail level of the image. `low` uses fewer tokens, you can opt in
@@ -746,7 +746,7 @@ func (r *ImageURLContentBlock) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ImageURLContentBlockParam.Overrides()
 func (r ImageURLContentBlock) ToParam() ImageURLContentBlockParam {
-	return param.Override[ImageURLContentBlockParam](r.RawJSON())
+	return param.Override[ImageURLContentBlockParam](json.RawMessage(r.RawJSON()))
 }
 
 // References an image URL in the content of a message.

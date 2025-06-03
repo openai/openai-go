@@ -68,7 +68,7 @@ func (r *DpoHyperparametersResp) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // DpoHyperparameters.Overrides()
 func (r DpoHyperparametersResp) ToParam() DpoHyperparameters {
-	return param.Override[DpoHyperparameters](r.RawJSON())
+	return param.Override[DpoHyperparameters](json.RawMessage(r.RawJSON()))
 }
 
 // DpoHyperparametersBatchSizeUnionResp contains all possible properties and values
@@ -372,7 +372,7 @@ func (r *DpoMethod) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // DpoMethodParam.Overrides()
 func (r DpoMethod) ToParam() DpoMethodParam {
-	return param.Override[DpoMethodParam](r.RawJSON())
+	return param.Override[DpoMethodParam](json.RawMessage(r.RawJSON()))
 }
 
 // Configuration for the DPO fine-tuning method.
@@ -438,7 +438,7 @@ func (r *ReinforcementHyperparametersResp) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ReinforcementHyperparameters.Overrides()
 func (r ReinforcementHyperparametersResp) ToParam() ReinforcementHyperparameters {
-	return param.Override[ReinforcementHyperparameters](r.RawJSON())
+	return param.Override[ReinforcementHyperparameters](json.RawMessage(r.RawJSON()))
 }
 
 // ReinforcementHyperparametersBatchSizeUnionResp contains all possible properties
@@ -890,7 +890,7 @@ func (r *ReinforcementMethod) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ReinforcementMethodParam.Overrides()
 func (r ReinforcementMethod) ToParam() ReinforcementMethodParam {
-	return param.Override[ReinforcementMethodParam](r.RawJSON())
+	return param.Override[ReinforcementMethodParam](json.RawMessage(r.RawJSON()))
 }
 
 // ReinforcementMethodGraderUnion contains all possible properties and values from
@@ -1230,7 +1230,7 @@ func (r *SupervisedHyperparametersResp) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // SupervisedHyperparameters.Overrides()
 func (r SupervisedHyperparametersResp) ToParam() SupervisedHyperparameters {
-	return param.Override[SupervisedHyperparameters](r.RawJSON())
+	return param.Override[SupervisedHyperparameters](json.RawMessage(r.RawJSON()))
 }
 
 // SupervisedHyperparametersBatchSizeUnionResp contains all possible properties and
@@ -1468,7 +1468,7 @@ func (r *SupervisedMethod) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // SupervisedMethodParam.Overrides()
 func (r SupervisedMethod) ToParam() SupervisedMethodParam {
-	return param.Override[SupervisedMethodParam](r.RawJSON())
+	return param.Override[SupervisedMethodParam](json.RawMessage(r.RawJSON()))
 }
 
 // Configuration for the supervised fine-tuning method.

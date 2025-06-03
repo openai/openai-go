@@ -185,7 +185,7 @@ func (r *AssistantResponseFormatOptionUnion) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // AssistantResponseFormatOptionUnionParam.Overrides()
 func (r AssistantResponseFormatOptionUnion) ToParam() AssistantResponseFormatOptionUnionParam {
-	return param.Override[AssistantResponseFormatOptionUnionParam](r.RawJSON())
+	return param.Override[AssistantResponseFormatOptionUnionParam](json.RawMessage(r.RawJSON()))
 }
 
 func AssistantResponseFormatOptionParamOfAuto() AssistantResponseFormatOptionUnionParam {
@@ -279,7 +279,7 @@ func (r *AssistantToolChoice) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // AssistantToolChoiceParam.Overrides()
 func (r AssistantToolChoice) ToParam() AssistantToolChoiceParam {
-	return param.Override[AssistantToolChoiceParam](r.RawJSON())
+	return param.Override[AssistantToolChoiceParam](json.RawMessage(r.RawJSON()))
 }
 
 // The type of the tool. If type is `function`, the function name must be set
@@ -336,7 +336,7 @@ func (r *AssistantToolChoiceFunction) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // AssistantToolChoiceFunctionParam.Overrides()
 func (r AssistantToolChoiceFunction) ToParam() AssistantToolChoiceFunctionParam {
-	return param.Override[AssistantToolChoiceFunctionParam](r.RawJSON())
+	return param.Override[AssistantToolChoiceFunctionParam](json.RawMessage(r.RawJSON()))
 }
 
 // The property Name is required.
@@ -400,7 +400,7 @@ func (r *AssistantToolChoiceOptionUnion) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // AssistantToolChoiceOptionUnionParam.Overrides()
 func (r AssistantToolChoiceOptionUnion) ToParam() AssistantToolChoiceOptionUnionParam {
-	return param.Override[AssistantToolChoiceOptionUnionParam](r.RawJSON())
+	return param.Override[AssistantToolChoiceOptionUnionParam](json.RawMessage(r.RawJSON()))
 }
 
 // `none` means the model will not call any tools and instead generates a message.
