@@ -5,12 +5,10 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/shared"
 )
@@ -34,20 +32,16 @@ Santorini is a gem in the Aegean Sea, known for its stunning sunsets, white-wash
 Now, let's check the weather in Santorini.`
 
 func TestStreamingAccumulatorWithToolCalls(t *testing.T) {
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-
 	client := openai.NewClient(
-		option.WithBaseURL(baseURL),
+		option.WithBaseURL("http://localhost:4010"), // URL doesn't matter since we're mocking
 		option.WithAPIKey("My API Key"),
 		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
-			res, _ := next(req)
-			res.Body = io.NopCloser(strings.NewReader(mockResponseBody))
+			// Don't call next() - just return our mocked response directly
+			res := &http.Response{
+				StatusCode: 200,
+				Header:     make(http.Header),
+				Body:       io.NopCloser(strings.NewReader(mockResponseBody)),
+			}
 			return res, nil
 		}),
 	)
@@ -133,6 +127,113 @@ func TestStreamingAccumulatorWithToolCalls(t *testing.T) {
 
 	if expectedToolCall.Arguments != acc.Choices[0].Message.ToolCalls[0].Function.Arguments || expectedToolCall.Name != acc.Choices[0].Message.ToolCalls[0].Function.Name {
 		t.Fatalf("Found unexpected tool call %v %v", acc.Choices[0].Message.ToolCalls[0].Function.Arguments, acc.Choices[0].Message.ToolCalls[0].Function.Name)
+	}
+
+	if !anythingFinished {
+		t.Fatalf("No finish events sent in accumulation")
+	}
+}
+
+// Expected values for Ollama test
+var expectedOllamaToolCall openai.ChatCompletionMessageToolCallFunction = openai.ChatCompletionMessageToolCallFunction{
+	Arguments: `{}`,
+	Name:      "ping",
+}
+
+var expectedOllamaContents string = `<think>
+Okay, the user sent "Ping?". I need to respond with "pong" as per the function. Let me check the tools available. There's a ping function that returns "pong". So I should call that function. No parameters needed. Just return the function call in the specified format.
+</think>
+
+`
+
+func TestStreamingAccumulatorWithOllamaToolCalls(t *testing.T) {
+	client := openai.NewClient(
+		option.WithBaseURL("http://localhost:4010"), // URL doesn't matter since we're mocking
+		option.WithAPIKey("My API Key"),
+		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			// Don't call next() - just return our mocked response directly
+			res := &http.Response{
+				StatusCode: 200,
+				Header:     make(http.Header),
+				Body:       io.NopCloser(strings.NewReader(mockOllamaResponseBody)),
+			}
+			return res, nil
+		}),
+	)
+	stream := client.Chat.Completions.NewStreaming(context.TODO(), openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			{OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Ping?"),
+				},
+			}},
+		},
+		Model: openai.ChatModelGPT4o,
+		Tools: []openai.ChatCompletionToolParam{{
+			Function: shared.FunctionDefinitionParam{
+				Name:        "ping",
+				Description: openai.String("responds with pong"),
+				Parameters: openai.FunctionParameters{
+					"type":       "object",
+					"properties": map[string]interface{}{},
+				},
+			},
+		}},
+	})
+
+	acc := openai.ChatCompletionAccumulator{}
+
+	var err error
+	anythingFinished := false
+
+	for stream.Next() {
+		chunk := stream.Current()
+		if !acc.AddChunk(chunk) {
+			err = errors.New("Chunk was not incorporated correctly")
+			break
+		}
+
+		if _, ok := acc.JustFinishedContent(); ok {
+			anythingFinished = true
+		}
+		if _, ok := acc.JustFinishedToolCall(); ok {
+			anythingFinished = true
+		}
+		if _, ok := acc.JustFinishedRefusal(); ok {
+			anythingFinished = true
+		}
+	}
+
+	if err == nil {
+		err = stream.Err()
+	}
+
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+
+	if acc.Choices == nil || len(acc.Choices) == 0 {
+		t.Fatal("No choices in accumulation")
+	}
+
+	if acc.Choices[0].Message.Content != expectedOllamaContents {
+		t.Logf("Expected: %q", expectedOllamaContents)
+		t.Logf("Actual: %q", acc.Choices[0].Message.Content)
+		t.Fatalf("Found unexpected content")
+	}
+
+	if len(acc.Choices[0].Message.ToolCalls) == 0 {
+		t.Fatalf("No tool calls found in accumulation")
+	}
+
+	if expectedOllamaToolCall.Arguments != acc.Choices[0].Message.ToolCalls[0].Function.Arguments || expectedOllamaToolCall.Name != acc.Choices[0].Message.ToolCalls[0].Function.Name {
+		t.Fatalf("Found unexpected tool call. Expected: %v %v, Got: %v %v",
+			expectedOllamaToolCall.Name, expectedOllamaToolCall.Arguments,
+			acc.Choices[0].Message.ToolCalls[0].Function.Name, acc.Choices[0].Message.ToolCalls[0].Function.Arguments)
 	}
 
 	if !anythingFinished {
@@ -535,4 +636,140 @@ data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.c
 
 data: [DONE]
 
+`
+
+// Mock Ollama response for tool calls
+var mockOllamaResponseBody = `data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\u003cthink\u003e"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\n"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"Okay"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":","},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" the"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" user"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" sent"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" \""},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"Ping"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"?"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\"."},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" I"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" need"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" to"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" respond"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" with"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" \""},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"pong"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\""},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" as"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" per"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" the"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" function"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"."},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" Let"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" me"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" check"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" the"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" tools"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" available"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"."},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" There"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"'s"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" a"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" ping"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" function"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" that"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" returns"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" \""},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"pong"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\"."},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" So"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" I"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" should"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" call"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" that"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" function"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"."},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" No"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" parameters"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" needed"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"."},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" Just"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" return"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" the"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" function"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" call"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" in"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" the"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" specified"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":" format"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":".\n"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\u003c/think\u003e"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234143,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\n\n"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234144,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_qulqfb3l","index":0,"type":"function","function":{"name":"ping","arguments":"{}"}}]},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-197","object":"chat.completion.chunk","created":1749234144,"model":"qwen3:8b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"tool_calls"}]}
+
+data: [DONE]
 `
