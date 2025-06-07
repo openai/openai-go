@@ -301,7 +301,7 @@ type FineTuningAlphaGraderRunParamsGraderUnion struct {
 }
 
 func (u FineTuningAlphaGraderRunParamsGraderUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningAlphaGraderRunParamsGraderUnion](u.OfStringCheck,
+	return param.MarshalUnion(u, u.OfStringCheck,
 		u.OfTextSimilarity,
 		u.OfPython,
 		u.OfScoreModel,
@@ -505,7 +505,7 @@ type FineTuningAlphaGraderValidateParamsGraderUnion struct {
 }
 
 func (u FineTuningAlphaGraderValidateParamsGraderUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningAlphaGraderValidateParamsGraderUnion](u.OfStringCheckGrader,
+	return param.MarshalUnion(u, u.OfStringCheckGrader,
 		u.OfTextSimilarityGrader,
 		u.OfPythonGrader,
 		u.OfScoreModelGrader,

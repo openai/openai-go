@@ -218,10 +218,11 @@ func TestExtraFieldsForceOmitted(t *testing.T) {
 type UnionWithDates struct {
 	OfDate param.Opt[time.Time]
 	OfTime param.Opt[time.Time]
+	param.APIUnion
 }
 
 func (r UnionWithDates) MarshalJSON() (data []byte, err error) {
-	return param.MarshalUnion[UnionWithDates](param.EncodedAsDate(r.OfDate), r.OfTime)
+	return param.MarshalUnion(r, param.EncodedAsDate(r.OfDate), r.OfTime)
 }
 
 func TestUnionDateMarshal(t *testing.T) {
@@ -323,4 +324,42 @@ func TestOptionalInterfaceAssignability(t *testing.T) {
 	}
 
 	notOpt.implOpt() // silence the warning
+}
+
+type PrimitiveUnion struct {
+	OfString param.Opt[string]
+	OfInt    param.Opt[int]
+	param.APIUnion
+}
+
+func (p PrimitiveUnion) MarshalJSON() (data []byte, err error) {
+	return param.MarshalUnion(p, p.OfString, p.OfInt)
+}
+
+func TestOverriddenUnion(t *testing.T) {
+	tests := map[string]struct {
+		value    PrimitiveUnion
+		expected string
+	}{
+		"string": {
+			param.Override[PrimitiveUnion](json.RawMessage(`"hello"`)),
+			`"hello"`,
+		},
+		"int": {
+			param.Override[PrimitiveUnion](json.RawMessage(`42`)),
+			`42`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			b, err := json.Marshal(test.value)
+			if err != nil {
+				t.Fatalf("didn't expect error %v, expected %s", err, test.expected)
+			}
+			if string(b) != test.expected {
+				t.Fatalf("expected %s, received %s", test.expected, string(b))
+			}
+		})
+	}
 }

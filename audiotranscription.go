@@ -398,7 +398,7 @@ type AudioTranscriptionNewParamsChunkingStrategyUnion struct {
 }
 
 func (u AudioTranscriptionNewParamsChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[AudioTranscriptionNewParamsChunkingStrategyUnion](u.OfAuto, u.OfAudioTranscriptionNewsChunkingStrategyVadConfig)
+	return param.MarshalUnion(u, u.OfAuto, u.OfAudioTranscriptionNewsChunkingStrategyVadConfig)
 }
 func (u *AudioTranscriptionNewParamsChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

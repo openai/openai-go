@@ -322,7 +322,7 @@ type ImageEditParamsImageUnion struct {
 }
 
 func (u ImageEditParamsImageUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ImageEditParamsImageUnion](u.OfFile, u.OfFileArray)
+	return param.MarshalUnion(u, u.OfFile, u.OfFileArray)
 }
 func (u *ImageEditParamsImageUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

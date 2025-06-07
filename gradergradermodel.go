@@ -71,7 +71,7 @@ func (r *LabelModelGrader) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // LabelModelGraderParam.Overrides()
 func (r LabelModelGrader) ToParam() LabelModelGraderParam {
-	return param.Override[LabelModelGraderParam](r.RawJSON())
+	return param.Override[LabelModelGraderParam](json.RawMessage(r.RawJSON()))
 }
 
 // A message input to the model with a role indicating instruction following
@@ -250,7 +250,7 @@ type LabelModelGraderInputContentUnionParam struct {
 }
 
 func (u LabelModelGraderInputContentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[LabelModelGraderInputContentUnionParam](u.OfString, u.OfInputText, u.OfOutputText)
+	return param.MarshalUnion(u, u.OfString, u.OfInputText, u.OfOutputText)
 }
 func (u *LabelModelGraderInputContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -343,7 +343,7 @@ func (r *MultiGrader) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // MultiGraderParam.Overrides()
 func (r MultiGrader) ToParam() MultiGraderParam {
-	return param.Override[MultiGraderParam](r.RawJSON())
+	return param.Override[MultiGraderParam](json.RawMessage(r.RawJSON()))
 }
 
 // MultiGraderGradersUnion contains all possible properties and values from
@@ -496,7 +496,7 @@ type MultiGraderGradersUnionParam struct {
 }
 
 func (u MultiGraderGradersUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[MultiGraderGradersUnionParam](u.OfStringCheckGrader,
+	return param.MarshalUnion(u, u.OfStringCheckGrader,
 		u.OfTextSimilarityGrader,
 		u.OfPythonGrader,
 		u.OfScoreModelGrader,
@@ -701,7 +701,7 @@ func (r *PythonGrader) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // PythonGraderParam.Overrides()
 func (r PythonGrader) ToParam() PythonGraderParam {
-	return param.Override[PythonGraderParam](r.RawJSON())
+	return param.Override[PythonGraderParam](json.RawMessage(r.RawJSON()))
 }
 
 // A PythonGrader object that runs a python script on the input.
@@ -768,7 +768,7 @@ func (r *ScoreModelGrader) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ScoreModelGraderParam.Overrides()
 func (r ScoreModelGrader) ToParam() ScoreModelGraderParam {
-	return param.Override[ScoreModelGraderParam](r.RawJSON())
+	return param.Override[ScoreModelGraderParam](json.RawMessage(r.RawJSON()))
 }
 
 // A message input to the model with a role indicating instruction following
@@ -947,7 +947,7 @@ type ScoreModelGraderInputContentUnionParam struct {
 }
 
 func (u ScoreModelGraderInputContentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ScoreModelGraderInputContentUnionParam](u.OfString, u.OfInputText, u.OfOutputText)
+	return param.MarshalUnion(u, u.OfString, u.OfInputText, u.OfOutputText)
 }
 func (u *ScoreModelGraderInputContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1044,7 +1044,7 @@ func (r *StringCheckGrader) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // StringCheckGraderParam.Overrides()
 func (r StringCheckGrader) ToParam() StringCheckGraderParam {
-	return param.Override[StringCheckGraderParam](r.RawJSON())
+	return param.Override[StringCheckGraderParam](json.RawMessage(r.RawJSON()))
 }
 
 // The string check operation to perform. One of `eq`, `ne`, `like`, or `ilike`.
@@ -1127,7 +1127,7 @@ func (r *TextSimilarityGrader) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // TextSimilarityGraderParam.Overrides()
 func (r TextSimilarityGrader) ToParam() TextSimilarityGraderParam {
-	return param.Override[TextSimilarityGraderParam](r.RawJSON())
+	return param.Override[TextSimilarityGraderParam](json.RawMessage(r.RawJSON()))
 }
 
 // The evaluation metric to use. One of `fuzzy_match`, `bleu`, `gleu`, `meteor`,

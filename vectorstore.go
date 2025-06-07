@@ -248,7 +248,7 @@ type FileChunkingStrategyParamUnion struct {
 }
 
 func (u FileChunkingStrategyParamUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FileChunkingStrategyParamUnion](u.OfAuto, u.OfStatic)
+	return param.MarshalUnion(u, u.OfAuto, u.OfStatic)
 }
 func (u *FileChunkingStrategyParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -339,7 +339,7 @@ func (r *StaticFileChunkingStrategy) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // StaticFileChunkingStrategyParam.Overrides()
 func (r StaticFileChunkingStrategy) ToParam() StaticFileChunkingStrategyParam {
-	return param.Override[StaticFileChunkingStrategyParam](r.RawJSON())
+	return param.Override[StaticFileChunkingStrategyParam](json.RawMessage(r.RawJSON()))
 }
 
 // The properties ChunkOverlapTokens, MaxChunkSizeTokens are required.
@@ -808,7 +808,7 @@ type VectorStoreSearchParamsQueryUnion struct {
 }
 
 func (u VectorStoreSearchParamsQueryUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[VectorStoreSearchParamsQueryUnion](u.OfString, u.OfStringArray)
+	return param.MarshalUnion(u, u.OfString, u.OfStringArray)
 }
 func (u *VectorStoreSearchParamsQueryUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -833,7 +833,7 @@ type VectorStoreSearchParamsFiltersUnion struct {
 }
 
 func (u VectorStoreSearchParamsFiltersUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[VectorStoreSearchParamsFiltersUnion](u.OfComparisonFilter, u.OfCompoundFilter)
+	return param.MarshalUnion(u, u.OfComparisonFilter, u.OfCompoundFilter)
 }
 func (u *VectorStoreSearchParamsFiltersUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
