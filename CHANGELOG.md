@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.0 (2025-06-09)
+
+Full Changelog: [v1.3.0...v1.4.0](https://github.com/openai/openai-go/compare/v1.3.0...v1.4.0)
+
+### Features
+
+* **client:** allow overriding unions ([27c6299](https://github.com/openai/openai-go/commit/27c6299cb4ac275c6542b5691d81b795e65eeff6))
+
+
+### Bug Fixes
+
+* **client:** cast to raw message when converting to params ([a3282b0](https://github.com/openai/openai-go/commit/a3282b01a8d9a2c0cd04f24b298bf2ffcd160ebd))
+
 ## 1.3.0 (2025-06-03)
 
 Full Changelog: [v1.2.1...v1.3.0](https://github.com/openai/openai-go/compare/v1.2.1...v1.3.0)
