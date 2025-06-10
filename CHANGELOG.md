@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0 (2025-06-10)
+
+Full Changelog: [v1.4.0...v1.5.0](https://github.com/openai/openai-go/compare/v1.4.0...v1.5.0)
+
+### Features
+
+* **api:** Add o3-pro model IDs ([3bbd0b8](https://github.com/openai/openai-go/commit/3bbd0b8f09030a6c571900d444742c4fc2a3c211))
+
 ## 1.4.0 (2025-06-09)
 
 Full Changelog: [v1.3.0...v1.4.0](https://github.com/openai/openai-go/compare/v1.3.0...v1.4.0)
