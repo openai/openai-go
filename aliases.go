@@ -415,6 +415,12 @@ const ResponsesModelO1Pro = shared.ResponsesModelO1Pro
 // Equals "o1-pro-2025-03-19"
 const ResponsesModelO1Pro2025_03_19 = shared.ResponsesModelO1Pro2025_03_19
 
+// Equals "o3-pro"
+const ResponsesModelO3Pro = shared.ResponsesModelO3Pro
+
+// Equals "o3-pro-2025-06-10"
+const ResponsesModelO3Pro2025_06_10 = shared.ResponsesModelO3Pro2025_06_10
+
 // Equals "computer-use-preview"
 const ResponsesModelComputerUsePreview = shared.ResponsesModelComputerUsePreview
 

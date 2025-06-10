@@ -784,6 +784,8 @@ type ResponsesModel = string
 const (
 	ResponsesModelO1Pro                        ResponsesModel = "o1-pro"
 	ResponsesModelO1Pro2025_03_19              ResponsesModel = "o1-pro-2025-03-19"
+	ResponsesModelO3Pro                        ResponsesModel = "o3-pro"
+	ResponsesModelO3Pro2025_06_10              ResponsesModel = "o3-pro-2025-06-10"
 	ResponsesModelComputerUsePreview           ResponsesModel = "computer-use-preview"
 	ResponsesModelComputerUsePreview2025_03_11 ResponsesModel = "computer-use-preview-2025-03-11"
 	// Or some ...[ChatModel]
