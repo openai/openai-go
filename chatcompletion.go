@@ -182,9 +182,9 @@ type ChatCompletion struct {
 	//     utilize scale tier credits until they are exhausted.
 	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
 	//     be processed using the default service tier with a lower uptime SLA and no
-	//     latency guarantee.
+	//     latency guarentee.
 	//   - If set to 'default', the request will be processed using the default service
-	//     tier with a lower uptime SLA and no latency guarantee.
+	//     tier with a lower uptime SLA and no latency guarentee.
 	//   - If set to 'flex', the request will be processed with the Flex Processing
 	//     service tier.
 	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
@@ -284,9 +284,9 @@ func (r *ChatCompletionChoiceLogprobs) UnmarshalJSON(data []byte) error {
 //     utilize scale tier credits until they are exhausted.
 //   - If set to 'auto', and the Project is not Scale tier enabled, the request will
 //     be processed using the default service tier with a lower uptime SLA and no
-//     latency guarantee.
+//     latency guarentee.
 //   - If set to 'default', the request will be processed using the default service
-//     tier with a lower uptime SLA and no latency guarantee.
+//     tier with a lower uptime SLA and no latency guarentee.
 //   - If set to 'flex', the request will be processed with the Flex Processing
 //     service tier.
 //     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
@@ -577,9 +577,9 @@ type ChatCompletionChunk struct {
 	//     utilize scale tier credits until they are exhausted.
 	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
 	//     be processed using the default service tier with a lower uptime SLA and no
-	//     latency guarantee.
+	//     latency guarentee.
 	//   - If set to 'default', the request will be processed using the default service
-	//     tier with a lower uptime SLA and no latency guarantee.
+	//     tier with a lower uptime SLA and no latency guarentee.
 	//   - If set to 'flex', the request will be processed with the Flex Processing
 	//     service tier.
 	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
@@ -794,9 +794,9 @@ func (r *ChatCompletionChunkChoiceLogprobs) UnmarshalJSON(data []byte) error {
 //     utilize scale tier credits until they are exhausted.
 //   - If set to 'auto', and the Project is not Scale tier enabled, the request will
 //     be processed using the default service tier with a lower uptime SLA and no
-//     latency guarantee.
+//     latency guarentee.
 //   - If set to 'default', the request will be processed using the default service
-//     tier with a lower uptime SLA and no latency guarantee.
+//     tier with a lower uptime SLA and no latency guarentee.
 //   - If set to 'flex', the request will be processed with the Flex Processing
 //     service tier.
 //     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
@@ -2157,8 +2157,8 @@ type ChatCompletionNewParams struct {
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
-	// A stable identifier for your end-users. Used to boost cache hit rates by better
-	// bucketing similar requests and to help OpenAI detect and prevent abuse.
+	// A unique identifier representing your end-user, which can help OpenAI to monitor
+	// and detect abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Parameters for audio output. Required when audio output is requested with
@@ -2210,9 +2210,9 @@ type ChatCompletionNewParams struct {
 	//     utilize scale tier credits until they are exhausted.
 	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
 	//     be processed using the default service tier with a lower uptime SLA and no
-	//     latency guarantee.
+	//     latency guarentee.
 	//   - If set to 'default', the request will be processed using the default service
-	//     tier with a lower uptime SLA and no latency guarantee.
+	//     tier with a lower uptime SLA and no latency guarentee.
 	//   - If set to 'flex', the request will be processed with the Flex Processing
 	//     service tier.
 	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
@@ -2412,9 +2412,9 @@ func (u ChatCompletionNewParamsResponseFormatUnion) GetType() *string {
 //     utilize scale tier credits until they are exhausted.
 //   - If set to 'auto', and the Project is not Scale tier enabled, the request will
 //     be processed using the default service tier with a lower uptime SLA and no
-//     latency guarantee.
+//     latency guarentee.
 //   - If set to 'default', the request will be processed using the default service
-//     tier with a lower uptime SLA and no latency guarantee.
+//     tier with a lower uptime SLA and no latency guarentee.
 //   - If set to 'flex', the request will be processed with the Flex Processing
 //     service tier.
 //     [Learn more](https://platform.openai.com/docs/guides/flex-processing).

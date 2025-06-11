@@ -61,7 +61,6 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 			OfFile: io.Reader(bytes.NewBuffer([]byte("some file contents"))),
 		},
 		Prompt:         "A cute baby sea otter wearing a beret",
-		Background:     openai.ImageEditParamsBackgroundTransparent,
 		Mask:           io.Reader(bytes.NewBuffer([]byte("some file contents"))),
 		Model:          openai.ImageModelDallE2,
 		N:              openai.Int(1),

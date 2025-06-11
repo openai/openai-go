@@ -3,12 +3,6 @@
 package openai
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"net/http"
-
-	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 )
 
@@ -28,22 +22,5 @@ type ContainerFileContentService struct {
 func NewContainerFileContentService(opts ...option.RequestOption) (r ContainerFileContentService) {
 	r = ContainerFileContentService{}
 	r.Options = opts
-	return
-}
-
-// Retrieve Container File Content
-func (r *ContainerFileContentService) Get(ctx context.Context, containerID string, fileID string, opts ...option.RequestOption) (res *http.Response, err error) {
-	opts = append(r.Options[:], opts...)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)
-	if containerID == "" {
-		err = errors.New("missing required container_id parameter")
-		return
-	}
-	if fileID == "" {
-		err = errors.New("missing required file_id parameter")
-		return
-	}
-	path := fmt.Sprintf("containers/%s/files/%s/content", containerID, fileID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }

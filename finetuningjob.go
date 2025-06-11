@@ -132,30 +132,6 @@ func (r *FineTuningJobService) ListEventsAutoPaging(ctx context.Context, fineTun
 	return pagination.NewCursorPageAutoPager(r.ListEvents(ctx, fineTuningJobID, query, opts...))
 }
 
-// Pause a fine-tune job.
-func (r *FineTuningJobService) Pause(ctx context.Context, fineTuningJobID string, opts ...option.RequestOption) (res *FineTuningJob, err error) {
-	opts = append(r.Options[:], opts...)
-	if fineTuningJobID == "" {
-		err = errors.New("missing required fine_tuning_job_id parameter")
-		return
-	}
-	path := fmt.Sprintf("fine_tuning/jobs/%s/pause", fineTuningJobID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
-}
-
-// Resume a fine-tune job.
-func (r *FineTuningJobService) Resume(ctx context.Context, fineTuningJobID string, opts ...option.RequestOption) (res *FineTuningJob, err error) {
-	opts = append(r.Options[:], opts...)
-	if fineTuningJobID == "" {
-		err = errors.New("missing required fine_tuning_job_id parameter")
-		return
-	}
-	path := fmt.Sprintf("fine_tuning/jobs/%s/resume", fineTuningJobID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
-}
-
 // The `fine_tuning.job` object represents a fine-tuning job that has been created
 // through the API.
 type FineTuningJob struct {
@@ -280,7 +256,7 @@ func (r *FineTuningJobError) UnmarshalJSON(data []byte) error {
 type FineTuningJobHyperparameters struct {
 	// Number of examples in each batch. A larger batch size means that model
 	// parameters are updated less frequently, but with lower variance.
-	BatchSize FineTuningJobHyperparametersBatchSizeUnion `json:"batch_size,nullable"`
+	BatchSize FineTuningJobHyperparametersBatchSizeUnion `json:"batch_size"`
 	// Scaling factor for the learning rate. A smaller learning rate may be useful to
 	// avoid overfitting.
 	LearningRateMultiplier FineTuningJobHyperparametersLearningRateMultiplierUnion `json:"learning_rate_multiplier"`
@@ -429,24 +405,21 @@ const (
 
 // The method used for fine-tuning.
 type FineTuningJobMethod struct {
-	// The type of method. Is either `supervised`, `dpo`, or `reinforcement`.
-	//
-	// Any of "supervised", "dpo", "reinforcement".
-	Type string `json:"type,required"`
 	// Configuration for the DPO fine-tuning method.
 	Dpo DpoMethod `json:"dpo"`
-	// Configuration for the reinforcement fine-tuning method.
-	Reinforcement ReinforcementMethod `json:"reinforcement"`
 	// Configuration for the supervised fine-tuning method.
 	Supervised SupervisedMethod `json:"supervised"`
+	// The type of method. Is either `supervised` or `dpo`.
+	//
+	// Any of "supervised", "dpo".
+	Type string `json:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type          respjson.Field
-		Dpo           respjson.Field
-		Reinforcement respjson.Field
-		Supervised    respjson.Field
-		ExtraFields   map[string]respjson.Field
-		raw           string
+		Dpo         respjson.Field
+		Supervised  respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
 	} `json:"-"`
 }
 
@@ -810,19 +783,15 @@ func (r *FineTuningJobNewParamsIntegrationWandb) UnmarshalJSON(data []byte) erro
 }
 
 // The method used for fine-tuning.
-//
-// The property Type is required.
 type FineTuningJobNewParamsMethod struct {
-	// The type of method. Is either `supervised`, `dpo`, or `reinforcement`.
-	//
-	// Any of "supervised", "dpo", "reinforcement".
-	Type string `json:"type,omitzero,required"`
 	// Configuration for the DPO fine-tuning method.
 	Dpo DpoMethodParam `json:"dpo,omitzero"`
-	// Configuration for the reinforcement fine-tuning method.
-	Reinforcement ReinforcementMethodParam `json:"reinforcement,omitzero"`
 	// Configuration for the supervised fine-tuning method.
 	Supervised SupervisedMethodParam `json:"supervised,omitzero"`
+	// The type of method. Is either `supervised` or `dpo`.
+	//
+	// Any of "supervised", "dpo".
+	Type string `json:"type,omitzero"`
 	paramObj
 }
 
@@ -836,7 +805,7 @@ func (r *FineTuningJobNewParamsMethod) UnmarshalJSON(data []byte) error {
 
 func init() {
 	apijson.RegisterFieldValidator[FineTuningJobNewParamsMethod](
-		"type", "supervised", "dpo", "reinforcement",
+		"type", "supervised", "dpo",
 	)
 }
 
