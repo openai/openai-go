@@ -239,7 +239,7 @@ type ImageEditParams struct {
 	// The image(s) to edit. Must be a supported image file or an array of images.
 	//
 	// For `gpt-image-1`, each image should be a `png`, `webp`, or `jpg` file less than
-	// 25MB. You can provide up to 16 images.
+	// 50MB. You can provide up to 16 images.
 	//
 	// For `dall-e-2`, you can only provide one image, and it should be a square `png`
 	// file less than 4MB.
@@ -253,6 +253,16 @@ type ImageEditParams struct {
 	// and detect abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
 	User param.Opt[string] `json:"user,omitzero"`
+	// Allows to set transparency for the background of the generated image(s). This
+	// parameter is only supported for `gpt-image-1`. Must be one of `transparent`,
+	// `opaque` or `auto` (default value). When `auto` is used, the model will
+	// automatically determine the best background for the image.
+	//
+	// If `transparent`, the output format needs to support transparency, so it should
+	// be set to either `png` (default value) or `webp`.
+	//
+	// Any of "transparent", "opaque", "auto".
+	Background ImageEditParamsBackground `json:"background,omitzero"`
 	// The model to use for image generation. Only `dall-e-2` and `gpt-image-1` are
 	// supported. Defaults to `dall-e-2` unless a parameter specific to `gpt-image-1`
 	// is used.
@@ -326,6 +336,21 @@ func (u *ImageEditParamsImageUnion) asAny() any {
 	}
 	return nil
 }
+
+// Allows to set transparency for the background of the generated image(s). This
+// parameter is only supported for `gpt-image-1`. Must be one of `transparent`,
+// `opaque` or `auto` (default value). When `auto` is used, the model will
+// automatically determine the best background for the image.
+//
+// If `transparent`, the output format needs to support transparency, so it should
+// be set to either `png` (default value) or `webp`.
+type ImageEditParamsBackground string
+
+const (
+	ImageEditParamsBackgroundTransparent ImageEditParamsBackground = "transparent"
+	ImageEditParamsBackgroundOpaque      ImageEditParamsBackground = "opaque"
+	ImageEditParamsBackgroundAuto        ImageEditParamsBackground = "auto"
+)
 
 // The quality of the image that will be generated. `high`, `medium` and `low` are
 // only supported for `gpt-image-1`. `dall-e-2` only supports `standard` quality.

@@ -46,6 +46,7 @@ const (
 	ChatModelGPT4oAudioPreview                ChatModel = "gpt-4o-audio-preview"
 	ChatModelGPT4oAudioPreview2024_10_01      ChatModel = "gpt-4o-audio-preview-2024-10-01"
 	ChatModelGPT4oAudioPreview2024_12_17      ChatModel = "gpt-4o-audio-preview-2024-12-17"
+	ChatModelGPT4oAudioPreview2025_06_03      ChatModel = "gpt-4o-audio-preview-2025-06-03"
 	ChatModelGPT4oMiniAudioPreview            ChatModel = "gpt-4o-mini-audio-preview"
 	ChatModelGPT4oMiniAudioPreview2024_12_17  ChatModel = "gpt-4o-mini-audio-preview-2024-12-17"
 	ChatModelGPT4oSearchPreview               ChatModel = "gpt-4o-search-preview"
@@ -53,6 +54,7 @@ const (
 	ChatModelGPT4oSearchPreview2025_03_11     ChatModel = "gpt-4o-search-preview-2025-03-11"
 	ChatModelGPT4oMiniSearchPreview2025_03_11 ChatModel = "gpt-4o-mini-search-preview-2025-03-11"
 	ChatModelChatgpt4oLatest                  ChatModel = "chatgpt-4o-latest"
+	ChatModelCodexMiniLatest                  ChatModel = "codex-mini-latest"
 	ChatModelGPT4oMini                        ChatModel = "gpt-4o-mini"
 	ChatModelGPT4oMini2024_07_18              ChatModel = "gpt-4o-mini-2024-07-18"
 	ChatModelGPT4Turbo                        ChatModel = "gpt-4-turbo"
@@ -782,6 +784,8 @@ func (r *ResponseFormatTextParam) UnmarshalJSON(data []byte) error {
 const (
 	ResponsesModelO1Pro                        ResponsesModel = "o1-pro"
 	ResponsesModelO1Pro2025_03_19              ResponsesModel = "o1-pro-2025-03-19"
+	ResponsesModelO3Pro                        ResponsesModel = "o3-pro"
+	ResponsesModelO3Pro2025_06_10              ResponsesModel = "o3-pro-2025-06-10"
 	ResponsesModelComputerUsePreview           ResponsesModel = "computer-use-preview"
 	ResponsesModelComputerUsePreview2025_03_11 ResponsesModel = "computer-use-preview-2025-03-11"
 	// Or some ...[ChatModel]

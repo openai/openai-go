@@ -13,6 +13,7 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/internal/testutil"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/shared/constant"
 )
 
 func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {
@@ -28,8 +29,11 @@ func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Audio.Transcriptions.New(context.TODO(), openai.AudioTranscriptionNewParams{
-		File:                   io.Reader(bytes.NewBuffer([]byte("some file contents"))),
-		Model:                  openai.AudioModelWhisper1,
+		File:  io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		Model: openai.AudioModelWhisper1,
+		ChunkingStrategy: openai.AudioTranscriptionNewParamsChunkingStrategyUnion{
+			OfAuto: constant.ValueOf[constant.Auto](),
+		},
 		Include:                []openai.TranscriptionInclude{openai.TranscriptionIncludeLogprobs},
 		Language:               openai.String("language"),
 		Prompt:                 openai.String("prompt"),
