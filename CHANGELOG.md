@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.0 (2025-06-12)
+
+Full Changelog: [v1.5.0...v1.6.0](https://github.com/openai/openai-go/compare/v1.5.0...v1.6.0)
+
+### Features
+
+* **api:** Add missing image options, scale tier ([c5d2383](https://github.com/openai/openai-go/commit/c5d23830b2f5826c99172c5901e76dae6a352d2c))
+* **api:** manual updates ([8b9d3d3](https://github.com/openai/openai-go/commit/8b9d3d30fc7e614a893a11ba74404f3c95e469d4))
+
 ## 1.5.0 (2025-06-10)
 
 Full Changelog: [v1.4.0...v1.5.0](https://github.com/openai/openai-go/compare/v1.4.0...v1.5.0)
