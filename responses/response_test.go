@@ -41,6 +41,15 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		},
 		ParallelToolCalls:  openai.Bool(true),
 		PreviousResponseID: openai.String("previous_response_id"),
+		Prompt: responses.ResponsePromptParam{
+			ID: "id",
+			Variables: map[string]responses.ResponsePromptVariableUnionParam{
+				"foo": {
+					OfString: openai.String("string"),
+				},
+			},
+			Version: openai.String("version"),
+		},
 		Reasoning: shared.ReasoningParam{
 			Effort:          shared.ReasoningEffortLow,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,

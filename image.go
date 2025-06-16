@@ -249,6 +249,10 @@ type ImageEditParams struct {
 	Prompt string `json:"prompt,required"`
 	// The number of images to generate. Must be between 1 and 10.
 	N param.Opt[int64] `json:"n,omitzero"`
+	// The compression level (0-100%) for the generated images. This parameter is only
+	// supported for `gpt-image-1` with the `webp` or `jpeg` output formats, and
+	// defaults to 100.
+	OutputCompression param.Opt[int64] `json:"output_compression,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
@@ -267,6 +271,12 @@ type ImageEditParams struct {
 	// supported. Defaults to `dall-e-2` unless a parameter specific to `gpt-image-1`
 	// is used.
 	Model ImageModel `json:"model,omitzero"`
+	// The format in which the generated images are returned. This parameter is only
+	// supported for `gpt-image-1`. Must be one of `png`, `jpeg`, or `webp`. The
+	// default value is `png`.
+	//
+	// Any of "png", "jpeg", "webp".
+	OutputFormat ImageEditParamsOutputFormat `json:"output_format,omitzero"`
 	// The quality of the image that will be generated. `high`, `medium` and `low` are
 	// only supported for `gpt-image-1`. `dall-e-2` only supports `standard` quality.
 	// Defaults to `auto`.
@@ -350,6 +360,17 @@ const (
 	ImageEditParamsBackgroundTransparent ImageEditParamsBackground = "transparent"
 	ImageEditParamsBackgroundOpaque      ImageEditParamsBackground = "opaque"
 	ImageEditParamsBackgroundAuto        ImageEditParamsBackground = "auto"
+)
+
+// The format in which the generated images are returned. This parameter is only
+// supported for `gpt-image-1`. Must be one of `png`, `jpeg`, or `webp`. The
+// default value is `png`.
+type ImageEditParamsOutputFormat string
+
+const (
+	ImageEditParamsOutputFormatPNG  ImageEditParamsOutputFormat = "png"
+	ImageEditParamsOutputFormatJPEG ImageEditParamsOutputFormat = "jpeg"
+	ImageEditParamsOutputFormatWebP ImageEditParamsOutputFormat = "webp"
 )
 
 // The quality of the image that will be generated. `high`, `medium` and `low` are

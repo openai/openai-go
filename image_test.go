@@ -60,15 +60,17 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 		Image: openai.ImageEditParamsImageUnion{
 			OfFile: io.Reader(bytes.NewBuffer([]byte("some file contents"))),
 		},
-		Prompt:         "A cute baby sea otter wearing a beret",
-		Background:     openai.ImageEditParamsBackgroundTransparent,
-		Mask:           io.Reader(bytes.NewBuffer([]byte("some file contents"))),
-		Model:          openai.ImageModelDallE2,
-		N:              openai.Int(1),
-		Quality:        openai.ImageEditParamsQualityHigh,
-		ResponseFormat: openai.ImageEditParamsResponseFormatURL,
-		Size:           openai.ImageEditParamsSize1024x1024,
-		User:           openai.String("user-1234"),
+		Prompt:            "A cute baby sea otter wearing a beret",
+		Background:        openai.ImageEditParamsBackgroundTransparent,
+		Mask:              io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		Model:             openai.ImageModelDallE2,
+		N:                 openai.Int(1),
+		OutputCompression: openai.Int(100),
+		OutputFormat:      openai.ImageEditParamsOutputFormatPNG,
+		Quality:           openai.ImageEditParamsQualityHigh,
+		ResponseFormat:    openai.ImageEditParamsResponseFormatURL,
+		Size:              openai.ImageEditParamsSize1024x1024,
+		User:              openai.String("user-1234"),
 	})
 	if err != nil {
 		var apierr *openai.Error
