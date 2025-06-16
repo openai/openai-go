@@ -48,7 +48,7 @@ func NewFineTuningJobService(opts ...option.RequestOption) (r FineTuningJobServi
 // Response includes details of the enqueued job including job status and the name
 // of the fine-tuned models once complete.
 //
-// [Learn more about fine-tuning](https://platform.openai.com/docs/guides/fine-tuning)
+// [Learn more about fine-tuning](https://platform.openai.com/docs/guides/model-optimization)
 func (r *FineTuningJobService) New(ctx context.Context, body FineTuningJobNewParams, opts ...option.RequestOption) (res *FineTuningJob, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "fine_tuning/jobs"
@@ -58,7 +58,7 @@ func (r *FineTuningJobService) New(ctx context.Context, body FineTuningJobNewPar
 
 // Get info about a fine-tuning job.
 //
-// [Learn more about fine-tuning](https://platform.openai.com/docs/guides/fine-tuning)
+// [Learn more about fine-tuning](https://platform.openai.com/docs/guides/model-optimization)
 func (r *FineTuningJobService) Get(ctx context.Context, fineTuningJobID string, opts ...option.RequestOption) (res *FineTuningJob, err error) {
 	opts = append(r.Options[:], opts...)
 	if fineTuningJobID == "" {
@@ -590,7 +590,8 @@ type FineTuningJobNewParams struct {
 	// [preference](https://platform.openai.com/docs/api-reference/fine-tuning/preference-input)
 	// format.
 	//
-	// See the [fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)
+	// See the
+	// [fine-tuning guide](https://platform.openai.com/docs/guides/model-optimization)
 	// for more details.
 	TrainingFile string `json:"training_file,required"`
 	// The seed controls the reproducibility of the job. Passing in the same seed and
@@ -613,7 +614,8 @@ type FineTuningJobNewParams struct {
 	// Your dataset must be formatted as a JSONL file. You must upload your file with
 	// the purpose `fine-tune`.
 	//
-	// See the [fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)
+	// See the
+	// [fine-tuning guide](https://platform.openai.com/docs/guides/model-optimization)
 	// for more details.
 	ValidationFile param.Opt[string] `json:"validation_file,omitzero"`
 	// A list of integrations to enable for your fine-tuning job.
