@@ -75,15 +75,33 @@ func (r *FineTuningCheckpointPermissionService) NewAutoPaging(ctx context.Contex
 //
 // Organization owners can use this endpoint to view all permissions for a
 // fine-tuned model checkpoint.
-func (r *FineTuningCheckpointPermissionService) Get(ctx context.Context, fineTunedModelCheckpoint string, query FineTuningCheckpointPermissionGetParams, opts ...option.RequestOption) (res *FineTuningCheckpointPermissionGetResponse, err error) {
+func (r *FineTuningCheckpointPermissionService) Get(ctx context.Context, fineTunedModelCheckpoint string, query FineTuningCheckpointPermissionGetParams, opts ...option.RequestOption) (res *pagination.CursorPage[FineTuningCheckpointPermissionGetResponse], err error) {
+	var raw *http.Response
 	opts = append(r.Options[:], opts...)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if fineTunedModelCheckpoint == "" {
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
 		return
 	}
 	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// **NOTE:** This endpoint requires an [admin API key](../admin-api-keys).
+//
+// Organization owners can use this endpoint to view all permissions for a
+// fine-tuned model checkpoint.
+func (r *FineTuningCheckpointPermissionService) GetAutoPaging(ctx context.Context, fineTunedModelCheckpoint string, query FineTuningCheckpointPermissionGetParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[FineTuningCheckpointPermissionGetResponse] {
+	return pagination.NewCursorPageAutoPager(r.Get(ctx, fineTunedModelCheckpoint, query, opts...))
 }
 
 // **NOTE:** This endpoint requires an [admin API key](../admin-api-keys).
@@ -133,33 +151,9 @@ func (r *FineTuningCheckpointPermissionNewResponse) UnmarshalJSON(data []byte) e
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type FineTuningCheckpointPermissionGetResponse struct {
-	Data    []FineTuningCheckpointPermissionGetResponseData `json:"data,required"`
-	HasMore bool                                            `json:"has_more,required"`
-	Object  constant.List                                   `json:"object,required"`
-	FirstID string                                          `json:"first_id,nullable"`
-	LastID  string                                          `json:"last_id,nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		HasMore     respjson.Field
-		Object      respjson.Field
-		FirstID     respjson.Field
-		LastID      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r FineTuningCheckpointPermissionGetResponse) RawJSON() string { return r.JSON.raw }
-func (r *FineTuningCheckpointPermissionGetResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // The `checkpoint.permission` object represents a permission for a fine-tuned
 // model checkpoint.
-type FineTuningCheckpointPermissionGetResponseData struct {
+type FineTuningCheckpointPermissionGetResponse struct {
 	// The permission identifier, which can be referenced in the API endpoints.
 	ID string `json:"id,required"`
 	// The Unix timestamp (in seconds) for when the permission was created.
@@ -180,8 +174,8 @@ type FineTuningCheckpointPermissionGetResponseData struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r FineTuningCheckpointPermissionGetResponseData) RawJSON() string { return r.JSON.raw }
-func (r *FineTuningCheckpointPermissionGetResponseData) UnmarshalJSON(data []byte) error {
+func (r FineTuningCheckpointPermissionGetResponse) RawJSON() string { return r.JSON.raw }
+func (r *FineTuningCheckpointPermissionGetResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
