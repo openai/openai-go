@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.6.0 (2025-06-17)
+
+Full Changelog: [v1.5.0...v1.6.0](https://github.com/openai/openai-go/compare/v1.5.0...v1.6.0)
+
+### Features
+
+* **api:** add reusable prompt IDs ([280c698](https://github.com/openai/openai-go/commit/280c698015eba5f6bd47e2fce038eb401f6ef0f2))
+* **api:** manual updates ([740f840](https://github.com/openai/openai-go/commit/740f84006ac283a25f5ad96aaf845a3c8a51c6ac))
+* **client:** add debug log helper ([5715c49](https://github.com/openai/openai-go/commit/5715c491c483f8dab4ea2a900c400384f6810024))
+
+
+### Chores
+
+* **ci:** enable for pull requests ([9ed793a](https://github.com/openai/openai-go/commit/9ed793a51010423db464a7b7bd263d2fd275967f))
+
 ## 1.5.0 (2025-06-10)
 
 Full Changelog: [v1.4.0...v1.5.0](https://github.com/openai/openai-go/compare/v1.4.0...v1.5.0)

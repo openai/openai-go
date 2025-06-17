@@ -193,7 +193,7 @@ type ChatCompletion struct {
 	// When this parameter is set, the response body will include the `service_tier`
 	// utilized.
 	//
-	// Any of "auto", "default", "flex".
+	// Any of "auto", "default", "flex", "scale".
 	ServiceTier ChatCompletionServiceTier `json:"service_tier,nullable"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	//
@@ -300,6 +300,7 @@ const (
 	ChatCompletionServiceTierAuto    ChatCompletionServiceTier = "auto"
 	ChatCompletionServiceTierDefault ChatCompletionServiceTier = "default"
 	ChatCompletionServiceTierFlex    ChatCompletionServiceTier = "flex"
+	ChatCompletionServiceTierScale   ChatCompletionServiceTier = "scale"
 )
 
 // Messages sent by the model in response to user messages.
@@ -588,7 +589,7 @@ type ChatCompletionChunk struct {
 	// When this parameter is set, the response body will include the `service_tier`
 	// utilized.
 	//
-	// Any of "auto", "default", "flex".
+	// Any of "auto", "default", "flex", "scale".
 	ServiceTier ChatCompletionChunkServiceTier `json:"service_tier,nullable"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	// Can be used in conjunction with the `seed` request parameter to understand when
@@ -810,6 +811,7 @@ const (
 	ChatCompletionChunkServiceTierAuto    ChatCompletionChunkServiceTier = "auto"
 	ChatCompletionChunkServiceTierDefault ChatCompletionChunkServiceTier = "default"
 	ChatCompletionChunkServiceTierFlex    ChatCompletionChunkServiceTier = "flex"
+	ChatCompletionChunkServiceTierScale   ChatCompletionChunkServiceTier = "scale"
 )
 
 func TextContentPart(text string) ChatCompletionContentPartUnionParam {
@@ -2221,7 +2223,7 @@ type ChatCompletionNewParams struct {
 	// When this parameter is set, the response body will include the `service_tier`
 	// utilized.
 	//
-	// Any of "auto", "default", "flex".
+	// Any of "auto", "default", "flex", "scale".
 	ServiceTier ChatCompletionNewParamsServiceTier `json:"service_tier,omitzero"`
 	// Not supported with latest reasoning models `o3` and `o4-mini`.
 	//
@@ -2428,6 +2430,7 @@ const (
 	ChatCompletionNewParamsServiceTierAuto    ChatCompletionNewParamsServiceTier = "auto"
 	ChatCompletionNewParamsServiceTierDefault ChatCompletionNewParamsServiceTier = "default"
 	ChatCompletionNewParamsServiceTierFlex    ChatCompletionNewParamsServiceTier = "flex"
+	ChatCompletionNewParamsServiceTierScale   ChatCompletionNewParamsServiceTier = "scale"
 )
 
 // Only one field can be non-zero.
