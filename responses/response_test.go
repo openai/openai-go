@@ -28,17 +28,17 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
+		Background: openai.Bool(true),
+		Include:    []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String("string"),
 		},
-		Model:           shared.ResponsesModel("gpt-4o"),
-		Background:      openai.Bool(true),
-		Include:         []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		Instructions:    openai.String("instructions"),
 		MaxOutputTokens: openai.Int(0),
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
+		Model:              shared.ResponsesModel("gpt-4o"),
 		ParallelToolCalls:  openai.Bool(true),
 		PreviousResponseID: openai.String("previous_response_id"),
 		Prompt: responses.ResponsePromptParam{
