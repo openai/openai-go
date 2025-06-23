@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/openai/openai-go"
@@ -160,4 +161,36 @@ func TestResponseCancel(t *testing.T) {
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
+}
+
+func TestResponseTruncatedByMaxTokens(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+
+	_, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
+		Model:             shared.ResponsesModel("gpt-4o"),
+		Input:             responses.ResponseNewParamsInputUnion{OfString: openai.String("Tell me a long story about a dragon")},
+		Instructions:      openai.String("Return a JSON with full story"),
+		MaxOutputTokens:   openai.Int(5),
+		Temperature:       openai.Float(1),
+		Text:              responses.ResponseTextConfigParam{Format: responses.ResponseFormatTextConfigUnionParam{OfText: &shared.ResponseFormatTextParam{}}},
+		ParallelToolCalls: openai.Bool(false),
+	})
+
+	if err == nil {
+		t.Fatal("Expected error due to max_tokens truncation, but got nil")
+	}
+	if !strings.Contains(err.Error(), "truncated") {
+		t.Fatalf("Expected truncation-related error, got: %v", err)
+	}
+
 }
