@@ -1086,19 +1086,23 @@ func (r *ResponseAudioTranscriptDoneEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Emitted when a partial code snippet is added by the code interpreter.
+// Emitted when a partial code snippet is streamed by the code interpreter.
 type ResponseCodeInterpreterCallCodeDeltaEvent struct {
-	// The partial code snippet added by the code interpreter.
+	// The partial code snippet being streamed by the code interpreter.
 	Delta string `json:"delta,required"`
-	// The index of the output item that the code interpreter call is in progress.
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id,required"`
+	// The index of the output item in the response for which the code is being
+	// streamed.
 	OutputIndex int64 `json:"output_index,required"`
-	// The sequence number of this event.
+	// The sequence number of this event, used to order streaming events.
 	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.code_interpreter_call_code.delta`.
 	Type constant.ResponseCodeInterpreterCallCodeDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delta          respjson.Field
+		ItemID         respjson.Field
 		OutputIndex    respjson.Field
 		SequenceNumber respjson.Field
 		Type           respjson.Field
@@ -1113,19 +1117,22 @@ func (r *ResponseCodeInterpreterCallCodeDeltaEvent) UnmarshalJSON(data []byte) e
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Emitted when code snippet output is finalized by the code interpreter.
+// Emitted when the code snippet is finalized by the code interpreter.
 type ResponseCodeInterpreterCallCodeDoneEvent struct {
 	// The final code snippet output by the code interpreter.
 	Code string `json:"code,required"`
-	// The index of the output item that the code interpreter call is in progress.
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id,required"`
+	// The index of the output item in the response for which the code is finalized.
 	OutputIndex int64 `json:"output_index,required"`
-	// The sequence number of this event.
+	// The sequence number of this event, used to order streaming events.
 	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.code_interpreter_call_code.done`.
 	Type constant.ResponseCodeInterpreterCallCodeDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Code           respjson.Field
+		ItemID         respjson.Field
 		OutputIndex    respjson.Field
 		SequenceNumber respjson.Field
 		Type           respjson.Field
@@ -1142,22 +1149,23 @@ func (r *ResponseCodeInterpreterCallCodeDoneEvent) UnmarshalJSON(data []byte) er
 
 // Emitted when the code interpreter call is completed.
 type ResponseCodeInterpreterCallCompletedEvent struct {
-	// A tool call to run code.
-	CodeInterpreterCall ResponseCodeInterpreterToolCall `json:"code_interpreter_call,required"`
-	// The index of the output item that the code interpreter call is in progress.
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id,required"`
+	// The index of the output item in the response for which the code interpreter call
+	// is completed.
 	OutputIndex int64 `json:"output_index,required"`
-	// The sequence number of this event.
+	// The sequence number of this event, used to order streaming events.
 	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.code_interpreter_call.completed`.
 	Type constant.ResponseCodeInterpreterCallCompleted `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CodeInterpreterCall respjson.Field
-		OutputIndex         respjson.Field
-		SequenceNumber      respjson.Field
-		Type                respjson.Field
-		ExtraFields         map[string]respjson.Field
-		raw                 string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -1169,22 +1177,23 @@ func (r *ResponseCodeInterpreterCallCompletedEvent) UnmarshalJSON(data []byte) e
 
 // Emitted when a code interpreter call is in progress.
 type ResponseCodeInterpreterCallInProgressEvent struct {
-	// A tool call to run code.
-	CodeInterpreterCall ResponseCodeInterpreterToolCall `json:"code_interpreter_call,required"`
-	// The index of the output item that the code interpreter call is in progress.
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id,required"`
+	// The index of the output item in the response for which the code interpreter call
+	// is in progress.
 	OutputIndex int64 `json:"output_index,required"`
-	// The sequence number of this event.
+	// The sequence number of this event, used to order streaming events.
 	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.code_interpreter_call.in_progress`.
 	Type constant.ResponseCodeInterpreterCallInProgress `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CodeInterpreterCall respjson.Field
-		OutputIndex         respjson.Field
-		SequenceNumber      respjson.Field
-		Type                respjson.Field
-		ExtraFields         map[string]respjson.Field
-		raw                 string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -1196,22 +1205,23 @@ func (r *ResponseCodeInterpreterCallInProgressEvent) UnmarshalJSON(data []byte) 
 
 // Emitted when the code interpreter is actively interpreting the code snippet.
 type ResponseCodeInterpreterCallInterpretingEvent struct {
-	// A tool call to run code.
-	CodeInterpreterCall ResponseCodeInterpreterToolCall `json:"code_interpreter_call,required"`
-	// The index of the output item that the code interpreter call is in progress.
+	// The unique identifier of the code interpreter tool call item.
+	ItemID string `json:"item_id,required"`
+	// The index of the output item in the response for which the code interpreter is
+	// interpreting code.
 	OutputIndex int64 `json:"output_index,required"`
-	// The sequence number of this event.
+	// The sequence number of this event, used to order streaming events.
 	SequenceNumber int64 `json:"sequence_number,required"`
 	// The type of the event. Always `response.code_interpreter_call.interpreting`.
 	Type constant.ResponseCodeInterpreterCallInterpreting `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		CodeInterpreterCall respjson.Field
-		OutputIndex         respjson.Field
-		SequenceNumber      respjson.Field
-		Type                respjson.Field
-		ExtraFields         map[string]respjson.Field
-		raw                 string
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
 	} `json:"-"`
 }
 
@@ -1225,26 +1235,27 @@ func (r *ResponseCodeInterpreterCallInterpretingEvent) UnmarshalJSON(data []byte
 type ResponseCodeInterpreterToolCall struct {
 	// The unique ID of the code interpreter tool call.
 	ID string `json:"id,required"`
-	// The code to run.
+	// The code to run, or null if not available.
 	Code string `json:"code,required"`
-	// The results of the code interpreter tool call.
-	Results []ResponseCodeInterpreterToolCallResultUnion `json:"results,required"`
+	// The ID of the container used to run the code.
+	ContainerID string `json:"container_id,required"`
+	// The outputs generated by the code interpreter, such as logs or images. Can be
+	// null if no outputs are available.
+	Outputs []ResponseCodeInterpreterToolCallOutputUnion `json:"outputs,required"`
 	// The status of the code interpreter tool call.
 	//
-	// Any of "in_progress", "interpreting", "completed".
+	// Any of "in_progress", "completed", "incomplete", "interpreting", "failed".
 	Status ResponseCodeInterpreterToolCallStatus `json:"status,required"`
 	// The type of the code interpreter tool call. Always `code_interpreter_call`.
 	Type constant.CodeInterpreterCall `json:"type,required"`
-	// The ID of the container used to run the code.
-	ContainerID string `json:"container_id"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
 		Code        respjson.Field
-		Results     respjson.Field
+		ContainerID respjson.Field
+		Outputs     respjson.Field
 		Status      respjson.Field
 		Type        respjson.Field
-		ContainerID respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -1266,79 +1277,79 @@ func (r ResponseCodeInterpreterToolCall) ToParam() ResponseCodeInterpreterToolCa
 	return param.Override[ResponseCodeInterpreterToolCallParam](json.RawMessage(r.RawJSON()))
 }
 
-// ResponseCodeInterpreterToolCallResultUnion contains all possible properties and
-// values from [ResponseCodeInterpreterToolCallResultLogs],
-// [ResponseCodeInterpreterToolCallResultFiles].
+// ResponseCodeInterpreterToolCallOutputUnion contains all possible properties and
+// values from [ResponseCodeInterpreterToolCallOutputLogs],
+// [ResponseCodeInterpreterToolCallOutputImage].
 //
-// Use the [ResponseCodeInterpreterToolCallResultUnion.AsAny] method to switch on
+// Use the [ResponseCodeInterpreterToolCallOutputUnion.AsAny] method to switch on
 // the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
-type ResponseCodeInterpreterToolCallResultUnion struct {
-	// This field is from variant [ResponseCodeInterpreterToolCallResultLogs].
+type ResponseCodeInterpreterToolCallOutputUnion struct {
+	// This field is from variant [ResponseCodeInterpreterToolCallOutputLogs].
 	Logs string `json:"logs"`
-	// Any of "logs", "files".
+	// Any of "logs", "image".
 	Type string `json:"type"`
-	// This field is from variant [ResponseCodeInterpreterToolCallResultFiles].
-	Files []ResponseCodeInterpreterToolCallResultFilesFile `json:"files"`
-	JSON  struct {
-		Logs  respjson.Field
-		Type  respjson.Field
-		Files respjson.Field
-		raw   string
+	// This field is from variant [ResponseCodeInterpreterToolCallOutputImage].
+	URL  string `json:"url"`
+	JSON struct {
+		Logs respjson.Field
+		Type respjson.Field
+		URL  respjson.Field
+		raw  string
 	} `json:"-"`
 }
 
-// anyResponseCodeInterpreterToolCallResult is implemented by each variant of
-// [ResponseCodeInterpreterToolCallResultUnion] to add type safety for the return
-// type of [ResponseCodeInterpreterToolCallResultUnion.AsAny]
-type anyResponseCodeInterpreterToolCallResult interface {
-	implResponseCodeInterpreterToolCallResultUnion()
+// anyResponseCodeInterpreterToolCallOutput is implemented by each variant of
+// [ResponseCodeInterpreterToolCallOutputUnion] to add type safety for the return
+// type of [ResponseCodeInterpreterToolCallOutputUnion.AsAny]
+type anyResponseCodeInterpreterToolCallOutput interface {
+	implResponseCodeInterpreterToolCallOutputUnion()
 }
 
-func (ResponseCodeInterpreterToolCallResultLogs) implResponseCodeInterpreterToolCallResultUnion()  {}
-func (ResponseCodeInterpreterToolCallResultFiles) implResponseCodeInterpreterToolCallResultUnion() {}
+func (ResponseCodeInterpreterToolCallOutputLogs) implResponseCodeInterpreterToolCallOutputUnion()  {}
+func (ResponseCodeInterpreterToolCallOutputImage) implResponseCodeInterpreterToolCallOutputUnion() {}
 
 // Use the following switch statement to find the correct variant
 //
-//	switch variant := ResponseCodeInterpreterToolCallResultUnion.AsAny().(type) {
-//	case responses.ResponseCodeInterpreterToolCallResultLogs:
-//	case responses.ResponseCodeInterpreterToolCallResultFiles:
+//	switch variant := ResponseCodeInterpreterToolCallOutputUnion.AsAny().(type) {
+//	case responses.ResponseCodeInterpreterToolCallOutputLogs:
+//	case responses.ResponseCodeInterpreterToolCallOutputImage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
-func (u ResponseCodeInterpreterToolCallResultUnion) AsAny() anyResponseCodeInterpreterToolCallResult {
+func (u ResponseCodeInterpreterToolCallOutputUnion) AsAny() anyResponseCodeInterpreterToolCallOutput {
 	switch u.Type {
 	case "logs":
 		return u.AsLogs()
-	case "files":
-		return u.AsFiles()
+	case "image":
+		return u.AsImage()
 	}
 	return nil
 }
 
-func (u ResponseCodeInterpreterToolCallResultUnion) AsLogs() (v ResponseCodeInterpreterToolCallResultLogs) {
+func (u ResponseCodeInterpreterToolCallOutputUnion) AsLogs() (v ResponseCodeInterpreterToolCallOutputLogs) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u ResponseCodeInterpreterToolCallResultUnion) AsFiles() (v ResponseCodeInterpreterToolCallResultFiles) {
+func (u ResponseCodeInterpreterToolCallOutputUnion) AsImage() (v ResponseCodeInterpreterToolCallOutputImage) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 // Returns the unmodified JSON received from the API
-func (u ResponseCodeInterpreterToolCallResultUnion) RawJSON() string { return u.JSON.raw }
+func (u ResponseCodeInterpreterToolCallOutputUnion) RawJSON() string { return u.JSON.raw }
 
-func (r *ResponseCodeInterpreterToolCallResultUnion) UnmarshalJSON(data []byte) error {
+func (r *ResponseCodeInterpreterToolCallOutputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The output of a code interpreter tool call that is text.
-type ResponseCodeInterpreterToolCallResultLogs struct {
-	// The logs of the code interpreter tool call.
+// The logs output from the code interpreter.
+type ResponseCodeInterpreterToolCallOutputLogs struct {
+	// The logs output from the code interpreter.
 	Logs string `json:"logs,required"`
-	// The type of the code interpreter text output. Always `logs`.
+	// The type of the output. Always 'logs'.
 	Type constant.Logs `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1350,48 +1361,29 @@ type ResponseCodeInterpreterToolCallResultLogs struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ResponseCodeInterpreterToolCallResultLogs) RawJSON() string { return r.JSON.raw }
-func (r *ResponseCodeInterpreterToolCallResultLogs) UnmarshalJSON(data []byte) error {
+func (r ResponseCodeInterpreterToolCallOutputLogs) RawJSON() string { return r.JSON.raw }
+func (r *ResponseCodeInterpreterToolCallOutputLogs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The output of a code interpreter tool call that is a file.
-type ResponseCodeInterpreterToolCallResultFiles struct {
-	Files []ResponseCodeInterpreterToolCallResultFilesFile `json:"files,required"`
-	// The type of the code interpreter file output. Always `files`.
-	Type constant.Files `json:"type,required"`
+// The image output from the code interpreter.
+type ResponseCodeInterpreterToolCallOutputImage struct {
+	// The type of the output. Always 'image'.
+	Type constant.Image `json:"type,required"`
+	// The URL of the image output from the code interpreter.
+	URL string `json:"url,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Files       respjson.Field
 		Type        respjson.Field
+		URL         respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
-func (r ResponseCodeInterpreterToolCallResultFiles) RawJSON() string { return r.JSON.raw }
-func (r *ResponseCodeInterpreterToolCallResultFiles) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ResponseCodeInterpreterToolCallResultFilesFile struct {
-	// The ID of the file.
-	FileID string `json:"file_id,required"`
-	// The MIME type of the file.
-	MimeType string `json:"mime_type,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		FileID      respjson.Field
-		MimeType    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ResponseCodeInterpreterToolCallResultFilesFile) RawJSON() string { return r.JSON.raw }
-func (r *ResponseCodeInterpreterToolCallResultFilesFile) UnmarshalJSON(data []byte) error {
+func (r ResponseCodeInterpreterToolCallOutputImage) RawJSON() string { return r.JSON.raw }
+func (r *ResponseCodeInterpreterToolCallOutputImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1400,26 +1392,29 @@ type ResponseCodeInterpreterToolCallStatus string
 
 const (
 	ResponseCodeInterpreterToolCallStatusInProgress   ResponseCodeInterpreterToolCallStatus = "in_progress"
-	ResponseCodeInterpreterToolCallStatusInterpreting ResponseCodeInterpreterToolCallStatus = "interpreting"
 	ResponseCodeInterpreterToolCallStatusCompleted    ResponseCodeInterpreterToolCallStatus = "completed"
+	ResponseCodeInterpreterToolCallStatusIncomplete   ResponseCodeInterpreterToolCallStatus = "incomplete"
+	ResponseCodeInterpreterToolCallStatusInterpreting ResponseCodeInterpreterToolCallStatus = "interpreting"
+	ResponseCodeInterpreterToolCallStatusFailed       ResponseCodeInterpreterToolCallStatus = "failed"
 )
 
 // A tool call to run code.
 //
-// The properties ID, Code, Results, Status, Type are required.
+// The properties ID, Code, ContainerID, Outputs, Status, Type are required.
 type ResponseCodeInterpreterToolCallParam struct {
+	// The code to run, or null if not available.
+	Code param.Opt[string] `json:"code,omitzero,required"`
+	// The outputs generated by the code interpreter, such as logs or images. Can be
+	// null if no outputs are available.
+	Outputs []ResponseCodeInterpreterToolCallOutputUnionParam `json:"outputs,omitzero,required"`
 	// The unique ID of the code interpreter tool call.
 	ID string `json:"id,required"`
-	// The code to run.
-	Code string `json:"code,required"`
-	// The results of the code interpreter tool call.
-	Results []ResponseCodeInterpreterToolCallResultUnionParam `json:"results,omitzero,required"`
+	// The ID of the container used to run the code.
+	ContainerID string `json:"container_id,required"`
 	// The status of the code interpreter tool call.
 	//
-	// Any of "in_progress", "interpreting", "completed".
+	// Any of "in_progress", "completed", "incomplete", "interpreting", "failed".
 	Status ResponseCodeInterpreterToolCallStatus `json:"status,omitzero,required"`
-	// The ID of the container used to run the code.
-	ContainerID param.Opt[string] `json:"container_id,omitzero"`
 	// The type of the code interpreter tool call. Always `code_interpreter_call`.
 	//
 	// This field can be elided, and will marshal its zero value as
@@ -1439,30 +1434,30 @@ func (r *ResponseCodeInterpreterToolCallParam) UnmarshalJSON(data []byte) error 
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type ResponseCodeInterpreterToolCallResultUnionParam struct {
-	OfLogs  *ResponseCodeInterpreterToolCallResultLogsParam  `json:",omitzero,inline"`
-	OfFiles *ResponseCodeInterpreterToolCallResultFilesParam `json:",omitzero,inline"`
+type ResponseCodeInterpreterToolCallOutputUnionParam struct {
+	OfLogs  *ResponseCodeInterpreterToolCallOutputLogsParam  `json:",omitzero,inline"`
+	OfImage *ResponseCodeInterpreterToolCallOutputImageParam `json:",omitzero,inline"`
 	paramUnion
 }
 
-func (u ResponseCodeInterpreterToolCallResultUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfLogs, u.OfFiles)
+func (u ResponseCodeInterpreterToolCallOutputUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfLogs, u.OfImage)
 }
-func (u *ResponseCodeInterpreterToolCallResultUnionParam) UnmarshalJSON(data []byte) error {
+func (u *ResponseCodeInterpreterToolCallOutputUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ResponseCodeInterpreterToolCallResultUnionParam) asAny() any {
+func (u *ResponseCodeInterpreterToolCallOutputUnionParam) asAny() any {
 	if !param.IsOmitted(u.OfLogs) {
 		return u.OfLogs
-	} else if !param.IsOmitted(u.OfFiles) {
-		return u.OfFiles
+	} else if !param.IsOmitted(u.OfImage) {
+		return u.OfImage
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseCodeInterpreterToolCallResultUnionParam) GetLogs() *string {
+func (u ResponseCodeInterpreterToolCallOutputUnionParam) GetLogs() *string {
 	if vt := u.OfLogs; vt != nil {
 		return &vt.Logs
 	}
@@ -1470,86 +1465,70 @@ func (u ResponseCodeInterpreterToolCallResultUnionParam) GetLogs() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseCodeInterpreterToolCallResultUnionParam) GetFiles() []ResponseCodeInterpreterToolCallResultFilesFileParam {
-	if vt := u.OfFiles; vt != nil {
-		return vt.Files
+func (u ResponseCodeInterpreterToolCallOutputUnionParam) GetURL() *string {
+	if vt := u.OfImage; vt != nil {
+		return &vt.URL
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseCodeInterpreterToolCallResultUnionParam) GetType() *string {
+func (u ResponseCodeInterpreterToolCallOutputUnionParam) GetType() *string {
 	if vt := u.OfLogs; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfFiles; vt != nil {
+	} else if vt := u.OfImage; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
 }
 
 func init() {
-	apijson.RegisterUnion[ResponseCodeInterpreterToolCallResultUnionParam](
+	apijson.RegisterUnion[ResponseCodeInterpreterToolCallOutputUnionParam](
 		"type",
-		apijson.Discriminator[ResponseCodeInterpreterToolCallResultLogsParam]("logs"),
-		apijson.Discriminator[ResponseCodeInterpreterToolCallResultFilesParam]("files"),
+		apijson.Discriminator[ResponseCodeInterpreterToolCallOutputLogsParam]("logs"),
+		apijson.Discriminator[ResponseCodeInterpreterToolCallOutputImageParam]("image"),
 	)
 }
 
-// The output of a code interpreter tool call that is text.
+// The logs output from the code interpreter.
 //
 // The properties Logs, Type are required.
-type ResponseCodeInterpreterToolCallResultLogsParam struct {
-	// The logs of the code interpreter tool call.
+type ResponseCodeInterpreterToolCallOutputLogsParam struct {
+	// The logs output from the code interpreter.
 	Logs string `json:"logs,required"`
-	// The type of the code interpreter text output. Always `logs`.
+	// The type of the output. Always 'logs'.
 	//
 	// This field can be elided, and will marshal its zero value as "logs".
 	Type constant.Logs `json:"type,required"`
 	paramObj
 }
 
-func (r ResponseCodeInterpreterToolCallResultLogsParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponseCodeInterpreterToolCallResultLogsParam
+func (r ResponseCodeInterpreterToolCallOutputLogsParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseCodeInterpreterToolCallOutputLogsParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponseCodeInterpreterToolCallResultLogsParam) UnmarshalJSON(data []byte) error {
+func (r *ResponseCodeInterpreterToolCallOutputLogsParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The output of a code interpreter tool call that is a file.
+// The image output from the code interpreter.
 //
-// The properties Files, Type are required.
-type ResponseCodeInterpreterToolCallResultFilesParam struct {
-	Files []ResponseCodeInterpreterToolCallResultFilesFileParam `json:"files,omitzero,required"`
-	// The type of the code interpreter file output. Always `files`.
+// The properties Type, URL are required.
+type ResponseCodeInterpreterToolCallOutputImageParam struct {
+	// The URL of the image output from the code interpreter.
+	URL string `json:"url,required"`
+	// The type of the output. Always 'image'.
 	//
-	// This field can be elided, and will marshal its zero value as "files".
-	Type constant.Files `json:"type,required"`
+	// This field can be elided, and will marshal its zero value as "image".
+	Type constant.Image `json:"type,required"`
 	paramObj
 }
 
-func (r ResponseCodeInterpreterToolCallResultFilesParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponseCodeInterpreterToolCallResultFilesParam
+func (r ResponseCodeInterpreterToolCallOutputImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseCodeInterpreterToolCallOutputImageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponseCodeInterpreterToolCallResultFilesParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The properties FileID, MimeType are required.
-type ResponseCodeInterpreterToolCallResultFilesFileParam struct {
-	// The ID of the file.
-	FileID string `json:"file_id,required"`
-	// The MIME type of the file.
-	MimeType string `json:"mime_type,required"`
-	paramObj
-}
-
-func (r ResponseCodeInterpreterToolCallResultFilesFileParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponseCodeInterpreterToolCallResultFilesFileParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponseCodeInterpreterToolCallResultFilesFileParam) UnmarshalJSON(data []byte) error {
+func (r *ResponseCodeInterpreterToolCallOutputImageParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -4449,9 +4428,8 @@ type ResponseInputItemUnion struct {
 	ID     string `json:"id"`
 	// This field is from variant [ResponseFileSearchToolCall].
 	Queries []string `json:"queries"`
-	// This field is a union of [[]ResponseFileSearchToolCallResult],
-	// [[]ResponseCodeInterpreterToolCallResultUnion]
-	Results ResponseInputItemUnionResults `json:"results"`
+	// This field is from variant [ResponseFileSearchToolCall].
+	Results []ResponseFileSearchToolCallResult `json:"results"`
 	// This field is a union of [ResponseComputerToolCallActionUnion],
 	// [ResponseInputItemLocalShellCallAction]
 	Action ResponseInputItemUnionAction `json:"action"`
@@ -4475,7 +4453,9 @@ type ResponseInputItemUnion struct {
 	Code string `json:"code"`
 	// This field is from variant [ResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
-	ServerLabel string `json:"server_label"`
+	// This field is from variant [ResponseCodeInterpreterToolCall].
+	Outputs     []ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
+	ServerLabel string                                       `json:"server_label"`
 	// This field is from variant [ResponseInputItemMcpListTools].
 	Tools []ResponseInputItemMcpListToolsTool `json:"tools"`
 	Error string                              `json:"error"`
@@ -4505,6 +4485,7 @@ type ResponseInputItemUnion struct {
 		Result                   respjson.Field
 		Code                     respjson.Field
 		ContainerID              respjson.Field
+		Outputs                  respjson.Field
 		ServerLabel              respjson.Field
 		Tools                    respjson.Field
 		Error                    respjson.Field
@@ -4736,34 +4717,6 @@ type ResponseInputItemUnionContent struct {
 }
 
 func (r *ResponseInputItemUnionContent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ResponseInputItemUnionResults is an implicit subunion of
-// [ResponseInputItemUnion]. ResponseInputItemUnionResults provides convenient
-// access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ResponseInputItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfResponseFileSearchToolCallResults
-// OfResponseCodeInterpreterToolCallResults]
-type ResponseInputItemUnionResults struct {
-	// This field will be present if the value is a
-	// [[]ResponseFileSearchToolCallResult] instead of an object.
-	OfResponseFileSearchToolCallResults []ResponseFileSearchToolCallResult `json:",inline"`
-	// This field will be present if the value is a
-	// [[]ResponseCodeInterpreterToolCallResultUnion] instead of an object.
-	OfResponseCodeInterpreterToolCallResults []ResponseCodeInterpreterToolCallResultUnion `json:",inline"`
-	JSON                                     struct {
-		OfResponseFileSearchToolCallResults      respjson.Field
-		OfResponseCodeInterpreterToolCallResults respjson.Field
-		raw                                      string
-	} `json:"-"`
-}
-
-func (r *ResponseInputItemUnionResults) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -5505,6 +5458,14 @@ func (u ResponseInputItemUnionParam) GetQueries() []string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetResults() []ResponseFileSearchToolCallResultParam {
+	if vt := u.OfFileSearchCall; vt != nil {
+		return vt.Results
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputItemUnionParam) GetPendingSafetyChecks() []ResponseComputerToolCallPendingSafetyCheckParam {
 	if vt := u.OfComputerCall; vt != nil {
 		return vt.PendingSafetyChecks
@@ -5546,16 +5507,24 @@ func (u ResponseInputItemUnionParam) GetResult() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputItemUnionParam) GetCode() *string {
-	if vt := u.OfCodeInterpreterCall; vt != nil {
-		return &vt.Code
+	if vt := u.OfCodeInterpreterCall; vt != nil && vt.Code.Valid() {
+		return &vt.Code.Value
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputItemUnionParam) GetContainerID() *string {
-	if vt := u.OfCodeInterpreterCall; vt != nil && vt.ContainerID.Valid() {
-		return &vt.ContainerID.Value
+	if vt := u.OfCodeInterpreterCall; vt != nil {
+		return &vt.ContainerID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetOutputs() []ResponseCodeInterpreterToolCallOutputUnionParam {
+	if vt := u.OfCodeInterpreterCall; vt != nil {
+		return vt.Outputs
 	}
 	return nil
 }
@@ -5810,32 +5779,6 @@ type responseInputItemUnionParamContent struct{ any }
 //	    fmt.Errorf("not present")
 //	}
 func (u responseInputItemUnionParamContent) AsAny() any { return u.any }
-
-// Returns a subunion which exports methods to access subproperties
-//
-// Or use AsAny() to get the underlying value
-func (u ResponseInputItemUnionParam) GetResults() (res responseInputItemUnionParamResults) {
-	if vt := u.OfFileSearchCall; vt != nil {
-		res.any = &vt.Results
-	} else if vt := u.OfCodeInterpreterCall; vt != nil {
-		res.any = &vt.Results
-	}
-	return
-}
-
-// Can have the runtime types [_[]ResponseFileSearchToolCallResultParam],
-// [_[]ResponseCodeInterpreterToolCallResultUnionParam]
-type responseInputItemUnionParamResults struct{ any }
-
-// Use the following switch statement to get the type of the union:
-//
-//	switch u.AsAny().(type) {
-//	case *[]responses.ResponseFileSearchToolCallResultParam:
-//	case *[]responses.ResponseCodeInterpreterToolCallResultUnionParam:
-//	default:
-//	    fmt.Errorf("not present")
-//	}
-func (u responseInputItemUnionParamResults) AsAny() any { return u.any }
 
 // Returns a subunion which exports methods to access subproperties
 //
@@ -6648,9 +6591,8 @@ type ResponseItemUnion struct {
 	Type string `json:"type"`
 	// This field is from variant [ResponseFileSearchToolCall].
 	Queries []string `json:"queries"`
-	// This field is a union of [[]ResponseFileSearchToolCallResult],
-	// [[]ResponseCodeInterpreterToolCallResultUnion]
-	Results ResponseItemUnionResults `json:"results"`
+	// This field is from variant [ResponseFileSearchToolCall].
+	Results []ResponseFileSearchToolCallResult `json:"results"`
 	// This field is a union of [ResponseComputerToolCallActionUnion],
 	// [ResponseItemLocalShellCallAction]
 	Action ResponseItemUnionAction `json:"action"`
@@ -6670,7 +6612,9 @@ type ResponseItemUnion struct {
 	Code string `json:"code"`
 	// This field is from variant [ResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
-	ServerLabel string `json:"server_label"`
+	// This field is from variant [ResponseCodeInterpreterToolCall].
+	Outputs     []ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
+	ServerLabel string                                       `json:"server_label"`
 	// This field is from variant [ResponseItemMcpListTools].
 	Tools []ResponseItemMcpListToolsTool `json:"tools"`
 	Error string                         `json:"error"`
@@ -6698,6 +6642,7 @@ type ResponseItemUnion struct {
 		Result                   respjson.Field
 		Code                     respjson.Field
 		ContainerID              respjson.Field
+		Outputs                  respjson.Field
 		ServerLabel              respjson.Field
 		Tools                    respjson.Field
 		Error                    respjson.Field
@@ -6900,34 +6845,6 @@ type ResponseItemUnionContent struct {
 }
 
 func (r *ResponseItemUnionContent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ResponseItemUnionResults is an implicit subunion of [ResponseItemUnion].
-// ResponseItemUnionResults provides convenient access to the sub-properties of the
-// union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ResponseItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfResponseFileSearchToolCallResults
-// OfResponseCodeInterpreterToolCallResults]
-type ResponseItemUnionResults struct {
-	// This field will be present if the value is a
-	// [[]ResponseFileSearchToolCallResult] instead of an object.
-	OfResponseFileSearchToolCallResults []ResponseFileSearchToolCallResult `json:",inline"`
-	// This field will be present if the value is a
-	// [[]ResponseCodeInterpreterToolCallResultUnion] instead of an object.
-	OfResponseCodeInterpreterToolCallResults []ResponseCodeInterpreterToolCallResultUnion `json:",inline"`
-	JSON                                     struct {
-		OfResponseFileSearchToolCallResults      respjson.Field
-		OfResponseCodeInterpreterToolCallResults respjson.Field
-		raw                                      string
-	} `json:"-"`
-}
-
-func (r *ResponseItemUnionResults) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -7511,12 +7428,11 @@ type ResponseOutputItemUnion struct {
 	Type string `json:"type"`
 	// This field is from variant [ResponseFileSearchToolCall].
 	Queries []string `json:"queries"`
-	// This field is a union of [[]ResponseFileSearchToolCallResult],
-	// [[]ResponseCodeInterpreterToolCallResultUnion]
-	Results   ResponseOutputItemUnionResults `json:"results"`
-	Arguments string                         `json:"arguments"`
-	CallID    string                         `json:"call_id"`
-	Name      string                         `json:"name"`
+	// This field is from variant [ResponseFileSearchToolCall].
+	Results   []ResponseFileSearchToolCallResult `json:"results"`
+	Arguments string                             `json:"arguments"`
+	CallID    string                             `json:"call_id"`
+	Name      string                             `json:"name"`
 	// This field is a union of [ResponseComputerToolCallActionUnion],
 	// [ResponseOutputItemLocalShellCallAction]
 	Action ResponseOutputItemUnionAction `json:"action"`
@@ -7532,8 +7448,10 @@ type ResponseOutputItemUnion struct {
 	Code string `json:"code"`
 	// This field is from variant [ResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
-	ServerLabel string `json:"server_label"`
-	Error       string `json:"error"`
+	// This field is from variant [ResponseCodeInterpreterToolCall].
+	Outputs     []ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
+	ServerLabel string                                       `json:"server_label"`
+	Error       string                                       `json:"error"`
 	// This field is from variant [ResponseOutputItemMcpCall].
 	Output string `json:"output"`
 	// This field is from variant [ResponseOutputItemMcpListTools].
@@ -7556,6 +7474,7 @@ type ResponseOutputItemUnion struct {
 		Result              respjson.Field
 		Code                respjson.Field
 		ContainerID         respjson.Field
+		Outputs             respjson.Field
 		ServerLabel         respjson.Field
 		Error               respjson.Field
 		Output              respjson.Field
@@ -7696,34 +7615,6 @@ func (u ResponseOutputItemUnion) AsMcpApprovalRequest() (v ResponseOutputItemMcp
 func (u ResponseOutputItemUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ResponseOutputItemUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ResponseOutputItemUnionResults is an implicit subunion of
-// [ResponseOutputItemUnion]. ResponseOutputItemUnionResults provides convenient
-// access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ResponseOutputItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfResponseFileSearchToolCallResults
-// OfResponseCodeInterpreterToolCallResults]
-type ResponseOutputItemUnionResults struct {
-	// This field will be present if the value is a
-	// [[]ResponseFileSearchToolCallResult] instead of an object.
-	OfResponseFileSearchToolCallResults []ResponseFileSearchToolCallResult `json:",inline"`
-	// This field will be present if the value is a
-	// [[]ResponseCodeInterpreterToolCallResultUnion] instead of an object.
-	OfResponseCodeInterpreterToolCallResults []ResponseCodeInterpreterToolCallResultUnion `json:",inline"`
-	JSON                                     struct {
-		OfResponseFileSearchToolCallResults      respjson.Field
-		OfResponseCodeInterpreterToolCallResults respjson.Field
-		raw                                      string
-	} `json:"-"`
-}
-
-func (r *ResponseOutputItemUnionResults) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -8382,8 +8273,9 @@ func (r ResponseOutputText) ToParam() ResponseOutputTextParam {
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseOutputTextAnnotationUnion struct {
-	FileID string `json:"file_id"`
-	Index  int64  `json:"index"`
+	FileID   string `json:"file_id"`
+	Filename string `json:"filename"`
+	Index    int64  `json:"index"`
 	// Any of "file_citation", "url_citation", "container_file_citation", "file_path".
 	Type       string `json:"type"`
 	EndIndex   int64  `json:"end_index"`
@@ -8396,6 +8288,7 @@ type ResponseOutputTextAnnotationUnion struct {
 	ContainerID string `json:"container_id"`
 	JSON        struct {
 		FileID      respjson.Field
+		Filename    respjson.Field
 		Index       respjson.Field
 		Type        respjson.Field
 		EndIndex    respjson.Field
@@ -8474,6 +8367,8 @@ func (r *ResponseOutputTextAnnotationUnion) UnmarshalJSON(data []byte) error {
 type ResponseOutputTextAnnotationFileCitation struct {
 	// The ID of the file.
 	FileID string `json:"file_id,required"`
+	// The filename of the file cited.
+	Filename string `json:"filename,required"`
 	// The index of the file in the list of files.
 	Index int64 `json:"index,required"`
 	// The type of the file citation. Always `file_citation`.
@@ -8481,6 +8376,7 @@ type ResponseOutputTextAnnotationFileCitation struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		FileID      respjson.Field
+		Filename    respjson.Field
 		Index       respjson.Field
 		Type        respjson.Field
 		ExtraFields map[string]respjson.Field
@@ -8532,6 +8428,8 @@ type ResponseOutputTextAnnotationContainerFileCitation struct {
 	EndIndex int64 `json:"end_index,required"`
 	// The ID of the file.
 	FileID string `json:"file_id,required"`
+	// The filename of the container file cited.
+	Filename string `json:"filename,required"`
 	// The index of the first character of the container file citation in the message.
 	StartIndex int64 `json:"start_index,required"`
 	// The type of the container file citation. Always `container_file_citation`.
@@ -8541,6 +8439,7 @@ type ResponseOutputTextAnnotationContainerFileCitation struct {
 		ContainerID respjson.Field
 		EndIndex    respjson.Field
 		FileID      respjson.Field
+		Filename    respjson.Field
 		StartIndex  respjson.Field
 		Type        respjson.Field
 		ExtraFields map[string]respjson.Field
@@ -8714,6 +8613,16 @@ func (u ResponseOutputTextAnnotationUnionParam) GetFileID() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseOutputTextAnnotationUnionParam) GetFilename() *string {
+	if vt := u.OfFileCitation; vt != nil {
+		return (*string)(&vt.Filename)
+	} else if vt := u.OfContainerFileCitation; vt != nil {
+		return (*string)(&vt.Filename)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseOutputTextAnnotationUnionParam) GetIndex() *int64 {
 	if vt := u.OfFileCitation; vt != nil {
 		return (*int64)(&vt.Index)
@@ -8769,10 +8678,12 @@ func init() {
 
 // A citation to a file.
 //
-// The properties FileID, Index, Type are required.
+// The properties FileID, Filename, Index, Type are required.
 type ResponseOutputTextAnnotationFileCitationParam struct {
 	// The ID of the file.
 	FileID string `json:"file_id,required"`
+	// The filename of the file cited.
+	Filename string `json:"filename,required"`
 	// The index of the file in the list of files.
 	Index int64 `json:"index,required"`
 	// The type of the file citation. Always `file_citation`.
@@ -8819,7 +8730,8 @@ func (r *ResponseOutputTextAnnotationURLCitationParam) UnmarshalJSON(data []byte
 
 // A citation for a container file used to generate a model response.
 //
-// The properties ContainerID, EndIndex, FileID, StartIndex, Type are required.
+// The properties ContainerID, EndIndex, FileID, Filename, StartIndex, Type are
+// required.
 type ResponseOutputTextAnnotationContainerFileCitationParam struct {
 	// The ID of the container file.
 	ContainerID string `json:"container_id,required"`
@@ -8827,6 +8739,8 @@ type ResponseOutputTextAnnotationContainerFileCitationParam struct {
 	EndIndex int64 `json:"end_index,required"`
 	// The ID of the file.
 	FileID string `json:"file_id,required"`
+	// The filename of the container file cited.
+	Filename string `json:"filename,required"`
 	// The index of the first character of the container file citation in the message.
 	StartIndex int64 `json:"start_index,required"`
 	// The type of the container file citation. Always `container_file_citation`.
@@ -9767,14 +9681,12 @@ type ResponseStreamEventUnion struct {
 	// "response.reasoning.delta", "response.reasoning.done",
 	// "response.reasoning_summary.delta", "response.reasoning_summary.done".
 	Type        string `json:"type"`
+	ItemID      string `json:"item_id"`
 	OutputIndex int64  `json:"output_index"`
 	Code        string `json:"code"`
-	// This field is from variant [ResponseCodeInterpreterCallCompletedEvent].
-	CodeInterpreterCall ResponseCodeInterpreterToolCall `json:"code_interpreter_call"`
 	// This field is from variant [ResponseCompletedEvent].
 	Response     Response `json:"response"`
 	ContentIndex int64    `json:"content_index"`
-	ItemID       string   `json:"item_id"`
 	// This field is a union of [ResponseContentPartAddedEventPartUnion],
 	// [ResponseContentPartDoneEventPartUnion],
 	// [ResponseReasoningSummaryPartAddedEventPart],
@@ -9801,28 +9713,27 @@ type ResponseStreamEventUnion struct {
 	// This field is from variant [ResponseOutputTextAnnotationAddedEvent].
 	AnnotationIndex int64 `json:"annotation_index"`
 	JSON            struct {
-		Delta               respjson.Field
-		SequenceNumber      respjson.Field
-		Type                respjson.Field
-		OutputIndex         respjson.Field
-		Code                respjson.Field
-		CodeInterpreterCall respjson.Field
-		Response            respjson.Field
-		ContentIndex        respjson.Field
-		ItemID              respjson.Field
-		Part                respjson.Field
-		Message             respjson.Field
-		Param               respjson.Field
-		Arguments           respjson.Field
-		Item                respjson.Field
-		SummaryIndex        respjson.Field
-		Text                respjson.Field
-		Refusal             respjson.Field
-		PartialImageB64     respjson.Field
-		PartialImageIndex   respjson.Field
-		Annotation          respjson.Field
-		AnnotationIndex     respjson.Field
-		raw                 string
+		Delta             respjson.Field
+		SequenceNumber    respjson.Field
+		Type              respjson.Field
+		ItemID            respjson.Field
+		OutputIndex       respjson.Field
+		Code              respjson.Field
+		Response          respjson.Field
+		ContentIndex      respjson.Field
+		Part              respjson.Field
+		Message           respjson.Field
+		Param             respjson.Field
+		Arguments         respjson.Field
+		Item              respjson.Field
+		SummaryIndex      respjson.Field
+		Text              respjson.Field
+		Refusal           respjson.Field
+		PartialImageB64   respjson.Field
+		PartialImageIndex respjson.Field
+		Annotation        respjson.Field
+		AnnotationIndex   respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
