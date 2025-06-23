@@ -71,10 +71,13 @@ type Transcription struct {
 	// models `gpt-4o-transcribe` and `gpt-4o-mini-transcribe` if `logprobs` is added
 	// to the `include` array.
 	Logprobs []TranscriptionLogprob `json:"logprobs"`
+	// Token usage statistics for the request.
+	Usage TranscriptionUsageUnion `json:"usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
 		Logprobs    respjson.Field
+		Usage       respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -109,6 +112,153 @@ func (r *TranscriptionLogprob) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// TranscriptionUsageUnion contains all possible properties and values from
+// [TranscriptionUsageTokens], [TranscriptionUsageDuration].
+//
+// Use the [TranscriptionUsageUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type TranscriptionUsageUnion struct {
+	// This field is from variant [TranscriptionUsageTokens].
+	InputTokens int64 `json:"input_tokens"`
+	// This field is from variant [TranscriptionUsageTokens].
+	OutputTokens int64 `json:"output_tokens"`
+	// This field is from variant [TranscriptionUsageTokens].
+	TotalTokens int64 `json:"total_tokens"`
+	// Any of "tokens", "duration".
+	Type string `json:"type"`
+	// This field is from variant [TranscriptionUsageTokens].
+	InputTokenDetails TranscriptionUsageTokensInputTokenDetails `json:"input_token_details"`
+	// This field is from variant [TranscriptionUsageDuration].
+	Duration float64 `json:"duration"`
+	JSON     struct {
+		InputTokens       respjson.Field
+		OutputTokens      respjson.Field
+		TotalTokens       respjson.Field
+		Type              respjson.Field
+		InputTokenDetails respjson.Field
+		Duration          respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// anyTranscriptionUsage is implemented by each variant of
+// [TranscriptionUsageUnion] to add type safety for the return type of
+// [TranscriptionUsageUnion.AsAny]
+type anyTranscriptionUsage interface {
+	implTranscriptionUsageUnion()
+}
+
+func (TranscriptionUsageTokens) implTranscriptionUsageUnion()   {}
+func (TranscriptionUsageDuration) implTranscriptionUsageUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := TranscriptionUsageUnion.AsAny().(type) {
+//	case openai.TranscriptionUsageTokens:
+//	case openai.TranscriptionUsageDuration:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u TranscriptionUsageUnion) AsAny() anyTranscriptionUsage {
+	switch u.Type {
+	case "tokens":
+		return u.AsTokens()
+	case "duration":
+		return u.AsDuration()
+	}
+	return nil
+}
+
+func (u TranscriptionUsageUnion) AsTokens() (v TranscriptionUsageTokens) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u TranscriptionUsageUnion) AsDuration() (v TranscriptionUsageDuration) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u TranscriptionUsageUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *TranscriptionUsageUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Usage statistics for models billed by token usage.
+type TranscriptionUsageTokens struct {
+	// Number of input tokens billed for this request.
+	InputTokens int64 `json:"input_tokens,required"`
+	// Number of output tokens generated.
+	OutputTokens int64 `json:"output_tokens,required"`
+	// Total number of tokens used (input + output).
+	TotalTokens int64 `json:"total_tokens,required"`
+	// The type of the usage object. Always `tokens` for this variant.
+	Type constant.Tokens `json:"type,required"`
+	// Details about the input tokens billed for this request.
+	InputTokenDetails TranscriptionUsageTokensInputTokenDetails `json:"input_token_details"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens       respjson.Field
+		OutputTokens      respjson.Field
+		TotalTokens       respjson.Field
+		Type              respjson.Field
+		InputTokenDetails respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TranscriptionUsageTokens) RawJSON() string { return r.JSON.raw }
+func (r *TranscriptionUsageTokens) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Details about the input tokens billed for this request.
+type TranscriptionUsageTokensInputTokenDetails struct {
+	// Number of audio tokens billed for this request.
+	AudioTokens int64 `json:"audio_tokens"`
+	// Number of text tokens billed for this request.
+	TextTokens int64 `json:"text_tokens"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AudioTokens respjson.Field
+		TextTokens  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TranscriptionUsageTokensInputTokenDetails) RawJSON() string { return r.JSON.raw }
+func (r *TranscriptionUsageTokensInputTokenDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Usage statistics for models billed by audio input duration.
+type TranscriptionUsageDuration struct {
+	// Duration of the input audio in seconds.
+	Duration float64 `json:"duration,required"`
+	// The type of the usage object. Always `duration` for this variant.
+	Type constant.Duration `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Duration    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TranscriptionUsageDuration) RawJSON() string { return r.JSON.raw }
+func (r *TranscriptionUsageDuration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type TranscriptionInclude string
 
 const (
@@ -131,11 +281,14 @@ type TranscriptionStreamEventUnion struct {
 	Logprobs TranscriptionStreamEventUnionLogprobs `json:"logprobs"`
 	// This field is from variant [TranscriptionTextDoneEvent].
 	Text string `json:"text"`
-	JSON struct {
+	// This field is from variant [TranscriptionTextDoneEvent].
+	Usage TranscriptionTextDoneEventUsage `json:"usage"`
+	JSON  struct {
 		Delta    respjson.Field
 		Type     respjson.Field
 		Logprobs respjson.Field
 		Text     respjson.Field
+		Usage    respjson.Field
 		raw      string
 	} `json:"-"`
 }
@@ -279,11 +432,14 @@ type TranscriptionTextDoneEvent struct {
 	// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
 	// with the `include[]` parameter set to `logprobs`.
 	Logprobs []TranscriptionTextDoneEventLogprob `json:"logprobs"`
+	// Usage statistics for models billed by token usage.
+	Usage TranscriptionTextDoneEventUsage `json:"usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
 		Type        respjson.Field
 		Logprobs    respjson.Field
+		Usage       respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -315,6 +471,57 @@ type TranscriptionTextDoneEventLogprob struct {
 // Returns the unmodified JSON received from the API
 func (r TranscriptionTextDoneEventLogprob) RawJSON() string { return r.JSON.raw }
 func (r *TranscriptionTextDoneEventLogprob) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Usage statistics for models billed by token usage.
+type TranscriptionTextDoneEventUsage struct {
+	// Number of input tokens billed for this request.
+	InputTokens int64 `json:"input_tokens,required"`
+	// Number of output tokens generated.
+	OutputTokens int64 `json:"output_tokens,required"`
+	// Total number of tokens used (input + output).
+	TotalTokens int64 `json:"total_tokens,required"`
+	// The type of the usage object. Always `tokens` for this variant.
+	Type constant.Tokens `json:"type,required"`
+	// Details about the input tokens billed for this request.
+	InputTokenDetails TranscriptionTextDoneEventUsageInputTokenDetails `json:"input_token_details"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens       respjson.Field
+		OutputTokens      respjson.Field
+		TotalTokens       respjson.Field
+		Type              respjson.Field
+		InputTokenDetails respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TranscriptionTextDoneEventUsage) RawJSON() string { return r.JSON.raw }
+func (r *TranscriptionTextDoneEventUsage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Details about the input tokens billed for this request.
+type TranscriptionTextDoneEventUsageInputTokenDetails struct {
+	// Number of audio tokens billed for this request.
+	AudioTokens int64 `json:"audio_tokens"`
+	// Number of text tokens billed for this request.
+	TextTokens int64 `json:"text_tokens"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AudioTokens respjson.Field
+		TextTokens  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r TranscriptionTextDoneEventUsageInputTokenDetails) RawJSON() string { return r.JSON.raw }
+func (r *TranscriptionTextDoneEventUsageInputTokenDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

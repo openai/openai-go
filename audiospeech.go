@@ -63,13 +63,18 @@ type AudioSpeechNewParams struct {
 	// work with `tts-1` or `tts-1-hd`.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// The speed of the generated audio. Select a value from `0.25` to `4.0`. `1.0` is
-	// the default. Does not work with `gpt-4o-mini-tts`.
+	// the default.
 	Speed param.Opt[float64] `json:"speed,omitzero"`
 	// The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,
 	// `wav`, and `pcm`.
 	//
 	// Any of "mp3", "opus", "aac", "flac", "wav", "pcm".
 	ResponseFormat AudioSpeechNewParamsResponseFormat `json:"response_format,omitzero"`
+	// The format to stream the audio in. Supported formats are `sse` and `audio`.
+	// `sse` is not supported for `tts-1` or `tts-1-hd`.
+	//
+	// Any of "sse", "audio".
+	StreamFormat AudioSpeechNewParamsStreamFormat `json:"stream_format,omitzero"`
 	paramObj
 }
 
@@ -112,4 +117,13 @@ const (
 	AudioSpeechNewParamsResponseFormatFLAC AudioSpeechNewParamsResponseFormat = "flac"
 	AudioSpeechNewParamsResponseFormatWAV  AudioSpeechNewParamsResponseFormat = "wav"
 	AudioSpeechNewParamsResponseFormatPCM  AudioSpeechNewParamsResponseFormat = "pcm"
+)
+
+// The format to stream the audio in. Supported formats are `sse` and `audio`.
+// `sse` is not supported for `tts-1` or `tts-1-hd`.
+type AudioSpeechNewParamsStreamFormat string
+
+const (
+	AudioSpeechNewParamsStreamFormatSSE   AudioSpeechNewParamsStreamFormat = "sse"
+	AudioSpeechNewParamsStreamFormatAudio AudioSpeechNewParamsStreamFormat = "audio"
 )
