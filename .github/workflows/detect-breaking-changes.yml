@@ -1,0 +1,29 @@
+name: CI
+on:
+  pull_request:
+    branches:
+      - main
+      - next
+
+jobs:
+  detect_breaking_changes:
+    runs-on: 'ubuntu-latest'
+    name: detect-breaking-changes
+    if: github.repository == 'openai/openai-go'
+    steps:
+      - name: Calculate fetch-depth
+        run: |
+          echo "FETCH_DEPTH=$(expr ${{ github.event.pull_request.commits }} + 1)" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v4
+        with:
+          # Ensure we can check out the pull request base in the script below.
+          fetch-depth: ${{ env.FETCH_DEPTH }}
+
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
+
+      - name: Detect breaking changes
+        run: ./scripts/detect-breaking-changes ${{ github.event.pull_request.base.sha }}
