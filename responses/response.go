@@ -3843,15 +3843,12 @@ type ResponseFunctionWebSearchActionUnion struct {
 	Query string `json:"query"`
 	// Any of "search", "open_page", "find".
 	Type string `json:"type"`
-	// This field is from variant [ResponseFunctionWebSearchActionSearch].
-	Domains []string `json:"domains"`
-	URL     string   `json:"url"`
+	URL  string `json:"url"`
 	// This field is from variant [ResponseFunctionWebSearchActionFind].
 	Pattern string `json:"pattern"`
 	JSON    struct {
 		Query   respjson.Field
 		Type    respjson.Field
-		Domains respjson.Field
 		URL     respjson.Field
 		Pattern respjson.Field
 		raw     string
@@ -3918,13 +3915,10 @@ type ResponseFunctionWebSearchActionSearch struct {
 	Query string `json:"query,required"`
 	// The action type.
 	Type constant.Search `json:"type,required"`
-	// Domains to restrict the search or domains where results were found.
-	Domains []string `json:"domains"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Query       respjson.Field
 		Type        respjson.Field
-		Domains     respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4058,14 +4052,6 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetQuery() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseFunctionWebSearchActionUnionParam) GetDomains() []string {
-	if vt := u.OfSearch; vt != nil {
-		return vt.Domains
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseFunctionWebSearchActionUnionParam) GetPattern() *string {
 	if vt := u.OfFind; vt != nil {
 		return &vt.Pattern
@@ -4110,8 +4096,6 @@ func init() {
 type ResponseFunctionWebSearchActionSearchParam struct {
 	// The search query.
 	Query string `json:"query,required"`
-	// Domains to restrict the search or domains where results were found.
-	Domains []string `json:"domains,omitzero"`
 	// The action type.
 	//
 	// This field can be elided, and will marshal its zero value as "search".
@@ -5060,9 +5044,7 @@ type ResponseInputItemUnionAction struct {
 	Text string `json:"text"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Query string `json:"query"`
-	// This field is from variant [ResponseFunctionWebSearchActionUnion].
-	Domains []string `json:"domains"`
-	URL     string   `json:"url"`
+	URL   string `json:"url"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Pattern string `json:"pattern"`
 	// This field is from variant [ResponseInputItemLocalShellCallAction].
@@ -5086,7 +5068,6 @@ type ResponseInputItemUnionAction struct {
 		ScrollY          respjson.Field
 		Text             respjson.Field
 		Query            respjson.Field
-		Domains          respjson.Field
 		URL              respjson.Field
 		Pattern          respjson.Field
 		Command          respjson.Field
@@ -6231,15 +6212,6 @@ func (u responseInputItemUnionParamAction) GetQuery() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamAction) GetDomains() []string {
-	switch vt := u.any.(type) {
-	case *ResponseFunctionWebSearchActionUnionParam:
-		return vt.GetDomains()
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetPattern() *string {
 	switch vt := u.any.(type) {
 	case *ResponseFunctionWebSearchActionUnionParam:
@@ -7255,9 +7227,7 @@ type ResponseItemUnionAction struct {
 	Text string `json:"text"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Query string `json:"query"`
-	// This field is from variant [ResponseFunctionWebSearchActionUnion].
-	Domains []string `json:"domains"`
-	URL     string   `json:"url"`
+	URL   string `json:"url"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Pattern string `json:"pattern"`
 	// This field is from variant [ResponseItemLocalShellCallAction].
@@ -7281,7 +7251,6 @@ type ResponseItemUnionAction struct {
 		ScrollY          respjson.Field
 		Text             respjson.Field
 		Query            respjson.Field
-		Domains          respjson.Field
 		URL              respjson.Field
 		Pattern          respjson.Field
 		Command          respjson.Field
@@ -8022,9 +7991,7 @@ type ResponseOutputItemUnionAction struct {
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Query string `json:"query"`
 	Type  string `json:"type"`
-	// This field is from variant [ResponseFunctionWebSearchActionUnion].
-	Domains []string `json:"domains"`
-	URL     string   `json:"url"`
+	URL   string `json:"url"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Pattern string `json:"pattern"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
@@ -8054,7 +8021,6 @@ type ResponseOutputItemUnionAction struct {
 	JSON             struct {
 		Query            respjson.Field
 		Type             respjson.Field
-		Domains          respjson.Field
 		URL              respjson.Field
 		Pattern          respjson.Field
 		Button           respjson.Field
