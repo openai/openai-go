@@ -214,6 +214,7 @@ type RequestConfig struct {
 	APIKey         string
 	Organization   string
 	Project        string
+	WebhookSecret  string
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
 	// ResponseBodyInto. If Destination is a []byte, then it will return the body as
 	// is.
@@ -584,6 +585,7 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		APIKey:         cfg.APIKey,
 		Organization:   cfg.Organization,
 		Project:        cfg.Project,
+		WebhookSecret:  cfg.WebhookSecret,
 	}
 
 	return new

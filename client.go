@@ -10,6 +10,7 @@ import (
 	"github.com/openai/openai-go/internal/requestconfig"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/responses"
+	"github.com/openai/openai-go/webhooks"
 )
 
 // Client creates a struct with services and top level methods that help with
@@ -28,6 +29,7 @@ type Client struct {
 	FineTuning   FineTuningService
 	Graders      GraderService
 	VectorStores VectorStoreService
+	Webhooks     webhooks.WebhookService
 	Beta         BetaService
 	Batches      BatchService
 	Uploads      UploadService
@@ -36,8 +38,8 @@ type Client struct {
 }
 
 // DefaultClientOptions read from the environment (OPENAI_API_KEY, OPENAI_ORG_ID,
-// OPENAI_PROJECT_ID, OPENAI_BASE_URL). This should be used to initialize new
-// clients.
+// OPENAI_PROJECT_ID, OPENAI_WEBHOOK_SECRET, OPENAI_BASE_URL). This should be used
+// to initialize new clients.
 func DefaultClientOptions() []option.RequestOption {
 	defaults := []option.RequestOption{option.WithEnvironmentProduction()}
 	if o, ok := os.LookupEnv("OPENAI_BASE_URL"); ok {
@@ -52,14 +54,17 @@ func DefaultClientOptions() []option.RequestOption {
 	if o, ok := os.LookupEnv("OPENAI_PROJECT_ID"); ok {
 		defaults = append(defaults, option.WithProject(o))
 	}
+	if o, ok := os.LookupEnv("OPENAI_WEBHOOK_SECRET"); ok {
+		defaults = append(defaults, option.WithWebhookSecret(o))
+	}
 	return defaults
 }
 
 // NewClient generates a new client with the default option read from the
-// environment (OPENAI_API_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_BASE_URL).
-// The option passed in as arguments are applied after these default arguments, and
-// all option will be passed down to the services and requests that this client
-// makes.
+// environment (OPENAI_API_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID,
+// OPENAI_WEBHOOK_SECRET, OPENAI_BASE_URL). The option passed in as arguments are
+// applied after these default arguments, and all option will be passed down to the
+// services and requests that this client makes.
 func NewClient(opts ...option.RequestOption) (r Client) {
 	opts = append(DefaultClientOptions(), opts...)
 
@@ -76,6 +81,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.FineTuning = NewFineTuningService(opts...)
 	r.Graders = NewGraderService(opts...)
 	r.VectorStores = NewVectorStoreService(opts...)
+	r.Webhooks = webhooks.NewWebhookService(opts...)
 	r.Beta = NewBetaService(opts...)
 	r.Batches = NewBatchService(opts...)
 	r.Uploads = NewUploadService(opts...)

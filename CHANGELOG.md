@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.8.0 (2025-06-26)
+
+Full Changelog: [v1.7.0...v1.8.0](https://github.com/openai/openai-go/compare/v1.7.0...v1.8.0)
+
+### Features
+
+* **api:** webhook and deep research support ([f6a7e7d](https://github.com/openai/openai-go/commit/f6a7e7dcd8801facc4f8d981f1ca43786c10de1e))
+
+
+### Chores
+
+* **internal:** add tests for breaking change detection ([339522d](https://github.com/openai/openai-go/commit/339522d38cd31b0753a8df37b8924f7e7dfb0b1d))
+
 ## 1.7.0 (2025-06-23)
 
 Full Changelog: [v1.6.0...v1.7.0](https://github.com/openai/openai-go/compare/v1.6.0...v1.7.0)

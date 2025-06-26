@@ -786,6 +786,10 @@ const (
 	ResponsesModelO1Pro2025_03_19              ResponsesModel = "o1-pro-2025-03-19"
 	ResponsesModelO3Pro                        ResponsesModel = "o3-pro"
 	ResponsesModelO3Pro2025_06_10              ResponsesModel = "o3-pro-2025-06-10"
+	ResponsesModelO3DeepResearch               ResponsesModel = "o3-deep-research"
+	ResponsesModelO3DeepResearch2025_06_26     ResponsesModel = "o3-deep-research-2025-06-26"
+	ResponsesModelO4MiniDeepResearch           ResponsesModel = "o4-mini-deep-research"
+	ResponsesModelO4MiniDeepResearch2025_06_26 ResponsesModel = "o4-mini-deep-research-2025-06-26"
 	ResponsesModelComputerUsePreview           ResponsesModel = "computer-use-preview"
 	ResponsesModelComputerUsePreview2025_03_11 ResponsesModel = "computer-use-preview-2025-03-11"
 	// Or some ...[ChatModel]
