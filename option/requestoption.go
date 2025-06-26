@@ -288,3 +288,11 @@ func WithProject(value string) RequestOption {
 		return r.Apply(WithHeader("OpenAI-Project", value))
 	})
 }
+
+// WithWebhookSecret returns a RequestOption that sets the client setting "webhook_secret".
+func WithWebhookSecret(value string) requestconfig.PreRequestOptionFunc {
+	return requestconfig.PreRequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.WebhookSecret = value
+		return nil
+	})
+}

@@ -421,6 +421,18 @@ const ResponsesModelO3Pro = shared.ResponsesModelO3Pro
 // Equals "o3-pro-2025-06-10"
 const ResponsesModelO3Pro2025_06_10 = shared.ResponsesModelO3Pro2025_06_10
 
+// Equals "o3-deep-research"
+const ResponsesModelO3DeepResearch = shared.ResponsesModelO3DeepResearch
+
+// Equals "o3-deep-research-2025-06-26"
+const ResponsesModelO3DeepResearch2025_06_26 = shared.ResponsesModelO3DeepResearch2025_06_26
+
+// Equals "o4-mini-deep-research"
+const ResponsesModelO4MiniDeepResearch = shared.ResponsesModelO4MiniDeepResearch
+
+// Equals "o4-mini-deep-research-2025-06-26"
+const ResponsesModelO4MiniDeepResearch2025_06_26 = shared.ResponsesModelO4MiniDeepResearch2025_06_26
+
 // Equals "computer-use-preview"
 const ResponsesModelComputerUsePreview = shared.ResponsesModelComputerUsePreview
 

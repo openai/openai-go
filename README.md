@@ -630,6 +630,119 @@ openai.FileNewParams{
 }
 ```
 
+## Webhook Verification
+
+Verifying webhook signatures is _optional but encouraged_.
+
+### Parsing webhook payloads
+
+For most use cases, you will likely want to verify the webhook and parse the payload at the same time. To achieve this, we provide the method `client.Webhooks.Unwrap()`, which parses a webhook request and verifies that it was sent by OpenAI. This method will return an error if the signature is invalid.
+
+Note that the `body` parameter should be the raw JSON bytes sent from the server (do not parse it first). The `Unwrap()` method will parse this JSON for you into an event object after verifying the webhook was sent from OpenAI.
+
+```go
+package main
+
+import (
+	"io"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/webhooks"
+)
+
+func main() {
+	client := openai.NewClient(
+		option.WithWebhookSecret(os.Getenv("OPENAI_WEBHOOK_SECRET")), // env var used by default; explicit here.
+	)
+
+	r := gin.Default()
+	
+	r.POST("/webhook", func(c *gin.Context) {
+		body, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
+			return
+		}
+		defer c.Request.Body.Close()
+
+		webhookEvent, err := client.Webhooks.Unwrap(body, c.Request.Header)
+		if err != nil {
+			log.Printf("Invalid webhook signature: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid signature"})
+			return
+		}
+
+		switch event := webhookEvent.AsAny().(type) {
+		case webhooks.ResponseCompletedWebhookEvent:
+			log.Printf("Response completed: %+v", event.Data)
+		case webhooks.ResponseFailedWebhookEvent:
+			log.Printf("Response failed: %+v", event.Data)
+		default:
+			log.Printf("Unhandled event type: %T", event)
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	})
+
+	r.Run(":8000")
+}
+```
+
+### Verifying webhook payloads directly
+
+In some cases, you may want to verify the webhook separately from parsing the payload. If you prefer to handle these steps separately, we provide the method `client.Webhooks.VerifySignature()` to _only verify_ the signature of a webhook request. Like `Unwrap()`, this method will return an error if the signature is invalid.
+
+Note that the `body` parameter should be the raw JSON bytes sent from the server (do not parse it first). You will then need to parse the body after verifying the signature.
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"io"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
+)
+
+func main() {
+	client := openai.NewClient(
+		option.WithWebhookSecret(os.Getenv("OPENAI_WEBHOOK_SECRET")), // env var used by default; explicit here.
+	)
+
+	r := gin.Default()
+	
+	r.POST("/webhook", func(c *gin.Context) {
+		body, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
+			return
+		}
+		defer c.Request.Body.Close()
+
+		err = client.Webhooks.VerifySignature(body, c.Request.Header)
+		if err != nil {
+			log.Printf("Invalid webhook signature: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid signature"})
+			return
+		}
+		
+		c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	})
+
+	r.Run(":8000")
+}
+```
+
 ### Retries
 
 Certain errors will be automatically retried 2 times by default, with a short exponential backoff.

@@ -29,12 +29,13 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
 		Background: openai.Bool(true),
-		Include:    []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
+		Include:    []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String("string"),
 		},
 		Instructions:    openai.String("instructions"),
 		MaxOutputTokens: openai.Int(0),
+		MaxToolCalls:    openai.Int(0),
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
@@ -76,9 +77,10 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 				Description: openai.String("description"),
 			},
 		}},
-		TopP:       openai.Float(1),
-		Truncation: responses.ResponseNewParamsTruncationAuto,
-		User:       openai.String("user-1234"),
+		TopLogprobs: openai.Int(0),
+		TopP:        openai.Float(1),
+		Truncation:  responses.ResponseNewParamsTruncationAuto,
+		User:        openai.String("user-1234"),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -105,7 +107,7 @@ func TestResponseGetWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"resp_677efb5139a88190b512bc3fef8e535d",
 		responses.ResponseGetParams{
-			Include:       []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
+			Include:       []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
 			StartingAfter: openai.Int(0),
 		},
 	)
