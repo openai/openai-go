@@ -175,25 +175,25 @@ type ChatCompletion struct {
 	Model string `json:"model,required"`
 	// The object type, which is always `chat.completion`.
 	Object constant.ChatCompletion `json:"object,required"`
-	// Specifies the latency tier to use for processing the request. This parameter is
-	// relevant for customers subscribed to the scale tier service:
+	// Specifies the processing type used for serving the request.
 	//
-	//   - If set to 'auto', and the Project is Scale tier enabled, the system will
-	//     utilize scale tier credits until they are exhausted.
-	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
-	//     be processed using the default service tier with a lower uptime SLA and no
-	//     latency guarantee.
-	//   - If set to 'default', the request will be processed using the default service
-	//     tier with a lower uptime SLA and no latency guarantee.
-	//   - If set to 'flex', the request will be processed with the Flex Processing
-	//     service tier.
-	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+	//   - If set to 'auto', then the request will be processed with the service tier
+	//     configured in the Project settings. Unless otherwise configured, the Project
+	//     will use 'default'.
+	//   - If set to 'default', then the requset will be processed with the standard
+	//     pricing and performance for the selected model.
+	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
+	//     'priority', then the request will be processed with the corresponding service
+	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
+	//     Priority processing.
 	//   - When not set, the default behavior is 'auto'.
 	//
-	// When this parameter is set, the response body will include the `service_tier`
-	// utilized.
+	// When the `service_tier` parameter is set, the response body will include the
+	// `service_tier` value based on the processing mode actually used to serve the
+	// request. This response value may be different from the value set in the
+	// parameter.
 	//
-	// Any of "auto", "default", "flex", "scale".
+	// Any of "auto", "default", "flex", "scale", "priority".
 	ServiceTier ChatCompletionServiceTier `json:"service_tier,nullable"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	//
@@ -277,30 +277,31 @@ func (r *ChatCompletionChoiceLogprobs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Specifies the latency tier to use for processing the request. This parameter is
-// relevant for customers subscribed to the scale tier service:
+// Specifies the processing type used for serving the request.
 //
-//   - If set to 'auto', and the Project is Scale tier enabled, the system will
-//     utilize scale tier credits until they are exhausted.
-//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
-//     be processed using the default service tier with a lower uptime SLA and no
-//     latency guarantee.
-//   - If set to 'default', the request will be processed using the default service
-//     tier with a lower uptime SLA and no latency guarantee.
-//   - If set to 'flex', the request will be processed with the Flex Processing
-//     service tier.
-//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+//   - If set to 'auto', then the request will be processed with the service tier
+//     configured in the Project settings. Unless otherwise configured, the Project
+//     will use 'default'.
+//   - If set to 'default', then the requset will be processed with the standard
+//     pricing and performance for the selected model.
+//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
+//     'priority', then the request will be processed with the corresponding service
+//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
+//     Priority processing.
 //   - When not set, the default behavior is 'auto'.
 //
-// When this parameter is set, the response body will include the `service_tier`
-// utilized.
+// When the `service_tier` parameter is set, the response body will include the
+// `service_tier` value based on the processing mode actually used to serve the
+// request. This response value may be different from the value set in the
+// parameter.
 type ChatCompletionServiceTier string
 
 const (
-	ChatCompletionServiceTierAuto    ChatCompletionServiceTier = "auto"
-	ChatCompletionServiceTierDefault ChatCompletionServiceTier = "default"
-	ChatCompletionServiceTierFlex    ChatCompletionServiceTier = "flex"
-	ChatCompletionServiceTierScale   ChatCompletionServiceTier = "scale"
+	ChatCompletionServiceTierAuto     ChatCompletionServiceTier = "auto"
+	ChatCompletionServiceTierDefault  ChatCompletionServiceTier = "default"
+	ChatCompletionServiceTierFlex     ChatCompletionServiceTier = "flex"
+	ChatCompletionServiceTierScale    ChatCompletionServiceTier = "scale"
+	ChatCompletionServiceTierPriority ChatCompletionServiceTier = "priority"
 )
 
 // Messages sent by the model in response to user messages.
@@ -571,25 +572,25 @@ type ChatCompletionChunk struct {
 	Model string `json:"model,required"`
 	// The object type, which is always `chat.completion.chunk`.
 	Object constant.ChatCompletionChunk `json:"object,required"`
-	// Specifies the latency tier to use for processing the request. This parameter is
-	// relevant for customers subscribed to the scale tier service:
+	// Specifies the processing type used for serving the request.
 	//
-	//   - If set to 'auto', and the Project is Scale tier enabled, the system will
-	//     utilize scale tier credits until they are exhausted.
-	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
-	//     be processed using the default service tier with a lower uptime SLA and no
-	//     latency guarantee.
-	//   - If set to 'default', the request will be processed using the default service
-	//     tier with a lower uptime SLA and no latency guarantee.
-	//   - If set to 'flex', the request will be processed with the Flex Processing
-	//     service tier.
-	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+	//   - If set to 'auto', then the request will be processed with the service tier
+	//     configured in the Project settings. Unless otherwise configured, the Project
+	//     will use 'default'.
+	//   - If set to 'default', then the requset will be processed with the standard
+	//     pricing and performance for the selected model.
+	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
+	//     'priority', then the request will be processed with the corresponding service
+	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
+	//     Priority processing.
 	//   - When not set, the default behavior is 'auto'.
 	//
-	// When this parameter is set, the response body will include the `service_tier`
-	// utilized.
+	// When the `service_tier` parameter is set, the response body will include the
+	// `service_tier` value based on the processing mode actually used to serve the
+	// request. This response value may be different from the value set in the
+	// parameter.
 	//
-	// Any of "auto", "default", "flex", "scale".
+	// Any of "auto", "default", "flex", "scale", "priority".
 	ServiceTier ChatCompletionChunkServiceTier `json:"service_tier,nullable"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	// Can be used in conjunction with the `seed` request parameter to understand when
@@ -788,30 +789,31 @@ func (r *ChatCompletionChunkChoiceLogprobs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Specifies the latency tier to use for processing the request. This parameter is
-// relevant for customers subscribed to the scale tier service:
+// Specifies the processing type used for serving the request.
 //
-//   - If set to 'auto', and the Project is Scale tier enabled, the system will
-//     utilize scale tier credits until they are exhausted.
-//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
-//     be processed using the default service tier with a lower uptime SLA and no
-//     latency guarantee.
-//   - If set to 'default', the request will be processed using the default service
-//     tier with a lower uptime SLA and no latency guarantee.
-//   - If set to 'flex', the request will be processed with the Flex Processing
-//     service tier.
-//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+//   - If set to 'auto', then the request will be processed with the service tier
+//     configured in the Project settings. Unless otherwise configured, the Project
+//     will use 'default'.
+//   - If set to 'default', then the requset will be processed with the standard
+//     pricing and performance for the selected model.
+//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
+//     'priority', then the request will be processed with the corresponding service
+//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
+//     Priority processing.
 //   - When not set, the default behavior is 'auto'.
 //
-// When this parameter is set, the response body will include the `service_tier`
-// utilized.
+// When the `service_tier` parameter is set, the response body will include the
+// `service_tier` value based on the processing mode actually used to serve the
+// request. This response value may be different from the value set in the
+// parameter.
 type ChatCompletionChunkServiceTier string
 
 const (
-	ChatCompletionChunkServiceTierAuto    ChatCompletionChunkServiceTier = "auto"
-	ChatCompletionChunkServiceTierDefault ChatCompletionChunkServiceTier = "default"
-	ChatCompletionChunkServiceTierFlex    ChatCompletionChunkServiceTier = "flex"
-	ChatCompletionChunkServiceTierScale   ChatCompletionChunkServiceTier = "scale"
+	ChatCompletionChunkServiceTierAuto     ChatCompletionChunkServiceTier = "auto"
+	ChatCompletionChunkServiceTierDefault  ChatCompletionChunkServiceTier = "default"
+	ChatCompletionChunkServiceTierFlex     ChatCompletionChunkServiceTier = "flex"
+	ChatCompletionChunkServiceTierScale    ChatCompletionChunkServiceTier = "scale"
+	ChatCompletionChunkServiceTierPriority ChatCompletionChunkServiceTier = "priority"
 )
 
 func TextContentPart(text string) ChatCompletionContentPartUnionParam {
@@ -2092,6 +2094,8 @@ type ChatCompletionNewParams struct {
 	// Whether or not to store the output of this chat completion request for use in
 	// our [model distillation](https://platform.openai.com/docs/guides/distillation)
 	// or [evals](https://platform.openai.com/docs/guides/evals) products.
+	//
+	// Supports text and image inputs. Note: image inputs over 10MB will be dropped.
 	Store param.Opt[bool] `json:"store,omitzero"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
@@ -2158,25 +2162,25 @@ type ChatCompletionNewParams struct {
 	//
 	// Any of "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
-	// Specifies the latency tier to use for processing the request. This parameter is
-	// relevant for customers subscribed to the scale tier service:
+	// Specifies the processing type used for serving the request.
 	//
-	//   - If set to 'auto', and the Project is Scale tier enabled, the system will
-	//     utilize scale tier credits until they are exhausted.
-	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
-	//     be processed using the default service tier with a lower uptime SLA and no
-	//     latency guarantee.
-	//   - If set to 'default', the request will be processed using the default service
-	//     tier with a lower uptime SLA and no latency guarantee.
-	//   - If set to 'flex', the request will be processed with the Flex Processing
-	//     service tier.
-	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+	//   - If set to 'auto', then the request will be processed with the service tier
+	//     configured in the Project settings. Unless otherwise configured, the Project
+	//     will use 'default'.
+	//   - If set to 'default', then the requset will be processed with the standard
+	//     pricing and performance for the selected model.
+	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
+	//     'priority', then the request will be processed with the corresponding service
+	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
+	//     Priority processing.
 	//   - When not set, the default behavior is 'auto'.
 	//
-	// When this parameter is set, the response body will include the `service_tier`
-	// utilized.
+	// When the `service_tier` parameter is set, the response body will include the
+	// `service_tier` value based on the processing mode actually used to serve the
+	// request. This response value may be different from the value set in the
+	// parameter.
 	//
-	// Any of "auto", "default", "flex", "scale".
+	// Any of "auto", "default", "flex", "scale", "priority".
 	ServiceTier ChatCompletionNewParamsServiceTier `json:"service_tier,omitzero"`
 	// Not supported with latest reasoning models `o3` and `o4-mini`.
 	//
@@ -2360,30 +2364,31 @@ func (u ChatCompletionNewParamsResponseFormatUnion) GetType() *string {
 	return nil
 }
 
-// Specifies the latency tier to use for processing the request. This parameter is
-// relevant for customers subscribed to the scale tier service:
+// Specifies the processing type used for serving the request.
 //
-//   - If set to 'auto', and the Project is Scale tier enabled, the system will
-//     utilize scale tier credits until they are exhausted.
-//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
-//     be processed using the default service tier with a lower uptime SLA and no
-//     latency guarantee.
-//   - If set to 'default', the request will be processed using the default service
-//     tier with a lower uptime SLA and no latency guarantee.
-//   - If set to 'flex', the request will be processed with the Flex Processing
-//     service tier.
-//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+//   - If set to 'auto', then the request will be processed with the service tier
+//     configured in the Project settings. Unless otherwise configured, the Project
+//     will use 'default'.
+//   - If set to 'default', then the requset will be processed with the standard
+//     pricing and performance for the selected model.
+//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
+//     'priority', then the request will be processed with the corresponding service
+//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
+//     Priority processing.
 //   - When not set, the default behavior is 'auto'.
 //
-// When this parameter is set, the response body will include the `service_tier`
-// utilized.
+// When the `service_tier` parameter is set, the response body will include the
+// `service_tier` value based on the processing mode actually used to serve the
+// request. This response value may be different from the value set in the
+// parameter.
 type ChatCompletionNewParamsServiceTier string
 
 const (
-	ChatCompletionNewParamsServiceTierAuto    ChatCompletionNewParamsServiceTier = "auto"
-	ChatCompletionNewParamsServiceTierDefault ChatCompletionNewParamsServiceTier = "default"
-	ChatCompletionNewParamsServiceTierFlex    ChatCompletionNewParamsServiceTier = "flex"
-	ChatCompletionNewParamsServiceTierScale   ChatCompletionNewParamsServiceTier = "scale"
+	ChatCompletionNewParamsServiceTierAuto     ChatCompletionNewParamsServiceTier = "auto"
+	ChatCompletionNewParamsServiceTierDefault  ChatCompletionNewParamsServiceTier = "default"
+	ChatCompletionNewParamsServiceTierFlex     ChatCompletionNewParamsServiceTier = "flex"
+	ChatCompletionNewParamsServiceTierScale    ChatCompletionNewParamsServiceTier = "scale"
+	ChatCompletionNewParamsServiceTierPriority ChatCompletionNewParamsServiceTier = "priority"
 )
 
 // Only one field can be non-zero.

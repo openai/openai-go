@@ -102,17 +102,39 @@ const (
 type ImagesResponse struct {
 	// The Unix timestamp (in seconds) of when the image was created.
 	Created int64 `json:"created,required"`
+	// The background parameter used for the image generation. Either `transparent` or
+	// `opaque`.
+	//
+	// Any of "transparent", "opaque".
+	Background ImagesResponseBackground `json:"background"`
 	// The list of generated images.
 	Data []Image `json:"data"`
+	// The output format of the image generation. Either `png`, `webp`, or `jpeg`.
+	//
+	// Any of "png", "webp", "jpeg".
+	OutputFormat ImagesResponseOutputFormat `json:"output_format"`
+	// The quality of the image generated. Either `low`, `medium`, or `high`.
+	//
+	// Any of "low", "medium", "high".
+	Quality ImagesResponseQuality `json:"quality"`
+	// The size of the image generated. Either `1024x1024`, `1024x1536`, or
+	// `1536x1024`.
+	//
+	// Any of "1024x1024", "1024x1536", "1536x1024".
+	Size ImagesResponseSize `json:"size"`
 	// For `gpt-image-1` only, the token usage information for the image generation.
 	Usage ImagesResponseUsage `json:"usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Created     respjson.Field
-		Data        respjson.Field
-		Usage       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Created      respjson.Field
+		Background   respjson.Field
+		Data         respjson.Field
+		OutputFormat respjson.Field
+		Quality      respjson.Field
+		Size         respjson.Field
+		Usage        respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -121,6 +143,43 @@ func (r ImagesResponse) RawJSON() string { return r.JSON.raw }
 func (r *ImagesResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+// The background parameter used for the image generation. Either `transparent` or
+// `opaque`.
+type ImagesResponseBackground string
+
+const (
+	ImagesResponseBackgroundTransparent ImagesResponseBackground = "transparent"
+	ImagesResponseBackgroundOpaque      ImagesResponseBackground = "opaque"
+)
+
+// The output format of the image generation. Either `png`, `webp`, or `jpeg`.
+type ImagesResponseOutputFormat string
+
+const (
+	ImagesResponseOutputFormatPNG  ImagesResponseOutputFormat = "png"
+	ImagesResponseOutputFormatWebP ImagesResponseOutputFormat = "webp"
+	ImagesResponseOutputFormatJPEG ImagesResponseOutputFormat = "jpeg"
+)
+
+// The quality of the image generated. Either `low`, `medium`, or `high`.
+type ImagesResponseQuality string
+
+const (
+	ImagesResponseQualityLow    ImagesResponseQuality = "low"
+	ImagesResponseQualityMedium ImagesResponseQuality = "medium"
+	ImagesResponseQualityHigh   ImagesResponseQuality = "high"
+)
+
+// The size of the image generated. Either `1024x1024`, `1024x1536`, or
+// `1536x1024`.
+type ImagesResponseSize string
+
+const (
+	ImagesResponseSize1024x1024 ImagesResponseSize = "1024x1024"
+	ImagesResponseSize1024x1536 ImagesResponseSize = "1024x1536"
+	ImagesResponseSize1536x1024 ImagesResponseSize = "1536x1024"
+)
 
 // For `gpt-image-1` only, the token usage information for the image generation.
 type ImagesResponseUsage struct {

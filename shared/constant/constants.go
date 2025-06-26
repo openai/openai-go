@@ -23,6 +23,10 @@ type Assistant string                               // Always "assistant"
 type AssistantDeleted string                        // Always "assistant.deleted"
 type Auto string                                    // Always "auto"
 type Batch string                                   // Always "batch"
+type BatchCancelled string                          // Always "batch.cancelled"
+type BatchCompleted string                          // Always "batch.completed"
+type BatchExpired string                            // Always "batch.expired"
+type BatchFailed string                             // Always "batch.failed"
 type ChatCompletion string                          // Always "chat.completion"
 type ChatCompletionChunk string                     // Always "chat.completion.chunk"
 type ChatCompletionDeleted string                   // Always "chat.completion.deleted"
@@ -42,15 +46,22 @@ type Drag string                                    // Always "drag"
 type Duration string                                // Always "duration"
 type Embedding string                               // Always "embedding"
 type Error string                                   // Always "error"
+type EvalRunCanceled string                         // Always "eval.run.canceled"
+type EvalRunFailed string                           // Always "eval.run.failed"
+type EvalRunSucceeded string                        // Always "eval.run.succeeded"
 type Exec string                                    // Always "exec"
 type File string                                    // Always "file"
 type FileCitation string                            // Always "file_citation"
 type FilePath string                                // Always "file_path"
 type FileSearch string                              // Always "file_search"
 type FileSearchCall string                          // Always "file_search_call"
+type Find string                                    // Always "find"
 type FineTuningJob string                           // Always "fine_tuning.job"
+type FineTuningJobCancelled string                  // Always "fine_tuning.job.cancelled"
 type FineTuningJobCheckpoint string                 // Always "fine_tuning.job.checkpoint"
 type FineTuningJobEvent string                      // Always "fine_tuning.job.event"
+type FineTuningJobFailed string                     // Always "fine_tuning.job.failed"
+type FineTuningJobSucceeded string                  // Always "fine_tuning.job.succeeded"
 type Function string                                // Always "function"
 type FunctionCall string                            // Always "function_call"
 type FunctionCallOutput string                      // Always "function_call_output"
@@ -83,6 +94,7 @@ type MessageCreation string                         // Always "message_creation"
 type Model string                                   // Always "model"
 type Move string                                    // Always "move"
 type Multi string                                   // Always "multi"
+type OpenPage string                                // Always "open_page"
 type Other string                                   // Always "other"
 type OutputAudio string                             // Always "output_audio"
 type OutputText string                              // Always "output_text"
@@ -94,6 +106,7 @@ type ResponseAudioDelta string                      // Always "response.audio.de
 type ResponseAudioDone string                       // Always "response.audio.done"
 type ResponseAudioTranscriptDelta string            // Always "response.audio.transcript.delta"
 type ResponseAudioTranscriptDone string             // Always "response.audio.transcript.done"
+type ResponseCancelled string                       // Always "response.cancelled"
 type ResponseCodeInterpreterCallCodeDelta string    // Always "response.code_interpreter_call_code.delta"
 type ResponseCodeInterpreterCallCodeDone string     // Always "response.code_interpreter_call_code.done"
 type ResponseCodeInterpreterCallCompleted string    // Always "response.code_interpreter_call.completed"
@@ -145,6 +158,7 @@ type ResponseWebSearchCallSearching string          // Always "response.web_sear
 type ScoreModel string                              // Always "score_model"
 type Screenshot string                              // Always "screenshot"
 type Scroll string                                  // Always "scroll"
+type Search string                                  // Always "search"
 type Static string                                  // Always "static"
 type StringCheck string                             // Always "string_check"
 type SubmitToolOutputs string                       // Always "submit_tool_outputs"
@@ -203,88 +217,101 @@ type Wait string                                    // Always "wait"
 type Wandb string                                   // Always "wandb"
 type WebSearchCall string                           // Always "web_search_call"
 
-func (c Approximate) Default() Approximate                     { return "approximate" }
-func (c Assistant) Default() Assistant                         { return "assistant" }
-func (c AssistantDeleted) Default() AssistantDeleted           { return "assistant.deleted" }
-func (c Auto) Default() Auto                                   { return "auto" }
-func (c Batch) Default() Batch                                 { return "batch" }
-func (c ChatCompletion) Default() ChatCompletion               { return "chat.completion" }
-func (c ChatCompletionChunk) Default() ChatCompletionChunk     { return "chat.completion.chunk" }
-func (c ChatCompletionDeleted) Default() ChatCompletionDeleted { return "chat.completion.deleted" }
-func (c CheckpointPermission) Default() CheckpointPermission   { return "checkpoint.permission" }
-func (c Click) Default() Click                                 { return "click" }
-func (c CodeInterpreter) Default() CodeInterpreter             { return "code_interpreter" }
-func (c CodeInterpreterCall) Default() CodeInterpreterCall     { return "code_interpreter_call" }
-func (c ComputerCallOutput) Default() ComputerCallOutput       { return "computer_call_output" }
-func (c ComputerScreenshot) Default() ComputerScreenshot       { return "computer_screenshot" }
-func (c ComputerUsePreview) Default() ComputerUsePreview       { return "computer_use_preview" }
-func (c ContainerFileCitation) Default() ContainerFileCitation { return "container_file_citation" }
-func (c ContainerFile) Default() ContainerFile                 { return "container.file" }
-func (c Content) Default() Content                             { return "content" }
-func (c Developer) Default() Developer                         { return "developer" }
-func (c DoubleClick) Default() DoubleClick                     { return "double_click" }
-func (c Drag) Default() Drag                                   { return "drag" }
-func (c Duration) Default() Duration                           { return "duration" }
-func (c Embedding) Default() Embedding                         { return "embedding" }
-func (c Error) Default() Error                                 { return "error" }
-func (c Exec) Default() Exec                                   { return "exec" }
-func (c File) Default() File                                   { return "file" }
-func (c FileCitation) Default() FileCitation                   { return "file_citation" }
-func (c FilePath) Default() FilePath                           { return "file_path" }
-func (c FileSearch) Default() FileSearch                       { return "file_search" }
-func (c FileSearchCall) Default() FileSearchCall               { return "file_search_call" }
-func (c FineTuningJob) Default() FineTuningJob                 { return "fine_tuning.job" }
+func (c Approximate) Default() Approximate                       { return "approximate" }
+func (c Assistant) Default() Assistant                           { return "assistant" }
+func (c AssistantDeleted) Default() AssistantDeleted             { return "assistant.deleted" }
+func (c Auto) Default() Auto                                     { return "auto" }
+func (c Batch) Default() Batch                                   { return "batch" }
+func (c BatchCancelled) Default() BatchCancelled                 { return "batch.cancelled" }
+func (c BatchCompleted) Default() BatchCompleted                 { return "batch.completed" }
+func (c BatchExpired) Default() BatchExpired                     { return "batch.expired" }
+func (c BatchFailed) Default() BatchFailed                       { return "batch.failed" }
+func (c ChatCompletion) Default() ChatCompletion                 { return "chat.completion" }
+func (c ChatCompletionChunk) Default() ChatCompletionChunk       { return "chat.completion.chunk" }
+func (c ChatCompletionDeleted) Default() ChatCompletionDeleted   { return "chat.completion.deleted" }
+func (c CheckpointPermission) Default() CheckpointPermission     { return "checkpoint.permission" }
+func (c Click) Default() Click                                   { return "click" }
+func (c CodeInterpreter) Default() CodeInterpreter               { return "code_interpreter" }
+func (c CodeInterpreterCall) Default() CodeInterpreterCall       { return "code_interpreter_call" }
+func (c ComputerCallOutput) Default() ComputerCallOutput         { return "computer_call_output" }
+func (c ComputerScreenshot) Default() ComputerScreenshot         { return "computer_screenshot" }
+func (c ComputerUsePreview) Default() ComputerUsePreview         { return "computer_use_preview" }
+func (c ContainerFileCitation) Default() ContainerFileCitation   { return "container_file_citation" }
+func (c ContainerFile) Default() ContainerFile                   { return "container.file" }
+func (c Content) Default() Content                               { return "content" }
+func (c Developer) Default() Developer                           { return "developer" }
+func (c DoubleClick) Default() DoubleClick                       { return "double_click" }
+func (c Drag) Default() Drag                                     { return "drag" }
+func (c Duration) Default() Duration                             { return "duration" }
+func (c Embedding) Default() Embedding                           { return "embedding" }
+func (c Error) Default() Error                                   { return "error" }
+func (c EvalRunCanceled) Default() EvalRunCanceled               { return "eval.run.canceled" }
+func (c EvalRunFailed) Default() EvalRunFailed                   { return "eval.run.failed" }
+func (c EvalRunSucceeded) Default() EvalRunSucceeded             { return "eval.run.succeeded" }
+func (c Exec) Default() Exec                                     { return "exec" }
+func (c File) Default() File                                     { return "file" }
+func (c FileCitation) Default() FileCitation                     { return "file_citation" }
+func (c FilePath) Default() FilePath                             { return "file_path" }
+func (c FileSearch) Default() FileSearch                         { return "file_search" }
+func (c FileSearchCall) Default() FileSearchCall                 { return "file_search_call" }
+func (c Find) Default() Find                                     { return "find" }
+func (c FineTuningJob) Default() FineTuningJob                   { return "fine_tuning.job" }
+func (c FineTuningJobCancelled) Default() FineTuningJobCancelled { return "fine_tuning.job.cancelled" }
 func (c FineTuningJobCheckpoint) Default() FineTuningJobCheckpoint {
 	return "fine_tuning.job.checkpoint"
 }
-func (c FineTuningJobEvent) Default() FineTuningJobEvent     { return "fine_tuning.job.event" }
-func (c Function) Default() Function                         { return "function" }
-func (c FunctionCall) Default() FunctionCall                 { return "function_call" }
-func (c FunctionCallOutput) Default() FunctionCallOutput     { return "function_call_output" }
-func (c Image) Default() Image                               { return "image" }
-func (c ImageFile) Default() ImageFile                       { return "image_file" }
-func (c ImageGeneration) Default() ImageGeneration           { return "image_generation" }
-func (c ImageGenerationCall) Default() ImageGenerationCall   { return "image_generation_call" }
-func (c ImageURL) Default() ImageURL                         { return "image_url" }
-func (c InputAudio) Default() InputAudio                     { return "input_audio" }
-func (c InputFile) Default() InputFile                       { return "input_file" }
-func (c InputImage) Default() InputImage                     { return "input_image" }
-func (c InputText) Default() InputText                       { return "input_text" }
-func (c JSONObject) Default() JSONObject                     { return "json_object" }
-func (c JSONSchema) Default() JSONSchema                     { return "json_schema" }
-func (c Keypress) Default() Keypress                         { return "keypress" }
-func (c LabelModel) Default() LabelModel                     { return "label_model" }
-func (c LastActiveAt) Default() LastActiveAt                 { return "last_active_at" }
-func (c List) Default() List                                 { return "list" }
-func (c LocalShell) Default() LocalShell                     { return "local_shell" }
-func (c LocalShellCall) Default() LocalShellCall             { return "local_shell_call" }
-func (c LocalShellCallOutput) Default() LocalShellCallOutput { return "local_shell_call_output" }
-func (c Logs) Default() Logs                                 { return "logs" }
-func (c Mcp) Default() Mcp                                   { return "mcp" }
-func (c McpApprovalRequest) Default() McpApprovalRequest     { return "mcp_approval_request" }
-func (c McpApprovalResponse) Default() McpApprovalResponse   { return "mcp_approval_response" }
-func (c McpCall) Default() McpCall                           { return "mcp_call" }
-func (c McpListTools) Default() McpListTools                 { return "mcp_list_tools" }
-func (c Message) Default() Message                           { return "message" }
-func (c MessageCreation) Default() MessageCreation           { return "message_creation" }
-func (c Model) Default() Model                               { return "model" }
-func (c Move) Default() Move                                 { return "move" }
-func (c Multi) Default() Multi                               { return "multi" }
-func (c Other) Default() Other                               { return "other" }
-func (c OutputAudio) Default() OutputAudio                   { return "output_audio" }
-func (c OutputText) Default() OutputText                     { return "output_text" }
-func (c Python) Default() Python                             { return "python" }
-func (c Reasoning) Default() Reasoning                       { return "reasoning" }
-func (c Refusal) Default() Refusal                           { return "refusal" }
-func (c Response) Default() Response                         { return "response" }
-func (c ResponseAudioDelta) Default() ResponseAudioDelta     { return "response.audio.delta" }
-func (c ResponseAudioDone) Default() ResponseAudioDone       { return "response.audio.done" }
+func (c FineTuningJobEvent) Default() FineTuningJobEvent         { return "fine_tuning.job.event" }
+func (c FineTuningJobFailed) Default() FineTuningJobFailed       { return "fine_tuning.job.failed" }
+func (c FineTuningJobSucceeded) Default() FineTuningJobSucceeded { return "fine_tuning.job.succeeded" }
+func (c Function) Default() Function                             { return "function" }
+func (c FunctionCall) Default() FunctionCall                     { return "function_call" }
+func (c FunctionCallOutput) Default() FunctionCallOutput         { return "function_call_output" }
+func (c Image) Default() Image                                   { return "image" }
+func (c ImageFile) Default() ImageFile                           { return "image_file" }
+func (c ImageGeneration) Default() ImageGeneration               { return "image_generation" }
+func (c ImageGenerationCall) Default() ImageGenerationCall       { return "image_generation_call" }
+func (c ImageURL) Default() ImageURL                             { return "image_url" }
+func (c InputAudio) Default() InputAudio                         { return "input_audio" }
+func (c InputFile) Default() InputFile                           { return "input_file" }
+func (c InputImage) Default() InputImage                         { return "input_image" }
+func (c InputText) Default() InputText                           { return "input_text" }
+func (c JSONObject) Default() JSONObject                         { return "json_object" }
+func (c JSONSchema) Default() JSONSchema                         { return "json_schema" }
+func (c Keypress) Default() Keypress                             { return "keypress" }
+func (c LabelModel) Default() LabelModel                         { return "label_model" }
+func (c LastActiveAt) Default() LastActiveAt                     { return "last_active_at" }
+func (c List) Default() List                                     { return "list" }
+func (c LocalShell) Default() LocalShell                         { return "local_shell" }
+func (c LocalShellCall) Default() LocalShellCall                 { return "local_shell_call" }
+func (c LocalShellCallOutput) Default() LocalShellCallOutput     { return "local_shell_call_output" }
+func (c Logs) Default() Logs                                     { return "logs" }
+func (c Mcp) Default() Mcp                                       { return "mcp" }
+func (c McpApprovalRequest) Default() McpApprovalRequest         { return "mcp_approval_request" }
+func (c McpApprovalResponse) Default() McpApprovalResponse       { return "mcp_approval_response" }
+func (c McpCall) Default() McpCall                               { return "mcp_call" }
+func (c McpListTools) Default() McpListTools                     { return "mcp_list_tools" }
+func (c Message) Default() Message                               { return "message" }
+func (c MessageCreation) Default() MessageCreation               { return "message_creation" }
+func (c Model) Default() Model                                   { return "model" }
+func (c Move) Default() Move                                     { return "move" }
+func (c Multi) Default() Multi                                   { return "multi" }
+func (c OpenPage) Default() OpenPage                             { return "open_page" }
+func (c Other) Default() Other                                   { return "other" }
+func (c OutputAudio) Default() OutputAudio                       { return "output_audio" }
+func (c OutputText) Default() OutputText                         { return "output_text" }
+func (c Python) Default() Python                                 { return "python" }
+func (c Reasoning) Default() Reasoning                           { return "reasoning" }
+func (c Refusal) Default() Refusal                               { return "refusal" }
+func (c Response) Default() Response                             { return "response" }
+func (c ResponseAudioDelta) Default() ResponseAudioDelta         { return "response.audio.delta" }
+func (c ResponseAudioDone) Default() ResponseAudioDone           { return "response.audio.done" }
 func (c ResponseAudioTranscriptDelta) Default() ResponseAudioTranscriptDelta {
 	return "response.audio.transcript.delta"
 }
 func (c ResponseAudioTranscriptDone) Default() ResponseAudioTranscriptDone {
 	return "response.audio.transcript.done"
 }
+func (c ResponseCancelled) Default() ResponseCancelled { return "response.cancelled" }
 func (c ResponseCodeInterpreterCallCodeDelta) Default() ResponseCodeInterpreterCallCodeDelta {
 	return "response.code_interpreter_call_code.delta"
 }
@@ -406,6 +433,7 @@ func (c ResponseWebSearchCallSearching) Default() ResponseWebSearchCallSearching
 func (c ScoreModel) Default() ScoreModel                         { return "score_model" }
 func (c Screenshot) Default() Screenshot                         { return "screenshot" }
 func (c Scroll) Default() Scroll                                 { return "scroll" }
+func (c Search) Default() Search                                 { return "search" }
 func (c Static) Default() Static                                 { return "static" }
 func (c StringCheck) Default() StringCheck                       { return "string_check" }
 func (c SubmitToolOutputs) Default() SubmitToolOutputs           { return "submit_tool_outputs" }
@@ -481,6 +509,10 @@ func (c Assistant) MarshalJSON() ([]byte, error)                             { r
 func (c AssistantDeleted) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Auto) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c Batch) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
+func (c BatchCancelled) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c BatchCompleted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c BatchExpired) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c BatchFailed) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c ChatCompletion) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c ChatCompletionChunk) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
 func (c ChatCompletionDeleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
@@ -500,15 +532,22 @@ func (c Drag) MarshalJSON() ([]byte, error)                                  { r
 func (c Duration) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c Embedding) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Error) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
+func (c EvalRunCanceled) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c EvalRunFailed) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c EvalRunSucceeded) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Exec) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c File) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c FileCitation) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c FilePath) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c FileSearch) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c FileSearchCall) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c Find) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c FineTuningJob) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c FineTuningJobCancelled) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c FineTuningJobCheckpoint) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c FineTuningJobEvent) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c FineTuningJobFailed) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c FineTuningJobSucceeded) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c Function) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c FunctionCall) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c FunctionCallOutput) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
@@ -541,6 +580,7 @@ func (c MessageCreation) MarshalJSON() ([]byte, error)                       { r
 func (c Model) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c Move) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c Multi) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
+func (c OpenPage) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c Other) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c OutputAudio) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c OutputText) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
@@ -552,6 +592,7 @@ func (c ResponseAudioDelta) MarshalJSON() ([]byte, error)                    { r
 func (c ResponseAudioDone) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c ResponseAudioTranscriptDelta) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c ResponseAudioTranscriptDone) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c ResponseCancelled) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c ResponseCodeInterpreterCallCodeDelta) MarshalJSON() ([]byte, error)  { return marshalString(c) }
 func (c ResponseCodeInterpreterCallCodeDone) MarshalJSON() ([]byte, error)   { return marshalString(c) }
 func (c ResponseCodeInterpreterCallCompleted) MarshalJSON() ([]byte, error)  { return marshalString(c) }
@@ -607,6 +648,7 @@ func (c ResponseWebSearchCallSearching) MarshalJSON() ([]byte, error)    { retur
 func (c ScoreModel) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c Screenshot) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c Scroll) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
+func (c Search) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Static) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c StringCheck) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c SubmitToolOutputs) MarshalJSON() ([]byte, error)                 { return marshalString(c) }

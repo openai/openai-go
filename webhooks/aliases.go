@@ -1,6 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-package openai
+package webhooks
 
 import (
 	"github.com/openai/openai-go/internal/apierror"

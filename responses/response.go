@@ -743,6 +743,11 @@ type Response struct {
 	// including visible output tokens and
 	// [reasoning tokens](https://platform.openai.com/docs/guides/reasoning).
 	MaxOutputTokens int64 `json:"max_output_tokens,nullable"`
+	// The maximum number of total calls to built-in tools that can be processed in a
+	// response. This maximum number applies across all built-in tool calls, not per
+	// individual tool. Any further attempts to call a tool by the model will be
+	// ignored.
+	MaxToolCalls int64 `json:"max_tool_calls,nullable"`
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
 	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
@@ -755,25 +760,25 @@ type Response struct {
 	// Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 	Reasoning shared.Reasoning `json:"reasoning,nullable"`
-	// Specifies the latency tier to use for processing the request. This parameter is
-	// relevant for customers subscribed to the scale tier service:
+	// Specifies the processing type used for serving the request.
 	//
-	//   - If set to 'auto', and the Project is Scale tier enabled, the system will
-	//     utilize scale tier credits until they are exhausted.
-	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
-	//     be processed using the default service tier with a lower uptime SLA and no
-	//     latency guarantee.
-	//   - If set to 'default', the request will be processed using the default service
-	//     tier with a lower uptime SLA and no latency guarantee.
-	//   - If set to 'flex', the request will be processed with the Flex Processing
-	//     service tier.
-	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+	//   - If set to 'auto', then the request will be processed with the service tier
+	//     configured in the Project settings. Unless otherwise configured, the Project
+	//     will use 'default'.
+	//   - If set to 'default', then the requset will be processed with the standard
+	//     pricing and performance for the selected model.
+	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
+	//     'priority', then the request will be processed with the corresponding service
+	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
+	//     Priority processing.
 	//   - When not set, the default behavior is 'auto'.
 	//
-	// When this parameter is set, the response body will include the `service_tier`
-	// utilized.
+	// When the `service_tier` parameter is set, the response body will include the
+	// `service_tier` value based on the processing mode actually used to serve the
+	// request. This response value may be different from the value set in the
+	// parameter.
 	//
-	// Any of "auto", "default", "flex", "scale".
+	// Any of "auto", "default", "flex", "scale", "priority".
 	ServiceTier ResponseServiceTier `json:"service_tier,nullable"`
 	// The status of the response generation. One of `completed`, `failed`,
 	// `in_progress`, `cancelled`, `queued`, or `incomplete`.
@@ -787,6 +792,9 @@ type Response struct {
 	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
 	// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
 	Text ResponseTextConfig `json:"text"`
+	// An integer between 0 and 20 specifying the number of most likely tokens to
+	// return at each token position, each with an associated log probability.
+	TopLogprobs int64 `json:"top_logprobs,nullable"`
 	// The truncation strategy to use for the model response.
 	//
 	//   - `auto`: If the context of this response and previous ones exceeds the model's
@@ -822,12 +830,14 @@ type Response struct {
 		TopP               respjson.Field
 		Background         respjson.Field
 		MaxOutputTokens    respjson.Field
+		MaxToolCalls       respjson.Field
 		PreviousResponseID respjson.Field
 		Prompt             respjson.Field
 		Reasoning          respjson.Field
 		ServiceTier        respjson.Field
 		Status             respjson.Field
 		Text               respjson.Field
+		TopLogprobs        respjson.Field
 		Truncation         respjson.Field
 		Usage              respjson.Field
 		User               respjson.Field
@@ -900,7 +910,7 @@ func (r *ResponseInstructionsUnion) UnmarshalJSON(data []byte) error {
 }
 
 // ResponseToolChoiceUnion contains all possible properties and values from
-// [ToolChoiceOptions], [ToolChoiceTypes], [ToolChoiceFunction].
+// [ToolChoiceOptions], [ToolChoiceTypes], [ToolChoiceFunction], [ToolChoiceMcp].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
@@ -911,12 +921,14 @@ type ResponseToolChoiceUnion struct {
 	// object.
 	OfToolChoiceMode ToolChoiceOptions `json:",inline"`
 	Type             string            `json:"type"`
-	// This field is from variant [ToolChoiceFunction].
-	Name string `json:"name"`
-	JSON struct {
+	Name             string            `json:"name"`
+	// This field is from variant [ToolChoiceMcp].
+	ServerLabel string `json:"server_label"`
+	JSON        struct {
 		OfToolChoiceMode respjson.Field
 		Type             respjson.Field
 		Name             respjson.Field
+		ServerLabel      respjson.Field
 		raw              string
 	} `json:"-"`
 }
@@ -936,6 +948,11 @@ func (u ResponseToolChoiceUnion) AsFunctionTool() (v ToolChoiceFunction) {
 	return
 }
 
+func (u ResponseToolChoiceUnion) AsMcpTool() (v ToolChoiceMcp) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u ResponseToolChoiceUnion) RawJSON() string { return u.JSON.raw }
 
@@ -943,30 +960,31 @@ func (r *ResponseToolChoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Specifies the latency tier to use for processing the request. This parameter is
-// relevant for customers subscribed to the scale tier service:
+// Specifies the processing type used for serving the request.
 //
-//   - If set to 'auto', and the Project is Scale tier enabled, the system will
-//     utilize scale tier credits until they are exhausted.
-//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
-//     be processed using the default service tier with a lower uptime SLA and no
-//     latency guarantee.
-//   - If set to 'default', the request will be processed using the default service
-//     tier with a lower uptime SLA and no latency guarantee.
-//   - If set to 'flex', the request will be processed with the Flex Processing
-//     service tier.
-//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+//   - If set to 'auto', then the request will be processed with the service tier
+//     configured in the Project settings. Unless otherwise configured, the Project
+//     will use 'default'.
+//   - If set to 'default', then the requset will be processed with the standard
+//     pricing and performance for the selected model.
+//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
+//     'priority', then the request will be processed with the corresponding service
+//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
+//     Priority processing.
 //   - When not set, the default behavior is 'auto'.
 //
-// When this parameter is set, the response body will include the `service_tier`
-// utilized.
+// When the `service_tier` parameter is set, the response body will include the
+// `service_tier` value based on the processing mode actually used to serve the
+// request. This response value may be different from the value set in the
+// parameter.
 type ResponseServiceTier string
 
 const (
-	ResponseServiceTierAuto    ResponseServiceTier = "auto"
-	ResponseServiceTierDefault ResponseServiceTier = "default"
-	ResponseServiceTierFlex    ResponseServiceTier = "flex"
-	ResponseServiceTierScale   ResponseServiceTier = "scale"
+	ResponseServiceTierAuto     ResponseServiceTier = "auto"
+	ResponseServiceTierDefault  ResponseServiceTier = "default"
+	ResponseServiceTierFlex     ResponseServiceTier = "flex"
+	ResponseServiceTierScale    ResponseServiceTier = "scale"
+	ResponseServiceTierPriority ResponseServiceTier = "priority"
 )
 
 // The truncation strategy to use for the model response.
@@ -3775,6 +3793,9 @@ const (
 type ResponseFunctionWebSearch struct {
 	// The unique ID of the web search tool call.
 	ID string `json:"id,required"`
+	// An object describing the specific action taken in this web search call. Includes
+	// details on how the model used the web (search, open_page, find).
+	Action ResponseFunctionWebSearchActionUnion `json:"action,required"`
 	// The status of the web search tool call.
 	//
 	// Any of "in_progress", "searching", "completed", "failed".
@@ -3784,6 +3805,7 @@ type ResponseFunctionWebSearch struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
+		Action      respjson.Field
 		Status      respjson.Field
 		Type        respjson.Field
 		ExtraFields map[string]respjson.Field
@@ -3807,6 +3829,158 @@ func (r ResponseFunctionWebSearch) ToParam() ResponseFunctionWebSearchParam {
 	return param.Override[ResponseFunctionWebSearchParam](json.RawMessage(r.RawJSON()))
 }
 
+// ResponseFunctionWebSearchActionUnion contains all possible properties and values
+// from [ResponseFunctionWebSearchActionSearch],
+// [ResponseFunctionWebSearchActionOpenPage],
+// [ResponseFunctionWebSearchActionFind].
+//
+// Use the [ResponseFunctionWebSearchActionUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponseFunctionWebSearchActionUnion struct {
+	// This field is from variant [ResponseFunctionWebSearchActionSearch].
+	Query string `json:"query"`
+	// Any of "search", "open_page", "find".
+	Type string `json:"type"`
+	// This field is from variant [ResponseFunctionWebSearchActionSearch].
+	Domains []string `json:"domains"`
+	URL     string   `json:"url"`
+	// This field is from variant [ResponseFunctionWebSearchActionFind].
+	Pattern string `json:"pattern"`
+	JSON    struct {
+		Query   respjson.Field
+		Type    respjson.Field
+		Domains respjson.Field
+		URL     respjson.Field
+		Pattern respjson.Field
+		raw     string
+	} `json:"-"`
+}
+
+// anyResponseFunctionWebSearchAction is implemented by each variant of
+// [ResponseFunctionWebSearchActionUnion] to add type safety for the return type of
+// [ResponseFunctionWebSearchActionUnion.AsAny]
+type anyResponseFunctionWebSearchAction interface {
+	implResponseFunctionWebSearchActionUnion()
+}
+
+func (ResponseFunctionWebSearchActionSearch) implResponseFunctionWebSearchActionUnion()   {}
+func (ResponseFunctionWebSearchActionOpenPage) implResponseFunctionWebSearchActionUnion() {}
+func (ResponseFunctionWebSearchActionFind) implResponseFunctionWebSearchActionUnion()     {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponseFunctionWebSearchActionUnion.AsAny().(type) {
+//	case responses.ResponseFunctionWebSearchActionSearch:
+//	case responses.ResponseFunctionWebSearchActionOpenPage:
+//	case responses.ResponseFunctionWebSearchActionFind:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponseFunctionWebSearchActionUnion) AsAny() anyResponseFunctionWebSearchAction {
+	switch u.Type {
+	case "search":
+		return u.AsSearch()
+	case "open_page":
+		return u.AsOpenPage()
+	case "find":
+		return u.AsFind()
+	}
+	return nil
+}
+
+func (u ResponseFunctionWebSearchActionUnion) AsSearch() (v ResponseFunctionWebSearchActionSearch) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseFunctionWebSearchActionUnion) AsOpenPage() (v ResponseFunctionWebSearchActionOpenPage) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseFunctionWebSearchActionUnion) AsFind() (v ResponseFunctionWebSearchActionFind) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseFunctionWebSearchActionUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponseFunctionWebSearchActionUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Action type "search" - Performs a web search query.
+type ResponseFunctionWebSearchActionSearch struct {
+	// The search query.
+	Query string `json:"query,required"`
+	// The action type.
+	Type constant.Search `json:"type,required"`
+	// Domains to restrict the search or domains where results were found.
+	Domains []string `json:"domains"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Query       respjson.Field
+		Type        respjson.Field
+		Domains     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseFunctionWebSearchActionSearch) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFunctionWebSearchActionSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Action type "open_page" - Opens a specific URL from search results.
+type ResponseFunctionWebSearchActionOpenPage struct {
+	// The action type.
+	Type constant.OpenPage `json:"type,required"`
+	// The URL opened by the model.
+	URL string `json:"url,required" format:"uri"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseFunctionWebSearchActionOpenPage) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFunctionWebSearchActionOpenPage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Action type "find": Searches for a pattern within a loaded page.
+type ResponseFunctionWebSearchActionFind struct {
+	// The pattern or text to search for within the page.
+	Pattern string `json:"pattern,required"`
+	// The action type.
+	Type constant.Find `json:"type,required"`
+	// The URL of the page searched for the pattern.
+	URL string `json:"url,required" format:"uri"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Pattern     respjson.Field
+		Type        respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseFunctionWebSearchActionFind) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFunctionWebSearchActionFind) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The status of the web search tool call.
 type ResponseFunctionWebSearchStatus string
 
@@ -3821,10 +3995,13 @@ const (
 // [web search guide](https://platform.openai.com/docs/guides/tools-web-search) for
 // more information.
 //
-// The properties ID, Status, Type are required.
+// The properties ID, Action, Status, Type are required.
 type ResponseFunctionWebSearchParam struct {
 	// The unique ID of the web search tool call.
 	ID string `json:"id,required"`
+	// An object describing the specific action taken in this web search call. Includes
+	// details on how the model used the web (search, open_page, find).
+	Action ResponseFunctionWebSearchActionUnionParam `json:"action,omitzero,required"`
 	// The status of the web search tool call.
 	//
 	// Any of "in_progress", "searching", "completed", "failed".
@@ -3841,6 +4018,156 @@ func (r ResponseFunctionWebSearchParam) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ResponseFunctionWebSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseFunctionWebSearchActionUnionParam struct {
+	OfSearch   *ResponseFunctionWebSearchActionSearchParam   `json:",omitzero,inline"`
+	OfOpenPage *ResponseFunctionWebSearchActionOpenPageParam `json:",omitzero,inline"`
+	OfFind     *ResponseFunctionWebSearchActionFindParam     `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseFunctionWebSearchActionUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfSearch, u.OfOpenPage, u.OfFind)
+}
+func (u *ResponseFunctionWebSearchActionUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *ResponseFunctionWebSearchActionUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfSearch) {
+		return u.OfSearch
+	} else if !param.IsOmitted(u.OfOpenPage) {
+		return u.OfOpenPage
+	} else if !param.IsOmitted(u.OfFind) {
+		return u.OfFind
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseFunctionWebSearchActionUnionParam) GetQuery() *string {
+	if vt := u.OfSearch; vt != nil {
+		return &vt.Query
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseFunctionWebSearchActionUnionParam) GetDomains() []string {
+	if vt := u.OfSearch; vt != nil {
+		return vt.Domains
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseFunctionWebSearchActionUnionParam) GetPattern() *string {
+	if vt := u.OfFind; vt != nil {
+		return &vt.Pattern
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseFunctionWebSearchActionUnionParam) GetType() *string {
+	if vt := u.OfSearch; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfOpenPage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFind; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseFunctionWebSearchActionUnionParam) GetURL() *string {
+	if vt := u.OfOpenPage; vt != nil {
+		return (*string)(&vt.URL)
+	} else if vt := u.OfFind; vt != nil {
+		return (*string)(&vt.URL)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseFunctionWebSearchActionUnionParam](
+		"type",
+		apijson.Discriminator[ResponseFunctionWebSearchActionSearchParam]("search"),
+		apijson.Discriminator[ResponseFunctionWebSearchActionOpenPageParam]("open_page"),
+		apijson.Discriminator[ResponseFunctionWebSearchActionFindParam]("find"),
+	)
+}
+
+// Action type "search" - Performs a web search query.
+//
+// The properties Query, Type are required.
+type ResponseFunctionWebSearchActionSearchParam struct {
+	// The search query.
+	Query string `json:"query,required"`
+	// Domains to restrict the search or domains where results were found.
+	Domains []string `json:"domains,omitzero"`
+	// The action type.
+	//
+	// This field can be elided, and will marshal its zero value as "search".
+	Type constant.Search `json:"type,required"`
+	paramObj
+}
+
+func (r ResponseFunctionWebSearchActionSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseFunctionWebSearchActionSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseFunctionWebSearchActionSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Action type "open_page" - Opens a specific URL from search results.
+//
+// The properties Type, URL are required.
+type ResponseFunctionWebSearchActionOpenPageParam struct {
+	// The URL opened by the model.
+	URL string `json:"url,required" format:"uri"`
+	// The action type.
+	//
+	// This field can be elided, and will marshal its zero value as "open_page".
+	Type constant.OpenPage `json:"type,required"`
+	paramObj
+}
+
+func (r ResponseFunctionWebSearchActionOpenPageParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseFunctionWebSearchActionOpenPageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseFunctionWebSearchActionOpenPageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Action type "find": Searches for a pattern within a loaded page.
+//
+// The properties Pattern, Type, URL are required.
+type ResponseFunctionWebSearchActionFindParam struct {
+	// The pattern or text to search for within the page.
+	Pattern string `json:"pattern,required"`
+	// The URL of the page searched for the pattern.
+	URL string `json:"url,required" format:"uri"`
+	// The action type.
+	//
+	// This field can be elided, and will marshal its zero value as "find".
+	Type constant.Find `json:"type,required"`
+	paramObj
+}
+
+func (r ResponseFunctionWebSearchActionFindParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseFunctionWebSearchActionFindParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseFunctionWebSearchActionFindParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -3988,26 +4315,28 @@ func (r *ResponseInProgressEvent) UnmarshalJSON(data []byte) error {
 // Specify additional output data to include in the model response. Currently
 // supported values are:
 //
+//   - `code_interpreter_call.outputs`: Includes the outputs of python code execution
+//     in code interpreter tool call items.
+//   - `computer_call_output.output.image_url`: Include image urls from the computer
+//     call output.
 //   - `file_search_call.results`: Include the search results of the file search tool
 //     call.
 //   - `message.input_image.image_url`: Include image urls from the input message.
-//   - `computer_call_output.output.image_url`: Include image urls from the computer
-//     call output.
+//   - `message.output_text.logprobs`: Include logprobs with assistant messages.
 //   - `reasoning.encrypted_content`: Includes an encrypted version of reasoning
 //     tokens in reasoning item outputs. This enables reasoning items to be used in
 //     multi-turn conversations when using the Responses API statelessly (like when
 //     the `store` parameter is set to `false`, or when an organization is enrolled
 //     in the zero data retention program).
-//   - `code_interpreter_call.outputs`: Includes the outputs of python code execution
-//     in code interpreter tool call items.
 type ResponseIncludable string
 
 const (
+	ResponseIncludableCodeInterpreterCallOutputs       ResponseIncludable = "code_interpreter_call.outputs"
+	ResponseIncludableComputerCallOutputOutputImageURL ResponseIncludable = "computer_call_output.output.image_url"
 	ResponseIncludableFileSearchCallResults            ResponseIncludable = "file_search_call.results"
 	ResponseIncludableMessageInputImageImageURL        ResponseIncludable = "message.input_image.image_url"
-	ResponseIncludableComputerCallOutputOutputImageURL ResponseIncludable = "computer_call_output.output.image_url"
+	ResponseIncludableMessageOutputTextLogprobs        ResponseIncludable = "message.output_text.logprobs"
 	ResponseIncludableReasoningEncryptedContent        ResponseIncludable = "reasoning.encrypted_content"
-	ResponseIncludableCodeInterpreterCallOutputs       ResponseIncludable = "code_interpreter_call.outputs"
 )
 
 // An event that is emitted when a response finishes as incomplete.
@@ -4418,7 +4747,7 @@ type ResponseInputItemUnion struct {
 	// This field is from variant [ResponseFileSearchToolCall].
 	Results []ResponseFileSearchToolCallResult `json:"results"`
 	// This field is a union of [ResponseComputerToolCallActionUnion],
-	// [ResponseInputItemLocalShellCallAction]
+	// [ResponseFunctionWebSearchActionUnion], [ResponseInputItemLocalShellCallAction]
 	Action ResponseInputItemUnionAction `json:"action"`
 	CallID string                       `json:"call_id"`
 	// This field is from variant [ResponseComputerToolCall].
@@ -4729,6 +5058,13 @@ type ResponseInputItemUnionAction struct {
 	ScrollY int64 `json:"scroll_y"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	Text string `json:"text"`
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Query string `json:"query"`
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Domains []string `json:"domains"`
+	URL     string   `json:"url"`
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Pattern string `json:"pattern"`
 	// This field is from variant [ResponseInputItemLocalShellCallAction].
 	Command []string `json:"command"`
 	// This field is from variant [ResponseInputItemLocalShellCallAction].
@@ -4749,6 +5085,10 @@ type ResponseInputItemUnionAction struct {
 		ScrollX          respjson.Field
 		ScrollY          respjson.Field
 		Text             respjson.Field
+		Query            respjson.Field
+		Domains          respjson.Field
+		URL              respjson.Field
+		Pattern          respjson.Field
 		Command          respjson.Field
 		Env              respjson.Field
 		TimeoutMs        respjson.Field
@@ -5277,8 +5617,18 @@ func ResponseInputItemParamOfComputerCallOutput(callID string, output ResponseCo
 	return ResponseInputItemUnionParam{OfComputerCallOutput: &computerCallOutput}
 }
 
-func ResponseInputItemParamOfWebSearchCall(id string, status ResponseFunctionWebSearchStatus) ResponseInputItemUnionParam {
+func ResponseInputItemParamOfWebSearchCall[
+	T ResponseFunctionWebSearchActionSearchParam | ResponseFunctionWebSearchActionOpenPageParam | ResponseFunctionWebSearchActionFindParam,
+](action T, id string, status ResponseFunctionWebSearchStatus) ResponseInputItemUnionParam {
 	var webSearchCall ResponseFunctionWebSearchParam
+	switch v := any(action).(type) {
+	case ResponseFunctionWebSearchActionSearchParam:
+		webSearchCall.Action.OfSearch = &v
+	case ResponseFunctionWebSearchActionOpenPageParam:
+		webSearchCall.Action.OfOpenPage = &v
+	case ResponseFunctionWebSearchActionFindParam:
+		webSearchCall.Action.OfFind = &v
+	}
 	webSearchCall.ID = id
 	webSearchCall.Status = status
 	return ResponseInputItemUnionParam{OfWebSearchCall: &webSearchCall}
@@ -5773,6 +6123,8 @@ func (u responseInputItemUnionParamContent) AsAny() any { return u.any }
 func (u ResponseInputItemUnionParam) GetAction() (res responseInputItemUnionParamAction) {
 	if vt := u.OfComputerCall; vt != nil {
 		res.any = vt.Action.asAny()
+	} else if vt := u.OfWebSearchCall; vt != nil {
+		res.any = vt.Action.asAny()
 	} else if vt := u.OfLocalShellCall; vt != nil {
 		res.any = &vt.Action
 	}
@@ -5788,6 +6140,9 @@ func (u ResponseInputItemUnionParam) GetAction() (res responseInputItemUnionPara
 // [*ResponseComputerToolCallActionScrollParam],
 // [*ResponseComputerToolCallActionTypeParam],
 // [*ResponseComputerToolCallActionWaitParam],
+// [*ResponseFunctionWebSearchActionSearchParam],
+// [*ResponseFunctionWebSearchActionOpenPageParam],
+// [*ResponseFunctionWebSearchActionFindParam],
 // [*ResponseInputItemLocalShellCallActionParam]
 type responseInputItemUnionParamAction struct{ any }
 
@@ -5803,6 +6158,9 @@ type responseInputItemUnionParamAction struct{ any }
 //	case *responses.ResponseComputerToolCallActionScrollParam:
 //	case *responses.ResponseComputerToolCallActionTypeParam:
 //	case *responses.ResponseComputerToolCallActionWaitParam:
+//	case *responses.ResponseFunctionWebSearchActionSearchParam:
+//	case *responses.ResponseFunctionWebSearchActionOpenPageParam:
+//	case *responses.ResponseFunctionWebSearchActionFindParam:
 //	case *responses.ResponseInputItemLocalShellCallActionParam:
 //	default:
 //	    fmt.Errorf("not present")
@@ -5864,6 +6222,33 @@ func (u responseInputItemUnionParamAction) GetText() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u responseInputItemUnionParamAction) GetQuery() *string {
+	switch vt := u.any.(type) {
+	case *ResponseFunctionWebSearchActionUnionParam:
+		return vt.GetQuery()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseInputItemUnionParamAction) GetDomains() []string {
+	switch vt := u.any.(type) {
+	case *ResponseFunctionWebSearchActionUnionParam:
+		return vt.GetDomains()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseInputItemUnionParamAction) GetPattern() *string {
+	switch vt := u.any.(type) {
+	case *ResponseFunctionWebSearchActionUnionParam:
+		return vt.GetPattern()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetCommand() []string {
 	switch vt := u.any.(type) {
 	case *ResponseInputItemLocalShellCallActionParam:
@@ -5913,6 +6298,8 @@ func (u responseInputItemUnionParamAction) GetType() *string {
 	switch vt := u.any.(type) {
 	case *ResponseComputerToolCallActionUnionParam:
 		return vt.GetType()
+	case *ResponseFunctionWebSearchActionUnionParam:
+		return vt.GetType()
 	case *ResponseInputItemLocalShellCallActionParam:
 		return (*string)(&vt.Type)
 	}
@@ -5933,6 +6320,15 @@ func (u responseInputItemUnionParamAction) GetY() *int64 {
 	switch vt := u.any.(type) {
 	case *ResponseComputerToolCallActionUnionParam:
 		return vt.GetY()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseInputItemUnionParamAction) GetURL() *string {
+	switch vt := u.any.(type) {
+	case *ResponseFunctionWebSearchActionUnionParam:
+		return vt.GetURL()
 	}
 	return nil
 }
@@ -6581,7 +6977,7 @@ type ResponseItemUnion struct {
 	// This field is from variant [ResponseFileSearchToolCall].
 	Results []ResponseFileSearchToolCallResult `json:"results"`
 	// This field is a union of [ResponseComputerToolCallActionUnion],
-	// [ResponseItemLocalShellCallAction]
+	// [ResponseFunctionWebSearchActionUnion], [ResponseItemLocalShellCallAction]
 	Action ResponseItemUnionAction `json:"action"`
 	CallID string                  `json:"call_id"`
 	// This field is from variant [ResponseComputerToolCall].
@@ -6857,6 +7253,13 @@ type ResponseItemUnionAction struct {
 	ScrollY int64 `json:"scroll_y"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	Text string `json:"text"`
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Query string `json:"query"`
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Domains []string `json:"domains"`
+	URL     string   `json:"url"`
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Pattern string `json:"pattern"`
 	// This field is from variant [ResponseItemLocalShellCallAction].
 	Command []string `json:"command"`
 	// This field is from variant [ResponseItemLocalShellCallAction].
@@ -6877,6 +7280,10 @@ type ResponseItemUnionAction struct {
 		ScrollX          respjson.Field
 		ScrollY          respjson.Field
 		Text             respjson.Field
+		Query            respjson.Field
+		Domains          respjson.Field
+		URL              respjson.Field
+		Pattern          respjson.Field
 		Command          respjson.Field
 		Env              respjson.Field
 		TimeoutMs        respjson.Field
@@ -7420,8 +7827,8 @@ type ResponseOutputItemUnion struct {
 	Arguments string                             `json:"arguments"`
 	CallID    string                             `json:"call_id"`
 	Name      string                             `json:"name"`
-	// This field is a union of [ResponseComputerToolCallActionUnion],
-	// [ResponseOutputItemLocalShellCallAction]
+	// This field is a union of [ResponseFunctionWebSearchActionUnion],
+	// [ResponseComputerToolCallActionUnion], [ResponseOutputItemLocalShellCallAction]
 	Action ResponseOutputItemUnionAction `json:"action"`
 	// This field is from variant [ResponseComputerToolCall].
 	PendingSafetyChecks []ResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
@@ -7612,9 +8019,16 @@ func (r *ResponseOutputItemUnion) UnmarshalJSON(data []byte) error {
 // For type safety it is recommended to directly use a variant of the
 // [ResponseOutputItemUnion].
 type ResponseOutputItemUnionAction struct {
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Query string `json:"query"`
+	Type  string `json:"type"`
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Domains []string `json:"domains"`
+	URL     string   `json:"url"`
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Pattern string `json:"pattern"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	Button string `json:"button"`
-	Type   string `json:"type"`
 	X      int64  `json:"x"`
 	Y      int64  `json:"y"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
@@ -7638,8 +8052,12 @@ type ResponseOutputItemUnionAction struct {
 	// This field is from variant [ResponseOutputItemLocalShellCallAction].
 	WorkingDirectory string `json:"working_directory"`
 	JSON             struct {
-		Button           respjson.Field
+		Query            respjson.Field
 		Type             respjson.Field
+		Domains          respjson.Field
+		URL              respjson.Field
+		Pattern          respjson.Field
+		Button           respjson.Field
 		X                respjson.Field
 		Y                respjson.Field
 		Path             respjson.Field
@@ -11880,6 +12298,64 @@ func (r *ToolChoiceFunctionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Use this option to force the model to call a specific tool on a remote MCP
+// server.
+type ToolChoiceMcp struct {
+	// The label of the MCP server to use.
+	ServerLabel string `json:"server_label,required"`
+	// For MCP tools, the type is always `mcp`.
+	Type constant.Mcp `json:"type,required"`
+	// The name of the tool to call on the server.
+	Name string `json:"name,nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ServerLabel respjson.Field
+		Type        respjson.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ToolChoiceMcp) RawJSON() string { return r.JSON.raw }
+func (r *ToolChoiceMcp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this ToolChoiceMcp to a ToolChoiceMcpParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ToolChoiceMcpParam.Overrides()
+func (r ToolChoiceMcp) ToParam() ToolChoiceMcpParam {
+	return param.Override[ToolChoiceMcpParam](json.RawMessage(r.RawJSON()))
+}
+
+// Use this option to force the model to call a specific tool on a remote MCP
+// server.
+//
+// The properties ServerLabel, Type are required.
+type ToolChoiceMcpParam struct {
+	// The label of the MCP server to use.
+	ServerLabel string `json:"server_label,required"`
+	// The name of the tool to call on the server.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// For MCP tools, the type is always `mcp`.
+	//
+	// This field can be elided, and will marshal its zero value as "mcp".
+	Type constant.Mcp `json:"type,required"`
+	paramObj
+}
+
+func (r ToolChoiceMcpParam) MarshalJSON() (data []byte, err error) {
+	type shadow ToolChoiceMcpParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ToolChoiceMcpParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Controls which (if any) tool is called by the model.
 //
 // `none` means the model will not call any tool and instead generates a message.
@@ -11908,11 +12384,10 @@ type ToolChoiceTypes struct {
 	// - `web_search_preview`
 	// - `computer_use_preview`
 	// - `code_interpreter`
-	// - `mcp`
 	// - `image_generation`
 	//
 	// Any of "file_search", "web_search_preview", "computer_use_preview",
-	// "web_search_preview_2025_03_11", "image_generation", "code_interpreter", "mcp".
+	// "web_search_preview_2025_03_11", "image_generation", "code_interpreter".
 	Type ToolChoiceTypesType `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -11946,7 +12421,6 @@ func (r ToolChoiceTypes) ToParam() ToolChoiceTypesParam {
 // - `web_search_preview`
 // - `computer_use_preview`
 // - `code_interpreter`
-// - `mcp`
 // - `image_generation`
 type ToolChoiceTypesType string
 
@@ -11957,7 +12431,6 @@ const (
 	ToolChoiceTypesTypeWebSearchPreview2025_03_11 ToolChoiceTypesType = "web_search_preview_2025_03_11"
 	ToolChoiceTypesTypeImageGeneration            ToolChoiceTypesType = "image_generation"
 	ToolChoiceTypesTypeCodeInterpreter            ToolChoiceTypesType = "code_interpreter"
-	ToolChoiceTypesTypeMcp                        ToolChoiceTypesType = "mcp"
 )
 
 // Indicates that the model should use a built-in tool to generate a response.
@@ -11974,11 +12447,10 @@ type ToolChoiceTypesParam struct {
 	// - `web_search_preview`
 	// - `computer_use_preview`
 	// - `code_interpreter`
-	// - `mcp`
 	// - `image_generation`
 	//
 	// Any of "file_search", "web_search_preview", "computer_use_preview",
-	// "web_search_preview_2025_03_11", "image_generation", "code_interpreter", "mcp".
+	// "web_search_preview_2025_03_11", "image_generation", "code_interpreter".
 	Type ToolChoiceTypesType `json:"type,omitzero,required"`
 	paramObj
 }
@@ -12155,6 +12627,11 @@ type ResponseNewParams struct {
 	// including visible output tokens and
 	// [reasoning tokens](https://platform.openai.com/docs/guides/reasoning).
 	MaxOutputTokens param.Opt[int64] `json:"max_output_tokens,omitzero"`
+	// The maximum number of total calls to built-in tools that can be processed in a
+	// response. This maximum number applies across all built-in tool calls, not per
+	// individual tool. Any further attempts to call a tool by the model will be
+	// ignored.
+	MaxToolCalls param.Opt[int64] `json:"max_tool_calls,omitzero"`
 	// Whether to allow the model to run tool calls in parallel.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
 	// The unique ID of the previous response to the model. Use this to create
@@ -12168,6 +12645,9 @@ type ResponseNewParams struct {
 	// focused and deterministic. We generally recommend altering this or `top_p` but
 	// not both.
 	Temperature param.Opt[float64] `json:"temperature,omitzero"`
+	// An integer between 0 and 20 specifying the number of most likely tokens to
+	// return at each token position, each with an associated log probability.
+	TopLogprobs param.Opt[int64] `json:"top_logprobs,omitzero"`
 	// An alternative to sampling with temperature, called nucleus sampling, where the
 	// model considers the results of the tokens with top_p probability mass. So 0.1
 	// means only the tokens comprising the top 10% probability mass are considered.
@@ -12181,18 +12661,19 @@ type ResponseNewParams struct {
 	// Specify additional output data to include in the model response. Currently
 	// supported values are:
 	//
+	//   - `code_interpreter_call.outputs`: Includes the outputs of python code execution
+	//     in code interpreter tool call items.
+	//   - `computer_call_output.output.image_url`: Include image urls from the computer
+	//     call output.
 	//   - `file_search_call.results`: Include the search results of the file search tool
 	//     call.
 	//   - `message.input_image.image_url`: Include image urls from the input message.
-	//   - `computer_call_output.output.image_url`: Include image urls from the computer
-	//     call output.
+	//   - `message.output_text.logprobs`: Include logprobs with assistant messages.
 	//   - `reasoning.encrypted_content`: Includes an encrypted version of reasoning
 	//     tokens in reasoning item outputs. This enables reasoning items to be used in
 	//     multi-turn conversations when using the Responses API statelessly (like when
 	//     the `store` parameter is set to `false`, or when an organization is enrolled
 	//     in the zero data retention program).
-	//   - `code_interpreter_call.outputs`: Includes the outputs of python code execution
-	//     in code interpreter tool call items.
 	Include []ResponseIncludable `json:"include,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
@@ -12204,25 +12685,25 @@ type ResponseNewParams struct {
 	// Reference to a prompt template and its variables.
 	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
 	Prompt ResponsePromptParam `json:"prompt,omitzero"`
-	// Specifies the latency tier to use for processing the request. This parameter is
-	// relevant for customers subscribed to the scale tier service:
+	// Specifies the processing type used for serving the request.
 	//
-	//   - If set to 'auto', and the Project is Scale tier enabled, the system will
-	//     utilize scale tier credits until they are exhausted.
-	//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
-	//     be processed using the default service tier with a lower uptime SLA and no
-	//     latency guarantee.
-	//   - If set to 'default', the request will be processed using the default service
-	//     tier with a lower uptime SLA and no latency guarantee.
-	//   - If set to 'flex', the request will be processed with the Flex Processing
-	//     service tier.
-	//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+	//   - If set to 'auto', then the request will be processed with the service tier
+	//     configured in the Project settings. Unless otherwise configured, the Project
+	//     will use 'default'.
+	//   - If set to 'default', then the requset will be processed with the standard
+	//     pricing and performance for the selected model.
+	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
+	//     'priority', then the request will be processed with the corresponding service
+	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
+	//     Priority processing.
 	//   - When not set, the default behavior is 'auto'.
 	//
-	// When this parameter is set, the response body will include the `service_tier`
-	// utilized.
+	// When the `service_tier` parameter is set, the response body will include the
+	// `service_tier` value based on the processing mode actually used to serve the
+	// request. This response value may be different from the value set in the
+	// parameter.
 	//
-	// Any of "auto", "default", "flex", "scale".
+	// Any of "auto", "default", "flex", "scale", "priority".
 	ServiceTier ResponseNewParamsServiceTier `json:"service_tier,omitzero"`
 	// The truncation strategy to use for the model response.
 	//
@@ -12316,30 +12797,31 @@ func (u *ResponseNewParamsInputUnion) asAny() any {
 	return nil
 }
 
-// Specifies the latency tier to use for processing the request. This parameter is
-// relevant for customers subscribed to the scale tier service:
+// Specifies the processing type used for serving the request.
 //
-//   - If set to 'auto', and the Project is Scale tier enabled, the system will
-//     utilize scale tier credits until they are exhausted.
-//   - If set to 'auto', and the Project is not Scale tier enabled, the request will
-//     be processed using the default service tier with a lower uptime SLA and no
-//     latency guarantee.
-//   - If set to 'default', the request will be processed using the default service
-//     tier with a lower uptime SLA and no latency guarantee.
-//   - If set to 'flex', the request will be processed with the Flex Processing
-//     service tier.
-//     [Learn more](https://platform.openai.com/docs/guides/flex-processing).
+//   - If set to 'auto', then the request will be processed with the service tier
+//     configured in the Project settings. Unless otherwise configured, the Project
+//     will use 'default'.
+//   - If set to 'default', then the requset will be processed with the standard
+//     pricing and performance for the selected model.
+//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
+//     'priority', then the request will be processed with the corresponding service
+//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
+//     Priority processing.
 //   - When not set, the default behavior is 'auto'.
 //
-// When this parameter is set, the response body will include the `service_tier`
-// utilized.
+// When the `service_tier` parameter is set, the response body will include the
+// `service_tier` value based on the processing mode actually used to serve the
+// request. This response value may be different from the value set in the
+// parameter.
 type ResponseNewParamsServiceTier string
 
 const (
-	ResponseNewParamsServiceTierAuto    ResponseNewParamsServiceTier = "auto"
-	ResponseNewParamsServiceTierDefault ResponseNewParamsServiceTier = "default"
-	ResponseNewParamsServiceTierFlex    ResponseNewParamsServiceTier = "flex"
-	ResponseNewParamsServiceTierScale   ResponseNewParamsServiceTier = "scale"
+	ResponseNewParamsServiceTierAuto     ResponseNewParamsServiceTier = "auto"
+	ResponseNewParamsServiceTierDefault  ResponseNewParamsServiceTier = "default"
+	ResponseNewParamsServiceTierFlex     ResponseNewParamsServiceTier = "flex"
+	ResponseNewParamsServiceTierScale    ResponseNewParamsServiceTier = "scale"
+	ResponseNewParamsServiceTierPriority ResponseNewParamsServiceTier = "priority"
 )
 
 // Only one field can be non-zero.
@@ -12350,11 +12832,12 @@ type ResponseNewParamsToolChoiceUnion struct {
 	OfToolChoiceMode param.Opt[ToolChoiceOptions] `json:",omitzero,inline"`
 	OfHostedTool     *ToolChoiceTypesParam        `json:",omitzero,inline"`
 	OfFunctionTool   *ToolChoiceFunctionParam     `json:",omitzero,inline"`
+	OfMcpTool        *ToolChoiceMcpParam          `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponseNewParamsToolChoiceUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfToolChoiceMode, u.OfHostedTool, u.OfFunctionTool)
+	return param.MarshalUnion(u, u.OfToolChoiceMode, u.OfHostedTool, u.OfFunctionTool, u.OfMcpTool)
 }
 func (u *ResponseNewParamsToolChoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -12367,14 +12850,16 @@ func (u *ResponseNewParamsToolChoiceUnion) asAny() any {
 		return u.OfHostedTool
 	} else if !param.IsOmitted(u.OfFunctionTool) {
 		return u.OfFunctionTool
+	} else if !param.IsOmitted(u.OfMcpTool) {
+		return u.OfMcpTool
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseNewParamsToolChoiceUnion) GetName() *string {
-	if vt := u.OfFunctionTool; vt != nil {
-		return &vt.Name
+func (u ResponseNewParamsToolChoiceUnion) GetServerLabel() *string {
+	if vt := u.OfMcpTool; vt != nil {
+		return &vt.ServerLabel
 	}
 	return nil
 }
@@ -12385,6 +12870,18 @@ func (u ResponseNewParamsToolChoiceUnion) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfFunctionTool; vt != nil {
 		return (*string)(&vt.Type)
+	} else if vt := u.OfMcpTool; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseNewParamsToolChoiceUnion) GetName() *string {
+	if vt := u.OfFunctionTool; vt != nil {
+		return (*string)(&vt.Name)
+	} else if vt := u.OfMcpTool; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
 	}
 	return nil
 }
