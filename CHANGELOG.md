@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.3 (2025-06-30)
+
+Full Changelog: [v1.8.2...v1.8.3](https://github.com/openai/openai-go/compare/v1.8.2...v1.8.3)
+
+### Chores
+
+* **ci:** only run for pushes and fork pull requests ([d6aab99](https://github.com/openai/openai-go/commit/d6aab99dadf267201add9812ba34ab2d5c70e0f4))
+
 ## 1.8.2 (2025-06-27)
 
 Full Changelog: [v1.8.1...v1.8.2](https://github.com/openai/openai-go/compare/v1.8.1...v1.8.2)
