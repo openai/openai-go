@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.8.3 (2025-07-08)
+
+Full Changelog: [v1.8.2...v1.8.3](https://github.com/openai/openai-go/compare/v1.8.2...v1.8.3)
+
+### Chores
+
+* **ci:** only run for pushes and fork pull requests ([d6aab99](https://github.com/openai/openai-go/commit/d6aab99dadf267201add9812ba34ab2d5c70e0f4))
+* **internal:** fix lint script for tests ([9c0a745](https://github.com/openai/openai-go/commit/9c0a74553c57ea5c29fb55f5ca2e122ca96031a4))
+* lint tests ([2bd38d2](https://github.com/openai/openai-go/commit/2bd38d248cf2097254d1821a44c87827805732d1))
+
 ## 1.8.2 (2025-06-27)
 
 Full Changelog: [v1.8.1...v1.8.2](https://github.com/openai/openai-go/compare/v1.8.1...v1.8.2)
