@@ -15,7 +15,8 @@ import (
 )
 
 func main() {
-	// Command line options
+	// --- Command line flags ---
+	// These allow the user to override the API key, set a custom timeout, and enable verbose output.
 	var (
 		apiKey  = flag.String("api-key", "", "OpenAI API key (overrides OPENAI_API_KEY)")
 		timeout = flag.Duration("timeout", 10*time.Second, "Request timeout")
@@ -23,12 +24,14 @@ func main() {
 	)
 	flag.Parse()
 
-	// Get API key
+	// --- API Key Resolution ---
+	// Priority: --api-key flag > OPENAI_API_KEY env var.
 	key := *apiKey
 	if key == "" {
 		key = os.Getenv("OPENAI_API_KEY")
 	}
 	if key == "" {
+		// Fail fast if no API key is provided.
 		fmt.Fprintln(os.Stderr, "No API key provided")
 		fmt.Fprintln(os.Stderr, " Use:")
 		fmt.Fprintln(os.Stderr, "   • --api-key 'sk-...'")
@@ -36,16 +39,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create client with timeout
+	// --- Context with Timeout ---
+	// Ensures the request does not hang indefinitely.
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
 
+	// --- Client Initialization ---
+	// The client is configured with the resolved API key and timeout.
 	client := openai.NewClient(
 		option.WithAPIKey(key),
 		option.WithRequestTimeout(*timeout),
 	)
 
-	// Verbose mode
+	// --- Verbose Logging ---
+	// Show diagnostic info if requested.
 	if *verbose {
 		fmt.Printf("Testing OpenAI API connection...\n")
 		fmt.Printf("Timeout: %v\n", *timeout)
@@ -57,7 +64,8 @@ func main() {
 		fmt.Println()
 	}
 
-	// Test connection
+	// --- API Validation ---
+	// The core check: attempt to list models. This is a lightweight endpoint and a good proxy for API health.
 	if err := validateAPI(ctx, client); err != nil {
 		handleError(err)
 		os.Exit(1)
@@ -69,16 +77,21 @@ func main() {
 	}
 }
 
+// validateAPI attempts a simple API call to verify connectivity and authentication.
+// Returns an error if the call fails for any reason.
 func validateAPI(ctx context.Context, client openai.Client) error {
-	// Simple test: list models
+	// Simple test: list models (minimal permissions required, fast response)
 	_, err := client.Models.List(ctx)
 	return err
 }
 
+// handleError provides structured, actionable error messages for common API issues.
+// This function distinguishes between API errors (with status codes) and generic/network errors.
 func handleError(err error) {
 	fmt.Fprintf(os.Stderr, "API Error: %v\n\n", err)
 
 	if apiErr, ok := err.(*apierror.Error); ok {
+		// Handle known API error codes with specific guidance.
 		switch apiErr.StatusCode {
 		case 401:
 			fmt.Fprintln(os.Stderr, " Authentication issue:")
@@ -98,10 +111,12 @@ func handleError(err error) {
 			fmt.Fprintln(os.Stderr, "   • OpenAI service is temporarily unavailable")
 			fmt.Fprintln(os.Stderr, "   • Try again in a few minutes")
 		default:
+			// For unhandled status codes, print the code and message for debugging.
 			fmt.Fprintf(os.Stderr, " Error code: %d\n", apiErr.StatusCode)
 			fmt.Fprintf(os.Stderr, " Message: %s\n", apiErr.Message)
 		}
 	} else {
+		// Handle network and unknown errors.
 		errStr := err.Error()
 		if strings.Contains(errStr, "Connection refused") {
 			fmt.Fprintln(os.Stderr, " Connection issue:")
@@ -112,9 +127,11 @@ func handleError(err error) {
 			fmt.Fprintln(os.Stderr, "   • Check your internet connection")
 			fmt.Fprintln(os.Stderr, "   • Increase timeout with --timeout 30s")
 		} else {
+			// Catch-all for unexpected errors.
 			fmt.Fprintf(os.Stderr, "Unknown error: %s\n", errStr)
 		}
 	}
 
+	// Always provide a pointer to the official error documentation for further troubleshooting.
 	fmt.Fprintln(os.Stderr, "\n For more help: https://platform.openai.com/docs/guides/error-codes")
 }
