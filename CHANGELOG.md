@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.10.0 (2025-07-10)
+
+Full Changelog: [v1.9.0...v1.10.0](https://github.com/openai/openai-go/compare/v1.9.0...v1.10.0)
+
+### Features
+
+* **api:** add file_url, fix event ID ([cb33971](https://github.com/openai/openai-go/commit/cb339714b65249844a87009192b2cf1508329673))
+
 ## 1.9.0 (2025-07-10)
 
 Full Changelog: [v1.8.3...v1.9.0](https://github.com/openai/openai-go/compare/v1.8.3...v1.9.0)
