@@ -4368,6 +4368,8 @@ type ResponseInputContentUnion struct {
 	// This field is from variant [ResponseInputFile].
 	FileData string `json:"file_data"`
 	// This field is from variant [ResponseInputFile].
+	FileURL string `json:"file_url"`
+	// This field is from variant [ResponseInputFile].
 	Filename string `json:"filename"`
 	JSON     struct {
 		Text     respjson.Field
@@ -4376,6 +4378,7 @@ type ResponseInputContentUnion struct {
 		FileID   respjson.Field
 		ImageURL respjson.Field
 		FileData respjson.Field
+		FileURL  respjson.Field
 		Filename respjson.Field
 		raw      string
 	} `json:"-"`
@@ -4518,6 +4521,14 @@ func (u ResponseInputContentUnionParam) GetFileData() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputContentUnionParam) GetFileURL() *string {
+	if vt := u.OfInputFile; vt != nil && vt.FileURL.Valid() {
+		return &vt.FileURL.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputContentUnionParam) GetFilename() *string {
 	if vt := u.OfInputFile; vt != nil && vt.Filename.Valid() {
 		return &vt.Filename.Value
@@ -4564,6 +4575,8 @@ type ResponseInputFile struct {
 	FileData string `json:"file_data"`
 	// The ID of the file to be sent to the model.
 	FileID string `json:"file_id,nullable"`
+	// The URL of the file to be sent to the model.
+	FileURL string `json:"file_url"`
 	// The name of the file to be sent to the model.
 	Filename string `json:"filename"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -4571,6 +4584,7 @@ type ResponseInputFile struct {
 		Type        respjson.Field
 		FileData    respjson.Field
 		FileID      respjson.Field
+		FileURL     respjson.Field
 		Filename    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -4600,6 +4614,8 @@ type ResponseInputFileParam struct {
 	FileID param.Opt[string] `json:"file_id,omitzero"`
 	// The content of the file to be sent to the model.
 	FileData param.Opt[string] `json:"file_data,omitzero"`
+	// The URL of the file to be sent to the model.
+	FileURL param.Opt[string] `json:"file_url,omitzero"`
 	// The name of the file to be sent to the model.
 	Filename param.Opt[string] `json:"filename,omitzero"`
 	// The type of the input item. Always `input_file`.
@@ -7584,7 +7600,7 @@ type ResponseMcpCallArgumentsDeltaEvent struct {
 	OutputIndex int64 `json:"output_index,required"`
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number,required"`
-	// The type of the event. Always 'response.mcp_call.arguments_delta'.
+	// The type of the event. Always 'response.mcp_call_arguments.delta'.
 	Type constant.ResponseMcpCallArgumentsDelta `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -7614,7 +7630,7 @@ type ResponseMcpCallArgumentsDoneEvent struct {
 	OutputIndex int64 `json:"output_index,required"`
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number,required"`
-	// The type of the event. Always 'response.mcp_call.arguments_done'.
+	// The type of the event. Always 'response.mcp_call_arguments.done'.
 	Type constant.ResponseMcpCallArgumentsDone `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -9204,7 +9220,7 @@ type ResponseOutputTextAnnotationAddedEvent struct {
 	OutputIndex int64 `json:"output_index,required"`
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number,required"`
-	// The type of the event. Always 'response.output_text_annotation.added'.
+	// The type of the event. Always 'response.output_text.annotation.added'.
 	Type constant.ResponseOutputTextAnnotationAdded `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -9283,6 +9299,8 @@ type ResponsePromptVariableUnion struct {
 	// This field is from variant [ResponseInputFile].
 	FileData string `json:"file_data"`
 	// This field is from variant [ResponseInputFile].
+	FileURL string `json:"file_url"`
+	// This field is from variant [ResponseInputFile].
 	Filename string `json:"filename"`
 	JSON     struct {
 		OfString respjson.Field
@@ -9292,6 +9310,7 @@ type ResponsePromptVariableUnion struct {
 		FileID   respjson.Field
 		ImageURL respjson.Field
 		FileData respjson.Field
+		FileURL  respjson.Field
 		Filename respjson.Field
 		raw      string
 	} `json:"-"`
@@ -9407,6 +9426,14 @@ func (u ResponsePromptVariableUnionParam) GetImageURL() *string {
 func (u ResponsePromptVariableUnionParam) GetFileData() *string {
 	if vt := u.OfInputFile; vt != nil && vt.FileData.Valid() {
 		return &vt.FileData.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponsePromptVariableUnionParam) GetFileURL() *string {
+	if vt := u.OfInputFile; vt != nil && vt.FileURL.Valid() {
+		return &vt.FileURL.Value
 	}
 	return nil
 }
@@ -10044,11 +10071,11 @@ type ResponseStreamEventUnion struct {
 	// "response.image_generation_call.generating",
 	// "response.image_generation_call.in_progress",
 	// "response.image_generation_call.partial_image",
-	// "response.mcp_call.arguments_delta", "response.mcp_call.arguments_done",
+	// "response.mcp_call_arguments.delta", "response.mcp_call_arguments.done",
 	// "response.mcp_call.completed", "response.mcp_call.failed",
 	// "response.mcp_call.in_progress", "response.mcp_list_tools.completed",
 	// "response.mcp_list_tools.failed", "response.mcp_list_tools.in_progress",
-	// "response.output_text_annotation.added", "response.queued",
+	// "response.output_text.annotation.added", "response.queued",
 	// "response.reasoning.delta", "response.reasoning.done",
 	// "response.reasoning_summary.delta", "response.reasoning_summary.done".
 	Type        string `json:"type"`
@@ -10308,9 +10335,9 @@ func (u ResponseStreamEventUnion) AsAny() anyResponseStreamEvent {
 		return u.AsResponseImageGenerationCallInProgress()
 	case "response.image_generation_call.partial_image":
 		return u.AsResponseImageGenerationCallPartialImage()
-	case "response.mcp_call.arguments_delta":
+	case "response.mcp_call_arguments.delta":
 		return u.AsResponseMcpCallArgumentsDelta()
-	case "response.mcp_call.arguments_done":
+	case "response.mcp_call_arguments.done":
 		return u.AsResponseMcpCallArgumentsDone()
 	case "response.mcp_call.completed":
 		return u.AsResponseMcpCallCompleted()
@@ -10324,7 +10351,7 @@ func (u ResponseStreamEventUnion) AsAny() anyResponseStreamEvent {
 		return u.AsResponseMcpListToolsFailed()
 	case "response.mcp_list_tools.in_progress":
 		return u.AsResponseMcpListToolsInProgress()
-	case "response.output_text_annotation.added":
+	case "response.output_text.annotation.added":
 		return u.AsResponseOutputTextAnnotationAdded()
 	case "response.queued":
 		return u.AsResponseQueued()
@@ -11030,6 +11057,8 @@ type ToolUnion struct {
 	Headers map[string]string `json:"headers"`
 	// This field is from variant [ToolMcp].
 	RequireApproval ToolMcpRequireApprovalUnion `json:"require_approval"`
+	// This field is from variant [ToolMcp].
+	ServerDescription string `json:"server_description"`
 	// This field is from variant [ToolCodeInterpreter].
 	Container ToolCodeInterpreterContainerUnion `json:"container"`
 	// This field is from variant [ToolImageGeneration].
@@ -11070,6 +11099,7 @@ type ToolUnion struct {
 		AllowedTools      respjson.Field
 		Headers           respjson.Field
 		RequireApproval   respjson.Field
+		ServerDescription respjson.Field
 		Container         respjson.Field
 		Background        respjson.Field
 		InputImageMask    respjson.Field
@@ -11157,16 +11187,19 @@ type ToolMcp struct {
 	Headers map[string]string `json:"headers,nullable"`
 	// Specify which of the MCP server's tools require approval.
 	RequireApproval ToolMcpRequireApprovalUnion `json:"require_approval,nullable"`
+	// Optional description of the MCP server, used to provide more context.
+	ServerDescription string `json:"server_description"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ServerLabel     respjson.Field
-		ServerURL       respjson.Field
-		Type            respjson.Field
-		AllowedTools    respjson.Field
-		Headers         respjson.Field
-		RequireApproval respjson.Field
-		ExtraFields     map[string]respjson.Field
-		raw             string
+		ServerLabel       respjson.Field
+		ServerURL         respjson.Field
+		Type              respjson.Field
+		AllowedTools      respjson.Field
+		Headers           respjson.Field
+		RequireApproval   respjson.Field
+		ServerDescription respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
@@ -11766,6 +11799,14 @@ func (u ToolUnionParam) GetRequireApproval() *ToolMcpRequireApprovalUnionParam {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ToolUnionParam) GetServerDescription() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerDescription.Valid() {
+		return &vt.ServerDescription.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ToolUnionParam) GetContainer() *ToolCodeInterpreterContainerUnionParam {
 	if vt := u.OfCodeInterpreter; vt != nil {
 		return &vt.Container
@@ -11892,6 +11933,8 @@ type ToolMcpParam struct {
 	ServerLabel string `json:"server_label,required"`
 	// The URL for the MCP server.
 	ServerURL string `json:"server_url,required"`
+	// Optional description of the MCP server, used to provide more context.
+	ServerDescription param.Opt[string] `json:"server_description,omitzero"`
 	// List of allowed tool names or a filter object.
 	AllowedTools ToolMcpAllowedToolsUnionParam `json:"allowed_tools,omitzero"`
 	// Optional HTTP headers to send to the MCP server. Use for authentication or other

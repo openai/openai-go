@@ -163,11 +163,11 @@ type FileObject struct {
 	// The object type, which is always `file`.
 	Object constant.File `json:"object,required"`
 	// The intended purpose of the file. Supported values are `assistants`,
-	// `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results`
-	// and `vision`.
+	// `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results`,
+	// `vision`, and `user_data`.
 	//
 	// Any of "assistants", "assistants_output", "batch", "batch_output", "fine-tune",
-	// "fine-tune-results", "vision".
+	// "fine-tune-results", "vision", "user_data".
 	Purpose FileObjectPurpose `json:"purpose,required"`
 	// Deprecated. The current status of the file, which can be either `uploaded`,
 	// `processed`, or `error`.
@@ -206,8 +206,8 @@ func (r *FileObject) UnmarshalJSON(data []byte) error {
 }
 
 // The intended purpose of the file. Supported values are `assistants`,
-// `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results`
-// and `vision`.
+// `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results`,
+// `vision`, and `user_data`.
 type FileObjectPurpose string
 
 const (
@@ -218,6 +218,7 @@ const (
 	FileObjectPurposeFineTune         FileObjectPurpose = "fine-tune"
 	FileObjectPurposeFineTuneResults  FileObjectPurpose = "fine-tune-results"
 	FileObjectPurposeVision           FileObjectPurpose = "vision"
+	FileObjectPurposeUserData         FileObjectPurpose = "user_data"
 )
 
 // Deprecated. The current status of the file, which can be either `uploaded`,
