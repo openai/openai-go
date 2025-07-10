@@ -128,8 +128,8 @@ type ResponseImageGenerationCallInProgress string   // Always "response.image_ge
 type ResponseImageGenerationCallPartialImage string // Always "response.image_generation_call.partial_image"
 type ResponseInProgress string                      // Always "response.in_progress"
 type ResponseIncomplete string                      // Always "response.incomplete"
-type ResponseMcpCallArgumentsDelta string           // Always "response.mcp_call.arguments_delta"
-type ResponseMcpCallArgumentsDone string            // Always "response.mcp_call.arguments_done"
+type ResponseMcpCallArgumentsDelta string           // Always "response.mcp_call_arguments.delta"
+type ResponseMcpCallArgumentsDone string            // Always "response.mcp_call_arguments.done"
 type ResponseMcpCallCompleted string                // Always "response.mcp_call.completed"
 type ResponseMcpCallFailed string                   // Always "response.mcp_call.failed"
 type ResponseMcpCallInProgress string               // Always "response.mcp_call.in_progress"
@@ -138,7 +138,7 @@ type ResponseMcpListToolsFailed string              // Always "response.mcp_list
 type ResponseMcpListToolsInProgress string          // Always "response.mcp_list_tools.in_progress"
 type ResponseOutputItemAdded string                 // Always "response.output_item.added"
 type ResponseOutputItemDone string                  // Always "response.output_item.done"
-type ResponseOutputTextAnnotationAdded string       // Always "response.output_text_annotation.added"
+type ResponseOutputTextAnnotationAdded string       // Always "response.output_text.annotation.added"
 type ResponseOutputTextDelta string                 // Always "response.output_text.delta"
 type ResponseOutputTextDone string                  // Always "response.output_text.done"
 type ResponseQueued string                          // Always "response.queued"
@@ -366,10 +366,10 @@ func (c ResponseImageGenerationCallPartialImage) Default() ResponseImageGenerati
 func (c ResponseInProgress) Default() ResponseInProgress { return "response.in_progress" }
 func (c ResponseIncomplete) Default() ResponseIncomplete { return "response.incomplete" }
 func (c ResponseMcpCallArgumentsDelta) Default() ResponseMcpCallArgumentsDelta {
-	return "response.mcp_call.arguments_delta"
+	return "response.mcp_call_arguments.delta"
 }
 func (c ResponseMcpCallArgumentsDone) Default() ResponseMcpCallArgumentsDone {
-	return "response.mcp_call.arguments_done"
+	return "response.mcp_call_arguments.done"
 }
 func (c ResponseMcpCallCompleted) Default() ResponseMcpCallCompleted {
 	return "response.mcp_call.completed"
@@ -392,7 +392,7 @@ func (c ResponseOutputItemAdded) Default() ResponseOutputItemAdded {
 }
 func (c ResponseOutputItemDone) Default() ResponseOutputItemDone { return "response.output_item.done" }
 func (c ResponseOutputTextAnnotationAdded) Default() ResponseOutputTextAnnotationAdded {
-	return "response.output_text_annotation.added"
+	return "response.output_text.annotation.added"
 }
 func (c ResponseOutputTextDelta) Default() ResponseOutputTextDelta {
 	return "response.output_text.delta"
