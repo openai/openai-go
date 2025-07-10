@@ -130,14 +130,14 @@ type TranscriptionUsageUnion struct {
 	// This field is from variant [TranscriptionUsageTokens].
 	InputTokenDetails TranscriptionUsageTokensInputTokenDetails `json:"input_token_details"`
 	// This field is from variant [TranscriptionUsageDuration].
-	Duration float64 `json:"duration"`
-	JSON     struct {
+	Seconds float64 `json:"seconds"`
+	JSON    struct {
 		InputTokens       respjson.Field
 		OutputTokens      respjson.Field
 		TotalTokens       respjson.Field
 		Type              respjson.Field
 		InputTokenDetails respjson.Field
-		Duration          respjson.Field
+		Seconds           respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -241,12 +241,12 @@ func (r *TranscriptionUsageTokensInputTokenDetails) UnmarshalJSON(data []byte) e
 // Usage statistics for models billed by audio input duration.
 type TranscriptionUsageDuration struct {
 	// Duration of the input audio in seconds.
-	Duration float64 `json:"duration,required"`
+	Seconds float64 `json:"seconds,required"`
 	// The type of the usage object. Always `duration` for this variant.
 	Type constant.Duration `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Duration    respjson.Field
+		Seconds     respjson.Field
 		Type        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
