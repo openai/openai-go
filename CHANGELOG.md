@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.0 (2025-07-10)
+
+Full Changelog: [v1.8.3...v1.9.0](https://github.com/openai/openai-go/compare/v1.8.3...v1.9.0)
+
+### Features
+
+* **client:** expand max streaming buffer size ([44390c8](https://github.com/openai/openai-go/commit/44390c81fdf33144f088b3ee8fef02269634dbe9))
+
 ## 1.8.3 (2025-07-08)
 
 Full Changelog: [v1.8.2...v1.8.3](https://github.com/openai/openai-go/compare/v1.8.2...v1.8.3)
