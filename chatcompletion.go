@@ -1364,6 +1364,19 @@ func UserMessage[T string | []ChatCompletionContentPartUnionParam](content T) Ch
 	return ChatCompletionMessageParamUnion{OfUser: &user}
 }
 
+func ChatCompletionMessageParamOfAssistant[
+	T string | []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion,
+](content T) ChatCompletionMessageParamUnion {
+	var assistant ChatCompletionAssistantMessageParam
+	switch v := any(content).(type) {
+	case string:
+		assistant.Content.OfString = param.NewOpt(v)
+	case []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion:
+		assistant.Content.OfArrayOfContentParts = v
+	}
+	return ChatCompletionMessageParamUnion{OfAssistant: &assistant}
+}
+
 func ToolMessage[T string | []ChatCompletionContentPartTextParam](content T, toolCallID string) ChatCompletionMessageParamUnion {
 	var tool ChatCompletionToolMessageParam
 	switch v := any(content).(type) {
