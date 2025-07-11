@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.1 (2025-07-11)
+
+Full Changelog: [v1.10.0...v1.10.1](https://github.com/openai/openai-go/compare/v1.10.0...v1.10.1)
+
+### Chores
+
+* **api:** specification cleanup ([5dbf6d2](https://github.com/openai/openai-go/commit/5dbf6d2cebe770d980db7888d705d1642ccd9cbc))
+* lint tests in subpackages ([02f440d](https://github.com/openai/openai-go/commit/02f440dc6d899d7816b9fec9c47c09b393a7dd6c))
+
 ## 1.10.0 (2025-07-10)
 
 Full Changelog: [v1.9.0...v1.10.0](https://github.com/openai/openai-go/compare/v1.9.0...v1.10.0)
