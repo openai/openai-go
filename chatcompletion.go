@@ -2287,6 +2287,7 @@ type ChatCompletionNewParams struct {
 	// about the
 	// [web search tool](https://platform.openai.com/docs/guides/tools-web-search?api-mode=chat).
 	WebSearchOptions ChatCompletionNewParamsWebSearchOptions `json:"web_search_options,omitzero"`
+	ExtraFields      map[string]interface{}                  `json:"extra_fields,omitzero"`
 	paramObj
 }
 
