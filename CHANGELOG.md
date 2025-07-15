@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.10.2 (2025-07-15)
+
+Full Changelog: [v1.10.1...v1.10.2](https://github.com/openai/openai-go/compare/v1.10.1...v1.10.2)
+
+### Chores
+
+* **api:** update realtime specs, build config ([3d2afda](https://github.com/openai/openai-go/commit/3d2afda006bd1f9e7ebde27b2873efa67e5e480d))
+
 ## 1.10.1 (2025-07-11)
 
 Full Changelog: [v1.10.0...v1.10.1](https://github.com/openai/openai-go/compare/v1.10.0...v1.10.1)
