@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.11.0 (2025-07-16)
+
+Full Changelog: [v1.10.3...v1.11.0](https://github.com/openai/openai-go/compare/v1.10.3...v1.11.0)
+
+### Features
+
+* **api:** manual updates ([97ed7fd](https://github.com/openai/openai-go/commit/97ed7fd1d432ad0144ec76bcebb61c9aaa1148de))
+
 ## 1.10.3 (2025-07-15)
 
 Full Changelog: [v1.10.2...v1.10.3](https://github.com/openai/openai-go/compare/v1.10.2...v1.10.3)
