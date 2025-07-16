@@ -66,9 +66,13 @@ type Function string                                // Always "function"
 type FunctionCall string                            // Always "function_call"
 type FunctionCallOutput string                      // Always "function_call_output"
 type Image string                                   // Always "image"
+type ImageEditCompleted string                      // Always "image_edit.completed"
+type ImageEditPartialImage string                   // Always "image_edit.partial_image"
 type ImageFile string                               // Always "image_file"
 type ImageGeneration string                         // Always "image_generation"
 type ImageGenerationCall string                     // Always "image_generation_call"
+type ImageGenerationCompleted string                // Always "image_generation.completed"
+type ImageGenerationPartialImage string             // Always "image_generation.partial_image"
 type ImageURL string                                // Always "image_url"
 type InputAudio string                              // Always "input_audio"
 type InputFile string                               // Always "input_file"
@@ -267,44 +271,52 @@ func (c Function) Default() Function                             { return "funct
 func (c FunctionCall) Default() FunctionCall                     { return "function_call" }
 func (c FunctionCallOutput) Default() FunctionCallOutput         { return "function_call_output" }
 func (c Image) Default() Image                                   { return "image" }
+func (c ImageEditCompleted) Default() ImageEditCompleted         { return "image_edit.completed" }
+func (c ImageEditPartialImage) Default() ImageEditPartialImage   { return "image_edit.partial_image" }
 func (c ImageFile) Default() ImageFile                           { return "image_file" }
 func (c ImageGeneration) Default() ImageGeneration               { return "image_generation" }
 func (c ImageGenerationCall) Default() ImageGenerationCall       { return "image_generation_call" }
-func (c ImageURL) Default() ImageURL                             { return "image_url" }
-func (c InputAudio) Default() InputAudio                         { return "input_audio" }
-func (c InputFile) Default() InputFile                           { return "input_file" }
-func (c InputImage) Default() InputImage                         { return "input_image" }
-func (c InputText) Default() InputText                           { return "input_text" }
-func (c JSONObject) Default() JSONObject                         { return "json_object" }
-func (c JSONSchema) Default() JSONSchema                         { return "json_schema" }
-func (c Keypress) Default() Keypress                             { return "keypress" }
-func (c LabelModel) Default() LabelModel                         { return "label_model" }
-func (c LastActiveAt) Default() LastActiveAt                     { return "last_active_at" }
-func (c List) Default() List                                     { return "list" }
-func (c LocalShell) Default() LocalShell                         { return "local_shell" }
-func (c LocalShellCall) Default() LocalShellCall                 { return "local_shell_call" }
-func (c LocalShellCallOutput) Default() LocalShellCallOutput     { return "local_shell_call_output" }
-func (c Logs) Default() Logs                                     { return "logs" }
-func (c Mcp) Default() Mcp                                       { return "mcp" }
-func (c McpApprovalRequest) Default() McpApprovalRequest         { return "mcp_approval_request" }
-func (c McpApprovalResponse) Default() McpApprovalResponse       { return "mcp_approval_response" }
-func (c McpCall) Default() McpCall                               { return "mcp_call" }
-func (c McpListTools) Default() McpListTools                     { return "mcp_list_tools" }
-func (c Message) Default() Message                               { return "message" }
-func (c MessageCreation) Default() MessageCreation               { return "message_creation" }
-func (c Model) Default() Model                                   { return "model" }
-func (c Move) Default() Move                                     { return "move" }
-func (c Multi) Default() Multi                                   { return "multi" }
-func (c OpenPage) Default() OpenPage                             { return "open_page" }
-func (c Other) Default() Other                                   { return "other" }
-func (c OutputAudio) Default() OutputAudio                       { return "output_audio" }
-func (c OutputText) Default() OutputText                         { return "output_text" }
-func (c Python) Default() Python                                 { return "python" }
-func (c Reasoning) Default() Reasoning                           { return "reasoning" }
-func (c Refusal) Default() Refusal                               { return "refusal" }
-func (c Response) Default() Response                             { return "response" }
-func (c ResponseAudioDelta) Default() ResponseAudioDelta         { return "response.audio.delta" }
-func (c ResponseAudioDone) Default() ResponseAudioDone           { return "response.audio.done" }
+func (c ImageGenerationCompleted) Default() ImageGenerationCompleted {
+	return "image_generation.completed"
+}
+func (c ImageGenerationPartialImage) Default() ImageGenerationPartialImage {
+	return "image_generation.partial_image"
+}
+func (c ImageURL) Default() ImageURL                         { return "image_url" }
+func (c InputAudio) Default() InputAudio                     { return "input_audio" }
+func (c InputFile) Default() InputFile                       { return "input_file" }
+func (c InputImage) Default() InputImage                     { return "input_image" }
+func (c InputText) Default() InputText                       { return "input_text" }
+func (c JSONObject) Default() JSONObject                     { return "json_object" }
+func (c JSONSchema) Default() JSONSchema                     { return "json_schema" }
+func (c Keypress) Default() Keypress                         { return "keypress" }
+func (c LabelModel) Default() LabelModel                     { return "label_model" }
+func (c LastActiveAt) Default() LastActiveAt                 { return "last_active_at" }
+func (c List) Default() List                                 { return "list" }
+func (c LocalShell) Default() LocalShell                     { return "local_shell" }
+func (c LocalShellCall) Default() LocalShellCall             { return "local_shell_call" }
+func (c LocalShellCallOutput) Default() LocalShellCallOutput { return "local_shell_call_output" }
+func (c Logs) Default() Logs                                 { return "logs" }
+func (c Mcp) Default() Mcp                                   { return "mcp" }
+func (c McpApprovalRequest) Default() McpApprovalRequest     { return "mcp_approval_request" }
+func (c McpApprovalResponse) Default() McpApprovalResponse   { return "mcp_approval_response" }
+func (c McpCall) Default() McpCall                           { return "mcp_call" }
+func (c McpListTools) Default() McpListTools                 { return "mcp_list_tools" }
+func (c Message) Default() Message                           { return "message" }
+func (c MessageCreation) Default() MessageCreation           { return "message_creation" }
+func (c Model) Default() Model                               { return "model" }
+func (c Move) Default() Move                                 { return "move" }
+func (c Multi) Default() Multi                               { return "multi" }
+func (c OpenPage) Default() OpenPage                         { return "open_page" }
+func (c Other) Default() Other                               { return "other" }
+func (c OutputAudio) Default() OutputAudio                   { return "output_audio" }
+func (c OutputText) Default() OutputText                     { return "output_text" }
+func (c Python) Default() Python                             { return "python" }
+func (c Reasoning) Default() Reasoning                       { return "reasoning" }
+func (c Refusal) Default() Refusal                           { return "refusal" }
+func (c Response) Default() Response                         { return "response" }
+func (c ResponseAudioDelta) Default() ResponseAudioDelta     { return "response.audio.delta" }
+func (c ResponseAudioDone) Default() ResponseAudioDone       { return "response.audio.done" }
 func (c ResponseAudioTranscriptDelta) Default() ResponseAudioTranscriptDelta {
 	return "response.audio.transcript.delta"
 }
@@ -552,9 +564,13 @@ func (c Function) MarshalJSON() ([]byte, error)                              { r
 func (c FunctionCall) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c FunctionCallOutput) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c Image) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
+func (c ImageEditCompleted) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c ImageEditPartialImage) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c ImageFile) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c ImageGeneration) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c ImageGenerationCall) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c ImageGenerationCompleted) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c ImageGenerationPartialImage) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c ImageURL) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c InputAudio) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c InputFile) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
