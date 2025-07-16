@@ -8578,7 +8578,7 @@ func init() {
 
 // A refusal from the model.
 type ResponseOutputRefusal struct {
-	// The refusal explanationfrom the model.
+	// The refusal explanation from the model.
 	Refusal string `json:"refusal,required"`
 	// The type of the refusal. Always `refusal`.
 	Type constant.Refusal `json:"type,required"`
@@ -8610,7 +8610,7 @@ func (r ResponseOutputRefusal) ToParam() ResponseOutputRefusalParam {
 //
 // The properties Refusal, Type are required.
 type ResponseOutputRefusalParam struct {
-	// The refusal explanationfrom the model.
+	// The refusal explanation from the model.
 	Refusal string `json:"refusal,required"`
 	// The type of the refusal. Always `refusal`.
 	//
@@ -11077,6 +11077,8 @@ type ToolUnion struct {
 	// This field is from variant [ToolImageGeneration].
 	Background string `json:"background"`
 	// This field is from variant [ToolImageGeneration].
+	InputFidelity string `json:"input_fidelity"`
+	// This field is from variant [ToolImageGeneration].
 	InputImageMask ToolImageGenerationInputImageMask `json:"input_image_mask"`
 	// This field is from variant [ToolImageGeneration].
 	Model string `json:"model"`
@@ -11115,6 +11117,7 @@ type ToolUnion struct {
 		ServerDescription respjson.Field
 		Container         respjson.Field
 		Background        respjson.Field
+		InputFidelity     respjson.Field
 		InputImageMask    respjson.Field
 		Model             respjson.Field
 		Moderation        respjson.Field
@@ -11475,6 +11478,12 @@ type ToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. This parameter is only supported
+	// for `gpt-image-1`. Supports `high` and `low`. Defaults to `low`.
+	//
+	// Any of "high", "low".
+	InputFidelity string `json:"input_fidelity,nullable"`
 	// Optional mask for inpainting. Contains `image_url` (string, optional) and
 	// `file_id` (string, optional).
 	InputImageMask ToolImageGenerationInputImageMask `json:"input_image_mask"`
@@ -11510,6 +11519,7 @@ type ToolImageGeneration struct {
 	JSON struct {
 		Type              respjson.Field
 		Background        respjson.Field
+		InputFidelity     respjson.Field
 		InputImageMask    respjson.Field
 		Model             respjson.Field
 		Moderation        respjson.Field
@@ -11831,6 +11841,14 @@ func (u ToolUnionParam) GetContainer() *ToolCodeInterpreterContainerUnionParam {
 func (u ToolUnionParam) GetBackground() *string {
 	if vt := u.OfImageGeneration; vt != nil {
 		return &vt.Background
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ToolUnionParam) GetInputFidelity() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.InputFidelity
 	}
 	return nil
 }
@@ -12161,6 +12179,12 @@ type ToolImageGenerationParam struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. This parameter is only supported
+	// for `gpt-image-1`. Supports `high` and `low`. Defaults to `low`.
+	//
+	// Any of "high", "low".
+	InputFidelity string `json:"input_fidelity,omitzero"`
 	// Background type for the generated image. One of `transparent`, `opaque`, or
 	// `auto`. Default: `auto`.
 	//
@@ -12210,6 +12234,9 @@ func (r *ToolImageGenerationParam) UnmarshalJSON(data []byte) error {
 func init() {
 	apijson.RegisterFieldValidator[ToolImageGenerationParam](
 		"background", "transparent", "opaque", "auto",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"input_fidelity", "high", "low",
 	)
 	apijson.RegisterFieldValidator[ToolImageGenerationParam](
 		"model", "gpt-image-1",
