@@ -152,8 +152,6 @@ type ResponseReasoningSummaryTextDelta string       // Always "response.reasonin
 type ResponseReasoningSummaryTextDone string        // Always "response.reasoning_summary_text.done"
 type ResponseReasoningSummaryDelta string           // Always "response.reasoning_summary.delta"
 type ResponseReasoningSummaryDone string            // Always "response.reasoning_summary.done"
-type ResponseReasoningDelta string                  // Always "response.reasoning.delta"
-type ResponseReasoningDone string                   // Always "response.reasoning.done"
 type ResponseRefusalDelta string                    // Always "response.refusal.delta"
 type ResponseRefusalDone string                     // Always "response.refusal.done"
 type ResponseWebSearchCallCompleted string          // Always "response.web_search_call.completed"
@@ -429,10 +427,8 @@ func (c ResponseReasoningSummaryDelta) Default() ResponseReasoningSummaryDelta {
 func (c ResponseReasoningSummaryDone) Default() ResponseReasoningSummaryDone {
 	return "response.reasoning_summary.done"
 }
-func (c ResponseReasoningDelta) Default() ResponseReasoningDelta { return "response.reasoning.delta" }
-func (c ResponseReasoningDone) Default() ResponseReasoningDone   { return "response.reasoning.done" }
-func (c ResponseRefusalDelta) Default() ResponseRefusalDelta     { return "response.refusal.delta" }
-func (c ResponseRefusalDone) Default() ResponseRefusalDone       { return "response.refusal.done" }
+func (c ResponseRefusalDelta) Default() ResponseRefusalDelta { return "response.refusal.delta" }
+func (c ResponseRefusalDone) Default() ResponseRefusalDone   { return "response.refusal.done" }
 func (c ResponseWebSearchCallCompleted) Default() ResponseWebSearchCallCompleted {
 	return "response.web_search_call.completed"
 }
@@ -654,8 +650,6 @@ func (c ResponseReasoningSummaryTextDelta) MarshalJSON() ([]byte, error) { retur
 func (c ResponseReasoningSummaryTextDone) MarshalJSON() ([]byte, error)  { return marshalString(c) }
 func (c ResponseReasoningSummaryDelta) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c ResponseReasoningSummaryDone) MarshalJSON() ([]byte, error)      { return marshalString(c) }
-func (c ResponseReasoningDelta) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c ResponseReasoningDone) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c ResponseRefusalDelta) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c ResponseRefusalDone) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ResponseWebSearchCallCompleted) MarshalJSON() ([]byte, error)    { return marshalString(c) }
