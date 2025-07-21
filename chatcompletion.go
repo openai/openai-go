@@ -180,7 +180,7 @@ type ChatCompletion struct {
 	//   - If set to 'auto', then the request will be processed with the service tier
 	//     configured in the Project settings. Unless otherwise configured, the Project
 	//     will use 'default'.
-	//   - If set to 'default', then the requset will be processed with the standard
+	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
 	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
 	//     'priority', then the request will be processed with the corresponding service
@@ -282,7 +282,7 @@ func (r *ChatCompletionChoiceLogprobs) UnmarshalJSON(data []byte) error {
 //   - If set to 'auto', then the request will be processed with the service tier
 //     configured in the Project settings. Unless otherwise configured, the Project
 //     will use 'default'.
-//   - If set to 'default', then the requset will be processed with the standard
+//   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
 //   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
 //     'priority', then the request will be processed with the corresponding service
@@ -547,9 +547,6 @@ const (
 	ChatCompletionAudioParamVoiceBallad  ChatCompletionAudioParamVoice = "ballad"
 	ChatCompletionAudioParamVoiceCoral   ChatCompletionAudioParamVoice = "coral"
 	ChatCompletionAudioParamVoiceEcho    ChatCompletionAudioParamVoice = "echo"
-	ChatCompletionAudioParamVoiceFable   ChatCompletionAudioParamVoice = "fable"
-	ChatCompletionAudioParamVoiceOnyx    ChatCompletionAudioParamVoice = "onyx"
-	ChatCompletionAudioParamVoiceNova    ChatCompletionAudioParamVoice = "nova"
 	ChatCompletionAudioParamVoiceSage    ChatCompletionAudioParamVoice = "sage"
 	ChatCompletionAudioParamVoiceShimmer ChatCompletionAudioParamVoice = "shimmer"
 	ChatCompletionAudioParamVoiceVerse   ChatCompletionAudioParamVoice = "verse"
@@ -577,7 +574,7 @@ type ChatCompletionChunk struct {
 	//   - If set to 'auto', then the request will be processed with the service tier
 	//     configured in the Project settings. Unless otherwise configured, the Project
 	//     will use 'default'.
-	//   - If set to 'default', then the requset will be processed with the standard
+	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
 	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
 	//     'priority', then the request will be processed with the corresponding service
@@ -794,7 +791,7 @@ func (r *ChatCompletionChunkChoiceLogprobs) UnmarshalJSON(data []byte) error {
 //   - If set to 'auto', then the request will be processed with the service tier
 //     configured in the Project settings. Unless otherwise configured, the Project
 //     will use 'default'.
-//   - If set to 'default', then the requset will be processed with the standard
+//   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
 //   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
 //     'priority', then the request will be processed with the corresponding service
@@ -2227,7 +2224,7 @@ type ChatCompletionNewParams struct {
 	//   - If set to 'auto', then the request will be processed with the service tier
 	//     configured in the Project settings. Unless otherwise configured, the Project
 	//     will use 'default'.
-	//   - If set to 'default', then the requset will be processed with the standard
+	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
 	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
 	//     'priority', then the request will be processed with the corresponding service
@@ -2429,7 +2426,7 @@ func (u ChatCompletionNewParamsResponseFormatUnion) GetType() *string {
 //   - If set to 'auto', then the request will be processed with the service tier
 //     configured in the Project settings. Unless otherwise configured, the Project
 //     will use 'default'.
-//   - If set to 'default', then the requset will be processed with the standard
+//   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
 //   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
 //     'priority', then the request will be processed with the corresponding service
