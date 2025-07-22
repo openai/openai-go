@@ -710,8 +710,6 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseOutputTextAnnotationAddedEvent">ResponseOutputTextAnnotationAddedEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponsePrompt">ResponsePrompt</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseQueuedEvent">ResponseQueuedEvent</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseReasoningDeltaEvent">ResponseReasoningDeltaEvent</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseReasoningDoneEvent">ResponseReasoningDoneEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseReasoningItem">ResponseReasoningItem</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseReasoningSummaryDeltaEvent">ResponseReasoningSummaryDeltaEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/responses#ResponseReasoningSummaryDoneEvent">ResponseReasoningSummaryDoneEvent</a>

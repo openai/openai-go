@@ -349,7 +349,7 @@ type FunctionDefinition struct {
 	// set to true, the model will follow the exact schema defined in the `parameters`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
-	// [function calling guide](docs/guides/function-calling).
+	// [function calling guide](https://platform.openai.com/docs/guides/function-calling).
 	Strict bool `json:"strict,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -386,7 +386,7 @@ type FunctionDefinitionParam struct {
 	// set to true, the model will follow the exact schema defined in the `parameters`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
-	// [function calling guide](docs/guides/function-calling).
+	// [function calling guide](https://platform.openai.com/docs/guides/function-calling).
 	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the function does, used by the model to choose when and
 	// how to call the function.
