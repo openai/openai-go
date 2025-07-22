@@ -28,7 +28,7 @@ func NewDecoder(res *http.Response) Decoder {
 
 	var decoder Decoder
 	contentType := res.Header.Get("content-type")
-	if t, ok := decoderTypes[contentType]; ok {
+	if t, ok := decoderTypes[strings.ToLower(contentType)]; ok {
 		decoder = t(res.Body)
 	} else {
 		scn := bufio.NewScanner(res.Body)
