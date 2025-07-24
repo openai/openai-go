@@ -38,7 +38,7 @@ import (
 // WithEndpoint configures this client to connect to an Azure OpenAI endpoint.
 //
 //   - endpoint - the Azure OpenAI endpoint to connect to. Ex: https://<azure-openai-resource>.openai.azure.com
-//   - apiVersion - the Azure OpenAI API version to target (ex: 2024-06-01). See [Azure OpenAI apiversions] for current API versions. This value cannot be empty.
+//   - apiVersion - the Azure OpenAI API version to target (ex: 2024-10-21). See [Azure OpenAI apiversions] for current API versions. This value cannot be empty.
 //
 // This function should be paired with a call to authenticate, like [azure.WithAPIKey] or [azure.WithTokenCredential], similar to this:
 //
@@ -53,8 +53,6 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 	if !strings.HasSuffix(endpoint, "/") {
 		endpoint += "/"
 	}
-
-	endpoint += "openai/"
 
 	withQueryAdd := option.WithQueryAdd("api-version", apiVersion)
 	withEndpoint := option.WithBaseURL(endpoint)
@@ -72,7 +70,7 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
 		if apiVersion == "" {
-			return errors.New("apiVersion is an empty string, but needs to be set. See https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning for details.")
+			return errors.New("apiVersion is an empty string, but needs to be set. See https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning for details")
 		}
 
 		if err := withQueryAdd.Apply(rc); err != nil {
@@ -159,19 +157,19 @@ func WithAPIKey(apiKey string) option.RequestOption {
 // jsonRoutes have JSON payloads - we'll deserialize looking for a .model field in there
 // so we won't have to worry about individual types for completions vs embeddings, etc...
 var jsonRoutes = map[string]bool{
-	"/openai/completions":        true,
-	"/openai/chat/completions":   true,
-	"/openai/embeddings":         true,
-	"/openai/audio/speech":       true,
-	"/openai/images/generations": true,
+	"/completions":        true,
+	"/chat/completions":   true,
+	"/embeddings":         true,
+	"/audio/speech":       true,
+	"/images/generations": true,
 }
 
 // multipartRoutes have mime/multipart payloads. These are less generic - we're very much
 // expecting a transcription or translation payload for these.
 var multipartRoutes = map[string]bool{
-	"/openai/audio/transcriptions": true,
-	"/openai/audio/translations":   true,
-	"/openai/images/edits":         true,
+	"/audio/transcriptions": true,
+	"/audio/translations":   true,
+	"/images/edits":         true,
 }
 
 // getReplacementPathWithDeployment parses the request body to extract out the Model parameter (or equivalent)
@@ -209,7 +207,8 @@ func getJSONRoute(req *http.Request) (string, error) {
 	}
 
 	escapedDeployment := url.PathEscape(v.Model)
-	return strings.Replace(req.URL.Path, "/openai/", "/openai/deployments/"+escapedDeployment+"/", 1), nil
+	// Convert path from /chat/completions to /openai/deployments/{deployment-id}/chat/completions
+	return "/openai/deployments/" + escapedDeployment + req.URL.Path, nil
 }
 
 func getMultipartRoute(req *http.Request) (string, error) {
@@ -254,7 +253,8 @@ func getMultipartRoute(req *http.Request) (string, error) {
 			}
 
 			escapedDeployment := url.PathEscape(string(modelBytes))
-			return strings.Replace(req.URL.Path, "/openai/", "/openai/deployments/"+escapedDeployment+"/", 1), nil
+			// Convert path from /audio/transcriptions to /openai/deployments/{deployment-id}/audio/transcriptions
+			return "/openai/deployments/" + escapedDeployment + req.URL.Path, nil
 		}
 	}
 }
