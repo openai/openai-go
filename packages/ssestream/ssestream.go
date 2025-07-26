@@ -136,13 +136,6 @@ func NewStream[T any](decoder Decoder, err error) *Stream[T] {
 	}
 }
 
-var eventPrefixesToBeParsed = []string{
-	"response.",
-	"image_generation.",
-	"image_generation.",
-	"transcript.",
-}
-
 // Next returns false if the stream has ended or an error occurred.
 // Call Stream.Current() to get the current value.
 // Call Stream.Err() to get the error.
@@ -172,15 +165,7 @@ func (s *Stream[T]) Next() bool {
 
 		var nxt T
 
-		hasPrefixToParse := false
-		for _, prefix := range eventPrefixesToBeParsed {
-			if strings.HasPrefix(s.decoder.Event().Type, prefix) {
-				hasPrefixToParse = true
-				break
-			}
-		}
-
-		if s.decoder.Event().Type == "" || hasPrefixToParse {
+		if s.decoder.Event().Type == "" || !strings.HasPrefix(s.decoder.Event().Type, "thread.") {
 			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
 			if ep.Exists() {
 				s.err = fmt.Errorf("received error while streaming: %s", ep.String())
