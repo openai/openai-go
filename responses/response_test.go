@@ -51,14 +51,16 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			},
 			Version: openai.String("version"),
 		},
+		PromptCacheKey: openai.String("prompt-cache-key-1234"),
 		Reasoning: shared.ReasoningParam{
 			Effort:          shared.ReasoningEffortLow,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
 			Summary:         shared.ReasoningSummaryAuto,
 		},
-		ServiceTier: responses.ResponseNewParamsServiceTierAuto,
-		Store:       openai.Bool(true),
-		Temperature: openai.Float(1),
+		SafetyIdentifier: openai.String("safety-identifier-1234"),
+		ServiceTier:      responses.ResponseNewParamsServiceTierAuto,
+		Store:            openai.Bool(true),
+		Temperature:      openai.Float(1),
 		Text: responses.ResponseTextConfigParam{
 			Format: responses.ResponseFormatTextConfigUnionParam{
 				OfText: &shared.ResponseFormatTextParam{},
