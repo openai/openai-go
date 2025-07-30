@@ -965,6 +965,59 @@ func (r *ChatCompletionContentPartFileFileParam) UnmarshalJSON(data []byte) erro
 }
 
 // Learn about [image inputs](https://platform.openai.com/docs/guides/vision).
+type ChatCompletionContentPartImage struct {
+	ImageURL ChatCompletionContentPartImageImageURL `json:"image_url,required"`
+	// The type of the content part.
+	Type constant.ImageURL `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ImageURL    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionContentPartImage) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionContentPartImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this ChatCompletionContentPartImage to a
+// ChatCompletionContentPartImageParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ChatCompletionContentPartImageParam.Overrides()
+func (r ChatCompletionContentPartImage) ToParam() ChatCompletionContentPartImageParam {
+	return param.Override[ChatCompletionContentPartImageParam](json.RawMessage(r.RawJSON()))
+}
+
+type ChatCompletionContentPartImageImageURL struct {
+	// Either a URL of the image or the base64 encoded image data.
+	URL string `json:"url,required" format:"uri"`
+	// Specifies the detail level of the image. Learn more in the
+	// [Vision guide](https://platform.openai.com/docs/guides/vision#low-or-high-fidelity-image-understanding).
+	//
+	// Any of "auto", "low", "high".
+	Detail string `json:"detail"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		URL         respjson.Field
+		Detail      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionContentPartImageImageURL) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionContentPartImageImageURL) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Learn about [image inputs](https://platform.openai.com/docs/guides/vision).
 //
 // The properties ImageURL, Type are required.
 type ChatCompletionContentPartImageParam struct {
@@ -1072,6 +1125,38 @@ func (r ChatCompletionContentPartRefusalParam) MarshalJSON() (data []byte, err e
 }
 func (r *ChatCompletionContentPartRefusalParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Learn about
+// [text inputs](https://platform.openai.com/docs/guides/text-generation).
+type ChatCompletionContentPartText struct {
+	// The text content.
+	Text string `json:"text,required"`
+	// The type of the content part.
+	Type constant.Text `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionContentPartText) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionContentPartText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this ChatCompletionContentPartText to a
+// ChatCompletionContentPartTextParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ChatCompletionContentPartTextParam.Overrides()
+func (r ChatCompletionContentPartText) ToParam() ChatCompletionContentPartTextParam {
+	return param.Override[ChatCompletionContentPartTextParam](json.RawMessage(r.RawJSON()))
 }
 
 // Learn about
@@ -1748,11 +1833,15 @@ func (u *ChatCompletionPredictionContentContentUnionParam) asAny() any {
 type ChatCompletionStoreMessage struct {
 	// The identifier of the chat message.
 	ID string `json:"id,required"`
+	// If a content parts array was provided, this is an array of `text` and
+	// `image_url` parts. Otherwise, null.
+	ContentParts []ChatCompletionStoreMessageContentPartUnion `json:"content_parts,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID           respjson.Field
+		ContentParts respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 	ChatCompletionMessage
 }
@@ -1760,6 +1849,41 @@ type ChatCompletionStoreMessage struct {
 // Returns the unmodified JSON received from the API
 func (r ChatCompletionStoreMessage) RawJSON() string { return r.JSON.raw }
 func (r *ChatCompletionStoreMessage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ChatCompletionStoreMessageContentPartUnion contains all possible properties and
+// values from [ChatCompletionContentPartText], [ChatCompletionContentPartImage].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ChatCompletionStoreMessageContentPartUnion struct {
+	// This field is from variant [ChatCompletionContentPartText].
+	Text string `json:"text"`
+	Type string `json:"type"`
+	// This field is from variant [ChatCompletionContentPartImage].
+	ImageURL ChatCompletionContentPartImageImageURL `json:"image_url"`
+	JSON     struct {
+		Text     respjson.Field
+		Type     respjson.Field
+		ImageURL respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u ChatCompletionStoreMessageContentPartUnion) AsTextContentPart() (v ChatCompletionContentPartText) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ChatCompletionStoreMessageContentPartUnion) AsImageContentPart() (v ChatCompletionContentPartImage) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ChatCompletionStoreMessageContentPartUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ChatCompletionStoreMessageContentPartUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -2126,9 +2250,21 @@ type ChatCompletionNewParams struct {
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
-	// A stable identifier for your end-users. Used to boost cache hit rates by better
-	// bucketing similar requests and to help OpenAI detect and prevent abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
+	// Used by OpenAI to cache responses for similar requests to optimize your cache
+	// hit rates. Replaces the `user` field.
+	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
+	// A stable identifier used to help detect users of your application that may be
+	// violating OpenAI's usage policies. The IDs should be a string that uniquely
+	// identifies each user. We recommend hashing their username or email address, in
+	// order to avoid sending us any identifying information.
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
+	// This field is being replaced by `safety_identifier` and `prompt_cache_key`. Use
+	// `prompt_cache_key` instead to maintain caching optimizations. A stable
+	// identifier for your end-users. Used to boost cache hit rates by better bucketing
+	// similar requests and to help OpenAI detect and prevent abuse.
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Parameters for audio output. Required when audio output is requested with
 	// `modalities: ["audio"]`.

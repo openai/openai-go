@@ -69,12 +69,14 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 			},
 		},
 		PresencePenalty: openai.Float(-2),
+		PromptCacheKey:  openai.String("prompt-cache-key-1234"),
 		ReasoningEffort: shared.ReasoningEffortLow,
 		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
 			OfText: &shared.ResponseFormatTextParam{},
 		},
-		Seed:        openai.Int(-9007199254740991),
-		ServiceTier: openai.ChatCompletionNewParamsServiceTierAuto,
+		SafetyIdentifier: openai.String("safety-identifier-1234"),
+		Seed:             openai.Int(-9007199254740991),
+		ServiceTier:      openai.ChatCompletionNewParamsServiceTierAuto,
 		Stop: openai.ChatCompletionNewParamsStopUnion{
 			OfString: openai.String("\n"),
 		},

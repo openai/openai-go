@@ -755,11 +755,21 @@ type Response struct {
 	// Reference to a prompt template and its variables.
 	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
 	Prompt ResponsePrompt `json:"prompt,nullable"`
+	// Used by OpenAI to cache responses for similar requests to optimize your cache
+	// hit rates. Replaces the `user` field.
+	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+	PromptCacheKey string `json:"prompt_cache_key"`
 	// **o-series models only**
 	//
 	// Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 	Reasoning shared.Reasoning `json:"reasoning,nullable"`
+	// A stable identifier used to help detect users of your application that may be
+	// violating OpenAI's usage policies. The IDs should be a string that uniquely
+	// identifies each user. We recommend hashing their username or email address, in
+	// order to avoid sending us any identifying information.
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	SafetyIdentifier string `json:"safety_identifier"`
 	// Specifies the processing type used for serving the request.
 	//
 	//   - If set to 'auto', then the request will be processed with the service tier
@@ -808,9 +818,13 @@ type Response struct {
 	// Represents token usage details including input tokens, output tokens, a
 	// breakdown of output tokens, and the total tokens used.
 	Usage ResponseUsage `json:"usage"`
-	// A stable identifier for your end-users. Used to boost cache hit rates by better
-	// bucketing similar requests and to help OpenAI detect and prevent abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
+	// This field is being replaced by `safety_identifier` and `prompt_cache_key`. Use
+	// `prompt_cache_key` instead to maintain caching optimizations. A stable
+	// identifier for your end-users. Used to boost cache hit rates by better bucketing
+	// similar requests and to help OpenAI detect and prevent abuse.
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	//
+	// Deprecated: deprecated
 	User string `json:"user"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -833,7 +847,9 @@ type Response struct {
 		MaxToolCalls       respjson.Field
 		PreviousResponseID respjson.Field
 		Prompt             respjson.Field
+		PromptCacheKey     respjson.Field
 		Reasoning          respjson.Field
+		SafetyIdentifier   respjson.Field
 		ServiceTier        respjson.Field
 		Status             respjson.Field
 		Text               respjson.Field
@@ -12741,9 +12757,21 @@ type ResponseNewParams struct {
 	//
 	// We generally recommend altering this or `temperature` but not both.
 	TopP param.Opt[float64] `json:"top_p,omitzero"`
-	// A stable identifier for your end-users. Used to boost cache hit rates by better
-	// bucketing similar requests and to help OpenAI detect and prevent abuse.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
+	// Used by OpenAI to cache responses for similar requests to optimize your cache
+	// hit rates. Replaces the `user` field.
+	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
+	// A stable identifier used to help detect users of your application that may be
+	// violating OpenAI's usage policies. The IDs should be a string that uniquely
+	// identifies each user. We recommend hashing their username or email address, in
+	// order to avoid sending us any identifying information.
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
+	// This field is being replaced by `safety_identifier` and `prompt_cache_key`. Use
+	// `prompt_cache_key` instead to maintain caching optimizations. A stable
+	// identifier for your end-users. Used to boost cache hit rates by better bucketing
+	// similar requests and to help OpenAI detect and prevent abuse.
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
 	// Specify additional output data to include in the model response. Currently
 	// supported values are:
