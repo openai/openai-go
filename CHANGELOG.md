@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.12.0 (2025-07-30)
+
+Full Changelog: [v1.11.1...v1.12.0](https://github.com/openai/openai-go/compare/v1.11.1...v1.12.0)
+
+### Features
+
+* **api:** manual updates ([16312ea](https://github.com/openai/openai-go/commit/16312ea2fea76c7cd2db4f38dfa10e0839f52d3e))
+
+
+### Chores
+
+* **client:** refactor streaming slightly to better future proof it ([0b9cb85](https://github.com/openai/openai-go/commit/0b9cb85a6bf0f2386e5db13aed34fbfad645efbe))
+
 ## 1.11.1 (2025-07-22)
 
 Full Changelog: [v1.11.0...v1.11.1](https://github.com/openai/openai-go/compare/v1.11.0...v1.11.1)
