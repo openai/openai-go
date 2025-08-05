@@ -183,7 +183,7 @@ func TestVectorStoreSearchWithOptionalParams(t *testing.T) {
 			},
 			MaxNumResults: openai.Int(1),
 			RankingOptions: openai.VectorStoreSearchParamsRankingOptions{
-				Ranker:         "auto",
+				Ranker:         "none",
 				ScoreThreshold: openai.Float(0),
 			},
 			RewriteQuery: openai.Bool(true),
