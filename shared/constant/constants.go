@@ -104,6 +104,7 @@ type OutputAudio string                             // Always "output_audio"
 type OutputText string                              // Always "output_text"
 type Python string                                  // Always "python"
 type Reasoning string                               // Always "reasoning"
+type ReasoningText string                           // Always "reasoning_text"
 type Refusal string                                 // Always "refusal"
 type Response string                                // Always "response"
 type ResponseAudioDelta string                      // Always "response.audio.delta"
@@ -150,8 +151,8 @@ type ResponseReasoningSummaryPartAdded string       // Always "response.reasonin
 type ResponseReasoningSummaryPartDone string        // Always "response.reasoning_summary_part.done"
 type ResponseReasoningSummaryTextDelta string       // Always "response.reasoning_summary_text.delta"
 type ResponseReasoningSummaryTextDone string        // Always "response.reasoning_summary_text.done"
-type ResponseReasoningSummaryDelta string           // Always "response.reasoning_summary.delta"
-type ResponseReasoningSummaryDone string            // Always "response.reasoning_summary.done"
+type ResponseReasoningTextDelta string              // Always "response.reasoning_text.delta"
+type ResponseReasoningTextDone string               // Always "response.reasoning_text.done"
 type ResponseRefusalDelta string                    // Always "response.refusal.delta"
 type ResponseRefusalDone string                     // Always "response.refusal.done"
 type ResponseWebSearchCallCompleted string          // Always "response.web_search_call.completed"
@@ -311,6 +312,7 @@ func (c OutputAudio) Default() OutputAudio                   { return "output_au
 func (c OutputText) Default() OutputText                     { return "output_text" }
 func (c Python) Default() Python                             { return "python" }
 func (c Reasoning) Default() Reasoning                       { return "reasoning" }
+func (c ReasoningText) Default() ReasoningText               { return "reasoning_text" }
 func (c Refusal) Default() Refusal                           { return "refusal" }
 func (c Response) Default() Response                         { return "response" }
 func (c ResponseAudioDelta) Default() ResponseAudioDelta     { return "response.audio.delta" }
@@ -421,11 +423,11 @@ func (c ResponseReasoningSummaryTextDelta) Default() ResponseReasoningSummaryTex
 func (c ResponseReasoningSummaryTextDone) Default() ResponseReasoningSummaryTextDone {
 	return "response.reasoning_summary_text.done"
 }
-func (c ResponseReasoningSummaryDelta) Default() ResponseReasoningSummaryDelta {
-	return "response.reasoning_summary.delta"
+func (c ResponseReasoningTextDelta) Default() ResponseReasoningTextDelta {
+	return "response.reasoning_text.delta"
 }
-func (c ResponseReasoningSummaryDone) Default() ResponseReasoningSummaryDone {
-	return "response.reasoning_summary.done"
+func (c ResponseReasoningTextDone) Default() ResponseReasoningTextDone {
+	return "response.reasoning_text.done"
 }
 func (c ResponseRefusalDelta) Default() ResponseRefusalDelta { return "response.refusal.delta" }
 func (c ResponseRefusalDone) Default() ResponseRefusalDone   { return "response.refusal.done" }
@@ -598,6 +600,7 @@ func (c OutputAudio) MarshalJSON() ([]byte, error)                           { r
 func (c OutputText) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Python) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Reasoning) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
+func (c ReasoningText) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Refusal) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Response) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c ResponseAudioDelta) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
@@ -648,8 +651,8 @@ func (c ResponseReasoningSummaryPartAdded) MarshalJSON() ([]byte, error) { retur
 func (c ResponseReasoningSummaryPartDone) MarshalJSON() ([]byte, error)  { return marshalString(c) }
 func (c ResponseReasoningSummaryTextDelta) MarshalJSON() ([]byte, error) { return marshalString(c) }
 func (c ResponseReasoningSummaryTextDone) MarshalJSON() ([]byte, error)  { return marshalString(c) }
-func (c ResponseReasoningSummaryDelta) MarshalJSON() ([]byte, error)     { return marshalString(c) }
-func (c ResponseReasoningSummaryDone) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c ResponseReasoningTextDelta) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c ResponseReasoningTextDone) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c ResponseRefusalDelta) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c ResponseRefusalDone) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ResponseWebSearchCallCompleted) MarshalJSON() ([]byte, error)    { return marshalString(c) }
