@@ -62,7 +62,7 @@ func (o Opt[T]) MarshalJSON() ([]byte, error) {
 	if !o.Valid() {
 		return []byte("null"), nil
 	}
-	return json.Marshal(o.Value)
+	return shimjson.Marshal(o.Value)
 }
 
 func (o *Opt[T]) UnmarshalJSON(data []byte) error {
@@ -96,7 +96,7 @@ func (o Opt[T]) MarshalJSONWithTimeLayout(format string) []byte {
 		return nil
 	}
 
-	b, err := json.Marshal(t.Format(shimjson.TimeLayout(format)))
+	b, err := shimjson.Marshal(t.Format(shimjson.TimeLayout(format)))
 	if err != nil {
 		return nil
 	}
