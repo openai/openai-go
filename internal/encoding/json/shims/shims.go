@@ -11,6 +11,8 @@ import (
 	"slices"
 )
 
+const EscapeHTMLByDefault = true
+
 type OverflowableType struct{ reflect.Type }
 
 func (t OverflowableType) OverflowInt(x int64) bool {
