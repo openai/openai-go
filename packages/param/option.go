@@ -3,8 +3,9 @@ package param
 import (
 	"encoding/json"
 	"fmt"
-	shimjson "github.com/openai/openai-go/internal/encoding/json"
 	"time"
+
+	shimjson "github.com/openai/openai-go/internal/encoding/json"
 )
 
 func NewOpt[T comparable](v T) Opt[T] {

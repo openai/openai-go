@@ -11,7 +11,7 @@ import (
 	"slices"
 )
 
-const EscapeHTMLByDefault = true
+const EscapeHTMLByDefault = false
 
 type OverflowableType struct{ reflect.Type }
 
