@@ -63,7 +63,7 @@ func main() {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	})
 	if err != nil {
 		panic(err.Error())
@@ -372,7 +372,7 @@ client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -438,7 +438,7 @@ client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	},
 	option.WithMaxRetries(5),
 )
@@ -462,7 +462,7 @@ chatCompletion, err := client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	},
 	option.WithResponseInto(&response),
 )

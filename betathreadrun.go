@@ -621,14 +621,13 @@ type BetaThreadRunNewParams struct {
 	// model associated with the assistant. If not, the model associated with the
 	// assistant will be used.
 	Model shared.ChatModel `json:"model,omitzero"`
-	// **o-series models only**
-	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
 	//
-	// Any of "low", "medium", "high".
+	// Any of "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// Override the tools the assistant can use for this run. This is useful for
 	// modifying the behavior on a per-run basis.

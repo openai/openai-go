@@ -45,7 +45,8 @@ func TestCompletionNewWithOptionalParams(t *testing.T) {
 			OfString: openai.String("\n"),
 		},
 		StreamOptions: openai.ChatCompletionStreamOptionsParam{
-			IncludeUsage: openai.Bool(true),
+			IncludeObfuscation: openai.Bool(true),
+			IncludeUsage:       openai.Bool(true),
 		},
 		Suffix:      openai.String("test."),
 		Temperature: openai.Float(1),

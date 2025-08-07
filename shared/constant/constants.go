@@ -18,6 +18,7 @@ func ValueOf[T Constant[T]]() T {
 	return t.Default()
 }
 
+type AllowedTools string                            // Always "allowed_tools"
 type Approximate string                             // Always "approximate"
 type Assistant string                               // Always "assistant"
 type AssistantDeleted string                        // Always "assistant.deleted"
@@ -40,6 +41,9 @@ type ComputerUsePreview string                      // Always "computer_use_prev
 type ContainerFileCitation string                   // Always "container_file_citation"
 type ContainerFile string                           // Always "container.file"
 type Content string                                 // Always "content"
+type Custom string                                  // Always "custom"
+type CustomToolCall string                          // Always "custom_tool_call"
+type CustomToolCallOutput string                    // Always "custom_tool_call_output"
 type Developer string                               // Always "developer"
 type DoubleClick string                             // Always "double_click"
 type Drag string                                    // Always "drag"
@@ -65,6 +69,7 @@ type FineTuningJobSucceeded string                  // Always "fine_tuning.job.s
 type Function string                                // Always "function"
 type FunctionCall string                            // Always "function_call"
 type FunctionCallOutput string                      // Always "function_call_output"
+type Grammar string                                 // Always "grammar"
 type Image string                                   // Always "image"
 type ImageEditCompleted string                      // Always "image_edit.completed"
 type ImageEditPartialImage string                   // Always "image_edit.partial_image"
@@ -121,6 +126,8 @@ type ResponseCompleted string                       // Always "response.complete
 type ResponseContentPartAdded string                // Always "response.content_part.added"
 type ResponseContentPartDone string                 // Always "response.content_part.done"
 type ResponseCreated string                         // Always "response.created"
+type ResponseCustomToolCallInputDelta string        // Always "response.custom_tool_call_input.delta"
+type ResponseCustomToolCallInputDone string         // Always "response.custom_tool_call_input.done"
 type ResponseFailed string                          // Always "response.failed"
 type ResponseFileSearchCallCompleted string         // Always "response.file_search_call.completed"
 type ResponseFileSearchCallInProgress string        // Always "response.file_search_call.in_progress"
@@ -220,6 +227,7 @@ type Wait string                                    // Always "wait"
 type Wandb string                                   // Always "wandb"
 type WebSearchCall string                           // Always "web_search_call"
 
+func (c AllowedTools) Default() AllowedTools                     { return "allowed_tools" }
 func (c Approximate) Default() Approximate                       { return "approximate" }
 func (c Assistant) Default() Assistant                           { return "assistant" }
 func (c AssistantDeleted) Default() AssistantDeleted             { return "assistant.deleted" }
@@ -242,6 +250,9 @@ func (c ComputerUsePreview) Default() ComputerUsePreview         { return "compu
 func (c ContainerFileCitation) Default() ContainerFileCitation   { return "container_file_citation" }
 func (c ContainerFile) Default() ContainerFile                   { return "container.file" }
 func (c Content) Default() Content                               { return "content" }
+func (c Custom) Default() Custom                                 { return "custom" }
+func (c CustomToolCall) Default() CustomToolCall                 { return "custom_tool_call" }
+func (c CustomToolCallOutput) Default() CustomToolCallOutput     { return "custom_tool_call_output" }
 func (c Developer) Default() Developer                           { return "developer" }
 func (c DoubleClick) Default() DoubleClick                       { return "double_click" }
 func (c Drag) Default() Drag                                     { return "drag" }
@@ -269,6 +280,7 @@ func (c FineTuningJobSucceeded) Default() FineTuningJobSucceeded { return "fine_
 func (c Function) Default() Function                             { return "function" }
 func (c FunctionCall) Default() FunctionCall                     { return "function_call" }
 func (c FunctionCallOutput) Default() FunctionCallOutput         { return "function_call_output" }
+func (c Grammar) Default() Grammar                               { return "grammar" }
 func (c Image) Default() Image                                   { return "image" }
 func (c ImageEditCompleted) Default() ImageEditCompleted         { return "image_edit.completed" }
 func (c ImageEditPartialImage) Default() ImageEditPartialImage   { return "image_edit.partial_image" }
@@ -347,7 +359,13 @@ func (c ResponseContentPartDone) Default() ResponseContentPartDone {
 	return "response.content_part.done"
 }
 func (c ResponseCreated) Default() ResponseCreated { return "response.created" }
-func (c ResponseFailed) Default() ResponseFailed   { return "response.failed" }
+func (c ResponseCustomToolCallInputDelta) Default() ResponseCustomToolCallInputDelta {
+	return "response.custom_tool_call_input.delta"
+}
+func (c ResponseCustomToolCallInputDone) Default() ResponseCustomToolCallInputDone {
+	return "response.custom_tool_call_input.done"
+}
+func (c ResponseFailed) Default() ResponseFailed { return "response.failed" }
 func (c ResponseFileSearchCallCompleted) Default() ResponseFileSearchCallCompleted {
 	return "response.file_search_call.completed"
 }
@@ -514,6 +532,7 @@ func (c Wait) Default() Wait                   { return "wait" }
 func (c Wandb) Default() Wandb                 { return "wandb" }
 func (c WebSearchCall) Default() WebSearchCall { return "web_search_call" }
 
+func (c AllowedTools) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Approximate) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Assistant) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c AssistantDeleted) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
@@ -536,6 +555,9 @@ func (c ComputerUsePreview) MarshalJSON() ([]byte, error)                    { r
 func (c ContainerFileCitation) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c ContainerFile) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Content) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
+func (c Custom) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c CustomToolCall) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c CustomToolCallOutput) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c Developer) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c DoubleClick) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Drag) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
@@ -561,6 +583,7 @@ func (c FineTuningJobSucceeded) MarshalJSON() ([]byte, error)                { r
 func (c Function) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c FunctionCall) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c FunctionCallOutput) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c Grammar) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Image) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c ImageEditCompleted) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c ImageEditPartialImage) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
@@ -619,6 +642,8 @@ func (c ResponseCompleted) MarshalJSON() ([]byte, error)                     { r
 func (c ResponseContentPartAdded) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c ResponseContentPartDone) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ResponseCreated) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c ResponseCustomToolCallInputDelta) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c ResponseCustomToolCallInputDone) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c ResponseFailed) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c ResponseFileSearchCallCompleted) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c ResponseFileSearchCallInProgress) MarshalJSON() ([]byte, error)      { return marshalString(c) }
