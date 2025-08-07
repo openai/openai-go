@@ -1,6 +1,6 @@
 package openai
 
-import "github.com/openai/openai-go/shared/constant"
+import "github.com/openai/openai-go/v2/shared/constant"
 
 // Helper to accumulate chunks from a stream
 type ChatCompletionAccumulator struct {
@@ -11,7 +11,7 @@ type ChatCompletionAccumulator struct {
 }
 
 type FinishedChatCompletionToolCall struct {
-	ChatCompletionMessageToolCallFunction
+	ChatCompletionMessageFunctionToolCallFunction
 	Index int
 	ID    string
 }
@@ -88,7 +88,7 @@ func (acc *ChatCompletionAccumulator) JustFinishedToolCall() (toolcall FinishedC
 		return FinishedChatCompletionToolCall{
 			ID:    id,
 			Index: acc.justFinished.index,
-			ChatCompletionMessageToolCallFunction: ChatCompletionMessageToolCallFunction{
+			ChatCompletionMessageFunctionToolCallFunction: ChatCompletionMessageFunctionToolCallFunction{
 				Name:      f.Name,
 				Arguments: f.Arguments,
 			},
@@ -132,7 +132,7 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 				tool.ID = deltaTool.ID
 			}
 			if deltaTool.Type != "" {
-				tool.Type = constant.Function(deltaTool.Type)
+				tool.Type = deltaTool.Type
 			}
 			tool.Function.Name += deltaTool.Function.Name
 			tool.Function.Arguments += deltaTool.Function.Arguments

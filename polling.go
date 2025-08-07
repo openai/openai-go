@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/v2/option"
 )
 
 func mkPollingOptions(pollIntervalMs int) []option.RequestOption {

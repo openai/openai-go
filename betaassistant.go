@@ -10,15 +10,15 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v2/internal/apijson"
+	"github.com/openai/openai-go/v2/internal/apiquery"
+	"github.com/openai/openai-go/v2/internal/requestconfig"
+	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/packages/pagination"
+	"github.com/openai/openai-go/v2/packages/param"
+	"github.com/openai/openai-go/v2/packages/respjson"
+	"github.com/openai/openai-go/v2/shared"
+	"github.com/openai/openai-go/v2/shared/constant"
 )
 
 // BetaAssistantService contains methods and other services that help with
@@ -1780,14 +1780,13 @@ type BetaAssistantNewParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,omitzero"`
-	// **o-series models only**
-	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
 	//
-	// Any of "low", "medium", "high".
+	// Any of "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// A set of resources that are used by the assistant's tools. The resources are
 	// specific to the type of tool. For example, the `code_interpreter` tool requires
@@ -2051,14 +2050,13 @@ type BetaAssistantUpdateParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,omitzero"`
-	// **o-series models only**
-	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
 	//
-	// Any of "low", "medium", "high".
+	// Any of "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// A set of resources that are used by the assistant's tools. The resources are
 	// specific to the type of tool. For example, the `code_interpreter` tool requires
@@ -2115,6 +2113,12 @@ func (r *BetaAssistantUpdateParams) UnmarshalJSON(data []byte) error {
 type BetaAssistantUpdateParamsModel string
 
 const (
+	BetaAssistantUpdateParamsModelGPT5                    BetaAssistantUpdateParamsModel = "gpt-5"
+	BetaAssistantUpdateParamsModelGPT5Mini                BetaAssistantUpdateParamsModel = "gpt-5-mini"
+	BetaAssistantUpdateParamsModelGPT5Nano                BetaAssistantUpdateParamsModel = "gpt-5-nano"
+	BetaAssistantUpdateParamsModelGPT5_2025_08_07         BetaAssistantUpdateParamsModel = "gpt-5-2025-08-07"
+	BetaAssistantUpdateParamsModelGPT5Mini2025_08_07      BetaAssistantUpdateParamsModel = "gpt-5-mini-2025-08-07"
+	BetaAssistantUpdateParamsModelGPT5Nano2025_08_07      BetaAssistantUpdateParamsModel = "gpt-5-nano-2025-08-07"
 	BetaAssistantUpdateParamsModelGPT4_1                  BetaAssistantUpdateParamsModel = "gpt-4.1"
 	BetaAssistantUpdateParamsModelGPT4_1Mini              BetaAssistantUpdateParamsModel = "gpt-4.1-mini"
 	BetaAssistantUpdateParamsModelGPT4_1Nano              BetaAssistantUpdateParamsModel = "gpt-4.1-nano"

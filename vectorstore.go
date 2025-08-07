@@ -10,15 +10,15 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v2/internal/apijson"
+	"github.com/openai/openai-go/v2/internal/apiquery"
+	"github.com/openai/openai-go/v2/internal/requestconfig"
+	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/packages/pagination"
+	"github.com/openai/openai-go/v2/packages/param"
+	"github.com/openai/openai-go/v2/packages/respjson"
+	"github.com/openai/openai-go/v2/shared"
+	"github.com/openai/openai-go/v2/shared/constant"
 )
 
 // VectorStoreService contains methods and other services that help with
@@ -885,7 +885,9 @@ func (u VectorStoreSearchParamsFiltersUnion) GetType() *string {
 // Ranking options for search.
 type VectorStoreSearchParamsRankingOptions struct {
 	ScoreThreshold param.Opt[float64] `json:"score_threshold,omitzero"`
-	// Any of "auto", "default-2024-11-15".
+	// Enable re-ranking; set to `none` to disable, which can help reduce latency.
+	//
+	// Any of "none", "auto", "default-2024-11-15".
 	Ranker string `json:"ranker,omitzero"`
 	paramObj
 }
@@ -900,6 +902,6 @@ func (r *VectorStoreSearchParamsRankingOptions) UnmarshalJSON(data []byte) error
 
 func init() {
 	apijson.RegisterFieldValidator[VectorStoreSearchParamsRankingOptions](
-		"ranker", "auto", "default-2024-11-15",
+		"ranker", "none", "auto", "default-2024-11-15",
 	)
 }

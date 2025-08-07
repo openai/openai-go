@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/v2"
 )
 
 func main() {
@@ -70,44 +70,40 @@ func main() {
 	}
 }
 
-var tools = []openai.ChatCompletionToolParam{
-	{
-		Function: openai.FunctionDefinitionParam{
-			Name:        "get_live_weather",
-			Description: openai.String("Get weather at the given location"),
-			Parameters: openai.FunctionParameters{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"location": map[string]string{
-						"type": "string",
-					},
+var tools = []openai.ChatCompletionToolUnionParam{
+	openai.ChatCompletionFunctionTool(openai.FunctionDefinitionParam{
+		Name:        "get_live_weather",
+		Description: openai.String("Get weather at the given location"),
+		Parameters: openai.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"location": map[string]string{
+					"type": "string",
 				},
-				"required": []string{"location"},
 			},
+			"required": []string{"location"},
 		},
-	},
-	{
-		Function: openai.FunctionDefinitionParam{
-			Name:        "get_population",
-			Description: openai.String("Get population of a given town"),
-			Parameters: openai.FunctionParameters{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"town": map[string]string{
-						"type": "string",
-					},
-					"nation": map[string]string{
-						"type": "string",
-					},
-					"rounding": map[string]string{
-						"type":        "integer",
-						"description": "Nearest base 10 to round to, e.g. 1000 or 1000000",
-					},
+	}),
+	openai.ChatCompletionFunctionTool(openai.FunctionDefinitionParam{
+		Name:        "get_population",
+		Description: openai.String("Get population of a given town"),
+		Parameters: openai.FunctionParameters{
+			"type": "object",
+			"properties": map[string]any{
+				"town": map[string]string{
+					"type": "string",
 				},
-				"required": []string{"town", "nation"},
+				"nation": map[string]string{
+					"type": "string",
+				},
+				"rounding": map[string]string{
+					"type":        "integer",
+					"description": "Nearest base 10 to round to, e.g. 1000 or 1000000",
+				},
 			},
+			"required": []string{"town", "nation"},
 		},
-	},
+	}),
 }
 
 // Mock function to simulate weather data retrieval

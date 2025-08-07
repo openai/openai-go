@@ -7,10 +7,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v2"
+	"github.com/openai/openai-go/v2/internal/testutil"
+	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/shared"
 )
 
 func TestUsage(t *testing.T) {
@@ -33,7 +33,7 @@ func TestUsage(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	})
 	if err != nil {
 		t.Fatalf("err should be nil: %s", err.Error())

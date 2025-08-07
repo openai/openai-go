@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v2"
+	"github.com/openai/openai-go/v2/internal"
+	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/shared"
 )
 
 type closureTransport struct {
@@ -48,7 +48,7 @@ func TestUserAgentHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	})
 	if userAgent != fmt.Sprintf("OpenAI/Go %s", internal.PackageVersion) {
 		t.Errorf("Expected User-Agent to be correct, but got: %#v", userAgent)
@@ -81,7 +81,7 @@ func TestRetryAfter(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -125,7 +125,7 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -164,7 +164,7 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -202,7 +202,7 @@ func TestRetryAfterMs(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -234,7 +234,7 @@ func TestContextCancel(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	})
 	if err == nil {
 		t.Error("Expected there to be a cancel error")
@@ -263,7 +263,7 @@ func TestContextCancelDelay(t *testing.T) {
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	})
 	if err == nil {
 		t.Error("expected there to be a cancel error")
@@ -298,7 +298,7 @@ func TestContextDeadline(t *testing.T) {
 					},
 				},
 			}},
-			Model: shared.ChatModelGPT4_1,
+			Model: shared.ChatModelGPT5,
 		})
 		if err == nil {
 			t.Error("expected there to be a deadline error")
@@ -352,7 +352,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 					},
 				},
 			}},
-			Model: shared.ChatModelGPT4_1,
+			Model: shared.ChatModelGPT5,
 		})
 		for stream.Next() {
 			_ = stream.Current()
@@ -408,7 +408,7 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 						},
 					},
 				}},
-				Model: shared.ChatModelGPT4_1,
+				Model: shared.ChatModelGPT5,
 			},
 			option.WithRequestTimeout((100 * time.Millisecond)),
 		)

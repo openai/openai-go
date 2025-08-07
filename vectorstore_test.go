@@ -8,10 +8,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v2"
+	"github.com/openai/openai-go/v2/internal/testutil"
+	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/shared"
 )
 
 func TestVectorStoreNewWithOptionalParams(t *testing.T) {
@@ -183,7 +183,7 @@ func TestVectorStoreSearchWithOptionalParams(t *testing.T) {
 			},
 			MaxNumResults: openai.Int(1),
 			RankingOptions: openai.VectorStoreSearchParamsRankingOptions{
-				Ranker:         "auto",
+				Ranker:         "none",
 				ScoreThreshold: openai.Float(0),
 			},
 			RewriteQuery: openai.Bool(true),

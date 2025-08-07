@@ -2,7 +2,7 @@ package apijson
 
 import (
 	"errors"
-	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/v2/packages/param"
 	"reflect"
 
 	"github.com/tidwall/gjson"
