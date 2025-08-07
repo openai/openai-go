@@ -6,8 +6,10 @@ The OpenAI Go library provides convenient access to the [OpenAI REST API](https:
 from applications written in Go.
 
 > [!WARNING]
-> The latest version of this package uses a new design with significant breaking changes.
-> Please refer to the [migration guide](./MIGRATION.md) for more information on how to update your code.
+> The latest version of this package has small and limited breaking changes.
+> With the launch of `custom` tools in Chat Completions, `function` tools have been renamed to be clarify the difference between the two
+> The type `ChatCompletionMessageToolCall` has become `ChatCompletionMessageToolCallUnion`
+and `ChatCompletionMessageToolCallParam` has become `ChatCompletionMessageToolCallParamUnion`.
 
 ## Installation
 
@@ -663,7 +665,7 @@ func main() {
 	)
 
 	r := gin.Default()
-	
+
 	r.POST("/webhook", func(c *gin.Context) {
 		body, err := io.ReadAll(c.Request.Body)
 		if err != nil {
@@ -722,7 +724,7 @@ func main() {
 	)
 
 	r := gin.Default()
-	
+
 	r.POST("/webhook", func(c *gin.Context) {
 		body, err := io.ReadAll(c.Request.Body)
 		if err != nil {
@@ -737,7 +739,7 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid signature"})
 			return
 		}
-		
+
 		c.JSON(http.StatusOK, gin.H{"message": "ok"})
 	})
 

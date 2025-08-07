@@ -2193,20 +2193,6 @@ func (r ChatCompletionMessageToolCallUnion) ToParam() ChatCompletionMessageToolC
 	return param.Override[ChatCompletionMessageToolCallUnionParam](json.RawMessage(r.RawJSON()))
 }
 
-func ChatCompletionMessageToolCallParamOfFunction(function ChatCompletionMessageFunctionToolCallFunctionParam, id string) ChatCompletionMessageToolCallUnionParam {
-	var variant ChatCompletionMessageFunctionToolCallParam
-	variant.Function = function
-	variant.ID = id
-	return ChatCompletionMessageToolCallUnionParam{OfFunction: &variant}
-}
-
-func ChatCompletionMessageToolCallParamOfCustom(custom ChatCompletionMessageCustomToolCallCustomParam, id string) ChatCompletionMessageToolCallUnionParam {
-	var variant ChatCompletionMessageCustomToolCallParam
-	variant.Custom = custom
-	variant.ID = id
-	return ChatCompletionMessageToolCallUnionParam{OfCustom: &variant}
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
