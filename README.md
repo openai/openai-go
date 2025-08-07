@@ -7,9 +7,7 @@ from applications written in Go.
 
 > [!WARNING]
 > The latest version of this package has small and limited breaking changes.
-> With the launch of `custom` tools in Chat Completions, `function` tools have been renamed to be clarify the difference between the two
-> The type `ChatCompletionMessageToolCall` has become `ChatCompletionMessageToolCallUnion`
-and `ChatCompletionMessageToolCallParam` has become `ChatCompletionMessageToolCallParamUnion`.
+> See the [changelog](CHANGELOG.md) for details.
 
 ## Installation
 
@@ -35,7 +33,7 @@ go get -u 'github.com/openai/openai-go@v1.12.0'
 
 ## Requirements
 
-This library requires Go 1.18+.
+This library requires Go 1.21+.
 
 ## Usage
 
