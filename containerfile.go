@@ -60,9 +60,9 @@ func (r *ContainerFileService) New(ctx context.Context, containerID string, body
 }
 
 // Retrieve Container File
-func (r *ContainerFileService) Get(ctx context.Context, containerID string, fileID string, opts ...option.RequestOption) (res *ContainerFileGetResponse, err error) {
+func (r *ContainerFileService) Get(ctx context.Context, fileID string, query ContainerFileGetParams, opts ...option.RequestOption) (res *ContainerFileGetResponse, err error) {
 	opts = append(r.Options[:], opts...)
-	if containerID == "" {
+	if query.ContainerID == "" {
 		err = errors.New("missing required container_id parameter")
 		return
 	}
@@ -70,7 +70,7 @@ func (r *ContainerFileService) Get(ctx context.Context, containerID string, file
 		err = errors.New("missing required file_id parameter")
 		return
 	}
-	path := fmt.Sprintf("containers/%s/files/%s", containerID, fileID)
+	path := fmt.Sprintf("containers/%s/files/%s", query.ContainerID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
@@ -103,10 +103,10 @@ func (r *ContainerFileService) ListAutoPaging(ctx context.Context, containerID s
 }
 
 // Delete Container File
-func (r *ContainerFileService) Delete(ctx context.Context, containerID string, fileID string, opts ...option.RequestOption) (err error) {
+func (r *ContainerFileService) Delete(ctx context.Context, fileID string, body ContainerFileDeleteParams, opts ...option.RequestOption) (err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
-	if containerID == "" {
+	if body.ContainerID == "" {
 		err = errors.New("missing required container_id parameter")
 		return
 	}
@@ -114,7 +114,7 @@ func (r *ContainerFileService) Delete(ctx context.Context, containerID string, f
 		err = errors.New("missing required file_id parameter")
 		return
 	}
-	path := fmt.Sprintf("containers/%s/files/%s", containerID, fileID)
+	path := fmt.Sprintf("containers/%s/files/%s", body.ContainerID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
 	return
 }
@@ -250,6 +250,11 @@ func (r ContainerFileNewParams) MarshalMultipart() (data []byte, contentType str
 	return buf.Bytes(), writer.FormDataContentType(), nil
 }
 
+type ContainerFileGetParams struct {
+	ContainerID string `path:"container_id,required" json:"-"`
+	paramObj
+}
+
 type ContainerFileListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
@@ -284,3 +289,8 @@ const (
 	ContainerFileListParamsOrderAsc  ContainerFileListParamsOrder = "asc"
 	ContainerFileListParamsOrderDesc ContainerFileListParamsOrder = "desc"
 )
+
+type ContainerFileDeleteParams struct {
+	ContainerID string `path:"container_id,required" json:"-"`
+	paramObj
+}

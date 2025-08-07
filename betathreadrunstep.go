@@ -45,14 +45,14 @@ func NewBetaThreadRunStepService(opts ...option.RequestOption) (r BetaThreadRunS
 // Retrieves a run step.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
-func (r *BetaThreadRunStepService) Get(ctx context.Context, threadID string, runID string, stepID string, query BetaThreadRunStepGetParams, opts ...option.RequestOption) (res *RunStep, err error) {
+func (r *BetaThreadRunStepService) Get(ctx context.Context, stepID string, params BetaThreadRunStepGetParams, opts ...option.RequestOption) (res *RunStep, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if threadID == "" {
+	if params.ThreadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
 	}
-	if runID == "" {
+	if params.RunID == "" {
 		err = errors.New("missing required run_id parameter")
 		return
 	}
@@ -60,19 +60,19 @@ func (r *BetaThreadRunStepService) Get(ctx context.Context, threadID string, run
 		err = errors.New("missing required step_id parameter")
 		return
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s/steps/%s", threadID, runID, stepID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	path := fmt.Sprintf("threads/%s/runs/%s/steps/%s", params.ThreadID, params.RunID, stepID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
 	return
 }
 
 // Returns a list of run steps belonging to a run.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
-func (r *BetaThreadRunStepService) List(ctx context.Context, threadID string, runID string, query BetaThreadRunStepListParams, opts ...option.RequestOption) (res *pagination.CursorPage[RunStep], err error) {
+func (r *BetaThreadRunStepService) List(ctx context.Context, runID string, params BetaThreadRunStepListParams, opts ...option.RequestOption) (res *pagination.CursorPage[RunStep], err error) {
 	var raw *http.Response
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
-	if threadID == "" {
+	if params.ThreadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
 	}
@@ -80,8 +80,8 @@ func (r *BetaThreadRunStepService) List(ctx context.Context, threadID string, ru
 		err = errors.New("missing required run_id parameter")
 		return
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s/steps", threadID, runID)
-	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
+	path := fmt.Sprintf("threads/%s/runs/%s/steps", params.ThreadID, runID)
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (r *BetaThreadRunStepService) List(ctx context.Context, threadID string, ru
 // Returns a list of run steps belonging to a run.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
-func (r *BetaThreadRunStepService) ListAutoPaging(ctx context.Context, threadID string, runID string, query BetaThreadRunStepListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[RunStep] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, threadID, runID, query, opts...))
+func (r *BetaThreadRunStepService) ListAutoPaging(ctx context.Context, runID string, params BetaThreadRunStepListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[RunStep] {
+	return pagination.NewCursorPageAutoPager(r.List(ctx, runID, params, opts...))
 }
 
 // Text output from the Code Interpreter tool call as part of a run step.
@@ -1324,6 +1324,8 @@ func (r *ToolCallsStepDetails) UnmarshalJSON(data []byte) error {
 }
 
 type BetaThreadRunStepGetParams struct {
+	ThreadID string `path:"thread_id,required" json:"-"`
+	RunID    string `path:"run_id,required" json:"-"`
 	// A list of additional fields to include in the response. Currently the only
 	// supported value is `step_details.tool_calls[*].file_search.results[*].content`
 	// to fetch the file search result content.
@@ -1345,6 +1347,7 @@ func (r BetaThreadRunStepGetParams) URLQuery() (v url.Values, err error) {
 }
 
 type BetaThreadRunStepListParams struct {
+	ThreadID string `path:"thread_id,required" json:"-"`
 	// A cursor for use in pagination. `after` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
 	// ending with obj_foo, your subsequent call can include after=obj_foo in order to

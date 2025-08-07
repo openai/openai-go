@@ -2582,13 +2582,13 @@ func (r *ChatCompletionTokenLogprobTopLogprob) UnmarshalJSON(data []byte) error 
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func ChatCompletionToolParamOfFunction(function shared.FunctionDefinitionParam) ChatCompletionToolUnionParam {
+func ChatCompletionFunctionTool(function shared.FunctionDefinitionParam) ChatCompletionToolUnionParam {
 	var variant ChatCompletionFunctionToolParam
 	variant.Function = function
 	return ChatCompletionToolUnionParam{OfFunction: &variant}
 }
 
-func ChatCompletionToolParamOfCustom(custom ChatCompletionCustomToolCustomParam) ChatCompletionToolUnionParam {
+func ChatCompletionCustomTool(custom ChatCompletionCustomToolCustomParam) ChatCompletionToolUnionParam {
 	var variant ChatCompletionCustomToolParam
 	variant.Custom = custom
 	return ChatCompletionToolUnionParam{OfCustom: &variant}
@@ -2653,19 +2653,19 @@ func init() {
 	)
 }
 
-func ChatCompletionToolChoiceOptionParamOfAllowedTools(allowedTools ChatCompletionAllowedToolsParam) ChatCompletionToolChoiceOptionUnionParam {
+func ToolChoiceOptionAllowedTools(allowedTools ChatCompletionAllowedToolsParam) ChatCompletionToolChoiceOptionUnionParam {
 	var variant ChatCompletionAllowedToolChoiceParam
 	variant.AllowedTools = allowedTools
 	return ChatCompletionToolChoiceOptionUnionParam{OfAllowedTools: &variant}
 }
 
-func ChatCompletionToolChoiceOptionParamOfFunctionToolChoice(function ChatCompletionNamedToolChoiceFunctionParam) ChatCompletionToolChoiceOptionUnionParam {
+func ToolChoiceOptionFunctionToolChoice(function ChatCompletionNamedToolChoiceFunctionParam) ChatCompletionToolChoiceOptionUnionParam {
 	var variant ChatCompletionNamedToolChoiceParam
 	variant.Function = function
 	return ChatCompletionToolChoiceOptionUnionParam{OfFunctionToolChoice: &variant}
 }
 
-func ChatCompletionToolChoiceOptionParamOfCustomToolChoice(custom ChatCompletionNamedToolChoiceCustomCustomParam) ChatCompletionToolChoiceOptionUnionParam {
+func ToolChoiceOptionCustomToolChoice(custom ChatCompletionNamedToolChoiceCustomCustomParam) ChatCompletionToolChoiceOptionUnionParam {
 	var variant ChatCompletionNamedToolChoiceCustomParam
 	variant.Custom = custom
 	return ChatCompletionToolChoiceOptionUnionParam{OfCustomToolChoice: &variant}
