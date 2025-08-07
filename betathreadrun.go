@@ -82,10 +82,10 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 // Retrieves a run.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
-func (r *BetaThreadRunService) Get(ctx context.Context, runID string, query BetaThreadRunGetParams, opts ...option.RequestOption) (res *Run, err error) {
+func (r *BetaThreadRunService) Get(ctx context.Context, threadID string, runID string, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if query.ThreadID == "" {
+	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
 	}
@@ -93,7 +93,7 @@ func (r *BetaThreadRunService) Get(ctx context.Context, runID string, query Beta
 		err = errors.New("missing required run_id parameter")
 		return
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s", query.ThreadID, runID)
+	path := fmt.Sprintf("threads/%s/runs/%s", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
@@ -101,10 +101,10 @@ func (r *BetaThreadRunService) Get(ctx context.Context, runID string, query Beta
 // Modifies a run.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
-func (r *BetaThreadRunService) Update(ctx context.Context, runID string, params BetaThreadRunUpdateParams, opts ...option.RequestOption) (res *Run, err error) {
+func (r *BetaThreadRunService) Update(ctx context.Context, threadID string, runID string, body BetaThreadRunUpdateParams, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if params.ThreadID == "" {
+	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
 	}
@@ -112,8 +112,8 @@ func (r *BetaThreadRunService) Update(ctx context.Context, runID string, params 
 		err = errors.New("missing required run_id parameter")
 		return
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s", params.ThreadID, runID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
+	path := fmt.Sprintf("threads/%s/runs/%s", threadID, runID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
 }
 
@@ -151,10 +151,10 @@ func (r *BetaThreadRunService) ListAutoPaging(ctx context.Context, threadID stri
 // Cancels a run that is `in_progress`.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
-func (r *BetaThreadRunService) Cancel(ctx context.Context, runID string, body BetaThreadRunCancelParams, opts ...option.RequestOption) (res *Run, err error) {
+func (r *BetaThreadRunService) Cancel(ctx context.Context, threadID string, runID string, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if body.ThreadID == "" {
+	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
 	}
@@ -162,7 +162,7 @@ func (r *BetaThreadRunService) Cancel(ctx context.Context, runID string, body Be
 		err = errors.New("missing required run_id parameter")
 		return
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s/cancel", body.ThreadID, runID)
+	path := fmt.Sprintf("threads/%s/runs/%s/cancel", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return
 }
@@ -173,10 +173,10 @@ func (r *BetaThreadRunService) Cancel(ctx context.Context, runID string, body Be
 // request.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
-func (r *BetaThreadRunService) SubmitToolOutputs(ctx context.Context, runID string, params BetaThreadRunSubmitToolOutputsParams, opts ...option.RequestOption) (res *Run, err error) {
+func (r *BetaThreadRunService) SubmitToolOutputs(ctx context.Context, threadID string, runID string, body BetaThreadRunSubmitToolOutputsParams, opts ...option.RequestOption) (res *Run, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if params.ThreadID == "" {
+	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
 	}
@@ -184,8 +184,8 @@ func (r *BetaThreadRunService) SubmitToolOutputs(ctx context.Context, runID stri
 		err = errors.New("missing required run_id parameter")
 		return
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", params.ThreadID, runID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
+	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", threadID, runID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
 }
 
@@ -195,14 +195,14 @@ func (r *BetaThreadRunService) SubmitToolOutputs(ctx context.Context, runID stri
 // request.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
-func (r *BetaThreadRunService) SubmitToolOutputsStreaming(ctx context.Context, runID string, params BetaThreadRunSubmitToolOutputsParams, opts ...option.RequestOption) (stream *ssestream.Stream[AssistantStreamEventUnion]) {
+func (r *BetaThreadRunService) SubmitToolOutputsStreaming(ctx context.Context, threadID string, runID string, body BetaThreadRunSubmitToolOutputsParams, opts ...option.RequestOption) (stream *ssestream.Stream[AssistantStreamEventUnion]) {
 	var (
 		raw *http.Response
 		err error
 	)
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithJSONSet("stream", true)}, opts...)
-	if params.ThreadID == "" {
+	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
 	}
@@ -210,8 +210,8 @@ func (r *BetaThreadRunService) SubmitToolOutputsStreaming(ctx context.Context, r
 		err = errors.New("missing required run_id parameter")
 		return
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", params.ThreadID, runID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &raw, opts...)
+	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", threadID, runID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStream[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
 
@@ -868,13 +868,7 @@ func init() {
 	)
 }
 
-type BetaThreadRunGetParams struct {
-	ThreadID string `path:"thread_id,required" json:"-"`
-	paramObj
-}
-
 type BetaThreadRunUpdateParams struct {
-	ThreadID string `path:"thread_id,required" json:"-"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
@@ -933,13 +927,7 @@ const (
 	BetaThreadRunListParamsOrderDesc BetaThreadRunListParamsOrder = "desc"
 )
 
-type BetaThreadRunCancelParams struct {
-	ThreadID string `path:"thread_id,required" json:"-"`
-	paramObj
-}
-
 type BetaThreadRunSubmitToolOutputsParams struct {
-	ThreadID string `path:"thread_id,required" json:"-"`
 	// A list of tools for which the outputs are being submitted.
 	ToolOutputs []BetaThreadRunSubmitToolOutputsParamsToolOutput `json:"tool_outputs,omitzero,required"`
 	paramObj

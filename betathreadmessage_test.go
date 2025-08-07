@@ -68,10 +68,8 @@ func TestBetaThreadMessageGet(t *testing.T) {
 	)
 	_, err := client.Beta.Threads.Messages.Get(
 		context.TODO(),
+		"thread_id",
 		"message_id",
-		openai.BetaThreadMessageGetParams{
-			ThreadID: "thread_id",
-		},
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -96,9 +94,9 @@ func TestBetaThreadMessageUpdateWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Beta.Threads.Messages.Update(
 		context.TODO(),
+		"thread_id",
 		"message_id",
 		openai.BetaThreadMessageUpdateParams{
-			ThreadID: "thread_id",
 			Metadata: shared.Metadata{
 				"foo": "string",
 			},
@@ -159,10 +157,8 @@ func TestBetaThreadMessageDelete(t *testing.T) {
 	)
 	_, err := client.Beta.Threads.Messages.Delete(
 		context.TODO(),
+		"thread_id",
 		"message_id",
-		openai.BetaThreadMessageDeleteParams{
-			ThreadID: "thread_id",
-		},
 	)
 	if err != nil {
 		var apierr *openai.Error

@@ -32,10 +32,10 @@ func NewContainerFileContentService(opts ...option.RequestOption) (r ContainerFi
 }
 
 // Retrieve Container File Content
-func (r *ContainerFileContentService) Get(ctx context.Context, fileID string, query ContainerFileContentGetParams, opts ...option.RequestOption) (res *http.Response, err error) {
+func (r *ContainerFileContentService) Get(ctx context.Context, containerID string, fileID string, opts ...option.RequestOption) (res *http.Response, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)
-	if query.ContainerID == "" {
+	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
 		return
 	}
@@ -43,12 +43,7 @@ func (r *ContainerFileContentService) Get(ctx context.Context, fileID string, qu
 		err = errors.New("missing required file_id parameter")
 		return
 	}
-	path := fmt.Sprintf("containers/%s/files/%s/content", query.ContainerID, fileID)
+	path := fmt.Sprintf("containers/%s/files/%s/content", containerID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
-}
-
-type ContainerFileContentGetParams struct {
-	ContainerID string `path:"container_id,required" json:"-"`
-	paramObj
 }

@@ -98,10 +98,8 @@ func TestBetaThreadRunGet(t *testing.T) {
 	)
 	_, err := client.Beta.Threads.Runs.Get(
 		context.TODO(),
+		"thread_id",
 		"run_id",
-		openai.BetaThreadRunGetParams{
-			ThreadID: "thread_id",
-		},
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -126,9 +124,9 @@ func TestBetaThreadRunUpdateWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Beta.Threads.Runs.Update(
 		context.TODO(),
+		"thread_id",
 		"run_id",
 		openai.BetaThreadRunUpdateParams{
-			ThreadID: "thread_id",
 			Metadata: shared.Metadata{
 				"foo": "string",
 			},
@@ -188,10 +186,8 @@ func TestBetaThreadRunCancel(t *testing.T) {
 	)
 	_, err := client.Beta.Threads.Runs.Cancel(
 		context.TODO(),
+		"thread_id",
 		"run_id",
-		openai.BetaThreadRunCancelParams{
-			ThreadID: "thread_id",
-		},
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -216,9 +212,9 @@ func TestBetaThreadRunSubmitToolOutputsWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Beta.Threads.Runs.SubmitToolOutputs(
 		context.TODO(),
+		"thread_id",
 		"run_id",
 		openai.BetaThreadRunSubmitToolOutputsParams{
-			ThreadID: "thread_id",
 			ToolOutputs: []openai.BetaThreadRunSubmitToolOutputsParamsToolOutput{{
 				Output:     openai.String("output"),
 				ToolCallID: openai.String("tool_call_id"),
