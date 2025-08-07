@@ -29,8 +29,8 @@ import (
 	"unicode/utf8"
 	_ "unsafe" // for linkname
 
-	"github.com/openai/openai-go/internal/encoding/json/sentinel"
-	"github.com/openai/openai-go/internal/encoding/json/shims"
+	"github.com/openai/openai-go/v2/internal/encoding/json/sentinel"
+	"github.com/openai/openai-go/v2/internal/encoding/json/shims"
 )
 
 // Marshal returns the JSON encoding of v.
