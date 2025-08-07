@@ -63,10 +63,8 @@ func TestVectorStoreFileGet(t *testing.T) {
 	)
 	_, err := client.VectorStores.Files.Get(
 		context.TODO(),
+		"vs_abc123",
 		"file-abc123",
-		openai.VectorStoreFileGetParams{
-			VectorStoreID: "vs_abc123",
-		},
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -91,9 +89,9 @@ func TestVectorStoreFileUpdate(t *testing.T) {
 	)
 	_, err := client.VectorStores.Files.Update(
 		context.TODO(),
+		"vs_abc123",
 		"file-abc123",
 		openai.VectorStoreFileUpdateParams{
-			VectorStoreID: "vs_abc123",
 			Attributes: map[string]openai.VectorStoreFileUpdateParamsAttributeUnion{
 				"foo": {
 					OfString: openai.String("string"),
@@ -156,10 +154,8 @@ func TestVectorStoreFileDelete(t *testing.T) {
 	)
 	_, err := client.VectorStores.Files.Delete(
 		context.TODO(),
+		"vector_store_id",
 		"file_id",
-		openai.VectorStoreFileDeleteParams{
-			VectorStoreID: "vector_store_id",
-		},
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -184,10 +180,8 @@ func TestVectorStoreFileContent(t *testing.T) {
 	)
 	_, err := client.VectorStores.Files.Content(
 		context.TODO(),
+		"vs_abc123",
 		"file-abc123",
-		openai.VectorStoreFileContentParams{
-			VectorStoreID: "vs_abc123",
-		},
 	)
 	if err != nil {
 		var apierr *openai.Error
