@@ -1,6 +1,6 @@
 # OpenAI Go Migration Guide
 
-<a href="https://pkg.go.dev/github.com/openai/openai-go"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
+<a href="https://pkg.go.dev/github.com/openai/openai-go/v2"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
 
 This SDK includes breaking changes to improve the ergonomics of constructing parameters and accessing responses.
 
