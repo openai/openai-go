@@ -1,6 +1,6 @@
 # OpenAI Go API Library
 
-<a href="https://pkg.go.dev/github.com/openai/openai-go"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
+<a href="https://pkg.go.dev/github.com/openai/openai-go/v2"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go/v2.svg" alt="Go Reference"></a>
 
 The OpenAI Go library provides convenient access to the [OpenAI REST API](https://platform.openai.com/docs)
 from applications written in Go.
@@ -15,7 +15,7 @@ from applications written in Go.
 
 ```go
 import (
-	"github.com/openai/openai-go" // imported as openai
+	"github.com/openai/openai-go/v2" // imported as openai
 )
 ```
 
@@ -26,7 +26,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go@v1.12.0'
+go get -u 'github.com/openai/openai-go/v2@v2.0.0'
 ```
 
 <!-- x-release-please-end -->
@@ -46,9 +46,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v2"
+	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/shared"
 )
 
 func main() {
@@ -284,7 +284,7 @@ client.Chat.Completions.New(context.TODO(), ...,
 
 The request option `option.WithDebugLog(nil)` may be helpful while debugging.
 
-See the [full list of request options](https://pkg.go.dev/github.com/openai/openai-go/option).
+See the [full list of request options](https://pkg.go.dev/github.com/openai/openai-go/v2/option).
 
 ### Pagination
 
