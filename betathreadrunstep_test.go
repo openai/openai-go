@@ -27,11 +27,11 @@ func TestBetaThreadRunStepGetWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Beta.Threads.Runs.Steps.Get(
 		context.TODO(),
-		"thread_id",
-		"run_id",
 		"step_id",
 		openai.BetaThreadRunStepGetParams{
-			Include: []openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent},
+			ThreadID: "thread_id",
+			RunID:    "run_id",
+			Include:  []openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent},
 		},
 	)
 	if err != nil {
@@ -57,14 +57,14 @@ func TestBetaThreadRunStepListWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Beta.Threads.Runs.Steps.List(
 		context.TODO(),
-		"thread_id",
 		"run_id",
 		openai.BetaThreadRunStepListParams{
-			After:   openai.String("after"),
-			Before:  openai.String("before"),
-			Include: []openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent},
-			Limit:   openai.Int(0),
-			Order:   openai.BetaThreadRunStepListParamsOrderAsc,
+			ThreadID: "thread_id",
+			After:    openai.String("after"),
+			Before:   openai.String("before"),
+			Include:  []openai.RunStepInclude{openai.RunStepIncludeStepDetailsToolCallsFileSearchResultsContent},
+			Limit:    openai.Int(0),
+			Order:    openai.BetaThreadRunStepListParamsOrderAsc,
 		},
 	)
 	if err != nil {

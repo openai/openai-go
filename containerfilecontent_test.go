@@ -28,8 +28,10 @@ func TestContainerFileContentGet(t *testing.T) {
 	)
 	resp, err := client.Containers.Files.Content.Get(
 		context.TODO(),
-		"container_id",
 		"file_id",
+		openai.ContainerFileContentGetParams{
+			ContainerID: "container_id",
+		},
 	)
 	if err != nil {
 		var apierr *openai.Error

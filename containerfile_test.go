@@ -58,8 +58,10 @@ func TestContainerFileGet(t *testing.T) {
 	)
 	_, err := client.Containers.Files.Get(
 		context.TODO(),
-		"container_id",
 		"file_id",
+		openai.ContainerFileGetParams{
+			ContainerID: "container_id",
+		},
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -114,8 +116,10 @@ func TestContainerFileDelete(t *testing.T) {
 	)
 	err := client.Containers.Files.Delete(
 		context.TODO(),
-		"container_id",
 		"file_id",
+		openai.ContainerFileDeleteParams{
+			ContainerID: "container_id",
+		},
 	)
 	if err != nil {
 		var apierr *openai.Error

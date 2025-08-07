@@ -63,8 +63,10 @@ func TestVectorStoreFileBatchGet(t *testing.T) {
 	)
 	_, err := client.VectorStores.FileBatches.Get(
 		context.TODO(),
-		"vs_abc123",
 		"vsfb_abc123",
+		openai.VectorStoreFileBatchGetParams{
+			VectorStoreID: "vs_abc123",
+		},
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -89,8 +91,10 @@ func TestVectorStoreFileBatchCancel(t *testing.T) {
 	)
 	_, err := client.VectorStores.FileBatches.Cancel(
 		context.TODO(),
-		"vector_store_id",
 		"batch_id",
+		openai.VectorStoreFileBatchCancelParams{
+			VectorStoreID: "vector_store_id",
+		},
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -115,14 +119,14 @@ func TestVectorStoreFileBatchListFilesWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.VectorStores.FileBatches.ListFiles(
 		context.TODO(),
-		"vector_store_id",
 		"batch_id",
 		openai.VectorStoreFileBatchListFilesParams{
-			After:  openai.String("after"),
-			Before: openai.String("before"),
-			Filter: openai.VectorStoreFileBatchListFilesParamsFilterInProgress,
-			Limit:  openai.Int(0),
-			Order:  openai.VectorStoreFileBatchListFilesParamsOrderAsc,
+			VectorStoreID: "vector_store_id",
+			After:         openai.String("after"),
+			Before:        openai.String("before"),
+			Filter:        openai.VectorStoreFileBatchListFilesParamsFilterInProgress,
+			Limit:         openai.Int(0),
+			Order:         openai.VectorStoreFileBatchListFilesParamsOrderAsc,
 		},
 	)
 	if err != nil {

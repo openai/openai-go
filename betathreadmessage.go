@@ -60,10 +60,10 @@ func (r *BetaThreadMessageService) New(ctx context.Context, threadID string, bod
 // Retrieve a message.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
-func (r *BetaThreadMessageService) Get(ctx context.Context, threadID string, messageID string, opts ...option.RequestOption) (res *Message, err error) {
+func (r *BetaThreadMessageService) Get(ctx context.Context, messageID string, query BetaThreadMessageGetParams, opts ...option.RequestOption) (res *Message, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if threadID == "" {
+	if query.ThreadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
 	}
@@ -71,7 +71,7 @@ func (r *BetaThreadMessageService) Get(ctx context.Context, threadID string, mes
 		err = errors.New("missing required message_id parameter")
 		return
 	}
-	path := fmt.Sprintf("threads/%s/messages/%s", threadID, messageID)
+	path := fmt.Sprintf("threads/%s/messages/%s", query.ThreadID, messageID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
 }
@@ -79,10 +79,10 @@ func (r *BetaThreadMessageService) Get(ctx context.Context, threadID string, mes
 // Modifies a message.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
-func (r *BetaThreadMessageService) Update(ctx context.Context, threadID string, messageID string, body BetaThreadMessageUpdateParams, opts ...option.RequestOption) (res *Message, err error) {
+func (r *BetaThreadMessageService) Update(ctx context.Context, messageID string, params BetaThreadMessageUpdateParams, opts ...option.RequestOption) (res *Message, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if threadID == "" {
+	if params.ThreadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
 	}
@@ -90,8 +90,8 @@ func (r *BetaThreadMessageService) Update(ctx context.Context, threadID string, 
 		err = errors.New("missing required message_id parameter")
 		return
 	}
-	path := fmt.Sprintf("threads/%s/messages/%s", threadID, messageID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	path := fmt.Sprintf("threads/%s/messages/%s", params.ThreadID, messageID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return
 }
 
@@ -129,10 +129,10 @@ func (r *BetaThreadMessageService) ListAutoPaging(ctx context.Context, threadID 
 // Deletes a message.
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
-func (r *BetaThreadMessageService) Delete(ctx context.Context, threadID string, messageID string, opts ...option.RequestOption) (res *MessageDeleted, err error) {
+func (r *BetaThreadMessageService) Delete(ctx context.Context, messageID string, body BetaThreadMessageDeleteParams, opts ...option.RequestOption) (res *MessageDeleted, err error) {
 	opts = append(r.Options[:], opts...)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
-	if threadID == "" {
+	if body.ThreadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
 	}
@@ -140,7 +140,7 @@ func (r *BetaThreadMessageService) Delete(ctx context.Context, threadID string, 
 		err = errors.New("missing required message_id parameter")
 		return
 	}
-	path := fmt.Sprintf("threads/%s/messages/%s", threadID, messageID)
+	path := fmt.Sprintf("threads/%s/messages/%s", body.ThreadID, messageID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return
 }
@@ -1650,7 +1650,13 @@ func (r *BetaThreadMessageNewParamsAttachmentToolFileSearch) UnmarshalJSON(data 
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type BetaThreadMessageGetParams struct {
+	ThreadID string `path:"thread_id,required" json:"-"`
+	paramObj
+}
+
 type BetaThreadMessageUpdateParams struct {
+	ThreadID string `path:"thread_id,required" json:"-"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
@@ -1710,3 +1716,8 @@ const (
 	BetaThreadMessageListParamsOrderAsc  BetaThreadMessageListParamsOrder = "asc"
 	BetaThreadMessageListParamsOrderDesc BetaThreadMessageListParamsOrder = "desc"
 )
+
+type BetaThreadMessageDeleteParams struct {
+	ThreadID string `path:"thread_id,required" json:"-"`
+	paramObj
+}
