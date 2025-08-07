@@ -4,6 +4,28 @@
 
 Full Changelog: [v1.12.0...v2.0.0](https://github.com/openai/openai-go/compare/v1.12.0...v2.0.0)
 
+### Breaking changes
+
+With the launch of `custom` tools in Chat Completions, `function` tools have been renamed to clarify the difference between the two.
+
+`ChatCompletionToolParam` has become a union and is now named `ChatCompletionToolUnionParam`.
+
+Older versions of the SDK used function tools: to migrate 
+
+
+```diff
+- openai.ChatCompletionToolParam{
+-  Function: openai.FunctionDefinitionParam{
++ openai.ChatCompletionFunctionTool(
++  openai.FunctionDefinitionParam{
+    Name:        "get_weather",
+    Description: openai.String("Get weather at the given location"),
+    Parameters: openai.FunctionParameters{ … },
++  },
++ )
+- },
+```
+
 ### Features
 
 * **api:** adds GPT-5 and new API features: platform.openai.com/docs/guides/gpt-5 ([af46c88](https://github.com/openai/openai-go/commit/af46c885ea2414ba2b960f5d3accce89699a6250))
