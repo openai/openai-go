@@ -139,7 +139,7 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 	if body != nil && !hasSerializationFunc {
 		buf := new(bytes.Buffer)
 		enc := json.NewEncoder(buf)
-		enc.SetEscapeHTML(true)
+		enc.SetEscapeHTML(false)
 		if err := enc.Encode(body); err != nil {
 			return nil, err
 		}
