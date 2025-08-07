@@ -125,8 +125,14 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 		for j := range delta.Delta.ToolCalls {
 			deltaTool := &delta.Delta.ToolCalls[j]
 
-			choice.Message.ToolCalls = expandToFit(choice.Message.ToolCalls, int(deltaTool.Index))
-			tool := &choice.Message.ToolCalls[deltaTool.Index]
+			// Handle negative tool call indices (sometimes -1 from Bedrock)
+			toolIndex := int(deltaTool.Index)
+			if toolIndex < 0 {
+				toolIndex = 0 // Default to 0 for negative indices
+			}
+
+			choice.Message.ToolCalls = expandToFit(choice.Message.ToolCalls, toolIndex)
+			tool := &choice.Message.ToolCalls[toolIndex]
 
 			if deltaTool.ID != "" {
 				tool.ID = deltaTool.ID
