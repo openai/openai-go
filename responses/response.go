@@ -892,12 +892,6 @@ type Response struct {
 	//
 	// Deprecated: deprecated
 	User string `json:"user"`
-	// Constrains the verbosity of the model's response. Lower values will result in
-	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
-	//
-	// Any of "low", "medium", "high".
-	Verbosity ResponseVerbosity `json:"verbosity,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                 respjson.Field
@@ -929,7 +923,6 @@ type Response struct {
 		Truncation         respjson.Field
 		Usage              respjson.Field
 		User               respjson.Field
-		Verbosity          respjson.Field
 		ExtraFields        map[string]respjson.Field
 		raw                string
 	} `json:"-"`
@@ -1117,17 +1110,6 @@ type ResponseTruncation string
 const (
 	ResponseTruncationAuto     ResponseTruncation = "auto"
 	ResponseTruncationDisabled ResponseTruncation = "disabled"
-)
-
-// Constrains the verbosity of the model's response. Lower values will result in
-// more concise responses, while higher values will result in more verbose
-// responses. Currently supported values are `low`, `medium`, and `high`.
-type ResponseVerbosity string
-
-const (
-	ResponseVerbosityLow    ResponseVerbosity = "low"
-	ResponseVerbosityMedium ResponseVerbosity = "medium"
-	ResponseVerbosityHigh   ResponseVerbosity = "high"
 )
 
 // Emitted when there is a partial audio response.
@@ -11174,9 +11156,16 @@ type ResponseTextConfig struct {
 	// ensures the message the model generates is valid JSON. Using `json_schema` is
 	// preferred for models that support it.
 	Format ResponseFormatTextConfigUnion `json:"format"`
+	// Constrains the verbosity of the model's response. Lower values will result in
+	// more concise responses, while higher values will result in more verbose
+	// responses. Currently supported values are `low`, `medium`, and `high`.
+	//
+	// Any of "low", "medium", "high".
+	Verbosity ResponseTextConfigVerbosity `json:"verbosity,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Format      respjson.Field
+		Verbosity   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -11197,12 +11186,29 @@ func (r ResponseTextConfig) ToParam() ResponseTextConfigParam {
 	return param.Override[ResponseTextConfigParam](json.RawMessage(r.RawJSON()))
 }
 
+// Constrains the verbosity of the model's response. Lower values will result in
+// more concise responses, while higher values will result in more verbose
+// responses. Currently supported values are `low`, `medium`, and `high`.
+type ResponseTextConfigVerbosity string
+
+const (
+	ResponseTextConfigVerbosityLow    ResponseTextConfigVerbosity = "low"
+	ResponseTextConfigVerbosityMedium ResponseTextConfigVerbosity = "medium"
+	ResponseTextConfigVerbosityHigh   ResponseTextConfigVerbosity = "high"
+)
+
 // Configuration options for a text response from the model. Can be plain text or
 // structured JSON data. Learn more:
 //
 // - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
 // - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
 type ResponseTextConfigParam struct {
+	// Constrains the verbosity of the model's response. Lower values will result in
+	// more concise responses, while higher values will result in more verbose
+	// responses. Currently supported values are `low`, `medium`, and `high`.
+	//
+	// Any of "low", "medium", "high".
+	Verbosity ResponseTextConfigVerbosity `json:"verbosity,omitzero"`
 	// An object specifying the format that the model must output.
 	//
 	// Configuring `{ "type": "json_schema" }` enables Structured Outputs, which
@@ -13485,12 +13491,6 @@ type ResponseNewParams struct {
 	//
 	// Any of "auto", "disabled".
 	Truncation ResponseNewParamsTruncation `json:"truncation,omitzero"`
-	// Constrains the verbosity of the model's response. Lower values will result in
-	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
-	//
-	// Any of "low", "medium", "high".
-	Verbosity ResponseNewParamsVerbosity `json:"verbosity,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response.
 	//
 	// Learn more:
@@ -13729,17 +13729,6 @@ type ResponseNewParamsTruncation string
 const (
 	ResponseNewParamsTruncationAuto     ResponseNewParamsTruncation = "auto"
 	ResponseNewParamsTruncationDisabled ResponseNewParamsTruncation = "disabled"
-)
-
-// Constrains the verbosity of the model's response. Lower values will result in
-// more concise responses, while higher values will result in more verbose
-// responses. Currently supported values are `low`, `medium`, and `high`.
-type ResponseNewParamsVerbosity string
-
-const (
-	ResponseNewParamsVerbosityLow    ResponseNewParamsVerbosity = "low"
-	ResponseNewParamsVerbosityMedium ResponseNewParamsVerbosity = "medium"
-	ResponseNewParamsVerbosityHigh   ResponseNewParamsVerbosity = "high"
 )
 
 type ResponseGetParams struct {
