@@ -68,6 +68,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			Format: responses.ResponseFormatTextConfigUnionParam{
 				OfText: &shared.ResponseFormatTextParam{},
 			},
+			Verbosity: responses.ResponseTextConfigVerbosityLow,
 		},
 		ToolChoice: responses.ResponseNewParamsToolChoiceUnion{
 			OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
@@ -86,7 +87,6 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		TopP:        openai.Float(1),
 		Truncation:  responses.ResponseNewParamsTruncationAuto,
 		User:        openai.String("user-1234"),
-		Verbosity:   responses.ResponseNewParamsVerbosityLow,
 	})
 	if err != nil {
 		var apierr *openai.Error
