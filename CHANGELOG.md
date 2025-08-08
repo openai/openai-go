@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.1 (2025-08-08)
+
+Full Changelog: [v2.0.0...v2.0.1](https://github.com/openai/openai-go/compare/v2.0.0...v2.0.1)
+
+### Bug Fixes
+
+* **client:** fix verbosity parameter location in Responses ([6e2e903](https://github.com/openai/openai-go/commit/6e2e903e7c63a3e2a5aef5c81bdae55d220c0292))
+
 ## 2.0.0 (2025-08-07)
 
 Full Changelog: [v1.12.0...v2.0.0](https://github.com/openai/openai-go/compare/v1.12.0...v2.0.0)
