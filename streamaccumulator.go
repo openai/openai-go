@@ -125,7 +125,7 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 		for j := range delta.Delta.ToolCalls {
 			deltaTool := &delta.Delta.ToolCalls[j]
 
-			// Handle negative tool call indices (sometimes -1 from Bedrock)
+			// Handle negative tool call indices (sometimes -1)
 			toolIndex := int(deltaTool.Index)
 			if toolIndex < 0 {
 				toolIndex = 0 // Default to 0 for negative indices
@@ -175,7 +175,14 @@ func (prev *chatCompletionResponseState) update(chunk ChatCompletionChunk) (just
 		new.state = refusalResponseState
 	case delta.JSON.ToolCalls.Valid():
 		new.state = toolResponseState
-		new.index = int(delta.ToolCalls[0].Index)
+		// Handle negative tool call indices (sometimes -1)
+		if len(delta.ToolCalls) > 0 {
+			index := int(delta.ToolCalls[0].Index)
+			if index < 0 {
+				index = 0 // Default to 0 for negative indices
+			}
+			new.index = index
+		}
 	default:
 		new.state = finishedResponseState
 	}
