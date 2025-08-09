@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.2 (2025-08-09)
+
+Full Changelog: [v2.0.1...v2.0.2](https://github.com/openai/openai-go/compare/v2.0.1...v2.0.2)
+
+### Chores
+
+* **internal:** update comment in script ([4be24de](https://github.com/openai/openai-go/commit/4be24dee6ab7b116ed34e50d56c99c1a36c0ef9d))
+* update @stainless-api/prism-cli to v5.15.0 ([eca22af](https://github.com/openai/openai-go/commit/eca22af6f1d1f2ac36fbee365616210c12267bb1))
+
 ## 2.0.1 (2025-08-08)
 
 Full Changelog: [v2.0.0...v2.0.1](https://github.com/openai/openai-go/compare/v2.0.0...v2.0.1)
