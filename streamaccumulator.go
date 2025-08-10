@@ -163,11 +163,11 @@ func (prev *chatCompletionResponseState) update(chunk ChatCompletionChunk) (just
 	delta := chunk.Choices[0].Delta
 	new := chatCompletionResponseState{}
 	switch {
-	case delta.JSON.Content.Valid():
+	case delta.Content != "":
 		new.state = contentResponseState
-	case delta.JSON.Refusal.Valid():
+	case delta.Refusal != "":
 		new.state = refusalResponseState
-	case delta.JSON.ToolCalls.Valid():
+	case len(delta.ToolCalls) > 0:
 		new.state = toolResponseState
 		new.index = int(delta.ToolCalls[0].Index)
 	default:
