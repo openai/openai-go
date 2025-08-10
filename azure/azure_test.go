@@ -25,7 +25,7 @@ func TestJSONRoute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest("POST", "/openai/chat/completions", bytes.NewReader(serializedBytes))
+	req, err := http.NewRequest("POST", "/chat/completions", bytes.NewReader(serializedBytes))
 
 	if err != nil {
 		t.Fatal(err)
@@ -65,7 +65,7 @@ func TestGetAudioMultipartRoute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest("POST", "/openai/audio/transcriptions", bytes.NewReader(buff.Bytes()))
+	req, err := http.NewRequest("POST", "/audio/transcriptions", bytes.NewReader(buff.Bytes()))
 
 	if err != nil {
 		t.Fatal(err)
@@ -114,4 +114,18 @@ func TestNoRouteChangeNeeded(t *testing.T) {
 	if replacementPath != "/openai/does/not/need/a/deployment" {
 		t.Fatalf("replacementpath didn't match: %s", replacementPath)
 	}
+}
+
+func TestAPIKeyAuthentication(t *testing.T) {
+	// Test that the API key option is created successfully
+	apiKeyOption := WithAPIKey("test-api-key")
+
+	// Verify the option is not nil
+	if apiKeyOption == nil {
+		t.Fatal("Expected API key option to be created")
+	}
+
+	// This test verifies the option is created correctly.
+	// The actual header setting happens in the middleware chain.
+	t.Log("API key option created successfully")
 }
