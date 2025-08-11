@@ -27,7 +27,7 @@ All files in the `examples/` directory are not modified by the generator and can
 package main
 
 func main() {
-// ...
+  // ...
 }
 ```
 

@@ -49,7 +49,7 @@ type FooParams struct {
 
 ```go
 _ = FooParams{
-Name: openai.String("Jerry")
+    Name: openai.String("Jerry")
 }
 `{"name": "Jerry"}` // (after serialization)
 ```
@@ -59,7 +59,7 @@ Name: openai.String("Jerry")
 
 ```go
 _ = FooParams{
-Name: openai.String("Jerry")
+    Name: openai.String("Jerry")
 }
 `{"name": "Jerry", "age": 0}` // <== Notice the age field
 ```
@@ -151,7 +151,7 @@ For a type `AnimalUnionParam` which could be either a `CatParam | DogParam`.
 
 ```go
 type AnimalParam interface {
-ImplAnimalParam()
+	ImplAnimalParam()
 }
 
 func (Dog)         ImplAnimalParam() {}
@@ -163,8 +163,8 @@ func (Cat)         ImplAnimalParam() {}
 
 ```go
 type AnimalUnionParam struct {
-OfCat 	 *Cat              `json:",omitzero,inline"`
-OfDog    *Dog              `json:",omitzero,inline"`
+	OfCat 	 *Cat              `json:",omitzero,inline`
+	OfDog    *Dog              `json:",omitzero,inline`
 }
 ```
 
@@ -176,10 +176,10 @@ OfDog    *Dog              `json:",omitzero,inline"`
 
 ```go
 var dog AnimalParam = DogParam{
-Name: "spot", ...
+	Name: "spot", ...
 }
 var cat AnimalParam = CatParam{
-Name: "whiskers", ...
+	Name: "whiskers", ...
 }
 ```
 
@@ -188,10 +188,10 @@ Name: "whiskers", ...
 
 ```go
 dog := AnimalUnionParam{
-OfDog: &DogParam{Name: "spot", ... },
+	OfDog: &DogParam{Name: "spot", ... },
 }
 cat := AnimalUnionParam{
-OfCat: &CatParam{Name: "whiskers", ... },
+	OfCat: &CatParam{Name: "whiskers", ... },
 }
 ```
 
@@ -205,9 +205,9 @@ OfCat: &CatParam{Name: "whiskers", ... },
 var name string
 switch v := animal.(type) {
 case Dog:
-name = v.Name
+	name = v.Name
 case Cat:
-name = v.Name
+	name = v.Name
 }
 ```
 
