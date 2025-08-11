@@ -15,7 +15,7 @@ from applications written in Go.
 
 ```go
 import (
-	"github.com/openai/openai-go/v2" // imported as openai
+"github.com/openai/openai-go/v2" // imported as openai
 )
 ```
 
@@ -74,11 +74,11 @@ func main() {
 
 ```go
 param := openai.ChatCompletionNewParams{
-	Messages: []openai.ChatCompletionMessageParamUnion{
-		openai.UserMessage("What kind of houseplant is easy to take care of?"),
-	},
-	Seed:     openai.Int(1),
-	Model:    openai.ChatModelGPT4o,
+Messages: []openai.ChatCompletionMessageParamUnion{
+openai.UserMessage("What kind of houseplant is easy to take care of?"),
+},
+Seed:     openai.Int(1),
+Model:    openai.ChatModelGPT4o,
 }
 
 completion, err := client.Chat.Completions.New(ctx, param)
@@ -99,41 +99,41 @@ completion, err = client.Chat.Completions.New(ctx, param)
 question := "Write an epic"
 
 stream := client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
-	Messages: []openai.ChatCompletionMessageParamUnion{
-		openai.UserMessage(question),
-	},
-	Seed:  openai.Int(0),
-	Model: openai.ChatModelGPT4o,
+Messages: []openai.ChatCompletionMessageParamUnion{
+openai.UserMessage(question),
+},
+Seed:  openai.Int(0),
+Model: openai.ChatModelGPT4o,
 })
 
 // optionally, an accumulator helper can be used
 acc := openai.ChatCompletionAccumulator{}
 
 for stream.Next() {
-	chunk := stream.Current()
-	acc.AddChunk(chunk)
+chunk := stream.Current()
+acc.AddChunk(chunk)
 
-	if content, ok := acc.JustFinishedContent(); ok {
-		println("Content stream finished:", content)
-	}
+if content, ok := acc.JustFinishedContent(); ok {
+println("Content stream finished:", content)
+}
 
-	// if using tool calls
-	if tool, ok := acc.JustFinishedToolCall(); ok {
-		println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
-	}
+// if using tool calls
+if tool, ok := acc.JustFinishedToolCall(); ok {
+println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
+}
 
-	if refusal, ok := acc.JustFinishedRefusal(); ok {
-		println("Refusal stream finished:", refusal)
-	}
+if refusal, ok := acc.JustFinishedRefusal(); ok {
+println("Refusal stream finished:", refusal)
+}
 
-	// it's best to use chunks after handling JustFinished events
-	if len(chunk.Choices) > 0 {
-		println(chunk.Choices[0].Delta.Content)
-	}
+// it's best to use chunks after handling JustFinished events
+if len(chunk.Choices) > 0 {
+println(chunk.Choices[0].Delta.Content)
+}
 }
 
 if stream.Err() != nil {
-	panic(stream.Err())
+panic(stream.Err())
 }
 
 // After the stream is finished, acc can be used like a ChatCompletion
@@ -149,8 +149,8 @@ _ = acc.Choices[0].Message.Content
 
 ```go
 import (
-	"encoding/json"
-	// ...
+"encoding/json"
+// ...
 )
 
 // ...
@@ -158,49 +158,49 @@ import (
 question := "What is the weather in New York City?"
 
 params := openai.ChatCompletionNewParams{
-	Messages: []openai.ChatCompletionMessageParamUnion{
-		openai.UserMessage(question),
-	},
-	Tools: []openai.ChatCompletionToolParam{
-		{
-			Function: openai.FunctionDefinitionParam{
-				Name:        "get_weather",
-				Description: openai.String("Get weather at the given location"),
-				Parameters: openai.FunctionParameters{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"location": map[string]string{
-							"type": "string",
-						},
-					},
-					"required": []string{"location"},
-				},
-			},
-		},
-	},
-	Model: openai.ChatModelGPT4o,
+Messages: []openai.ChatCompletionMessageParamUnion{
+openai.UserMessage(question),
+},
+Tools: []openai.ChatCompletionToolParam{
+{
+Function: openai.FunctionDefinitionParam{
+Name:        "get_weather",
+Description: openai.String("Get weather at the given location"),
+Parameters: openai.FunctionParameters{
+"type": "object",
+"properties": map[string]interface{}{
+"location": map[string]string{
+"type": "string",
+},
+},
+"required": []string{"location"},
+},
+},
+},
+},
+Model: openai.ChatModelGPT4o,
 }
 
 // If there is a was a function call, continue the conversation
 params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
 for _, toolCall := range toolCalls {
-	if toolCall.Function.Name == "get_weather" {
-		// Extract the location from the function call arguments
-		var args map[string]interface{}
-		err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
-		if err != nil {
-			panic(err)
-		}
-		location := args["location"].(string)
+if toolCall.Function.Name == "get_weather" {
+// Extract the location from the function call arguments
+var args map[string]interface{}
+err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+if err != nil {
+panic(err)
+}
+location := args["location"].(string)
 
-		// Simulate getting weather data
-		weatherData := getWeather(location)
+// Simulate getting weather data
+weatherData := getWeather(location)
 
-		// Print the weather data
-		fmt.Printf("Weather in %s: %s\n", location, weatherData)
+// Print the weather data
+fmt.Printf("Weather in %s: %s\n", location, weatherData)
 
-		params.Messages = append(params.Messages, openai.ToolMessage(weatherData, toolCall.ID))
-	}
+params.Messages = append(params.Messages, openai.ToolMessage(weatherData, toolCall.ID))
+}
 }
 
 // ... continue the conversation with the information provided by the tool
@@ -215,34 +215,34 @@ for _, toolCall := range toolCalls {
 
 ```go
 import (
-	"encoding/json"
-	"github.com/invopop/jsonschema"
-	// ...
+"encoding/json"
+"github.com/invopop/jsonschema"
+// ...
 )
 
 // A struct that will be converted to a Structured Outputs response schema
 type HistoricalComputer struct {
-	Origin       Origin   `json:"origin" jsonschema_description:"The origin of the computer"`
-	Name         string   `json:"full_name" jsonschema_description:"The name of the device model"`
-	Legacy       string   `json:"legacy" jsonschema:"enum=positive,enum=neutral,enum=negative" jsonschema_description:"Its influence on the field of computing"`
-	NotableFacts []string `json:"notable_facts" jsonschema_description:"A few key facts about the computer"`
+Origin       Origin   `json:"origin" jsonschema_description:"The origin of the computer"`
+Name         string   `json:"full_name" jsonschema_description:"The name of the device model"`
+Legacy       string   `json:"legacy" jsonschema:"enum=positive,enum=neutral,enum=negative" jsonschema_description:"Its influence on the field of computing"`
+NotableFacts []string `json:"notable_facts" jsonschema_description:"A few key facts about the computer"`
 }
 
 type Origin struct {
-	YearBuilt    int64  `json:"year_of_construction" jsonschema_description:"The year it was made"`
-	Organization string `json:"organization" jsonschema_description:"The organization that was in charge of its development"`
+YearBuilt    int64  `json:"year_of_construction" jsonschema_description:"The year it was made"`
+Organization string `json:"organization" jsonschema_description:"The organization that was in charge of its development"`
 }
 
 func GenerateSchema[T any]() interface{} {
-	// Structured Outputs uses a subset of JSON schema
-	// These flags are necessary to comply with the subset
-	reflector := jsonschema.Reflector{
-		AllowAdditionalProperties: false,
-		DoNotReference:            true,
-	}
-	var v T
-	schema := reflector.Reflect(v)
-	return schema
+// Structured Outputs uses a subset of JSON schema
+// These flags are necessary to comply with the subset
+reflector := jsonschema.Reflector{
+AllowAdditionalProperties: false,
+DoNotReference:            true,
+}
+var v T
+schema := reflector.Reflect(v)
+return schema
 }
 
 // Generate the JSON schema at initialization time
@@ -250,38 +250,38 @@ var HistoricalComputerResponseSchema = GenerateSchema[HistoricalComputer]()
 
 func main() {
 
-	// ...
+// ...
 
-	question := "What computer ran the first neural network?"
+question := "What computer ran the first neural network?"
 
-	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
-		Name:        "historical_computer",
-		Description: openai.String("Notable information about a computer"),
-		Schema:      HistoricalComputerResponseSchema,
-		Strict:      openai.Bool(true),
-	}
+schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
+Name:        "historical_computer",
+Description: openai.String("Notable information about a computer"),
+Schema:      HistoricalComputerResponseSchema,
+Strict:      openai.Bool(true),
+}
 
-	chat, _ := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		// ...
-		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
-			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{
-				JSONSchema: schemaParam,
-			},
-		},
-		// only certain models can perform structured outputs
-		Model: openai.ChatModelGPT4o2024_08_06,
-	})
+chat, _ := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+// ...
+ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
+OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{
+JSONSchema: schemaParam,
+},
+},
+// only certain models can perform structured outputs
+Model: openai.ChatModelGPT4o2024_08_06,
+})
 
-	// extract into a well-typed struct
-	var historicalComputer HistoricalComputer
-	_ = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &historicalComputer)
+// extract into a well-typed struct
+var historicalComputer HistoricalComputer
+_ = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &historicalComputer)
 
-	historicalComputer.Name
-	historicalComputer.Origin.YearBuilt
-	historicalComputer.Origin.Organization
-	for i, fact := range historicalComputer.NotableFacts {
-		// ...
-	}
+historicalComputer.Name
+historicalComputer.Origin.YearBuilt
+historicalComputer.Origin.Organization
+for i, fact := range historicalComputer.NotableFacts {
+// ...
+}
 }
 ```
 
@@ -307,16 +307,16 @@ The `param.IsOmitted(any)` function can confirm the presence of any `omitzero` f
 
 ```go
 p := openai.ExampleParams{
-	ID:   "id_xxx",             // required property
-	Name: openai.String("..."), // optional property
+ID:   "id_xxx",             // required property
+Name: openai.String("..."), // optional property
 
-	Point: openai.Point{
-		X: 0,             // required field will serialize as 0
-		Y: openai.Int(1), // optional field will serialize as 1
-		// ... omitted non-required fields will not be serialized
-	},
+Point: openai.Point{
+X: 0,             // required field will serialize as 0
+Y: openai.Int(1), // optional field will serialize as 1
+// ... omitted non-required fields will not be serialized
+},
 
-	Origin: openai.Origin{}, // the zero value of [Origin] is considered omitted
+Origin: openai.Origin{}, // the zero value of [Origin] is considered omitted
 }
 ```
 
@@ -341,7 +341,7 @@ To send a custom value instead of a struct, use `param.Override[T](value)`.
 // In cases where the API specifies a given type,
 // but you want to send something else, use [SetExtraFields]:
 p.SetExtraFields(map[string]any{
-	"x": 0.01, // send "x" as a float instead of int
+"x": 0.01, // send "x" as a float instead of int
 })
 
 // Send a number instead of an object
@@ -359,22 +359,22 @@ These methods return a mutable pointer to the underlying data, if present.
 ```go
 // Only one field can be non-zero, use param.IsOmitted() to check if a field is set
 type AnimalUnionParam struct {
-	OfCat *Cat `json:",omitzero,inline`
-	OfDog *Dog `json:",omitzero,inline`
+OfCat *Cat `json:",omitzero,inline"`
+OfDog *Dog `json:",omitzero,inline"`
 }
 
 animal := AnimalUnionParam{
-	OfCat: &Cat{
-		Name: "Whiskers",
-		Owner: PersonParam{
-			Address: AddressParam{Street: "3333 Coyote Hill Rd", Zip: 0},
-		},
-	},
+OfCat: &Cat{
+Name: "Whiskers",
+Owner: PersonParam{
+Address: AddressParam{Street: "3333 Coyote Hill Rd", Zip: 0},
+},
+},
 }
 
 // Mutating a field
 if address := animal.GetOwner().GetAddress(); address != nil {
-	address.ZipCode = 94304
+address.ZipCode = 94304
 }
 ```
 
@@ -872,7 +872,7 @@ func Logger(req *http.Request, next option.MiddlewareNext) (res *http.Response, 
 
 	// Handle stuff after the request
 	end := time.Now()
-	LogRes(res, err, start - end)
+	LogRes(res, err, end.Sub(start))
 
     return res, err
 }
@@ -895,13 +895,15 @@ middleware has been applied.
 
 ## Microsoft Azure OpenAI
 
-To use this library with [Azure OpenAI]https://learn.microsoft.com/azure/ai-services/openai/overview),
+To use this library with [Azure OpenAI](https://learn.microsoft.com/azure/ai-services/openai/overview),
 use the option.RequestOption functions in the `azure` package.
 
 ```go
 package main
 
 import (
+	"fmt"
+	"os"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/azure"
@@ -911,7 +913,7 @@ func main() {
 	const azureOpenAIEndpoint = "https://<azure-openai-resource>.openai.azure.com"
 
 	// The latest API versions, including previews, can be found here:
-	// ttps://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versionng
+	// https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning
 	const azureOpenAIAPIVersion = "2024-06-01"
 
 	tokenCredential, err := azidentity.NewDefaultAzureCredential(nil)
