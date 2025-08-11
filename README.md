@@ -872,7 +872,7 @@ func Logger(req *http.Request, next option.MiddlewareNext) (res *http.Response, 
 
 	// Handle stuff after the request
 	end := time.Now()
-	LogRes(res, err, start - end)
+	LogRes(res, err, end.Sub(start))
 
     return res, err
 }
@@ -895,13 +895,15 @@ middleware has been applied.
 
 ## Microsoft Azure OpenAI
 
-To use this library with [Azure OpenAI]https://learn.microsoft.com/azure/ai-services/openai/overview),
+To use this library with [Azure OpenAI](https://learn.microsoft.com/azure/ai-services/openai/overview),
 use the option.RequestOption functions in the `azure` package.
 
 ```go
 package main
 
 import (
+	"fmt"
+	"os"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/azure"
@@ -911,7 +913,7 @@ func main() {
 	const azureOpenAIEndpoint = "https://<azure-openai-resource>.openai.azure.com"
 
 	// The latest API versions, including previews, can be found here:
-	// ttps://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versionng
+	// https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning
 	const azureOpenAIAPIVersion = "2024-06-01"
 
 	tokenCredential, err := azidentity.NewDefaultAzureCredential(nil)
