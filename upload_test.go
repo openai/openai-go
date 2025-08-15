@@ -13,7 +13,7 @@ import (
 	"github.com/openai/openai-go/v2/option"
 )
 
-func TestUploadNew(t *testing.T) {
+func TestUploadNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -30,6 +30,9 @@ func TestUploadNew(t *testing.T) {
 		Filename: "filename",
 		MimeType: "mime_type",
 		Purpose:  openai.FilePurposeAssistants,
+		ExpiresAfter: openai.UploadNewParamsExpiresAfter{
+			Seconds: 3600,
+		},
 	})
 	if err != nil {
 		var apierr *openai.Error
