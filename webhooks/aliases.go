@@ -340,7 +340,7 @@ type FunctionParameters = shared.FunctionParameters
 // This is an alias to an internal type.
 type Metadata = shared.Metadata
 
-// **o-series models only**
+// **gpt-5 and o-series models only**
 //
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
@@ -382,7 +382,7 @@ const ReasoningSummaryConcise = shared.ReasoningSummaryConcise
 // Equals "detailed"
 const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 
-// **o-series models only**
+// **gpt-5 and o-series models only**
 //
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
