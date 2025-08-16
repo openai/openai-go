@@ -172,6 +172,9 @@ type UploadNewParams struct {
 	//
 	// Any of "assistants", "batch", "fine-tune", "vision", "user_data", "evals".
 	Purpose FilePurpose `json:"purpose,omitzero,required"`
+	// The expiration policy for a file. By default, files with `purpose=batch` expire
+	// after 30 days and all other files are persisted until they are manually deleted.
+	ExpiresAfter UploadNewParamsExpiresAfter `json:"expires_after,omitzero"`
 	paramObj
 }
 
@@ -180,6 +183,30 @@ func (r UploadNewParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *UploadNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The expiration policy for a file. By default, files with `purpose=batch` expire
+// after 30 days and all other files are persisted until they are manually deleted.
+//
+// The properties Anchor, Seconds are required.
+type UploadNewParamsExpiresAfter struct {
+	// The number of seconds after the anchor time that the file will expire. Must be
+	// between 3600 (1 hour) and 2592000 (30 days).
+	Seconds int64 `json:"seconds,required"`
+	// Anchor timestamp after which the expiration policy applies. Supported anchors:
+	// `created_at`.
+	//
+	// This field can be elided, and will marshal its zero value as "created_at".
+	Anchor constant.CreatedAt `json:"anchor,required"`
+	paramObj
+}
+
+func (r UploadNewParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
+	type shadow UploadNewParamsExpiresAfter
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *UploadNewParamsExpiresAfter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

@@ -1065,7 +1065,7 @@ type BetaThreadNewAndRunParams struct {
 	// modifying the behavior on a per-run basis.
 	Tools []AssistantToolUnionParam `json:"tools,omitzero"`
 	// Controls for how a thread will be truncated prior to the run. Use this to
-	// control the intial context window of the run.
+	// control the initial context window of the run.
 	TruncationStrategy BetaThreadNewAndRunParamsTruncationStrategy `json:"truncation_strategy,omitzero"`
 	// Specifies the format that the model must output. Compatible with
 	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
@@ -1532,7 +1532,7 @@ func (r *BetaThreadNewAndRunParamsToolResourcesFileSearch) UnmarshalJSON(data []
 }
 
 // Controls for how a thread will be truncated prior to the run. Use this to
-// control the intial context window of the run.
+// control the initial context window of the run.
 //
 // The property Type is required.
 type BetaThreadNewAndRunParamsTruncationStrategy struct {

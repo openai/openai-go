@@ -44,7 +44,7 @@ func NewFileService(opts ...option.RequestOption) (r FileService) {
 
 // Upload a file that can be used across various endpoints. Individual files can be
 // up to 512 MB, and the size of all files uploaded by one organization can be up
-// to 100 GB.
+// to 1 TB.
 //
 // The Assistants API supports files up to 2 million tokens and of specific file
 // types. See the
@@ -256,6 +256,9 @@ type FileNewParams struct {
 	//
 	// Any of "assistants", "batch", "fine-tune", "vision", "user_data", "evals".
 	Purpose FilePurpose `json:"purpose,omitzero,required"`
+	// The expiration policy for a file. By default, files with `purpose=batch` expire
+	// after 30 days and all other files are persisted until they are manually deleted.
+	ExpiresAfter FileNewParamsExpiresAfter `json:"expires_after,omitzero"`
 	paramObj
 }
 
@@ -275,6 +278,30 @@ func (r FileNewParams) MarshalMultipart() (data []byte, contentType string, err 
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// The expiration policy for a file. By default, files with `purpose=batch` expire
+// after 30 days and all other files are persisted until they are manually deleted.
+//
+// The properties Anchor, Seconds are required.
+type FileNewParamsExpiresAfter struct {
+	// The number of seconds after the anchor time that the file will expire. Must be
+	// between 3600 (1 hour) and 2592000 (30 days).
+	Seconds int64 `json:"seconds,required"`
+	// Anchor timestamp after which the expiration policy applies. Supported anchors:
+	// `created_at`.
+	//
+	// This field can be elided, and will marshal its zero value as "created_at".
+	Anchor constant.CreatedAt `json:"anchor,required"`
+	paramObj
+}
+
+func (r FileNewParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
+	type shadow FileNewParamsExpiresAfter
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *FileNewParamsExpiresAfter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type FileListParams struct {

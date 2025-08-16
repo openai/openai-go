@@ -825,7 +825,7 @@ type Response struct {
 	// hit rates. Replaces the `user` field.
 	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
 	PromptCacheKey string `json:"prompt_cache_key"`
-	// **o-series models only**
+	// **gpt-5 and o-series models only**
 	//
 	// Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
@@ -844,9 +844,8 @@ type Response struct {
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
 	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-	//     'priority', then the request will be processed with the corresponding service
-	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-	//     Priority processing.
+	//     '[priority](https://openai.com/api-priority-processing/)', then the request
+	//     will be processed with the corresponding service tier.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -862,12 +861,7 @@ type Response struct {
 	// Any of "completed", "failed", "in_progress", "cancelled", "queued",
 	// "incomplete".
 	Status ResponseStatus `json:"status"`
-	// Configuration options for a text response from the model. Can be plain text or
-	// structured JSON data. Learn more:
-	//
-	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-	// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
-	Text ResponseTextConfig `json:"text"`
+	Text   ResponseText   `json:"text"`
 	// An integer between 0 and 20 specifying the number of most likely tokens to
 	// return at each token position, each with an associated log probability.
 	TopLogprobs int64 `json:"top_logprobs,nullable"`
@@ -1079,9 +1073,8 @@ func (r *ResponseToolChoiceUnion) UnmarshalJSON(data []byte) error {
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
 //   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-//     'priority', then the request will be processed with the corresponding service
-//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-//     Priority processing.
+//     '[priority](https://openai.com/api-priority-processing/)', then the request
+//     will be processed with the corresponding service tier.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -1097,6 +1090,42 @@ const (
 	ResponseServiceTierScale    ResponseServiceTier = "scale"
 	ResponseServiceTierPriority ResponseServiceTier = "priority"
 )
+
+type ResponseText struct {
+	// An object specifying the format that the model must output.
+	//
+	// Configuring `{ "type": "json_schema" }` enables Structured Outputs, which
+	// ensures the model will match your supplied JSON schema. Learn more in the
+	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	//
+	// The default format is `{ "type": "text" }` with no additional options.
+	//
+	// **Not recommended for gpt-4o and newer models:**
+	//
+	// Setting to `{ "type": "json_object" }` enables the older JSON mode, which
+	// ensures the message the model generates is valid JSON. Using `json_schema` is
+	// preferred for models that support it.
+	Format ResponseFormatTextConfigUnion `json:"format"`
+	// Constrains the verbosity of the model's response. Lower values will result in
+	// more concise responses, while higher values will result in more verbose
+	// responses. Currently supported values are `low`, `medium`, and `high`.
+	//
+	// Any of "low", "medium", "high".
+	Verbosity string `json:"verbosity,nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Format      respjson.Field
+		Verbosity   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseText) RawJSON() string { return r.JSON.raw }
+func (r *ResponseText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The truncation strategy to use for the model response.
 //
@@ -11136,104 +11165,6 @@ func (r *ResponseStreamEventUnionLogprobs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Configuration options for a text response from the model. Can be plain text or
-// structured JSON data. Learn more:
-//
-// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
-type ResponseTextConfig struct {
-	// An object specifying the format that the model must output.
-	//
-	// Configuring `{ "type": "json_schema" }` enables Structured Outputs, which
-	// ensures the model will match your supplied JSON schema. Learn more in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
-	//
-	// The default format is `{ "type": "text" }` with no additional options.
-	//
-	// **Not recommended for gpt-4o and newer models:**
-	//
-	// Setting to `{ "type": "json_object" }` enables the older JSON mode, which
-	// ensures the message the model generates is valid JSON. Using `json_schema` is
-	// preferred for models that support it.
-	Format ResponseFormatTextConfigUnion `json:"format"`
-	// Constrains the verbosity of the model's response. Lower values will result in
-	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
-	//
-	// Any of "low", "medium", "high".
-	Verbosity ResponseTextConfigVerbosity `json:"verbosity,nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Format      respjson.Field
-		Verbosity   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ResponseTextConfig) RawJSON() string { return r.JSON.raw }
-func (r *ResponseTextConfig) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ToParam converts this ResponseTextConfig to a ResponseTextConfigParam.
-//
-// Warning: the fields of the param type will not be present. ToParam should only
-// be used at the last possible moment before sending a request. Test for this with
-// ResponseTextConfigParam.Overrides()
-func (r ResponseTextConfig) ToParam() ResponseTextConfigParam {
-	return param.Override[ResponseTextConfigParam](json.RawMessage(r.RawJSON()))
-}
-
-// Constrains the verbosity of the model's response. Lower values will result in
-// more concise responses, while higher values will result in more verbose
-// responses. Currently supported values are `low`, `medium`, and `high`.
-type ResponseTextConfigVerbosity string
-
-const (
-	ResponseTextConfigVerbosityLow    ResponseTextConfigVerbosity = "low"
-	ResponseTextConfigVerbosityMedium ResponseTextConfigVerbosity = "medium"
-	ResponseTextConfigVerbosityHigh   ResponseTextConfigVerbosity = "high"
-)
-
-// Configuration options for a text response from the model. Can be plain text or
-// structured JSON data. Learn more:
-//
-// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
-type ResponseTextConfigParam struct {
-	// Constrains the verbosity of the model's response. Lower values will result in
-	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
-	//
-	// Any of "low", "medium", "high".
-	Verbosity ResponseTextConfigVerbosity `json:"verbosity,omitzero"`
-	// An object specifying the format that the model must output.
-	//
-	// Configuring `{ "type": "json_schema" }` enables Structured Outputs, which
-	// ensures the model will match your supplied JSON schema. Learn more in the
-	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
-	//
-	// The default format is `{ "type": "text" }` with no additional options.
-	//
-	// **Not recommended for gpt-4o and newer models:**
-	//
-	// Setting to `{ "type": "json_object" }` enables the older JSON mode, which
-	// ensures the message the model generates is valid JSON. Using `json_schema` is
-	// preferred for models that support it.
-	Format ResponseFormatTextConfigUnionParam `json:"format,omitzero"`
-	paramObj
-}
-
-func (r ResponseTextConfigParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponseTextConfigParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ResponseTextConfigParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // Emitted when there is an additional text delta.
 type ResponseTextDeltaEvent struct {
 	// The index of the content part that the text delta was added to.
@@ -13467,9 +13398,8 @@ type ResponseNewParams struct {
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
 	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-	//     'priority', then the request will be processed with the corresponding service
-	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-	//     Priority processing.
+	//     '[priority](https://openai.com/api-priority-processing/)', then the request
+	//     will be processed with the corresponding service tier.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -13507,17 +13437,12 @@ type ResponseNewParams struct {
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
 	// available models.
 	Model shared.ResponsesModel `json:"model,omitzero"`
-	// **o-series models only**
+	// **gpt-5 and o-series models only**
 	//
 	// Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 	Reasoning shared.ReasoningParam `json:"reasoning,omitzero"`
-	// Configuration options for a text response from the model. Can be plain text or
-	// structured JSON data. Learn more:
-	//
-	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
-	// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
-	Text ResponseTextConfigParam `json:"text,omitzero"`
+	Text      ResponseNewParamsText `json:"text,omitzero"`
 	// How the model should select which tool (or tools) to use when generating a
 	// response. See the `tools` parameter to see how to specify which tools the model
 	// can call.
@@ -13583,9 +13508,8 @@ func (u *ResponseNewParamsInputUnion) asAny() any {
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
 //   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-//     'priority', then the request will be processed with the corresponding service
-//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-//     Priority processing.
+//     '[priority](https://openai.com/api-priority-processing/)', then the request
+//     will be processed with the corresponding service tier.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -13620,6 +13544,44 @@ func (r ResponseNewParamsStreamOptions) MarshalJSON() (data []byte, err error) {
 }
 func (r *ResponseNewParamsStreamOptions) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+type ResponseNewParamsText struct {
+	// Constrains the verbosity of the model's response. Lower values will result in
+	// more concise responses, while higher values will result in more verbose
+	// responses. Currently supported values are `low`, `medium`, and `high`.
+	//
+	// Any of "low", "medium", "high".
+	Verbosity string `json:"verbosity,omitzero"`
+	// An object specifying the format that the model must output.
+	//
+	// Configuring `{ "type": "json_schema" }` enables Structured Outputs, which
+	// ensures the model will match your supplied JSON schema. Learn more in the
+	// [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
+	//
+	// The default format is `{ "type": "text" }` with no additional options.
+	//
+	// **Not recommended for gpt-4o and newer models:**
+	//
+	// Setting to `{ "type": "json_object" }` enables the older JSON mode, which
+	// ensures the message the model generates is valid JSON. Using `json_schema` is
+	// preferred for models that support it.
+	Format ResponseFormatTextConfigUnionParam `json:"format,omitzero"`
+	paramObj
+}
+
+func (r ResponseNewParamsText) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseNewParamsText
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseNewParamsText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseNewParamsText](
+		"verbosity", "low", "medium", "high",
+	)
 }
 
 // Only one field can be non-zero.

@@ -17,7 +17,7 @@ import (
 	"github.com/openai/openai-go/v2/option"
 )
 
-func TestFileNew(t *testing.T) {
+func TestFileNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -32,6 +32,9 @@ func TestFileNew(t *testing.T) {
 	_, err := client.Files.New(context.TODO(), openai.FileNewParams{
 		File:    io.Reader(bytes.NewBuffer([]byte("some file contents"))),
 		Purpose: openai.FilePurposeAssistants,
+		ExpiresAfter: openai.FileNewParamsExpiresAfter{
+			Seconds: 3600,
+		},
 	})
 	if err != nil {
 		var apierr *openai.Error

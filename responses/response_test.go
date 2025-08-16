@@ -64,11 +64,11 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			IncludeObfuscation: openai.Bool(true),
 		},
 		Temperature: openai.Float(1),
-		Text: responses.ResponseTextConfigParam{
+		Text: responses.ResponseNewParamsText{
 			Format: responses.ResponseFormatTextConfigUnionParam{
 				OfText: &shared.ResponseFormatTextParam{},
 			},
-			Verbosity: responses.ResponseTextConfigVerbosityLow,
+			Verbosity: "low",
 		},
 		ToolChoice: responses.ResponseNewParamsToolChoiceUnion{
 			OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
