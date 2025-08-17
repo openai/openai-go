@@ -3,7 +3,7 @@
 package openai
 
 import (
-	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/v2/option"
 )
 
 // GraderService contains methods and other services that help with interacting

@@ -8,11 +8,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/responses"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v2"
+	"github.com/openai/openai-go/v2/internal/testutil"
+	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/responses"
+	"github.com/openai/openai-go/v2/shared"
 )
 
 func TestResponseNewWithOptionalParams(t *testing.T) {
@@ -53,18 +53,22 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		},
 		PromptCacheKey: openai.String("prompt-cache-key-1234"),
 		Reasoning: shared.ReasoningParam{
-			Effort:          shared.ReasoningEffortLow,
+			Effort:          shared.ReasoningEffortMinimal,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
 			Summary:         shared.ReasoningSummaryAuto,
 		},
 		SafetyIdentifier: openai.String("safety-identifier-1234"),
 		ServiceTier:      responses.ResponseNewParamsServiceTierAuto,
 		Store:            openai.Bool(true),
-		Temperature:      openai.Float(1),
+		StreamOptions: responses.ResponseNewParamsStreamOptions{
+			IncludeObfuscation: openai.Bool(true),
+		},
+		Temperature: openai.Float(1),
 		Text: responses.ResponseTextConfigParam{
 			Format: responses.ResponseFormatTextConfigUnionParam{
 				OfText: &shared.ResponseFormatTextParam{},
 			},
+			Verbosity: responses.ResponseTextConfigVerbosityLow,
 		},
 		ToolChoice: responses.ResponseNewParamsToolChoiceUnion{
 			OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
@@ -109,8 +113,9 @@ func TestResponseGetWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"resp_677efb5139a88190b512bc3fef8e535d",
 		responses.ResponseGetParams{
-			Include:       []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
-			StartingAfter: openai.Int(0),
+			Include:            []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
+			IncludeObfuscation: openai.Bool(true),
+			StartingAfter:      openai.Int(0),
 		},
 	)
 	if err != nil {

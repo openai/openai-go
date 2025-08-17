@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/v2"
+	"github.com/openai/openai-go/v2/internal/testutil"
+	"github.com/openai/openai-go/v2/option"
 )
 
 func TestCompletionNewWithOptionalParams(t *testing.T) {
@@ -45,7 +45,8 @@ func TestCompletionNewWithOptionalParams(t *testing.T) {
 			OfString: openai.String("\n"),
 		},
 		StreamOptions: openai.ChatCompletionStreamOptionsParam{
-			IncludeUsage: openai.Bool(true),
+			IncludeObfuscation: openai.Bool(true),
+			IncludeUsage:       openai.Bool(true),
 		},
 		Suffix:      openai.String("test."),
 		Temperature: openai.Float(1),

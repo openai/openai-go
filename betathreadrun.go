@@ -9,16 +9,16 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/packages/ssestream"
-	"github.com/openai/openai-go/shared"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v2/internal/apijson"
+	"github.com/openai/openai-go/v2/internal/apiquery"
+	"github.com/openai/openai-go/v2/internal/requestconfig"
+	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/packages/pagination"
+	"github.com/openai/openai-go/v2/packages/param"
+	"github.com/openai/openai-go/v2/packages/respjson"
+	"github.com/openai/openai-go/v2/packages/ssestream"
+	"github.com/openai/openai-go/v2/shared"
+	"github.com/openai/openai-go/v2/shared/constant"
 )
 
 // BetaThreadRunService contains methods and other services that help with
@@ -621,14 +621,13 @@ type BetaThreadRunNewParams struct {
 	// model associated with the assistant. If not, the model associated with the
 	// assistant will be used.
 	Model shared.ChatModel `json:"model,omitzero"`
-	// **o-series models only**
-	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
 	//
-	// Any of "low", "medium", "high".
+	// Any of "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// Override the tools the assistant can use for this run. This is useful for
 	// modifying the behavior on a per-run basis.

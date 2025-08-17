@@ -14,7 +14,7 @@ import (
 	"encoding"
 	"encoding/base64"
 	"fmt"
-	"github.com/openai/openai-go/internal/encoding/json/shims"
+	"github.com/openai/openai-go/v2/internal/encoding/json/shims"
 	"reflect"
 	"strconv"
 	"strings"

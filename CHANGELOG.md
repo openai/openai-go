@@ -1,5 +1,68 @@
 # Changelog
 
+## 2.0.2 (2025-08-09)
+
+Full Changelog: [v2.0.1...v2.0.2](https://github.com/openai/openai-go/compare/v2.0.1...v2.0.2)
+
+### Chores
+
+* **internal:** update comment in script ([4be24de](https://github.com/openai/openai-go/commit/4be24dee6ab7b116ed34e50d56c99c1a36c0ef9d))
+* update @stainless-api/prism-cli to v5.15.0 ([eca22af](https://github.com/openai/openai-go/commit/eca22af6f1d1f2ac36fbee365616210c12267bb1))
+
+## 2.0.1 (2025-08-08)
+
+Full Changelog: [v2.0.0...v2.0.1](https://github.com/openai/openai-go/compare/v2.0.0...v2.0.1)
+
+### Bug Fixes
+
+* **client:** fix verbosity parameter location in Responses ([6e2e903](https://github.com/openai/openai-go/commit/6e2e903e7c63a3e2a5aef5c81bdae55d220c0292))
+
+## 2.0.0 (2025-08-07)
+
+Full Changelog: [v1.12.0...v2.0.0](https://github.com/openai/openai-go/compare/v1.12.0...v2.0.0)
+
+### Breaking changes
+
+With the launch of `custom` tools in Chat Completions, `function` tools have been renamed to clarify the difference between the two.
+
+`ChatCompletionToolParam` has become a union and is now named `ChatCompletionToolUnionParam`.
+
+Older versions of the SDK used function tools: to migrate 
+
+
+```diff
+- openai.ChatCompletionToolParam{
+-  Function: openai.FunctionDefinitionParam{
++ openai.ChatCompletionFunctionTool(
++  openai.FunctionDefinitionParam{
+    Name:        "get_weather",
+    Description: openai.String("Get weather at the given location"),
+    Parameters: openai.FunctionParameters{ … },
++  },
++ )
+- },
+```
+
+### Features
+
+* **api:** adds GPT-5 and new API features: platform.openai.com/docs/guides/gpt-5 ([af46c88](https://github.com/openai/openai-go/commit/af46c885ea2414ba2b960f5d3accce89699a6250))
+* **api:** manual updates ([219f209](https://github.com/openai/openai-go/commit/219f2092a6d7f1952d119b5b4ec32512956825ff))
+* **client:** remove HTML escaping in JSON ([aea5ebc](https://github.com/openai/openai-go/commit/aea5ebccacb4fd854197dbf2547821860a62debc))
+* **client:** rename union helpers ([645e881](https://github.com/openai/openai-go/commit/645e881dee5799d81fb4fd40d6494a296710d0ce))
+* **client:** support optional json html escaping ([1d2336b](https://github.com/openai/openai-go/commit/1d2336b0d92f810fad3bf5faf5bf9e74975adf61))
+
+
+### Bug Fixes
+
+* **client:** revert path param changes ([9239f06](https://github.com/openai/openai-go/commit/9239f06bf0cb537d80980cee140a90d07b6d14f2))
+
+
+### Chores
+
+* change readme warning and minimum version ([1d0e22f](https://github.com/openai/openai-go/commit/1d0e22f85593a70f006f285f4461a05243b0fd74))
+* document breaking changes ([afaa2b8](https://github.com/openai/openai-go/commit/afaa2b8482e8d10ea508716ad9b241517c9affa1))
+* migrate examples ([9c57dd7](https://github.com/openai/openai-go/commit/9c57dd72515aab1c6d05d604870c5d0cf7fc1652))
+
 ## 1.12.0 (2025-07-30)
 
 Full Changelog: [v1.11.1...v1.12.0](https://github.com/openai/openai-go/compare/v1.11.1...v1.12.0)

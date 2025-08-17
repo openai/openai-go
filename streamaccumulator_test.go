@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v2"
+	"github.com/openai/openai-go/v2/internal/testutil"
+	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/shared"
 )
 
 // Mock function to simulate weather data retrieval
@@ -22,7 +22,7 @@ func getWeather(_ string) string {
 }
 
 // Since the streamed response is hardcoded, we can hardcode the expected tool call
-var expectedToolCall openai.ChatCompletionMessageToolCallFunction = openai.ChatCompletionMessageToolCallFunction{
+var expectedToolCall = openai.ChatCompletionMessageFunctionToolCallFunction{
 	Arguments: `{"location":"Santorini, Greece"}`,
 	Name:      "get_weather",
 }
@@ -65,21 +65,23 @@ func TestStreamingAccumulatorWithToolCalls(t *testing.T) {
 		StreamOptions: openai.ChatCompletionStreamOptionsParam{
 			IncludeUsage: openai.Bool(true),
 		},
-		Tools: []openai.ChatCompletionToolParam{{
-			Function: shared.FunctionDefinitionParam{
-				Name:        "get_weather",
-				Description: openai.String("gets weather data"),
-				Parameters: openai.FunctionParameters{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"location": map[string]string{
-							"type": "string",
+		Tools: []openai.ChatCompletionToolUnionParam{{
+			OfFunction: &openai.ChatCompletionFunctionToolParam{
+				Function: shared.FunctionDefinitionParam{
+					Name:        "get_weather",
+					Description: openai.String("gets weather data"),
+					Parameters: openai.FunctionParameters{
+						"type": "object",
+						"properties": map[string]interface{}{
+							"location": map[string]string{
+								"type": "string",
+							},
 						},
+						"required":             []string{"location"},
+						"additionalProperties": false,
 					},
-					"required":             []string{"location"},
-					"additionalProperties": false,
+					Strict: openai.Bool(true),
 				},
-				Strict: openai.Bool(true),
 			},
 		}},
 		User: openai.String("user-1234"),

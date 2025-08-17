@@ -5,10 +5,10 @@ package shared
 import (
 	"encoding/json"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v2/internal/apijson"
+	"github.com/openai/openai-go/v2/packages/param"
+	"github.com/openai/openai-go/v2/packages/respjson"
+	"github.com/openai/openai-go/v2/shared/constant"
 )
 
 // aliased to make [param.APIUnion] private when embedding
@@ -21,6 +21,13 @@ type ResponsesModel = string
 // aliased to make [param.APIObject] private when embedding
 
 const (
+	ChatModelGPT5                             ChatModel = "gpt-5"
+	ChatModelGPT5Mini                         ChatModel = "gpt-5-mini"
+	ChatModelGPT5Nano                         ChatModel = "gpt-5-nano"
+	ChatModelGPT5_2025_08_07                  ChatModel = "gpt-5-2025-08-07"
+	ChatModelGPT5Mini2025_08_07               ChatModel = "gpt-5-mini-2025-08-07"
+	ChatModelGPT5Nano2025_08_07               ChatModel = "gpt-5-nano-2025-08-07"
+	ChatModelGPT5ChatLatest                   ChatModel = "gpt-5-chat-latest"
 	ChatModelGPT4_1                           ChatModel = "gpt-4.1"
 	ChatModelGPT4_1Mini                       ChatModel = "gpt-4.1-mini"
 	ChatModelGPT4_1Nano                       ChatModel = "gpt-4.1-nano"
@@ -308,6 +315,248 @@ func (r *CompoundFilterParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// CustomToolInputFormatUnion contains all possible properties and values from
+// [CustomToolInputFormatText], [CustomToolInputFormatGrammar].
+//
+// Use the [CustomToolInputFormatUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type CustomToolInputFormatUnion struct {
+	// Any of "text", "grammar".
+	Type string `json:"type"`
+	// This field is from variant [CustomToolInputFormatGrammar].
+	Definition string `json:"definition"`
+	// This field is from variant [CustomToolInputFormatGrammar].
+	Syntax string `json:"syntax"`
+	JSON   struct {
+		Type       respjson.Field
+		Definition respjson.Field
+		Syntax     respjson.Field
+		raw        string
+	} `json:"-"`
+}
+
+// anyCustomToolInputFormat is implemented by each variant of
+// [CustomToolInputFormatUnion] to add type safety for the return type of
+// [CustomToolInputFormatUnion.AsAny]
+type anyCustomToolInputFormat interface {
+	implCustomToolInputFormatUnion()
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := CustomToolInputFormatUnion.AsAny().(type) {
+//	case shared.CustomToolInputFormatText:
+//	case shared.CustomToolInputFormatGrammar:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u CustomToolInputFormatUnion) AsAny() anyCustomToolInputFormat {
+	switch u.Type {
+	case "text":
+		return u.AsText()
+	case "grammar":
+		return u.AsGrammar()
+	}
+	return nil
+}
+
+func (u CustomToolInputFormatUnion) AsText() (v CustomToolInputFormatText) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u CustomToolInputFormatUnion) AsGrammar() (v CustomToolInputFormatGrammar) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u CustomToolInputFormatUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *CustomToolInputFormatUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this CustomToolInputFormatUnion to a
+// CustomToolInputFormatUnionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// CustomToolInputFormatUnionParam.Overrides()
+func (r CustomToolInputFormatUnion) ToParam() CustomToolInputFormatUnionParam {
+	return param.Override[CustomToolInputFormatUnionParam](json.RawMessage(r.RawJSON()))
+}
+
+// Unconstrained free-form text.
+type CustomToolInputFormatText struct {
+	// Unconstrained text format. Always `text`.
+	Type constant.Text `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r CustomToolInputFormatText) RawJSON() string { return r.JSON.raw }
+func (r *CustomToolInputFormatText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (CustomToolInputFormatText) implCustomToolInputFormatUnion() {}
+
+// A grammar defined by the user.
+type CustomToolInputFormatGrammar struct {
+	// The grammar definition.
+	Definition string `json:"definition,required"`
+	// The syntax of the grammar definition. One of `lark` or `regex`.
+	//
+	// Any of "lark", "regex".
+	Syntax string `json:"syntax,required"`
+	// Grammar format. Always `grammar`.
+	Type constant.Grammar `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Definition  respjson.Field
+		Syntax      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r CustomToolInputFormatGrammar) RawJSON() string { return r.JSON.raw }
+func (r *CustomToolInputFormatGrammar) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (CustomToolInputFormatGrammar) implCustomToolInputFormatUnion() {}
+
+func CustomToolInputFormatParamOfGrammar(definition string, syntax string) CustomToolInputFormatUnionParam {
+	var grammar CustomToolInputFormatGrammarParam
+	grammar.Definition = definition
+	grammar.Syntax = syntax
+	return CustomToolInputFormatUnionParam{OfGrammar: &grammar}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type CustomToolInputFormatUnionParam struct {
+	OfText    *CustomToolInputFormatTextParam    `json:",omitzero,inline"`
+	OfGrammar *CustomToolInputFormatGrammarParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u CustomToolInputFormatUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfText, u.OfGrammar)
+}
+func (u *CustomToolInputFormatUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *CustomToolInputFormatUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfText) {
+		return u.OfText
+	} else if !param.IsOmitted(u.OfGrammar) {
+		return u.OfGrammar
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CustomToolInputFormatUnionParam) GetDefinition() *string {
+	if vt := u.OfGrammar; vt != nil {
+		return &vt.Definition
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CustomToolInputFormatUnionParam) GetSyntax() *string {
+	if vt := u.OfGrammar; vt != nil {
+		return &vt.Syntax
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CustomToolInputFormatUnionParam) GetType() *string {
+	if vt := u.OfText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfGrammar; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[CustomToolInputFormatUnionParam](
+		"type",
+		apijson.Discriminator[CustomToolInputFormatTextParam]("text"),
+		apijson.Discriminator[CustomToolInputFormatGrammarParam]("grammar"),
+	)
+}
+
+func NewCustomToolInputFormatTextParam() CustomToolInputFormatTextParam {
+	return CustomToolInputFormatTextParam{
+		Type: "text",
+	}
+}
+
+// Unconstrained free-form text.
+//
+// This struct has a constant value, construct it with
+// [NewCustomToolInputFormatTextParam].
+type CustomToolInputFormatTextParam struct {
+	// Unconstrained text format. Always `text`.
+	Type constant.Text `json:"type,required"`
+	paramObj
+}
+
+func (r CustomToolInputFormatTextParam) MarshalJSON() (data []byte, err error) {
+	type shadow CustomToolInputFormatTextParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *CustomToolInputFormatTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A grammar defined by the user.
+//
+// The properties Definition, Syntax, Type are required.
+type CustomToolInputFormatGrammarParam struct {
+	// The grammar definition.
+	Definition string `json:"definition,required"`
+	// The syntax of the grammar definition. One of `lark` or `regex`.
+	//
+	// Any of "lark", "regex".
+	Syntax string `json:"syntax,omitzero,required"`
+	// Grammar format. Always `grammar`.
+	//
+	// This field can be elided, and will marshal its zero value as "grammar".
+	Type constant.Grammar `json:"type,required"`
+	paramObj
+}
+
+func (r CustomToolInputFormatGrammarParam) MarshalJSON() (data []byte, err error) {
+	type shadow CustomToolInputFormatGrammarParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *CustomToolInputFormatGrammarParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[CustomToolInputFormatGrammarParam](
+		"syntax", "lark", "regex",
+	)
+}
+
 type ErrorObject struct {
 	Code    string `json:"code,required"`
 	Message string `json:"message,required"`
@@ -419,14 +668,13 @@ type Metadata map[string]string
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type Reasoning struct {
-	// **o-series models only**
-	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
 	//
-	// Any of "low", "medium", "high".
+	// Any of "minimal", "low", "medium", "high".
 	Effort ReasoningEffort `json:"effort,nullable"`
 	// **Deprecated:** use `summary` instead.
 	//
@@ -498,14 +746,13 @@ const (
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type ReasoningParam struct {
-	// **o-series models only**
-	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
 	//
-	// Any of "low", "medium", "high".
+	// Any of "minimal", "low", "medium", "high".
 	Effort ReasoningEffort `json:"effort,omitzero"`
 	// **Deprecated:** use `summary` instead.
 	//
@@ -534,18 +781,18 @@ func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// **o-series models only**
-//
 // Constrains effort on reasoning for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-// result in faster responses and fewer tokens used on reasoning in a response.
+// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+// effort can result in faster responses and fewer tokens used on reasoning in a
+// response.
 type ReasoningEffort string
 
 const (
-	ReasoningEffortLow    ReasoningEffort = "low"
-	ReasoningEffortMedium ReasoningEffort = "medium"
-	ReasoningEffortHigh   ReasoningEffort = "high"
+	ReasoningEffortMinimal ReasoningEffort = "minimal"
+	ReasoningEffortLow     ReasoningEffort = "low"
+	ReasoningEffortMedium  ReasoningEffort = "medium"
+	ReasoningEffortHigh    ReasoningEffort = "high"
 )
 
 // JSON object response format. An older method of generating JSON responses. Using

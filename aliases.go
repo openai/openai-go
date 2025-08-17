@@ -3,9 +3,9 @@
 package openai
 
 import (
-	"github.com/openai/openai-go/internal/apierror"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v2/internal/apierror"
+	"github.com/openai/openai-go/v2/packages/param"
+	"github.com/openai/openai-go/v2/shared"
 )
 
 // aliased to make [param.APIUnion] private when embedding
@@ -18,6 +18,27 @@ type Error = apierror.Error
 
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
+
+// Equals "gpt-5"
+const ChatModelGPT5 = shared.ChatModelGPT5
+
+// Equals "gpt-5-mini"
+const ChatModelGPT5Mini = shared.ChatModelGPT5Mini
+
+// Equals "gpt-5-nano"
+const ChatModelGPT5Nano = shared.ChatModelGPT5Nano
+
+// Equals "gpt-5-2025-08-07"
+const ChatModelGPT5_2025_08_07 = shared.ChatModelGPT5_2025_08_07
+
+// Equals "gpt-5-mini-2025-08-07"
+const ChatModelGPT5Mini2025_08_07 = shared.ChatModelGPT5Mini2025_08_07
+
+// Equals "gpt-5-nano-2025-08-07"
+const ChatModelGPT5Nano2025_08_07 = shared.ChatModelGPT5Nano2025_08_07
+
+// Equals "gpt-5-chat-latest"
+const ChatModelGPT5ChatLatest = shared.ChatModelGPT5ChatLatest
 
 // Equals "gpt-4.1"
 const ChatModelGPT4_1 = shared.ChatModelGPT4_1
@@ -259,6 +280,36 @@ const CompoundFilterTypeOr = shared.CompoundFilterTypeOr
 // This is an alias to an internal type.
 type CompoundFilterParam = shared.CompoundFilterParam
 
+// The input format for the custom tool. Default is unconstrained text.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatUnion = shared.CustomToolInputFormatUnion
+
+// Unconstrained free-form text.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatText = shared.CustomToolInputFormatText
+
+// A grammar defined by the user.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatGrammar = shared.CustomToolInputFormatGrammar
+
+// The input format for the custom tool. Default is unconstrained text.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatUnionParam = shared.CustomToolInputFormatUnionParam
+
+// Unconstrained free-form text.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatTextParam = shared.CustomToolInputFormatTextParam
+
+// A grammar defined by the user.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatGrammarParam = shared.CustomToolInputFormatGrammarParam
+
 // This is an alias to an internal type.
 type ErrorObject = shared.ErrorObject
 
@@ -339,15 +390,17 @@ const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 // This is an alias to an internal type.
 type ReasoningParam = shared.ReasoningParam
 
-// **o-series models only**
-//
 // Constrains effort on reasoning for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-// result in faster responses and fewer tokens used on reasoning in a response.
+// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+// effort can result in faster responses and fewer tokens used on reasoning in a
+// response.
 //
 // This is an alias to an internal type.
 type ReasoningEffort = shared.ReasoningEffort
+
+// Equals "minimal"
+const ReasoningEffortMinimal = shared.ReasoningEffortMinimal
 
 // Equals "low"
 const ReasoningEffortLow = shared.ReasoningEffortLow

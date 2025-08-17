@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/v2"
 )
 
 func main() {
@@ -19,10 +19,10 @@ func main() {
 	for _, arg := range os.Args[2:] {
 		println("File to upload:", arg)
 		rdr, err := os.Open(arg)
-		defer rdr.Close()
 		if err != nil {
 			panic("file open failed:" + err.Error())
 		}
+		defer rdr.Close()
 
 		fileParams = append(fileParams, openai.FileNewParams{
 			File:    rdr,
@@ -60,14 +60,13 @@ func main() {
 	println("Listing the files from the vector store")
 
 	vector := openai.VectorStoreFileBatchListFilesParams{
-		Order:         openai.VectorStoreFileBatchListFilesParamsOrderAsc,
-		VectorStoreID: vectorStore.ID,
+		Order: openai.VectorStoreFileBatchListFilesParamsOrderAsc,
 	}
 
 	q, _ := vector.URLQuery()
 	println("Vector JSON:", q)
 
-	filesCursor, err := client.VectorStores.FileBatches.ListFiles(ctx, batch.ID, vector)
+	filesCursor, err := client.VectorStores.FileBatches.ListFiles(ctx, vectorStore.ID, batch.ID, vector)
 
 	if err != nil {
 		panic(err)

@@ -18,10 +18,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openai/openai-go/internal"
-	"github.com/openai/openai-go/internal/apierror"
-	"github.com/openai/openai-go/internal/apiform"
-	"github.com/openai/openai-go/internal/apiquery"
+	"github.com/openai/openai-go/v2/internal"
+	"github.com/openai/openai-go/v2/internal/apierror"
+	"github.com/openai/openai-go/v2/internal/apiform"
+	"github.com/openai/openai-go/v2/internal/apiquery"
 	"github.com/tidwall/gjson"
 )
 
@@ -139,7 +139,7 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 	if body != nil && !hasSerializationFunc {
 		buf := new(bytes.Buffer)
 		enc := json.NewEncoder(buf)
-		enc.SetEscapeHTML(true)
+		enc.SetEscapeHTML(false)
 		if err := enc.Encode(body); err != nil {
 			return nil, err
 		}
