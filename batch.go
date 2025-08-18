@@ -290,6 +290,9 @@ type BatchNewParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,omitzero"`
+	// The expiration policy for the output and/or error file that are generated for a
+	// batch.
+	OutputExpiresAfter BatchNewParamsOutputExpiresAfter `json:"output_expires_after,omitzero"`
 	paramObj
 }
 
@@ -321,6 +324,31 @@ const (
 	BatchNewParamsEndpointV1Embeddings      BatchNewParamsEndpoint = "/v1/embeddings"
 	BatchNewParamsEndpointV1Completions     BatchNewParamsEndpoint = "/v1/completions"
 )
+
+// The expiration policy for the output and/or error file that are generated for a
+// batch.
+//
+// The properties Anchor, Seconds are required.
+type BatchNewParamsOutputExpiresAfter struct {
+	// The number of seconds after the anchor time that the file will expire. Must be
+	// between 3600 (1 hour) and 2592000 (30 days).
+	Seconds int64 `json:"seconds,required"`
+	// Anchor timestamp after which the expiration policy applies. Supported anchors:
+	// `created_at`. Note that the anchor is the file creation time, not the time the
+	// batch is created.
+	//
+	// This field can be elided, and will marshal its zero value as "created_at".
+	Anchor constant.CreatedAt `json:"anchor,required"`
+	paramObj
+}
+
+func (r BatchNewParamsOutputExpiresAfter) MarshalJSON() (data []byte, err error) {
+	type shadow BatchNewParamsOutputExpiresAfter
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BatchNewParamsOutputExpiresAfter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BatchListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place

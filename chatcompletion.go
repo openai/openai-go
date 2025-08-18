@@ -183,9 +183,8 @@ type ChatCompletion struct {
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
 	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-	//     'priority', then the request will be processed with the corresponding service
-	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-	//     Priority processing.
+	//     '[priority](https://openai.com/api-priority-processing/)', then the request
+	//     will be processed with the corresponding service tier.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -199,6 +198,8 @@ type ChatCompletion struct {
 	//
 	// Can be used in conjunction with the `seed` request parameter to understand when
 	// backend changes have been made that might impact determinism.
+	//
+	// Deprecated: deprecated
 	SystemFingerprint string `json:"system_fingerprint"`
 	// Usage statistics for the completion request.
 	Usage CompletionUsage `json:"usage"`
@@ -285,9 +286,8 @@ func (r *ChatCompletionChoiceLogprobs) UnmarshalJSON(data []byte) error {
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
 //   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-//     'priority', then the request will be processed with the corresponding service
-//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-//     Priority processing.
+//     '[priority](https://openai.com/api-priority-processing/)', then the request
+//     will be processed with the corresponding service tier.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -598,9 +598,8 @@ type ChatCompletionChunk struct {
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
 	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-	//     'priority', then the request will be processed with the corresponding service
-	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-	//     Priority processing.
+	//     '[priority](https://openai.com/api-priority-processing/)', then the request
+	//     will be processed with the corresponding service tier.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -613,6 +612,8 @@ type ChatCompletionChunk struct {
 	// This fingerprint represents the backend configuration that the model runs with.
 	// Can be used in conjunction with the `seed` request parameter to understand when
 	// backend changes have been made that might impact determinism.
+	//
+	// Deprecated: deprecated
 	SystemFingerprint string `json:"system_fingerprint"`
 	// An optional field that will only be present when you set
 	// `stream_options: {"include_usage": true}` in your request. When present, it
@@ -815,9 +816,8 @@ func (r *ChatCompletionChunkChoiceLogprobs) UnmarshalJSON(data []byte) error {
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
 //   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-//     'priority', then the request will be processed with the corresponding service
-//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-//     Priority processing.
+//     '[priority](https://openai.com/api-priority-processing/)', then the request
+//     will be processed with the corresponding service tier.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -3034,9 +3034,8 @@ type ChatCompletionNewParams struct {
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
 	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-	//     'priority', then the request will be processed with the corresponding service
-	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-	//     Priority processing.
+	//     '[priority](https://openai.com/api-priority-processing/)', then the request
+	//     will be processed with the corresponding service tier.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -3092,6 +3091,7 @@ type ChatCompletionNewParams struct {
 	// ensures the message the model generates is valid JSON. Using `json_schema` is
 	// preferred for models that support it.
 	ResponseFormat ChatCompletionNewParamsResponseFormatUnion `json:"response_format,omitzero"`
+	Text           ChatCompletionNewParamsText                `json:"text,omitzero"`
 	// Controls which (if any) tool is called by the model. `none` means the model will
 	// not call any tool and instead generates a message. `auto` means the model can
 	// pick between generating a message or calling one or more tools. `required` means
@@ -3242,9 +3242,8 @@ func (u ChatCompletionNewParamsResponseFormatUnion) GetType() *string {
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
 //   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-//     'priority', then the request will be processed with the corresponding service
-//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-//     Priority processing.
+//     '[priority](https://openai.com/api-priority-processing/)', then the request
+//     will be processed with the corresponding service tier.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -3284,6 +3283,30 @@ func (u *ChatCompletionNewParamsStopUnion) asAny() any {
 		return &u.OfStringArray
 	}
 	return nil
+}
+
+type ChatCompletionNewParamsText struct {
+	// Constrains the verbosity of the model's response. Lower values will result in
+	// more concise responses, while higher values will result in more verbose
+	// responses. Currently supported values are `low`, `medium`, and `high`.
+	//
+	// Any of "low", "medium", "high".
+	Verbosity string `json:"verbosity,omitzero"`
+	paramObj
+}
+
+func (r ChatCompletionNewParamsText) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionNewParamsText
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionNewParamsText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionNewParamsText](
+		"verbosity", "low", "medium", "high",
+	)
 }
 
 // Constrains the verbosity of the model's response. Lower values will result in
