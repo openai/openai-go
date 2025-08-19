@@ -2884,7 +2884,7 @@ type ChatCompletionNewParams struct {
 	// our [model distillation](https://platform.openai.com/docs/guides/distillation)
 	// or [evals](https://platform.openai.com/docs/guides/evals) products.
 	//
-	// Supports text and image inputs. Note: image inputs over 10MB will be dropped.
+	// Supports text and image inputs. Note: image inputs over 8MB will be dropped.
 	Store param.Opt[bool] `json:"store,omitzero"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
 	// make the output more random, while lower values like 0.2 will make it more
@@ -3027,7 +3027,6 @@ type ChatCompletionNewParams struct {
 	// ensures the message the model generates is valid JSON. Using `json_schema` is
 	// preferred for models that support it.
 	ResponseFormat ChatCompletionNewParamsResponseFormatUnion `json:"response_format,omitzero"`
-	Text           ChatCompletionNewParamsText                `json:"text,omitzero"`
 	// Controls which (if any) tool is called by the model. `none` means the model will
 	// not call any tool and instead generates a message. `auto` means the model can
 	// pick between generating a message or calling one or more tools. `required` means
@@ -3219,30 +3218,6 @@ func (u *ChatCompletionNewParamsStopUnion) asAny() any {
 		return &u.OfStringArray
 	}
 	return nil
-}
-
-type ChatCompletionNewParamsText struct {
-	// Constrains the verbosity of the model's response. Lower values will result in
-	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
-	//
-	// Any of "low", "medium", "high".
-	Verbosity string `json:"verbosity,omitzero"`
-	paramObj
-}
-
-func (r ChatCompletionNewParamsText) MarshalJSON() (data []byte, err error) {
-	type shadow ChatCompletionNewParamsText
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ChatCompletionNewParamsText) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ChatCompletionNewParamsText](
-		"verbosity", "low", "medium", "high",
-	)
 }
 
 // Constrains the verbosity of the model's response. Lower values will result in

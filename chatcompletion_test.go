@@ -86,9 +86,6 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 			IncludeUsage:       openai.Bool(true),
 		},
 		Temperature: openai.Float(1),
-		Text: openai.ChatCompletionNewParamsText{
-			Verbosity: "low",
-		},
 		ToolChoice: openai.ChatCompletionToolChoiceOptionUnionParam{
 			OfAuto: openai.String("none"),
 		},
