@@ -12135,10 +12135,20 @@ func ToolParamOfComputerUsePreview(displayHeight int64, displayWidth int64, envi
 	return ToolUnionParam{OfComputerUsePreview: &computerUsePreview}
 }
 
-func ToolParamOfMcp(serverLabel string, serverURL string) ToolUnionParam {
+func ToolParamOfMcp(serverLabel string, serverURL string, allowedTools []string, requireApproval string) ToolUnionParam {
 	var mcp ToolMcpParam
 	mcp.ServerLabel = serverLabel
 	mcp.ServerURL = serverURL
+	if len(allowedTools) > 0 {
+		mcp.AllowedTools = ToolMcpAllowedToolsUnionParam{
+			OfMcpAllowedTools: allowedTools,
+		}
+	}
+	if requireApproval != "" {
+		mcp.RequireApproval = ToolMcpRequireApprovalUnionParam{
+			OfMcpToolApprovalSetting: param.NewOpt(requireApproval),
+		}
+	}
 	return ToolUnionParam{OfMcp: &mcp}
 }
 
