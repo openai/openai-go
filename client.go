@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/openai/openai-go/v2/conversations"
 	"github.com/openai/openai-go/v2/internal/requestconfig"
 	"github.com/openai/openai-go/v2/option"
 	"github.com/openai/openai-go/v2/responses"
@@ -17,24 +18,25 @@ import (
 // interacting with the openai API. You should not instantiate this client
 // directly, and instead use the [NewClient] method instead.
 type Client struct {
-	Options      []option.RequestOption
-	Completions  CompletionService
-	Chat         ChatService
-	Embeddings   EmbeddingService
-	Files        FileService
-	Images       ImageService
-	Audio        AudioService
-	Moderations  ModerationService
-	Models       ModelService
-	FineTuning   FineTuningService
-	Graders      GraderService
-	VectorStores VectorStoreService
-	Webhooks     webhooks.WebhookService
-	Beta         BetaService
-	Batches      BatchService
-	Uploads      UploadService
-	Responses    responses.ResponseService
-	Containers   ContainerService
+	Options       []option.RequestOption
+	Completions   CompletionService
+	Chat          ChatService
+	Embeddings    EmbeddingService
+	Files         FileService
+	Images        ImageService
+	Audio         AudioService
+	Moderations   ModerationService
+	Models        ModelService
+	FineTuning    FineTuningService
+	Graders       GraderService
+	VectorStores  VectorStoreService
+	Webhooks      webhooks.WebhookService
+	Beta          BetaService
+	Batches       BatchService
+	Uploads       UploadService
+	Responses     responses.ResponseService
+	Conversations conversations.ConversationService
+	Containers    ContainerService
 }
 
 // DefaultClientOptions read from the environment (OPENAI_API_KEY, OPENAI_ORG_ID,
@@ -86,6 +88,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Batches = NewBatchService(opts...)
 	r.Uploads = NewUploadService(opts...)
 	r.Responses = responses.NewResponseService(opts...)
+	r.Conversations = conversations.NewConversationService(opts...)
 	r.Containers = NewContainerService(opts...)
 
 	return

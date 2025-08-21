@@ -899,6 +899,8 @@ func (r *Message) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (Message) ImplConversationItemUnion() {}
+
 type MessageAttachment struct {
 	// The ID of the file to attach to the message.
 	FileID string `json:"file_id"`

@@ -41,6 +41,8 @@ type ComputerUsePreview string                      // Always "computer_use_prev
 type ContainerFileCitation string                   // Always "container_file_citation"
 type ContainerFile string                           // Always "container.file"
 type Content string                                 // Always "content"
+type Conversation string                            // Always "conversation"
+type ConversationDeleted string                     // Always "conversation.deleted"
 type CreatedAt string                               // Always "created_at"
 type Custom string                                  // Always "custom"
 type CustomToolCall string                          // Always "custom_tool_call"
@@ -251,6 +253,8 @@ func (c ComputerUsePreview) Default() ComputerUsePreview         { return "compu
 func (c ContainerFileCitation) Default() ContainerFileCitation   { return "container_file_citation" }
 func (c ContainerFile) Default() ContainerFile                   { return "container.file" }
 func (c Content) Default() Content                               { return "content" }
+func (c Conversation) Default() Conversation                     { return "conversation" }
+func (c ConversationDeleted) Default() ConversationDeleted       { return "conversation.deleted" }
 func (c CreatedAt) Default() CreatedAt                           { return "created_at" }
 func (c Custom) Default() Custom                                 { return "custom" }
 func (c CustomToolCall) Default() CustomToolCall                 { return "custom_tool_call" }
@@ -557,6 +561,8 @@ func (c ComputerUsePreview) MarshalJSON() ([]byte, error)                    { r
 func (c ContainerFileCitation) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c ContainerFile) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Content) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
+func (c Conversation) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c ConversationDeleted) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
 func (c CreatedAt) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Custom) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c CustomToolCall) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
