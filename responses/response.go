@@ -804,6 +804,9 @@ type Response struct {
 	// Whether to run the model response in the background.
 	// [Learn more](https://platform.openai.com/docs/guides/background).
 	Background bool `json:"background,nullable"`
+	// The conversation that this response belongs to. Input items and output items
+	// from this response are automatically added to this conversation.
+	Conversation ResponseConversation `json:"conversation,nullable"`
 	// An upper bound for the number of tokens that can be generated for a response,
 	// including visible output tokens and
 	// [reasoning tokens](https://platform.openai.com/docs/guides/reasoning).
@@ -816,6 +819,7 @@ type Response struct {
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
 	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
+	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID string `json:"previous_response_id,nullable"`
 	// Reference to a prompt template and its variables.
 	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
@@ -907,6 +911,7 @@ type Response struct {
 		Tools              respjson.Field
 		TopP               respjson.Field
 		Background         respjson.Field
+		Conversation       respjson.Field
 		MaxOutputTokens    respjson.Field
 		MaxToolCalls       respjson.Field
 		PreviousResponseID respjson.Field
@@ -1054,6 +1059,25 @@ func (u ResponseToolChoiceUnion) AsCustomTool() (v ToolChoiceCustom) {
 func (u ResponseToolChoiceUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ResponseToolChoiceUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The conversation that this response belongs to. Input items and output items
+// from this response are automatically added to this conversation.
+type ResponseConversation struct {
+	// The unique ID of the conversation.
+	ID string `json:"id,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseConversation) RawJSON() string { return r.JSON.raw }
+func (r *ResponseConversation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -1368,6 +1392,8 @@ func (r ResponseCodeInterpreterToolCall) RawJSON() string { return r.JSON.raw }
 func (r *ResponseCodeInterpreterToolCall) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (ResponseCodeInterpreterToolCall) ImplConversationItemUnion() {}
 
 // ToParam converts this ResponseCodeInterpreterToolCall to a
 // ResponseCodeInterpreterToolCallParam.
@@ -1699,6 +1725,8 @@ func (r ResponseComputerToolCall) RawJSON() string { return r.JSON.raw }
 func (r *ResponseComputerToolCall) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (ResponseComputerToolCall) ImplConversationItemUnion() {}
 
 // ToParam converts this ResponseComputerToolCall to a
 // ResponseComputerToolCallParam.
@@ -2670,6 +2698,8 @@ func (r *ResponseComputerToolCallOutputItem) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (ResponseComputerToolCallOutputItem) ImplConversationItemUnion() {}
+
 // A pending safety check for the computer call.
 type ResponseComputerToolCallOutputItemAcknowledgedSafetyCheck struct {
 	// The ID of the pending safety check.
@@ -2978,6 +3008,23 @@ func (r *ResponseContentPartDoneEventPartUnion) UnmarshalJSON(data []byte) error
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The conversation that this response belongs to.
+//
+// The property ID is required.
+type ResponseConversationParam struct {
+	// The unique ID of the conversation.
+	ID string `json:"id,required"`
+	paramObj
+}
+
+func (r ResponseConversationParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseConversationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseConversationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // An event that is emitted when a response is created.
 type ResponseCreatedEvent struct {
 	// The response that was created.
@@ -3031,6 +3078,8 @@ func (r ResponseCustomToolCall) RawJSON() string { return r.JSON.raw }
 func (r *ResponseCustomToolCall) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (ResponseCustomToolCall) ImplConversationItemUnion() {}
 
 // ToParam converts this ResponseCustomToolCall to a ResponseCustomToolCallParam.
 //
@@ -3154,6 +3203,8 @@ func (r ResponseCustomToolCallOutput) RawJSON() string { return r.JSON.raw }
 func (r *ResponseCustomToolCallOutput) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (ResponseCustomToolCallOutput) ImplConversationItemUnion() {}
 
 // ToParam converts this ResponseCustomToolCallOutput to a
 // ResponseCustomToolCallOutputParam.
@@ -3412,6 +3463,8 @@ func (r ResponseFileSearchToolCall) RawJSON() string { return r.JSON.raw }
 func (r *ResponseFileSearchToolCall) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (ResponseFileSearchToolCall) ImplConversationItemUnion() {}
 
 // ToParam converts this ResponseFileSearchToolCall to a
 // ResponseFileSearchToolCallParam.
@@ -4033,6 +4086,8 @@ func (r *ResponseFunctionToolCallItem) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (ResponseFunctionToolCallItem) ImplConversationItemUnion() {}
+
 type ResponseFunctionToolCallOutputItem struct {
 	// The unique ID of the function call tool output.
 	ID string `json:"id,required"`
@@ -4064,6 +4119,8 @@ func (r ResponseFunctionToolCallOutputItem) RawJSON() string { return r.JSON.raw
 func (r *ResponseFunctionToolCallOutputItem) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (ResponseFunctionToolCallOutputItem) ImplConversationItemUnion() {}
 
 // The status of the item. One of `in_progress`, `completed`, or `incomplete`.
 // Populated when items are returned via API.
@@ -4106,6 +4163,8 @@ func (r ResponseFunctionWebSearch) RawJSON() string { return r.JSON.raw }
 func (r *ResponseFunctionWebSearch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (ResponseFunctionWebSearch) ImplConversationItemUnion() {}
 
 // ToParam converts this ResponseFunctionWebSearch to a
 // ResponseFunctionWebSearchParam.
@@ -9974,6 +10033,8 @@ func (r *ResponseReasoningItem) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (ResponseReasoningItem) ImplConversationItemUnion() {}
+
 // ToParam converts this ResponseReasoningItem to a ResponseReasoningItemParam.
 //
 // Warning: the fields of the param type will not be present. ToParam should only
@@ -13384,6 +13445,7 @@ type ResponseNewParams struct {
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
 	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
+	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
 	// Whether to store the generated model response for later retrieval via API.
 	Store param.Opt[bool] `json:"store,omitzero"`
@@ -13417,6 +13479,11 @@ type ResponseNewParams struct {
 	// similar requests and to help OpenAI detect and prevent abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
+	// The conversation that this response belongs to. Items from this conversation are
+	// prepended to `input_items` for this response request. Input items and output
+	// items from this response are automatically added to this conversation after this
+	// response completes.
+	Conversation ResponseNewParamsConversationUnion `json:"conversation,omitzero"`
 	// Specify additional output data to include in the model response. Currently
 	// supported values are:
 	//
@@ -13532,6 +13599,31 @@ func (r ResponseNewParams) MarshalJSON() (data []byte, err error) {
 }
 func (r *ResponseNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseNewParamsConversationUnion struct {
+	OfString             param.Opt[string]          `json:",omitzero,inline"`
+	OfConversationObject *ResponseConversationParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseNewParamsConversationUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfConversationObject)
+}
+func (u *ResponseNewParamsConversationUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *ResponseNewParamsConversationUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfConversationObject) {
+		return u.OfConversationObject
+	}
+	return nil
 }
 
 // Only one field can be non-zero.

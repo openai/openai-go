@@ -37,6 +37,8 @@ TEST_PATHS=(
 	uploadpart_test.go
 	responses/response_test.go
 	responses/inputitem_test.go
+	conversations/conversation_test.go
+	conversations/item_test.go
 	container_test.go
 	containerfile_test.go
 	containerfilecontent_test.go
