@@ -11631,15 +11631,19 @@ type ToolUnion struct {
 	// This field is from variant [ToolMcp].
 	ServerLabel string `json:"server_label"`
 	// This field is from variant [ToolMcp].
-	ServerURL string `json:"server_url"`
-	// This field is from variant [ToolMcp].
 	AllowedTools ToolMcpAllowedToolsUnion `json:"allowed_tools"`
+	// This field is from variant [ToolMcp].
+	Authorization string `json:"authorization"`
+	// This field is from variant [ToolMcp].
+	ConnectorID string `json:"connector_id"`
 	// This field is from variant [ToolMcp].
 	Headers map[string]string `json:"headers"`
 	// This field is from variant [ToolMcp].
 	RequireApproval ToolMcpRequireApprovalUnion `json:"require_approval"`
 	// This field is from variant [ToolMcp].
 	ServerDescription string `json:"server_description"`
+	// This field is from variant [ToolMcp].
+	ServerURL string `json:"server_url"`
 	// This field is from variant [ToolCodeInterpreter].
 	Container ToolCodeInterpreterContainerUnion `json:"container"`
 	// This field is from variant [ToolImageGeneration].
@@ -11680,11 +11684,13 @@ type ToolUnion struct {
 		DisplayWidth      respjson.Field
 		Environment       respjson.Field
 		ServerLabel       respjson.Field
-		ServerURL         respjson.Field
 		AllowedTools      respjson.Field
+		Authorization     respjson.Field
+		ConnectorID       respjson.Field
 		Headers           respjson.Field
 		RequireApproval   respjson.Field
 		ServerDescription respjson.Field
+		ServerURL         respjson.Field
 		Container         respjson.Field
 		Background        respjson.Field
 		InputFidelity     respjson.Field
@@ -11768,12 +11774,34 @@ func (r ToolUnion) ToParam() ToolUnionParam {
 type ToolMcp struct {
 	// A label for this MCP server, used to identify it in tool calls.
 	ServerLabel string `json:"server_label,required"`
-	// The URL for the MCP server.
-	ServerURL string `json:"server_url,required"`
 	// The type of the MCP tool. Always `mcp`.
 	Type constant.Mcp `json:"type,required"`
 	// List of allowed tool names or a filter object.
 	AllowedTools ToolMcpAllowedToolsUnion `json:"allowed_tools,nullable"`
+	// An OAuth access token that can be used with a remote MCP server, either with a
+	// custom MCP server URL or a service connector. Your application must handle the
+	// OAuth authorization flow and provide the token here.
+	Authorization string `json:"authorization"`
+	// Identifier for service connectors, like those available in ChatGPT. One of
+	// `server_url` or `connector_id` must be provided. Learn more about service
+	// connectors
+	// [here](https://platform.openai.com/docs/guides/tools-remote-mcp#connectors).
+	//
+	// Currently supported `connector_id` values are:
+	//
+	// - Dropbox: `connector_dropbox`
+	// - Gmail: `connector_gmail`
+	// - Google Calendar: `connector_googlecalendar`
+	// - Google Drive: `connector_googledrive`
+	// - Microsoft Teams: `connector_microsoftteams`
+	// - Outlook Calendar: `connector_outlookcalendar`
+	// - Outlook Email: `connector_outlookemail`
+	// - SharePoint: `connector_sharepoint`
+	//
+	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
+	// "connector_googledrive", "connector_microsoftteams",
+	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	ConnectorID string `json:"connector_id"`
 	// Optional HTTP headers to send to the MCP server. Use for authentication or other
 	// purposes.
 	Headers map[string]string `json:"headers,nullable"`
@@ -11781,15 +11809,20 @@ type ToolMcp struct {
 	RequireApproval ToolMcpRequireApprovalUnion `json:"require_approval,nullable"`
 	// Optional description of the MCP server, used to provide more context.
 	ServerDescription string `json:"server_description"`
+	// The URL for the MCP server. One of `server_url` or `connector_id` must be
+	// provided.
+	ServerURL string `json:"server_url"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ServerLabel       respjson.Field
-		ServerURL         respjson.Field
 		Type              respjson.Field
 		AllowedTools      respjson.Field
+		Authorization     respjson.Field
+		ConnectorID       respjson.Field
 		Headers           respjson.Field
 		RequireApproval   respjson.Field
 		ServerDescription respjson.Field
+		ServerURL         respjson.Field
 		ExtraFields       map[string]respjson.Field
 		raw               string
 	} `json:"-"`
@@ -11802,7 +11835,7 @@ func (r *ToolMcp) UnmarshalJSON(data []byte) error {
 }
 
 // ToolMcpAllowedToolsUnion contains all possible properties and values from
-// [[]string], [ToolMcpAllowedToolsMcpAllowedToolsFilter].
+// [[]string], [ToolMcpAllowedToolsMcpToolFilter].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
@@ -11811,10 +11844,13 @@ func (r *ToolMcp) UnmarshalJSON(data []byte) error {
 type ToolMcpAllowedToolsUnion struct {
 	// This field will be present if the value is a [[]string] instead of an object.
 	OfMcpAllowedTools []string `json:",inline"`
-	// This field is from variant [ToolMcpAllowedToolsMcpAllowedToolsFilter].
+	// This field is from variant [ToolMcpAllowedToolsMcpToolFilter].
+	ReadOnly bool `json:"read_only"`
+	// This field is from variant [ToolMcpAllowedToolsMcpToolFilter].
 	ToolNames []string `json:"tool_names"`
 	JSON      struct {
 		OfMcpAllowedTools respjson.Field
+		ReadOnly          respjson.Field
 		ToolNames         respjson.Field
 		raw               string
 	} `json:"-"`
@@ -11825,7 +11861,7 @@ func (u ToolMcpAllowedToolsUnion) AsMcpAllowedTools() (v []string) {
 	return
 }
 
-func (u ToolMcpAllowedToolsUnion) AsMcpAllowedToolsFilter() (v ToolMcpAllowedToolsMcpAllowedToolsFilter) {
+func (u ToolMcpAllowedToolsUnion) AsMcpToolFilter() (v ToolMcpAllowedToolsMcpToolFilter) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -11838,11 +11874,17 @@ func (r *ToolMcpAllowedToolsUnion) UnmarshalJSON(data []byte) error {
 }
 
 // A filter object to specify which tools are allowed.
-type ToolMcpAllowedToolsMcpAllowedToolsFilter struct {
+type ToolMcpAllowedToolsMcpToolFilter struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly bool `json:"read_only"`
 	// List of allowed tool names.
 	ToolNames []string `json:"tool_names"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		ReadOnly    respjson.Field
 		ToolNames   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -11850,8 +11892,8 @@ type ToolMcpAllowedToolsMcpAllowedToolsFilter struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ToolMcpAllowedToolsMcpAllowedToolsFilter) RawJSON() string { return r.JSON.raw }
-func (r *ToolMcpAllowedToolsMcpAllowedToolsFilter) UnmarshalJSON(data []byte) error {
+func (r ToolMcpAllowedToolsMcpToolFilter) RawJSON() string { return r.JSON.raw }
+func (r *ToolMcpAllowedToolsMcpToolFilter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -11894,10 +11936,12 @@ func (r *ToolMcpRequireApprovalUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Specify which of the MCP server's tools require approval. Can be `always`,
+// `never`, or a filter object associated with tools that require approval.
 type ToolMcpRequireApprovalMcpToolApprovalFilter struct {
-	// A list of tools that always require approval.
+	// A filter object to specify which tools are allowed.
 	Always ToolMcpRequireApprovalMcpToolApprovalFilterAlways `json:"always"`
-	// A list of tools that never require approval.
+	// A filter object to specify which tools are allowed.
 	Never ToolMcpRequireApprovalMcpToolApprovalFilterNever `json:"never"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -11914,12 +11958,18 @@ func (r *ToolMcpRequireApprovalMcpToolApprovalFilter) UnmarshalJSON(data []byte)
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A list of tools that always require approval.
+// A filter object to specify which tools are allowed.
 type ToolMcpRequireApprovalMcpToolApprovalFilterAlways struct {
-	// List of tools that require approval.
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly bool `json:"read_only"`
+	// List of allowed tool names.
 	ToolNames []string `json:"tool_names"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		ReadOnly    respjson.Field
 		ToolNames   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -11932,12 +11982,18 @@ func (r *ToolMcpRequireApprovalMcpToolApprovalFilterAlways) UnmarshalJSON(data [
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A list of tools that never require approval.
+// A filter object to specify which tools are allowed.
 type ToolMcpRequireApprovalMcpToolApprovalFilterNever struct {
-	// List of tools that do not require approval.
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly bool `json:"read_only"`
+	// List of allowed tool names.
 	ToolNames []string `json:"tool_names"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		ReadOnly    respjson.Field
 		ToolNames   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -12183,10 +12239,9 @@ func ToolParamOfComputerUsePreview(displayHeight int64, displayWidth int64, envi
 	return ToolUnionParam{OfComputerUsePreview: &computerUsePreview}
 }
 
-func ToolParamOfMcp(serverLabel string, serverURL string) ToolUnionParam {
+func ToolParamOfMcp(serverLabel string) ToolUnionParam {
 	var mcp ToolMcpParam
 	mcp.ServerLabel = serverLabel
-	mcp.ServerURL = serverURL
 	return ToolUnionParam{OfMcp: &mcp}
 }
 
@@ -12360,17 +12415,25 @@ func (u ToolUnionParam) GetServerLabel() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ToolUnionParam) GetServerURL() *string {
+func (u ToolUnionParam) GetAllowedTools() *ToolMcpAllowedToolsUnionParam {
 	if vt := u.OfMcp; vt != nil {
-		return &vt.ServerURL
+		return &vt.AllowedTools
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ToolUnionParam) GetAllowedTools() *ToolMcpAllowedToolsUnionParam {
+func (u ToolUnionParam) GetAuthorization() *string {
+	if vt := u.OfMcp; vt != nil && vt.Authorization.Valid() {
+		return &vt.Authorization.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ToolUnionParam) GetConnectorID() *string {
 	if vt := u.OfMcp; vt != nil {
-		return &vt.AllowedTools
+		return &vt.ConnectorID
 	}
 	return nil
 }
@@ -12395,6 +12458,14 @@ func (u ToolUnionParam) GetRequireApproval() *ToolMcpRequireApprovalUnionParam {
 func (u ToolUnionParam) GetServerDescription() *string {
 	if vt := u.OfMcp; vt != nil && vt.ServerDescription.Valid() {
 		return &vt.ServerDescription.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ToolUnionParam) GetServerURL() *string {
+	if vt := u.OfMcp; vt != nil && vt.ServerURL.Valid() {
+		return &vt.ServerURL.Value
 	}
 	return nil
 }
@@ -12559,14 +12630,19 @@ func init() {
 // (MCP) servers.
 // [Learn more about MCP](https://platform.openai.com/docs/guides/tools-remote-mcp).
 //
-// The properties ServerLabel, ServerURL, Type are required.
+// The properties ServerLabel, Type are required.
 type ToolMcpParam struct {
 	// A label for this MCP server, used to identify it in tool calls.
 	ServerLabel string `json:"server_label,required"`
-	// The URL for the MCP server.
-	ServerURL string `json:"server_url,required"`
+	// An OAuth access token that can be used with a remote MCP server, either with a
+	// custom MCP server URL or a service connector. Your application must handle the
+	// OAuth authorization flow and provide the token here.
+	Authorization param.Opt[string] `json:"authorization,omitzero"`
 	// Optional description of the MCP server, used to provide more context.
 	ServerDescription param.Opt[string] `json:"server_description,omitzero"`
+	// The URL for the MCP server. One of `server_url` or `connector_id` must be
+	// provided.
+	ServerURL param.Opt[string] `json:"server_url,omitzero"`
 	// List of allowed tool names or a filter object.
 	AllowedTools ToolMcpAllowedToolsUnionParam `json:"allowed_tools,omitzero"`
 	// Optional HTTP headers to send to the MCP server. Use for authentication or other
@@ -12574,6 +12650,26 @@ type ToolMcpParam struct {
 	Headers map[string]string `json:"headers,omitzero"`
 	// Specify which of the MCP server's tools require approval.
 	RequireApproval ToolMcpRequireApprovalUnionParam `json:"require_approval,omitzero"`
+	// Identifier for service connectors, like those available in ChatGPT. One of
+	// `server_url` or `connector_id` must be provided. Learn more about service
+	// connectors
+	// [here](https://platform.openai.com/docs/guides/tools-remote-mcp#connectors).
+	//
+	// Currently supported `connector_id` values are:
+	//
+	// - Dropbox: `connector_dropbox`
+	// - Gmail: `connector_gmail`
+	// - Google Calendar: `connector_googlecalendar`
+	// - Google Drive: `connector_googledrive`
+	// - Microsoft Teams: `connector_microsoftteams`
+	// - Outlook Calendar: `connector_outlookcalendar`
+	// - Outlook Email: `connector_outlookemail`
+	// - SharePoint: `connector_sharepoint`
+	//
+	// Any of "connector_dropbox", "connector_gmail", "connector_googlecalendar",
+	// "connector_googledrive", "connector_microsoftteams",
+	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
+	ConnectorID string `json:"connector_id,omitzero"`
 	// The type of the MCP tool. Always `mcp`.
 	//
 	// This field can be elided, and will marshal its zero value as "mcp".
@@ -12589,17 +12685,23 @@ func (r *ToolMcpParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ToolMcpParam](
+		"connector_id", "connector_dropbox", "connector_gmail", "connector_googlecalendar", "connector_googledrive", "connector_microsoftteams", "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint",
+	)
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ToolMcpAllowedToolsUnionParam struct {
-	OfMcpAllowedTools       []string                                       `json:",omitzero,inline"`
-	OfMcpAllowedToolsFilter *ToolMcpAllowedToolsMcpAllowedToolsFilterParam `json:",omitzero,inline"`
+	OfMcpAllowedTools []string                               `json:",omitzero,inline"`
+	OfMcpToolFilter   *ToolMcpAllowedToolsMcpToolFilterParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ToolMcpAllowedToolsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfMcpAllowedTools, u.OfMcpAllowedToolsFilter)
+	return param.MarshalUnion(u, u.OfMcpAllowedTools, u.OfMcpToolFilter)
 }
 func (u *ToolMcpAllowedToolsUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -12608,24 +12710,29 @@ func (u *ToolMcpAllowedToolsUnionParam) UnmarshalJSON(data []byte) error {
 func (u *ToolMcpAllowedToolsUnionParam) asAny() any {
 	if !param.IsOmitted(u.OfMcpAllowedTools) {
 		return &u.OfMcpAllowedTools
-	} else if !param.IsOmitted(u.OfMcpAllowedToolsFilter) {
-		return u.OfMcpAllowedToolsFilter
+	} else if !param.IsOmitted(u.OfMcpToolFilter) {
+		return u.OfMcpToolFilter
 	}
 	return nil
 }
 
 // A filter object to specify which tools are allowed.
-type ToolMcpAllowedToolsMcpAllowedToolsFilterParam struct {
+type ToolMcpAllowedToolsMcpToolFilterParam struct {
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly param.Opt[bool] `json:"read_only,omitzero"`
 	// List of allowed tool names.
 	ToolNames []string `json:"tool_names,omitzero"`
 	paramObj
 }
 
-func (r ToolMcpAllowedToolsMcpAllowedToolsFilterParam) MarshalJSON() (data []byte, err error) {
-	type shadow ToolMcpAllowedToolsMcpAllowedToolsFilterParam
+func (r ToolMcpAllowedToolsMcpToolFilterParam) MarshalJSON() (data []byte, err error) {
+	type shadow ToolMcpAllowedToolsMcpToolFilterParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ToolMcpAllowedToolsMcpAllowedToolsFilterParam) UnmarshalJSON(data []byte) error {
+func (r *ToolMcpAllowedToolsMcpToolFilterParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -12656,10 +12763,12 @@ func (u *ToolMcpRequireApprovalUnionParam) asAny() any {
 	return nil
 }
 
+// Specify which of the MCP server's tools require approval. Can be `always`,
+// `never`, or a filter object associated with tools that require approval.
 type ToolMcpRequireApprovalMcpToolApprovalFilterParam struct {
-	// A list of tools that always require approval.
+	// A filter object to specify which tools are allowed.
 	Always ToolMcpRequireApprovalMcpToolApprovalFilterAlwaysParam `json:"always,omitzero"`
-	// A list of tools that never require approval.
+	// A filter object to specify which tools are allowed.
 	Never ToolMcpRequireApprovalMcpToolApprovalFilterNeverParam `json:"never,omitzero"`
 	paramObj
 }
@@ -12672,9 +12781,14 @@ func (r *ToolMcpRequireApprovalMcpToolApprovalFilterParam) UnmarshalJSON(data []
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A list of tools that always require approval.
+// A filter object to specify which tools are allowed.
 type ToolMcpRequireApprovalMcpToolApprovalFilterAlwaysParam struct {
-	// List of tools that require approval.
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly param.Opt[bool] `json:"read_only,omitzero"`
+	// List of allowed tool names.
 	ToolNames []string `json:"tool_names,omitzero"`
 	paramObj
 }
@@ -12687,9 +12801,14 @@ func (r *ToolMcpRequireApprovalMcpToolApprovalFilterAlwaysParam) UnmarshalJSON(d
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A list of tools that never require approval.
+// A filter object to specify which tools are allowed.
 type ToolMcpRequireApprovalMcpToolApprovalFilterNeverParam struct {
-	// List of tools that do not require approval.
+	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
+	// is
+	// [annotated with `readOnlyHint`](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations-readonlyhint),
+	// it will match this filter.
+	ReadOnly param.Opt[bool] `json:"read_only,omitzero"`
+	// List of allowed tool names.
 	ToolNames []string `json:"tool_names,omitzero"`
 	paramObj
 }
