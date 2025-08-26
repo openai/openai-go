@@ -825,7 +825,7 @@ type Response struct {
 	// hit rates. Replaces the `user` field.
 	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
 	PromptCacheKey string `json:"prompt_cache_key"`
-	// **o-series models only**
+	// **gpt-5 and o-series models only**
 	//
 	// Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
@@ -844,9 +844,8 @@ type Response struct {
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
 	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-	//     'priority', then the request will be processed with the corresponding service
-	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-	//     Priority processing.
+	//     '[priority](https://openai.com/api-priority-processing/)', then the request
+	//     will be processed with the corresponding service tier.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -1079,9 +1078,8 @@ func (r *ResponseToolChoiceUnion) UnmarshalJSON(data []byte) error {
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
 //   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-//     'priority', then the request will be processed with the corresponding service
-//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-//     Priority processing.
+//     '[priority](https://openai.com/api-priority-processing/)', then the request
+//     will be processed with the corresponding service tier.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -13467,9 +13465,8 @@ type ResponseNewParams struct {
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
 	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-	//     'priority', then the request will be processed with the corresponding service
-	//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-	//     Priority processing.
+	//     '[priority](https://openai.com/api-priority-processing/)', then the request
+	//     will be processed with the corresponding service tier.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -13507,7 +13504,7 @@ type ResponseNewParams struct {
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
 	// available models.
 	Model shared.ResponsesModel `json:"model,omitzero"`
-	// **o-series models only**
+	// **gpt-5 and o-series models only**
 	//
 	// Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
@@ -13583,9 +13580,8 @@ func (u *ResponseNewParamsInputUnion) asAny() any {
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
 //   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-//     'priority', then the request will be processed with the corresponding service
-//     tier. [Contact sales](https://openai.com/contact-sales) to learn more about
-//     Priority processing.
+//     '[priority](https://openai.com/api-priority-processing/)', then the request
+//     will be processed with the corresponding service tier.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the

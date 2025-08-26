@@ -33,6 +33,9 @@ func TestBatchNewWithOptionalParams(t *testing.T) {
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
+		OutputExpiresAfter: openai.BatchNewParamsOutputExpiresAfter{
+			Seconds: 3600,
+		},
 	})
 	if err != nil {
 		var apierr *openai.Error

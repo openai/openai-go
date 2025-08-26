@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.1.1 (2025-08-20)
+
+Full Changelog: [v2.1.0...v2.1.1](https://github.com/openai/openai-go/compare/v2.1.0...v2.1.1)
+
+### Chores
+
+* **api:** accurately represent shape for verbosity on Chat Completions ([f81197b](https://github.com/openai/openai-go/commit/f81197b4b02f3aa022bc363d6db6949d0d105d92))
+
+## 2.1.0 (2025-08-18)
+
+Full Changelog: [v2.0.2...v2.1.0](https://github.com/openai/openai-go/compare/v2.0.2...v2.1.0)
+
+### Features
+
+* **api:** add new text parameters, expiration options ([323154c](https://github.com/openai/openai-go/commit/323154ccec2facf80d9ada76ed3c35553cb8896d))
+
+
+### Documentation
+
+* give https its missing "h" in Azure OpenAI REST API link ([#480](https://github.com/openai/openai-go/issues/480)) ([8a401c9](https://github.com/openai/openai-go/commit/8a401c9eecbe4936de487447be09757859001009))
+
 ## 2.0.2 (2025-08-09)
 
 Full Changelog: [v2.0.1...v2.0.2](https://github.com/openai/openai-go/compare/v2.0.1...v2.0.2)
