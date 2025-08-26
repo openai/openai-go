@@ -4203,12 +4203,15 @@ type ResponseFunctionWebSearchActionUnion struct {
 	Query string `json:"query"`
 	// Any of "search", "open_page", "find".
 	Type string `json:"type"`
-	URL  string `json:"url"`
+	// This field is from variant [ResponseFunctionWebSearchActionSearch].
+	Sources []ResponseFunctionWebSearchActionSearchSource `json:"sources"`
+	URL     string                                        `json:"url"`
 	// This field is from variant [ResponseFunctionWebSearchActionFind].
 	Pattern string `json:"pattern"`
 	JSON    struct {
 		Query   respjson.Field
 		Type    respjson.Field
+		Sources respjson.Field
 		URL     respjson.Field
 		Pattern respjson.Field
 		raw     string
@@ -4275,10 +4278,13 @@ type ResponseFunctionWebSearchActionSearch struct {
 	Query string `json:"query,required"`
 	// The action type.
 	Type constant.Search `json:"type,required"`
+	// The sources used in the search.
+	Sources []ResponseFunctionWebSearchActionSearchSource `json:"sources"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Query       respjson.Field
 		Type        respjson.Field
+		Sources     respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4287,6 +4293,27 @@ type ResponseFunctionWebSearchActionSearch struct {
 // Returns the unmodified JSON received from the API
 func (r ResponseFunctionWebSearchActionSearch) RawJSON() string { return r.JSON.raw }
 func (r *ResponseFunctionWebSearchActionSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A source used in the search.
+type ResponseFunctionWebSearchActionSearchSource struct {
+	// The type of source. Always `url`.
+	Type constant.URL `json:"type,required"`
+	// The URL of the source.
+	URL string `json:"url,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseFunctionWebSearchActionSearchSource) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFunctionWebSearchActionSearchSource) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -4412,6 +4439,14 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetQuery() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseFunctionWebSearchActionUnionParam) GetSources() []ResponseFunctionWebSearchActionSearchSourceParam {
+	if vt := u.OfSearch; vt != nil {
+		return vt.Sources
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseFunctionWebSearchActionUnionParam) GetPattern() *string {
 	if vt := u.OfFind; vt != nil {
 		return &vt.Pattern
@@ -4456,6 +4491,8 @@ func init() {
 type ResponseFunctionWebSearchActionSearchParam struct {
 	// The search query.
 	Query string `json:"query,required"`
+	// The sources used in the search.
+	Sources []ResponseFunctionWebSearchActionSearchSourceParam `json:"sources,omitzero"`
 	// The action type.
 	//
 	// This field can be elided, and will marshal its zero value as "search".
@@ -4468,6 +4505,27 @@ func (r ResponseFunctionWebSearchActionSearchParam) MarshalJSON() (data []byte, 
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ResponseFunctionWebSearchActionSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A source used in the search.
+//
+// The properties Type, URL are required.
+type ResponseFunctionWebSearchActionSearchSourceParam struct {
+	// The URL of the source.
+	URL string `json:"url,required"`
+	// The type of source. Always `url`.
+	//
+	// This field can be elided, and will marshal its zero value as "url".
+	Type constant.URL `json:"type,required"`
+	paramObj
+}
+
+func (r ResponseFunctionWebSearchActionSearchSourceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseFunctionWebSearchActionSearchSourceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseFunctionWebSearchActionSearchSourceParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -4659,6 +4717,8 @@ func (r *ResponseInProgressEvent) UnmarshalJSON(data []byte) error {
 // Specify additional output data to include in the model response. Currently
 // supported values are:
 //
+//   - `web_search_call.action.sources`: Include the sources of the web search tool
+//     call.
 //   - `code_interpreter_call.outputs`: Includes the outputs of python code execution
 //     in code interpreter tool call items.
 //   - `computer_call_output.output.image_url`: Include image urls from the computer
@@ -5447,7 +5507,9 @@ type ResponseInputItemUnionAction struct {
 	Text string `json:"text"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Query string `json:"query"`
-	URL   string `json:"url"`
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Sources []ResponseFunctionWebSearchActionSearchSource `json:"sources"`
+	URL     string                                        `json:"url"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Pattern string `json:"pattern"`
 	// This field is from variant [ResponseInputItemLocalShellCallAction].
@@ -5471,6 +5533,7 @@ type ResponseInputItemUnionAction struct {
 		ScrollY          respjson.Field
 		Text             respjson.Field
 		Query            respjson.Field
+		Sources          respjson.Field
 		URL              respjson.Field
 		Pattern          respjson.Field
 		Command          respjson.Field
@@ -6664,6 +6727,15 @@ func (u responseInputItemUnionParamAction) GetQuery() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u responseInputItemUnionParamAction) GetSources() []ResponseFunctionWebSearchActionSearchSourceParam {
+	switch vt := u.any.(type) {
+	case *ResponseFunctionWebSearchActionUnionParam:
+		return vt.GetSources()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetPattern() *string {
 	switch vt := u.any.(type) {
 	case *ResponseFunctionWebSearchActionUnionParam:
@@ -7683,7 +7755,9 @@ type ResponseItemUnionAction struct {
 	Text string `json:"text"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Query string `json:"query"`
-	URL   string `json:"url"`
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Sources []ResponseFunctionWebSearchActionSearchSource `json:"sources"`
+	URL     string                                        `json:"url"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Pattern string `json:"pattern"`
 	// This field is from variant [ResponseItemLocalShellCallAction].
@@ -7707,6 +7781,7 @@ type ResponseItemUnionAction struct {
 		ScrollY          respjson.Field
 		Text             respjson.Field
 		Query            respjson.Field
+		Sources          respjson.Field
 		URL              respjson.Field
 		Pattern          respjson.Field
 		Command          respjson.Field
@@ -8521,7 +8596,9 @@ type ResponseOutputItemUnionAction struct {
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Query string `json:"query"`
 	Type  string `json:"type"`
-	URL   string `json:"url"`
+	// This field is from variant [ResponseFunctionWebSearchActionUnion].
+	Sources []ResponseFunctionWebSearchActionSearchSource `json:"sources"`
+	URL     string                                        `json:"url"`
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Pattern string `json:"pattern"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
@@ -8551,6 +8628,7 @@ type ResponseOutputItemUnionAction struct {
 	JSON             struct {
 		Query            respjson.Field
 		Type             respjson.Field
+		Sources          respjson.Field
 		URL              respjson.Field
 		Pattern          respjson.Field
 		Button           respjson.Field
@@ -11607,8 +11685,9 @@ func (r *ResponseWebSearchCallSearchingEvent) UnmarshalJSON(data []byte) error {
 }
 
 // ToolUnion contains all possible properties and values from [FunctionTool],
-// [FileSearchTool], [WebSearchTool], [ComputerTool], [ToolMcp],
-// [ToolCodeInterpreter], [ToolImageGeneration], [ToolLocalShell], [CustomTool].
+// [FileSearchTool], [ComputerTool], [ToolWebSearch], [ToolMcp],
+// [ToolCodeInterpreter], [ToolImageGeneration], [ToolLocalShell], [CustomTool],
+// [WebSearchTool].
 //
 // Use the [ToolUnion.AsAny] method to switch on the variant.
 //
@@ -11619,28 +11698,28 @@ type ToolUnion struct {
 	Parameters map[string]any `json:"parameters"`
 	// This field is from variant [FunctionTool].
 	Strict bool `json:"strict"`
-	// Any of "function", "file_search", nil, "computer_use_preview", "mcp",
-	// "code_interpreter", "image_generation", "local_shell", "custom".
+	// Any of "function", "file_search", "computer_use_preview", nil, "mcp",
+	// "code_interpreter", "image_generation", "local_shell", "custom", nil.
 	Type        string `json:"type"`
 	Description string `json:"description"`
 	// This field is from variant [FileSearchTool].
 	VectorStoreIDs []string `json:"vector_store_ids"`
-	// This field is from variant [FileSearchTool].
-	Filters FileSearchToolFiltersUnion `json:"filters"`
+	// This field is a union of [FileSearchToolFiltersUnion], [ToolWebSearchFilters]
+	Filters ToolUnionFilters `json:"filters"`
 	// This field is from variant [FileSearchTool].
 	MaxNumResults int64 `json:"max_num_results"`
 	// This field is from variant [FileSearchTool].
 	RankingOptions FileSearchToolRankingOptions `json:"ranking_options"`
-	// This field is from variant [WebSearchTool].
-	SearchContextSize WebSearchToolSearchContextSize `json:"search_context_size"`
-	// This field is from variant [WebSearchTool].
-	UserLocation WebSearchToolUserLocation `json:"user_location"`
 	// This field is from variant [ComputerTool].
 	DisplayHeight int64 `json:"display_height"`
 	// This field is from variant [ComputerTool].
 	DisplayWidth int64 `json:"display_width"`
 	// This field is from variant [ComputerTool].
-	Environment ComputerToolEnvironment `json:"environment"`
+	Environment       ComputerToolEnvironment `json:"environment"`
+	SearchContextSize string                  `json:"search_context_size"`
+	// This field is a union of [ToolWebSearchUserLocation],
+	// [WebSearchToolUserLocation]
+	UserLocation ToolUnionUserLocation `json:"user_location"`
 	// This field is from variant [ToolMcp].
 	ServerLabel string `json:"server_label"`
 	// This field is from variant [ToolMcp].
@@ -11691,11 +11770,11 @@ type ToolUnion struct {
 		Filters           respjson.Field
 		MaxNumResults     respjson.Field
 		RankingOptions    respjson.Field
-		SearchContextSize respjson.Field
-		UserLocation      respjson.Field
 		DisplayHeight     respjson.Field
 		DisplayWidth      respjson.Field
 		Environment       respjson.Field
+		SearchContextSize respjson.Field
+		UserLocation      respjson.Field
 		ServerLabel       respjson.Field
 		AllowedTools      respjson.Field
 		Authorization     respjson.Field
@@ -11730,12 +11809,12 @@ func (u ToolUnion) AsFileSearch() (v FileSearchTool) {
 	return
 }
 
-func (u ToolUnion) AsWebSearchPreview() (v WebSearchTool) {
+func (u ToolUnion) AsComputerUsePreview() (v ComputerTool) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u ToolUnion) AsComputerUsePreview() (v ComputerTool) {
+func (u ToolUnion) AsWebSearch() (v ToolWebSearch) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -11765,10 +11844,68 @@ func (u ToolUnion) AsCustom() (v CustomTool) {
 	return
 }
 
+func (u ToolUnion) AsWebSearchPreview() (v WebSearchTool) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u ToolUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ToolUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToolUnionFilters is an implicit subunion of [ToolUnion]. ToolUnionFilters
+// provides convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the [ToolUnion].
+type ToolUnionFilters struct {
+	// This field is from variant [FileSearchToolFiltersUnion].
+	Key  string `json:"key"`
+	Type string `json:"type"`
+	// This field is from variant [FileSearchToolFiltersUnion].
+	Value shared.ComparisonFilterValueUnion `json:"value"`
+	// This field is from variant [FileSearchToolFiltersUnion].
+	Filters []shared.ComparisonFilter `json:"filters"`
+	// This field is from variant [ToolWebSearchFilters].
+	AllowedDomains []string `json:"allowed_domains"`
+	JSON           struct {
+		Key            respjson.Field
+		Type           respjson.Field
+		Value          respjson.Field
+		Filters        respjson.Field
+		AllowedDomains respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+func (r *ToolUnionFilters) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToolUnionUserLocation is an implicit subunion of [ToolUnion].
+// ToolUnionUserLocation provides convenient access to the sub-properties of the
+// union.
+//
+// For type safety it is recommended to directly use a variant of the [ToolUnion].
+type ToolUnionUserLocation struct {
+	City     string `json:"city"`
+	Country  string `json:"country"`
+	Region   string `json:"region"`
+	Timezone string `json:"timezone"`
+	Type     string `json:"type"`
+	JSON     struct {
+		City     respjson.Field
+		Country  respjson.Field
+		Region   respjson.Field
+		Timezone respjson.Field
+		Type     respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *ToolUnionUserLocation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -11779,6 +11916,94 @@ func (r *ToolUnion) UnmarshalJSON(data []byte) error {
 // ToolUnionParam.Overrides()
 func (r ToolUnion) ToParam() ToolUnionParam {
 	return param.Override[ToolUnionParam](json.RawMessage(r.RawJSON()))
+}
+
+// Search the Internet for sources related to the prompt. Learn more about the
+// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+type ToolWebSearch struct {
+	// The type of the web search tool. One of `web_search` or `web_search_2025_08_26`.
+	//
+	// Any of "web_search", "web_search_2025_08_26".
+	Type string `json:"type,required"`
+	// Filters for the search.
+	Filters ToolWebSearchFilters `json:"filters,nullable"`
+	// High level guidance for the amount of context window space to use for the
+	// search. One of `low`, `medium`, or `high`. `medium` is the default.
+	//
+	// Any of "low", "medium", "high".
+	SearchContextSize string `json:"search_context_size"`
+	// The approximate location of the user.
+	UserLocation ToolWebSearchUserLocation `json:"user_location,nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type              respjson.Field
+		Filters           respjson.Field
+		SearchContextSize respjson.Field
+		UserLocation      respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ToolWebSearch) RawJSON() string { return r.JSON.raw }
+func (r *ToolWebSearch) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Filters for the search.
+type ToolWebSearchFilters struct {
+	// Allowed domains for the search. If not provided, all domains are allowed.
+	// Subdomains of the provided domains are allowed as well.
+	//
+	// Example: `["pubmed.ncbi.nlm.nih.gov"]`
+	AllowedDomains []string `json:"allowed_domains,nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AllowedDomains respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ToolWebSearchFilters) RawJSON() string { return r.JSON.raw }
+func (r *ToolWebSearchFilters) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The approximate location of the user.
+type ToolWebSearchUserLocation struct {
+	// Free text input for the city of the user, e.g. `San Francisco`.
+	City string `json:"city,nullable"`
+	// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of
+	// the user, e.g. `US`.
+	Country string `json:"country,nullable"`
+	// Free text input for the region of the user, e.g. `California`.
+	Region string `json:"region,nullable"`
+	// The [IANA timezone](https://timeapi.io/documentation/iana-timezones) of the
+	// user, e.g. `America/Los_Angeles`.
+	Timezone string `json:"timezone,nullable"`
+	// The type of location approximation. Always `approximate`.
+	//
+	// Any of "approximate".
+	Type string `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		City        respjson.Field
+		Country     respjson.Field
+		Region      respjson.Field
+		Timezone    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ToolWebSearchUserLocation) RawJSON() string { return r.JSON.raw }
+func (r *ToolWebSearchUserLocation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Give the model access to additional tools via remote Model Context Protocol
@@ -12238,18 +12463,18 @@ func ToolParamOfFileSearch(vectorStoreIDs []string) ToolUnionParam {
 	return ToolUnionParam{OfFileSearch: &fileSearch}
 }
 
-func ToolParamOfWebSearchPreview(type_ WebSearchToolType) ToolUnionParam {
-	var variant WebSearchToolParam
-	variant.Type = type_
-	return ToolUnionParam{OfWebSearchPreview: &variant}
-}
-
 func ToolParamOfComputerUsePreview(displayHeight int64, displayWidth int64, environment ComputerToolEnvironment) ToolUnionParam {
 	var computerUsePreview ComputerToolParam
 	computerUsePreview.DisplayHeight = displayHeight
 	computerUsePreview.DisplayWidth = displayWidth
 	computerUsePreview.Environment = environment
 	return ToolUnionParam{OfComputerUsePreview: &computerUsePreview}
+}
+
+func ToolParamOfWebSearch(type_ string) ToolUnionParam {
+	var variant ToolWebSearchParam
+	variant.Type = type_
+	return ToolUnionParam{OfWebSearch: &variant}
 }
 
 func ToolParamOfMcp(serverLabel string) ToolUnionParam {
@@ -12277,32 +12502,40 @@ func ToolParamOfCustom(name string) ToolUnionParam {
 	return ToolUnionParam{OfCustom: &custom}
 }
 
+func ToolParamOfWebSearchPreview(type_ WebSearchToolType) ToolUnionParam {
+	var variant WebSearchToolParam
+	variant.Type = type_
+	return ToolUnionParam{OfWebSearchPreview: &variant}
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ToolUnionParam struct {
 	OfFunction           *FunctionToolParam        `json:",omitzero,inline"`
 	OfFileSearch         *FileSearchToolParam      `json:",omitzero,inline"`
-	OfWebSearchPreview   *WebSearchToolParam       `json:",omitzero,inline"`
 	OfComputerUsePreview *ComputerToolParam        `json:",omitzero,inline"`
+	OfWebSearch          *ToolWebSearchParam       `json:",omitzero,inline"`
 	OfMcp                *ToolMcpParam             `json:",omitzero,inline"`
 	OfCodeInterpreter    *ToolCodeInterpreterParam `json:",omitzero,inline"`
 	OfImageGeneration    *ToolImageGenerationParam `json:",omitzero,inline"`
 	OfLocalShell         *ToolLocalShellParam      `json:",omitzero,inline"`
 	OfCustom             *CustomToolParam          `json:",omitzero,inline"`
+	OfWebSearchPreview   *WebSearchToolParam       `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ToolUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion(u, u.OfFunction,
 		u.OfFileSearch,
-		u.OfWebSearchPreview,
 		u.OfComputerUsePreview,
+		u.OfWebSearch,
 		u.OfMcp,
 		u.OfCodeInterpreter,
 		u.OfImageGeneration,
 		u.OfLocalShell,
-		u.OfCustom)
+		u.OfCustom,
+		u.OfWebSearchPreview)
 }
 func (u *ToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -12313,10 +12546,10 @@ func (u *ToolUnionParam) asAny() any {
 		return u.OfFunction
 	} else if !param.IsOmitted(u.OfFileSearch) {
 		return u.OfFileSearch
-	} else if !param.IsOmitted(u.OfWebSearchPreview) {
-		return u.OfWebSearchPreview
 	} else if !param.IsOmitted(u.OfComputerUsePreview) {
 		return u.OfComputerUsePreview
+	} else if !param.IsOmitted(u.OfWebSearch) {
+		return u.OfWebSearch
 	} else if !param.IsOmitted(u.OfMcp) {
 		return u.OfMcp
 	} else if !param.IsOmitted(u.OfCodeInterpreter) {
@@ -12327,6 +12560,8 @@ func (u *ToolUnionParam) asAny() any {
 		return u.OfLocalShell
 	} else if !param.IsOmitted(u.OfCustom) {
 		return u.OfCustom
+	} else if !param.IsOmitted(u.OfWebSearchPreview) {
+		return u.OfWebSearchPreview
 	}
 	return nil
 }
@@ -12356,14 +12591,6 @@ func (u ToolUnionParam) GetVectorStoreIDs() []string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ToolUnionParam) GetFilters() *FileSearchToolFiltersUnionParam {
-	if vt := u.OfFileSearch; vt != nil {
-		return &vt.Filters
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u ToolUnionParam) GetMaxNumResults() *int64 {
 	if vt := u.OfFileSearch; vt != nil && vt.MaxNumResults.Valid() {
 		return &vt.MaxNumResults.Value
@@ -12375,22 +12602,6 @@ func (u ToolUnionParam) GetMaxNumResults() *int64 {
 func (u ToolUnionParam) GetRankingOptions() *FileSearchToolRankingOptionsParam {
 	if vt := u.OfFileSearch; vt != nil {
 		return &vt.RankingOptions
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ToolUnionParam) GetSearchContextSize() *string {
-	if vt := u.OfWebSearchPreview; vt != nil {
-		return (*string)(&vt.SearchContextSize)
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ToolUnionParam) GetUserLocation() *WebSearchToolUserLocationParam {
-	if vt := u.OfWebSearchPreview; vt != nil {
-		return &vt.UserLocation
 	}
 	return nil
 }
@@ -12595,9 +12806,9 @@ func (u ToolUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfFileSearch; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfWebSearchPreview; vt != nil {
-		return (*string)(&vt.Type)
 	} else if vt := u.OfComputerUsePreview; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfWebSearch; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfMcp; vt != nil {
 		return (*string)(&vt.Type)
@@ -12608,6 +12819,8 @@ func (u ToolUnionParam) GetType() *string {
 	} else if vt := u.OfLocalShell; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfCustom; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfWebSearchPreview; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -12623,19 +12836,273 @@ func (u ToolUnionParam) GetDescription() *string {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u ToolUnionParam) GetSearchContextSize() *string {
+	if vt := u.OfWebSearch; vt != nil {
+		return (*string)(&vt.SearchContextSize)
+	} else if vt := u.OfWebSearchPreview; vt != nil {
+		return (*string)(&vt.SearchContextSize)
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u ToolUnionParam) GetFilters() (res toolUnionParamFilters) {
+	if vt := u.OfFileSearch; vt != nil {
+		res.any = vt.Filters.asAny()
+	} else if vt := u.OfWebSearch; vt != nil {
+		res.any = &vt.Filters
+	}
+	return
+}
+
+// Can have the runtime types [*shared.ComparisonFilterParam],
+// [*shared.CompoundFilterParam], [*ToolWebSearchFiltersParam]
+type toolUnionParamFilters struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *shared.ComparisonFilterParam:
+//	case *shared.CompoundFilterParam:
+//	case *responses.ToolWebSearchFiltersParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u toolUnionParamFilters) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u toolUnionParamFilters) GetKey() *string {
+	switch vt := u.any.(type) {
+	case *FileSearchToolFiltersUnionParam:
+		return vt.GetKey()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u toolUnionParamFilters) GetValue() *shared.ComparisonFilterValueUnionParam {
+	switch vt := u.any.(type) {
+	case *FileSearchToolFiltersUnionParam:
+		return vt.GetValue()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u toolUnionParamFilters) GetFilters() []shared.ComparisonFilterParam {
+	switch vt := u.any.(type) {
+	case *FileSearchToolFiltersUnionParam:
+		return vt.GetFilters()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u toolUnionParamFilters) GetAllowedDomains() []string {
+	switch vt := u.any.(type) {
+	case *ToolWebSearchFiltersParam:
+		return vt.AllowedDomains
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u toolUnionParamFilters) GetType() *string {
+	switch vt := u.any.(type) {
+	case *FileSearchToolFiltersUnionParam:
+		return vt.GetType()
+	}
+	return nil
+}
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u ToolUnionParam) GetUserLocation() (res toolUnionParamUserLocation) {
+	if vt := u.OfWebSearch; vt != nil {
+		res.any = &vt.UserLocation
+	} else if vt := u.OfWebSearchPreview; vt != nil {
+		res.any = &vt.UserLocation
+	}
+	return
+}
+
+// Can have the runtime types [*ToolWebSearchUserLocationParam],
+// [*WebSearchToolUserLocationParam]
+type toolUnionParamUserLocation struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *responses.ToolWebSearchUserLocationParam:
+//	case *responses.WebSearchToolUserLocationParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u toolUnionParamUserLocation) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u toolUnionParamUserLocation) GetCity() *string {
+	switch vt := u.any.(type) {
+	case *ToolWebSearchUserLocationParam:
+		return paramutil.AddrIfPresent(vt.City)
+	case *WebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.City)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u toolUnionParamUserLocation) GetCountry() *string {
+	switch vt := u.any.(type) {
+	case *ToolWebSearchUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Country)
+	case *WebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Country)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u toolUnionParamUserLocation) GetRegion() *string {
+	switch vt := u.any.(type) {
+	case *ToolWebSearchUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Region)
+	case *WebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Region)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u toolUnionParamUserLocation) GetTimezone() *string {
+	switch vt := u.any.(type) {
+	case *ToolWebSearchUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Timezone)
+	case *WebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Timezone)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u toolUnionParamUserLocation) GetType() *string {
+	switch vt := u.any.(type) {
+	case *ToolWebSearchUserLocationParam:
+		return (*string)(&vt.Type)
+	case *WebSearchToolUserLocationParam:
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[ToolUnionParam](
 		"type",
 		apijson.Discriminator[FunctionToolParam]("function"),
 		apijson.Discriminator[FileSearchToolParam]("file_search"),
-		apijson.Discriminator[WebSearchToolParam]("web_search_preview"),
-		apijson.Discriminator[WebSearchToolParam]("web_search_preview_2025_03_11"),
 		apijson.Discriminator[ComputerToolParam]("computer_use_preview"),
+		apijson.Discriminator[ToolWebSearchParam]("web_search"),
+		apijson.Discriminator[ToolWebSearchParam]("web_search_2025_08_26"),
 		apijson.Discriminator[ToolMcpParam]("mcp"),
 		apijson.Discriminator[ToolCodeInterpreterParam]("code_interpreter"),
 		apijson.Discriminator[ToolImageGenerationParam]("image_generation"),
 		apijson.Discriminator[ToolLocalShellParam]("local_shell"),
 		apijson.Discriminator[CustomToolParam]("custom"),
+		apijson.Discriminator[WebSearchToolParam]("web_search_preview"),
+		apijson.Discriminator[WebSearchToolParam]("web_search_preview_2025_03_11"),
+	)
+}
+
+// Search the Internet for sources related to the prompt. Learn more about the
+// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+//
+// The property Type is required.
+type ToolWebSearchParam struct {
+	// The type of the web search tool. One of `web_search` or `web_search_2025_08_26`.
+	//
+	// Any of "web_search", "web_search_2025_08_26".
+	Type string `json:"type,omitzero,required"`
+	// Filters for the search.
+	Filters ToolWebSearchFiltersParam `json:"filters,omitzero"`
+	// The approximate location of the user.
+	UserLocation ToolWebSearchUserLocationParam `json:"user_location,omitzero"`
+	// High level guidance for the amount of context window space to use for the
+	// search. One of `low`, `medium`, or `high`. `medium` is the default.
+	//
+	// Any of "low", "medium", "high".
+	SearchContextSize string `json:"search_context_size,omitzero"`
+	paramObj
+}
+
+func (r ToolWebSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow ToolWebSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ToolWebSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ToolWebSearchParam](
+		"type", "web_search", "web_search_2025_08_26",
+	)
+	apijson.RegisterFieldValidator[ToolWebSearchParam](
+		"search_context_size", "low", "medium", "high",
+	)
+}
+
+// Filters for the search.
+type ToolWebSearchFiltersParam struct {
+	// Allowed domains for the search. If not provided, all domains are allowed.
+	// Subdomains of the provided domains are allowed as well.
+	//
+	// Example: `["pubmed.ncbi.nlm.nih.gov"]`
+	AllowedDomains []string `json:"allowed_domains,omitzero"`
+	paramObj
+}
+
+func (r ToolWebSearchFiltersParam) MarshalJSON() (data []byte, err error) {
+	type shadow ToolWebSearchFiltersParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ToolWebSearchFiltersParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The approximate location of the user.
+type ToolWebSearchUserLocationParam struct {
+	// Free text input for the city of the user, e.g. `San Francisco`.
+	City param.Opt[string] `json:"city,omitzero"`
+	// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of
+	// the user, e.g. `US`.
+	Country param.Opt[string] `json:"country,omitzero"`
+	// Free text input for the region of the user, e.g. `California`.
+	Region param.Opt[string] `json:"region,omitzero"`
+	// The [IANA timezone](https://timeapi.io/documentation/iana-timezones) of the
+	// user, e.g. `America/Los_Angeles`.
+	Timezone param.Opt[string] `json:"timezone,omitzero"`
+	// The type of location approximation. Always `approximate`.
+	//
+	// Any of "approximate".
+	Type string `json:"type,omitzero"`
+	paramObj
+}
+
+func (r ToolWebSearchUserLocationParam) MarshalJSON() (data []byte, err error) {
+	type shadow ToolWebSearchUserLocationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ToolWebSearchUserLocationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ToolWebSearchUserLocationParam](
+		"type", "approximate",
 	)
 }
 
@@ -13619,6 +14086,8 @@ type ResponseNewParams struct {
 	// Specify additional output data to include in the model response. Currently
 	// supported values are:
 	//
+	//   - `web_search_call.action.sources`: Include the sources of the web search tool
+	//     call.
 	//   - `code_interpreter_call.outputs`: Includes the outputs of python code execution
 	//     in code interpreter tool call items.
 	//   - `computer_call_output.output.image_url`: Include image urls from the computer
