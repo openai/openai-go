@@ -462,7 +462,9 @@ type ConversationItemUnionAction struct {
 	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
 	Query string `json:"query"`
 	Type  string `json:"type"`
-	URL   string `json:"url"`
+	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
+	Sources []responses.ResponseFunctionWebSearchActionSearchSource `json:"sources"`
+	URL     string                                                  `json:"url"`
 	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
 	Pattern string `json:"pattern"`
 	// This field is from variant [responses.ResponseComputerToolCallActionUnion].
@@ -492,6 +494,7 @@ type ConversationItemUnionAction struct {
 	JSON             struct {
 		Query            respjson.Field
 		Type             respjson.Field
+		Sources          respjson.Field
 		URL              respjson.Field
 		Pattern          respjson.Field
 		Button           respjson.Field
@@ -872,6 +875,8 @@ type ItemListParams struct {
 	// Specify additional output data to include in the model response. Currently
 	// supported values are:
 	//
+	//   - `web_search_call.action.sources`: Include the sources of the web search tool
+	//     call.
 	//   - `code_interpreter_call.outputs`: Includes the outputs of python code execution
 	//     in code interpreter tool call items.
 	//   - `computer_call_output.output.image_url`: Include image urls from the computer

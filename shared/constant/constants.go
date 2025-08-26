@@ -217,6 +217,7 @@ type TranscriptTextDone string                      // Always "transcript.text.d
 type Type string                                    // Always "type"
 type Upload string                                  // Always "upload"
 type UploadPart string                              // Always "upload.part"
+type URL string                                     // Always "url"
 type URLCitation string                             // Always "url_citation"
 type User string                                    // Always "user"
 type VectorStore string                             // Always "vector_store"
@@ -521,6 +522,7 @@ func (c TranscriptTextDone) Default() TranscriptTextDone   { return "transcript.
 func (c Type) Default() Type                               { return "type" }
 func (c Upload) Default() Upload                           { return "upload" }
 func (c UploadPart) Default() UploadPart                   { return "upload.part" }
+func (c URL) Default() URL                                 { return "url" }
 func (c URLCitation) Default() URLCitation                 { return "url_citation" }
 func (c User) Default() User                               { return "user" }
 func (c VectorStore) Default() VectorStore                 { return "vector_store" }
@@ -741,6 +743,7 @@ func (c TranscriptTextDone) MarshalJSON() ([]byte, error)                { retur
 func (c Type) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c Upload) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c UploadPart) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c URL) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c URLCitation) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c User) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c VectorStore) MarshalJSON() ([]byte, error)                       { return marshalString(c) }

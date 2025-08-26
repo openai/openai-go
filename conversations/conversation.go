@@ -40,7 +40,7 @@ func NewConversationService(opts ...option.RequestOption) (r ConversationService
 	return
 }
 
-// Create a conversation with the given ID.
+// Create a conversation.
 func (r *ConversationService) New(ctx context.Context, body ConversationNewParams, opts ...option.RequestOption) (res *Conversation, err error) {
 	opts = append(r.Options[:], opts...)
 	path := "conversations"
