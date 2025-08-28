@@ -136,11 +136,12 @@ var jsonRoutes = map[string]bool{
 	"/openai/images/generations": true,
 }
 
-// audioMultipartRoutes have mime/multipart payloads. These are less generic - we're very much
+// multipartRoutes have mime/multipart payloads. These are less generic - we're very much
 // expecting a transcription or translation payload for these.
-var audioMultipartRoutes = map[string]bool{
+var multipartRoutes = map[string]bool{
 	"/openai/audio/transcriptions": true,
 	"/openai/audio/translations":   true,
+	"/openai/images/edits":         true,
 }
 
 // getReplacementPathWithDeployment parses the request body to extract out the Model parameter (or equivalent)
@@ -150,8 +151,8 @@ func getReplacementPathWithDeployment(req *http.Request) (string, error) {
 		return getJSONRoute(req)
 	}
 
-	if audioMultipartRoutes[req.URL.Path] {
-		return getAudioMultipartRoute(req)
+	if multipartRoutes[req.URL.Path] {
+		return getMultipartRoute(req)
 	}
 
 	// No need to relocate the path. We've already tacked on /openai when we setup the endpoint.
@@ -181,7 +182,7 @@ func getJSONRoute(req *http.Request) (string, error) {
 	return strings.Replace(req.URL.Path, "/openai/", "/openai/deployments/"+escapedDeployment+"/", 1), nil
 }
 
-func getAudioMultipartRoute(req *http.Request) (string, error) {
+func getMultipartRoute(req *http.Request) (string, error) {
 	// body is a multipart/mime body type instead.
 	mimeBytes, err := io.ReadAll(req.Body)
 
