@@ -465,6 +465,11 @@ func (cfg *RequestConfig) Execute() (err error) {
 			break
 		}
 
+		// Close the response body before retrying to prevent connection leaks
+		if res != nil && res.Body != nil {
+			res.Body.Close()
+		}
+
 		time.Sleep(retryDelay(res, retryCount))
 	}
 
