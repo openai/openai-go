@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.2.2 (2025-09-02)
+
+Full Changelog: [v2.2.1...v2.2.2](https://github.com/openai/openai-go/compare/v2.2.1...v2.2.2)
+
+### Bug Fixes
+
+* update url to refresh pkg.go.dev ([edf94ce](https://github.com/openai/openai-go/commit/edf94ce95a9f3fae87722a338c213dcf57ac1bf2))
+* use release please annotations on more places ([2ff82f9](https://github.com/openai/openai-go/commit/2ff82f98ae636ff942cbdd8b909854f01279af90))
+
 ## 2.2.1 (2025-09-02)
 
 Full Changelog: [v2.2.0...v2.2.1](https://github.com/openai/openai-go/compare/v2.2.0...v2.2.1)
