@@ -98,8 +98,6 @@ func (r *ResponseItemList) UnmarshalJSON(data []byte) error {
 type InputItemListParams struct {
 	// An item ID to list items after, used in pagination.
 	After param.Opt[string] `query:"after,omitzero" json:"-"`
-	// An item ID to list items before, used in pagination.
-	Before param.Opt[string] `query:"before,omitzero" json:"-"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`

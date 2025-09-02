@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.2.0 (2025-09-02)
+
+Full Changelog: [v2.1.1...v2.2.0](https://github.com/openai/openai-go/compare/v2.1.1...v2.2.0)
+
+### Features
+
+* **api:** Add connectors support for MCP tool ([35888bc](https://github.com/openai/openai-go/commit/35888bcd26c7633e8ea68f9213cc3977b8ac49eb))
+* **api:** add web search filters ([6f2c71d](https://github.com/openai/openai-go/commit/6f2c71d4e28971fc73e7e291d40f3b875d9cc42a))
+* **api:** adding support for /v1/conversations to the API ([5b7c31b](https://github.com/openai/openai-go/commit/5b7c31bde9c1086d3fb71c88dfdf74228845b22e))
+* **api:** realtime API updates ([130fc8e](https://github.com/openai/openai-go/commit/130fc8ea5ba39e6c1457ed6d26ef827d931a6242))
+* **client:** add support for verifying signatures on incoming webhooks ([f7c8dbb](https://github.com/openai/openai-go/commit/f7c8dbb6b5bd5bab72b7d146dc255d543b0b5a71))
+
+
+### Bug Fixes
+
+* **azure:** compatibility with edit image endpoint ([#477](https://github.com/openai/openai-go/issues/477)) ([d156eec](https://github.com/openai/openai-go/commit/d156eeca37bc86a5d8e1c973063a8425744810f1))
+* close body before retrying ([8dfed35](https://github.com/openai/openai-go/commit/8dfed35f11a00970ad804ab985cf393c2332ea8f))
+
+
+### Chores
+
+* **internal/ci:** setup breaking change detection ([0af0cd0](https://github.com/openai/openai-go/commit/0af0cd01302d3859a4e43554ed8e665007f69aad))
+* **internal:** version bump ([3265795](https://github.com/openai/openai-go/commit/3265795fffa44fb40d65a800b300807d9f1e7b2b))
+
 ## 2.1.1 (2025-08-20)
 
 Full Changelog: [v2.1.0...v2.1.1](https://github.com/openai/openai-go/compare/v2.1.0...v2.1.1)

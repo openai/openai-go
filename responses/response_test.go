@@ -29,7 +29,10 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
 		Background: openai.Bool(true),
-		Include:    []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
+		Conversation: responses.ResponseNewParamsConversationUnion{
+			OfString: openai.String("string"),
+		},
+		Include: []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String("string"),
 		},
