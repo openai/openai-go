@@ -782,7 +782,7 @@ type Response struct {
 	// An array of tools the model may call while generating a response. You can
 	// specify which tool to use by setting the `tool_choice` parameter.
 	//
-	// The two categories of tools you can provide the model are:
+	// We support the following categories of tools:
 	//
 	//   - **Built-in tools**: Tools that are provided by OpenAI that extend the model's
 	//     capabilities, like
@@ -790,6 +790,9 @@ type Response struct {
 	//     [file search](https://platform.openai.com/docs/guides/tools-file-search).
 	//     Learn more about
 	//     [built-in tools](https://platform.openai.com/docs/guides/tools).
+	//   - **MCP Tools**: Integrations with third-party systems via custom MCP servers or
+	//     predefined connectors such as Google Drive and Notion. Learn more about
+	//     [MCP Tools](https://platform.openai.com/docs/guides/tools-connectors-mcp).
 	//   - **Function calls (custom tools)**: Functions that are defined by you, enabling
 	//     the model to call your own code with strongly typed arguments and outputs.
 	//     Learn more about
@@ -11685,9 +11688,9 @@ func (r *ResponseWebSearchCallSearchingEvent) UnmarshalJSON(data []byte) error {
 }
 
 // ToolUnion contains all possible properties and values from [FunctionTool],
-// [FileSearchTool], [ComputerTool], [ToolWebSearch], [ToolMcp],
+// [FileSearchTool], [ComputerTool], [WebSearchTool], [ToolMcp],
 // [ToolCodeInterpreter], [ToolImageGeneration], [ToolLocalShell], [CustomTool],
-// [WebSearchTool].
+// [WebSearchPreviewTool].
 //
 // Use the [ToolUnion.AsAny] method to switch on the variant.
 //
@@ -11704,7 +11707,7 @@ type ToolUnion struct {
 	Description string `json:"description"`
 	// This field is from variant [FileSearchTool].
 	VectorStoreIDs []string `json:"vector_store_ids"`
-	// This field is a union of [FileSearchToolFiltersUnion], [ToolWebSearchFilters]
+	// This field is a union of [FileSearchToolFiltersUnion], [WebSearchToolFilters]
 	Filters ToolUnionFilters `json:"filters"`
 	// This field is from variant [FileSearchTool].
 	MaxNumResults int64 `json:"max_num_results"`
@@ -11717,8 +11720,8 @@ type ToolUnion struct {
 	// This field is from variant [ComputerTool].
 	Environment       ComputerToolEnvironment `json:"environment"`
 	SearchContextSize string                  `json:"search_context_size"`
-	// This field is a union of [ToolWebSearchUserLocation],
-	// [WebSearchToolUserLocation]
+	// This field is a union of [WebSearchToolUserLocation],
+	// [WebSearchPreviewToolUserLocation]
 	UserLocation ToolUnionUserLocation `json:"user_location"`
 	// This field is from variant [ToolMcp].
 	ServerLabel string `json:"server_label"`
@@ -11814,7 +11817,7 @@ func (u ToolUnion) AsComputerUsePreview() (v ComputerTool) {
 	return
 }
 
-func (u ToolUnion) AsWebSearch() (v ToolWebSearch) {
+func (u ToolUnion) AsWebSearch() (v WebSearchTool) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -11844,7 +11847,7 @@ func (u ToolUnion) AsCustom() (v CustomTool) {
 	return
 }
 
-func (u ToolUnion) AsWebSearchPreview() (v WebSearchTool) {
+func (u ToolUnion) AsWebSearchPreview() (v WebSearchPreviewTool) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -11868,7 +11871,7 @@ type ToolUnionFilters struct {
 	Value shared.ComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [FileSearchToolFiltersUnion].
 	Filters []shared.ComparisonFilter `json:"filters"`
-	// This field is from variant [ToolWebSearchFilters].
+	// This field is from variant [WebSearchToolFilters].
 	AllowedDomains []string `json:"allowed_domains"`
 	JSON           struct {
 		Key            respjson.Field
@@ -11916,94 +11919,6 @@ func (r *ToolUnionUserLocation) UnmarshalJSON(data []byte) error {
 // ToolUnionParam.Overrides()
 func (r ToolUnion) ToParam() ToolUnionParam {
 	return param.Override[ToolUnionParam](json.RawMessage(r.RawJSON()))
-}
-
-// Search the Internet for sources related to the prompt. Learn more about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
-type ToolWebSearch struct {
-	// The type of the web search tool. One of `web_search` or `web_search_2025_08_26`.
-	//
-	// Any of "web_search", "web_search_2025_08_26".
-	Type string `json:"type,required"`
-	// Filters for the search.
-	Filters ToolWebSearchFilters `json:"filters,nullable"`
-	// High level guidance for the amount of context window space to use for the
-	// search. One of `low`, `medium`, or `high`. `medium` is the default.
-	//
-	// Any of "low", "medium", "high".
-	SearchContextSize string `json:"search_context_size"`
-	// The approximate location of the user.
-	UserLocation ToolWebSearchUserLocation `json:"user_location,nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Type              respjson.Field
-		Filters           respjson.Field
-		SearchContextSize respjson.Field
-		UserLocation      respjson.Field
-		ExtraFields       map[string]respjson.Field
-		raw               string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ToolWebSearch) RawJSON() string { return r.JSON.raw }
-func (r *ToolWebSearch) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Filters for the search.
-type ToolWebSearchFilters struct {
-	// Allowed domains for the search. If not provided, all domains are allowed.
-	// Subdomains of the provided domains are allowed as well.
-	//
-	// Example: `["pubmed.ncbi.nlm.nih.gov"]`
-	AllowedDomains []string `json:"allowed_domains,nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		AllowedDomains respjson.Field
-		ExtraFields    map[string]respjson.Field
-		raw            string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ToolWebSearchFilters) RawJSON() string { return r.JSON.raw }
-func (r *ToolWebSearchFilters) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The approximate location of the user.
-type ToolWebSearchUserLocation struct {
-	// Free text input for the city of the user, e.g. `San Francisco`.
-	City string `json:"city,nullable"`
-	// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of
-	// the user, e.g. `US`.
-	Country string `json:"country,nullable"`
-	// Free text input for the region of the user, e.g. `California`.
-	Region string `json:"region,nullable"`
-	// The [IANA timezone](https://timeapi.io/documentation/iana-timezones) of the
-	// user, e.g. `America/Los_Angeles`.
-	Timezone string `json:"timezone,nullable"`
-	// The type of location approximation. Always `approximate`.
-	//
-	// Any of "approximate".
-	Type string `json:"type"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		City        respjson.Field
-		Country     respjson.Field
-		Region      respjson.Field
-		Timezone    respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ToolWebSearchUserLocation) RawJSON() string { return r.JSON.raw }
-func (r *ToolWebSearchUserLocation) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 // Give the model access to additional tools via remote Model Context Protocol
@@ -12471,8 +12386,8 @@ func ToolParamOfComputerUsePreview(displayHeight int64, displayWidth int64, envi
 	return ToolUnionParam{OfComputerUsePreview: &computerUsePreview}
 }
 
-func ToolParamOfWebSearch(type_ string) ToolUnionParam {
-	var variant ToolWebSearchParam
+func ToolParamOfWebSearch(type_ WebSearchToolType) ToolUnionParam {
+	var variant WebSearchToolParam
 	variant.Type = type_
 	return ToolUnionParam{OfWebSearch: &variant}
 }
@@ -12502,8 +12417,8 @@ func ToolParamOfCustom(name string) ToolUnionParam {
 	return ToolUnionParam{OfCustom: &custom}
 }
 
-func ToolParamOfWebSearchPreview(type_ WebSearchToolType) ToolUnionParam {
-	var variant WebSearchToolParam
+func ToolParamOfWebSearchPreview(type_ WebSearchPreviewToolType) ToolUnionParam {
+	var variant WebSearchPreviewToolParam
 	variant.Type = type_
 	return ToolUnionParam{OfWebSearchPreview: &variant}
 }
@@ -12512,16 +12427,16 @@ func ToolParamOfWebSearchPreview(type_ WebSearchToolType) ToolUnionParam {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ToolUnionParam struct {
-	OfFunction           *FunctionToolParam        `json:",omitzero,inline"`
-	OfFileSearch         *FileSearchToolParam      `json:",omitzero,inline"`
-	OfComputerUsePreview *ComputerToolParam        `json:",omitzero,inline"`
-	OfWebSearch          *ToolWebSearchParam       `json:",omitzero,inline"`
-	OfMcp                *ToolMcpParam             `json:",omitzero,inline"`
-	OfCodeInterpreter    *ToolCodeInterpreterParam `json:",omitzero,inline"`
-	OfImageGeneration    *ToolImageGenerationParam `json:",omitzero,inline"`
-	OfLocalShell         *ToolLocalShellParam      `json:",omitzero,inline"`
-	OfCustom             *CustomToolParam          `json:",omitzero,inline"`
-	OfWebSearchPreview   *WebSearchToolParam       `json:",omitzero,inline"`
+	OfFunction           *FunctionToolParam         `json:",omitzero,inline"`
+	OfFileSearch         *FileSearchToolParam       `json:",omitzero,inline"`
+	OfComputerUsePreview *ComputerToolParam         `json:",omitzero,inline"`
+	OfWebSearch          *WebSearchToolParam        `json:",omitzero,inline"`
+	OfMcp                *ToolMcpParam              `json:",omitzero,inline"`
+	OfCodeInterpreter    *ToolCodeInterpreterParam  `json:",omitzero,inline"`
+	OfImageGeneration    *ToolImageGenerationParam  `json:",omitzero,inline"`
+	OfLocalShell         *ToolLocalShellParam       `json:",omitzero,inline"`
+	OfCustom             *CustomToolParam           `json:",omitzero,inline"`
+	OfWebSearchPreview   *WebSearchPreviewToolParam `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -12859,7 +12774,7 @@ func (u ToolUnionParam) GetFilters() (res toolUnionParamFilters) {
 }
 
 // Can have the runtime types [*shared.ComparisonFilterParam],
-// [*shared.CompoundFilterParam], [*ToolWebSearchFiltersParam]
+// [*shared.CompoundFilterParam], [*WebSearchToolFiltersParam]
 type toolUnionParamFilters struct{ any }
 
 // Use the following switch statement to get the type of the union:
@@ -12867,7 +12782,7 @@ type toolUnionParamFilters struct{ any }
 //	switch u.AsAny().(type) {
 //	case *shared.ComparisonFilterParam:
 //	case *shared.CompoundFilterParam:
-//	case *responses.ToolWebSearchFiltersParam:
+//	case *responses.WebSearchToolFiltersParam:
 //	default:
 //	    fmt.Errorf("not present")
 //	}
@@ -12903,7 +12818,7 @@ func (u toolUnionParamFilters) GetFilters() []shared.ComparisonFilterParam {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamFilters) GetAllowedDomains() []string {
 	switch vt := u.any.(type) {
-	case *ToolWebSearchFiltersParam:
+	case *WebSearchToolFiltersParam:
 		return vt.AllowedDomains
 	}
 	return nil
@@ -12930,15 +12845,15 @@ func (u ToolUnionParam) GetUserLocation() (res toolUnionParamUserLocation) {
 	return
 }
 
-// Can have the runtime types [*ToolWebSearchUserLocationParam],
-// [*WebSearchToolUserLocationParam]
+// Can have the runtime types [*WebSearchToolUserLocationParam],
+// [*WebSearchPreviewToolUserLocationParam]
 type toolUnionParamUserLocation struct{ any }
 
 // Use the following switch statement to get the type of the union:
 //
 //	switch u.AsAny().(type) {
-//	case *responses.ToolWebSearchUserLocationParam:
 //	case *responses.WebSearchToolUserLocationParam:
+//	case *responses.WebSearchPreviewToolUserLocationParam:
 //	default:
 //	    fmt.Errorf("not present")
 //	}
@@ -12947,9 +12862,9 @@ func (u toolUnionParamUserLocation) AsAny() any { return u.any }
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamUserLocation) GetCity() *string {
 	switch vt := u.any.(type) {
-	case *ToolWebSearchUserLocationParam:
-		return paramutil.AddrIfPresent(vt.City)
 	case *WebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.City)
+	case *WebSearchPreviewToolUserLocationParam:
 		return paramutil.AddrIfPresent(vt.City)
 	}
 	return nil
@@ -12958,9 +12873,9 @@ func (u toolUnionParamUserLocation) GetCity() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamUserLocation) GetCountry() *string {
 	switch vt := u.any.(type) {
-	case *ToolWebSearchUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Country)
 	case *WebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Country)
+	case *WebSearchPreviewToolUserLocationParam:
 		return paramutil.AddrIfPresent(vt.Country)
 	}
 	return nil
@@ -12969,9 +12884,9 @@ func (u toolUnionParamUserLocation) GetCountry() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamUserLocation) GetRegion() *string {
 	switch vt := u.any.(type) {
-	case *ToolWebSearchUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Region)
 	case *WebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Region)
+	case *WebSearchPreviewToolUserLocationParam:
 		return paramutil.AddrIfPresent(vt.Region)
 	}
 	return nil
@@ -12980,9 +12895,9 @@ func (u toolUnionParamUserLocation) GetRegion() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamUserLocation) GetTimezone() *string {
 	switch vt := u.any.(type) {
-	case *ToolWebSearchUserLocationParam:
-		return paramutil.AddrIfPresent(vt.Timezone)
 	case *WebSearchToolUserLocationParam:
+		return paramutil.AddrIfPresent(vt.Timezone)
+	case *WebSearchPreviewToolUserLocationParam:
 		return paramutil.AddrIfPresent(vt.Timezone)
 	}
 	return nil
@@ -12991,9 +12906,9 @@ func (u toolUnionParamUserLocation) GetTimezone() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u toolUnionParamUserLocation) GetType() *string {
 	switch vt := u.any.(type) {
-	case *ToolWebSearchUserLocationParam:
-		return (*string)(&vt.Type)
 	case *WebSearchToolUserLocationParam:
+		return (*string)(&vt.Type)
+	case *WebSearchPreviewToolUserLocationParam:
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -13005,104 +12920,15 @@ func init() {
 		apijson.Discriminator[FunctionToolParam]("function"),
 		apijson.Discriminator[FileSearchToolParam]("file_search"),
 		apijson.Discriminator[ComputerToolParam]("computer_use_preview"),
-		apijson.Discriminator[ToolWebSearchParam]("web_search"),
-		apijson.Discriminator[ToolWebSearchParam]("web_search_2025_08_26"),
+		apijson.Discriminator[WebSearchToolParam]("web_search"),
+		apijson.Discriminator[WebSearchToolParam]("web_search_2025_08_26"),
 		apijson.Discriminator[ToolMcpParam]("mcp"),
 		apijson.Discriminator[ToolCodeInterpreterParam]("code_interpreter"),
 		apijson.Discriminator[ToolImageGenerationParam]("image_generation"),
 		apijson.Discriminator[ToolLocalShellParam]("local_shell"),
 		apijson.Discriminator[CustomToolParam]("custom"),
-		apijson.Discriminator[WebSearchToolParam]("web_search_preview"),
-		apijson.Discriminator[WebSearchToolParam]("web_search_preview_2025_03_11"),
-	)
-}
-
-// Search the Internet for sources related to the prompt. Learn more about the
-// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
-//
-// The property Type is required.
-type ToolWebSearchParam struct {
-	// The type of the web search tool. One of `web_search` or `web_search_2025_08_26`.
-	//
-	// Any of "web_search", "web_search_2025_08_26".
-	Type string `json:"type,omitzero,required"`
-	// Filters for the search.
-	Filters ToolWebSearchFiltersParam `json:"filters,omitzero"`
-	// The approximate location of the user.
-	UserLocation ToolWebSearchUserLocationParam `json:"user_location,omitzero"`
-	// High level guidance for the amount of context window space to use for the
-	// search. One of `low`, `medium`, or `high`. `medium` is the default.
-	//
-	// Any of "low", "medium", "high".
-	SearchContextSize string `json:"search_context_size,omitzero"`
-	paramObj
-}
-
-func (r ToolWebSearchParam) MarshalJSON() (data []byte, err error) {
-	type shadow ToolWebSearchParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ToolWebSearchParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ToolWebSearchParam](
-		"type", "web_search", "web_search_2025_08_26",
-	)
-	apijson.RegisterFieldValidator[ToolWebSearchParam](
-		"search_context_size", "low", "medium", "high",
-	)
-}
-
-// Filters for the search.
-type ToolWebSearchFiltersParam struct {
-	// Allowed domains for the search. If not provided, all domains are allowed.
-	// Subdomains of the provided domains are allowed as well.
-	//
-	// Example: `["pubmed.ncbi.nlm.nih.gov"]`
-	AllowedDomains []string `json:"allowed_domains,omitzero"`
-	paramObj
-}
-
-func (r ToolWebSearchFiltersParam) MarshalJSON() (data []byte, err error) {
-	type shadow ToolWebSearchFiltersParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ToolWebSearchFiltersParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The approximate location of the user.
-type ToolWebSearchUserLocationParam struct {
-	// Free text input for the city of the user, e.g. `San Francisco`.
-	City param.Opt[string] `json:"city,omitzero"`
-	// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of
-	// the user, e.g. `US`.
-	Country param.Opt[string] `json:"country,omitzero"`
-	// Free text input for the region of the user, e.g. `California`.
-	Region param.Opt[string] `json:"region,omitzero"`
-	// The [IANA timezone](https://timeapi.io/documentation/iana-timezones) of the
-	// user, e.g. `America/Los_Angeles`.
-	Timezone param.Opt[string] `json:"timezone,omitzero"`
-	// The type of location approximation. Always `approximate`.
-	//
-	// Any of "approximate".
-	Type string `json:"type,omitzero"`
-	paramObj
-}
-
-func (r ToolWebSearchUserLocationParam) MarshalJSON() (data []byte, err error) {
-	type shadow ToolWebSearchUserLocationParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ToolWebSearchUserLocationParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ToolWebSearchUserLocationParam](
-		"type", "approximate",
+		apijson.Discriminator[WebSearchPreviewToolParam]("web_search_preview"),
+		apijson.Discriminator[WebSearchPreviewToolParam]("web_search_preview_2025_03_11"),
 	)
 }
 
@@ -13873,19 +13699,19 @@ func (r *ToolChoiceTypesParam) UnmarshalJSON(data []byte) error {
 // This tool searches the web for relevant results to use in a response. Learn more
 // about the
 // [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
-type WebSearchTool struct {
+type WebSearchPreviewTool struct {
 	// The type of the web search tool. One of `web_search_preview` or
 	// `web_search_preview_2025_03_11`.
 	//
 	// Any of "web_search_preview", "web_search_preview_2025_03_11".
-	Type WebSearchToolType `json:"type,required"`
+	Type WebSearchPreviewToolType `json:"type,required"`
 	// High level guidance for the amount of context window space to use for the
 	// search. One of `low`, `medium`, or `high`. `medium` is the default.
 	//
 	// Any of "low", "medium", "high".
-	SearchContextSize WebSearchToolSearchContextSize `json:"search_context_size"`
+	SearchContextSize WebSearchPreviewToolSearchContextSize `json:"search_context_size"`
 	// The user's location.
-	UserLocation WebSearchToolUserLocation `json:"user_location,nullable"`
+	UserLocation WebSearchPreviewToolUserLocation `json:"user_location,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type              respjson.Field
@@ -13897,41 +13723,41 @@ type WebSearchTool struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r WebSearchTool) RawJSON() string { return r.JSON.raw }
-func (r *WebSearchTool) UnmarshalJSON(data []byte) error {
+func (r WebSearchPreviewTool) RawJSON() string { return r.JSON.raw }
+func (r *WebSearchPreviewTool) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// ToParam converts this WebSearchTool to a WebSearchToolParam.
+// ToParam converts this WebSearchPreviewTool to a WebSearchPreviewToolParam.
 //
 // Warning: the fields of the param type will not be present. ToParam should only
 // be used at the last possible moment before sending a request. Test for this with
-// WebSearchToolParam.Overrides()
-func (r WebSearchTool) ToParam() WebSearchToolParam {
-	return param.Override[WebSearchToolParam](json.RawMessage(r.RawJSON()))
+// WebSearchPreviewToolParam.Overrides()
+func (r WebSearchPreviewTool) ToParam() WebSearchPreviewToolParam {
+	return param.Override[WebSearchPreviewToolParam](json.RawMessage(r.RawJSON()))
 }
 
 // The type of the web search tool. One of `web_search_preview` or
 // `web_search_preview_2025_03_11`.
-type WebSearchToolType string
+type WebSearchPreviewToolType string
 
 const (
-	WebSearchToolTypeWebSearchPreview           WebSearchToolType = "web_search_preview"
-	WebSearchToolTypeWebSearchPreview2025_03_11 WebSearchToolType = "web_search_preview_2025_03_11"
+	WebSearchPreviewToolTypeWebSearchPreview           WebSearchPreviewToolType = "web_search_preview"
+	WebSearchPreviewToolTypeWebSearchPreview2025_03_11 WebSearchPreviewToolType = "web_search_preview_2025_03_11"
 )
 
 // High level guidance for the amount of context window space to use for the
 // search. One of `low`, `medium`, or `high`. `medium` is the default.
-type WebSearchToolSearchContextSize string
+type WebSearchPreviewToolSearchContextSize string
 
 const (
-	WebSearchToolSearchContextSizeLow    WebSearchToolSearchContextSize = "low"
-	WebSearchToolSearchContextSizeMedium WebSearchToolSearchContextSize = "medium"
-	WebSearchToolSearchContextSizeHigh   WebSearchToolSearchContextSize = "high"
+	WebSearchPreviewToolSearchContextSizeLow    WebSearchPreviewToolSearchContextSize = "low"
+	WebSearchPreviewToolSearchContextSizeMedium WebSearchPreviewToolSearchContextSize = "medium"
+	WebSearchPreviewToolSearchContextSizeHigh   WebSearchPreviewToolSearchContextSize = "high"
 )
 
 // The user's location.
-type WebSearchToolUserLocation struct {
+type WebSearchPreviewToolUserLocation struct {
 	// The type of location approximation. Always `approximate`.
 	Type constant.Approximate `json:"type,required"`
 	// Free text input for the city of the user, e.g. `San Francisco`.
@@ -13957,8 +13783,8 @@ type WebSearchToolUserLocation struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r WebSearchToolUserLocation) RawJSON() string { return r.JSON.raw }
-func (r *WebSearchToolUserLocation) UnmarshalJSON(data []byte) error {
+func (r WebSearchPreviewToolUserLocation) RawJSON() string { return r.JSON.raw }
+func (r *WebSearchPreviewToolUserLocation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -13967,34 +13793,34 @@ func (r *WebSearchToolUserLocation) UnmarshalJSON(data []byte) error {
 // [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
 //
 // The property Type is required.
-type WebSearchToolParam struct {
+type WebSearchPreviewToolParam struct {
 	// The type of the web search tool. One of `web_search_preview` or
 	// `web_search_preview_2025_03_11`.
 	//
 	// Any of "web_search_preview", "web_search_preview_2025_03_11".
-	Type WebSearchToolType `json:"type,omitzero,required"`
+	Type WebSearchPreviewToolType `json:"type,omitzero,required"`
 	// The user's location.
-	UserLocation WebSearchToolUserLocationParam `json:"user_location,omitzero"`
+	UserLocation WebSearchPreviewToolUserLocationParam `json:"user_location,omitzero"`
 	// High level guidance for the amount of context window space to use for the
 	// search. One of `low`, `medium`, or `high`. `medium` is the default.
 	//
 	// Any of "low", "medium", "high".
-	SearchContextSize WebSearchToolSearchContextSize `json:"search_context_size,omitzero"`
+	SearchContextSize WebSearchPreviewToolSearchContextSize `json:"search_context_size,omitzero"`
 	paramObj
 }
 
-func (r WebSearchToolParam) MarshalJSON() (data []byte, err error) {
-	type shadow WebSearchToolParam
+func (r WebSearchPreviewToolParam) MarshalJSON() (data []byte, err error) {
+	type shadow WebSearchPreviewToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *WebSearchToolParam) UnmarshalJSON(data []byte) error {
+func (r *WebSearchPreviewToolParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // The user's location.
 //
 // The property Type is required.
-type WebSearchToolUserLocationParam struct {
+type WebSearchPreviewToolUserLocationParam struct {
 	// Free text input for the city of the user, e.g. `San Francisco`.
 	City param.Opt[string] `json:"city,omitzero"`
 	// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of
@@ -14012,12 +13838,207 @@ type WebSearchToolUserLocationParam struct {
 	paramObj
 }
 
+func (r WebSearchPreviewToolUserLocationParam) MarshalJSON() (data []byte, err error) {
+	type shadow WebSearchPreviewToolUserLocationParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebSearchPreviewToolUserLocationParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Search the Internet for sources related to the prompt. Learn more about the
+// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+type WebSearchTool struct {
+	// The type of the web search tool. One of `web_search` or `web_search_2025_08_26`.
+	//
+	// Any of "web_search", "web_search_2025_08_26".
+	Type WebSearchToolType `json:"type,required"`
+	// Filters for the search.
+	Filters WebSearchToolFilters `json:"filters,nullable"`
+	// High level guidance for the amount of context window space to use for the
+	// search. One of `low`, `medium`, or `high`. `medium` is the default.
+	//
+	// Any of "low", "medium", "high".
+	SearchContextSize WebSearchToolSearchContextSize `json:"search_context_size"`
+	// The approximate location of the user.
+	UserLocation WebSearchToolUserLocation `json:"user_location,nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type              respjson.Field
+		Filters           respjson.Field
+		SearchContextSize respjson.Field
+		UserLocation      respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebSearchTool) RawJSON() string { return r.JSON.raw }
+func (r *WebSearchTool) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this WebSearchTool to a WebSearchToolParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// WebSearchToolParam.Overrides()
+func (r WebSearchTool) ToParam() WebSearchToolParam {
+	return param.Override[WebSearchToolParam](json.RawMessage(r.RawJSON()))
+}
+
+// The type of the web search tool. One of `web_search` or `web_search_2025_08_26`.
+type WebSearchToolType string
+
+const (
+	WebSearchToolTypeWebSearch           WebSearchToolType = "web_search"
+	WebSearchToolTypeWebSearch2025_08_26 WebSearchToolType = "web_search_2025_08_26"
+)
+
+// Filters for the search.
+type WebSearchToolFilters struct {
+	// Allowed domains for the search. If not provided, all domains are allowed.
+	// Subdomains of the provided domains are allowed as well.
+	//
+	// Example: `["pubmed.ncbi.nlm.nih.gov"]`
+	AllowedDomains []string `json:"allowed_domains,nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		AllowedDomains respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebSearchToolFilters) RawJSON() string { return r.JSON.raw }
+func (r *WebSearchToolFilters) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// High level guidance for the amount of context window space to use for the
+// search. One of `low`, `medium`, or `high`. `medium` is the default.
+type WebSearchToolSearchContextSize string
+
+const (
+	WebSearchToolSearchContextSizeLow    WebSearchToolSearchContextSize = "low"
+	WebSearchToolSearchContextSizeMedium WebSearchToolSearchContextSize = "medium"
+	WebSearchToolSearchContextSizeHigh   WebSearchToolSearchContextSize = "high"
+)
+
+// The approximate location of the user.
+type WebSearchToolUserLocation struct {
+	// Free text input for the city of the user, e.g. `San Francisco`.
+	City string `json:"city,nullable"`
+	// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of
+	// the user, e.g. `US`.
+	Country string `json:"country,nullable"`
+	// Free text input for the region of the user, e.g. `California`.
+	Region string `json:"region,nullable"`
+	// The [IANA timezone](https://timeapi.io/documentation/iana-timezones) of the
+	// user, e.g. `America/Los_Angeles`.
+	Timezone string `json:"timezone,nullable"`
+	// The type of location approximation. Always `approximate`.
+	//
+	// Any of "approximate".
+	Type string `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		City        respjson.Field
+		Country     respjson.Field
+		Region      respjson.Field
+		Timezone    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r WebSearchToolUserLocation) RawJSON() string { return r.JSON.raw }
+func (r *WebSearchToolUserLocation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Search the Internet for sources related to the prompt. Learn more about the
+// [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
+//
+// The property Type is required.
+type WebSearchToolParam struct {
+	// The type of the web search tool. One of `web_search` or `web_search_2025_08_26`.
+	//
+	// Any of "web_search", "web_search_2025_08_26".
+	Type WebSearchToolType `json:"type,omitzero,required"`
+	// Filters for the search.
+	Filters WebSearchToolFiltersParam `json:"filters,omitzero"`
+	// The approximate location of the user.
+	UserLocation WebSearchToolUserLocationParam `json:"user_location,omitzero"`
+	// High level guidance for the amount of context window space to use for the
+	// search. One of `low`, `medium`, or `high`. `medium` is the default.
+	//
+	// Any of "low", "medium", "high".
+	SearchContextSize WebSearchToolSearchContextSize `json:"search_context_size,omitzero"`
+	paramObj
+}
+
+func (r WebSearchToolParam) MarshalJSON() (data []byte, err error) {
+	type shadow WebSearchToolParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebSearchToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Filters for the search.
+type WebSearchToolFiltersParam struct {
+	// Allowed domains for the search. If not provided, all domains are allowed.
+	// Subdomains of the provided domains are allowed as well.
+	//
+	// Example: `["pubmed.ncbi.nlm.nih.gov"]`
+	AllowedDomains []string `json:"allowed_domains,omitzero"`
+	paramObj
+}
+
+func (r WebSearchToolFiltersParam) MarshalJSON() (data []byte, err error) {
+	type shadow WebSearchToolFiltersParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *WebSearchToolFiltersParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The approximate location of the user.
+type WebSearchToolUserLocationParam struct {
+	// Free text input for the city of the user, e.g. `San Francisco`.
+	City param.Opt[string] `json:"city,omitzero"`
+	// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of
+	// the user, e.g. `US`.
+	Country param.Opt[string] `json:"country,omitzero"`
+	// Free text input for the region of the user, e.g. `California`.
+	Region param.Opt[string] `json:"region,omitzero"`
+	// The [IANA timezone](https://timeapi.io/documentation/iana-timezones) of the
+	// user, e.g. `America/Los_Angeles`.
+	Timezone param.Opt[string] `json:"timezone,omitzero"`
+	// The type of location approximation. Always `approximate`.
+	//
+	// Any of "approximate".
+	Type string `json:"type,omitzero"`
+	paramObj
+}
+
 func (r WebSearchToolUserLocationParam) MarshalJSON() (data []byte, err error) {
 	type shadow WebSearchToolUserLocationParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *WebSearchToolUserLocationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[WebSearchToolUserLocationParam](
+		"type", "approximate",
+	)
 }
 
 type ResponseNewParams struct {
@@ -14177,7 +14198,7 @@ type ResponseNewParams struct {
 	// An array of tools the model may call while generating a response. You can
 	// specify which tool to use by setting the `tool_choice` parameter.
 	//
-	// The two categories of tools you can provide the model are:
+	// We support the following categories of tools:
 	//
 	//   - **Built-in tools**: Tools that are provided by OpenAI that extend the model's
 	//     capabilities, like
@@ -14185,6 +14206,9 @@ type ResponseNewParams struct {
 	//     [file search](https://platform.openai.com/docs/guides/tools-file-search).
 	//     Learn more about
 	//     [built-in tools](https://platform.openai.com/docs/guides/tools).
+	//   - **MCP Tools**: Integrations with third-party systems via custom MCP servers or
+	//     predefined connectors such as Google Drive and Notion. Learn more about
+	//     [MCP Tools](https://platform.openai.com/docs/guides/tools-connectors-mcp).
 	//   - **Function calls (custom tools)**: Functions that are defined by you, enabling
 	//     the model to call your own code with strongly typed arguments and outputs.
 	//     Learn more about

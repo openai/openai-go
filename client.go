@@ -10,6 +10,7 @@ import (
 	"github.com/openai/openai-go/v2/conversations"
 	"github.com/openai/openai-go/v2/internal/requestconfig"
 	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v2/realtime"
 	"github.com/openai/openai-go/v2/responses"
 	"github.com/openai/openai-go/v2/webhooks"
 )
@@ -35,6 +36,7 @@ type Client struct {
 	Batches       BatchService
 	Uploads       UploadService
 	Responses     responses.ResponseService
+	Realtime      realtime.RealtimeService
 	Conversations conversations.ConversationService
 	Containers    ContainerService
 }
@@ -88,6 +90,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Batches = NewBatchService(opts...)
 	r.Uploads = NewUploadService(opts...)
 	r.Responses = responses.NewResponseService(opts...)
+	r.Realtime = realtime.NewRealtimeService(opts...)
 	r.Conversations = conversations.NewConversationService(opts...)
 	r.Containers = NewContainerService(opts...)
 

@@ -571,6 +571,8 @@ const (
 	ChatCompletionAudioParamVoiceSage    ChatCompletionAudioParamVoice = "sage"
 	ChatCompletionAudioParamVoiceShimmer ChatCompletionAudioParamVoice = "shimmer"
 	ChatCompletionAudioParamVoiceVerse   ChatCompletionAudioParamVoice = "verse"
+	ChatCompletionAudioParamVoiceMarin   ChatCompletionAudioParamVoice = "marin"
+	ChatCompletionAudioParamVoiceCedar   ChatCompletionAudioParamVoice = "cedar"
 )
 
 // Represents a streamed chunk of a chat completion response returned by the model,
