@@ -790,7 +790,7 @@ type Response struct {
 	//     Learn more about
 	//     [built-in tools](https://platform.openai.com/docs/guides/tools).
 	//   - **MCP Tools**: Integrations with third-party systems via custom MCP servers or
-	//     predefined connectors such as Google Drive and Notion. Learn more about
+	//     predefined connectors such as Google Drive and SharePoint. Learn more about
 	//     [MCP Tools](https://platform.openai.com/docs/guides/tools-connectors-mcp).
 	//   - **Function calls (custom tools)**: Functions that are defined by you, enabling
 	//     the model to call your own code with strongly typed arguments and outputs.
@@ -4759,8 +4759,105 @@ func (r *ResponseIncompleteEvent) UnmarshalJSON(data []byte) error {
 
 type ResponseInputParam []ResponseInputItemUnionParam
 
+// An audio input to the model.
+type ResponseInputAudio struct {
+	InputAudio ResponseInputAudioInputAudio `json:"input_audio,required"`
+	// The type of the input item. Always `input_audio`.
+	Type constant.InputAudio `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputAudio  respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseInputAudio) RawJSON() string { return r.JSON.raw }
+func (r *ResponseInputAudio) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this ResponseInputAudio to a ResponseInputAudioParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ResponseInputAudioParam.Overrides()
+func (r ResponseInputAudio) ToParam() ResponseInputAudioParam {
+	return param.Override[ResponseInputAudioParam](json.RawMessage(r.RawJSON()))
+}
+
+type ResponseInputAudioInputAudio struct {
+	// Base64-encoded audio data.
+	Data string `json:"data,required"`
+	// The format of the audio data. Currently supported formats are `mp3` and `wav`.
+	//
+	// Any of "mp3", "wav".
+	Format string `json:"format,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Format      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseInputAudioInputAudio) RawJSON() string { return r.JSON.raw }
+func (r *ResponseInputAudioInputAudio) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An audio input to the model.
+//
+// The properties InputAudio, Type are required.
+type ResponseInputAudioParam struct {
+	InputAudio ResponseInputAudioInputAudioParam `json:"input_audio,omitzero,required"`
+	// The type of the input item. Always `input_audio`.
+	//
+	// This field can be elided, and will marshal its zero value as "input_audio".
+	Type constant.InputAudio `json:"type,required"`
+	paramObj
+}
+
+func (r ResponseInputAudioParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseInputAudioParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputAudioParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Data, Format are required.
+type ResponseInputAudioInputAudioParam struct {
+	// Base64-encoded audio data.
+	Data string `json:"data,required"`
+	// The format of the audio data. Currently supported formats are `mp3` and `wav`.
+	//
+	// Any of "mp3", "wav".
+	Format string `json:"format,omitzero,required"`
+	paramObj
+}
+
+func (r ResponseInputAudioInputAudioParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseInputAudioInputAudioParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputAudioInputAudioParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputAudioInputAudioParam](
+		"format", "mp3", "wav",
+	)
+}
+
 // ResponseInputContentUnion contains all possible properties and values from
-// [ResponseInputText], [ResponseInputImage], [ResponseInputFile].
+// [ResponseInputText], [ResponseInputImage], [ResponseInputFile],
+// [ResponseInputAudio].
 //
 // Use the [ResponseInputContentUnion.AsAny] method to switch on the variant.
 //
@@ -4768,7 +4865,7 @@ type ResponseInputParam []ResponseInputItemUnionParam
 type ResponseInputContentUnion struct {
 	// This field is from variant [ResponseInputText].
 	Text string `json:"text"`
-	// Any of "input_text", "input_image", "input_file".
+	// Any of "input_text", "input_image", "input_file", "input_audio".
 	Type string `json:"type"`
 	// This field is from variant [ResponseInputImage].
 	Detail ResponseInputImageDetail `json:"detail"`
@@ -4781,16 +4878,19 @@ type ResponseInputContentUnion struct {
 	FileURL string `json:"file_url"`
 	// This field is from variant [ResponseInputFile].
 	Filename string `json:"filename"`
-	JSON     struct {
-		Text     respjson.Field
-		Type     respjson.Field
-		Detail   respjson.Field
-		FileID   respjson.Field
-		ImageURL respjson.Field
-		FileData respjson.Field
-		FileURL  respjson.Field
-		Filename respjson.Field
-		raw      string
+	// This field is from variant [ResponseInputAudio].
+	InputAudio ResponseInputAudioInputAudio `json:"input_audio"`
+	JSON       struct {
+		Text       respjson.Field
+		Type       respjson.Field
+		Detail     respjson.Field
+		FileID     respjson.Field
+		ImageURL   respjson.Field
+		FileData   respjson.Field
+		FileURL    respjson.Field
+		Filename   respjson.Field
+		InputAudio respjson.Field
+		raw        string
 	} `json:"-"`
 }
 
@@ -4804,6 +4904,7 @@ type anyResponseInputContent interface {
 func (ResponseInputText) implResponseInputContentUnion()  {}
 func (ResponseInputImage) implResponseInputContentUnion() {}
 func (ResponseInputFile) implResponseInputContentUnion()  {}
+func (ResponseInputAudio) implResponseInputContentUnion() {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -4811,6 +4912,7 @@ func (ResponseInputFile) implResponseInputContentUnion()  {}
 //	case responses.ResponseInputText:
 //	case responses.ResponseInputImage:
 //	case responses.ResponseInputFile:
+//	case responses.ResponseInputAudio:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -4822,6 +4924,8 @@ func (u ResponseInputContentUnion) AsAny() anyResponseInputContent {
 		return u.AsInputImage()
 	case "input_file":
 		return u.AsInputFile()
+	case "input_audio":
+		return u.AsInputAudio()
 	}
 	return nil
 }
@@ -4837,6 +4941,11 @@ func (u ResponseInputContentUnion) AsInputImage() (v ResponseInputImage) {
 }
 
 func (u ResponseInputContentUnion) AsInputFile() (v ResponseInputFile) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseInputContentUnion) AsInputAudio() (v ResponseInputAudio) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -4870,6 +4979,12 @@ func ResponseInputContentParamOfInputImage(detail ResponseInputImageDetail) Resp
 	return ResponseInputContentUnionParam{OfInputImage: &inputImage}
 }
 
+func ResponseInputContentParamOfInputAudio(inputAudio ResponseInputAudioInputAudioParam) ResponseInputContentUnionParam {
+	var variant ResponseInputAudioParam
+	variant.InputAudio = inputAudio
+	return ResponseInputContentUnionParam{OfInputAudio: &variant}
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -4877,11 +4992,12 @@ type ResponseInputContentUnionParam struct {
 	OfInputText  *ResponseInputTextParam  `json:",omitzero,inline"`
 	OfInputImage *ResponseInputImageParam `json:",omitzero,inline"`
 	OfInputFile  *ResponseInputFileParam  `json:",omitzero,inline"`
+	OfInputAudio *ResponseInputAudioParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponseInputContentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage, u.OfInputFile)
+	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage, u.OfInputFile, u.OfInputAudio)
 }
 func (u *ResponseInputContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -4894,6 +5010,8 @@ func (u *ResponseInputContentUnionParam) asAny() any {
 		return u.OfInputImage
 	} else if !param.IsOmitted(u.OfInputFile) {
 		return u.OfInputFile
+	} else if !param.IsOmitted(u.OfInputAudio) {
+		return u.OfInputAudio
 	}
 	return nil
 }
@@ -4947,12 +5065,22 @@ func (u ResponseInputContentUnionParam) GetFilename() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputContentUnionParam) GetInputAudio() *ResponseInputAudioInputAudioParam {
+	if vt := u.OfInputAudio; vt != nil {
+		return &vt.InputAudio
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputContentUnionParam) GetType() *string {
 	if vt := u.OfInputText; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfInputImage; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfInputFile; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputAudio; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -4974,6 +5102,7 @@ func init() {
 		apijson.Discriminator[ResponseInputTextParam]("input_text"),
 		apijson.Discriminator[ResponseInputImageParam]("input_image"),
 		apijson.Discriminator[ResponseInputFileParam]("input_file"),
+		apijson.Discriminator[ResponseInputAudioParam]("input_audio"),
 	)
 }
 
@@ -14194,7 +14323,7 @@ type ResponseNewParams struct {
 	//     Learn more about
 	//     [built-in tools](https://platform.openai.com/docs/guides/tools).
 	//   - **MCP Tools**: Integrations with third-party systems via custom MCP servers or
-	//     predefined connectors such as Google Drive and Notion. Learn more about
+	//     predefined connectors such as Google Drive and SharePoint. Learn more about
 	//     [MCP Tools](https://platform.openai.com/docs/guides/tools-connectors-mcp).
 	//   - **Function calls (custom tools)**: Functions that are defined by you, enabling
 	//     the model to call your own code with strongly typed arguments and outputs.

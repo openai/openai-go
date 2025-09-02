@@ -630,6 +630,7 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseFunctionWebSearchParam">ResponseFunctionWebSearchParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseIncludable">ResponseIncludable</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseInputParam">ResponseInputParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseInputAudioParam">ResponseInputAudioParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseInputContentUnionParam">ResponseInputContentUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseInputFileParam">ResponseInputFileParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseInputImageParam">ResponseInputImageParam</a>
@@ -702,6 +703,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseImageGenCallPartialImageEvent">ResponseImageGenCallPartialImageEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseInProgressEvent">ResponseInProgressEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseIncompleteEvent">ResponseIncompleteEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseInputAudio">ResponseInputAudio</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseInputContentUnion">ResponseInputContentUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseInputFile">ResponseInputFile</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseInputImage">ResponseInputImage</a>
