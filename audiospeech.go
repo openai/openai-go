@@ -101,6 +101,8 @@ const (
 	AudioSpeechNewParamsVoiceSage    AudioSpeechNewParamsVoice = "sage"
 	AudioSpeechNewParamsVoiceShimmer AudioSpeechNewParamsVoice = "shimmer"
 	AudioSpeechNewParamsVoiceVerse   AudioSpeechNewParamsVoice = "verse"
+	AudioSpeechNewParamsVoiceMarin   AudioSpeechNewParamsVoice = "marin"
+	AudioSpeechNewParamsVoiceCedar   AudioSpeechNewParamsVoice = "cedar"
 )
 
 // The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,

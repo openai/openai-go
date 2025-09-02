@@ -413,6 +413,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks#FineTuningJobCancelledWebhookEvent">FineTuningJobCancelledWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks#FineTuningJobFailedWebhookEvent">FineTuningJobFailedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks#FineTuningJobSucceededWebhookEvent">FineTuningJobSucceededWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks#RealtimeCallIncomingWebhookEvent">RealtimeCallIncomingWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks#ResponseCancelledWebhookEvent">ResponseCancelledWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks#ResponseCompletedWebhookEvent">ResponseCompletedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/webhooks#ResponseFailedWebhookEvent">ResponseFailedWebhookEvent</a>
@@ -648,6 +649,7 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ToolChoiceMcpParam">ToolChoiceMcpParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ToolChoiceOptions">ToolChoiceOptions</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ToolChoiceTypesParam">ToolChoiceTypesParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#WebSearchPreviewToolParam">WebSearchPreviewToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#WebSearchToolParam">WebSearchToolParam</a>
 
 Response Types:
@@ -750,6 +752,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ToolChoiceMcp">ToolChoiceMcp</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ToolChoiceOptions">ToolChoiceOptions</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ToolChoiceTypes">ToolChoiceTypes</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#WebSearchPreviewTool">WebSearchPreviewTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#WebSearchTool">WebSearchTool</a>
 
 Methods:
@@ -768,6 +771,31 @@ Response Types:
 Methods:
 
 - <code title="get /responses/{response_id}/input_items">client.Responses.InputItems.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#InputItemService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, responseID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#InputItemListParams">InputItemListParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/packages/pagination#CursorPage">CursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses">responses</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/responses#ResponseItemUnion">ResponseItemUnion</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+# Realtime
+
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeAudioConfigParam">RealtimeAudioConfigParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeClientSecretConfigParam">RealtimeClientSecretConfigParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeSessionCreateRequestParam">RealtimeSessionCreateRequestParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeToolChoiceConfigUnionParam">RealtimeToolChoiceConfigUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeToolsConfigParam">RealtimeToolsConfigParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeToolsConfigUnionParam">RealtimeToolsConfigUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeTracingConfigUnionParam">RealtimeTracingConfigUnionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeTranscriptionSessionCreateRequestParam">RealtimeTranscriptionSessionCreateRequestParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeTruncationUnionParam">RealtimeTruncationUnionParam</a>
+
+## ClientSecrets
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeSessionCreateResponse">RealtimeSessionCreateResponse</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#ClientSecretNewResponse">ClientSecretNewResponse</a>
+
+Methods:
+
+- <code title="post /realtime/client_secrets">client.Realtime.ClientSecrets.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#ClientSecretService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#ClientSecretNewParams">ClientSecretNewParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#ClientSecretNewResponse">ClientSecretNewResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 # Conversations
 
