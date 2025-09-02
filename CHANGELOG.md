@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.2.1 (2025-09-02)
+
+Full Changelog: [v2.2.0...v2.2.1](https://github.com/openai/openai-go/compare/v2.2.0...v2.2.1)
+
+### Chores
+
+* **api:** manual updates for ResponseInputAudio ([8c0ebe5](https://github.com/openai/openai-go/commit/8c0ebe566fb03be01cd772a80eb2581b46b78f5c))
+
 ## 2.2.0 (2025-09-02)
 
 Full Changelog: [v2.1.1...v2.2.0](https://github.com/openai/openai-go/compare/v2.1.1...v2.2.0)
