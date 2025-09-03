@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.3.0 (2025-09-03)
+
+Full Changelog: [v2.2.2...v2.3.0](https://github.com/openai/openai-go/compare/v2.2.2...v2.3.0)
+
+### Features
+
+* **api:** Add gpt-realtime models ([3cf6a34](https://github.com/openai/openai-go/commit/3cf6a3484108786df49cd8e44356fc5fcaf58d8a))
+
 ## 2.2.2 (2025-09-02)
 
 Full Changelog: [v2.2.1...v2.2.2](https://github.com/openai/openai-go/compare/v2.2.1...v2.2.2)
