@@ -384,6 +384,8 @@ func (r *RealtimeSessionCreateRequestParam) UnmarshalJSON(data []byte) error {
 type RealtimeSessionCreateRequestModel = string
 
 const (
+	RealtimeSessionCreateRequestModelGPTRealtime                        RealtimeSessionCreateRequestModel = "gpt-realtime"
+	RealtimeSessionCreateRequestModelGPTRealtime2025_08_28              RealtimeSessionCreateRequestModel = "gpt-realtime-2025-08-28"
 	RealtimeSessionCreateRequestModelGPT4oRealtime                      RealtimeSessionCreateRequestModel = "gpt-4o-realtime"
 	RealtimeSessionCreateRequestModelGPT4oMiniRealtime                  RealtimeSessionCreateRequestModel = "gpt-4o-mini-realtime"
 	RealtimeSessionCreateRequestModelGPT4oRealtimePreview               RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview"
