@@ -35,7 +35,7 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 		},
 		Session: realtime.ClientSecretNewParamsSessionUnion{
 			OfRealtime: &realtime.RealtimeSessionCreateRequestParam{
-				Model: realtime.RealtimeSessionCreateRequestModelGPT4oRealtime,
+				Model: realtime.RealtimeSessionCreateRequestModelGPTRealtime,
 				Audio: realtime.RealtimeAudioConfigParam{
 					Input: realtime.RealtimeAudioConfigInputParam{
 						Format: "pcm16",
