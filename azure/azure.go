@@ -121,7 +121,7 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential) option.RequestO
 // WithAPIKey configures this client to authenticate using an API key.
 // This function should be paired with a call to [WithEndpoint] to point to your Azure OpenAI instance.
 func WithAPIKey(apiKey string) option.RequestOption {
-	// NOTE: there is an option.WithApiKey(), but that adds the value into
+	// NOTE: there is an option.WithAPIKey(), but that adds the value into
 	// the Authorization header instead so we're doing this instead.
 	return option.WithHeader("Api-Key", apiKey)
 }
@@ -235,4 +235,4 @@ func (mp policyAdapter) Do(req *policy.Request) (*http.Response, error) {
 	return (option.MiddlewareNext)(mp)(req.Raw())
 }
 
-const version = "v.0.1.0"
+const version = "v0.1.0"

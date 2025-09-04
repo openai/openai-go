@@ -33,7 +33,7 @@ func WithBaseURL(base string) RequestOption {
 
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		if err != nil {
-			return fmt.Errorf("requestoption: WithBaseURL failed to parse url %s", err)
+			return fmt.Errorf("requestoption: WithBaseURL failed to parse base URL %q: %v", base, err)
 		}
 
 		r.BaseURL = u
@@ -232,7 +232,7 @@ func WithResponseInto(dst **http.Response) RequestOption {
 // WithRequestBody returns a RequestOption that provides a custom serialized body with the given
 // content type.
 //
-// body accepts an io.Reader or raw []bytes.
+// body accepts an io.Reader or raw []byte.
 func WithRequestBody(contentType string, body any) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		if reader, ok := body.(io.Reader); ok {
@@ -270,7 +270,7 @@ func WithEnvironmentProduction() RequestOption {
 func WithAPIKey(value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		r.APIKey = value
-		return r.Apply(WithHeader("authorization", fmt.Sprintf("Bearer %s", r.APIKey)))
+		return r.Apply(WithHeader("Authorization", fmt.Sprintf("Bearer %s", r.APIKey)))
 	})
 }
 
