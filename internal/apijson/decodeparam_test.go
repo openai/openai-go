@@ -351,6 +351,36 @@ func init() {
 	})
 }
 
+type FooVariant struct {
+	Type  string `json:"type,required"`
+	Value string `json:"value,required"`
+}
+
+type BarVariant struct {
+	Type   string `json:"type,required"`
+	Enable bool   `json:"enable,required"`
+}
+
+type MultiDiscriminatorUnion struct {
+	OfFoo *FooVariant `json:",inline"`
+	OfBar *BarVariant `json:",inline"`
+
+	paramUnion
+}
+
+func init() {
+	apijson.RegisterDiscriminatedUnion[MultiDiscriminatorUnion]("type", map[string]reflect.Type{
+		"foo":        reflect.TypeOf(FooVariant{}),
+		"foo_v2":     reflect.TypeOf(FooVariant{}),
+		"bar":        reflect.TypeOf(BarVariant{}),
+		"bar_legacy": reflect.TypeOf(BarVariant{}),
+	})
+}
+
+func (m *MultiDiscriminatorUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, m)
+}
+
 func (d *DiscriminatedUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, d)
 }
@@ -395,6 +425,64 @@ func TestDiscriminatedUnion(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			var dst DiscriminatedUnion
+			err := json.Unmarshal([]byte(test.raw), &dst)
+			if err != nil && !test.shouldFail {
+				t.Fatalf("failed unmarshal with err: %v", err)
+			}
+			if err == nil && test.shouldFail {
+				t.Fatalf("expected unmarshal to fail but it succeeded")
+			}
+			if !reflect.DeepEqual(dst, test.target) {
+				t.Fatalf("failed equality, got %#v but expected %#v", dst, test.target)
+			}
+		})
+	}
+}
+
+func TestMultiDiscriminatorUnion(t *testing.T) {
+	tests := map[string]struct {
+		raw        string
+		target     MultiDiscriminatorUnion
+		shouldFail bool
+	}{
+		"foo_variant": {
+			raw: `{"type":"foo","value":"test"}`,
+			target: MultiDiscriminatorUnion{OfFoo: &FooVariant{
+				Type:  "foo",
+				Value: "test",
+			}},
+		},
+		"foo_v2_variant": {
+			raw: `{"type":"foo_v2","value":"test_v2"}`,
+			target: MultiDiscriminatorUnion{OfFoo: &FooVariant{
+				Type:  "foo_v2",
+				Value: "test_v2",
+			}},
+		},
+		"bar_variant": {
+			raw: `{"type":"bar","enable":true}`,
+			target: MultiDiscriminatorUnion{OfBar: &BarVariant{
+				Type:   "bar",
+				Enable: true,
+			}},
+		},
+		"bar_legacy_variant": {
+			raw: `{"type":"bar_legacy","enable":false}`,
+			target: MultiDiscriminatorUnion{OfBar: &BarVariant{
+				Type:   "bar_legacy",
+				Enable: false,
+			}},
+		},
+		"invalid_type": {
+			raw:        `{"type":"unknown","value":"test"}`,
+			target:     MultiDiscriminatorUnion{},
+			shouldFail: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			var dst MultiDiscriminatorUnion
 			err := json.Unmarshal([]byte(test.raw), &dst)
 			if err != nil && !test.shouldFail {
 				t.Fatalf("failed unmarshal with err: %v", err)

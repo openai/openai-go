@@ -39,12 +39,10 @@ func RegisterDiscriminatedUnion[T any](key string, mappings map[string]reflect.T
 
 func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 	type variantDecoder struct {
-		decoder            decoderFunc
-		field              reflect.StructField
-		discriminatorValue any
+		decoder decoderFunc
+		field   reflect.StructField
 	}
-
-	variants := []variantDecoder{}
+	decoders := []variantDecoder{}
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 
@@ -53,18 +51,26 @@ func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 		}
 
 		decoder := d.typeDecoder(field.Type)
-		variants = append(variants, variantDecoder{
+		decoders = append(decoders, variantDecoder{
 			decoder: decoder,
 			field:   field,
 		})
 	}
 
+	type discriminatedDecoder struct {
+		variantDecoder
+		discriminator any
+	}
+	discriminatedDecoders := []discriminatedDecoder{}
 	unionEntry, discriminated := unionRegistry[t]
-	for _, unionVariant := range unionEntry.variants {
-		for i := 0; i < len(variants); i++ {
-			variant := &variants[i]
-			if variant.field.Type.Elem() == unionVariant.Type {
-				variant.discriminatorValue = unionVariant.DiscriminatorValue
+	for _, variant := range unionEntry.variants {
+		// For each union variant, find a matching decoder and save it
+		for _, decoder := range decoders {
+			if decoder.field.Type.Elem() == variant.Type {
+				discriminatedDecoders = append(discriminatedDecoders, discriminatedDecoder{
+					decoder,
+					variant.DiscriminatorValue,
+				})
 				break
 			}
 		}
@@ -73,10 +79,10 @@ func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 	return func(n gjson.Result, v reflect.Value, state *decoderState) error {
 		if discriminated && n.Type == gjson.JSON && len(unionEntry.discriminatorKey) != 0 {
 			discriminator := n.Get(unionEntry.discriminatorKey).Value()
-			for _, variant := range variants {
-				if discriminator == variant.discriminatorValue {
-					inner := v.FieldByIndex(variant.field.Index)
-					return variant.decoder(n, inner, state)
+			for _, decoder := range discriminatedDecoders {
+				if discriminator == decoder.discriminator {
+					inner := v.FieldByIndex(decoder.field.Index)
+					return decoder.decoder(n, inner, state)
 				}
 			}
 			return errors.New("apijson: was not able to find discriminated union variant")
@@ -85,15 +91,15 @@ func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 		// Set bestExactness to worse than loose
 		bestExactness := loose - 1
 		bestVariant := -1
-		for i, variant := range variants {
+		for i, decoder := range decoders {
 			// Pointers are used to discern JSON object variants from value variants
-			if n.Type != gjson.JSON && variant.field.Type.Kind() == reflect.Ptr {
+			if n.Type != gjson.JSON && decoder.field.Type.Kind() == reflect.Ptr {
 				continue
 			}
 
 			sub := decoderState{strict: state.strict, exactness: exact}
-			inner := v.FieldByIndex(variant.field.Index)
-			err := variant.decoder(n, inner, &sub)
+			inner := v.FieldByIndex(decoder.field.Index)
+			err := decoder.decoder(n, inner, &sub)
 			if err != nil {
 				continue
 			}
@@ -116,11 +122,11 @@ func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 			return errors.New("apijson: was not able to coerce type as union strictly")
 		}
 
-		for i := 0; i < len(variants); i++ {
+		for i := 0; i < len(decoders); i++ {
 			if i == bestVariant {
 				continue
 			}
-			v.FieldByIndex(variants[i].field.Index).SetZero()
+			v.FieldByIndex(decoders[i].field.Index).SetZero()
 		}
 
 		return nil
