@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.3.1 (2025-09-05)
+
+Full Changelog: [v2.3.0...v2.3.1](https://github.com/openai/openai-go/compare/v2.3.0...v2.3.1)
+
+### Bug Fixes
+
+* **internal:** unmarshal correctly when there are multiple discriminators ([98596b2](https://github.com/openai/openai-go/commit/98596b2183dcf3a13297b0dc07b0efc015dff83f))
+
 ## 2.3.0 (2025-09-03)
 
 Full Changelog: [v2.2.2...v2.3.0](https://github.com/openai/openai-go/compare/v2.2.2...v2.3.0)
