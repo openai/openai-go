@@ -165,19 +165,21 @@ params := openai.ChatCompletionNewParams{
 	Messages: []openai.ChatCompletionMessageParamUnion{
 		openai.UserMessage(question),
 	},
-	Tools: []openai.ChatCompletionToolParam{
+	Tools: []openai.ChatCompletionToolUnionParam{
 		{
-			Function: openai.FunctionDefinitionParam{
-				Name:        "get_weather",
-				Description: openai.String("Get weather at the given location"),
-				Parameters: openai.FunctionParameters{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"location": map[string]string{
-							"type": "string",
+			OfFunction: &openai.ChatCompletionFunctionToolParam{
+				Function: openai.FunctionDefinitionParam{
+					Name:        "get_weather",
+					Description: openai.String("Get weather at the given location"),
+					Parameters: openai.FunctionParameters{
+						"type": "object",
+						"properties": map[string]interface{}{
+							"location": map[string]string{
+								"type": "string",
+							},
 						},
+						"required": []string{"location"},
 					},
-					"required": []string{"location"},
 				},
 			},
 		},
@@ -292,7 +294,6 @@ func main() {
 > See the [full structured outputs example](./examples/structured-outputs/main.go)
 
 </details>
-
 
 ### Request fields
 
@@ -934,7 +935,6 @@ func main() {
 	)
 }
 ```
-
 
 ## Semantic versioning
 
