@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.4.0 (2025-09-08)
+
+Full Changelog: [v2.3.1...v2.4.0](https://github.com/openai/openai-go/compare/v2.3.1...v2.4.0)
+
+### Features
+
+* **api:** ship the RealtimeGA API shape ([2b6c6db](https://github.com/openai/openai-go/commit/2b6c6db63e4871f3fa12a29c568365ac09290b9d))
+
 ## 2.3.1 (2025-09-05)
 
 Full Changelog: [v2.3.0...v2.3.1](https://github.com/openai/openai-go/compare/v2.3.0...v2.3.1)
