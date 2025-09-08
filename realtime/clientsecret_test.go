@@ -35,39 +35,42 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 		},
 		Session: realtime.ClientSecretNewParamsSessionUnion{
 			OfRealtime: &realtime.RealtimeSessionCreateRequestParam{
-				Model: realtime.RealtimeSessionCreateRequestModelGPTRealtime,
 				Audio: realtime.RealtimeAudioConfigParam{
 					Input: realtime.RealtimeAudioConfigInputParam{
-						Format: "pcm16",
-						NoiseReduction: realtime.RealtimeAudioConfigInputNoiseReductionParam{
-							Type: "near_field",
+						Format: realtime.RealtimeAudioFormatsUnionParam{
+							OfAudioPCM: &realtime.RealtimeAudioFormatsAudioPCMParam{
+								Rate: 24000,
+								Type: "audio/pcm",
+							},
 						},
-						Transcription: realtime.RealtimeAudioConfigInputTranscriptionParam{
+						NoiseReduction: realtime.RealtimeAudioConfigInputNoiseReductionParam{
+							Type: realtime.NoiseReductionTypeNearField,
+						},
+						Transcription: realtime.AudioTranscriptionParam{
 							Language: openai.String("language"),
-							Model:    "whisper-1",
+							Model:    realtime.AudioTranscriptionModelWhisper1,
 							Prompt:   openai.String("prompt"),
 						},
-						TurnDetection: realtime.RealtimeAudioConfigInputTurnDetectionParam{
+						TurnDetection: realtime.RealtimeAudioInputTurnDetectionParam{
 							CreateResponse:    openai.Bool(true),
-							Eagerness:         "low",
+							Eagerness:         realtime.RealtimeAudioInputTurnDetectionEagernessLow,
 							IdleTimeoutMs:     openai.Int(0),
 							InterruptResponse: openai.Bool(true),
 							PrefixPaddingMs:   openai.Int(0),
 							SilenceDurationMs: openai.Int(0),
 							Threshold:         openai.Float(0),
-							Type:              "server_vad",
+							Type:              realtime.RealtimeAudioInputTurnDetectionTypeServerVad,
 						},
 					},
 					Output: realtime.RealtimeAudioConfigOutputParam{
-						Format: "pcm16",
-						Speed:  openai.Float(0.25),
-						Voice:  "alloy",
-					},
-				},
-				ClientSecret: realtime.RealtimeClientSecretConfigParam{
-					ExpiresAfter: realtime.RealtimeClientSecretConfigExpiresAfterParam{
-						Anchor:  "created_at",
-						Seconds: openai.Int(0),
+						Format: realtime.RealtimeAudioFormatsUnionParam{
+							OfAudioPCM: &realtime.RealtimeAudioFormatsAudioPCMParam{
+								Rate: 24000,
+								Type: "audio/pcm",
+							},
+						},
+						Speed: openai.Float(0.25),
+						Voice: realtime.RealtimeAudioConfigOutputVoiceAlloy,
 					},
 				},
 				Include:      []string{"item.input_audio_transcription.logprobs"},
@@ -75,6 +78,7 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 				MaxOutputTokens: realtime.RealtimeSessionCreateRequestMaxOutputTokensUnionParam{
 					OfInt: openai.Int(0),
 				},
+				Model:            realtime.RealtimeSessionCreateRequestModelGPTRealtime,
 				OutputModalities: []string{"text"},
 				Prompt: responses.ResponsePromptParam{
 					ID: "id",
@@ -85,16 +89,15 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 					},
 					Version: openai.String("version"),
 				},
-				Temperature: openai.Float(0),
 				ToolChoice: realtime.RealtimeToolChoiceConfigUnionParam{
 					OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
 				},
 				Tools: realtime.RealtimeToolsConfigParam{realtime.RealtimeToolsConfigUnionParam{
-					OfFunction: &realtime.RealtimeToolsConfigUnionFunctionParam{
+					OfFunction: &realtime.ModelsParam{
 						Description: openai.String("description"),
 						Name:        openai.String("name"),
 						Parameters:  map[string]interface{}{},
-						Type:        "function",
+						Type:        realtime.ModelsTypeFunction,
 					},
 				}},
 				Tracing: realtime.RealtimeTracingConfigUnionParam{
