@@ -3,9 +3,12 @@
 package realtime
 
 import (
+	"encoding/json"
+
 	"github.com/openai/openai-go/v2/internal/apijson"
 	"github.com/openai/openai-go/v2/option"
 	"github.com/openai/openai-go/v2/packages/param"
+	"github.com/openai/openai-go/v2/packages/respjson"
 	"github.com/openai/openai-go/v2/responses"
 	"github.com/openai/openai-go/v2/shared/constant"
 )
@@ -31,6 +34,165 @@ func NewRealtimeService(opts ...option.RequestOption) (r RealtimeService) {
 	return
 }
 
+type AudioTranscription struct {
+	// The language of the input audio. Supplying the input language in
+	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) (e.g. `en`)
+	// format will improve accuracy and latency.
+	Language string `json:"language"`
+	// The model to use for transcription. Current options are `whisper-1`,
+	// `gpt-4o-transcribe-latest`, `gpt-4o-mini-transcribe`, and `gpt-4o-transcribe`.
+	//
+	// Any of "whisper-1", "gpt-4o-transcribe-latest", "gpt-4o-mini-transcribe",
+	// "gpt-4o-transcribe".
+	Model AudioTranscriptionModel `json:"model"`
+	// An optional text to guide the model's style or continue a previous audio
+	// segment. For `whisper-1`, the
+	// [prompt is a list of keywords](https://platform.openai.com/docs/guides/speech-to-text#prompting).
+	// For `gpt-4o-transcribe` models, the prompt is a free text string, for example
+	// "expect words related to technology".
+	Prompt string `json:"prompt"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Language    respjson.Field
+		Model       respjson.Field
+		Prompt      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AudioTranscription) RawJSON() string { return r.JSON.raw }
+func (r *AudioTranscription) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this AudioTranscription to a AudioTranscriptionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// AudioTranscriptionParam.Overrides()
+func (r AudioTranscription) ToParam() AudioTranscriptionParam {
+	return param.Override[AudioTranscriptionParam](json.RawMessage(r.RawJSON()))
+}
+
+// The model to use for transcription. Current options are `whisper-1`,
+// `gpt-4o-transcribe-latest`, `gpt-4o-mini-transcribe`, and `gpt-4o-transcribe`.
+type AudioTranscriptionModel string
+
+const (
+	AudioTranscriptionModelWhisper1              AudioTranscriptionModel = "whisper-1"
+	AudioTranscriptionModelGPT4oTranscribeLatest AudioTranscriptionModel = "gpt-4o-transcribe-latest"
+	AudioTranscriptionModelGPT4oMiniTranscribe   AudioTranscriptionModel = "gpt-4o-mini-transcribe"
+	AudioTranscriptionModelGPT4oTranscribe       AudioTranscriptionModel = "gpt-4o-transcribe"
+)
+
+type AudioTranscriptionParam struct {
+	// The language of the input audio. Supplying the input language in
+	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) (e.g. `en`)
+	// format will improve accuracy and latency.
+	Language param.Opt[string] `json:"language,omitzero"`
+	// An optional text to guide the model's style or continue a previous audio
+	// segment. For `whisper-1`, the
+	// [prompt is a list of keywords](https://platform.openai.com/docs/guides/speech-to-text#prompting).
+	// For `gpt-4o-transcribe` models, the prompt is a free text string, for example
+	// "expect words related to technology".
+	Prompt param.Opt[string] `json:"prompt,omitzero"`
+	// The model to use for transcription. Current options are `whisper-1`,
+	// `gpt-4o-transcribe-latest`, `gpt-4o-mini-transcribe`, and `gpt-4o-transcribe`.
+	//
+	// Any of "whisper-1", "gpt-4o-transcribe-latest", "gpt-4o-mini-transcribe",
+	// "gpt-4o-transcribe".
+	Model AudioTranscriptionModel `json:"model,omitzero"`
+	paramObj
+}
+
+func (r AudioTranscriptionParam) MarshalJSON() (data []byte, err error) {
+	type shadow AudioTranscriptionParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AudioTranscriptionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type Models struct {
+	// The description of the function, including guidance on when and how to call it,
+	// and guidance about what to tell the user when calling (if anything).
+	Description string `json:"description"`
+	// The name of the function.
+	Name string `json:"name"`
+	// Parameters of the function in JSON Schema.
+	Parameters any `json:"parameters"`
+	// The type of the tool, i.e. `function`.
+	//
+	// Any of "function".
+	Type ModelsType `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Description respjson.Field
+		Name        respjson.Field
+		Parameters  respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r Models) RawJSON() string { return r.JSON.raw }
+func (r *Models) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this Models to a ModelsParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ModelsParam.Overrides()
+func (r Models) ToParam() ModelsParam {
+	return param.Override[ModelsParam](json.RawMessage(r.RawJSON()))
+}
+
+// The type of the tool, i.e. `function`.
+type ModelsType string
+
+const (
+	ModelsTypeFunction ModelsType = "function"
+)
+
+type ModelsParam struct {
+	// The description of the function, including guidance on when and how to call it,
+	// and guidance about what to tell the user when calling (if anything).
+	Description param.Opt[string] `json:"description,omitzero"`
+	// The name of the function.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// Parameters of the function in JSON Schema.
+	Parameters any `json:"parameters,omitzero"`
+	// The type of the tool, i.e. `function`.
+	//
+	// Any of "function".
+	Type ModelsType `json:"type,omitzero"`
+	paramObj
+}
+
+func (r ModelsParam) MarshalJSON() (data []byte, err error) {
+	type shadow ModelsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ModelsParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Type of noise reduction. `near_field` is for close-talking microphones such as
+// headphones, `far_field` is for far-field microphones such as laptop or
+// conference room microphones.
+type NoiseReductionType string
+
+const (
+	NoiseReductionTypeNearField NoiseReductionType = "near_field"
+	NoiseReductionTypeFarField  NoiseReductionType = "far_field"
+)
+
 // Configuration for input and output audio.
 type RealtimeAudioConfigParam struct {
 	Input  RealtimeAudioConfigInputParam  `json:"input,omitzero"`
@@ -47,12 +209,8 @@ func (r *RealtimeAudioConfigParam) UnmarshalJSON(data []byte) error {
 }
 
 type RealtimeAudioConfigInputParam struct {
-	// The format of input audio. Options are `pcm16`, `g711_ulaw`, or `g711_alaw`. For
-	// `pcm16`, input audio must be 16-bit PCM at a 24kHz sample rate, single channel
-	// (mono), and little-endian byte order.
-	//
-	// Any of "pcm16", "g711_ulaw", "g711_alaw".
-	Format string `json:"format,omitzero"`
+	// The format of the input audio.
+	Format RealtimeAudioFormatsUnionParam `json:"format,omitzero"`
 	// Configuration for input audio noise reduction. This can be set to `null` to turn
 	// off. Noise reduction filters audio added to the input audio buffer before it is
 	// sent to VAD and the model. Filtering the audio can improve VAD and turn
@@ -67,7 +225,7 @@ type RealtimeAudioConfigInputParam struct {
 	// and should be treated as guidance of input audio content rather than precisely
 	// what the model heard. The client can optionally set the language and prompt for
 	// transcription, these offer additional guidance to the transcription service.
-	Transcription RealtimeAudioConfigInputTranscriptionParam `json:"transcription,omitzero"`
+	Transcription AudioTranscriptionParam `json:"transcription,omitzero"`
 	// Configuration for turn detection, ether Server VAD or Semantic VAD. This can be
 	// set to `null` to turn off, in which case the client must manually trigger model
 	// response. Server VAD means that the model will detect the start and end of
@@ -78,7 +236,7 @@ type RealtimeAudioConfigInputParam struct {
 	// with "uhhm", the model will score a low probability of turn end and wait longer
 	// for the user to continue speaking. This can be useful for more natural
 	// conversations, but may have a higher latency.
-	TurnDetection RealtimeAudioConfigInputTurnDetectionParam `json:"turn_detection,omitzero"`
+	TurnDetection RealtimeAudioInputTurnDetectionParam `json:"turn_detection,omitzero"`
 	paramObj
 }
 
@@ -88,12 +246,6 @@ func (r RealtimeAudioConfigInputParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *RealtimeAudioConfigInputParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[RealtimeAudioConfigInputParam](
-		"format", "pcm16", "g711_ulaw", "g711_alaw",
-	)
 }
 
 // Configuration for input audio noise reduction. This can be set to `null` to turn
@@ -107,7 +259,7 @@ type RealtimeAudioConfigInputNoiseReductionParam struct {
 	// conference room microphones.
 	//
 	// Any of "near_field", "far_field".
-	Type string `json:"type,omitzero"`
+	Type NoiseReductionType `json:"type,omitzero"`
 	paramObj
 }
 
@@ -119,52 +271,330 @@ func (r *RealtimeAudioConfigInputNoiseReductionParam) UnmarshalJSON(data []byte)
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func init() {
-	apijson.RegisterFieldValidator[RealtimeAudioConfigInputNoiseReductionParam](
-		"type", "near_field", "far_field",
-	)
-}
-
-// Configuration for input audio transcription, defaults to off and can be set to
-// `null` to turn off once on. Input audio transcription is not native to the
-// model, since the model consumes audio directly. Transcription runs
-// asynchronously through
-// [the /audio/transcriptions endpoint](https://platform.openai.com/docs/api-reference/audio/createTranscription)
-// and should be treated as guidance of input audio content rather than precisely
-// what the model heard. The client can optionally set the language and prompt for
-// transcription, these offer additional guidance to the transcription service.
-type RealtimeAudioConfigInputTranscriptionParam struct {
-	// The language of the input audio. Supplying the input language in
-	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) (e.g. `en`)
-	// format will improve accuracy and latency.
-	Language param.Opt[string] `json:"language,omitzero"`
-	// An optional text to guide the model's style or continue a previous audio
-	// segment. For `whisper-1`, the
-	// [prompt is a list of keywords](https://platform.openai.com/docs/guides/speech-to-text#prompting).
-	// For `gpt-4o-transcribe` models, the prompt is a free text string, for example
-	// "expect words related to technology".
-	Prompt param.Opt[string] `json:"prompt,omitzero"`
-	// The model to use for transcription. Current options are `whisper-1`,
-	// `gpt-4o-transcribe-latest`, `gpt-4o-mini-transcribe`, `gpt-4o-transcribe`, and
-	// `gpt-4o-transcribe-diarize`.
+type RealtimeAudioConfigOutputParam struct {
+	// The speed of the model's spoken response as a multiple of the original speed.
+	// 1.0 is the default speed. 0.25 is the minimum speed. 1.5 is the maximum speed.
+	// This value can only be changed in between model turns, not while a response is
+	// in progress.
 	//
-	// Any of "whisper-1", "gpt-4o-transcribe-latest", "gpt-4o-mini-transcribe",
-	// "gpt-4o-transcribe", "gpt-4o-transcribe-diarize".
-	Model string `json:"model,omitzero"`
+	// This parameter is a post-processing adjustment to the audio after it is
+	// generated, it's also possible to prompt the model to speak faster or slower.
+	Speed param.Opt[float64] `json:"speed,omitzero"`
+	// The format of the output audio.
+	Format RealtimeAudioFormatsUnionParam `json:"format,omitzero"`
+	// The voice the model uses to respond. Voice cannot be changed during the session
+	// once the model has responded with audio at least once. Current voice options are
+	// `alloy`, `ash`, `ballad`, `coral`, `echo`, `sage`, `shimmer`, `verse`, `marin`,
+	// and `cedar`. We recommend `marin` and `cedar` for best quality.
+	Voice RealtimeAudioConfigOutputVoice `json:"voice,omitzero"`
 	paramObj
 }
 
-func (r RealtimeAudioConfigInputTranscriptionParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeAudioConfigInputTranscriptionParam
+func (r RealtimeAudioConfigOutputParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeAudioConfigOutputParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *RealtimeAudioConfigInputTranscriptionParam) UnmarshalJSON(data []byte) error {
+func (r *RealtimeAudioConfigOutputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The voice the model uses to respond. Voice cannot be changed during the session
+// once the model has responded with audio at least once. Current voice options are
+// `alloy`, `ash`, `ballad`, `coral`, `echo`, `sage`, `shimmer`, `verse`, `marin`,
+// and `cedar`. We recommend `marin` and `cedar` for best quality.
+type RealtimeAudioConfigOutputVoice string
+
+const (
+	RealtimeAudioConfigOutputVoiceAlloy   RealtimeAudioConfigOutputVoice = "alloy"
+	RealtimeAudioConfigOutputVoiceAsh     RealtimeAudioConfigOutputVoice = "ash"
+	RealtimeAudioConfigOutputVoiceBallad  RealtimeAudioConfigOutputVoice = "ballad"
+	RealtimeAudioConfigOutputVoiceCoral   RealtimeAudioConfigOutputVoice = "coral"
+	RealtimeAudioConfigOutputVoiceEcho    RealtimeAudioConfigOutputVoice = "echo"
+	RealtimeAudioConfigOutputVoiceSage    RealtimeAudioConfigOutputVoice = "sage"
+	RealtimeAudioConfigOutputVoiceShimmer RealtimeAudioConfigOutputVoice = "shimmer"
+	RealtimeAudioConfigOutputVoiceVerse   RealtimeAudioConfigOutputVoice = "verse"
+	RealtimeAudioConfigOutputVoiceMarin   RealtimeAudioConfigOutputVoice = "marin"
+	RealtimeAudioConfigOutputVoiceCedar   RealtimeAudioConfigOutputVoice = "cedar"
+)
+
+// RealtimeAudioFormatsUnion contains all possible properties and values from
+// [RealtimeAudioFormatsAudioPCM], [RealtimeAudioFormatsAudioPCMU],
+// [RealtimeAudioFormatsAudioPCMA].
+//
+// Use the [RealtimeAudioFormatsUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type RealtimeAudioFormatsUnion struct {
+	// This field is from variant [RealtimeAudioFormatsAudioPCM].
+	Rate int64 `json:"rate"`
+	// Any of "audio/pcm", "audio/pcmu", "audio/pcma".
+	Type string `json:"type"`
+	JSON struct {
+		Rate respjson.Field
+		Type respjson.Field
+		raw  string
+	} `json:"-"`
+}
+
+// anyRealtimeAudioFormats is implemented by each variant of
+// [RealtimeAudioFormatsUnion] to add type safety for the return type of
+// [RealtimeAudioFormatsUnion.AsAny]
+type anyRealtimeAudioFormats interface {
+	implRealtimeAudioFormatsUnion()
+}
+
+func (RealtimeAudioFormatsAudioPCM) implRealtimeAudioFormatsUnion()  {}
+func (RealtimeAudioFormatsAudioPCMU) implRealtimeAudioFormatsUnion() {}
+func (RealtimeAudioFormatsAudioPCMA) implRealtimeAudioFormatsUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := RealtimeAudioFormatsUnion.AsAny().(type) {
+//	case realtime.RealtimeAudioFormatsAudioPCM:
+//	case realtime.RealtimeAudioFormatsAudioPCMU:
+//	case realtime.RealtimeAudioFormatsAudioPCMA:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u RealtimeAudioFormatsUnion) AsAny() anyRealtimeAudioFormats {
+	switch u.Type {
+	case "audio/pcm":
+		return u.AsAudioPCM()
+	case "audio/pcmu":
+		return u.AsAudioPCMU()
+	case "audio/pcma":
+		return u.AsAudioPCMA()
+	}
+	return nil
+}
+
+func (u RealtimeAudioFormatsUnion) AsAudioPCM() (v RealtimeAudioFormatsAudioPCM) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u RealtimeAudioFormatsUnion) AsAudioPCMU() (v RealtimeAudioFormatsAudioPCMU) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u RealtimeAudioFormatsUnion) AsAudioPCMA() (v RealtimeAudioFormatsAudioPCMA) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u RealtimeAudioFormatsUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *RealtimeAudioFormatsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this RealtimeAudioFormatsUnion to a
+// RealtimeAudioFormatsUnionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// RealtimeAudioFormatsUnionParam.Overrides()
+func (r RealtimeAudioFormatsUnion) ToParam() RealtimeAudioFormatsUnionParam {
+	return param.Override[RealtimeAudioFormatsUnionParam](json.RawMessage(r.RawJSON()))
+}
+
+// The PCM audio format. Only a 24kHz sample rate is supported.
+type RealtimeAudioFormatsAudioPCM struct {
+	// The sample rate of the audio. Always `24000`.
+	//
+	// Any of 24000.
+	Rate int64 `json:"rate"`
+	// The audio format. Always `audio/pcm`.
+	//
+	// Any of "audio/pcm".
+	Type string `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Rate        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeAudioFormatsAudioPCM) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeAudioFormatsAudioPCM) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The G.711 μ-law format.
+type RealtimeAudioFormatsAudioPCMU struct {
+	// The audio format. Always `audio/pcmu`.
+	//
+	// Any of "audio/pcmu".
+	Type string `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeAudioFormatsAudioPCMU) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeAudioFormatsAudioPCMU) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The G.711 A-law format.
+type RealtimeAudioFormatsAudioPCMA struct {
+	// The audio format. Always `audio/pcma`.
+	//
+	// Any of "audio/pcma".
+	Type string `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeAudioFormatsAudioPCMA) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeAudioFormatsAudioPCMA) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type RealtimeAudioFormatsUnionParam struct {
+	OfAudioPCM  *RealtimeAudioFormatsAudioPCMParam  `json:",omitzero,inline"`
+	OfAudioPCMU *RealtimeAudioFormatsAudioPCMUParam `json:",omitzero,inline"`
+	OfAudioPCMA *RealtimeAudioFormatsAudioPCMAParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u RealtimeAudioFormatsUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfAudioPCM, u.OfAudioPCMU, u.OfAudioPCMA)
+}
+func (u *RealtimeAudioFormatsUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *RealtimeAudioFormatsUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfAudioPCM) {
+		return u.OfAudioPCM
+	} else if !param.IsOmitted(u.OfAudioPCMU) {
+		return u.OfAudioPCMU
+	} else if !param.IsOmitted(u.OfAudioPCMA) {
+		return u.OfAudioPCMA
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeAudioFormatsUnionParam) GetRate() *int64 {
+	if vt := u.OfAudioPCM; vt != nil {
+		return &vt.Rate
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeAudioFormatsUnionParam) GetType() *string {
+	if vt := u.OfAudioPCM; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfAudioPCMU; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfAudioPCMA; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[RealtimeAudioFormatsUnionParam](
+		"type",
+		apijson.Discriminator[RealtimeAudioFormatsAudioPCMParam]("audio/pcm"),
+		apijson.Discriminator[RealtimeAudioFormatsAudioPCMUParam]("audio/pcmu"),
+		apijson.Discriminator[RealtimeAudioFormatsAudioPCMAParam]("audio/pcma"),
+	)
+}
+
+// The PCM audio format. Only a 24kHz sample rate is supported.
+type RealtimeAudioFormatsAudioPCMParam struct {
+	// The sample rate of the audio. Always `24000`.
+	//
+	// Any of 24000.
+	Rate int64 `json:"rate,omitzero"`
+	// The audio format. Always `audio/pcm`.
+	//
+	// Any of "audio/pcm".
+	Type string `json:"type,omitzero"`
+	paramObj
+}
+
+func (r RealtimeAudioFormatsAudioPCMParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeAudioFormatsAudioPCMParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeAudioFormatsAudioPCMParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 func init() {
-	apijson.RegisterFieldValidator[RealtimeAudioConfigInputTranscriptionParam](
-		"model", "whisper-1", "gpt-4o-transcribe-latest", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize",
+	apijson.RegisterFieldValidator[RealtimeAudioFormatsAudioPCMParam](
+		"rate", 24000,
+	)
+	apijson.RegisterFieldValidator[RealtimeAudioFormatsAudioPCMParam](
+		"type", "audio/pcm",
+	)
+}
+
+// The G.711 μ-law format.
+type RealtimeAudioFormatsAudioPCMUParam struct {
+	// The audio format. Always `audio/pcmu`.
+	//
+	// Any of "audio/pcmu".
+	Type string `json:"type,omitzero"`
+	paramObj
+}
+
+func (r RealtimeAudioFormatsAudioPCMUParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeAudioFormatsAudioPCMUParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeAudioFormatsAudioPCMUParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[RealtimeAudioFormatsAudioPCMUParam](
+		"type", "audio/pcmu",
+	)
+}
+
+// The G.711 A-law format.
+type RealtimeAudioFormatsAudioPCMAParam struct {
+	// The audio format. Always `audio/pcma`.
+	//
+	// Any of "audio/pcma".
+	Type string `json:"type,omitzero"`
+	paramObj
+}
+
+func (r RealtimeAudioFormatsAudioPCMAParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeAudioFormatsAudioPCMAParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeAudioFormatsAudioPCMAParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[RealtimeAudioFormatsAudioPCMAParam](
+		"type", "audio/pcma",
 	)
 }
 
@@ -178,7 +608,7 @@ func init() {
 // with "uhhm", the model will score a low probability of turn end and wait longer
 // for the user to continue speaking. This can be useful for more natural
 // conversations, but may have a higher latency.
-type RealtimeAudioConfigInputTurnDetectionParam struct {
+type RealtimeAudioInputTurnDetectionParam struct {
 	// Optional idle timeout after which turn detection will auto-timeout when no
 	// additional audio is received.
 	IdleTimeoutMs param.Opt[int64] `json:"idle_timeout_ms,omitzero"`
@@ -202,116 +632,51 @@ type RealtimeAudioConfigInputTurnDetectionParam struct {
 	Threshold param.Opt[float64] `json:"threshold,omitzero"`
 	// Used only for `semantic_vad` mode. The eagerness of the model to respond. `low`
 	// will wait longer for the user to continue speaking, `high` will respond more
-	// quickly. `auto` is the default and is equivalent to `medium`.
+	// quickly. `auto` is the default and is equivalent to `medium`. `low`, `medium`,
+	// and `high` have max timeouts of 8s, 4s, and 2s respectively.
 	//
 	// Any of "low", "medium", "high", "auto".
-	Eagerness string `json:"eagerness,omitzero"`
+	Eagerness RealtimeAudioInputTurnDetectionEagerness `json:"eagerness,omitzero"`
 	// Type of turn detection.
 	//
 	// Any of "server_vad", "semantic_vad".
-	Type string `json:"type,omitzero"`
+	Type RealtimeAudioInputTurnDetectionType `json:"type,omitzero"`
 	paramObj
 }
 
-func (r RealtimeAudioConfigInputTurnDetectionParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeAudioConfigInputTurnDetectionParam
+func (r RealtimeAudioInputTurnDetectionParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeAudioInputTurnDetectionParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *RealtimeAudioConfigInputTurnDetectionParam) UnmarshalJSON(data []byte) error {
+func (r *RealtimeAudioInputTurnDetectionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func init() {
-	apijson.RegisterFieldValidator[RealtimeAudioConfigInputTurnDetectionParam](
-		"eagerness", "low", "medium", "high", "auto",
-	)
-	apijson.RegisterFieldValidator[RealtimeAudioConfigInputTurnDetectionParam](
-		"type", "server_vad", "semantic_vad",
-	)
-}
+// Used only for `semantic_vad` mode. The eagerness of the model to respond. `low`
+// will wait longer for the user to continue speaking, `high` will respond more
+// quickly. `auto` is the default and is equivalent to `medium`. `low`, `medium`,
+// and `high` have max timeouts of 8s, 4s, and 2s respectively.
+type RealtimeAudioInputTurnDetectionEagerness string
 
-type RealtimeAudioConfigOutputParam struct {
-	// The speed of the model's spoken response. 1.0 is the default speed. 0.25 is the
-	// minimum speed. 1.5 is the maximum speed. This value can only be changed in
-	// between model turns, not while a response is in progress.
-	Speed param.Opt[float64] `json:"speed,omitzero"`
-	// The format of output audio. Options are `pcm16`, `g711_ulaw`, or `g711_alaw`.
-	// For `pcm16`, output audio is sampled at a rate of 24kHz.
-	//
-	// Any of "pcm16", "g711_ulaw", "g711_alaw".
-	Format string `json:"format,omitzero"`
-	// The voice the model uses to respond. Voice cannot be changed during the session
-	// once the model has responded with audio at least once. Current voice options are
-	// `alloy`, `ash`, `ballad`, `coral`, `echo`, `sage`, `shimmer`, `verse`, `marin`,
-	// and `cedar`.
-	Voice string `json:"voice,omitzero"`
-	paramObj
-}
+const (
+	RealtimeAudioInputTurnDetectionEagernessLow    RealtimeAudioInputTurnDetectionEagerness = "low"
+	RealtimeAudioInputTurnDetectionEagernessMedium RealtimeAudioInputTurnDetectionEagerness = "medium"
+	RealtimeAudioInputTurnDetectionEagernessHigh   RealtimeAudioInputTurnDetectionEagerness = "high"
+	RealtimeAudioInputTurnDetectionEagernessAuto   RealtimeAudioInputTurnDetectionEagerness = "auto"
+)
 
-func (r RealtimeAudioConfigOutputParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeAudioConfigOutputParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *RealtimeAudioConfigOutputParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
+// Type of turn detection.
+type RealtimeAudioInputTurnDetectionType string
 
-func init() {
-	apijson.RegisterFieldValidator[RealtimeAudioConfigOutputParam](
-		"format", "pcm16", "g711_ulaw", "g711_alaw",
-	)
-}
-
-// Configuration options for the generated client secret.
-type RealtimeClientSecretConfigParam struct {
-	// Configuration for the ephemeral token expiration.
-	ExpiresAfter RealtimeClientSecretConfigExpiresAfterParam `json:"expires_after,omitzero"`
-	paramObj
-}
-
-func (r RealtimeClientSecretConfigParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeClientSecretConfigParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *RealtimeClientSecretConfigParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// Configuration for the ephemeral token expiration.
-//
-// The property Anchor is required.
-type RealtimeClientSecretConfigExpiresAfterParam struct {
-	// The anchor point for the ephemeral token expiration. Only `created_at` is
-	// currently supported.
-	//
-	// Any of "created_at".
-	Anchor string `json:"anchor,omitzero,required"`
-	// The number of seconds from the anchor point to the expiration. Select a value
-	// between `10` and `7200`.
-	Seconds param.Opt[int64] `json:"seconds,omitzero"`
-	paramObj
-}
-
-func (r RealtimeClientSecretConfigExpiresAfterParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeClientSecretConfigExpiresAfterParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *RealtimeClientSecretConfigExpiresAfterParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[RealtimeClientSecretConfigExpiresAfterParam](
-		"anchor", "created_at",
-	)
-}
+const (
+	RealtimeAudioInputTurnDetectionTypeServerVad   RealtimeAudioInputTurnDetectionType = "server_vad"
+	RealtimeAudioInputTurnDetectionTypeSemanticVad RealtimeAudioInputTurnDetectionType = "semantic_vad"
+)
 
 // Realtime session object configuration.
 //
-// The properties Model, Type are required.
+// The property Type is required.
 type RealtimeSessionCreateRequestParam struct {
-	// The Realtime model used for this session.
-	Model RealtimeSessionCreateRequestModel `json:"model,omitzero,required"`
 	// The default system instructions (i.e. system message) prepended to model calls.
 	// This field allows the client to guide the model on desired responses. The model
 	// can be instructed on response content and format, (e.g. "be extremely succinct",
@@ -324,26 +689,22 @@ type RealtimeSessionCreateRequestParam struct {
 	// is not set and are visible in the `session.created` event at the start of the
 	// session.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
-	// Sampling temperature for the model, limited to [0.6, 1.2]. For audio models a
-	// temperature of 0.8 is highly recommended for best performance.
-	Temperature param.Opt[float64] `json:"temperature,omitzero"`
 	// Reference to a prompt template and its variables.
 	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
 	Prompt responses.ResponsePromptParam `json:"prompt,omitzero"`
-	// Configuration options for tracing. Set to null to disable tracing. Once tracing
-	// is enabled for a session, the configuration cannot be modified.
+	// Realtime API can write session traces to the
+	// [Traces Dashboard](/logs?api=traces). Set to null to disable tracing. Once
+	// tracing is enabled for a session, the configuration cannot be modified.
 	//
 	// `auto` will create a trace for the session with default values for the workflow
 	// name, group id, and metadata.
 	Tracing RealtimeTracingConfigUnionParam `json:"tracing,omitzero"`
 	// Configuration for input and output audio.
 	Audio RealtimeAudioConfigParam `json:"audio,omitzero"`
-	// Configuration options for the generated client secret.
-	ClientSecret RealtimeClientSecretConfigParam `json:"client_secret,omitzero"`
 	// Additional fields to include in server outputs.
 	//
-	//   - `item.input_audio_transcription.logprobs`: Include logprobs for input audio
-	//     transcription.
+	// `item.input_audio_transcription.logprobs`: Include logprobs for input audio
+	// transcription.
 	//
 	// Any of "item.input_audio_transcription.logprobs".
 	Include []string `json:"include,omitzero"`
@@ -351,8 +712,12 @@ type RealtimeSessionCreateRequestParam struct {
 	// tool calls. Provide an integer between 1 and 4096 to limit output tokens, or
 	// `inf` for the maximum available tokens for a given model. Defaults to `inf`.
 	MaxOutputTokens RealtimeSessionCreateRequestMaxOutputTokensUnionParam `json:"max_output_tokens,omitzero"`
-	// The set of modalities the model can respond with. To disable audio, set this to
-	// ["text"].
+	// The Realtime model used for this session.
+	Model RealtimeSessionCreateRequestModel `json:"model,omitzero"`
+	// The set of modalities the model can respond with. It defaults to `["audio"]`,
+	// indicating that the model will respond with audio plus a transcript. `["text"]`
+	// can be used to make the model respond with text only. It is not possible to
+	// request both `text` and `audio` at the same time.
 	//
 	// Any of "text", "audio".
 	OutputModalities []string `json:"output_modalities,omitzero"`
@@ -362,8 +727,7 @@ type RealtimeSessionCreateRequestParam struct {
 	// Tools available to the model.
 	Tools RealtimeToolsConfigParam `json:"tools,omitzero"`
 	// Controls how the realtime conversation is truncated prior to model inference.
-	// The default is `auto`. When set to `retention_ratio`, the server retains a
-	// fraction of the conversation tokens prior to the instructions.
+	// The default is `auto`.
 	Truncation RealtimeTruncationUnionParam `json:"truncation,omitzero"`
 	// The type of session to create. Always `realtime` for the Realtime API.
 	//
@@ -379,22 +743,6 @@ func (r RealtimeSessionCreateRequestParam) MarshalJSON() (data []byte, err error
 func (r *RealtimeSessionCreateRequestParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-// The Realtime model used for this session.
-type RealtimeSessionCreateRequestModel = string
-
-const (
-	RealtimeSessionCreateRequestModelGPTRealtime                        RealtimeSessionCreateRequestModel = "gpt-realtime"
-	RealtimeSessionCreateRequestModelGPTRealtime2025_08_28              RealtimeSessionCreateRequestModel = "gpt-realtime-2025-08-28"
-	RealtimeSessionCreateRequestModelGPT4oRealtime                      RealtimeSessionCreateRequestModel = "gpt-4o-realtime"
-	RealtimeSessionCreateRequestModelGPT4oMiniRealtime                  RealtimeSessionCreateRequestModel = "gpt-4o-mini-realtime"
-	RealtimeSessionCreateRequestModelGPT4oRealtimePreview               RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview"
-	RealtimeSessionCreateRequestModelGPT4oRealtimePreview2024_10_01     RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview-2024-10-01"
-	RealtimeSessionCreateRequestModelGPT4oRealtimePreview2024_12_17     RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview-2024-12-17"
-	RealtimeSessionCreateRequestModelGPT4oRealtimePreview2025_06_03     RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview-2025-06-03"
-	RealtimeSessionCreateRequestModelGPT4oMiniRealtimePreview           RealtimeSessionCreateRequestModel = "gpt-4o-mini-realtime-preview"
-	RealtimeSessionCreateRequestModelGPT4oMiniRealtimePreview2024_12_17 RealtimeSessionCreateRequestModel = "gpt-4o-mini-realtime-preview-2024-12-17"
-)
 
 // Only one field can be non-zero.
 //
@@ -421,6 +769,20 @@ func (u *RealtimeSessionCreateRequestMaxOutputTokensUnionParam) asAny() any {
 	}
 	return nil
 }
+
+// The Realtime model used for this session.
+type RealtimeSessionCreateRequestModel = string
+
+const (
+	RealtimeSessionCreateRequestModelGPTRealtime                        RealtimeSessionCreateRequestModel = "gpt-realtime"
+	RealtimeSessionCreateRequestModelGPTRealtime2025_08_28              RealtimeSessionCreateRequestModel = "gpt-realtime-2025-08-28"
+	RealtimeSessionCreateRequestModelGPT4oRealtimePreview               RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview"
+	RealtimeSessionCreateRequestModelGPT4oRealtimePreview2024_10_01     RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview-2024-10-01"
+	RealtimeSessionCreateRequestModelGPT4oRealtimePreview2024_12_17     RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview-2024-12-17"
+	RealtimeSessionCreateRequestModelGPT4oRealtimePreview2025_06_03     RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview-2025-06-03"
+	RealtimeSessionCreateRequestModelGPT4oMiniRealtimePreview           RealtimeSessionCreateRequestModel = "gpt-4o-mini-realtime-preview"
+	RealtimeSessionCreateRequestModelGPT4oMiniRealtimePreview2024_12_17 RealtimeSessionCreateRequestModel = "gpt-4o-mini-realtime-preview-2024-12-17"
+)
 
 func RealtimeToolChoiceConfigParamOfFunctionTool(name string) RealtimeToolChoiceConfigUnionParam {
 	var variant responses.ToolChoiceFunctionParam
@@ -503,8 +865,8 @@ func RealtimeToolsConfigUnionParamOfMcp(serverLabel string) RealtimeToolsConfigU
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type RealtimeToolsConfigUnionParam struct {
-	OfFunction *RealtimeToolsConfigUnionFunctionParam `json:",omitzero,inline"`
-	OfMcp      *RealtimeToolsConfigUnionMcpParam      `json:",omitzero,inline"`
+	OfFunction *ModelsParam                      `json:",omitzero,inline"`
+	OfMcp      *RealtimeToolsConfigUnionMcpParam `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -625,37 +987,8 @@ func (u RealtimeToolsConfigUnionParam) GetType() *string {
 func init() {
 	apijson.RegisterUnion[RealtimeToolsConfigUnionParam](
 		"type",
-		apijson.Discriminator[RealtimeToolsConfigUnionFunctionParam]("function"),
+		apijson.Discriminator[ModelsParam]("function"),
 		apijson.Discriminator[RealtimeToolsConfigUnionMcpParam]("mcp"),
-	)
-}
-
-type RealtimeToolsConfigUnionFunctionParam struct {
-	// The description of the function, including guidance on when and how to call it,
-	// and guidance about what to tell the user when calling (if anything).
-	Description param.Opt[string] `json:"description,omitzero"`
-	// The name of the function.
-	Name param.Opt[string] `json:"name,omitzero"`
-	// Parameters of the function in JSON Schema.
-	Parameters any `json:"parameters,omitzero"`
-	// The type of the tool, i.e. `function`.
-	//
-	// Any of "function".
-	Type string `json:"type,omitzero"`
-	paramObj
-}
-
-func (r RealtimeToolsConfigUnionFunctionParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeToolsConfigUnionFunctionParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *RealtimeToolsConfigUnionFunctionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[RealtimeToolsConfigUnionFunctionParam](
-		"type", "function",
 	)
 }
 
@@ -897,13 +1230,13 @@ func (u *RealtimeTracingConfigUnionParam) asAny() any {
 // Granular configuration for tracing.
 type RealtimeTracingConfigTracingConfigurationParam struct {
 	// The group id to attach to this trace to enable filtering and grouping in the
-	// traces dashboard.
+	// Traces Dashboard.
 	GroupID param.Opt[string] `json:"group_id,omitzero"`
 	// The name of the workflow to attach to this trace. This is used to name the trace
-	// in the traces dashboard.
+	// in the Traces Dashboard.
 	WorkflowName param.Opt[string] `json:"workflow_name,omitzero"`
-	// The arbitrary metadata to attach to this trace to enable filtering in the traces
-	// dashboard.
+	// The arbitrary metadata to attach to this trace to enable filtering in the Traces
+	// Dashboard.
 	Metadata any `json:"metadata,omitzero"`
 	paramObj
 }
@@ -916,40 +1249,169 @@ func (r *RealtimeTracingConfigTracingConfigurationParam) UnmarshalJSON(data []by
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Realtime transcription session object configuration.
-//
-// The properties Model, Type are required.
-type RealtimeTranscriptionSessionCreateRequestParam struct {
-	// ID of the model to use. The options are `gpt-4o-transcribe`,
-	// `gpt-4o-mini-transcribe`, and `whisper-1` (which is powered by our open source
-	// Whisper V2 model).
-	Model RealtimeTranscriptionSessionCreateRequestModel `json:"model,omitzero,required"`
-	// The set of items to include in the transcription. Current available items are:
-	//
-	// - `item.input_audio_transcription.logprobs`
-	//
-	// Any of "item.input_audio_transcription.logprobs".
-	Include []string `json:"include,omitzero"`
-	// The format of input audio. Options are `pcm16`, `g711_ulaw`, or `g711_alaw`. For
-	// `pcm16`, input audio must be 16-bit PCM at a 24kHz sample rate, single channel
-	// (mono), and little-endian byte order.
-	//
-	// Any of "pcm16", "g711_ulaw", "g711_alaw".
-	InputAudioFormat RealtimeTranscriptionSessionCreateRequestInputAudioFormat `json:"input_audio_format,omitzero"`
+// Configuration for input and output audio.
+type RealtimeTranscriptionSessionAudioParam struct {
+	Input RealtimeTranscriptionSessionAudioInputParam `json:"input,omitzero"`
+	paramObj
+}
+
+func (r RealtimeTranscriptionSessionAudioParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranscriptionSessionAudioParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranscriptionSessionAudioParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type RealtimeTranscriptionSessionAudioInputParam struct {
+	// The PCM audio format. Only a 24kHz sample rate is supported.
+	Format RealtimeAudioFormatsUnionParam `json:"format,omitzero"`
 	// Configuration for input audio noise reduction. This can be set to `null` to turn
 	// off. Noise reduction filters audio added to the input audio buffer before it is
 	// sent to VAD and the model. Filtering the audio can improve VAD and turn
 	// detection accuracy (reducing false positives) and model performance by improving
 	// perception of the input audio.
-	InputAudioNoiseReduction RealtimeTranscriptionSessionCreateRequestInputAudioNoiseReductionParam `json:"input_audio_noise_reduction,omitzero"`
-	// Configuration for input audio transcription. The client can optionally set the
-	// language and prompt for transcription, these offer additional guidance to the
-	// transcription service.
-	InputAudioTranscription RealtimeTranscriptionSessionCreateRequestInputAudioTranscriptionParam `json:"input_audio_transcription,omitzero"`
-	// Configuration for turn detection. Can be set to `null` to turn off. Server VAD
-	// means that the model will detect the start and end of speech based on audio
-	// volume and respond at the end of user speech.
-	TurnDetection RealtimeTranscriptionSessionCreateRequestTurnDetectionParam `json:"turn_detection,omitzero"`
+	NoiseReduction RealtimeTranscriptionSessionAudioInputNoiseReductionParam `json:"noise_reduction,omitzero"`
+	// Configuration for input audio transcription, defaults to off and can be set to
+	// `null` to turn off once on. Input audio transcription is not native to the
+	// model, since the model consumes audio directly. Transcription runs
+	// asynchronously through
+	// [the /audio/transcriptions endpoint](https://platform.openai.com/docs/api-reference/audio/createTranscription)
+	// and should be treated as guidance of input audio content rather than precisely
+	// what the model heard. The client can optionally set the language and prompt for
+	// transcription, these offer additional guidance to the transcription service.
+	Transcription AudioTranscriptionParam `json:"transcription,omitzero"`
+	// Configuration for turn detection, ether Server VAD or Semantic VAD. This can be
+	// set to `null` to turn off, in which case the client must manually trigger model
+	// response. Server VAD means that the model will detect the start and end of
+	// speech based on audio volume and respond at the end of user speech. Semantic VAD
+	// is more advanced and uses a turn detection model (in conjunction with VAD) to
+	// semantically estimate whether the user has finished speaking, then dynamically
+	// sets a timeout based on this probability. For example, if user audio trails off
+	// with "uhhm", the model will score a low probability of turn end and wait longer
+	// for the user to continue speaking. This can be useful for more natural
+	// conversations, but may have a higher latency.
+	TurnDetection RealtimeTranscriptionSessionAudioInputTurnDetectionParam `json:"turn_detection,omitzero"`
+	paramObj
+}
+
+func (r RealtimeTranscriptionSessionAudioInputParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranscriptionSessionAudioInputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranscriptionSessionAudioInputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Configuration for input audio noise reduction. This can be set to `null` to turn
+// off. Noise reduction filters audio added to the input audio buffer before it is
+// sent to VAD and the model. Filtering the audio can improve VAD and turn
+// detection accuracy (reducing false positives) and model performance by improving
+// perception of the input audio.
+type RealtimeTranscriptionSessionAudioInputNoiseReductionParam struct {
+	// Type of noise reduction. `near_field` is for close-talking microphones such as
+	// headphones, `far_field` is for far-field microphones such as laptop or
+	// conference room microphones.
+	//
+	// Any of "near_field", "far_field".
+	Type NoiseReductionType `json:"type,omitzero"`
+	paramObj
+}
+
+func (r RealtimeTranscriptionSessionAudioInputNoiseReductionParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranscriptionSessionAudioInputNoiseReductionParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranscriptionSessionAudioInputNoiseReductionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Configuration for turn detection, ether Server VAD or Semantic VAD. This can be
+// set to `null` to turn off, in which case the client must manually trigger model
+// response. Server VAD means that the model will detect the start and end of
+// speech based on audio volume and respond at the end of user speech. Semantic VAD
+// is more advanced and uses a turn detection model (in conjunction with VAD) to
+// semantically estimate whether the user has finished speaking, then dynamically
+// sets a timeout based on this probability. For example, if user audio trails off
+// with "uhhm", the model will score a low probability of turn end and wait longer
+// for the user to continue speaking. This can be useful for more natural
+// conversations, but may have a higher latency.
+type RealtimeTranscriptionSessionAudioInputTurnDetectionParam struct {
+	// Optional idle timeout after which turn detection will auto-timeout when no
+	// additional audio is received.
+	IdleTimeoutMs param.Opt[int64] `json:"idle_timeout_ms,omitzero"`
+	// Whether or not to automatically generate a response when a VAD stop event
+	// occurs.
+	CreateResponse param.Opt[bool] `json:"create_response,omitzero"`
+	// Whether or not to automatically interrupt any ongoing response with output to
+	// the default conversation (i.e. `conversation` of `auto`) when a VAD start event
+	// occurs.
+	InterruptResponse param.Opt[bool] `json:"interrupt_response,omitzero"`
+	// Used only for `server_vad` mode. Amount of audio to include before the VAD
+	// detected speech (in milliseconds). Defaults to 300ms.
+	PrefixPaddingMs param.Opt[int64] `json:"prefix_padding_ms,omitzero"`
+	// Used only for `server_vad` mode. Duration of silence to detect speech stop (in
+	// milliseconds). Defaults to 500ms. With shorter values the model will respond
+	// more quickly, but may jump in on short pauses from the user.
+	SilenceDurationMs param.Opt[int64] `json:"silence_duration_ms,omitzero"`
+	// Used only for `server_vad` mode. Activation threshold for VAD (0.0 to 1.0), this
+	// defaults to 0.5. A higher threshold will require louder audio to activate the
+	// model, and thus might perform better in noisy environments.
+	Threshold param.Opt[float64] `json:"threshold,omitzero"`
+	// Used only for `semantic_vad` mode. The eagerness of the model to respond. `low`
+	// will wait longer for the user to continue speaking, `high` will respond more
+	// quickly. `auto` is the default and is equivalent to `medium`.
+	//
+	// Any of "low", "medium", "high", "auto".
+	Eagerness RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness `json:"eagerness,omitzero"`
+	// Type of turn detection.
+	//
+	// Any of "server_vad", "semantic_vad".
+	Type RealtimeTranscriptionSessionAudioInputTurnDetectionType `json:"type,omitzero"`
+	paramObj
+}
+
+func (r RealtimeTranscriptionSessionAudioInputTurnDetectionParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranscriptionSessionAudioInputTurnDetectionParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranscriptionSessionAudioInputTurnDetectionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Used only for `semantic_vad` mode. The eagerness of the model to respond. `low`
+// will wait longer for the user to continue speaking, `high` will respond more
+// quickly. `auto` is the default and is equivalent to `medium`.
+type RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness string
+
+const (
+	RealtimeTranscriptionSessionAudioInputTurnDetectionEagernessLow    RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness = "low"
+	RealtimeTranscriptionSessionAudioInputTurnDetectionEagernessMedium RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness = "medium"
+	RealtimeTranscriptionSessionAudioInputTurnDetectionEagernessHigh   RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness = "high"
+	RealtimeTranscriptionSessionAudioInputTurnDetectionEagernessAuto   RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness = "auto"
+)
+
+// Type of turn detection.
+type RealtimeTranscriptionSessionAudioInputTurnDetectionType string
+
+const (
+	RealtimeTranscriptionSessionAudioInputTurnDetectionTypeServerVad   RealtimeTranscriptionSessionAudioInputTurnDetectionType = "server_vad"
+	RealtimeTranscriptionSessionAudioInputTurnDetectionTypeSemanticVad RealtimeTranscriptionSessionAudioInputTurnDetectionType = "semantic_vad"
+)
+
+// Realtime transcription session object configuration.
+//
+// The property Type is required.
+type RealtimeTranscriptionSessionCreateRequestParam struct {
+	// Configuration for input and output audio.
+	Audio RealtimeTranscriptionSessionAudioParam `json:"audio,omitzero"`
+	// Additional fields to include in server outputs.
+	//
+	// `item.input_audio_transcription.logprobs`: Include logprobs for input audio
+	// transcription.
+	//
+	// Any of "item.input_audio_transcription.logprobs".
+	Include []string `json:"include,omitzero"`
 	// The type of session to create. Always `transcription` for transcription
 	// sessions.
 	//
@@ -966,132 +1428,66 @@ func (r *RealtimeTranscriptionSessionCreateRequestParam) UnmarshalJSON(data []by
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// ID of the model to use. The options are `gpt-4o-transcribe`,
-// `gpt-4o-mini-transcribe`, and `whisper-1` (which is powered by our open source
-// Whisper V2 model).
-type RealtimeTranscriptionSessionCreateRequestModel = string
+// RealtimeTruncationUnion contains all possible properties and values from
+// [string], [RealtimeTruncationRetentionRatio].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfRealtimeTruncationStrategy]
+type RealtimeTruncationUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfRealtimeTruncationStrategy string `json:",inline"`
+	// This field is from variant [RealtimeTruncationRetentionRatio].
+	RetentionRatio float64 `json:"retention_ratio"`
+	// This field is from variant [RealtimeTruncationRetentionRatio].
+	Type constant.RetentionRatio `json:"type"`
+	JSON struct {
+		OfRealtimeTruncationStrategy respjson.Field
+		RetentionRatio               respjson.Field
+		Type                         respjson.Field
+		raw                          string
+	} `json:"-"`
+}
+
+func (u RealtimeTruncationUnion) AsRealtimeTruncationStrategy() (v string) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u RealtimeTruncationUnion) AsRetentionRatioTruncation() (v RealtimeTruncationRetentionRatio) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u RealtimeTruncationUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *RealtimeTruncationUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this RealtimeTruncationUnion to a RealtimeTruncationUnionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// RealtimeTruncationUnionParam.Overrides()
+func (r RealtimeTruncationUnion) ToParam() RealtimeTruncationUnionParam {
+	return param.Override[RealtimeTruncationUnionParam](json.RawMessage(r.RawJSON()))
+}
+
+// The truncation strategy to use for the session. `auto` is the default truncation
+// strategy. `disabled` will disable truncation and emit errors when the
+// conversation exceeds the input token limit.
+type RealtimeTruncationRealtimeTruncationStrategy string
 
 const (
-	RealtimeTranscriptionSessionCreateRequestModelWhisper1            RealtimeTranscriptionSessionCreateRequestModel = "whisper-1"
-	RealtimeTranscriptionSessionCreateRequestModelGPT4oTranscribe     RealtimeTranscriptionSessionCreateRequestModel = "gpt-4o-transcribe"
-	RealtimeTranscriptionSessionCreateRequestModelGPT4oMiniTranscribe RealtimeTranscriptionSessionCreateRequestModel = "gpt-4o-mini-transcribe"
+	RealtimeTruncationRealtimeTruncationStrategyAuto     RealtimeTruncationRealtimeTruncationStrategy = "auto"
+	RealtimeTruncationRealtimeTruncationStrategyDisabled RealtimeTruncationRealtimeTruncationStrategy = "disabled"
 )
-
-// The format of input audio. Options are `pcm16`, `g711_ulaw`, or `g711_alaw`. For
-// `pcm16`, input audio must be 16-bit PCM at a 24kHz sample rate, single channel
-// (mono), and little-endian byte order.
-type RealtimeTranscriptionSessionCreateRequestInputAudioFormat string
-
-const (
-	RealtimeTranscriptionSessionCreateRequestInputAudioFormatPcm16    RealtimeTranscriptionSessionCreateRequestInputAudioFormat = "pcm16"
-	RealtimeTranscriptionSessionCreateRequestInputAudioFormatG711Ulaw RealtimeTranscriptionSessionCreateRequestInputAudioFormat = "g711_ulaw"
-	RealtimeTranscriptionSessionCreateRequestInputAudioFormatG711Alaw RealtimeTranscriptionSessionCreateRequestInputAudioFormat = "g711_alaw"
-)
-
-// Configuration for input audio noise reduction. This can be set to `null` to turn
-// off. Noise reduction filters audio added to the input audio buffer before it is
-// sent to VAD and the model. Filtering the audio can improve VAD and turn
-// detection accuracy (reducing false positives) and model performance by improving
-// perception of the input audio.
-type RealtimeTranscriptionSessionCreateRequestInputAudioNoiseReductionParam struct {
-	// Type of noise reduction. `near_field` is for close-talking microphones such as
-	// headphones, `far_field` is for far-field microphones such as laptop or
-	// conference room microphones.
-	//
-	// Any of "near_field", "far_field".
-	Type string `json:"type,omitzero"`
-	paramObj
-}
-
-func (r RealtimeTranscriptionSessionCreateRequestInputAudioNoiseReductionParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeTranscriptionSessionCreateRequestInputAudioNoiseReductionParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *RealtimeTranscriptionSessionCreateRequestInputAudioNoiseReductionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[RealtimeTranscriptionSessionCreateRequestInputAudioNoiseReductionParam](
-		"type", "near_field", "far_field",
-	)
-}
-
-// Configuration for input audio transcription. The client can optionally set the
-// language and prompt for transcription, these offer additional guidance to the
-// transcription service.
-type RealtimeTranscriptionSessionCreateRequestInputAudioTranscriptionParam struct {
-	// The language of the input audio. Supplying the input language in
-	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) (e.g. `en`)
-	// format will improve accuracy and latency.
-	Language param.Opt[string] `json:"language,omitzero"`
-	// An optional text to guide the model's style or continue a previous audio
-	// segment. For `whisper-1`, the
-	// [prompt is a list of keywords](https://platform.openai.com/docs/guides/speech-to-text#prompting).
-	// For `gpt-4o-transcribe` models, the prompt is a free text string, for example
-	// "expect words related to technology".
-	Prompt param.Opt[string] `json:"prompt,omitzero"`
-	// The model to use for transcription, current options are `gpt-4o-transcribe`,
-	// `gpt-4o-mini-transcribe`, and `whisper-1`.
-	//
-	// Any of "gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1".
-	Model string `json:"model,omitzero"`
-	paramObj
-}
-
-func (r RealtimeTranscriptionSessionCreateRequestInputAudioTranscriptionParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeTranscriptionSessionCreateRequestInputAudioTranscriptionParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *RealtimeTranscriptionSessionCreateRequestInputAudioTranscriptionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[RealtimeTranscriptionSessionCreateRequestInputAudioTranscriptionParam](
-		"model", "gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1",
-	)
-}
-
-// Configuration for turn detection. Can be set to `null` to turn off. Server VAD
-// means that the model will detect the start and end of speech based on audio
-// volume and respond at the end of user speech.
-type RealtimeTranscriptionSessionCreateRequestTurnDetectionParam struct {
-	// Amount of audio to include before the VAD detected speech (in milliseconds).
-	// Defaults to 300ms.
-	PrefixPaddingMs param.Opt[int64] `json:"prefix_padding_ms,omitzero"`
-	// Duration of silence to detect speech stop (in milliseconds). Defaults to 500ms.
-	// With shorter values the model will respond more quickly, but may jump in on
-	// short pauses from the user.
-	SilenceDurationMs param.Opt[int64] `json:"silence_duration_ms,omitzero"`
-	// Activation threshold for VAD (0.0 to 1.0), this defaults to 0.5. A higher
-	// threshold will require louder audio to activate the model, and thus might
-	// perform better in noisy environments.
-	Threshold param.Opt[float64] `json:"threshold,omitzero"`
-	// Type of turn detection. Only `server_vad` is currently supported for
-	// transcription sessions.
-	//
-	// Any of "server_vad".
-	Type string `json:"type,omitzero"`
-	paramObj
-}
-
-func (r RealtimeTranscriptionSessionCreateRequestTurnDetectionParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeTranscriptionSessionCreateRequestTurnDetectionParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *RealtimeTranscriptionSessionCreateRequestTurnDetectionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[RealtimeTranscriptionSessionCreateRequestTurnDetectionParam](
-		"type", "server_vad",
-	)
-}
 
 func RealtimeTruncationParamOfRetentionRatioTruncation(retentionRatio float64) RealtimeTruncationUnionParam {
-	var variant RealtimeTruncationRetentionRatioTruncationParam
+	var variant RealtimeTruncationRetentionRatioParam
 	variant.RetentionRatio = retentionRatio
 	return RealtimeTruncationUnionParam{OfRetentionRatioTruncation: &variant}
 }
@@ -1102,8 +1498,8 @@ func RealtimeTruncationParamOfRetentionRatioTruncation(retentionRatio float64) R
 type RealtimeTruncationUnionParam struct {
 	// Check if union is this variant with
 	// !param.IsOmitted(union.OfRealtimeTruncationStrategy)
-	OfRealtimeTruncationStrategy param.Opt[string]                                `json:",omitzero,inline"`
-	OfRetentionRatioTruncation   *RealtimeTruncationRetentionRatioTruncationParam `json:",omitzero,inline"`
+	OfRealtimeTruncationStrategy param.Opt[string]                      `json:",omitzero,inline"`
+	OfRetentionRatioTruncation   *RealtimeTruncationRetentionRatioParam `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -1123,22 +1519,49 @@ func (u *RealtimeTruncationUnionParam) asAny() any {
 	return nil
 }
 
-// The truncation strategy to use for the session.
-type RealtimeTruncationRealtimeTruncationStrategy string
+// Retain a fraction of the conversation tokens when the conversation exceeds the
+// input token limit. This allows you to amortize truncations across multiple
+// turns, which can help improve cached token usage.
+type RealtimeTruncationRetentionRatio struct {
+	// Fraction of post-instruction conversation tokens to retain (0.0 - 1.0) when the
+	// conversation exceeds the input token limit.
+	RetentionRatio float64 `json:"retention_ratio,required"`
+	// Use retention ratio truncation.
+	Type constant.RetentionRatio `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		RetentionRatio respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
 
-const (
-	RealtimeTruncationRealtimeTruncationStrategyAuto     RealtimeTruncationRealtimeTruncationStrategy = "auto"
-	RealtimeTruncationRealtimeTruncationStrategyDisabled RealtimeTruncationRealtimeTruncationStrategy = "disabled"
-)
+// Returns the unmodified JSON received from the API
+func (r RealtimeTruncationRetentionRatio) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeTruncationRetentionRatio) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
-// Retain a fraction of the conversation tokens.
+// ToParam converts this RealtimeTruncationRetentionRatio to a
+// RealtimeTruncationRetentionRatioParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// RealtimeTruncationRetentionRatioParam.Overrides()
+func (r RealtimeTruncationRetentionRatio) ToParam() RealtimeTruncationRetentionRatioParam {
+	return param.Override[RealtimeTruncationRetentionRatioParam](json.RawMessage(r.RawJSON()))
+}
+
+// Retain a fraction of the conversation tokens when the conversation exceeds the
+// input token limit. This allows you to amortize truncations across multiple
+// turns, which can help improve cached token usage.
 //
 // The properties RetentionRatio, Type are required.
-type RealtimeTruncationRetentionRatioTruncationParam struct {
-	// Fraction of pre-instruction conversation tokens to retain (0.0 - 1.0).
+type RealtimeTruncationRetentionRatioParam struct {
+	// Fraction of post-instruction conversation tokens to retain (0.0 - 1.0) when the
+	// conversation exceeds the input token limit.
 	RetentionRatio float64 `json:"retention_ratio,required"`
-	// Optional cap on tokens allowed after the instructions.
-	PostInstructionsTokenLimit param.Opt[int64] `json:"post_instructions_token_limit,omitzero"`
 	// Use retention ratio truncation.
 	//
 	// This field can be elided, and will marshal its zero value as "retention_ratio".
@@ -1146,10 +1569,10 @@ type RealtimeTruncationRetentionRatioTruncationParam struct {
 	paramObj
 }
 
-func (r RealtimeTruncationRetentionRatioTruncationParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeTruncationRetentionRatioTruncationParam
+func (r RealtimeTruncationRetentionRatioParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTruncationRetentionRatioParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *RealtimeTruncationRetentionRatioTruncationParam) UnmarshalJSON(data []byte) error {
+func (r *RealtimeTruncationRetentionRatioParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
