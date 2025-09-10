@@ -264,7 +264,6 @@ type ToolExecutionError string                               // Always "tool_exe
 type TranscriptTextDelta string                              // Always "transcript.text.delta"
 type TranscriptTextDone string                               // Always "transcript.text.done"
 type Transcription string                                    // Always "transcription"
-type TranscriptionSessionCreated string                      // Always "transcription_session.created"
 type TranscriptionSessionUpdate string                       // Always "transcription_session.update"
 type TranscriptionSessionUpdated string                      // Always "transcription_session.updated"
 type Type string                                             // Always "type"
@@ -666,9 +665,6 @@ func (c ToolExecutionError) Default() ToolExecutionError   { return "tool_execut
 func (c TranscriptTextDelta) Default() TranscriptTextDelta { return "transcript.text.delta" }
 func (c TranscriptTextDone) Default() TranscriptTextDone   { return "transcript.text.done" }
 func (c Transcription) Default() Transcription             { return "transcription" }
-func (c TranscriptionSessionCreated) Default() TranscriptionSessionCreated {
-	return "transcription_session.created"
-}
 func (c TranscriptionSessionUpdate) Default() TranscriptionSessionUpdate {
 	return "transcription_session.update"
 }
@@ -954,7 +950,6 @@ func (c ToolExecutionError) MarshalJSON() ([]byte, error)                 { retu
 func (c TranscriptTextDelta) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c TranscriptTextDone) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c Transcription) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
-func (c TranscriptionSessionCreated) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c TranscriptionSessionUpdate) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c TranscriptionSessionUpdated) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c Type) MarshalJSON() ([]byte, error)                               { return marshalString(c) }

@@ -115,74 +115,6 @@ func (r *AudioTranscriptionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type Models struct {
-	// The description of the function, including guidance on when and how to call it,
-	// and guidance about what to tell the user when calling (if anything).
-	Description string `json:"description"`
-	// The name of the function.
-	Name string `json:"name"`
-	// Parameters of the function in JSON Schema.
-	Parameters any `json:"parameters"`
-	// The type of the tool, i.e. `function`.
-	//
-	// Any of "function".
-	Type ModelsType `json:"type"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Description respjson.Field
-		Name        respjson.Field
-		Parameters  respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r Models) RawJSON() string { return r.JSON.raw }
-func (r *Models) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ToParam converts this Models to a ModelsParam.
-//
-// Warning: the fields of the param type will not be present. ToParam should only
-// be used at the last possible moment before sending a request. Test for this with
-// ModelsParam.Overrides()
-func (r Models) ToParam() ModelsParam {
-	return param.Override[ModelsParam](json.RawMessage(r.RawJSON()))
-}
-
-// The type of the tool, i.e. `function`.
-type ModelsType string
-
-const (
-	ModelsTypeFunction ModelsType = "function"
-)
-
-type ModelsParam struct {
-	// The description of the function, including guidance on when and how to call it,
-	// and guidance about what to tell the user when calling (if anything).
-	Description param.Opt[string] `json:"description,omitzero"`
-	// The name of the function.
-	Name param.Opt[string] `json:"name,omitzero"`
-	// Parameters of the function in JSON Schema.
-	Parameters any `json:"parameters,omitzero"`
-	// The type of the tool, i.e. `function`.
-	//
-	// Any of "function".
-	Type ModelsType `json:"type,omitzero"`
-	paramObj
-}
-
-func (r ModelsParam) MarshalJSON() (data []byte, err error) {
-	type shadow ModelsParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ModelsParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
 // Type of noise reduction. `near_field` is for close-talking microphones such as
 // headphones, `far_field` is for far-field microphones such as laptop or
 // conference room microphones.
@@ -610,7 +542,7 @@ func init() {
 // conversations, but may have a higher latency.
 type RealtimeAudioInputTurnDetectionParam struct {
 	// Optional idle timeout after which turn detection will auto-timeout when no
-	// additional audio is received.
+	// additional audio is received and emits a `timeout_triggered` event.
 	IdleTimeoutMs param.Opt[int64] `json:"idle_timeout_ms,omitzero"`
 	// Whether or not to automatically generate a response when a VAD stop event
 	// occurs.
@@ -672,6 +604,74 @@ const (
 	RealtimeAudioInputTurnDetectionTypeServerVad   RealtimeAudioInputTurnDetectionType = "server_vad"
 	RealtimeAudioInputTurnDetectionTypeSemanticVad RealtimeAudioInputTurnDetectionType = "semantic_vad"
 )
+
+type RealtimeFunctionTool struct {
+	// The description of the function, including guidance on when and how to call it,
+	// and guidance about what to tell the user when calling (if anything).
+	Description string `json:"description"`
+	// The name of the function.
+	Name string `json:"name"`
+	// Parameters of the function in JSON Schema.
+	Parameters any `json:"parameters"`
+	// The type of the tool, i.e. `function`.
+	//
+	// Any of "function".
+	Type RealtimeFunctionToolType `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Description respjson.Field
+		Name        respjson.Field
+		Parameters  respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeFunctionTool) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeFunctionTool) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this RealtimeFunctionTool to a RealtimeFunctionToolParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// RealtimeFunctionToolParam.Overrides()
+func (r RealtimeFunctionTool) ToParam() RealtimeFunctionToolParam {
+	return param.Override[RealtimeFunctionToolParam](json.RawMessage(r.RawJSON()))
+}
+
+// The type of the tool, i.e. `function`.
+type RealtimeFunctionToolType string
+
+const (
+	RealtimeFunctionToolTypeFunction RealtimeFunctionToolType = "function"
+)
+
+type RealtimeFunctionToolParam struct {
+	// The description of the function, including guidance on when and how to call it,
+	// and guidance about what to tell the user when calling (if anything).
+	Description param.Opt[string] `json:"description,omitzero"`
+	// The name of the function.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// Parameters of the function in JSON Schema.
+	Parameters any `json:"parameters,omitzero"`
+	// The type of the tool, i.e. `function`.
+	//
+	// Any of "function".
+	Type RealtimeFunctionToolType `json:"type,omitzero"`
+	paramObj
+}
+
+func (r RealtimeFunctionToolParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeFunctionToolParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeFunctionToolParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Realtime session object configuration.
 //
@@ -865,7 +865,7 @@ func RealtimeToolsConfigUnionParamOfMcp(serverLabel string) RealtimeToolsConfigU
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type RealtimeToolsConfigUnionParam struct {
-	OfFunction *ModelsParam                      `json:",omitzero,inline"`
+	OfFunction *RealtimeFunctionToolParam        `json:",omitzero,inline"`
 	OfMcp      *RealtimeToolsConfigUnionMcpParam `json:",omitzero,inline"`
 	paramUnion
 }
@@ -987,7 +987,7 @@ func (u RealtimeToolsConfigUnionParam) GetType() *string {
 func init() {
 	apijson.RegisterUnion[RealtimeToolsConfigUnionParam](
 		"type",
-		apijson.Discriminator[ModelsParam]("function"),
+		apijson.Discriminator[RealtimeFunctionToolParam]("function"),
 		apijson.Discriminator[RealtimeToolsConfigUnionMcpParam]("mcp"),
 	)
 }

@@ -788,13 +788,13 @@ Methods:
 Params Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#AudioTranscriptionParam">AudioTranscriptionParam</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#ModelsParam">ModelsParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#NoiseReductionType">NoiseReductionType</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeAudioConfigParam">RealtimeAudioConfigParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeAudioConfigInputParam">RealtimeAudioConfigInputParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeAudioConfigOutputParam">RealtimeAudioConfigOutputParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeAudioFormatsUnionParam">RealtimeAudioFormatsUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeAudioInputTurnDetectionParam">RealtimeAudioInputTurnDetectionParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeFunctionToolParam">RealtimeFunctionToolParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeSessionCreateRequestParam">RealtimeSessionCreateRequestParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeToolChoiceConfigUnionParam">RealtimeToolChoiceConfigUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeToolsConfigParam">RealtimeToolsConfigParam</a>
@@ -810,9 +810,9 @@ Params Types:
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#AudioTranscription">AudioTranscription</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#Models">Models</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#NoiseReductionType">NoiseReductionType</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeAudioFormatsUnion">RealtimeAudioFormatsUnion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeFunctionTool">RealtimeFunctionTool</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeTruncationUnion">RealtimeTruncationUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeTruncationRetentionRatio">RealtimeTruncationRetentionRatio</a>
 
@@ -822,9 +822,7 @@ Response Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeSessionClientSecret">RealtimeSessionClientSecret</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeSessionCreateResponse">RealtimeSessionCreateResponse</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeTranscriptionSessionClientSecret">RealtimeTranscriptionSessionClientSecret</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeTranscriptionSessionCreateResponse">RealtimeTranscriptionSessionCreateResponse</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeTranscriptionSessionInputAudioTranscription">RealtimeTranscriptionSessionInputAudioTranscription</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#RealtimeTranscriptionSessionTurnDetection">RealtimeTranscriptionSessionTurnDetection</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/realtime#ClientSecretNewResponse">ClientSecretNewResponse</a>
 
