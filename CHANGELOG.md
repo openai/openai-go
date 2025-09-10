@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.4.1 (2025-09-10)
+
+Full Changelog: [v2.4.0...v2.4.1](https://github.com/openai/openai-go/compare/v2.4.0...v2.4.1)
+
+### Chores
+
+* **api:** fix realtime GA types ([012b83e](https://github.com/openai/openai-go/commit/012b83e3fa37a69d39eeaf6b227c37f5d3e42134))
+
 ## 2.4.0 (2025-09-08)
 
 Full Changelog: [v2.3.1...v2.4.0](https://github.com/openai/openai-go/compare/v2.3.1...v2.4.0)

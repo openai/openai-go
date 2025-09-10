@@ -93,11 +93,11 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 					OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
 				},
 				Tools: realtime.RealtimeToolsConfigParam{realtime.RealtimeToolsConfigUnionParam{
-					OfFunction: &realtime.ModelsParam{
+					OfFunction: &realtime.RealtimeFunctionToolParam{
 						Description: openai.String("description"),
 						Name:        openai.String("name"),
 						Parameters:  map[string]interface{}{},
-						Type:        realtime.ModelsTypeFunction,
+						Type:        realtime.RealtimeFunctionToolTypeFunction,
 					},
 				}},
 				Tracing: realtime.RealtimeTracingConfigUnionParam{

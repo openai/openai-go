@@ -71,10 +71,12 @@ func (r *RealtimeSessionClientSecret) UnmarshalJSON(data []byte) error {
 // A new Realtime session configuration, with an ephemeral key. Default TTL for
 // keys is one minute.
 type RealtimeSessionCreateResponse struct {
+	// Ephemeral key returned by the API.
+	ClientSecret RealtimeSessionClientSecret `json:"client_secret,required"`
+	// The type of session to create. Always `realtime` for the Realtime API.
+	Type constant.Realtime `json:"type,required"`
 	// Configuration for input and output audio.
 	Audio RealtimeSessionCreateResponseAudio `json:"audio"`
-	// Ephemeral key returned by the API.
-	ClientSecret RealtimeSessionClientSecret `json:"client_secret"`
 	// Additional fields to include in server outputs.
 	//
 	// `item.input_audio_transcription.logprobs`: Include logprobs for input audio
@@ -125,14 +127,11 @@ type RealtimeSessionCreateResponse struct {
 	// Controls how the realtime conversation is truncated prior to model inference.
 	// The default is `auto`.
 	Truncation RealtimeTruncationUnion `json:"truncation"`
-	// The type of session to create. Always `realtime` for the Realtime API.
-	//
-	// Any of "realtime".
-	Type RealtimeSessionCreateResponseType `json:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Audio            respjson.Field
 		ClientSecret     respjson.Field
+		Type             respjson.Field
+		Audio            respjson.Field
 		Include          respjson.Field
 		Instructions     respjson.Field
 		MaxOutputTokens  respjson.Field
@@ -143,7 +142,6 @@ type RealtimeSessionCreateResponse struct {
 		Tools            respjson.Field
 		Tracing          respjson.Field
 		Truncation       respjson.Field
-		Type             respjson.Field
 		ExtraFields      map[string]respjson.Field
 		raw              string
 	} `json:"-"`
@@ -268,7 +266,7 @@ type RealtimeSessionCreateResponseAudioInputTurnDetection struct {
 	// Any of "low", "medium", "high", "auto".
 	Eagerness string `json:"eagerness"`
 	// Optional idle timeout after which turn detection will auto-timeout when no
-	// additional audio is received.
+	// additional audio is received and emits a `timeout_triggered` event.
 	IdleTimeoutMs int64 `json:"idle_timeout_ms,nullable"`
 	// Whether or not to automatically interrupt any ongoing response with output to
 	// the default conversation (i.e. `conversation` of `auto`) when a VAD start event
@@ -441,15 +439,15 @@ func (r *RealtimeSessionCreateResponseToolChoiceUnion) UnmarshalJSON(data []byte
 }
 
 // RealtimeSessionCreateResponseToolUnion contains all possible properties and
-// values from [Models], [RealtimeSessionCreateResponseToolMcpTool].
+// values from [RealtimeFunctionTool], [RealtimeSessionCreateResponseToolMcpTool].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type RealtimeSessionCreateResponseToolUnion struct {
-	// This field is from variant [Models].
+	// This field is from variant [RealtimeFunctionTool].
 	Description string `json:"description"`
-	// This field is from variant [Models].
+	// This field is from variant [RealtimeFunctionTool].
 	Name string `json:"name"`
-	// This field is from variant [Models].
+	// This field is from variant [RealtimeFunctionTool].
 	Parameters any    `json:"parameters"`
 	Type       string `json:"type"`
 	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
@@ -485,7 +483,7 @@ type RealtimeSessionCreateResponseToolUnion struct {
 	} `json:"-"`
 }
 
-func (u RealtimeSessionCreateResponseToolUnion) AsFunctionTool() (v Models) {
+func (u RealtimeSessionCreateResponseToolUnion) AsFunctionTool() (v RealtimeFunctionTool) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -843,69 +841,35 @@ func (r *RealtimeSessionCreateResponseTracingTracingConfiguration) UnmarshalJSON
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The type of session to create. Always `realtime` for the Realtime API.
-type RealtimeSessionCreateResponseType string
-
-const (
-	RealtimeSessionCreateResponseTypeRealtime RealtimeSessionCreateResponseType = "realtime"
-)
-
-// Ephemeral key returned by the API. Only present when the session is created on
-// the server via REST API.
-type RealtimeTranscriptionSessionClientSecret struct {
-	// Timestamp for when the token expires. Currently, all tokens expire after one
-	// minute.
-	ExpiresAt int64 `json:"expires_at,required"`
-	// Ephemeral key usable in client environments to authenticate connections to the
-	// Realtime API. Use this in client-side environments rather than a standard API
-	// token, which should only be used server-side.
-	Value string `json:"value,required"`
+// A Realtime transcription session configuration object.
+type RealtimeTranscriptionSessionCreateResponse struct {
+	// Unique identifier for the session that looks like `sess_1234567890abcdef`.
+	ID string `json:"id,required"`
+	// The object type. Always `realtime.transcription_session`.
+	Object string `json:"object,required"`
+	// The type of session. Always `transcription` for transcription sessions.
+	Type constant.Transcription `json:"type,required"`
+	// Configuration for input audio for the session.
+	Audio RealtimeTranscriptionSessionCreateResponseAudio `json:"audio"`
+	// Expiration timestamp for the session, in seconds since epoch.
+	ExpiresAt int64 `json:"expires_at"`
+	// Additional fields to include in server outputs.
+	//
+	//   - `item.input_audio_transcription.logprobs`: Include logprobs for input audio
+	//     transcription.
+	//
+	// Any of "item.input_audio_transcription.logprobs".
+	Include []string `json:"include"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		ID          respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		Audio       respjson.Field
 		ExpiresAt   respjson.Field
-		Value       respjson.Field
+		Include     respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r RealtimeTranscriptionSessionClientSecret) RawJSON() string { return r.JSON.raw }
-func (r *RealtimeTranscriptionSessionClientSecret) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// A new Realtime transcription session configuration.
-//
-// When a session is created on the server via REST API, the session object also
-// contains an ephemeral key. Default TTL for keys is 10 minutes. This property is
-// not present when a session is updated via the WebSocket API.
-type RealtimeTranscriptionSessionCreateResponse struct {
-	// Ephemeral key returned by the API. Only present when the session is created on
-	// the server via REST API.
-	ClientSecret RealtimeTranscriptionSessionClientSecret `json:"client_secret,required"`
-	// The format of input audio. Options are `pcm16`, `g711_ulaw`, or `g711_alaw`.
-	InputAudioFormat string `json:"input_audio_format"`
-	// Configuration of the transcription model.
-	InputAudioTranscription RealtimeTranscriptionSessionInputAudioTranscription `json:"input_audio_transcription"`
-	// The set of modalities the model can respond with. To disable audio, set this to
-	// ["text"].
-	//
-	// Any of "text", "audio".
-	Modalities []string `json:"modalities"`
-	// Configuration for turn detection. Can be set to `null` to turn off. Server VAD
-	// means that the model will detect the start and end of speech based on audio
-	// volume and respond at the end of user speech.
-	TurnDetection RealtimeTranscriptionSessionTurnDetection `json:"turn_detection"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ClientSecret            respjson.Field
-		InputAudioFormat        respjson.Field
-		InputAudioTranscription respjson.Field
-		Modalities              respjson.Field
-		TurnDetection           respjson.Field
-		ExtraFields             map[string]respjson.Field
-		raw                     string
 	} `json:"-"`
 }
 
@@ -915,50 +879,74 @@ func (r *RealtimeTranscriptionSessionCreateResponse) UnmarshalJSON(data []byte) 
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Configuration of the transcription model.
-type RealtimeTranscriptionSessionInputAudioTranscription struct {
-	// The language of the input audio. Supplying the input language in
-	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) (e.g. `en`)
-	// format will improve accuracy and latency.
-	Language string `json:"language"`
-	// The model to use for transcription. Current options are `whisper-1`,
-	// `gpt-4o-transcribe-latest`, `gpt-4o-mini-transcribe`, and `gpt-4o-transcribe`.
-	//
-	// Any of "whisper-1", "gpt-4o-transcribe-latest", "gpt-4o-mini-transcribe",
-	// "gpt-4o-transcribe".
-	Model RealtimeTranscriptionSessionInputAudioTranscriptionModel `json:"model"`
-	// An optional text to guide the model's style or continue a previous audio
-	// segment. For `whisper-1`, the
-	// [prompt is a list of keywords](https://platform.openai.com/docs/guides/speech-to-text#prompting).
-	// For `gpt-4o-transcribe` models, the prompt is a free text string, for example
-	// "expect words related to technology".
-	Prompt string `json:"prompt"`
+// Configuration for input audio for the session.
+type RealtimeTranscriptionSessionCreateResponseAudio struct {
+	Input RealtimeTranscriptionSessionCreateResponseAudioInput `json:"input"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Language    respjson.Field
-		Model       respjson.Field
-		Prompt      respjson.Field
+		Input       respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
-func (r RealtimeTranscriptionSessionInputAudioTranscription) RawJSON() string { return r.JSON.raw }
-func (r *RealtimeTranscriptionSessionInputAudioTranscription) UnmarshalJSON(data []byte) error {
+func (r RealtimeTranscriptionSessionCreateResponseAudio) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeTranscriptionSessionCreateResponseAudio) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The model to use for transcription. Current options are `whisper-1`,
-// `gpt-4o-transcribe-latest`, `gpt-4o-mini-transcribe`, and `gpt-4o-transcribe`.
-type RealtimeTranscriptionSessionInputAudioTranscriptionModel string
+type RealtimeTranscriptionSessionCreateResponseAudioInput struct {
+	// The PCM audio format. Only a 24kHz sample rate is supported.
+	Format RealtimeAudioFormatsUnion `json:"format"`
+	// Configuration for input audio noise reduction.
+	NoiseReduction RealtimeTranscriptionSessionCreateResponseAudioInputNoiseReduction `json:"noise_reduction"`
+	// Configuration of the transcription model.
+	Transcription AudioTranscription `json:"transcription"`
+	// Configuration for turn detection. Can be set to `null` to turn off. Server VAD
+	// means that the model will detect the start and end of speech based on audio
+	// volume and respond at the end of user speech.
+	TurnDetection RealtimeTranscriptionSessionTurnDetection `json:"turn_detection"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Format         respjson.Field
+		NoiseReduction respjson.Field
+		Transcription  respjson.Field
+		TurnDetection  respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
 
-const (
-	RealtimeTranscriptionSessionInputAudioTranscriptionModelWhisper1              RealtimeTranscriptionSessionInputAudioTranscriptionModel = "whisper-1"
-	RealtimeTranscriptionSessionInputAudioTranscriptionModelGPT4oTranscribeLatest RealtimeTranscriptionSessionInputAudioTranscriptionModel = "gpt-4o-transcribe-latest"
-	RealtimeTranscriptionSessionInputAudioTranscriptionModelGPT4oMiniTranscribe   RealtimeTranscriptionSessionInputAudioTranscriptionModel = "gpt-4o-mini-transcribe"
-	RealtimeTranscriptionSessionInputAudioTranscriptionModelGPT4oTranscribe       RealtimeTranscriptionSessionInputAudioTranscriptionModel = "gpt-4o-transcribe"
-)
+// Returns the unmodified JSON received from the API
+func (r RealtimeTranscriptionSessionCreateResponseAudioInput) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeTranscriptionSessionCreateResponseAudioInput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Configuration for input audio noise reduction.
+type RealtimeTranscriptionSessionCreateResponseAudioInputNoiseReduction struct {
+	// Type of noise reduction. `near_field` is for close-talking microphones such as
+	// headphones, `far_field` is for far-field microphones such as laptop or
+	// conference room microphones.
+	//
+	// Any of "near_field", "far_field".
+	Type NoiseReductionType `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeTranscriptionSessionCreateResponseAudioInputNoiseReduction) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *RealtimeTranscriptionSessionCreateResponseAudioInputNoiseReduction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Configuration for turn detection. Can be set to `null` to turn off. Server VAD
 // means that the model will detect the start and end of speech based on audio
@@ -1022,15 +1010,19 @@ func (r *ClientSecretNewResponse) UnmarshalJSON(data []byte) error {
 // from [RealtimeSessionCreateResponse],
 // [RealtimeTranscriptionSessionCreateResponse].
 //
+// Use the [ClientSecretNewResponseSessionUnion.AsAny] method to switch on the
+// variant.
+//
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ClientSecretNewResponseSessionUnion struct {
 	// This field is from variant [RealtimeSessionCreateResponse].
-	Audio RealtimeSessionCreateResponseAudio `json:"audio"`
-	// This field is a union of [RealtimeSessionClientSecret],
-	// [RealtimeTranscriptionSessionClientSecret]
-	ClientSecret ClientSecretNewResponseSessionUnionClientSecret `json:"client_secret"`
-	// This field is from variant [RealtimeSessionCreateResponse].
-	Include []string `json:"include"`
+	ClientSecret RealtimeSessionClientSecret `json:"client_secret"`
+	// Any of "realtime", "transcription".
+	Type string `json:"type"`
+	// This field is a union of [RealtimeSessionCreateResponseAudio],
+	// [RealtimeTranscriptionSessionCreateResponseAudio]
+	Audio   ClientSecretNewResponseSessionUnionAudio `json:"audio"`
+	Include []string                                 `json:"include"`
 	// This field is from variant [RealtimeSessionCreateResponse].
 	Instructions string `json:"instructions"`
 	// This field is from variant [RealtimeSessionCreateResponse].
@@ -1049,44 +1041,67 @@ type ClientSecretNewResponseSessionUnion struct {
 	Tracing RealtimeSessionCreateResponseTracingUnion `json:"tracing"`
 	// This field is from variant [RealtimeSessionCreateResponse].
 	Truncation RealtimeTruncationUnion `json:"truncation"`
-	// This field is from variant [RealtimeSessionCreateResponse].
-	Type RealtimeSessionCreateResponseType `json:"type"`
 	// This field is from variant [RealtimeTranscriptionSessionCreateResponse].
-	InputAudioFormat string `json:"input_audio_format"`
+	ID string `json:"id"`
 	// This field is from variant [RealtimeTranscriptionSessionCreateResponse].
-	InputAudioTranscription RealtimeTranscriptionSessionInputAudioTranscription `json:"input_audio_transcription"`
+	Object string `json:"object"`
 	// This field is from variant [RealtimeTranscriptionSessionCreateResponse].
-	Modalities []string `json:"modalities"`
-	// This field is from variant [RealtimeTranscriptionSessionCreateResponse].
-	TurnDetection RealtimeTranscriptionSessionTurnDetection `json:"turn_detection"`
-	JSON          struct {
-		Audio                   respjson.Field
-		ClientSecret            respjson.Field
-		Include                 respjson.Field
-		Instructions            respjson.Field
-		MaxOutputTokens         respjson.Field
-		Model                   respjson.Field
-		OutputModalities        respjson.Field
-		Prompt                  respjson.Field
-		ToolChoice              respjson.Field
-		Tools                   respjson.Field
-		Tracing                 respjson.Field
-		Truncation              respjson.Field
-		Type                    respjson.Field
-		InputAudioFormat        respjson.Field
-		InputAudioTranscription respjson.Field
-		Modalities              respjson.Field
-		TurnDetection           respjson.Field
-		raw                     string
+	ExpiresAt int64 `json:"expires_at"`
+	JSON      struct {
+		ClientSecret     respjson.Field
+		Type             respjson.Field
+		Audio            respjson.Field
+		Include          respjson.Field
+		Instructions     respjson.Field
+		MaxOutputTokens  respjson.Field
+		Model            respjson.Field
+		OutputModalities respjson.Field
+		Prompt           respjson.Field
+		ToolChoice       respjson.Field
+		Tools            respjson.Field
+		Tracing          respjson.Field
+		Truncation       respjson.Field
+		ID               respjson.Field
+		Object           respjson.Field
+		ExpiresAt        respjson.Field
+		raw              string
 	} `json:"-"`
 }
 
-func (u ClientSecretNewResponseSessionUnion) AsRealtimeSessionCreateResponse() (v RealtimeSessionCreateResponse) {
+// anyClientSecretNewResponseSession is implemented by each variant of
+// [ClientSecretNewResponseSessionUnion] to add type safety for the return type of
+// [ClientSecretNewResponseSessionUnion.AsAny]
+type anyClientSecretNewResponseSession interface {
+	implClientSecretNewResponseSessionUnion()
+}
+
+func (RealtimeSessionCreateResponse) implClientSecretNewResponseSessionUnion()              {}
+func (RealtimeTranscriptionSessionCreateResponse) implClientSecretNewResponseSessionUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ClientSecretNewResponseSessionUnion.AsAny().(type) {
+//	case realtime.RealtimeSessionCreateResponse:
+//	case realtime.RealtimeTranscriptionSessionCreateResponse:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ClientSecretNewResponseSessionUnion) AsAny() anyClientSecretNewResponseSession {
+	switch u.Type {
+	case "realtime":
+		return u.AsRealtime()
+	case "transcription":
+		return u.AsTranscription()
+	}
+	return nil
+}
+
+func (u ClientSecretNewResponseSessionUnion) AsRealtime() (v RealtimeSessionCreateResponse) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u ClientSecretNewResponseSessionUnion) AsRealtimeTranscriptionSessionCreateResponse() (v RealtimeTranscriptionSessionCreateResponse) {
+func (u ClientSecretNewResponseSessionUnion) AsTranscription() (v RealtimeTranscriptionSessionCreateResponse) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -1098,24 +1113,120 @@ func (r *ClientSecretNewResponseSessionUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// ClientSecretNewResponseSessionUnionClientSecret is an implicit subunion of
-// [ClientSecretNewResponseSessionUnion].
-// ClientSecretNewResponseSessionUnionClientSecret provides convenient access to
-// the sub-properties of the union.
+// ClientSecretNewResponseSessionUnionAudio is an implicit subunion of
+// [ClientSecretNewResponseSessionUnion]. ClientSecretNewResponseSessionUnionAudio
+// provides convenient access to the sub-properties of the union.
 //
 // For type safety it is recommended to directly use a variant of the
 // [ClientSecretNewResponseSessionUnion].
-type ClientSecretNewResponseSessionUnionClientSecret struct {
-	ExpiresAt int64  `json:"expires_at"`
-	Value     string `json:"value"`
-	JSON      struct {
-		ExpiresAt respjson.Field
-		Value     respjson.Field
-		raw       string
+type ClientSecretNewResponseSessionUnionAudio struct {
+	// This field is a union of [RealtimeSessionCreateResponseAudioInput],
+	// [RealtimeTranscriptionSessionCreateResponseAudioInput]
+	Input ClientSecretNewResponseSessionUnionAudioInput `json:"input"`
+	// This field is from variant [RealtimeSessionCreateResponseAudio].
+	Output RealtimeSessionCreateResponseAudioOutput `json:"output"`
+	JSON   struct {
+		Input  respjson.Field
+		Output respjson.Field
+		raw    string
 	} `json:"-"`
 }
 
-func (r *ClientSecretNewResponseSessionUnionClientSecret) UnmarshalJSON(data []byte) error {
+func (r *ClientSecretNewResponseSessionUnionAudio) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ClientSecretNewResponseSessionUnionAudioInput is an implicit subunion of
+// [ClientSecretNewResponseSessionUnion].
+// ClientSecretNewResponseSessionUnionAudioInput provides convenient access to the
+// sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ClientSecretNewResponseSessionUnion].
+type ClientSecretNewResponseSessionUnionAudioInput struct {
+	// This field is from variant [RealtimeSessionCreateResponseAudioInput].
+	Format RealtimeAudioFormatsUnion `json:"format"`
+	// This field is a union of
+	// [RealtimeSessionCreateResponseAudioInputNoiseReduction],
+	// [RealtimeTranscriptionSessionCreateResponseAudioInputNoiseReduction]
+	NoiseReduction ClientSecretNewResponseSessionUnionAudioInputNoiseReduction `json:"noise_reduction"`
+	// This field is from variant [RealtimeSessionCreateResponseAudioInput].
+	Transcription AudioTranscription `json:"transcription"`
+	// This field is a union of [RealtimeSessionCreateResponseAudioInputTurnDetection],
+	// [RealtimeTranscriptionSessionTurnDetection]
+	TurnDetection ClientSecretNewResponseSessionUnionAudioInputTurnDetection `json:"turn_detection"`
+	JSON          struct {
+		Format         respjson.Field
+		NoiseReduction respjson.Field
+		Transcription  respjson.Field
+		TurnDetection  respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+func (r *ClientSecretNewResponseSessionUnionAudioInput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ClientSecretNewResponseSessionUnionAudioInputNoiseReduction is an implicit
+// subunion of [ClientSecretNewResponseSessionUnion].
+// ClientSecretNewResponseSessionUnionAudioInputNoiseReduction provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ClientSecretNewResponseSessionUnion].
+type ClientSecretNewResponseSessionUnionAudioInputNoiseReduction struct {
+	// This field is from variant
+	// [RealtimeSessionCreateResponseAudioInputNoiseReduction].
+	Type NoiseReductionType `json:"type"`
+	JSON struct {
+		Type respjson.Field
+		raw  string
+	} `json:"-"`
+}
+
+func (r *ClientSecretNewResponseSessionUnionAudioInputNoiseReduction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ClientSecretNewResponseSessionUnionAudioInputTurnDetection is an implicit
+// subunion of [ClientSecretNewResponseSessionUnion].
+// ClientSecretNewResponseSessionUnionAudioInputTurnDetection provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ClientSecretNewResponseSessionUnion].
+type ClientSecretNewResponseSessionUnionAudioInputTurnDetection struct {
+	// This field is from variant
+	// [RealtimeSessionCreateResponseAudioInputTurnDetection].
+	CreateResponse bool `json:"create_response"`
+	// This field is from variant
+	// [RealtimeSessionCreateResponseAudioInputTurnDetection].
+	Eagerness string `json:"eagerness"`
+	// This field is from variant
+	// [RealtimeSessionCreateResponseAudioInputTurnDetection].
+	IdleTimeoutMs int64 `json:"idle_timeout_ms"`
+	// This field is from variant
+	// [RealtimeSessionCreateResponseAudioInputTurnDetection].
+	InterruptResponse bool    `json:"interrupt_response"`
+	PrefixPaddingMs   int64   `json:"prefix_padding_ms"`
+	SilenceDurationMs int64   `json:"silence_duration_ms"`
+	Threshold         float64 `json:"threshold"`
+	Type              string  `json:"type"`
+	JSON              struct {
+		CreateResponse    respjson.Field
+		Eagerness         respjson.Field
+		IdleTimeoutMs     respjson.Field
+		InterruptResponse respjson.Field
+		PrefixPaddingMs   respjson.Field
+		SilenceDurationMs respjson.Field
+		Threshold         respjson.Field
+		Type              respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+func (r *ClientSecretNewResponseSessionUnionAudioInputTurnDetection) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
