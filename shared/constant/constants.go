@@ -217,6 +217,8 @@ type ScoreModel string                                       // Always "score_mo
 type Screenshot string                                       // Always "screenshot"
 type Scroll string                                           // Always "scroll"
 type Search string                                           // Always "search"
+type SemanticVad string                                      // Always "semantic_vad"
+type ServerVad string                                        // Always "server_vad"
 type SessionCreated string                                   // Always "session.created"
 type SessionUpdate string                                    // Always "session.update"
 type SessionUpdated string                                   // Always "session.updated"
@@ -610,6 +612,8 @@ func (c ScoreModel) Default() ScoreModel                         { return "score
 func (c Screenshot) Default() Screenshot                         { return "screenshot" }
 func (c Scroll) Default() Scroll                                 { return "scroll" }
 func (c Search) Default() Search                                 { return "search" }
+func (c SemanticVad) Default() SemanticVad                       { return "semantic_vad" }
+func (c ServerVad) Default() ServerVad                           { return "server_vad" }
 func (c SessionCreated) Default() SessionCreated                 { return "session.created" }
 func (c SessionUpdate) Default() SessionUpdate                   { return "session.update" }
 func (c SessionUpdated) Default() SessionUpdated                 { return "session.updated" }
@@ -903,6 +907,8 @@ func (c ScoreModel) MarshalJSON() ([]byte, error)                         { retu
 func (c Screenshot) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Scroll) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Search) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
+func (c SemanticVad) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c ServerVad) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c SessionCreated) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c SessionUpdate) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c SessionUpdated) MarshalJSON() ([]byte, error)                     { return marshalString(c) }

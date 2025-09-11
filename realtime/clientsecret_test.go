@@ -51,15 +51,15 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 							Model:    realtime.AudioTranscriptionModelWhisper1,
 							Prompt:   openai.String("prompt"),
 						},
-						TurnDetection: realtime.RealtimeAudioInputTurnDetectionParam{
-							CreateResponse:    openai.Bool(true),
-							Eagerness:         realtime.RealtimeAudioInputTurnDetectionEagernessLow,
-							IdleTimeoutMs:     openai.Int(0),
-							InterruptResponse: openai.Bool(true),
-							PrefixPaddingMs:   openai.Int(0),
-							SilenceDurationMs: openai.Int(0),
-							Threshold:         openai.Float(0),
-							Type:              realtime.RealtimeAudioInputTurnDetectionTypeServerVad,
+						TurnDetection: realtime.RealtimeAudioInputTurnDetectionUnionParam{
+							OfServerVad: &realtime.RealtimeAudioInputTurnDetectionServerVadParam{
+								CreateResponse:    openai.Bool(true),
+								IdleTimeoutMs:     openai.Int(5000),
+								InterruptResponse: openai.Bool(true),
+								PrefixPaddingMs:   openai.Int(0),
+								SilenceDurationMs: openai.Int(0),
+								Threshold:         openai.Float(0),
+							},
 						},
 					},
 					Output: realtime.RealtimeAudioConfigOutputParam{
