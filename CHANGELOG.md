@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.4.2 (2025-09-12)
+
+Full Changelog: [v2.4.1...v2.4.2](https://github.com/openai/openai-go/compare/v2.4.1...v2.4.2)
+
+### Chores
+
+* **api:** Minor docs and type updates for realtime ([d92ea48](https://github.com/openai/openai-go/commit/d92ea4850f3720ba7a372f7bc9f8ecff07392ba0))
+
 ## 2.4.1 (2025-09-10)
 
 Full Changelog: [v2.4.0...v2.4.1](https://github.com/openai/openai-go/compare/v2.4.0...v2.4.1)

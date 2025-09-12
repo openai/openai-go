@@ -141,6 +141,20 @@ func (r *RealtimeAudioConfigParam) UnmarshalJSON(data []byte) error {
 }
 
 type RealtimeAudioConfigInputParam struct {
+	// Configuration for turn detection, ether Server VAD or Semantic VAD. This can be
+	// set to `null` to turn off, in which case the client must manually trigger model
+	// response.
+	//
+	// Server VAD means that the model will detect the start and end of speech based on
+	// audio volume and respond at the end of user speech.
+	//
+	// Semantic VAD is more advanced and uses a turn detection model (in conjunction
+	// with VAD) to semantically estimate whether the user has finished speaking, then
+	// dynamically sets a timeout based on this probability. For example, if user audio
+	// trails off with "uhhm", the model will score a low probability of turn end and
+	// wait longer for the user to continue speaking. This can be useful for more
+	// natural conversations, but may have a higher latency.
+	TurnDetection RealtimeAudioInputTurnDetectionUnionParam `json:"turn_detection,omitzero"`
 	// The format of the input audio.
 	Format RealtimeAudioFormatsUnionParam `json:"format,omitzero"`
 	// Configuration for input audio noise reduction. This can be set to `null` to turn
@@ -158,17 +172,6 @@ type RealtimeAudioConfigInputParam struct {
 	// what the model heard. The client can optionally set the language and prompt for
 	// transcription, these offer additional guidance to the transcription service.
 	Transcription AudioTranscriptionParam `json:"transcription,omitzero"`
-	// Configuration for turn detection, ether Server VAD or Semantic VAD. This can be
-	// set to `null` to turn off, in which case the client must manually trigger model
-	// response. Server VAD means that the model will detect the start and end of
-	// speech based on audio volume and respond at the end of user speech. Semantic VAD
-	// is more advanced and uses a turn detection model (in conjunction with VAD) to
-	// semantically estimate whether the user has finished speaking, then dynamically
-	// sets a timeout based on this probability. For example, if user audio trails off
-	// with "uhhm", the model will score a low probability of turn end and wait longer
-	// for the user to continue speaking. This can be useful for more natural
-	// conversations, but may have a higher latency.
-	TurnDetection RealtimeAudioInputTurnDetectionParam `json:"turn_detection,omitzero"`
 	paramObj
 }
 
@@ -530,19 +533,126 @@ func init() {
 	)
 }
 
-// Configuration for turn detection, ether Server VAD or Semantic VAD. This can be
-// set to `null` to turn off, in which case the client must manually trigger model
-// response. Server VAD means that the model will detect the start and end of
-// speech based on audio volume and respond at the end of user speech. Semantic VAD
-// is more advanced and uses a turn detection model (in conjunction with VAD) to
-// semantically estimate whether the user has finished speaking, then dynamically
-// sets a timeout based on this probability. For example, if user audio trails off
-// with "uhhm", the model will score a low probability of turn end and wait longer
-// for the user to continue speaking. This can be useful for more natural
-// conversations, but may have a higher latency.
-type RealtimeAudioInputTurnDetectionParam struct {
-	// Optional idle timeout after which turn detection will auto-timeout when no
-	// additional audio is received and emits a `timeout_triggered` event.
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type RealtimeAudioInputTurnDetectionUnionParam struct {
+	OfServerVad   *RealtimeAudioInputTurnDetectionServerVadParam   `json:",omitzero,inline"`
+	OfSemanticVad *RealtimeAudioInputTurnDetectionSemanticVadParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u RealtimeAudioInputTurnDetectionUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfServerVad, u.OfSemanticVad)
+}
+func (u *RealtimeAudioInputTurnDetectionUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *RealtimeAudioInputTurnDetectionUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfServerVad) {
+		return u.OfServerVad
+	} else if !param.IsOmitted(u.OfSemanticVad) {
+		return u.OfSemanticVad
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeAudioInputTurnDetectionUnionParam) GetIdleTimeoutMs() *int64 {
+	if vt := u.OfServerVad; vt != nil && vt.IdleTimeoutMs.Valid() {
+		return &vt.IdleTimeoutMs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeAudioInputTurnDetectionUnionParam) GetPrefixPaddingMs() *int64 {
+	if vt := u.OfServerVad; vt != nil && vt.PrefixPaddingMs.Valid() {
+		return &vt.PrefixPaddingMs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeAudioInputTurnDetectionUnionParam) GetSilenceDurationMs() *int64 {
+	if vt := u.OfServerVad; vt != nil && vt.SilenceDurationMs.Valid() {
+		return &vt.SilenceDurationMs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeAudioInputTurnDetectionUnionParam) GetThreshold() *float64 {
+	if vt := u.OfServerVad; vt != nil && vt.Threshold.Valid() {
+		return &vt.Threshold.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeAudioInputTurnDetectionUnionParam) GetEagerness() *string {
+	if vt := u.OfSemanticVad; vt != nil {
+		return &vt.Eagerness
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeAudioInputTurnDetectionUnionParam) GetType() *string {
+	if vt := u.OfServerVad; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfSemanticVad; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeAudioInputTurnDetectionUnionParam) GetCreateResponse() *bool {
+	if vt := u.OfServerVad; vt != nil && vt.CreateResponse.Valid() {
+		return &vt.CreateResponse.Value
+	} else if vt := u.OfSemanticVad; vt != nil && vt.CreateResponse.Valid() {
+		return &vt.CreateResponse.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeAudioInputTurnDetectionUnionParam) GetInterruptResponse() *bool {
+	if vt := u.OfServerVad; vt != nil && vt.InterruptResponse.Valid() {
+		return &vt.InterruptResponse.Value
+	} else if vt := u.OfSemanticVad; vt != nil && vt.InterruptResponse.Valid() {
+		return &vt.InterruptResponse.Value
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[RealtimeAudioInputTurnDetectionUnionParam](
+		"type",
+		apijson.Discriminator[RealtimeAudioInputTurnDetectionServerVadParam]("server_vad"),
+		apijson.Discriminator[RealtimeAudioInputTurnDetectionSemanticVadParam]("semantic_vad"),
+	)
+}
+
+// Server-side voice activity detection (VAD) which flips on when user speech is
+// detected and off after a period of silence.
+//
+// The property Type is required.
+type RealtimeAudioInputTurnDetectionServerVadParam struct {
+	// Optional timeout after which a model response will be triggered automatically.
+	// This is useful for situations in which a long pause from the user is unexpected,
+	// such as a phone call. The model will effectively prompt the user to continue the
+	// conversation based on the current context.
+	//
+	// The timeout value will be applied after the last model response's audio has
+	// finished playing, i.e. it's set to the `response.done` time plus audio playback
+	// duration.
+	//
+	// An `input_audio_buffer.timeout_triggered` event (plus events associated with the
+	// Response) will be emitted when the timeout is reached. Idle timeout is currently
+	// only supported for `server_vad` mode.
 	IdleTimeoutMs param.Opt[int64] `json:"idle_timeout_ms,omitzero"`
 	// Whether or not to automatically generate a response when a VAD stop event
 	// occurs.
@@ -562,48 +672,60 @@ type RealtimeAudioInputTurnDetectionParam struct {
 	// defaults to 0.5. A higher threshold will require louder audio to activate the
 	// model, and thus might perform better in noisy environments.
 	Threshold param.Opt[float64] `json:"threshold,omitzero"`
+	// Type of turn detection, `server_vad` to turn on simple Server VAD.
+	//
+	// This field can be elided, and will marshal its zero value as "server_vad".
+	Type constant.ServerVad `json:"type,required"`
+	paramObj
+}
+
+func (r RealtimeAudioInputTurnDetectionServerVadParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeAudioInputTurnDetectionServerVadParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeAudioInputTurnDetectionServerVadParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Server-side semantic turn detection which uses a model to determine when the
+// user has finished speaking.
+//
+// The property Type is required.
+type RealtimeAudioInputTurnDetectionSemanticVadParam struct {
+	// Whether or not to automatically generate a response when a VAD stop event
+	// occurs.
+	CreateResponse param.Opt[bool] `json:"create_response,omitzero"`
+	// Whether or not to automatically interrupt any ongoing response with output to
+	// the default conversation (i.e. `conversation` of `auto`) when a VAD start event
+	// occurs.
+	InterruptResponse param.Opt[bool] `json:"interrupt_response,omitzero"`
 	// Used only for `semantic_vad` mode. The eagerness of the model to respond. `low`
 	// will wait longer for the user to continue speaking, `high` will respond more
 	// quickly. `auto` is the default and is equivalent to `medium`. `low`, `medium`,
 	// and `high` have max timeouts of 8s, 4s, and 2s respectively.
 	//
 	// Any of "low", "medium", "high", "auto".
-	Eagerness RealtimeAudioInputTurnDetectionEagerness `json:"eagerness,omitzero"`
-	// Type of turn detection.
+	Eagerness string `json:"eagerness,omitzero"`
+	// Type of turn detection, `semantic_vad` to turn on Semantic VAD.
 	//
-	// Any of "server_vad", "semantic_vad".
-	Type RealtimeAudioInputTurnDetectionType `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "semantic_vad".
+	Type constant.SemanticVad `json:"type,required"`
 	paramObj
 }
 
-func (r RealtimeAudioInputTurnDetectionParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeAudioInputTurnDetectionParam
+func (r RealtimeAudioInputTurnDetectionSemanticVadParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeAudioInputTurnDetectionSemanticVadParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *RealtimeAudioInputTurnDetectionParam) UnmarshalJSON(data []byte) error {
+func (r *RealtimeAudioInputTurnDetectionSemanticVadParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Used only for `semantic_vad` mode. The eagerness of the model to respond. `low`
-// will wait longer for the user to continue speaking, `high` will respond more
-// quickly. `auto` is the default and is equivalent to `medium`. `low`, `medium`,
-// and `high` have max timeouts of 8s, 4s, and 2s respectively.
-type RealtimeAudioInputTurnDetectionEagerness string
-
-const (
-	RealtimeAudioInputTurnDetectionEagernessLow    RealtimeAudioInputTurnDetectionEagerness = "low"
-	RealtimeAudioInputTurnDetectionEagernessMedium RealtimeAudioInputTurnDetectionEagerness = "medium"
-	RealtimeAudioInputTurnDetectionEagernessHigh   RealtimeAudioInputTurnDetectionEagerness = "high"
-	RealtimeAudioInputTurnDetectionEagernessAuto   RealtimeAudioInputTurnDetectionEagerness = "auto"
-)
-
-// Type of turn detection.
-type RealtimeAudioInputTurnDetectionType string
-
-const (
-	RealtimeAudioInputTurnDetectionTypeServerVad   RealtimeAudioInputTurnDetectionType = "server_vad"
-	RealtimeAudioInputTurnDetectionTypeSemanticVad RealtimeAudioInputTurnDetectionType = "semantic_vad"
-)
+func init() {
+	apijson.RegisterFieldValidator[RealtimeAudioInputTurnDetectionSemanticVadParam](
+		"eagerness", "low", "medium", "high", "auto",
+	)
+}
 
 type RealtimeFunctionTool struct {
 	// The description of the function, including guidance on when and how to call it,
@@ -1264,6 +1386,20 @@ func (r *RealtimeTranscriptionSessionAudioParam) UnmarshalJSON(data []byte) erro
 }
 
 type RealtimeTranscriptionSessionAudioInputParam struct {
+	// Configuration for turn detection, ether Server VAD or Semantic VAD. This can be
+	// set to `null` to turn off, in which case the client must manually trigger model
+	// response.
+	//
+	// Server VAD means that the model will detect the start and end of speech based on
+	// audio volume and respond at the end of user speech.
+	//
+	// Semantic VAD is more advanced and uses a turn detection model (in conjunction
+	// with VAD) to semantically estimate whether the user has finished speaking, then
+	// dynamically sets a timeout based on this probability. For example, if user audio
+	// trails off with "uhhm", the model will score a low probability of turn end and
+	// wait longer for the user to continue speaking. This can be useful for more
+	// natural conversations, but may have a higher latency.
+	TurnDetection RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam `json:"turn_detection,omitzero"`
 	// The PCM audio format. Only a 24kHz sample rate is supported.
 	Format RealtimeAudioFormatsUnionParam `json:"format,omitzero"`
 	// Configuration for input audio noise reduction. This can be set to `null` to turn
@@ -1281,17 +1417,6 @@ type RealtimeTranscriptionSessionAudioInputParam struct {
 	// what the model heard. The client can optionally set the language and prompt for
 	// transcription, these offer additional guidance to the transcription service.
 	Transcription AudioTranscriptionParam `json:"transcription,omitzero"`
-	// Configuration for turn detection, ether Server VAD or Semantic VAD. This can be
-	// set to `null` to turn off, in which case the client must manually trigger model
-	// response. Server VAD means that the model will detect the start and end of
-	// speech based on audio volume and respond at the end of user speech. Semantic VAD
-	// is more advanced and uses a turn detection model (in conjunction with VAD) to
-	// semantically estimate whether the user has finished speaking, then dynamically
-	// sets a timeout based on this probability. For example, if user audio trails off
-	// with "uhhm", the model will score a low probability of turn end and wait longer
-	// for the user to continue speaking. This can be useful for more natural
-	// conversations, but may have a higher latency.
-	TurnDetection RealtimeTranscriptionSessionAudioInputTurnDetectionParam `json:"turn_detection,omitzero"`
 	paramObj
 }
 
@@ -1326,19 +1451,126 @@ func (r *RealtimeTranscriptionSessionAudioInputNoiseReductionParam) UnmarshalJSO
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Configuration for turn detection, ether Server VAD or Semantic VAD. This can be
-// set to `null` to turn off, in which case the client must manually trigger model
-// response. Server VAD means that the model will detect the start and end of
-// speech based on audio volume and respond at the end of user speech. Semantic VAD
-// is more advanced and uses a turn detection model (in conjunction with VAD) to
-// semantically estimate whether the user has finished speaking, then dynamically
-// sets a timeout based on this probability. For example, if user audio trails off
-// with "uhhm", the model will score a low probability of turn end and wait longer
-// for the user to continue speaking. This can be useful for more natural
-// conversations, but may have a higher latency.
-type RealtimeTranscriptionSessionAudioInputTurnDetectionParam struct {
-	// Optional idle timeout after which turn detection will auto-timeout when no
-	// additional audio is received.
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam struct {
+	OfServerVad   *RealtimeTranscriptionSessionAudioInputTurnDetectionServerVadParam   `json:",omitzero,inline"`
+	OfSemanticVad *RealtimeTranscriptionSessionAudioInputTurnDetectionSemanticVadParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfServerVad, u.OfSemanticVad)
+}
+func (u *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfServerVad) {
+		return u.OfServerVad
+	} else if !param.IsOmitted(u.OfSemanticVad) {
+		return u.OfSemanticVad
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) GetIdleTimeoutMs() *int64 {
+	if vt := u.OfServerVad; vt != nil && vt.IdleTimeoutMs.Valid() {
+		return &vt.IdleTimeoutMs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) GetPrefixPaddingMs() *int64 {
+	if vt := u.OfServerVad; vt != nil && vt.PrefixPaddingMs.Valid() {
+		return &vt.PrefixPaddingMs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) GetSilenceDurationMs() *int64 {
+	if vt := u.OfServerVad; vt != nil && vt.SilenceDurationMs.Valid() {
+		return &vt.SilenceDurationMs.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) GetThreshold() *float64 {
+	if vt := u.OfServerVad; vt != nil && vt.Threshold.Valid() {
+		return &vt.Threshold.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) GetEagerness() *string {
+	if vt := u.OfSemanticVad; vt != nil {
+		return &vt.Eagerness
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) GetType() *string {
+	if vt := u.OfServerVad; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfSemanticVad; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) GetCreateResponse() *bool {
+	if vt := u.OfServerVad; vt != nil && vt.CreateResponse.Valid() {
+		return &vt.CreateResponse.Value
+	} else if vt := u.OfSemanticVad; vt != nil && vt.CreateResponse.Valid() {
+		return &vt.CreateResponse.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) GetInterruptResponse() *bool {
+	if vt := u.OfServerVad; vt != nil && vt.InterruptResponse.Valid() {
+		return &vt.InterruptResponse.Value
+	} else if vt := u.OfSemanticVad; vt != nil && vt.InterruptResponse.Valid() {
+		return &vt.InterruptResponse.Value
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam](
+		"type",
+		apijson.Discriminator[RealtimeTranscriptionSessionAudioInputTurnDetectionServerVadParam]("server_vad"),
+		apijson.Discriminator[RealtimeTranscriptionSessionAudioInputTurnDetectionSemanticVadParam]("semantic_vad"),
+	)
+}
+
+// Server-side voice activity detection (VAD) which flips on when user speech is
+// detected and off after a period of silence.
+//
+// The property Type is required.
+type RealtimeTranscriptionSessionAudioInputTurnDetectionServerVadParam struct {
+	// Optional timeout after which a model response will be triggered automatically.
+	// This is useful for situations in which a long pause from the user is unexpected,
+	// such as a phone call. The model will effectively prompt the user to continue the
+	// conversation based on the current context.
+	//
+	// The timeout value will be applied after the last model response's audio has
+	// finished playing, i.e. it's set to the `response.done` time plus audio playback
+	// duration.
+	//
+	// An `input_audio_buffer.timeout_triggered` event (plus events associated with the
+	// Response) will be emitted when the timeout is reached. Idle timeout is currently
+	// only supported for `server_vad` mode.
 	IdleTimeoutMs param.Opt[int64] `json:"idle_timeout_ms,omitzero"`
 	// Whether or not to automatically generate a response when a VAD stop event
 	// occurs.
@@ -1358,46 +1590,60 @@ type RealtimeTranscriptionSessionAudioInputTurnDetectionParam struct {
 	// defaults to 0.5. A higher threshold will require louder audio to activate the
 	// model, and thus might perform better in noisy environments.
 	Threshold param.Opt[float64] `json:"threshold,omitzero"`
-	// Used only for `semantic_vad` mode. The eagerness of the model to respond. `low`
-	// will wait longer for the user to continue speaking, `high` will respond more
-	// quickly. `auto` is the default and is equivalent to `medium`.
+	// Type of turn detection, `server_vad` to turn on simple Server VAD.
 	//
-	// Any of "low", "medium", "high", "auto".
-	Eagerness RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness `json:"eagerness,omitzero"`
-	// Type of turn detection.
-	//
-	// Any of "server_vad", "semantic_vad".
-	Type RealtimeTranscriptionSessionAudioInputTurnDetectionType `json:"type,omitzero"`
+	// This field can be elided, and will marshal its zero value as "server_vad".
+	Type constant.ServerVad `json:"type,required"`
 	paramObj
 }
 
-func (r RealtimeTranscriptionSessionAudioInputTurnDetectionParam) MarshalJSON() (data []byte, err error) {
-	type shadow RealtimeTranscriptionSessionAudioInputTurnDetectionParam
+func (r RealtimeTranscriptionSessionAudioInputTurnDetectionServerVadParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranscriptionSessionAudioInputTurnDetectionServerVadParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *RealtimeTranscriptionSessionAudioInputTurnDetectionParam) UnmarshalJSON(data []byte) error {
+func (r *RealtimeTranscriptionSessionAudioInputTurnDetectionServerVadParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Used only for `semantic_vad` mode. The eagerness of the model to respond. `low`
-// will wait longer for the user to continue speaking, `high` will respond more
-// quickly. `auto` is the default and is equivalent to `medium`.
-type RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness string
+// Server-side semantic turn detection which uses a model to determine when the
+// user has finished speaking.
+//
+// The property Type is required.
+type RealtimeTranscriptionSessionAudioInputTurnDetectionSemanticVadParam struct {
+	// Whether or not to automatically generate a response when a VAD stop event
+	// occurs.
+	CreateResponse param.Opt[bool] `json:"create_response,omitzero"`
+	// Whether or not to automatically interrupt any ongoing response with output to
+	// the default conversation (i.e. `conversation` of `auto`) when a VAD start event
+	// occurs.
+	InterruptResponse param.Opt[bool] `json:"interrupt_response,omitzero"`
+	// Used only for `semantic_vad` mode. The eagerness of the model to respond. `low`
+	// will wait longer for the user to continue speaking, `high` will respond more
+	// quickly. `auto` is the default and is equivalent to `medium`. `low`, `medium`,
+	// and `high` have max timeouts of 8s, 4s, and 2s respectively.
+	//
+	// Any of "low", "medium", "high", "auto".
+	Eagerness string `json:"eagerness,omitzero"`
+	// Type of turn detection, `semantic_vad` to turn on Semantic VAD.
+	//
+	// This field can be elided, and will marshal its zero value as "semantic_vad".
+	Type constant.SemanticVad `json:"type,required"`
+	paramObj
+}
 
-const (
-	RealtimeTranscriptionSessionAudioInputTurnDetectionEagernessLow    RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness = "low"
-	RealtimeTranscriptionSessionAudioInputTurnDetectionEagernessMedium RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness = "medium"
-	RealtimeTranscriptionSessionAudioInputTurnDetectionEagernessHigh   RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness = "high"
-	RealtimeTranscriptionSessionAudioInputTurnDetectionEagernessAuto   RealtimeTranscriptionSessionAudioInputTurnDetectionEagerness = "auto"
-)
+func (r RealtimeTranscriptionSessionAudioInputTurnDetectionSemanticVadParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTranscriptionSessionAudioInputTurnDetectionSemanticVadParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTranscriptionSessionAudioInputTurnDetectionSemanticVadParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
-// Type of turn detection.
-type RealtimeTranscriptionSessionAudioInputTurnDetectionType string
-
-const (
-	RealtimeTranscriptionSessionAudioInputTurnDetectionTypeServerVad   RealtimeTranscriptionSessionAudioInputTurnDetectionType = "server_vad"
-	RealtimeTranscriptionSessionAudioInputTurnDetectionTypeSemanticVad RealtimeTranscriptionSessionAudioInputTurnDetectionType = "semantic_vad"
-)
+func init() {
+	apijson.RegisterFieldValidator[RealtimeTranscriptionSessionAudioInputTurnDetectionSemanticVadParam](
+		"eagerness", "low", "medium", "high", "auto",
+	)
+}
 
 // Realtime transcription session object configuration.
 //
