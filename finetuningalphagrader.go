@@ -182,7 +182,7 @@ type FineTuningAlphaGraderValidateResponseGraderUnion struct {
 	// This field is from variant [ScoreModelGrader].
 	Range []float64 `json:"range"`
 	// This field is from variant [ScoreModelGrader].
-	SamplingParams any `json:"sampling_params"`
+	SamplingParams ScoreModelGraderSamplingParams `json:"sampling_params"`
 	// This field is from variant [MultiGrader].
 	CalculateOutput string `json:"calculate_output"`
 	// This field is from variant [MultiGrader].
@@ -375,7 +375,7 @@ func (u FineTuningAlphaGraderRunParamsGraderUnion) GetRange() []float64 {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u FineTuningAlphaGraderRunParamsGraderUnion) GetSamplingParams() *any {
+func (u FineTuningAlphaGraderRunParamsGraderUnion) GetSamplingParams() *ScoreModelGraderSamplingParamsParam {
 	if vt := u.OfScoreModel; vt != nil {
 		return &vt.SamplingParams
 	}
@@ -579,7 +579,7 @@ func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetRange() []float64 {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetSamplingParams() *any {
+func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetSamplingParams() *ScoreModelGraderSamplingParamsParam {
 	if vt := u.OfScoreModelGrader; vt != nil {
 		return &vt.SamplingParams
 	}

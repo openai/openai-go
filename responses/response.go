@@ -5149,6 +5149,8 @@ func (r *ResponseInputFile) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (ResponseInputFile) ImplMessageContentUnion() {}
+
 // ToParam converts this ResponseInputFile to a ResponseInputFileParam.
 //
 // Warning: the fields of the param type will not be present. ToParam should only
@@ -5216,6 +5218,8 @@ func (r ResponseInputImage) RawJSON() string { return r.JSON.raw }
 func (r *ResponseInputImage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (ResponseInputImage) ImplMessageContentUnion() {}
 
 // ToParam converts this ResponseInputImage to a ResponseInputImageParam.
 //
@@ -7548,6 +7552,8 @@ func (r *ResponseInputText) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (ResponseInputText) ImplMessageContentUnion() {}
+
 // ToParam converts this ResponseInputText to a ResponseInputTextParam.
 //
 // Warning: the fields of the param type will not be present. ToParam should only
@@ -9308,6 +9314,8 @@ func (r *ResponseOutputRefusal) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func (ResponseOutputRefusal) ImplMessageContentUnion() {}
+
 // ToParam converts this ResponseOutputRefusal to a ResponseOutputRefusalParam.
 //
 // Warning: the fields of the param type will not be present. ToParam should only
@@ -9363,6 +9371,8 @@ func (r ResponseOutputText) RawJSON() string { return r.JSON.raw }
 func (r *ResponseOutputText) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (ResponseOutputText) ImplMessageContentUnion() {}
 
 // ToParam converts this ResponseOutputText to a ResponseOutputTextParam.
 //
