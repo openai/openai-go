@@ -835,21 +835,11 @@ Methods:
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#ComputerScreenshotContent">ComputerScreenshotContent</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#ContainerFileCitationBody">ContainerFileCitationBody</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#Conversation">Conversation</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#ConversationDeletedResource">ConversationDeletedResource</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#FileCitationBody">FileCitationBody</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#InputFileContent">InputFileContent</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#InputImageContent">InputImageContent</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#InputTextContent">InputTextContent</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#LobProb">LobProb</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#Message">Message</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#OutputTextContent">OutputTextContent</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#RefusalContent">RefusalContent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#SummaryTextContent">SummaryTextContent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#TextContent">TextContent</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#TopLogProb">TopLogProb</a>
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations">conversations</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v2/conversations#URLCitationBody">URLCitationBody</a>
 
 Methods:
 

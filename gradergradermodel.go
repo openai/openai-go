@@ -10,6 +10,7 @@ import (
 	"github.com/openai/openai-go/v2/packages/param"
 	"github.com/openai/openai-go/v2/packages/respjson"
 	"github.com/openai/openai-go/v2/responses"
+	"github.com/openai/openai-go/v2/shared"
 	"github.com/openai/openai-go/v2/shared/constant"
 )
 
@@ -490,7 +491,7 @@ type MultiGraderGradersUnion struct {
 	// This field is from variant [ScoreModelGrader].
 	Range []float64 `json:"range"`
 	// This field is from variant [ScoreModelGrader].
-	SamplingParams any `json:"sampling_params"`
+	SamplingParams ScoreModelGraderSamplingParams `json:"sampling_params"`
 	// This field is from variant [LabelModelGrader].
 	Labels []string `json:"labels"`
 	// This field is from variant [LabelModelGrader].
@@ -682,7 +683,7 @@ func (u MultiGraderGradersUnionParam) GetRange() []float64 {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u MultiGraderGradersUnionParam) GetSamplingParams() *any {
+func (u MultiGraderGradersUnionParam) GetSamplingParams() *ScoreModelGraderSamplingParamsParam {
 	if vt := u.OfScoreModelGrader; vt != nil {
 		return &vt.SamplingParams
 	}
@@ -862,7 +863,7 @@ type ScoreModelGrader struct {
 	// The range of the score. Defaults to `[0, 1]`.
 	Range []float64 `json:"range"`
 	// The sampling parameters for the model.
-	SamplingParams any `json:"sampling_params"`
+	SamplingParams ScoreModelGraderSamplingParams `json:"sampling_params"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Input          respjson.Field
@@ -1042,6 +1043,42 @@ func (r *ScoreModelGraderInputContentInputImage) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The sampling parameters for the model.
+type ScoreModelGraderSamplingParams struct {
+	// The maximum number of tokens the grader model may generate in its response.
+	MaxCompletionsTokens int64 `json:"max_completions_tokens,nullable"`
+	// Constrains effort on reasoning for
+	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
+	//
+	// Any of "minimal", "low", "medium", "high".
+	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,nullable"`
+	// A seed value to initialize the randomness, during sampling.
+	Seed int64 `json:"seed,nullable"`
+	// A higher temperature increases randomness in the outputs.
+	Temperature float64 `json:"temperature,nullable"`
+	// An alternative to temperature for nucleus sampling; 1.0 includes all tokens.
+	TopP float64 `json:"top_p,nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		MaxCompletionsTokens respjson.Field
+		ReasoningEffort      respjson.Field
+		Seed                 respjson.Field
+		Temperature          respjson.Field
+		TopP                 respjson.Field
+		ExtraFields          map[string]respjson.Field
+		raw                  string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ScoreModelGraderSamplingParams) RawJSON() string { return r.JSON.raw }
+func (r *ScoreModelGraderSamplingParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // A ScoreModelGrader object that uses a model to assign a score to the input.
 //
 // The properties Input, Model, Name, Type are required.
@@ -1055,7 +1092,7 @@ type ScoreModelGraderParam struct {
 	// The range of the score. Defaults to `[0, 1]`.
 	Range []float64 `json:"range,omitzero"`
 	// The sampling parameters for the model.
-	SamplingParams any `json:"sampling_params,omitzero"`
+	SamplingParams ScoreModelGraderSamplingParamsParam `json:"sampling_params,omitzero"`
 	// The object type, which is always `score_model`.
 	//
 	// This field can be elided, and will marshal its zero value as "score_model".
@@ -1242,6 +1279,35 @@ func (r ScoreModelGraderInputContentInputImageParam) MarshalJSON() (data []byte,
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ScoreModelGraderInputContentInputImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The sampling parameters for the model.
+type ScoreModelGraderSamplingParamsParam struct {
+	// The maximum number of tokens the grader model may generate in its response.
+	MaxCompletionsTokens param.Opt[int64] `json:"max_completions_tokens,omitzero"`
+	// A seed value to initialize the randomness, during sampling.
+	Seed param.Opt[int64] `json:"seed,omitzero"`
+	// A higher temperature increases randomness in the outputs.
+	Temperature param.Opt[float64] `json:"temperature,omitzero"`
+	// An alternative to temperature for nucleus sampling; 1.0 includes all tokens.
+	TopP param.Opt[float64] `json:"top_p,omitzero"`
+	// Constrains effort on reasoning for
+	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
+	//
+	// Any of "minimal", "low", "medium", "high".
+	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
+	paramObj
+}
+
+func (r ScoreModelGraderSamplingParamsParam) MarshalJSON() (data []byte, err error) {
+	type shadow ScoreModelGraderSamplingParamsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ScoreModelGraderSamplingParamsParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
