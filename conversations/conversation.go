@@ -84,6 +84,7 @@ func (r *ConversationService) Delete(ctx context.Context, conversationID string,
 	return
 }
 
+// A screenshot of a computer.
 type ComputerScreenshotContent struct {
 	// The identifier of an uploaded file that contains the screenshot.
 	FileID string `json:"file_id,required"`
@@ -105,38 +106,6 @@ type ComputerScreenshotContent struct {
 // Returns the unmodified JSON received from the API
 func (r ComputerScreenshotContent) RawJSON() string { return r.JSON.raw }
 func (r *ComputerScreenshotContent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ContainerFileCitationBody struct {
-	// The ID of the container file.
-	ContainerID string `json:"container_id,required"`
-	// The index of the last character of the container file citation in the message.
-	EndIndex int64 `json:"end_index,required"`
-	// The ID of the file.
-	FileID string `json:"file_id,required"`
-	// The filename of the container file cited.
-	Filename string `json:"filename,required"`
-	// The index of the first character of the container file citation in the message.
-	StartIndex int64 `json:"start_index,required"`
-	// The type of the container file citation. Always `container_file_citation`.
-	Type constant.ContainerFileCitation `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ContainerID respjson.Field
-		EndIndex    respjson.Field
-		FileID      respjson.Field
-		Filename    respjson.Field
-		StartIndex  respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ContainerFileCitationBody) RawJSON() string { return r.JSON.raw }
-func (r *ContainerFileCitationBody) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -191,140 +160,7 @@ func (r *ConversationDeletedResource) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type FileCitationBody struct {
-	// The ID of the file.
-	FileID string `json:"file_id,required"`
-	// The filename of the file cited.
-	Filename string `json:"filename,required"`
-	// The index of the file in the list of files.
-	Index int64 `json:"index,required"`
-	// The type of the file citation. Always `file_citation`.
-	Type constant.FileCitation `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		FileID      respjson.Field
-		Filename    respjson.Field
-		Index       respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r FileCitationBody) RawJSON() string { return r.JSON.raw }
-func (r *FileCitationBody) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type InputFileContent struct {
-	// The ID of the file to be sent to the model.
-	FileID string `json:"file_id,required"`
-	// The type of the input item. Always `input_file`.
-	Type constant.InputFile `json:"type,required"`
-	// The URL of the file to be sent to the model.
-	FileURL string `json:"file_url"`
-	// The name of the file to be sent to the model.
-	Filename string `json:"filename"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		FileID      respjson.Field
-		Type        respjson.Field
-		FileURL     respjson.Field
-		Filename    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r InputFileContent) RawJSON() string { return r.JSON.raw }
-func (r *InputFileContent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type InputImageContent struct {
-	// The detail level of the image to be sent to the model. One of `high`, `low`, or
-	// `auto`. Defaults to `auto`.
-	//
-	// Any of "low", "high", "auto".
-	Detail InputImageContentDetail `json:"detail,required"`
-	// The ID of the file to be sent to the model.
-	FileID string `json:"file_id,required"`
-	// The URL of the image to be sent to the model. A fully qualified URL or base64
-	// encoded image in a data URL.
-	ImageURL string `json:"image_url,required"`
-	// The type of the input item. Always `input_image`.
-	Type constant.InputImage `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Detail      respjson.Field
-		FileID      respjson.Field
-		ImageURL    respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r InputImageContent) RawJSON() string { return r.JSON.raw }
-func (r *InputImageContent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// The detail level of the image to be sent to the model. One of `high`, `low`, or
-// `auto`. Defaults to `auto`.
-type InputImageContentDetail string
-
-const (
-	InputImageContentDetailLow  InputImageContentDetail = "low"
-	InputImageContentDetailHigh InputImageContentDetail = "high"
-	InputImageContentDetailAuto InputImageContentDetail = "auto"
-)
-
-type InputTextContent struct {
-	// The text input to the model.
-	Text string `json:"text,required"`
-	// The type of the input item. Always `input_text`.
-	Type constant.InputText `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Text        respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r InputTextContent) RawJSON() string { return r.JSON.raw }
-func (r *InputTextContent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type LobProb struct {
-	Token       string       `json:"token,required"`
-	Bytes       []int64      `json:"bytes,required"`
-	Logprob     float64      `json:"logprob,required"`
-	TopLogprobs []TopLogProb `json:"top_logprobs,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Token       respjson.Field
-		Bytes       respjson.Field
-		Logprob     respjson.Field
-		TopLogprobs respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r LobProb) RawJSON() string { return r.JSON.raw }
-func (r *LobProb) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
+// A message to or from the model.
 type Message struct {
 	// The unique ID of the message.
 	ID string `json:"id,required"`
@@ -362,9 +198,10 @@ func (r *Message) UnmarshalJSON(data []byte) error {
 }
 
 // MessageContentUnion contains all possible properties and values from
-// [InputTextContent], [OutputTextContent], [TextContent], [SummaryTextContent],
-// [RefusalContent], [InputImageContent], [ComputerScreenshotContent],
-// [InputFileContent].
+// [responses.ResponseInputText], [responses.ResponseOutputText], [TextContent],
+// [SummaryTextContent], [responses.ResponseOutputRefusal],
+// [responses.ResponseInputImage], [ComputerScreenshotContent],
+// [responses.ResponseInputFile].
 //
 // Use the [MessageContentUnion.AsAny] method to switch on the variant.
 //
@@ -374,19 +211,21 @@ type MessageContentUnion struct {
 	// Any of "input_text", "output_text", "text", "summary_text", "refusal",
 	// "input_image", "computer_screenshot", "input_file".
 	Type string `json:"type"`
-	// This field is from variant [OutputTextContent].
-	Annotations []OutputTextContentAnnotationUnion `json:"annotations"`
-	// This field is from variant [OutputTextContent].
-	Logprobs []LobProb `json:"logprobs"`
-	// This field is from variant [RefusalContent].
+	// This field is from variant [responses.ResponseOutputText].
+	Annotations []responses.ResponseOutputTextAnnotationUnion `json:"annotations"`
+	// This field is from variant [responses.ResponseOutputText].
+	Logprobs []responses.ResponseOutputTextLogprob `json:"logprobs"`
+	// This field is from variant [responses.ResponseOutputRefusal].
 	Refusal string `json:"refusal"`
-	// This field is from variant [InputImageContent].
-	Detail   InputImageContentDetail `json:"detail"`
-	FileID   string                  `json:"file_id"`
-	ImageURL string                  `json:"image_url"`
-	// This field is from variant [InputFileContent].
+	// This field is from variant [responses.ResponseInputImage].
+	Detail   responses.ResponseInputImageDetail `json:"detail"`
+	FileID   string                             `json:"file_id"`
+	ImageURL string                             `json:"image_url"`
+	// This field is from variant [responses.ResponseInputFile].
+	FileData string `json:"file_data"`
+	// This field is from variant [responses.ResponseInputFile].
 	FileURL string `json:"file_url"`
-	// This field is from variant [InputFileContent].
+	// This field is from variant [responses.ResponseInputFile].
 	Filename string `json:"filename"`
 	JSON     struct {
 		Text        respjson.Field
@@ -397,6 +236,7 @@ type MessageContentUnion struct {
 		Detail      respjson.Field
 		FileID      respjson.Field
 		ImageURL    respjson.Field
+		FileData    respjson.Field
 		FileURL     respjson.Field
 		Filename    respjson.Field
 		raw         string
@@ -406,29 +246,24 @@ type MessageContentUnion struct {
 // anyMessageContent is implemented by each variant of [MessageContentUnion] to add
 // type safety for the return type of [MessageContentUnion.AsAny]
 type anyMessageContent interface {
-	implMessageContentUnion()
+	ImplMessageContentUnion()
 }
 
-func (InputTextContent) implMessageContentUnion()          {}
-func (OutputTextContent) implMessageContentUnion()         {}
-func (TextContent) implMessageContentUnion()               {}
-func (SummaryTextContent) implMessageContentUnion()        {}
-func (RefusalContent) implMessageContentUnion()            {}
-func (InputImageContent) implMessageContentUnion()         {}
-func (ComputerScreenshotContent) implMessageContentUnion() {}
-func (InputFileContent) implMessageContentUnion()          {}
+func (TextContent) ImplMessageContentUnion()               {}
+func (SummaryTextContent) ImplMessageContentUnion()        {}
+func (ComputerScreenshotContent) ImplMessageContentUnion() {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := MessageContentUnion.AsAny().(type) {
-//	case conversations.InputTextContent:
-//	case conversations.OutputTextContent:
+//	case responses.ResponseInputText:
+//	case responses.ResponseOutputText:
 //	case conversations.TextContent:
 //	case conversations.SummaryTextContent:
-//	case conversations.RefusalContent:
-//	case conversations.InputImageContent:
+//	case responses.ResponseOutputRefusal:
+//	case responses.ResponseInputImage:
 //	case conversations.ComputerScreenshotContent:
-//	case conversations.InputFileContent:
+//	case responses.ResponseInputFile:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -454,12 +289,12 @@ func (u MessageContentUnion) AsAny() anyMessageContent {
 	return nil
 }
 
-func (u MessageContentUnion) AsInputText() (v InputTextContent) {
+func (u MessageContentUnion) AsInputText() (v responses.ResponseInputText) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u MessageContentUnion) AsOutputText() (v OutputTextContent) {
+func (u MessageContentUnion) AsOutputText() (v responses.ResponseOutputText) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -474,12 +309,12 @@ func (u MessageContentUnion) AsSummaryText() (v SummaryTextContent) {
 	return
 }
 
-func (u MessageContentUnion) AsRefusal() (v RefusalContent) {
+func (u MessageContentUnion) AsRefusal() (v responses.ResponseOutputRefusal) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u MessageContentUnion) AsInputImage() (v InputImageContent) {
+func (u MessageContentUnion) AsInputImage() (v responses.ResponseInputImage) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -489,7 +324,7 @@ func (u MessageContentUnion) AsComputerScreenshot() (v ComputerScreenshotContent
 	return
 }
 
-func (u MessageContentUnion) AsInputFile() (v InputFileContent) {
+func (u MessageContentUnion) AsInputFile() (v responses.ResponseInputFile) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -526,141 +361,7 @@ const (
 	MessageStatusIncomplete MessageStatus = "incomplete"
 )
 
-type OutputTextContent struct {
-	// The annotations of the text output.
-	Annotations []OutputTextContentAnnotationUnion `json:"annotations,required"`
-	// The text output from the model.
-	Text string `json:"text,required"`
-	// The type of the output text. Always `output_text`.
-	Type     constant.OutputText `json:"type,required"`
-	Logprobs []LobProb           `json:"logprobs"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Annotations respjson.Field
-		Text        respjson.Field
-		Type        respjson.Field
-		Logprobs    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r OutputTextContent) RawJSON() string { return r.JSON.raw }
-func (r *OutputTextContent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// OutputTextContentAnnotationUnion contains all possible properties and values
-// from [FileCitationBody], [URLCitationBody], [ContainerFileCitationBody].
-//
-// Use the [OutputTextContentAnnotationUnion.AsAny] method to switch on the
-// variant.
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-type OutputTextContentAnnotationUnion struct {
-	FileID   string `json:"file_id"`
-	Filename string `json:"filename"`
-	// This field is from variant [FileCitationBody].
-	Index int64 `json:"index"`
-	// Any of "file_citation", "url_citation", "container_file_citation".
-	Type       string `json:"type"`
-	EndIndex   int64  `json:"end_index"`
-	StartIndex int64  `json:"start_index"`
-	// This field is from variant [URLCitationBody].
-	Title string `json:"title"`
-	// This field is from variant [URLCitationBody].
-	URL string `json:"url"`
-	// This field is from variant [ContainerFileCitationBody].
-	ContainerID string `json:"container_id"`
-	JSON        struct {
-		FileID      respjson.Field
-		Filename    respjson.Field
-		Index       respjson.Field
-		Type        respjson.Field
-		EndIndex    respjson.Field
-		StartIndex  respjson.Field
-		Title       respjson.Field
-		URL         respjson.Field
-		ContainerID respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// anyOutputTextContentAnnotation is implemented by each variant of
-// [OutputTextContentAnnotationUnion] to add type safety for the return type of
-// [OutputTextContentAnnotationUnion.AsAny]
-type anyOutputTextContentAnnotation interface {
-	implOutputTextContentAnnotationUnion()
-}
-
-func (FileCitationBody) implOutputTextContentAnnotationUnion()          {}
-func (URLCitationBody) implOutputTextContentAnnotationUnion()           {}
-func (ContainerFileCitationBody) implOutputTextContentAnnotationUnion() {}
-
-// Use the following switch statement to find the correct variant
-//
-//	switch variant := OutputTextContentAnnotationUnion.AsAny().(type) {
-//	case conversations.FileCitationBody:
-//	case conversations.URLCitationBody:
-//	case conversations.ContainerFileCitationBody:
-//	default:
-//	  fmt.Errorf("no variant present")
-//	}
-func (u OutputTextContentAnnotationUnion) AsAny() anyOutputTextContentAnnotation {
-	switch u.Type {
-	case "file_citation":
-		return u.AsFileCitation()
-	case "url_citation":
-		return u.AsURLCitation()
-	case "container_file_citation":
-		return u.AsContainerFileCitation()
-	}
-	return nil
-}
-
-func (u OutputTextContentAnnotationUnion) AsFileCitation() (v FileCitationBody) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u OutputTextContentAnnotationUnion) AsURLCitation() (v URLCitationBody) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u OutputTextContentAnnotationUnion) AsContainerFileCitation() (v ContainerFileCitationBody) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u OutputTextContentAnnotationUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *OutputTextContentAnnotationUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type RefusalContent struct {
-	// The refusal explanation from the model.
-	Refusal string `json:"refusal,required"`
-	// The type of the refusal. Always `refusal`.
-	Type constant.Refusal `json:"type,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Refusal     respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r RefusalContent) RawJSON() string { return r.JSON.raw }
-func (r *RefusalContent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
+// A summary text from the model.
 type SummaryTextContent struct {
 	Text string               `json:"text,required"`
 	Type constant.SummaryText `json:"type,required"`
@@ -679,6 +380,7 @@ func (r *SummaryTextContent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// A text content.
 type TextContent struct {
 	Text string        `json:"text,required"`
 	Type constant.Text `json:"type,required"`
@@ -694,55 +396,6 @@ type TextContent struct {
 // Returns the unmodified JSON received from the API
 func (r TextContent) RawJSON() string { return r.JSON.raw }
 func (r *TextContent) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type TopLogProb struct {
-	Token   string  `json:"token,required"`
-	Bytes   []int64 `json:"bytes,required"`
-	Logprob float64 `json:"logprob,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Token       respjson.Field
-		Bytes       respjson.Field
-		Logprob     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r TopLogProb) RawJSON() string { return r.JSON.raw }
-func (r *TopLogProb) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type URLCitationBody struct {
-	// The index of the last character of the URL citation in the message.
-	EndIndex int64 `json:"end_index,required"`
-	// The index of the first character of the URL citation in the message.
-	StartIndex int64 `json:"start_index,required"`
-	// The title of the web resource.
-	Title string `json:"title,required"`
-	// The type of the URL citation. Always `url_citation`.
-	Type constant.URLCitation `json:"type,required"`
-	// The URL of the web resource.
-	URL string `json:"url,required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		EndIndex    respjson.Field
-		StartIndex  respjson.Field
-		Title       respjson.Field
-		Type        respjson.Field
-		URL         respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r URLCitationBody) RawJSON() string { return r.JSON.raw }
-func (r *URLCitationBody) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
