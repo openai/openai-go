@@ -10,6 +10,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"slices"
 
 	"github.com/openai/openai-go/v2/internal/apiform"
 	"github.com/openai/openai-go/v2/internal/apijson"
@@ -50,7 +51,7 @@ func NewUploadPartService(opts ...option.RequestOption) (r UploadPartService) {
 // order of the Parts when you
 // [complete the Upload](https://platform.openai.com/docs/api-reference/uploads/complete).
 func (r *UploadPartService) New(ctx context.Context, uploadID string, body UploadPartNewParams, opts ...option.RequestOption) (res *UploadPart, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if uploadID == "" {
 		err = errors.New("missing required upload_id parameter")
 		return

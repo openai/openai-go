@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
 	"github.com/openai/openai-go/v2/internal/apiquery"
 	"github.com/openai/openai-go/v2/internal/requestconfig"
@@ -39,7 +40,7 @@ func NewChatCompletionMessageService(opts ...option.RequestOption) (r ChatComple
 // been created with the `store` parameter set to `true` will be returned.
 func (r *ChatCompletionMessageService) List(ctx context.Context, completionID string, query ChatCompletionMessageListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ChatCompletionStoreMessage], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if completionID == "" {
 		err = errors.New("missing required completion_id parameter")

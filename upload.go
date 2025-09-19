@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/openai/openai-go/v2/internal/apijson"
 	"github.com/openai/openai-go/v2/internal/requestconfig"
@@ -57,7 +58,7 @@ func NewUploadService(opts ...option.RequestOption) (r UploadService) {
 // the documentation on
 // [creating a File](https://platform.openai.com/docs/api-reference/files/create).
 func (r *UploadService) New(ctx context.Context, body UploadNewParams, opts ...option.RequestOption) (res *Upload, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "uploads"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -65,7 +66,7 @@ func (r *UploadService) New(ctx context.Context, body UploadNewParams, opts ...o
 
 // Cancels the Upload. No Parts may be added after an Upload is cancelled.
 func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...option.RequestOption) (res *Upload, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if uploadID == "" {
 		err = errors.New("missing required upload_id parameter")
 		return
@@ -89,7 +90,7 @@ func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...opt
 // initially specified when creating the Upload object. No Parts may be added after
 // an Upload is completed.
 func (r *UploadService) Complete(ctx context.Context, uploadID string, body UploadCompleteParams, opts ...option.RequestOption) (res *Upload, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if uploadID == "" {
 		err = errors.New("missing required upload_id parameter")
 		return
