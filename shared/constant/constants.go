@@ -98,6 +98,7 @@ type ImageGenerationCall string                              // Always "image_ge
 type ImageGenerationCompleted string                         // Always "image_generation.completed"
 type ImageGenerationPartialImage string                      // Always "image_generation.partial_image"
 type ImageURL string                                         // Always "image_url"
+type VideoURL string                                         // Always "video_url"
 type Inf string                                              // Always "inf"
 type InputAudio string                                       // Always "input_audio"
 type InputAudioBufferAppend string                           // Always "input_audio_buffer.append"
