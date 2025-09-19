@@ -199,17 +199,17 @@ func (r *Message) UnmarshalJSON(data []byte) error {
 
 // MessageContentUnion contains all possible properties and values from
 // [responses.ResponseInputText], [responses.ResponseOutputText], [TextContent],
-// [SummaryTextContent], [responses.ResponseOutputRefusal],
-// [responses.ResponseInputImage], [ComputerScreenshotContent],
-// [responses.ResponseInputFile].
+// [SummaryTextContent], [MessageContentReasoningText],
+// [responses.ResponseOutputRefusal], [responses.ResponseInputImage],
+// [ComputerScreenshotContent], [responses.ResponseInputFile].
 //
 // Use the [MessageContentUnion.AsAny] method to switch on the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type MessageContentUnion struct {
 	Text string `json:"text"`
-	// Any of "input_text", "output_text", "text", "summary_text", "refusal",
-	// "input_image", "computer_screenshot", "input_file".
+	// Any of "input_text", "output_text", "text", "summary_text", "reasoning_text",
+	// "refusal", "input_image", "computer_screenshot", "input_file".
 	Type string `json:"type"`
 	// This field is from variant [responses.ResponseOutputText].
 	Annotations []responses.ResponseOutputTextAnnotationUnion `json:"annotations"`
@@ -249,9 +249,10 @@ type anyMessageContent interface {
 	ImplMessageContentUnion()
 }
 
-func (TextContent) ImplMessageContentUnion()               {}
-func (SummaryTextContent) ImplMessageContentUnion()        {}
-func (ComputerScreenshotContent) ImplMessageContentUnion() {}
+func (TextContent) ImplMessageContentUnion()                 {}
+func (SummaryTextContent) ImplMessageContentUnion()          {}
+func (MessageContentReasoningText) ImplMessageContentUnion() {}
+func (ComputerScreenshotContent) ImplMessageContentUnion()   {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -260,6 +261,7 @@ func (ComputerScreenshotContent) ImplMessageContentUnion() {}
 //	case responses.ResponseOutputText:
 //	case conversations.TextContent:
 //	case conversations.SummaryTextContent:
+//	case conversations.MessageContentReasoningText:
 //	case responses.ResponseOutputRefusal:
 //	case responses.ResponseInputImage:
 //	case conversations.ComputerScreenshotContent:
@@ -277,6 +279,8 @@ func (u MessageContentUnion) AsAny() anyMessageContent {
 		return u.AsText()
 	case "summary_text":
 		return u.AsSummaryText()
+	case "reasoning_text":
+		return u.AsReasoningText()
 	case "refusal":
 		return u.AsRefusal()
 	case "input_image":
@@ -309,6 +313,11 @@ func (u MessageContentUnion) AsSummaryText() (v SummaryTextContent) {
 	return
 }
 
+func (u MessageContentUnion) AsReasoningText() (v MessageContentReasoningText) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 func (u MessageContentUnion) AsRefusal() (v responses.ResponseOutputRefusal) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
@@ -333,6 +342,27 @@ func (u MessageContentUnion) AsInputFile() (v responses.ResponseInputFile) {
 func (u MessageContentUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *MessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning text from the model.
+type MessageContentReasoningText struct {
+	// The reasoning text from the model.
+	Text string `json:"text,required"`
+	// The type of the reasoning text. Always `reasoning_text`.
+	Type constant.ReasoningText `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r MessageContentReasoningText) RawJSON() string { return r.JSON.raw }
+func (r *MessageContentReasoningText) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -363,7 +393,9 @@ const (
 
 // A summary text from the model.
 type SummaryTextContent struct {
-	Text string               `json:"text,required"`
+	// A summary of the reasoning output from the model so far.
+	Text string `json:"text,required"`
+	// The type of the object. Always `summary_text`.
 	Type constant.SummaryText `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
