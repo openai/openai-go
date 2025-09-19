@@ -3197,6 +3197,15 @@ type ChatCompletionNewParamsResponseFormatUnion struct {
 	paramUnion
 }
 
+func init() {
+	apijson.RegisterUnion[ChatCompletionNewParamsResponseFormatUnion](
+		"type",
+		apijson.Discriminator[shared.ResponseFormatTextParam]("text"),
+		apijson.Discriminator[shared.ResponseFormatJSONSchemaParam]("json_schema"),
+		apijson.Discriminator[shared.ResponseFormatJSONObjectParam]("json_object"),
+	)
+}
+
 func (u ChatCompletionNewParamsResponseFormatUnion) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion(u, u.OfText, u.OfJSONSchema, u.OfJSONObject)
 }
