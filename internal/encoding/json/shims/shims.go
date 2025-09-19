@@ -1,5 +1,5 @@
 // This package provides shims over Go 1.2{2,3} APIs
-// which are missing from Go 1.21, and used by the Go 1.24 encoding/json package.
+// which are missing from Go 1.22, and used by the Go 1.24 encoding/json package.
 //
 // Inside the vendored package, all shim code has comments that begin look like
 // // SHIM(...): ...
