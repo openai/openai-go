@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"slices"
 
 	"github.com/openai/openai-go/v2/internal/apijson"
 	"github.com/openai/openai-go/v2/internal/apiquery"
@@ -56,7 +57,7 @@ func NewResponseService(opts ...option.RequestOption) (r ResponseService) {
 // [file search](https://platform.openai.com/docs/guides/tools-file-search) to use
 // your own data as input for the model's response.
 func (r *ResponseService) New(ctx context.Context, body ResponseNewParams, opts ...option.RequestOption) (res *Response, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "responses"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -78,7 +79,7 @@ func (r *ResponseService) NewStreaming(ctx context.Context, body ResponseNewPara
 		raw *http.Response
 		err error
 	)
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithJSONSet("stream", true)}, opts...)
 	path := "responses"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
@@ -87,7 +88,7 @@ func (r *ResponseService) NewStreaming(ctx context.Context, body ResponseNewPara
 
 // Retrieves a model response with the given ID.
 func (r *ResponseService) Get(ctx context.Context, responseID string, query ResponseGetParams, opts ...option.RequestOption) (res *Response, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
 		return
@@ -103,7 +104,7 @@ func (r *ResponseService) GetStreaming(ctx context.Context, responseID string, q
 		raw *http.Response
 		err error
 	)
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithJSONSet("stream", true)}, opts...)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
@@ -116,7 +117,7 @@ func (r *ResponseService) GetStreaming(ctx context.Context, responseID string, q
 
 // Deletes a model response with the given ID.
 func (r *ResponseService) Delete(ctx context.Context, responseID string, opts ...option.RequestOption) (err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
@@ -131,7 +132,7 @@ func (r *ResponseService) Delete(ctx context.Context, responseID string, opts ..
 // `background` parameter set to `true` can be cancelled.
 // [Learn more](https://platform.openai.com/docs/guides/background).
 func (r *ResponseService) Cancel(ctx context.Context, responseID string, opts ...option.RequestOption) (res *Response, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
 		return
@@ -655,6 +656,216 @@ func (r *FileSearchToolRankingOptionsParam) UnmarshalJSON(data []byte) error {
 func init() {
 	apijson.RegisterFieldValidator[FileSearchToolRankingOptionsParam](
 		"ranker", "auto", "default-2024-11-15",
+	)
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseCodeInterpreterToolCallOutputUnionParam](
+		"type",
+		apijson.Discriminator[ResponseCodeInterpreterToolCallOutputLogsParam]("logs"),
+		apijson.Discriminator[ResponseCodeInterpreterToolCallOutputImageParam]("image"),
+	)
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseComputerToolCallActionUnionParam](
+		"type",
+		apijson.Discriminator[ResponseComputerToolCallActionClickParam]("click"),
+		apijson.Discriminator[ResponseComputerToolCallActionDoubleClickParam]("double_click"),
+		apijson.Discriminator[ResponseComputerToolCallActionDragParam]("drag"),
+		apijson.Discriminator[ResponseComputerToolCallActionKeypressParam]("keypress"),
+		apijson.Discriminator[ResponseComputerToolCallActionMoveParam]("move"),
+		apijson.Discriminator[ResponseComputerToolCallActionScreenshotParam]("screenshot"),
+		apijson.Discriminator[ResponseComputerToolCallActionScrollParam]("scroll"),
+		apijson.Discriminator[ResponseComputerToolCallActionTypeParam]("type"),
+		apijson.Discriminator[ResponseComputerToolCallActionWaitParam]("wait"),
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseComputerToolCallActionClickParam](
+		"button", "left", "right", "wheel", "back", "forward",
+	)
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseFormatTextConfigUnionParam](
+		"type",
+		apijson.Discriminator[shared.ResponseFormatTextParam]("text"),
+		apijson.Discriminator[ResponseFormatTextJSONSchemaConfigParam]("json_schema"),
+		apijson.Discriminator[shared.ResponseFormatJSONObjectParam]("json_object"),
+	)
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseFunctionWebSearchActionUnionParam](
+		"type",
+		apijson.Discriminator[ResponseFunctionWebSearchActionSearchParam]("search"),
+		apijson.Discriminator[ResponseFunctionWebSearchActionOpenPageParam]("open_page"),
+		apijson.Discriminator[ResponseFunctionWebSearchActionFindParam]("find"),
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputAudioInputAudioParam](
+		"format", "mp3", "wav",
+	)
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseInputContentUnionParam](
+		"type",
+		apijson.Discriminator[ResponseInputTextParam]("input_text"),
+		apijson.Discriminator[ResponseInputImageParam]("input_image"),
+		apijson.Discriminator[ResponseInputFileParam]("input_file"),
+		apijson.Discriminator[ResponseInputAudioParam]("input_audio"),
+	)
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseInputItemUnionParam](
+		"type",
+		apijson.Discriminator[EasyInputMessageParam]("message"),
+		apijson.Discriminator[ResponseInputItemMessageParam]("message"),
+		apijson.Discriminator[ResponseOutputMessageParam]("message"),
+		apijson.Discriminator[ResponseFileSearchToolCallParam]("file_search_call"),
+		apijson.Discriminator[ResponseComputerToolCallParam]("computer_call"),
+		apijson.Discriminator[ResponseInputItemComputerCallOutputParam]("computer_call_output"),
+		apijson.Discriminator[ResponseFunctionWebSearchParam]("web_search_call"),
+		apijson.Discriminator[ResponseFunctionToolCallParam]("function_call"),
+		apijson.Discriminator[ResponseInputItemFunctionCallOutputParam]("function_call_output"),
+		apijson.Discriminator[ResponseReasoningItemParam]("reasoning"),
+		apijson.Discriminator[ResponseInputItemImageGenerationCallParam]("image_generation_call"),
+		apijson.Discriminator[ResponseCodeInterpreterToolCallParam]("code_interpreter_call"),
+		apijson.Discriminator[ResponseInputItemLocalShellCallParam]("local_shell_call"),
+		apijson.Discriminator[ResponseInputItemLocalShellCallOutputParam]("local_shell_call_output"),
+		apijson.Discriminator[ResponseInputItemMcpListToolsParam]("mcp_list_tools"),
+		apijson.Discriminator[ResponseInputItemMcpApprovalRequestParam]("mcp_approval_request"),
+		apijson.Discriminator[ResponseInputItemMcpApprovalResponseParam]("mcp_approval_response"),
+		apijson.Discriminator[ResponseInputItemMcpCallParam]("mcp_call"),
+		apijson.Discriminator[ResponseCustomToolCallOutputParam]("custom_tool_call_output"),
+		apijson.Discriminator[ResponseCustomToolCallParam]("custom_tool_call"),
+		apijson.Discriminator[ResponseInputItemItemReferenceParam]("item_reference"),
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"role", "user", "system", "developer",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"type", "message",
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemComputerCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemFunctionCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemImageGenerationCallParam](
+		"status", "in_progress", "completed", "generating", "failed",
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemLocalShellCallParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemLocalShellCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemItemReferenceParam](
+		"type", "item_reference",
+	)
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseOutputMessageContentUnionParam](
+		"type",
+		apijson.Discriminator[ResponseOutputTextParam]("output_text"),
+		apijson.Discriminator[ResponseOutputRefusalParam]("refusal"),
+	)
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseOutputTextAnnotationUnionParam](
+		"type",
+		apijson.Discriminator[ResponseOutputTextAnnotationFileCitationParam]("file_citation"),
+		apijson.Discriminator[ResponseOutputTextAnnotationURLCitationParam]("url_citation"),
+		apijson.Discriminator[ResponseOutputTextAnnotationContainerFileCitationParam]("container_file_citation"),
+		apijson.Discriminator[ResponseOutputTextAnnotationFilePathParam]("file_path"),
+	)
+}
+
+func init() {
+	apijson.RegisterUnion[ToolUnionParam](
+		"type",
+		apijson.Discriminator[FunctionToolParam]("function"),
+		apijson.Discriminator[FileSearchToolParam]("file_search"),
+		apijson.Discriminator[ComputerToolParam]("computer_use_preview"),
+		apijson.Discriminator[WebSearchToolParam]("web_search"),
+		apijson.Discriminator[WebSearchToolParam]("web_search_2025_08_26"),
+		apijson.Discriminator[ToolMcpParam]("mcp"),
+		apijson.Discriminator[ToolCodeInterpreterParam]("code_interpreter"),
+		apijson.Discriminator[ToolImageGenerationParam]("image_generation"),
+		apijson.Discriminator[ToolLocalShellParam]("local_shell"),
+		apijson.Discriminator[CustomToolParam]("custom"),
+		apijson.Discriminator[WebSearchPreviewToolParam]("web_search_preview"),
+		apijson.Discriminator[WebSearchPreviewToolParam]("web_search_preview_2025_03_11"),
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ToolMcpParam](
+		"connector_id", "connector_dropbox", "connector_gmail", "connector_googlecalendar", "connector_googledrive", "connector_microsoftteams", "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint",
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"background", "transparent", "opaque", "auto",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"input_fidelity", "high", "low",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"model", "gpt-image-1",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"moderation", "auto", "low",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"output_format", "png", "webp", "jpeg",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"quality", "low", "medium", "high", "auto",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"size", "1024x1024", "1024x1536", "1536x1024", "auto",
+	)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[WebSearchToolUserLocationParam](
+		"type", "approximate",
 	)
 }
 
@@ -1628,14 +1839,6 @@ func (u ResponseCodeInterpreterToolCallOutputUnionParam) GetType() *string {
 	return nil
 }
 
-func init() {
-	apijson.RegisterUnion[ResponseCodeInterpreterToolCallOutputUnionParam](
-		"type",
-		apijson.Discriminator[ResponseCodeInterpreterToolCallOutputLogsParam]("logs"),
-		apijson.Discriminator[ResponseCodeInterpreterToolCallOutputImageParam]("image"),
-	)
-}
-
 // The logs output from the code interpreter.
 //
 // The properties Logs, Type are required.
@@ -2385,21 +2588,6 @@ func (u ResponseComputerToolCallActionUnionParam) GetY() *int64 {
 	return nil
 }
 
-func init() {
-	apijson.RegisterUnion[ResponseComputerToolCallActionUnionParam](
-		"type",
-		apijson.Discriminator[ResponseComputerToolCallActionClickParam]("click"),
-		apijson.Discriminator[ResponseComputerToolCallActionDoubleClickParam]("double_click"),
-		apijson.Discriminator[ResponseComputerToolCallActionDragParam]("drag"),
-		apijson.Discriminator[ResponseComputerToolCallActionKeypressParam]("keypress"),
-		apijson.Discriminator[ResponseComputerToolCallActionMoveParam]("move"),
-		apijson.Discriminator[ResponseComputerToolCallActionScreenshotParam]("screenshot"),
-		apijson.Discriminator[ResponseComputerToolCallActionScrollParam]("scroll"),
-		apijson.Discriminator[ResponseComputerToolCallActionTypeParam]("type"),
-		apijson.Discriminator[ResponseComputerToolCallActionWaitParam]("wait"),
-	)
-}
-
 // A click action.
 //
 // The properties Button, Type, X, Y are required.
@@ -2427,12 +2615,6 @@ func (r ResponseComputerToolCallActionClickParam) MarshalJSON() (data []byte, er
 }
 func (r *ResponseComputerToolCallActionClickParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseComputerToolCallActionClickParam](
-		"button", "left", "right", "wheel", "back", "forward",
-	)
 }
 
 // A double click action.
@@ -3896,15 +4078,6 @@ func (u ResponseFormatTextConfigUnionParam) GetType() *string {
 	return nil
 }
 
-func init() {
-	apijson.RegisterUnion[ResponseFormatTextConfigUnionParam](
-		"type",
-		apijson.Discriminator[shared.ResponseFormatTextParam]("text"),
-		apijson.Discriminator[ResponseFormatTextJSONSchemaConfigParam]("json_schema"),
-		apijson.Discriminator[shared.ResponseFormatJSONObjectParam]("json_object"),
-	)
-}
-
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
 // [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
@@ -4539,15 +4712,6 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetURL() *string {
 	return nil
 }
 
-func init() {
-	apijson.RegisterUnion[ResponseFunctionWebSearchActionUnionParam](
-		"type",
-		apijson.Discriminator[ResponseFunctionWebSearchActionSearchParam]("search"),
-		apijson.Discriminator[ResponseFunctionWebSearchActionOpenPageParam]("open_page"),
-		apijson.Discriminator[ResponseFunctionWebSearchActionFindParam]("find"),
-	)
-}
-
 // Action type "search" - Performs a web search query.
 //
 // The properties Query, Type are required.
@@ -4922,12 +5086,6 @@ func (r *ResponseInputAudioInputAudioParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputAudioInputAudioParam](
-		"format", "mp3", "wav",
-	)
-}
-
 // ResponseInputContentUnion contains all possible properties and values from
 // [ResponseInputText], [ResponseInputImage], [ResponseInputFile],
 // [ResponseInputAudio].
@@ -5167,16 +5325,6 @@ func (u ResponseInputContentUnionParam) GetFileID() *string {
 		return &vt.FileID.Value
 	}
 	return nil
-}
-
-func init() {
-	apijson.RegisterUnion[ResponseInputContentUnionParam](
-		"type",
-		apijson.Discriminator[ResponseInputTextParam]("input_text"),
-		apijson.Discriminator[ResponseInputImageParam]("input_image"),
-		apijson.Discriminator[ResponseInputFileParam]("input_file"),
-		apijson.Discriminator[ResponseInputAudioParam]("input_audio"),
-	)
 }
 
 // A file input to the model.
@@ -7057,33 +7205,6 @@ type responseInputItemUnionParamOutput struct{ any }
 //	}
 func (u responseInputItemUnionParamOutput) AsAny() any { return u.any }
 
-func init() {
-	apijson.RegisterUnion[ResponseInputItemUnionParam](
-		"type",
-		apijson.Discriminator[EasyInputMessageParam]("message"),
-		apijson.Discriminator[ResponseInputItemMessageParam]("message"),
-		apijson.Discriminator[ResponseOutputMessageParam]("message"),
-		apijson.Discriminator[ResponseFileSearchToolCallParam]("file_search_call"),
-		apijson.Discriminator[ResponseComputerToolCallParam]("computer_call"),
-		apijson.Discriminator[ResponseInputItemComputerCallOutputParam]("computer_call_output"),
-		apijson.Discriminator[ResponseFunctionWebSearchParam]("web_search_call"),
-		apijson.Discriminator[ResponseFunctionToolCallParam]("function_call"),
-		apijson.Discriminator[ResponseInputItemFunctionCallOutputParam]("function_call_output"),
-		apijson.Discriminator[ResponseReasoningItemParam]("reasoning"),
-		apijson.Discriminator[ResponseInputItemImageGenerationCallParam]("image_generation_call"),
-		apijson.Discriminator[ResponseCodeInterpreterToolCallParam]("code_interpreter_call"),
-		apijson.Discriminator[ResponseInputItemLocalShellCallParam]("local_shell_call"),
-		apijson.Discriminator[ResponseInputItemLocalShellCallOutputParam]("local_shell_call_output"),
-		apijson.Discriminator[ResponseInputItemMcpListToolsParam]("mcp_list_tools"),
-		apijson.Discriminator[ResponseInputItemMcpApprovalRequestParam]("mcp_approval_request"),
-		apijson.Discriminator[ResponseInputItemMcpApprovalResponseParam]("mcp_approval_response"),
-		apijson.Discriminator[ResponseInputItemMcpCallParam]("mcp_call"),
-		apijson.Discriminator[ResponseCustomToolCallOutputParam]("custom_tool_call_output"),
-		apijson.Discriminator[ResponseCustomToolCallParam]("custom_tool_call"),
-		apijson.Discriminator[ResponseInputItemItemReferenceParam]("item_reference"),
-	)
-}
-
 // A message input to the model with a role indicating instruction following
 // hierarchy. Instructions given with the `developer` or `system` role take
 // precedence over instructions given with the `user` role.
@@ -7115,18 +7236,6 @@ func (r ResponseInputItemMessageParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *ResponseInputItemMessageParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
-		"role", "user", "system", "developer",
-	)
-	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
-		"status", "in_progress", "completed", "incomplete",
-	)
-	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
-		"type", "message",
-	)
 }
 
 // The output of a computer tool call.
@@ -7161,12 +7270,6 @@ func (r ResponseInputItemComputerCallOutputParam) MarshalJSON() (data []byte, er
 }
 func (r *ResponseInputItemComputerCallOutputParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemComputerCallOutputParam](
-		"status", "in_progress", "completed", "incomplete",
-	)
 }
 
 // A pending safety check for the computer call.
@@ -7222,12 +7325,6 @@ func (r *ResponseInputItemFunctionCallOutputParam) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemFunctionCallOutputParam](
-		"status", "in_progress", "completed", "incomplete",
-	)
-}
-
 // An image generation request made by the model.
 //
 // The properties ID, Result, Status, Type are required.
@@ -7254,12 +7351,6 @@ func (r ResponseInputItemImageGenerationCallParam) MarshalJSON() (data []byte, e
 }
 func (r *ResponseInputItemImageGenerationCallParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemImageGenerationCallParam](
-		"status", "in_progress", "completed", "generating", "failed",
-	)
 }
 
 // A tool call to run a command on the local shell.
@@ -7289,12 +7380,6 @@ func (r ResponseInputItemLocalShellCallParam) MarshalJSON() (data []byte, err er
 }
 func (r *ResponseInputItemLocalShellCallParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemLocalShellCallParam](
-		"status", "in_progress", "completed", "incomplete",
-	)
 }
 
 // Execute a shell command on the server.
@@ -7352,12 +7437,6 @@ func (r ResponseInputItemLocalShellCallOutputParam) MarshalJSON() (data []byte, 
 }
 func (r *ResponseInputItemLocalShellCallOutputParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemLocalShellCallOutputParam](
-		"status", "in_progress", "completed", "incomplete",
-	)
 }
 
 // A list of tools available on an MCP server.
@@ -7516,12 +7595,6 @@ func (r ResponseInputItemItemReferenceParam) MarshalJSON() (data []byte, err err
 }
 func (r *ResponseInputItemItemReferenceParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ResponseInputItemItemReferenceParam](
-		"type", "item_reference",
-	)
 }
 
 type ResponseInputMessageContentList []ResponseInputContentUnion
@@ -9345,14 +9418,6 @@ func (u ResponseOutputMessageContentUnionParam) GetType() *string {
 	return nil
 }
 
-func init() {
-	apijson.RegisterUnion[ResponseOutputMessageContentUnionParam](
-		"type",
-		apijson.Discriminator[ResponseOutputTextParam]("output_text"),
-		apijson.Discriminator[ResponseOutputRefusalParam]("refusal"),
-	)
-}
-
 // A refusal from the model.
 type ResponseOutputRefusal struct {
 	// The refusal explanation from the model.
@@ -9845,16 +9910,6 @@ func (u ResponseOutputTextAnnotationUnionParam) GetStartIndex() *int64 {
 		return (*int64)(&vt.StartIndex)
 	}
 	return nil
-}
-
-func init() {
-	apijson.RegisterUnion[ResponseOutputTextAnnotationUnionParam](
-		"type",
-		apijson.Discriminator[ResponseOutputTextAnnotationFileCitationParam]("file_citation"),
-		apijson.Discriminator[ResponseOutputTextAnnotationURLCitationParam]("url_citation"),
-		apijson.Discriminator[ResponseOutputTextAnnotationContainerFileCitationParam]("container_file_citation"),
-		apijson.Discriminator[ResponseOutputTextAnnotationFilePathParam]("file_path"),
-	)
 }
 
 // A citation to a file.
@@ -13119,24 +13174,6 @@ func (u toolUnionParamUserLocation) GetType() *string {
 	return nil
 }
 
-func init() {
-	apijson.RegisterUnion[ToolUnionParam](
-		"type",
-		apijson.Discriminator[FunctionToolParam]("function"),
-		apijson.Discriminator[FileSearchToolParam]("file_search"),
-		apijson.Discriminator[ComputerToolParam]("computer_use_preview"),
-		apijson.Discriminator[WebSearchToolParam]("web_search"),
-		apijson.Discriminator[WebSearchToolParam]("web_search_2025_08_26"),
-		apijson.Discriminator[ToolMcpParam]("mcp"),
-		apijson.Discriminator[ToolCodeInterpreterParam]("code_interpreter"),
-		apijson.Discriminator[ToolImageGenerationParam]("image_generation"),
-		apijson.Discriminator[ToolLocalShellParam]("local_shell"),
-		apijson.Discriminator[CustomToolParam]("custom"),
-		apijson.Discriminator[WebSearchPreviewToolParam]("web_search_preview"),
-		apijson.Discriminator[WebSearchPreviewToolParam]("web_search_preview_2025_03_11"),
-	)
-}
-
 // Give the model access to additional tools via remote Model Context Protocol
 // (MCP) servers.
 // [Learn more about MCP](https://platform.openai.com/docs/guides/tools-remote-mcp).
@@ -13194,12 +13231,6 @@ func (r ToolMcpParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *ToolMcpParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ToolMcpParam](
-		"connector_id", "connector_dropbox", "connector_gmail", "connector_googlecalendar", "connector_googledrive", "connector_microsoftteams", "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint",
-	)
 }
 
 // Only one field can be non-zero.
@@ -13460,30 +13491,6 @@ func (r ToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *ToolImageGenerationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[ToolImageGenerationParam](
-		"background", "transparent", "opaque", "auto",
-	)
-	apijson.RegisterFieldValidator[ToolImageGenerationParam](
-		"input_fidelity", "high", "low",
-	)
-	apijson.RegisterFieldValidator[ToolImageGenerationParam](
-		"model", "gpt-image-1",
-	)
-	apijson.RegisterFieldValidator[ToolImageGenerationParam](
-		"moderation", "auto", "low",
-	)
-	apijson.RegisterFieldValidator[ToolImageGenerationParam](
-		"output_format", "png", "webp", "jpeg",
-	)
-	apijson.RegisterFieldValidator[ToolImageGenerationParam](
-		"quality", "low", "medium", "high", "auto",
-	)
-	apijson.RegisterFieldValidator[ToolImageGenerationParam](
-		"size", "1024x1024", "1024x1536", "1536x1024", "auto",
-	)
 }
 
 // Optional mask for inpainting. Contains `image_url` (string, optional) and
@@ -14238,12 +14245,6 @@ func (r WebSearchToolUserLocationParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *WebSearchToolUserLocationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func init() {
-	apijson.RegisterFieldValidator[WebSearchToolUserLocationParam](
-		"type", "approximate",
-	)
 }
 
 type ResponseNewParams struct {

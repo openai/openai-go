@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
 	"github.com/openai/openai-go/v2/internal/apijson"
 	"github.com/openai/openai-go/v2/internal/apiquery"
@@ -41,7 +42,7 @@ func NewContainerService(opts ...option.RequestOption) (r ContainerService) {
 
 // Create Container
 func (r *ContainerService) New(ctx context.Context, body ContainerNewParams, opts ...option.RequestOption) (res *ContainerNewResponse, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "containers"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -49,7 +50,7 @@ func (r *ContainerService) New(ctx context.Context, body ContainerNewParams, opt
 
 // Retrieve Container
 func (r *ContainerService) Get(ctx context.Context, containerID string, opts ...option.RequestOption) (res *ContainerGetResponse, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
 		return
@@ -62,7 +63,7 @@ func (r *ContainerService) Get(ctx context.Context, containerID string, opts ...
 // List Containers
 func (r *ContainerService) List(ctx context.Context, query ContainerListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ContainerListResponse], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "containers"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -84,7 +85,7 @@ func (r *ContainerService) ListAutoPaging(ctx context.Context, query ContainerLi
 
 // Delete Container
 func (r *ContainerService) Delete(ctx context.Context, containerID string, opts ...option.RequestOption) (err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")

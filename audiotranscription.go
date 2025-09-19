@@ -9,6 +9,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"slices"
 
 	"github.com/openai/openai-go/v2/internal/apiform"
 	"github.com/openai/openai-go/v2/internal/apijson"
@@ -41,7 +42,7 @@ func NewAudioTranscriptionService(opts ...option.RequestOption) (r AudioTranscri
 
 // Transcribes audio into the input language.
 func (r *AudioTranscriptionService) New(ctx context.Context, body AudioTranscriptionNewParams, opts ...option.RequestOption) (res *Transcription, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "audio/transcriptions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -53,7 +54,7 @@ func (r *AudioTranscriptionService) NewStreaming(ctx context.Context, body Audio
 		raw *http.Response
 		err error
 	)
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	body.SetExtraFields(map[string]any{
 		"stream": "true",
 	})

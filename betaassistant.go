@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
 	"github.com/openai/openai-go/v2/internal/apijson"
 	"github.com/openai/openai-go/v2/internal/apiquery"
@@ -42,7 +43,7 @@ func NewBetaAssistantService(opts ...option.RequestOption) (r BetaAssistantServi
 
 // Create an assistant with a model and instructions.
 func (r *BetaAssistantService) New(ctx context.Context, body BetaAssistantNewParams, opts ...option.RequestOption) (res *Assistant, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	path := "assistants"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
@@ -51,7 +52,7 @@ func (r *BetaAssistantService) New(ctx context.Context, body BetaAssistantNewPar
 
 // Retrieves an assistant.
 func (r *BetaAssistantService) Get(ctx context.Context, assistantID string, opts ...option.RequestOption) (res *Assistant, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if assistantID == "" {
 		err = errors.New("missing required assistant_id parameter")
@@ -64,7 +65,7 @@ func (r *BetaAssistantService) Get(ctx context.Context, assistantID string, opts
 
 // Modifies an assistant.
 func (r *BetaAssistantService) Update(ctx context.Context, assistantID string, body BetaAssistantUpdateParams, opts ...option.RequestOption) (res *Assistant, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if assistantID == "" {
 		err = errors.New("missing required assistant_id parameter")
@@ -78,7 +79,7 @@ func (r *BetaAssistantService) Update(ctx context.Context, assistantID string, b
 // Returns a list of assistants.
 func (r *BetaAssistantService) List(ctx context.Context, query BetaAssistantListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Assistant], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	path := "assistants"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -100,7 +101,7 @@ func (r *BetaAssistantService) ListAutoPaging(ctx context.Context, query BetaAss
 
 // Delete an assistant.
 func (r *BetaAssistantService) Delete(ctx context.Context, assistantID string, opts ...option.RequestOption) (res *AssistantDeleted, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if assistantID == "" {
 		err = errors.New("missing required assistant_id parameter")

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
 	"github.com/openai/openai-go/v2/internal/apijson"
 	"github.com/openai/openai-go/v2/internal/apiquery"
@@ -41,7 +42,7 @@ func NewBatchService(opts ...option.RequestOption) (r BatchService) {
 
 // Creates and executes a batch from an uploaded file of requests
 func (r *BatchService) New(ctx context.Context, body BatchNewParams, opts ...option.RequestOption) (res *Batch, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "batches"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -49,7 +50,7 @@ func (r *BatchService) New(ctx context.Context, body BatchNewParams, opts ...opt
 
 // Retrieves a batch.
 func (r *BatchService) Get(ctx context.Context, batchID string, opts ...option.RequestOption) (res *Batch, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if batchID == "" {
 		err = errors.New("missing required batch_id parameter")
 		return
@@ -62,7 +63,7 @@ func (r *BatchService) Get(ctx context.Context, batchID string, opts ...option.R
 // List your organization's batches.
 func (r *BatchService) List(ctx context.Context, query BatchListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Batch], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "batches"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -86,7 +87,7 @@ func (r *BatchService) ListAutoPaging(ctx context.Context, query BatchListParams
 // 10 minutes, before changing to `cancelled`, where it will have partial results
 // (if any) available in the output file.
 func (r *BatchService) Cancel(ctx context.Context, batchID string, opts ...option.RequestOption) (res *Batch, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if batchID == "" {
 		err = errors.New("missing required batch_id parameter")
 		return

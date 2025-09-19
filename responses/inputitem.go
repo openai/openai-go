@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
 	"github.com/openai/openai-go/v2/internal/apijson"
 	"github.com/openai/openai-go/v2/internal/apiquery"
@@ -41,7 +42,7 @@ func NewInputItemService(opts ...option.RequestOption) (r InputItemService) {
 // Returns a list of input items for a given response.
 func (r *InputItemService) List(ctx context.Context, responseID string, query InputItemListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ResponseItemUnion], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")

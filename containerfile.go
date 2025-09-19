@@ -11,6 +11,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"slices"
 
 	"github.com/openai/openai-go/v2/internal/apiform"
 	"github.com/openai/openai-go/v2/internal/apijson"
@@ -49,7 +50,7 @@ func NewContainerFileService(opts ...option.RequestOption) (r ContainerFileServi
 // You can send either a multipart/form-data request with the raw file content, or
 // a JSON request with a file ID.
 func (r *ContainerFileService) New(ctx context.Context, containerID string, body ContainerFileNewParams, opts ...option.RequestOption) (res *ContainerFileNewResponse, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
 		return
@@ -61,7 +62,7 @@ func (r *ContainerFileService) New(ctx context.Context, containerID string, body
 
 // Retrieve Container File
 func (r *ContainerFileService) Get(ctx context.Context, containerID string, fileID string, opts ...option.RequestOption) (res *ContainerFileGetResponse, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
 		return
@@ -78,7 +79,7 @@ func (r *ContainerFileService) Get(ctx context.Context, containerID string, file
 // List Container files
 func (r *ContainerFileService) List(ctx context.Context, containerID string, query ContainerFileListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ContainerFileListResponse], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
@@ -104,7 +105,7 @@ func (r *ContainerFileService) ListAutoPaging(ctx context.Context, containerID s
 
 // Delete Container File
 func (r *ContainerFileService) Delete(ctx context.Context, containerID string, fileID string, opts ...option.RequestOption) (err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
