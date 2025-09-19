@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.6.0 (2025-09-19)
+
+Full Changelog: [v2.5.0...v2.6.0](https://github.com/openai/openai-go/compare/v2.5.0...v2.6.0)
+
+### Features
+
+* **api:** add reasoning_text ([6ebf50d](https://github.com/openai/openai-go/commit/6ebf50d756f06d951cdccff432615835bbf3165f))
+
 ## 2.5.0 (2025-09-17)
 
 Full Changelog: [v2.4.3...v2.5.0](https://github.com/openai/openai-go/compare/v2.4.3...v2.5.0)
