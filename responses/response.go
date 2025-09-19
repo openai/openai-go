@@ -2833,7 +2833,8 @@ func (r *ResponseContentPartAddedEvent) UnmarshalJSON(data []byte) error {
 }
 
 // ResponseContentPartAddedEventPartUnion contains all possible properties and
-// values from [ResponseOutputText], [ResponseOutputRefusal].
+// values from [ResponseOutputText], [ResponseOutputRefusal],
+// [ResponseContentPartAddedEventPartReasoningText].
 //
 // Use the [ResponseContentPartAddedEventPartUnion.AsAny] method to switch on the
 // variant.
@@ -2842,9 +2843,8 @@ func (r *ResponseContentPartAddedEvent) UnmarshalJSON(data []byte) error {
 type ResponseContentPartAddedEventPartUnion struct {
 	// This field is from variant [ResponseOutputText].
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations"`
-	// This field is from variant [ResponseOutputText].
-	Text string `json:"text"`
-	// Any of "output_text", "refusal".
+	Text        string                              `json:"text"`
+	// Any of "output_text", "refusal", "reasoning_text".
 	Type string `json:"type"`
 	// This field is from variant [ResponseOutputText].
 	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
@@ -2867,14 +2867,16 @@ type anyResponseContentPartAddedEventPart interface {
 	implResponseContentPartAddedEventPartUnion()
 }
 
-func (ResponseOutputText) implResponseContentPartAddedEventPartUnion()    {}
-func (ResponseOutputRefusal) implResponseContentPartAddedEventPartUnion() {}
+func (ResponseOutputText) implResponseContentPartAddedEventPartUnion()                             {}
+func (ResponseOutputRefusal) implResponseContentPartAddedEventPartUnion()                          {}
+func (ResponseContentPartAddedEventPartReasoningText) implResponseContentPartAddedEventPartUnion() {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseContentPartAddedEventPartUnion.AsAny().(type) {
 //	case responses.ResponseOutputText:
 //	case responses.ResponseOutputRefusal:
+//	case responses.ResponseContentPartAddedEventPartReasoningText:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -2884,6 +2886,8 @@ func (u ResponseContentPartAddedEventPartUnion) AsAny() anyResponseContentPartAd
 		return u.AsOutputText()
 	case "refusal":
 		return u.AsRefusal()
+	case "reasoning_text":
+		return u.AsReasoningText()
 	}
 	return nil
 }
@@ -2898,10 +2902,36 @@ func (u ResponseContentPartAddedEventPartUnion) AsRefusal() (v ResponseOutputRef
 	return
 }
 
+func (u ResponseContentPartAddedEventPartUnion) AsReasoningText() (v ResponseContentPartAddedEventPartReasoningText) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u ResponseContentPartAddedEventPartUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ResponseContentPartAddedEventPartUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning text from the model.
+type ResponseContentPartAddedEventPartReasoningText struct {
+	// The reasoning text from the model.
+	Text string `json:"text,required"`
+	// The type of the reasoning text. Always `reasoning_text`.
+	Type constant.ReasoningText `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseContentPartAddedEventPartReasoningText) RawJSON() string { return r.JSON.raw }
+func (r *ResponseContentPartAddedEventPartReasoningText) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -2939,7 +2969,8 @@ func (r *ResponseContentPartDoneEvent) UnmarshalJSON(data []byte) error {
 }
 
 // ResponseContentPartDoneEventPartUnion contains all possible properties and
-// values from [ResponseOutputText], [ResponseOutputRefusal].
+// values from [ResponseOutputText], [ResponseOutputRefusal],
+// [ResponseContentPartDoneEventPartReasoningText].
 //
 // Use the [ResponseContentPartDoneEventPartUnion.AsAny] method to switch on the
 // variant.
@@ -2948,9 +2979,8 @@ func (r *ResponseContentPartDoneEvent) UnmarshalJSON(data []byte) error {
 type ResponseContentPartDoneEventPartUnion struct {
 	// This field is from variant [ResponseOutputText].
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations"`
-	// This field is from variant [ResponseOutputText].
-	Text string `json:"text"`
-	// Any of "output_text", "refusal".
+	Text        string                              `json:"text"`
+	// Any of "output_text", "refusal", "reasoning_text".
 	Type string `json:"type"`
 	// This field is from variant [ResponseOutputText].
 	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
@@ -2973,14 +3003,16 @@ type anyResponseContentPartDoneEventPart interface {
 	implResponseContentPartDoneEventPartUnion()
 }
 
-func (ResponseOutputText) implResponseContentPartDoneEventPartUnion()    {}
-func (ResponseOutputRefusal) implResponseContentPartDoneEventPartUnion() {}
+func (ResponseOutputText) implResponseContentPartDoneEventPartUnion()                            {}
+func (ResponseOutputRefusal) implResponseContentPartDoneEventPartUnion()                         {}
+func (ResponseContentPartDoneEventPartReasoningText) implResponseContentPartDoneEventPartUnion() {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseContentPartDoneEventPartUnion.AsAny().(type) {
 //	case responses.ResponseOutputText:
 //	case responses.ResponseOutputRefusal:
+//	case responses.ResponseContentPartDoneEventPartReasoningText:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -2990,6 +3022,8 @@ func (u ResponseContentPartDoneEventPartUnion) AsAny() anyResponseContentPartDon
 		return u.AsOutputText()
 	case "refusal":
 		return u.AsRefusal()
+	case "reasoning_text":
+		return u.AsReasoningText()
 	}
 	return nil
 }
@@ -3004,10 +3038,36 @@ func (u ResponseContentPartDoneEventPartUnion) AsRefusal() (v ResponseOutputRefu
 	return
 }
 
+func (u ResponseContentPartDoneEventPartUnion) AsReasoningText() (v ResponseContentPartDoneEventPartReasoningText) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u ResponseContentPartDoneEventPartUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ResponseContentPartDoneEventPartUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reasoning text from the model.
+type ResponseContentPartDoneEventPartReasoningText struct {
+	// The reasoning text from the model.
+	Text string `json:"text,required"`
+	// The type of the reasoning text. Always `reasoning_text`.
+	Type constant.ReasoningText `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseContentPartDoneEventPartReasoningText) RawJSON() string { return r.JSON.raw }
+func (r *ResponseContentPartDoneEventPartReasoningText) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -10264,6 +10324,7 @@ func (r ResponseReasoningItem) ToParam() ResponseReasoningItemParam {
 	return param.Override[ResponseReasoningItemParam](json.RawMessage(r.RawJSON()))
 }
 
+// A summary text from the model.
 type ResponseReasoningItemSummary struct {
 	// A summary of the reasoning output from the model so far.
 	Text string `json:"text,required"`
@@ -10284,10 +10345,11 @@ func (r *ResponseReasoningItemSummary) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Reasoning text from the model.
 type ResponseReasoningItemContent struct {
-	// Reasoning text output from the model.
+	// The reasoning text from the model.
 	Text string `json:"text,required"`
-	// The type of the object. Always `reasoning_text`.
+	// The type of the reasoning text. Always `reasoning_text`.
 	Type constant.ReasoningText `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -10350,6 +10412,8 @@ func (r *ResponseReasoningItemParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// A summary text from the model.
+//
 // The properties Text, Type are required.
 type ResponseReasoningItemSummaryParam struct {
 	// A summary of the reasoning output from the model so far.
@@ -10369,11 +10433,13 @@ func (r *ResponseReasoningItemSummaryParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Reasoning text from the model.
+//
 // The properties Text, Type are required.
 type ResponseReasoningItemContentParam struct {
-	// Reasoning text output from the model.
+	// The reasoning text from the model.
 	Text string `json:"text,required"`
-	// The type of the object. Always `reasoning_text`.
+	// The type of the reasoning text. Always `reasoning_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "reasoning_text".
 	Type constant.ReasoningText `json:"type,required"`
