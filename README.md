@@ -30,7 +30,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go/v2@v2.6.0'
+go get -u 'github.com/openai/openai-go/v2@v2.6.1'
 ```
 
 <!-- x-release-please-end -->

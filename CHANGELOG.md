@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.6.1 (2025-09-20)
+
+Full Changelog: [v2.6.0...v2.6.1](https://github.com/openai/openai-go/compare/v2.6.0...v2.6.1)
+
+### Chores
+
+* bump minimum go version to 1.22 ([8396ab5](https://github.com/openai/openai-go/commit/8396ab5d918bf068b6d6f342c825ba32d1d982b0))
+
 ## 2.6.0 (2025-09-19)
 
 Full Changelog: [v2.5.0...v2.6.0](https://github.com/openai/openai-go/compare/v2.5.0...v2.6.0)
