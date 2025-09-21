@@ -129,7 +129,6 @@ type McpListTools string                                     // Always "mcp_list
 type McpListToolsCompleted string                            // Always "mcp_list_tools.completed"
 type McpListToolsFailed string                               // Always "mcp_list_tools.failed"
 type McpListToolsInProgress string                           // Always "mcp_list_tools.in_progress"
-type McpToolCall string                                      // Always "mcp_tool_call"
 type Message string                                          // Always "message"
 type MessageCreation string                                  // Always "message_creation"
 type Model string                                            // Always "model"
@@ -432,7 +431,6 @@ func (c McpListTools) Default() McpListTools                     { return "mcp_l
 func (c McpListToolsCompleted) Default() McpListToolsCompleted   { return "mcp_list_tools.completed" }
 func (c McpListToolsFailed) Default() McpListToolsFailed         { return "mcp_list_tools.failed" }
 func (c McpListToolsInProgress) Default() McpListToolsInProgress { return "mcp_list_tools.in_progress" }
-func (c McpToolCall) Default() McpToolCall                       { return "mcp_tool_call" }
 func (c Message) Default() Message                               { return "message" }
 func (c MessageCreation) Default() MessageCreation               { return "message_creation" }
 func (c Model) Default() Model                                   { return "model" }
@@ -815,7 +813,6 @@ func (c McpListTools) MarshalJSON() ([]byte, error)                          { r
 func (c McpListToolsCompleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c McpListToolsFailed) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c McpListToolsInProgress) MarshalJSON() ([]byte, error)                { return marshalString(c) }
-func (c McpToolCall) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Message) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c MessageCreation) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c Model) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
