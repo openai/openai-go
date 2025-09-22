@@ -89,7 +89,7 @@ func TestConversationUpdate(t *testing.T) {
 		context.TODO(),
 		"conv_123",
 		conversations.ConversationUpdateParams{
-			Metadata: map[string]string{
+			Metadata: shared.Metadata{
 				"foo": "string",
 			},
 		},
