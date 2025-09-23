@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.7.0 (2025-09-23)
+
+Full Changelog: [v2.6.1...v2.7.0](https://github.com/openai/openai-go/compare/v2.6.1...v2.7.0)
+
+### Features
+
+* **api:** gpt-5-codex ([b0eac3e](https://github.com/openai/openai-go/commit/b0eac3ed2bcf2b7f0a5d6d68c9e13e7b7e409f0f))
+
 ## 2.6.1 (2025-09-22)
 
 Full Changelog: [v2.6.0...v2.6.1](https://github.com/openai/openai-go/compare/v2.6.0...v2.6.1)
