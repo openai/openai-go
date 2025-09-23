@@ -491,3 +491,6 @@ const ResponsesModelComputerUsePreview = shared.ResponsesModelComputerUsePreview
 
 // Equals "computer-use-preview-2025-03-11"
 const ResponsesModelComputerUsePreview2025_03_11 = shared.ResponsesModelComputerUsePreview2025_03_11
+
+// Equals "gpt-5-codex"
+const ResponsesModelGPT5Codex = shared.ResponsesModelGPT5Codex

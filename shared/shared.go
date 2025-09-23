@@ -1039,5 +1039,6 @@ const (
 	ResponsesModelO4MiniDeepResearch2025_06_26 ResponsesModel = "o4-mini-deep-research-2025-06-26"
 	ResponsesModelComputerUsePreview           ResponsesModel = "computer-use-preview"
 	ResponsesModelComputerUsePreview2025_03_11 ResponsesModel = "computer-use-preview-2025-03-11"
+	ResponsesModelGPT5Codex                    ResponsesModel = "gpt-5-codex"
 	// Or some ...[ChatModel]
 )
