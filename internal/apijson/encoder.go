@@ -16,6 +16,10 @@ import (
 
 var encoders sync.Map // map[encoderEntry]encoderFunc
 
+// If we want to set a literal key value into JSON using sjson, we need to make sure it doesn't have
+// special characters that sjson interprets as a path.
+var EscapeSJSONKey = strings.NewReplacer("\\", "\\\\", "|", "\\|", "#", "\\#", "@", "\\@", "*", "\\*", ".", "\\.", ":", "\\:", "?", "\\?").Replace
+
 func Marshal(value any) ([]byte, error) {
 	e := &encoder{dateFormat: time.RFC3339}
 	return e.marshal(value)
@@ -270,7 +274,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 			if encoded == nil {
 				continue
 			}
-			json, err = sjson.SetRawBytes(json, ef.tag.name, encoded)
+			json, err = sjson.SetRawBytes(json, EscapeSJSONKey(ef.tag.name), encoded)
 			if err != nil {
 				return nil, err
 			}
@@ -348,7 +352,7 @@ func (e *encoder) encodeMapEntries(json []byte, v reflect.Value) ([]byte, error)
 			}
 			encodedKeyString = string(encodedKeyBytes)
 		}
-		encodedKey := []byte(sjsonReplacer.Replace(encodedKeyString))
+		encodedKey := []byte(encodedKeyString)
 		pairs = append(pairs, mapPair{key: encodedKey, value: iter.Value()})
 	}
 
@@ -366,7 +370,7 @@ func (e *encoder) encodeMapEntries(json []byte, v reflect.Value) ([]byte, error)
 		if len(encodedValue) == 0 {
 			continue
 		}
-		json, err = sjson.SetRawBytes(json, string(p.key), encodedValue)
+		json, err = sjson.SetRawBytes(json, EscapeSJSONKey(string(p.key)), encodedValue)
 		if err != nil {
 			return nil, err
 		}
@@ -386,7 +390,3 @@ func (e *encoder) newMapEncoder(_ reflect.Type) encoderFunc {
 		return json, nil
 	}
 }
-
-// If we want to set a literal key value into JSON using sjson, we need to make sure it doesn't have
-// special characters that sjson interprets as a path.
-var sjsonReplacer *strings.Replacer = strings.NewReplacer(".", "\\.", ":", "\\:", "*", "\\*")
