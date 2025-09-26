@@ -169,7 +169,9 @@ func (prev *chatCompletionResponseState) update(chunk ChatCompletionChunk) (just
 		new.state = refusalResponseState
 	case delta.JSON.ToolCalls.Valid():
 		new.state = toolResponseState
-		new.index = int(delta.ToolCalls[0].Index)
+		if len(delta.ToolCalls) > 0 {
+			new.index = int(delta.ToolCalls[0].Index)
+		}
 	default:
 		new.state = finishedResponseState
 	}
