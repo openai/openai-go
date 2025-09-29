@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.7.1 (2025-09-29)
+
+Full Changelog: [v2.7.0...v2.7.1](https://github.com/openai/openai-go/compare/v2.7.0...v2.7.1)
+
+### Bug Fixes
+
+* bugfix for setting JSON keys with special characters ([f9ae028](https://github.com/openai/openai-go/commit/f9ae0283fe34fef6a8a7909655423b45795e41fc))
+
 ## 2.7.0 (2025-09-23)
 
 Full Changelog: [v2.6.1...v2.7.0](https://github.com/openai/openai-go/compare/v2.6.1...v2.7.0)
