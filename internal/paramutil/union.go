@@ -2,7 +2,7 @@ package paramutil
 
 import (
 	"fmt"
-	"github.com/openai/openai-go/v2/packages/param"
+	"github.com/openai/openai-go/v3/packages/param"
 	"reflect"
 )
 
