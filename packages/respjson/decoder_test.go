@@ -3,8 +3,8 @@ package respjson_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openai/openai-go/v2/internal/apijson"
-	rj "github.com/openai/openai-go/v2/packages/respjson"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	rj "github.com/openai/openai-go/v3/packages/respjson"
 	"reflect"
 	"testing"
 )

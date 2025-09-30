@@ -8,12 +8,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go/v2"
-	"github.com/openai/openai-go/v2/internal/testutil"
-	"github.com/openai/openai-go/v2/option"
-	"github.com/openai/openai-go/v2/realtime"
-	"github.com/openai/openai-go/v2/responses"
-	"github.com/openai/openai-go/v2/shared/constant"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/internal/testutil"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/realtime"
+	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 func TestClientSecretNewWithOptionalParams(t *testing.T) {
