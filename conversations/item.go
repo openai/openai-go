@@ -145,9 +145,10 @@ type ConversationItemUnion struct {
 	Arguments string `json:"arguments"`
 	CallID    string `json:"call_id"`
 	Name      string `json:"name"`
-	// This field is a union of [string],
+	// This field is a union of
+	// [responses.ResponseFunctionToolCallOutputItemOutputUnion],
 	// [responses.ResponseComputerToolCallOutputScreenshot], [string], [string],
-	// [string]
+	// [responses.ResponseCustomToolCallOutputOutputUnion]
 	Output ConversationItemUnionOutput `json:"output"`
 	// This field is from variant [responses.ResponseFileSearchToolCall].
 	Queries []string `json:"queries"`
@@ -430,10 +431,14 @@ func (r *ConversationItemUnionContent) UnmarshalJSON(data []byte) error {
 // [ConversationItemUnion].
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfString]
+// will be valid: OfString OfOutputContentList]
 type ConversationItemUnionOutput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]responses.ResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion]
+	// instead of an object.
+	OfOutputContentList []responses.ResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion `json:",inline"`
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
 	Type constant.ComputerScreenshot `json:"type"`
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
@@ -441,11 +446,12 @@ type ConversationItemUnionOutput struct {
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
 	ImageURL string `json:"image_url"`
 	JSON     struct {
-		OfString respjson.Field
-		Type     respjson.Field
-		FileID   respjson.Field
-		ImageURL respjson.Field
-		raw      string
+		OfString            respjson.Field
+		OfOutputContentList respjson.Field
+		Type                respjson.Field
+		FileID              respjson.Field
+		ImageURL            respjson.Field
+		raw                 string
 	} `json:"-"`
 }
 
