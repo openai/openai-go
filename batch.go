@@ -140,10 +140,20 @@ type Batch struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,nullable"`
+	// Model ID used to process the batch, like `gpt-5-2025-08-07`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
+	// [model guide](https://platform.openai.com/docs/models) to browse and compare
+	// available models.
+	Model string `json:"model"`
 	// The ID of the file containing the outputs of successfully executed requests.
 	OutputFileID string `json:"output_file_id"`
 	// The request counts for different statuses within the batch.
 	RequestCounts BatchRequestCounts `json:"request_counts"`
+	// Represents token usage details including input tokens, output tokens, a
+	// breakdown of output tokens, and the total tokens used. Only populated on batches
+	// created after September 7, 2025.
+	Usage BatchUsage `json:"usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID               respjson.Field
@@ -164,8 +174,10 @@ type Batch struct {
 		FinalizingAt     respjson.Field
 		InProgressAt     respjson.Field
 		Metadata         respjson.Field
+		Model            respjson.Field
 		OutputFileID     respjson.Field
 		RequestCounts    respjson.Field
+		Usage            respjson.Field
 		ExtraFields      map[string]respjson.Field
 		raw              string
 	} `json:"-"`
@@ -257,6 +269,75 @@ type BatchRequestCounts struct {
 // Returns the unmodified JSON received from the API
 func (r BatchRequestCounts) RawJSON() string { return r.JSON.raw }
 func (r *BatchRequestCounts) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Represents token usage details including input tokens, output tokens, a
+// breakdown of output tokens, and the total tokens used. Only populated on batches
+// created after September 7, 2025.
+type BatchUsage struct {
+	// The number of input tokens.
+	InputTokens int64 `json:"input_tokens,required"`
+	// A detailed breakdown of the input tokens.
+	InputTokensDetails BatchUsageInputTokensDetails `json:"input_tokens_details,required"`
+	// The number of output tokens.
+	OutputTokens int64 `json:"output_tokens,required"`
+	// A detailed breakdown of the output tokens.
+	OutputTokensDetails BatchUsageOutputTokensDetails `json:"output_tokens_details,required"`
+	// The total number of tokens used.
+	TotalTokens int64 `json:"total_tokens,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens         respjson.Field
+		InputTokensDetails  respjson.Field
+		OutputTokens        respjson.Field
+		OutputTokensDetails respjson.Field
+		TotalTokens         respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BatchUsage) RawJSON() string { return r.JSON.raw }
+func (r *BatchUsage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A detailed breakdown of the input tokens.
+type BatchUsageInputTokensDetails struct {
+	// The number of tokens that were retrieved from the cache.
+	// [More on prompt caching](https://platform.openai.com/docs/guides/prompt-caching).
+	CachedTokens int64 `json:"cached_tokens,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CachedTokens respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BatchUsageInputTokensDetails) RawJSON() string { return r.JSON.raw }
+func (r *BatchUsageInputTokensDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A detailed breakdown of the output tokens.
+type BatchUsageOutputTokensDetails struct {
+	// The number of reasoning tokens.
+	ReasoningTokens int64 `json:"reasoning_tokens,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ReasoningTokens respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BatchUsageOutputTokensDetails) RawJSON() string { return r.JSON.raw }
+func (r *BatchUsageOutputTokensDetails) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
