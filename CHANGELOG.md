@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.0.0 (2025-09-30)
+
+Full Changelog: [v2.7.1...v3.0.0](https://github.com/openai/openai-go/compare/v2.7.1...v3.0.0)
+
+### ⚠ BREAKING CHANGES
+
+* **api:** `ResponseFunctionToolCallOutputItem.output` and `ResponseCustomToolCallOutput.output` now return `string | Array<ResponseInputText | ResponseInputImage | ResponseInputFile>` instead of `string` only. This may break existing callsites that assume `output` is always a string.
+
+### Features
+
+* **api:** Support images and files for function call outputs in responses, BatchUsage ([21901ef](https://github.com/openai/openai-go/commit/21901ef84eac7028b92939c3e54c4ec7f2c8663f))
+
 ## 2.7.1 (2025-09-29)
 
 Full Changelog: [v2.7.0...v2.7.1](https://github.com/openai/openai-go/compare/v2.7.0...v2.7.1)

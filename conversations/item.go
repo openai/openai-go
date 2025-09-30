@@ -11,15 +11,15 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/openai/openai-go/v2/internal/apijson"
-	"github.com/openai/openai-go/v2/internal/apiquery"
-	"github.com/openai/openai-go/v2/internal/requestconfig"
-	"github.com/openai/openai-go/v2/option"
-	"github.com/openai/openai-go/v2/packages/pagination"
-	"github.com/openai/openai-go/v2/packages/param"
-	"github.com/openai/openai-go/v2/packages/respjson"
-	"github.com/openai/openai-go/v2/responses"
-	"github.com/openai/openai-go/v2/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // ItemService contains methods and other services that help with interacting with
@@ -145,9 +145,10 @@ type ConversationItemUnion struct {
 	Arguments string `json:"arguments"`
 	CallID    string `json:"call_id"`
 	Name      string `json:"name"`
-	// This field is a union of [string],
+	// This field is a union of
+	// [responses.ResponseFunctionToolCallOutputItemOutputUnion],
 	// [responses.ResponseComputerToolCallOutputScreenshot], [string], [string],
-	// [string]
+	// [responses.ResponseCustomToolCallOutputOutputUnion]
 	Output ConversationItemUnionOutput `json:"output"`
 	// This field is from variant [responses.ResponseFileSearchToolCall].
 	Queries []string `json:"queries"`
@@ -430,10 +431,14 @@ func (r *ConversationItemUnionContent) UnmarshalJSON(data []byte) error {
 // [ConversationItemUnion].
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfString]
+// will be valid: OfString OfOutputContentList]
 type ConversationItemUnionOutput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
+	// This field will be present if the value is a
+	// [[]responses.ResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion]
+	// instead of an object.
+	OfOutputContentList []responses.ResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion `json:",inline"`
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
 	Type constant.ComputerScreenshot `json:"type"`
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
@@ -441,11 +446,12 @@ type ConversationItemUnionOutput struct {
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
 	ImageURL string `json:"image_url"`
 	JSON     struct {
-		OfString respjson.Field
-		Type     respjson.Field
-		FileID   respjson.Field
-		ImageURL respjson.Field
-		raw      string
+		OfString            respjson.Field
+		OfOutputContentList respjson.Field
+		Type                respjson.Field
+		FileID              respjson.Field
+		ImageURL            respjson.Field
+		raw                 string
 	} `json:"-"`
 }
 
