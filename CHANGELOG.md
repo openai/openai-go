@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.1 (2025-10-01)
+
+Full Changelog: [v3.0.0...v3.0.1](https://github.com/openai/openai-go/compare/v3.0.0...v3.0.1)
+
+### Bug Fixes
+
+* **api:** add status, approval_request_id to MCP tool call ([a7f95e4](https://github.com/openai/openai-go/commit/a7f95e4ef4335a8eb3fc0e51e0b70b11b144e5aa))
+
 ## 3.0.0 (2025-09-30)
 
 Full Changelog: [v2.7.1...v3.0.0](https://github.com/openai/openai-go/compare/v2.7.1...v3.0.0)
