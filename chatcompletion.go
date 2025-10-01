@@ -2691,8 +2691,8 @@ func (u ChatCompletionToolChoiceOptionUnionParam) MarshalJSON() ([]byte, error) 
 }
 
 // https://github.com/openai/openai-go/issues/520
-// The issue: decoder.field.Type.Elem() calls .Elem() on the field type. When it encounters the OfAuto field (which is param.Opt[string]), calling .Elem() fails because param.Opt[string] is not a pointer type.
-// Solution: either handle it here or modify the Elem() code to handle param.Opt types.
+// The issue: in union.go, newStructUnionDecoder method -> decoder.field.Type.Elem() calls .Elem() on the field type. When it encounters the OfAuto field (which is param.Opt[string]), calling .Elem() fails because param.Opt[string] is not a pointer type.
+// Solution: either handle it here or modify the newStructUnionDecoder code to handle param.Opt types.
 func (u *ChatCompletionToolChoiceOptionUnionParam) UnmarshalJSON(data []byte) error {
 	// Handle simple string values first
 	var str string
