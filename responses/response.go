@@ -6313,10 +6313,9 @@ type ResponseInputItemUnion struct {
 	Outputs     []ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
 	ServerLabel string                                       `json:"server_label"`
 	// This field is from variant [ResponseInputItemMcpListTools].
-	Tools []ResponseInputItemMcpListToolsTool `json:"tools"`
-	Error string                              `json:"error"`
-	// This field is from variant [ResponseInputItemMcpApprovalResponse].
-	ApprovalRequestID string `json:"approval_request_id"`
+	Tools             []ResponseInputItemMcpListToolsTool `json:"tools"`
+	Error             string                              `json:"error"`
+	ApprovalRequestID string                              `json:"approval_request_id"`
 	// This field is from variant [ResponseInputItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ResponseInputItemMcpApprovalResponse].
@@ -7140,21 +7139,32 @@ type ResponseInputItemMcpCall struct {
 	ServerLabel string `json:"server_label,required"`
 	// The type of the item. Always `mcp_call`.
 	Type constant.McpCall `json:"type,required"`
+	// Unique identifier for the MCP tool call approval request. Include this value in
+	// a subsequent `mcp_approval_response` input to approve or reject the
+	// corresponding tool call.
+	ApprovalRequestID string `json:"approval_request_id,nullable"`
 	// The error from the tool call, if any.
 	Error string `json:"error,nullable"`
 	// The output from the tool call.
 	Output string `json:"output,nullable"`
+	// The status of the tool call. One of `in_progress`, `completed`, `incomplete`,
+	// `calling`, or `failed`.
+	//
+	// Any of "in_progress", "completed", "incomplete", "calling", "failed".
+	Status string `json:"status"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Arguments   respjson.Field
-		Name        respjson.Field
-		ServerLabel respjson.Field
-		Type        respjson.Field
-		Error       respjson.Field
-		Output      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID                respjson.Field
+		Arguments         respjson.Field
+		Name              respjson.Field
+		ServerLabel       respjson.Field
+		Type              respjson.Field
+		ApprovalRequestID respjson.Field
+		Error             respjson.Field
+		Output            respjson.Field
+		Status            respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
@@ -7522,14 +7532,6 @@ func (u ResponseInputItemUnionParam) GetTools() []ResponseInputItemMcpListToolsT
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseInputItemUnionParam) GetApprovalRequestID() *string {
-	if vt := u.OfMcpApprovalResponse; vt != nil {
-		return &vt.ApprovalRequestID
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputItemUnionParam) GetApprove() *bool {
 	if vt := u.OfMcpApprovalResponse; vt != nil {
 		return &vt.Approve
@@ -7640,6 +7642,8 @@ func (u ResponseInputItemUnionParam) GetStatus() *string {
 	} else if vt := u.OfLocalShellCall; vt != nil {
 		return (*string)(&vt.Status)
 	} else if vt := u.OfLocalShellCallOutput; vt != nil {
+		return (*string)(&vt.Status)
+	} else if vt := u.OfMcpCall; vt != nil {
 		return (*string)(&vt.Status)
 	}
 	return nil
@@ -7753,6 +7757,16 @@ func (u ResponseInputItemUnionParam) GetError() *string {
 		return &vt.Error.Value
 	} else if vt := u.OfMcpCall; vt != nil && vt.Error.Valid() {
 		return &vt.Error.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetApprovalRequestID() *string {
+	if vt := u.OfMcpApprovalResponse; vt != nil {
+		return (*string)(&vt.ApprovalRequestID)
+	} else if vt := u.OfMcpCall; vt != nil && vt.ApprovalRequestID.Valid() {
+		return &vt.ApprovalRequestID.Value
 	}
 	return nil
 }
@@ -8424,10 +8438,19 @@ type ResponseInputItemMcpCallParam struct {
 	Name string `json:"name,required"`
 	// The label of the MCP server running the tool.
 	ServerLabel string `json:"server_label,required"`
+	// Unique identifier for the MCP tool call approval request. Include this value in
+	// a subsequent `mcp_approval_response` input to approve or reject the
+	// corresponding tool call.
+	ApprovalRequestID param.Opt[string] `json:"approval_request_id,omitzero"`
 	// The error from the tool call, if any.
 	Error param.Opt[string] `json:"error,omitzero"`
 	// The output from the tool call.
 	Output param.Opt[string] `json:"output,omitzero"`
+	// The status of the tool call. One of `in_progress`, `completed`, `incomplete`,
+	// `calling`, or `failed`.
+	//
+	// Any of "in_progress", "completed", "incomplete", "calling", "failed".
+	Status string `json:"status,omitzero"`
 	// The type of the item. Always `mcp_call`.
 	//
 	// This field can be elided, and will marshal its zero value as "mcp_call".
@@ -8441,6 +8464,12 @@ func (r ResponseInputItemMcpCallParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *ResponseInputItemMcpCallParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemMcpCallParam](
+		"status", "in_progress", "completed", "incomplete", "calling", "failed",
+	)
 }
 
 // An internal identifier for an item to reference.
@@ -8689,10 +8718,9 @@ type ResponseItemUnion struct {
 	Outputs     []ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
 	ServerLabel string                                       `json:"server_label"`
 	// This field is from variant [ResponseItemMcpListTools].
-	Tools []ResponseItemMcpListToolsTool `json:"tools"`
-	Error string                         `json:"error"`
-	// This field is from variant [ResponseItemMcpApprovalResponse].
-	ApprovalRequestID string `json:"approval_request_id"`
+	Tools             []ResponseItemMcpListToolsTool `json:"tools"`
+	Error             string                         `json:"error"`
+	ApprovalRequestID string                         `json:"approval_request_id"`
 	// This field is from variant [ResponseItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ResponseItemMcpApprovalResponse].
@@ -9275,21 +9303,32 @@ type ResponseItemMcpCall struct {
 	ServerLabel string `json:"server_label,required"`
 	// The type of the item. Always `mcp_call`.
 	Type constant.McpCall `json:"type,required"`
+	// Unique identifier for the MCP tool call approval request. Include this value in
+	// a subsequent `mcp_approval_response` input to approve or reject the
+	// corresponding tool call.
+	ApprovalRequestID string `json:"approval_request_id,nullable"`
 	// The error from the tool call, if any.
 	Error string `json:"error,nullable"`
 	// The output from the tool call.
 	Output string `json:"output,nullable"`
+	// The status of the tool call. One of `in_progress`, `completed`, `incomplete`,
+	// `calling`, or `failed`.
+	//
+	// Any of "in_progress", "completed", "incomplete", "calling", "failed".
+	Status string `json:"status"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Arguments   respjson.Field
-		Name        respjson.Field
-		ServerLabel respjson.Field
-		Type        respjson.Field
-		Error       respjson.Field
-		Output      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID                respjson.Field
+		Arguments         respjson.Field
+		Name              respjson.Field
+		ServerLabel       respjson.Field
+		Type              respjson.Field
+		ApprovalRequestID respjson.Field
+		Error             respjson.Field
+		Output            respjson.Field
+		Status            respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
@@ -9574,7 +9613,9 @@ type ResponseOutputItemUnion struct {
 	// This field is from variant [ResponseCodeInterpreterToolCall].
 	Outputs     []ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
 	ServerLabel string                                       `json:"server_label"`
-	Error       string                                       `json:"error"`
+	// This field is from variant [ResponseOutputItemMcpCall].
+	ApprovalRequestID string `json:"approval_request_id"`
+	Error             string `json:"error"`
 	// This field is from variant [ResponseOutputItemMcpCall].
 	Output string `json:"output"`
 	// This field is from variant [ResponseOutputItemMcpListTools].
@@ -9601,6 +9642,7 @@ type ResponseOutputItemUnion struct {
 		ContainerID         respjson.Field
 		Outputs             respjson.Field
 		ServerLabel         respjson.Field
+		ApprovalRequestID   respjson.Field
 		Error               respjson.Field
 		Output              respjson.Field
 		Tools               respjson.Field
@@ -9953,21 +9995,32 @@ type ResponseOutputItemMcpCall struct {
 	ServerLabel string `json:"server_label,required"`
 	// The type of the item. Always `mcp_call`.
 	Type constant.McpCall `json:"type,required"`
+	// Unique identifier for the MCP tool call approval request. Include this value in
+	// a subsequent `mcp_approval_response` input to approve or reject the
+	// corresponding tool call.
+	ApprovalRequestID string `json:"approval_request_id,nullable"`
 	// The error from the tool call, if any.
 	Error string `json:"error,nullable"`
 	// The output from the tool call.
 	Output string `json:"output,nullable"`
+	// The status of the tool call. One of `in_progress`, `completed`, `incomplete`,
+	// `calling`, or `failed`.
+	//
+	// Any of "in_progress", "completed", "incomplete", "calling", "failed".
+	Status string `json:"status"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Arguments   respjson.Field
-		Name        respjson.Field
-		ServerLabel respjson.Field
-		Type        respjson.Field
-		Error       respjson.Field
-		Output      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID                respjson.Field
+		Arguments         respjson.Field
+		Name              respjson.Field
+		ServerLabel       respjson.Field
+		Type              respjson.Field
+		ApprovalRequestID respjson.Field
+		Error             respjson.Field
+		Output            respjson.Field
+		Status            respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
 	} `json:"-"`
 }
 

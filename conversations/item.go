@@ -176,10 +176,9 @@ type ConversationItemUnion struct {
 	Outputs     []responses.ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
 	ServerLabel string                                                 `json:"server_label"`
 	// This field is from variant [ConversationItemMcpListTools].
-	Tools []ConversationItemMcpListToolsTool `json:"tools"`
-	Error string                             `json:"error"`
-	// This field is from variant [ConversationItemMcpApprovalResponse].
-	ApprovalRequestID string `json:"approval_request_id"`
+	Tools             []ConversationItemMcpListToolsTool `json:"tools"`
+	Error             string                             `json:"error"`
+	ApprovalRequestID string                             `json:"approval_request_id"`
 	// This field is from variant [ConversationItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ConversationItemMcpApprovalResponse].
@@ -777,21 +776,32 @@ type ConversationItemMcpCall struct {
 	ServerLabel string `json:"server_label,required"`
 	// The type of the item. Always `mcp_call`.
 	Type constant.McpCall `json:"type,required"`
+	// Unique identifier for the MCP tool call approval request. Include this value in
+	// a subsequent `mcp_approval_response` input to approve or reject the
+	// corresponding tool call.
+	ApprovalRequestID string `json:"approval_request_id,nullable"`
 	// The error from the tool call, if any.
 	Error string `json:"error,nullable"`
 	// The output from the tool call.
 	Output string `json:"output,nullable"`
+	// The status of the tool call. One of `in_progress`, `completed`, `incomplete`,
+	// `calling`, or `failed`.
+	//
+	// Any of "in_progress", "completed", "incomplete", "calling", "failed".
+	Status string `json:"status"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Arguments   respjson.Field
-		Name        respjson.Field
-		ServerLabel respjson.Field
-		Type        respjson.Field
-		Error       respjson.Field
-		Output      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID                respjson.Field
+		Arguments         respjson.Field
+		Name              respjson.Field
+		ServerLabel       respjson.Field
+		Type              respjson.Field
+		ApprovalRequestID respjson.Field
+		Error             respjson.Field
+		Output            respjson.Field
+		Status            respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
