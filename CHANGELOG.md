@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.1.0 (2025-10-02)
+
+Full Changelog: [v3.0.1...v3.1.0](https://github.com/openai/openai-go/compare/v3.0.1...v3.1.0)
+
+### Features
+
+* **api:** add support for realtime calls ([565ca67](https://github.com/openai/openai-go/commit/565ca678729182ae35c634ff7791383273b29993))
+
 ## 3.0.1 (2025-10-01)
 
 Full Changelog: [v3.0.0...v3.0.1](https://github.com/openai/openai-go/compare/v3.0.0...v3.0.1)
