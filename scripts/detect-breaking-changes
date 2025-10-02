@@ -38,6 +38,7 @@ TEST_PATHS=(
 	responses/response_test.go
 	responses/inputitem_test.go
 	realtime/clientsecret_test.go
+	realtime/call_test.go
 	conversations/conversation_test.go
 	conversations/item_test.go
 	container_test.go

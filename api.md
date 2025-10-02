@@ -841,6 +841,15 @@ Methods:
 
 - <code title="post /realtime/client_secrets">client.Realtime.ClientSecrets.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#ClientSecretService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#ClientSecretNewParams">ClientSecretNewParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#ClientSecretNewResponse">ClientSecretNewResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+## Calls
+
+Methods:
+
+- <code title="post /realtime/calls/{call_id}/accept">client.Realtime.Calls.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallService.Accept">Accept</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, callID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallAcceptParams">CallAcceptParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+- <code title="post /realtime/calls/{call_id}/hangup">client.Realtime.Calls.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallService.Hangup">Hangup</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, callID <a href="https://pkg.go.dev/builtin#string">string</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+- <code title="post /realtime/calls/{call_id}/refer">client.Realtime.Calls.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallService.Refer">Refer</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, callID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallReferParams">CallReferParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+- <code title="post /realtime/calls/{call_id}/reject">client.Realtime.Calls.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallService.Reject">Reject</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, callID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#CallRejectParams">CallRejectParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+
 # Conversations
 
 Response Types:
