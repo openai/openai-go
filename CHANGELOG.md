@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.2.0 (2025-10-06)
+
+Full Changelog: [v3.1.0...v3.2.0](https://github.com/openai/openai-go/compare/v3.1.0...v3.2.0)
+
+### Features
+
+* **api:** dev day 2025 launches ([d40a768](https://github.com/openai/openai-go/commit/d40a7689c769fd8b581fa753c5b748805c8d7bd1))
+
 ## 3.1.0 (2025-10-02)
 
 Full Changelog: [v3.0.1...v3.1.0](https://github.com/openai/openai-go/compare/v3.0.1...v3.1.0)
