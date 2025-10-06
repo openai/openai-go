@@ -719,9 +719,10 @@ func (r *ImageGenStreamEventUnion) UnmarshalJSON(data []byte) error {
 type ImageModel = string
 
 const (
-	ImageModelDallE2    ImageModel = "dall-e-2"
-	ImageModelDallE3    ImageModel = "dall-e-3"
-	ImageModelGPTImage1 ImageModel = "gpt-image-1"
+	ImageModelDallE2        ImageModel = "dall-e-2"
+	ImageModelDallE3        ImageModel = "dall-e-3"
+	ImageModelGPTImage1     ImageModel = "gpt-image-1"
+	ImageModelGPTImage1Mini ImageModel = "gpt-image-1-mini"
 )
 
 // The response from the image generation endpoint.
@@ -961,7 +962,8 @@ type ImageEditParams struct {
 	Background ImageEditParamsBackground `json:"background,omitzero"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1`. Supports `high` and `low`. Defaults to `low`.
+	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
+	// `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity ImageEditParamsInputFidelity `json:"input_fidelity,omitzero"`
@@ -1062,7 +1064,8 @@ const (
 
 // Control how much effort the model will exert to match the style and features,
 // especially facial features, of input images. This parameter is only supported
-// for `gpt-image-1`. Supports `high` and `low`. Defaults to `low`.
+// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
+// `low`. Defaults to `low`.
 type ImageEditParamsInputFidelity string
 
 const (

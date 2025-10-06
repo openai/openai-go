@@ -13432,7 +13432,8 @@ type ToolImageGeneration struct {
 	Background string `json:"background"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1`. Supports `high` and `low`. Defaults to `low`.
+	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
+	// `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,nullable"`
@@ -13441,7 +13442,7 @@ type ToolImageGeneration struct {
 	InputImageMask ToolImageGenerationInputImageMask `json:"input_image_mask"`
 	// The image generation model to use. Default: `gpt-image-1`.
 	//
-	// Any of "gpt-image-1".
+	// Any of "gpt-image-1", "gpt-image-1-mini".
 	Model string `json:"model"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -14374,7 +14375,8 @@ type ToolImageGenerationParam struct {
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1`. Supports `high` and `low`. Defaults to `low`.
+	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
+	// `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
@@ -14388,7 +14390,7 @@ type ToolImageGenerationParam struct {
 	InputImageMask ToolImageGenerationInputImageMaskParam `json:"input_image_mask,omitzero"`
 	// The image generation model to use. Default: `gpt-image-1`.
 	//
-	// Any of "gpt-image-1".
+	// Any of "gpt-image-1", "gpt-image-1-mini".
 	Model string `json:"model,omitzero"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -14432,7 +14434,7 @@ func init() {
 		"input_fidelity", "high", "low",
 	)
 	apijson.RegisterFieldValidator[ToolImageGenerationParam](
-		"model", "gpt-image-1",
+		"model", "gpt-image-1", "gpt-image-1-mini",
 	)
 	apijson.RegisterFieldValidator[ToolImageGenerationParam](
 		"moderation", "auto", "low",
