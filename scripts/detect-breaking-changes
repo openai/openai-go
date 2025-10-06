@@ -27,6 +27,9 @@ TEST_PATHS=(
 	vectorstorefile_test.go
 	vectorstorefilebatch_test.go
 	webhooks/webhook_test.go
+	betachatkit_test.go
+	betachatkitsession_test.go
+	betachatkitthread_test.go
 	betaassistant_test.go
 	betathread_test.go
 	betathreadrun_test.go
@@ -44,6 +47,7 @@ TEST_PATHS=(
 	container_test.go
 	containerfile_test.go
 	containerfilecontent_test.go
+	video_test.go
 	usage_test.go
 	paginationauto_test.go
 	paginationmanual_test.go

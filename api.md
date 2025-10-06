@@ -431,6 +431,60 @@ Methods:
 
 # Beta
 
+## ChatKit
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatKitWorkflow">ChatKitWorkflow</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#FilePart">FilePart</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ImagePart">ImagePart</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitUploadFileResponseUnion">BetaChatKitUploadFileResponseUnion</a>
+
+Methods:
+
+- <code title="post /chatkit/files">client.Beta.ChatKit.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitService.UploadFile">UploadFile</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitUploadFileParams">BetaChatKitUploadFileParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitUploadFileResponseUnion">BetaChatKitUploadFileResponseUnion</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+### Sessions
+
+Methods:
+
+- <code title="post /chatkit/sessions">client.Beta.ChatKit.Sessions.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitSessionService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitSessionNewParams">BetaChatKitSessionNewParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSession">ChatSession</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /chatkit/sessions/{session_id}/cancel">client.Beta.ChatKit.Sessions.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitSessionService.Cancel">Cancel</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, sessionID <a href="https://pkg.go.dev/builtin#string">string</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSession">ChatSession</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+### Threads
+
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSessionChatKitConfigurationParam">ChatSessionChatKitConfigurationParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSessionExpiresAfterParam">ChatSessionExpiresAfterParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSessionRateLimitsParam">ChatSessionRateLimitsParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSessionWorkflowParam">ChatSessionWorkflowParam</a>
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSession">ChatSession</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSessionAutomaticThreadTitling">ChatSessionAutomaticThreadTitling</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSessionChatKitConfiguration">ChatSessionChatKitConfiguration</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSessionFileUpload">ChatSessionFileUpload</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSessionHistory">ChatSessionHistory</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSessionRateLimits">ChatSessionRateLimits</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatSessionStatus">ChatSessionStatus</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatKitAttachment">ChatKitAttachment</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatKitResponseOutputText">ChatKitResponseOutputText</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatKitThread">ChatKitThread</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatKitThreadAssistantMessageItem">ChatKitThreadAssistantMessageItem</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatKitThreadItemList">ChatKitThreadItemList</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatKitThreadUserMessageItem">ChatKitThreadUserMessageItem</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatKitWidgetItem">ChatKitWidgetItem</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitThreadDeleteResponse">BetaChatKitThreadDeleteResponse</a>
+
+Methods:
+
+- <code title="get /chatkit/threads/{thread_id}">client.Beta.ChatKit.Threads.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitThreadService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, threadID <a href="https://pkg.go.dev/builtin#string">string</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatKitThread">ChatKitThread</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /chatkit/threads">client.Beta.ChatKit.Threads.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitThreadService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitThreadListParams">BetaChatKitThreadListParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#ConversationCursorPage">ConversationCursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatKitThread">ChatKitThread</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /chatkit/threads/{thread_id}">client.Beta.ChatKit.Threads.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitThreadService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, threadID <a href="https://pkg.go.dev/builtin#string">string</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitThreadDeleteResponse">BetaChatKitThreadDeleteResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /chatkit/threads/{thread_id}/items">client.Beta.ChatKit.Threads.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitThreadService.ListItems">ListItems</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, threadID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#BetaChatKitThreadListItemsParams">BetaChatKitThreadListItemsParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#ConversationCursorPage">ConversationCursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ChatKitThreadItemListDataUnion">ChatKitThreadItemListDataUnion</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 ## Assistants
 
 Params Types:
@@ -917,3 +971,29 @@ Methods:
 Methods:
 
 - <code title="get /containers/{container_id}/files/{file_id}/content">client.Containers.Files.Content.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ContainerFileContentService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, containerID <a href="https://pkg.go.dev/builtin#string">string</a>, fileID <a href="https://pkg.go.dev/builtin#string">string</a>) (http.Response, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+# Videos
+
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoModel">VideoModel</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoSeconds">VideoSeconds</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoSize">VideoSize</a>
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Video">Video</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoCreateError">VideoCreateError</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoModel">VideoModel</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoSeconds">VideoSeconds</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoSize">VideoSize</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoDeleteResponse">VideoDeleteResponse</a>
+
+Methods:
+
+- <code title="post /videos">client.Videos.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoNewParams">VideoNewParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Video">Video</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /videos/{video_id}">client.Videos.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, videoID <a href="https://pkg.go.dev/builtin#string">string</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Video">Video</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /videos">client.Videos.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoListParams">VideoListParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#ConversationCursorPage">ConversationCursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Video">Video</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /videos/{video_id}">client.Videos.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, videoID <a href="https://pkg.go.dev/builtin#string">string</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoDeleteResponse">VideoDeleteResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /videos/{video_id}/content">client.Videos.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoService.DownloadContent">DownloadContent</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, videoID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoDownloadContentParams">VideoDownloadContentParams</a>) (http.Response, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /videos/{video_id}/remix">client.Videos.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoService.Remix">Remix</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, videoID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#VideoRemixParams">VideoRemixParams</a>) (<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Video">Video</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>

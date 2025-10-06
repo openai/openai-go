@@ -18,6 +18,7 @@ func ValueOf[T Constant[T]]() T {
 	return t.Default()
 }
 
+type Active string                                           // Always "active"
 type AllowedTools string                                     // Always "allowed_tools"
 type Approximate string                                      // Always "approximate"
 type Assistant string                                        // Always "assistant"
@@ -31,8 +32,19 @@ type BatchFailed string                                      // Always "batch.fa
 type ChatCompletion string                                   // Always "chat.completion"
 type ChatCompletionChunk string                              // Always "chat.completion.chunk"
 type ChatCompletionDeleted string                            // Always "chat.completion.deleted"
+type ChatKitAssistantMessage string                          // Always "chatkit.assistant_message"
+type ChatKitClientToolCall string                            // Always "chatkit.client_tool_call"
+type ChatKitSession string                                   // Always "chatkit.session"
+type ChatKitTask string                                      // Always "chatkit.task"
+type ChatKitTaskGroup string                                 // Always "chatkit.task_group"
+type ChatKitThread string                                    // Always "chatkit.thread"
+type ChatKitThreadItem string                                // Always "chatkit.thread_item"
+type ChatKitThreadDeleted string                             // Always "chatkit.thread.deleted"
+type ChatKitUserMessage string                               // Always "chatkit.user_message"
+type ChatKitWidget string                                    // Always "chatkit.widget"
 type CheckpointPermission string                             // Always "checkpoint.permission"
 type Click string                                            // Always "click"
+type Closed string                                           // Always "closed"
 type CodeInterpreter string                                  // Always "code_interpreter"
 type CodeInterpreterCall string                              // Always "code_interpreter_call"
 type ComputerCallOutput string                               // Always "computer_call_output"
@@ -120,6 +132,7 @@ type List string                                             // Always "list"
 type LocalShell string                                       // Always "local_shell"
 type LocalShellCall string                                   // Always "local_shell_call"
 type LocalShellCallOutput string                             // Always "local_shell_call_output"
+type Locked string                                           // Always "locked"
 type Logs string                                             // Always "logs"
 type Mcp string                                              // Always "mcp"
 type McpApprovalRequest string                               // Always "mcp_approval_request"
@@ -144,6 +157,7 @@ type OutputAudioBufferStopped string                         // Always "output_a
 type OutputText string                                       // Always "output_text"
 type ProtocolError string                                    // Always "protocol_error"
 type Python string                                           // Always "python"
+type QuotedText string                                       // Always "quoted_text"
 type RateLimitsUpdated string                                // Always "rate_limits.updated"
 type Realtime string                                         // Always "realtime"
 type RealtimeCallIncoming string                             // Always "realtime.call.incoming"
@@ -280,25 +294,41 @@ type VectorStoreFileContentPage string                       // Always "vector_s
 type VectorStoreFileDeleted string                           // Always "vector_store.file.deleted"
 type VectorStoreFilesBatch string                            // Always "vector_store.files_batch"
 type VectorStoreSearchResultsPage string                     // Always "vector_store.search_results.page"
+type Video string                                            // Always "video"
+type VideoDeleted string                                     // Always "video.deleted"
 type Wait string                                             // Always "wait"
 type Wandb string                                            // Always "wandb"
 type WebSearchCall string                                    // Always "web_search_call"
 
-func (c AllowedTools) Default() AllowedTools                     { return "allowed_tools" }
-func (c Approximate) Default() Approximate                       { return "approximate" }
-func (c Assistant) Default() Assistant                           { return "assistant" }
-func (c AssistantDeleted) Default() AssistantDeleted             { return "assistant.deleted" }
-func (c Auto) Default() Auto                                     { return "auto" }
-func (c Batch) Default() Batch                                   { return "batch" }
-func (c BatchCancelled) Default() BatchCancelled                 { return "batch.cancelled" }
-func (c BatchCompleted) Default() BatchCompleted                 { return "batch.completed" }
-func (c BatchExpired) Default() BatchExpired                     { return "batch.expired" }
-func (c BatchFailed) Default() BatchFailed                       { return "batch.failed" }
-func (c ChatCompletion) Default() ChatCompletion                 { return "chat.completion" }
-func (c ChatCompletionChunk) Default() ChatCompletionChunk       { return "chat.completion.chunk" }
-func (c ChatCompletionDeleted) Default() ChatCompletionDeleted   { return "chat.completion.deleted" }
+func (c Active) Default() Active                               { return "active" }
+func (c AllowedTools) Default() AllowedTools                   { return "allowed_tools" }
+func (c Approximate) Default() Approximate                     { return "approximate" }
+func (c Assistant) Default() Assistant                         { return "assistant" }
+func (c AssistantDeleted) Default() AssistantDeleted           { return "assistant.deleted" }
+func (c Auto) Default() Auto                                   { return "auto" }
+func (c Batch) Default() Batch                                 { return "batch" }
+func (c BatchCancelled) Default() BatchCancelled               { return "batch.cancelled" }
+func (c BatchCompleted) Default() BatchCompleted               { return "batch.completed" }
+func (c BatchExpired) Default() BatchExpired                   { return "batch.expired" }
+func (c BatchFailed) Default() BatchFailed                     { return "batch.failed" }
+func (c ChatCompletion) Default() ChatCompletion               { return "chat.completion" }
+func (c ChatCompletionChunk) Default() ChatCompletionChunk     { return "chat.completion.chunk" }
+func (c ChatCompletionDeleted) Default() ChatCompletionDeleted { return "chat.completion.deleted" }
+func (c ChatKitAssistantMessage) Default() ChatKitAssistantMessage {
+	return "chatkit.assistant_message"
+}
+func (c ChatKitClientToolCall) Default() ChatKitClientToolCall   { return "chatkit.client_tool_call" }
+func (c ChatKitSession) Default() ChatKitSession                 { return "chatkit.session" }
+func (c ChatKitTask) Default() ChatKitTask                       { return "chatkit.task" }
+func (c ChatKitTaskGroup) Default() ChatKitTaskGroup             { return "chatkit.task_group" }
+func (c ChatKitThread) Default() ChatKitThread                   { return "chatkit.thread" }
+func (c ChatKitThreadItem) Default() ChatKitThreadItem           { return "chatkit.thread_item" }
+func (c ChatKitThreadDeleted) Default() ChatKitThreadDeleted     { return "chatkit.thread.deleted" }
+func (c ChatKitUserMessage) Default() ChatKitUserMessage         { return "chatkit.user_message" }
+func (c ChatKitWidget) Default() ChatKitWidget                   { return "chatkit.widget" }
 func (c CheckpointPermission) Default() CheckpointPermission     { return "checkpoint.permission" }
 func (c Click) Default() Click                                   { return "click" }
+func (c Closed) Default() Closed                                 { return "closed" }
 func (c CodeInterpreter) Default() CodeInterpreter               { return "code_interpreter" }
 func (c CodeInterpreterCall) Default() CodeInterpreterCall       { return "code_interpreter_call" }
 func (c ComputerCallOutput) Default() ComputerCallOutput         { return "computer_call_output" }
@@ -422,6 +452,7 @@ func (c List) Default() List                                     { return "list"
 func (c LocalShell) Default() LocalShell                         { return "local_shell" }
 func (c LocalShellCall) Default() LocalShellCall                 { return "local_shell_call" }
 func (c LocalShellCallOutput) Default() LocalShellCallOutput     { return "local_shell_call_output" }
+func (c Locked) Default() Locked                                 { return "locked" }
 func (c Logs) Default() Logs                                     { return "logs" }
 func (c Mcp) Default() Mcp                                       { return "mcp" }
 func (c McpApprovalRequest) Default() McpApprovalRequest         { return "mcp_approval_request" }
@@ -452,6 +483,7 @@ func (c OutputAudioBufferStopped) Default() OutputAudioBufferStopped {
 func (c OutputText) Default() OutputText                     { return "output_text" }
 func (c ProtocolError) Default() ProtocolError               { return "protocol_error" }
 func (c Python) Default() Python                             { return "python" }
+func (c QuotedText) Default() QuotedText                     { return "quoted_text" }
 func (c RateLimitsUpdated) Default() RateLimitsUpdated       { return "rate_limits.updated" }
 func (c Realtime) Default() Realtime                         { return "realtime" }
 func (c RealtimeCallIncoming) Default() RealtimeCallIncoming { return "realtime.call.incoming" }
@@ -690,10 +722,13 @@ func (c VectorStoreFilesBatch) Default() VectorStoreFilesBatch   { return "vecto
 func (c VectorStoreSearchResultsPage) Default() VectorStoreSearchResultsPage {
 	return "vector_store.search_results.page"
 }
+func (c Video) Default() Video                 { return "video" }
+func (c VideoDeleted) Default() VideoDeleted   { return "video.deleted" }
 func (c Wait) Default() Wait                   { return "wait" }
 func (c Wandb) Default() Wandb                 { return "wandb" }
 func (c WebSearchCall) Default() WebSearchCall { return "web_search_call" }
 
+func (c Active) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c AllowedTools) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c Approximate) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c Assistant) MarshalJSON() ([]byte, error)               { return marshalString(c) }
@@ -707,8 +742,19 @@ func (c BatchFailed) MarshalJSON() ([]byte, error)             { return marshalS
 func (c ChatCompletion) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c ChatCompletionChunk) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c ChatCompletionDeleted) MarshalJSON() ([]byte, error)   { return marshalString(c) }
+func (c ChatKitAssistantMessage) MarshalJSON() ([]byte, error) { return marshalString(c) }
+func (c ChatKitClientToolCall) MarshalJSON() ([]byte, error)   { return marshalString(c) }
+func (c ChatKitSession) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c ChatKitTask) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ChatKitTaskGroup) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c ChatKitThread) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c ChatKitThreadItem) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c ChatKitThreadDeleted) MarshalJSON() ([]byte, error)    { return marshalString(c) }
+func (c ChatKitUserMessage) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c ChatKitWidget) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c CheckpointPermission) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c Click) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c Closed) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c CodeInterpreter) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c CodeInterpreterCall) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c ComputerCallOutput) MarshalJSON() ([]byte, error)      { return marshalString(c) }
@@ -804,6 +850,7 @@ func (c List) MarshalJSON() ([]byte, error)                                  { r
 func (c LocalShell) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c LocalShellCall) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c LocalShellCallOutput) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c Locked) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Logs) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c Mcp) MarshalJSON() ([]byte, error)                                   { return marshalString(c) }
 func (c McpApprovalRequest) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
@@ -828,6 +875,7 @@ func (c OutputAudioBufferStopped) MarshalJSON() ([]byte, error)              { r
 func (c OutputText) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c ProtocolError) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Python) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c QuotedText) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c RateLimitsUpdated) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c Realtime) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c RealtimeCallIncoming) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
@@ -968,6 +1016,8 @@ func (c VectorStoreFileContentPage) MarshalJSON() ([]byte, error)         { retu
 func (c VectorStoreFileDeleted) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c VectorStoreFilesBatch) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c VectorStoreSearchResultsPage) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c Video) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c VideoDeleted) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c Wait) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Wandb) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c WebSearchCall) MarshalJSON() ([]byte, error)                      { return marshalString(c) }

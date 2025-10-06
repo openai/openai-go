@@ -1040,5 +1040,7 @@ const (
 	ResponsesModelComputerUsePreview           ResponsesModel = "computer-use-preview"
 	ResponsesModelComputerUsePreview2025_03_11 ResponsesModel = "computer-use-preview-2025-03-11"
 	ResponsesModelGPT5Codex                    ResponsesModel = "gpt-5-codex"
+	ResponsesModelGPT5Pro                      ResponsesModel = "gpt-5-pro"
+	ResponsesModelGPT5Pro2025_10_06            ResponsesModel = "gpt-5-pro-2025-10-06"
 	// Or some ...[ChatModel]
 )
