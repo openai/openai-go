@@ -13505,7 +13505,8 @@ type ToolImageGeneration struct {
 	Background string `json:"background"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1`. Supports `high` and `low`. Defaults to `low`.
+	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
+	// `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,nullable"`
@@ -13514,7 +13515,7 @@ type ToolImageGeneration struct {
 	InputImageMask ToolImageGenerationInputImageMask `json:"input_image_mask"`
 	// The image generation model to use. Default: `gpt-image-1`.
 	//
-	// Any of "gpt-image-1".
+	// Any of "gpt-image-1", "gpt-image-1-mini".
 	Model string `json:"model"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -14423,7 +14424,8 @@ type ToolImageGenerationParam struct {
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1`. Supports `high` and `low`. Defaults to `low`.
+	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
+	// `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
@@ -14437,7 +14439,7 @@ type ToolImageGenerationParam struct {
 	InputImageMask ToolImageGenerationInputImageMaskParam `json:"input_image_mask,omitzero"`
 	// The image generation model to use. Default: `gpt-image-1`.
 	//
-	// Any of "gpt-image-1".
+	// Any of "gpt-image-1", "gpt-image-1-mini".
 	Model string `json:"model,omitzero"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -14471,6 +14473,30 @@ func (r ToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *ToolImageGenerationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"background", "transparent", "opaque", "auto",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"input_fidelity", "high", "low",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"model", "gpt-image-1", "gpt-image-1-mini",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"moderation", "auto", "low",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"output_format", "png", "webp", "jpeg",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"quality", "low", "medium", "high", "auto",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"size", "1024x1024", "1024x1536", "1536x1024", "auto",
+	)
 }
 
 // Optional mask for inpainting. Contains `image_url` (string, optional) and

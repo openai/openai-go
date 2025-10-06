@@ -40,6 +40,7 @@ type Client struct {
 	Realtime      realtime.RealtimeService
 	Conversations conversations.ConversationService
 	Containers    ContainerService
+	Videos        VideoService
 }
 
 // DefaultClientOptions read from the environment (OPENAI_API_KEY, OPENAI_ORG_ID,
@@ -94,6 +95,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Realtime = realtime.NewRealtimeService(opts...)
 	r.Conversations = conversations.NewConversationService(opts...)
 	r.Containers = NewContainerService(opts...)
+	r.Videos = NewVideoService(opts...)
 
 	return
 }
