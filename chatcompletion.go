@@ -2963,6 +2963,9 @@ type ChatCompletionNewParams struct {
 	// effort can result in faster responses and fewer tokens used on reasoning in a
 	// response.
 	//
+	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+	// effort.
+	//
 	// Any of "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// Specifies the processing type used for serving the request.
