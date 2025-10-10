@@ -628,6 +628,9 @@ type BetaThreadRunNewParams struct {
 	// effort can result in faster responses and fewer tokens used on reasoning in a
 	// response.
 	//
+	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+	// effort.
+	//
 	// Any of "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// Override the tools the assistant can use for this run. This is useful for

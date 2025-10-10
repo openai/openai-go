@@ -264,7 +264,7 @@ func (r *VectorStoreFile) UnmarshalJSON(data []byte) error {
 // The last error associated with this vector store file. Will be `null` if there
 // are no errors.
 type VectorStoreFileLastError struct {
-	// One of `server_error` or `rate_limit_exceeded`.
+	// One of `server_error`, `unsupported_file`, or `invalid_file`.
 	//
 	// Any of "server_error", "unsupported_file", "invalid_file".
 	Code string `json:"code,required"`

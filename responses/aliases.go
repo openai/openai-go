@@ -211,7 +211,8 @@ const ChatModelGPT3_5Turbo16k0613 = shared.ChatModelGPT3_5Turbo16k0613
 // This is an alias to an internal type.
 type ComparisonFilter = shared.ComparisonFilter
 
-// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
+// `nin`.
 //
 // - `eq`: equals
 // - `ne`: not equal
@@ -219,6 +220,8 @@ type ComparisonFilter = shared.ComparisonFilter
 // - `gte`: greater than or equal
 // - `lt`: less than
 // - `lte`: less than or equal
+// - `in`: in
+// - `nin`: not in
 //
 // This is an alias to an internal type.
 type ComparisonFilterType = shared.ComparisonFilterType
@@ -247,6 +250,9 @@ const ComparisonFilterTypeLte = shared.ComparisonFilterTypeLte
 // This is an alias to an internal type.
 type ComparisonFilterValueUnion = shared.ComparisonFilterValueUnion
 
+// This is an alias to an internal type.
+type ComparisonFilterValueArrayItemUnion = shared.ComparisonFilterValueArrayItemUnion
+
 // A filter used to compare a specified attribute key to a given value using a
 // defined comparison operation.
 //
@@ -258,6 +264,9 @@ type ComparisonFilterParam = shared.ComparisonFilterParam
 //
 // This is an alias to an internal type.
 type ComparisonFilterValueUnionParam = shared.ComparisonFilterValueUnionParam
+
+// This is an alias to an internal type.
+type ComparisonFilterValueArrayItemUnionParam = shared.ComparisonFilterValueArrayItemUnionParam
 
 // Combine multiple filters using `and` or `or`.
 //
@@ -395,6 +404,9 @@ type ReasoningParam = shared.ReasoningParam
 // supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
 // effort can result in faster responses and fewer tokens used on reasoning in a
 // response.
+//
+// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+// effort.
 //
 // This is an alias to an internal type.
 type ReasoningEffort = shared.ReasoningEffort

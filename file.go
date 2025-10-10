@@ -106,7 +106,7 @@ func (r *FileService) ListAutoPaging(ctx context.Context, query FileListParams, 
 	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
-// Delete a file.
+// Delete a file and remove it from all vector stores.
 func (r *FileService) Delete(ctx context.Context, fileID string, opts ...option.RequestOption) (res *FileDeleted, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if fileID == "" {
