@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.3.0 (2025-10-10)
+
+Full Changelog: [v3.2.0...v3.3.0](https://github.com/openai/openai-go/compare/v3.2.0...v3.3.0)
+
+### Features
+
+* **api:** comparison filter in/not in ([d6daca0](https://github.com/openai/openai-go/commit/d6daca0eedd998f49d8bfde0c3caba74d762c0d6))
+
 ## 3.2.0 (2025-10-06)
 
 Full Changelog: [v3.1.0...v3.2.0](https://github.com/openai/openai-go/compare/v3.1.0...v3.2.0)
