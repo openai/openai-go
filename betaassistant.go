@@ -1787,6 +1787,9 @@ type BetaAssistantNewParams struct {
 	// effort can result in faster responses and fewer tokens used on reasoning in a
 	// response.
 	//
+	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+	// effort.
+	//
 	// Any of "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// A set of resources that are used by the assistant's tools. The resources are
@@ -2056,6 +2059,9 @@ type BetaAssistantUpdateParams struct {
 	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
 	// effort can result in faster responses and fewer tokens used on reasoning in a
 	// response.
+	//
+	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+	// effort.
 	//
 	// Any of "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`

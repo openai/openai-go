@@ -90,7 +90,8 @@ const (
 type ComparisonFilter struct {
 	// The key to compare against the value.
 	Key string `json:"key,required"`
-	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
+	// `nin`.
 	//
 	// - `eq`: equals
 	// - `ne`: not equal
@@ -98,6 +99,8 @@ type ComparisonFilter struct {
 	// - `gte`: greater than or equal
 	// - `lt`: less than
 	// - `lte`: less than or equal
+	// - `in`: in
+	// - `nin`: not in
 	//
 	// Any of "eq", "ne", "gt", "gte", "lt", "lte".
 	Type ComparisonFilterType `json:"type,required"`
@@ -129,7 +132,8 @@ func (r ComparisonFilter) ToParam() ComparisonFilterParam {
 	return param.Override[ComparisonFilterParam](json.RawMessage(r.RawJSON()))
 }
 
-// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
+// `nin`.
 //
 // - `eq`: equals
 // - `ne`: not equal
@@ -137,6 +141,8 @@ func (r ComparisonFilter) ToParam() ComparisonFilterParam {
 // - `gte`: greater than or equal
 // - `lt`: less than
 // - `lte`: less than or equal
+// - `in`: in
+// - `nin`: not in
 type ComparisonFilterType string
 
 const (
@@ -149,12 +155,12 @@ const (
 )
 
 // ComparisonFilterValueUnion contains all possible properties and values from
-// [string], [float64], [bool].
+// [string], [float64], [bool], [[]ComparisonFilterValueArrayItemUnion].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfFloat OfBool]
+// will be valid: OfString OfFloat OfBool OfComparisonFilterValueArray]
 type ComparisonFilterValueUnion struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
@@ -162,11 +168,15 @@ type ComparisonFilterValueUnion struct {
 	OfFloat float64 `json:",inline"`
 	// This field will be present if the value is a [bool] instead of an object.
 	OfBool bool `json:",inline"`
-	JSON   struct {
-		OfString respjson.Field
-		OfFloat  respjson.Field
-		OfBool   respjson.Field
-		raw      string
+	// This field will be present if the value is a
+	// [[]ComparisonFilterValueArrayItemUnion] instead of an object.
+	OfComparisonFilterValueArray []ComparisonFilterValueArrayItemUnion `json:",inline"`
+	JSON                         struct {
+		OfString                     respjson.Field
+		OfFloat                      respjson.Field
+		OfBool                       respjson.Field
+		OfComparisonFilterValueArray respjson.Field
+		raw                          string
 	} `json:"-"`
 }
 
@@ -185,10 +195,51 @@ func (u ComparisonFilterValueUnion) AsBool() (v bool) {
 	return
 }
 
+func (u ComparisonFilterValueUnion) AsComparisonFilterValueArray() (v []ComparisonFilterValueArrayItemUnion) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u ComparisonFilterValueUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ComparisonFilterValueUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ComparisonFilterValueArrayItemUnion contains all possible properties and values
+// from [string], [float64].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfFloat]
+type ComparisonFilterValueArrayItemUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [float64] instead of an object.
+	OfFloat float64 `json:",inline"`
+	JSON    struct {
+		OfString respjson.Field
+		OfFloat  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u ComparisonFilterValueArrayItemUnion) AsString() (v string) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ComparisonFilterValueArrayItemUnion) AsFloat() (v float64) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ComparisonFilterValueArrayItemUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ComparisonFilterValueArrayItemUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -199,7 +250,8 @@ func (r *ComparisonFilterValueUnion) UnmarshalJSON(data []byte) error {
 type ComparisonFilterParam struct {
 	// The key to compare against the value.
 	Key string `json:"key,required"`
-	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
+	// `nin`.
 	//
 	// - `eq`: equals
 	// - `ne`: not equal
@@ -207,6 +259,8 @@ type ComparisonFilterParam struct {
 	// - `gte`: greater than or equal
 	// - `lt`: less than
 	// - `lte`: less than or equal
+	// - `in`: in
+	// - `nin`: not in
 	//
 	// Any of "eq", "ne", "gt", "gte", "lt", "lte".
 	Type ComparisonFilterType `json:"type,omitzero,required"`
@@ -228,14 +282,15 @@ func (r *ComparisonFilterParam) UnmarshalJSON(data []byte) error {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ComparisonFilterValueUnionParam struct {
-	OfString param.Opt[string]  `json:",omitzero,inline"`
-	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
-	OfBool   param.Opt[bool]    `json:",omitzero,inline"`
+	OfString                     param.Opt[string]                          `json:",omitzero,inline"`
+	OfFloat                      param.Opt[float64]                         `json:",omitzero,inline"`
+	OfBool                       param.Opt[bool]                            `json:",omitzero,inline"`
+	OfComparisonFilterValueArray []ComparisonFilterValueArrayItemUnionParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ComparisonFilterValueUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool)
+	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool, u.OfComparisonFilterValueArray)
 }
 func (u *ComparisonFilterValueUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -248,6 +303,33 @@ func (u *ComparisonFilterValueUnionParam) asAny() any {
 		return &u.OfFloat.Value
 	} else if !param.IsOmitted(u.OfBool) {
 		return &u.OfBool.Value
+	} else if !param.IsOmitted(u.OfComparisonFilterValueArray) {
+		return &u.OfComparisonFilterValueArray
+	}
+	return nil
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ComparisonFilterValueArrayItemUnionParam struct {
+	OfString param.Opt[string]  `json:",omitzero,inline"`
+	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ComparisonFilterValueArrayItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfFloat)
+}
+func (u *ComparisonFilterValueArrayItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *ComparisonFilterValueArrayItemUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfFloat) {
+		return &u.OfFloat.Value
 	}
 	return nil
 }
@@ -674,6 +756,9 @@ type Reasoning struct {
 	// effort can result in faster responses and fewer tokens used on reasoning in a
 	// response.
 	//
+	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+	// effort.
+	//
 	// Any of "minimal", "low", "medium", "high".
 	Effort ReasoningEffort `json:"effort,nullable"`
 	// **Deprecated:** use `summary` instead.
@@ -752,6 +837,9 @@ type ReasoningParam struct {
 	// effort can result in faster responses and fewer tokens used on reasoning in a
 	// response.
 	//
+	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+	// effort.
+	//
 	// Any of "minimal", "low", "medium", "high".
 	Effort ReasoningEffort `json:"effort,omitzero"`
 	// **Deprecated:** use `summary` instead.
@@ -786,6 +874,9 @@ func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
 // supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
 // effort can result in faster responses and fewer tokens used on reasoning in a
 // response.
+//
+// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+// effort.
 type ReasoningEffort string
 
 const (
