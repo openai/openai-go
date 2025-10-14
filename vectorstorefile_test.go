@@ -5,7 +5,11 @@ package openai_test
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/openai/openai-go/v3"
@@ -190,4 +194,80 @@ func TestVectorStoreFileContent(t *testing.T) {
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
+}
+
+func TestVectorStoreFilePollStatus(t *testing.T) {
+	var capturedURLs []string
+	callCount := 0
+
+	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
+		option.WithHTTPClient(&http.Client{
+			Transport: &vectorStoreFileClosureTransport{
+				fn: func(req *http.Request) (*http.Response, error) {
+					capturedURLs = append(capturedURLs, req.URL.String())
+					callCount++
+
+					var status openai.VectorStoreFileStatus
+					if callCount < 3 {
+						status = openai.VectorStoreFileStatusInProgress
+					} else {
+						status = openai.VectorStoreFileStatusCompleted
+					}
+
+					responseBody := fmt.Sprintf(`{
+						"id": "file-abc123",
+						"object": "vector_store.file",
+						"status": "%s",
+						"vector_store_id": "vs_abc123",
+						"created_at": 1234567890,
+						"usage_bytes": 1024
+					}`, status)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(strings.NewReader(responseBody)),
+						Header: http.Header{
+							"Content-Type":         []string{"application/json"},
+							"openai-poll-after-ms": []string{"10"},
+						},
+					}, nil
+				},
+			},
+		}),
+	)
+
+	file, err := client.VectorStores.Files.PollStatus(
+		context.Background(),
+		"vs_abc123",
+		"file-abc123",
+		10,
+	)
+
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+
+	if file.Status != openai.VectorStoreFileStatusCompleted {
+		t.Errorf("expected status to be completed, got: %s", file.Status)
+	}
+
+	expectedURL := "https://api.openai.com/v1/vector_stores/vs_abc123/files/file-abc123"
+	for _, url := range capturedURLs {
+		if url != expectedURL {
+			t.Errorf("expected URL %s, got: %s", expectedURL, url)
+		}
+	}
+
+	if callCount != 3 {
+		t.Errorf("expected 3 calls, got: %d", callCount)
+	}
+}
+
+type vectorStoreFileClosureTransport struct {
+	fn func(req *http.Request) (*http.Response, error)
+}
+
+func (t *vectorStoreFileClosureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return t.fn(req)
 }
