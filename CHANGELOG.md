@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.4.0 (2025-10-16)
+
+Full Changelog: [v3.3.0...v3.4.0](https://github.com/openai/openai-go/compare/v3.3.0...v3.4.0)
+
+### Features
+
+* **api:** Add support for gpt-4o-transcribe-diarize on audio/transcriptions endpoint ([ee32400](https://github.com/openai/openai-go/commit/ee32400f70d6d16c583978c574806648bdeecd91))
+
+
+### Chores
+
+* **api:** internal updates ([74c8031](https://github.com/openai/openai-go/commit/74c8031304013f5d7c24bd9db93d73da80efba9f))
+* **client:** undo more naming changes ([db441bc](https://github.com/openai/openai-go/commit/db441bcb7fb830743d9489589a3a48ca79d2f80a))
+* **client:** undo some naming changes ([a5aa3d6](https://github.com/openai/openai-go/commit/a5aa3d6e0d6773f838f826bbd68f96b70fef0653))
+
 ## 3.3.0 (2025-10-10)
 
 Full Changelog: [v3.2.0...v3.3.0](https://github.com/openai/openai-go/compare/v3.2.0...v3.3.0)
