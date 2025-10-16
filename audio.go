@@ -34,20 +34,24 @@ func NewAudioService(opts ...option.RequestOption) (r AudioService) {
 type AudioModel = string
 
 const (
-	AudioModelWhisper1            AudioModel = "whisper-1"
-	AudioModelGPT4oTranscribe     AudioModel = "gpt-4o-transcribe"
-	AudioModelGPT4oMiniTranscribe AudioModel = "gpt-4o-mini-transcribe"
+	AudioModelWhisper1               AudioModel = "whisper-1"
+	AudioModelGPT4oTranscribe        AudioModel = "gpt-4o-transcribe"
+	AudioModelGPT4oMiniTranscribe    AudioModel = "gpt-4o-mini-transcribe"
+	AudioModelGPT4oTranscribeDiarize AudioModel = "gpt-4o-transcribe-diarize"
 )
 
 // The format of the output, in one of these options: `json`, `text`, `srt`,
-// `verbose_json`, or `vtt`. For `gpt-4o-transcribe` and `gpt-4o-mini-transcribe`,
-// the only supported format is `json`.
+// `verbose_json`, `vtt`, or `diarized_json`. For `gpt-4o-transcribe` and
+// `gpt-4o-mini-transcribe`, the only supported format is `json`. For
+// `gpt-4o-transcribe-diarize`, the supported formats are `json`, `text`, and
+// `diarized_json`, with `diarized_json` required to receive speaker annotations.
 type AudioResponseFormat string
 
 const (
-	AudioResponseFormatJSON        AudioResponseFormat = "json"
-	AudioResponseFormatText        AudioResponseFormat = "text"
-	AudioResponseFormatSRT         AudioResponseFormat = "srt"
-	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json"
-	AudioResponseFormatVTT         AudioResponseFormat = "vtt"
+	AudioResponseFormatJSON         AudioResponseFormat = "json"
+	AudioResponseFormatText         AudioResponseFormat = "text"
+	AudioResponseFormatSRT          AudioResponseFormat = "srt"
+	AudioResponseFormatVerboseJSON  AudioResponseFormat = "verbose_json"
+	AudioResponseFormatVTT          AudioResponseFormat = "vtt"
+	AudioResponseFormatDiarizedJSON AudioResponseFormat = "diarized_json"
 )
