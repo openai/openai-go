@@ -13460,7 +13460,7 @@ func (u ToolCodeInterpreterContainerUnion) AsString() (v string) {
 	return
 }
 
-func (u ToolCodeInterpreterContainerUnion) AsCodeInterpreterToolAuto() (v ToolCodeInterpreterContainerCodeInterpreterContainerAuto) {
+func (u ToolCodeInterpreterContainerUnion) AsCodeInterpreterContainerAuto() (v ToolCodeInterpreterContainerCodeInterpreterContainerAuto) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -13647,7 +13647,7 @@ func ToolParamOfCodeInterpreter[
 	case string:
 		codeInterpreter.Container.OfString = param.NewOpt(v)
 	case ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam:
-		codeInterpreter.Container.OfCodeInterpreterToolAuto = &v
+		codeInterpreter.Container.OfCodeInterpreterContainerAuto = &v
 	}
 	return ToolUnionParam{OfCodeInterpreter: &codeInterpreter}
 }
@@ -14370,13 +14370,13 @@ func (r *ToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ToolCodeInterpreterContainerUnionParam struct {
-	OfString                  param.Opt[string]                                              `json:",omitzero,inline"`
-	OfCodeInterpreterToolAuto *ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam `json:",omitzero,inline"`
+	OfString                       param.Opt[string]                                              `json:",omitzero,inline"`
+	OfCodeInterpreterContainerAuto *ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ToolCodeInterpreterContainerUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfCodeInterpreterToolAuto)
+	return param.MarshalUnion(u, u.OfString, u.OfCodeInterpreterContainerAuto)
 }
 func (u *ToolCodeInterpreterContainerUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -14385,8 +14385,8 @@ func (u *ToolCodeInterpreterContainerUnionParam) UnmarshalJSON(data []byte) erro
 func (u *ToolCodeInterpreterContainerUnionParam) asAny() any {
 	if !param.IsOmitted(u.OfString) {
 		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfCodeInterpreterToolAuto) {
-		return u.OfCodeInterpreterToolAuto
+	} else if !param.IsOmitted(u.OfCodeInterpreterContainerAuto) {
+		return u.OfCodeInterpreterContainerAuto
 	}
 	return nil
 }
