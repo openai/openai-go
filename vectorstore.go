@@ -641,6 +641,9 @@ func (r *VectorStoreSearchResponseContent) UnmarshalJSON(data []byte) error {
 }
 
 type VectorStoreNewParams struct {
+	// A description for the vector store. Can be used to describe the vector store's
+	// purpose.
+	Description param.Opt[string] `json:"description,omitzero"`
 	// The name of the vector store.
 	Name param.Opt[string] `json:"name,omitzero"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
