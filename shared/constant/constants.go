@@ -276,8 +276,10 @@ type Tokens string                                           // Always "tokens"
 type Tool string                                             // Always "tool"
 type ToolCalls string                                        // Always "tool_calls"
 type ToolExecutionError string                               // Always "tool_execution_error"
+type Transcribe string                                       // Always "transcribe"
 type TranscriptTextDelta string                              // Always "transcript.text.delta"
 type TranscriptTextDone string                               // Always "transcript.text.done"
+type TranscriptTextSegment string                            // Always "transcript.text.segment"
 type Transcription string                                    // Always "transcription"
 type TranscriptionSessionUpdate string                       // Always "transcription_session.update"
 type TranscriptionSessionUpdated string                      // Always "transcription_session.updated"
@@ -692,13 +694,15 @@ func (c ThreadRunStepFailed) Default() ThreadRunStepFailed       { return "threa
 func (c ThreadRunStepInProgress) Default() ThreadRunStepInProgress {
 	return "thread.run.step.in_progress"
 }
-func (c Tokens) Default() Tokens                           { return "tokens" }
-func (c Tool) Default() Tool                               { return "tool" }
-func (c ToolCalls) Default() ToolCalls                     { return "tool_calls" }
-func (c ToolExecutionError) Default() ToolExecutionError   { return "tool_execution_error" }
-func (c TranscriptTextDelta) Default() TranscriptTextDelta { return "transcript.text.delta" }
-func (c TranscriptTextDone) Default() TranscriptTextDone   { return "transcript.text.done" }
-func (c Transcription) Default() Transcription             { return "transcription" }
+func (c Tokens) Default() Tokens                               { return "tokens" }
+func (c Tool) Default() Tool                                   { return "tool" }
+func (c ToolCalls) Default() ToolCalls                         { return "tool_calls" }
+func (c ToolExecutionError) Default() ToolExecutionError       { return "tool_execution_error" }
+func (c Transcribe) Default() Transcribe                       { return "transcribe" }
+func (c TranscriptTextDelta) Default() TranscriptTextDelta     { return "transcript.text.delta" }
+func (c TranscriptTextDone) Default() TranscriptTextDone       { return "transcript.text.done" }
+func (c TranscriptTextSegment) Default() TranscriptTextSegment { return "transcript.text.segment" }
+func (c Transcription) Default() Transcription                 { return "transcription" }
 func (c TranscriptionSessionUpdate) Default() TranscriptionSessionUpdate {
 	return "transcription_session.update"
 }
@@ -998,8 +1002,10 @@ func (c Tokens) MarshalJSON() ([]byte, error)                             { retu
 func (c Tool) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c ToolCalls) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c ToolExecutionError) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c Transcribe) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c TranscriptTextDelta) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c TranscriptTextDone) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c TranscriptTextSegment) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c Transcription) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c TranscriptionSessionUpdate) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c TranscriptionSessionUpdated) MarshalJSON() ([]byte, error)        { return marshalString(c) }

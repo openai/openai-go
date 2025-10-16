@@ -35,6 +35,8 @@ func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {
 			OfAuto: constant.ValueOf[constant.Auto](),
 		},
 		Include:                []openai.TranscriptionInclude{openai.TranscriptionIncludeLogprobs},
+		KnownSpeakerNames:      []string{"string"},
+		KnownSpeakerReferences: []string{"string"},
 		Language:               openai.String("language"),
 		Prompt:                 openai.String("prompt"),
 		ResponseFormat:         openai.AudioResponseFormatJSON,

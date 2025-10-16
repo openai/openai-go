@@ -30,6 +30,7 @@ func TestVectorStoreNewWithOptionalParams(t *testing.T) {
 		ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
 			OfAuto: &openai.AutoFileChunkingStrategyParam{},
 		},
+		Description: openai.String("description"),
 		ExpiresAfter: openai.VectorStoreNewParamsExpiresAfter{
 			Days: 1,
 		},
