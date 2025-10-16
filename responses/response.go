@@ -13359,7 +13359,7 @@ func (r *ToolCodeInterpreter) UnmarshalJSON(data []byte) error {
 }
 
 // ToolCodeInterpreterContainerUnion contains all possible properties and values
-// from [string], [ToolCodeInterpreterContainerCodeInterpreterToolAuto].
+// from [string], [ToolCodeInterpreterContainerCodeInterpreterContainerAuto].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
@@ -13369,10 +13369,10 @@ type ToolCodeInterpreterContainerUnion struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
 	// This field is from variant
-	// [ToolCodeInterpreterContainerCodeInterpreterToolAuto].
+	// [ToolCodeInterpreterContainerCodeInterpreterContainerAuto].
 	Type constant.Auto `json:"type"`
 	// This field is from variant
-	// [ToolCodeInterpreterContainerCodeInterpreterToolAuto].
+	// [ToolCodeInterpreterContainerCodeInterpreterContainerAuto].
 	FileIDs []string `json:"file_ids"`
 	JSON    struct {
 		OfString respjson.Field
@@ -13387,7 +13387,7 @@ func (u ToolCodeInterpreterContainerUnion) AsString() (v string) {
 	return
 }
 
-func (u ToolCodeInterpreterContainerUnion) AsCodeInterpreterToolAuto() (v ToolCodeInterpreterContainerCodeInterpreterToolAuto) {
+func (u ToolCodeInterpreterContainerUnion) AsCodeInterpreterToolAuto() (v ToolCodeInterpreterContainerCodeInterpreterContainerAuto) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -13401,7 +13401,7 @@ func (r *ToolCodeInterpreterContainerUnion) UnmarshalJSON(data []byte) error {
 
 // Configuration for a code interpreter container. Optionally specify the IDs of
 // the files to run the code on.
-type ToolCodeInterpreterContainerCodeInterpreterToolAuto struct {
+type ToolCodeInterpreterContainerCodeInterpreterContainerAuto struct {
 	// Always `auto`.
 	Type constant.Auto `json:"type,required"`
 	// An optional list of uploaded files to make available to your code.
@@ -13416,8 +13416,8 @@ type ToolCodeInterpreterContainerCodeInterpreterToolAuto struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ToolCodeInterpreterContainerCodeInterpreterToolAuto) RawJSON() string { return r.JSON.raw }
-func (r *ToolCodeInterpreterContainerCodeInterpreterToolAuto) UnmarshalJSON(data []byte) error {
+func (r ToolCodeInterpreterContainerCodeInterpreterContainerAuto) RawJSON() string { return r.JSON.raw }
+func (r *ToolCodeInterpreterContainerCodeInterpreterContainerAuto) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -13567,13 +13567,13 @@ func ToolParamOfMcp(serverLabel string) ToolUnionParam {
 }
 
 func ToolParamOfCodeInterpreter[
-	T string | ToolCodeInterpreterContainerCodeInterpreterToolAutoParam,
+	T string | ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam,
 ](container T) ToolUnionParam {
 	var codeInterpreter ToolCodeInterpreterParam
 	switch v := any(container).(type) {
 	case string:
 		codeInterpreter.Container.OfString = param.NewOpt(v)
-	case ToolCodeInterpreterContainerCodeInterpreterToolAutoParam:
+	case ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam:
 		codeInterpreter.Container.OfCodeInterpreterToolAuto = &v
 	}
 	return ToolUnionParam{OfCodeInterpreter: &codeInterpreter}
@@ -14321,8 +14321,8 @@ func (r *ToolCodeInterpreterParam) UnmarshalJSON(data []byte) error {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ToolCodeInterpreterContainerUnionParam struct {
-	OfString                  param.Opt[string]                                         `json:",omitzero,inline"`
-	OfCodeInterpreterToolAuto *ToolCodeInterpreterContainerCodeInterpreterToolAutoParam `json:",omitzero,inline"`
+	OfString                  param.Opt[string]                                              `json:",omitzero,inline"`
+	OfCodeInterpreterToolAuto *ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -14346,7 +14346,7 @@ func (u *ToolCodeInterpreterContainerUnionParam) asAny() any {
 // the files to run the code on.
 //
 // The property Type is required.
-type ToolCodeInterpreterContainerCodeInterpreterToolAutoParam struct {
+type ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam struct {
 	// An optional list of uploaded files to make available to your code.
 	FileIDs []string `json:"file_ids,omitzero"`
 	// Always `auto`.
@@ -14356,11 +14356,11 @@ type ToolCodeInterpreterContainerCodeInterpreterToolAutoParam struct {
 	paramObj
 }
 
-func (r ToolCodeInterpreterContainerCodeInterpreterToolAutoParam) MarshalJSON() (data []byte, err error) {
-	type shadow ToolCodeInterpreterContainerCodeInterpreterToolAutoParam
+func (r ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam) MarshalJSON() (data []byte, err error) {
+	type shadow ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ToolCodeInterpreterContainerCodeInterpreterToolAutoParam) UnmarshalJSON(data []byte) error {
+func (r *ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
