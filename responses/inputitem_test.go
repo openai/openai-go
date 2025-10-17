@@ -31,7 +31,7 @@ func TestInputItemListWithOptionalParams(t *testing.T) {
 		"response_id",
 		responses.InputItemListParams{
 			After:   openai.String("after"),
-			Include: []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
+			Include: []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 			Limit:   openai.Int(0),
 			Order:   responses.InputItemListParamsOrderAsc,
 		},
