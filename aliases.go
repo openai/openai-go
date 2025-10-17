@@ -294,13 +294,9 @@ type CompoundFilterParam = shared.CompoundFilterParam
 // This is an alias to an internal type.
 type CustomToolInputFormatUnion = shared.CustomToolInputFormatUnion
 
-// Unconstrained free-form text.
-//
 // This is an alias to an internal type.
 type CustomToolInputFormatText = shared.CustomToolInputFormatText
 
-// A grammar defined by the user.
-//
 // This is an alias to an internal type.
 type CustomToolInputFormatGrammar = shared.CustomToolInputFormatGrammar
 
@@ -309,13 +305,9 @@ type CustomToolInputFormatGrammar = shared.CustomToolInputFormatGrammar
 // This is an alias to an internal type.
 type CustomToolInputFormatUnionParam = shared.CustomToolInputFormatUnionParam
 
-// Unconstrained free-form text.
-//
 // This is an alias to an internal type.
 type CustomToolInputFormatTextParam = shared.CustomToolInputFormatTextParam
 
-// A grammar defined by the user.
-//
 // This is an alias to an internal type.
 type CustomToolInputFormatGrammarParam = shared.CustomToolInputFormatGrammarParam
 

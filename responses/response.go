@@ -220,8 +220,6 @@ func (r *ComputerToolParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A custom tool that processes input using a specified format. Learn more about
-// [custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools).
 type CustomTool struct {
 	// The name of the custom tool, used to identify it in tool calls.
 	Name string `json:"name,required"`
@@ -257,9 +255,6 @@ func (r CustomTool) ToParam() CustomToolParam {
 	return param.Override[CustomToolParam](json.RawMessage(r.RawJSON()))
 }
 
-// A custom tool that processes input using a specified format. Learn more about
-// [custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools).
-//
 // The properties Name, Type are required.
 type CustomToolParam struct {
 	// The name of the custom tool, used to identify it in tool calls.
@@ -1481,7 +1476,7 @@ func (r *ResponseCodeInterpreterToolCallOutputUnion) UnmarshalJSON(data []byte) 
 type ResponseCodeInterpreterToolCallOutputLogs struct {
 	// The logs output from the code interpreter.
 	Logs string `json:"logs,required"`
-	// The type of the output. Always 'logs'.
+	// The type of the output. Always `logs`.
 	Type constant.Logs `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1500,7 +1495,7 @@ func (r *ResponseCodeInterpreterToolCallOutputLogs) UnmarshalJSON(data []byte) e
 
 // The image output from the code interpreter.
 type ResponseCodeInterpreterToolCallOutputImage struct {
-	// The type of the output. Always 'image'.
+	// The type of the output. Always `image`.
 	Type constant.Image `json:"type,required"`
 	// The URL of the image output from the code interpreter.
 	URL string `json:"url,required"`
@@ -1630,7 +1625,7 @@ func init() {
 type ResponseCodeInterpreterToolCallOutputLogsParam struct {
 	// The logs output from the code interpreter.
 	Logs string `json:"logs,required"`
-	// The type of the output. Always 'logs'.
+	// The type of the output. Always `logs`.
 	//
 	// This field can be elided, and will marshal its zero value as "logs".
 	Type constant.Logs `json:"type,required"`
@@ -1651,7 +1646,7 @@ func (r *ResponseCodeInterpreterToolCallOutputLogsParam) UnmarshalJSON(data []by
 type ResponseCodeInterpreterToolCallOutputImageParam struct {
 	// The URL of the image output from the code interpreter.
 	URL string `json:"url,required"`
-	// The type of the output. Always 'image'.
+	// The type of the output. Always `image`.
 	//
 	// This field can be elided, and will marshal its zero value as "image".
 	Type constant.Image `json:"type,required"`
@@ -1902,8 +1897,7 @@ type ResponseComputerToolCallActionClick struct {
 	//
 	// Any of "left", "right", "wheel", "back", "forward".
 	Button string `json:"button,required"`
-	// Specifies the event type. For a click action, this property is always set to
-	// `click`.
+	// Specifies the event type. For a click action, this property is always `click`.
 	Type constant.Click `json:"type,required"`
 	// The x-coordinate where the click occurred.
 	X int64 `json:"x,required"`
@@ -1983,7 +1977,7 @@ func (r *ResponseComputerToolCallActionDrag) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A series of x/y coordinate pairs in the drag path.
+// An x/y coordinate pair, e.g. `{ x: 100, y: 200 }`.
 type ResponseComputerToolCallActionDragPath struct {
 	// The x-coordinate.
 	X int64 `json:"x,required"`
@@ -2148,9 +2142,9 @@ type ResponseComputerToolCallPendingSafetyCheck struct {
 	// The ID of the pending safety check.
 	ID string `json:"id,required"`
 	// The type of the pending safety check.
-	Code string `json:"code,required"`
+	Code string `json:"code,nullable"`
 	// Details about the pending safety check.
-	Message string `json:"message,required"`
+	Message string `json:"message,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -2401,8 +2395,7 @@ type ResponseComputerToolCallActionClickParam struct {
 	X int64 `json:"x,required"`
 	// The y-coordinate where the click occurred.
 	Y int64 `json:"y,required"`
-	// Specifies the event type. For a click action, this property is always set to
-	// `click`.
+	// Specifies the event type. For a click action, this property is always `click`.
 	//
 	// This field can be elided, and will marshal its zero value as "click".
 	Type constant.Click `json:"type,required"`
@@ -2479,7 +2472,7 @@ func (r *ResponseComputerToolCallActionDragParam) UnmarshalJSON(data []byte) err
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A series of x/y coordinate pairs in the drag path.
+// An x/y coordinate pair, e.g. `{ x: 100, y: 200 }`.
 //
 // The properties X, Y are required.
 type ResponseComputerToolCallActionDragPathParam struct {
@@ -2647,14 +2640,14 @@ func (r *ResponseComputerToolCallActionWaitParam) UnmarshalJSON(data []byte) err
 
 // A pending safety check for the computer call.
 //
-// The properties ID, Code, Message are required.
+// The property ID is required.
 type ResponseComputerToolCallPendingSafetyCheckParam struct {
 	// The ID of the pending safety check.
 	ID string `json:"id,required"`
 	// The type of the pending safety check.
-	Code string `json:"code,required"`
+	Code param.Opt[string] `json:"code,omitzero"`
 	// Details about the pending safety check.
-	Message string `json:"message,required"`
+	Message param.Opt[string] `json:"message,omitzero"`
 	paramObj
 }
 
@@ -2709,9 +2702,9 @@ type ResponseComputerToolCallOutputItemAcknowledgedSafetyCheck struct {
 	// The ID of the pending safety check.
 	ID string `json:"id,required"`
 	// The type of the pending safety check.
-	Code string `json:"code,required"`
+	Code string `json:"code,nullable"`
 	// Details about the pending safety check.
-	Message string `json:"message,required"`
+	Message string `json:"message,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -5410,12 +5403,14 @@ func (r *ResponseInProgressEvent) UnmarshalJSON(data []byte) error {
 type ResponseIncludable string
 
 const (
-	ResponseIncludableCodeInterpreterCallOutputs       ResponseIncludable = "code_interpreter_call.outputs"
-	ResponseIncludableComputerCallOutputOutputImageURL ResponseIncludable = "computer_call_output.output.image_url"
 	ResponseIncludableFileSearchCallResults            ResponseIncludable = "file_search_call.results"
+	ResponseIncludableWebSearchCallResults             ResponseIncludable = "web_search_call.results"
+	ResponseIncludableWebSearchCallActionSources       ResponseIncludable = "web_search_call.action.sources"
 	ResponseIncludableMessageInputImageImageURL        ResponseIncludable = "message.input_image.image_url"
-	ResponseIncludableMessageOutputTextLogprobs        ResponseIncludable = "message.output_text.logprobs"
+	ResponseIncludableComputerCallOutputOutputImageURL ResponseIncludable = "computer_call_output.output.image_url"
+	ResponseIncludableCodeInterpreterCallOutputs       ResponseIncludable = "code_interpreter_call.outputs"
 	ResponseIncludableReasoningEncryptedContent        ResponseIncludable = "reasoning.encrypted_content"
+	ResponseIncludableMessageOutputTextLogprobs        ResponseIncludable = "message.output_text.logprobs"
 )
 
 // An event that is emitted when a response finishes as incomplete.
@@ -13430,10 +13425,7 @@ type ToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
-	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
-	// `low`. Defaults to `low`.
+	// Control how much effort the model will exert to match the style and features, especially facial features, of input images. This parameter is only supported for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,nullable"`
@@ -13514,7 +13506,6 @@ func (r *ToolImageGenerationInputImageMask) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A tool that allows the model to execute shell commands in a local environment.
 type ToolLocalShell struct {
 	// The type of the local shell tool. Always `local_shell`.
 	Type constant.LocalShell `json:"type,required"`
@@ -14373,10 +14364,7 @@ type ToolImageGenerationParam struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// Control how much effort the model will exert to match the style and features,
-	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
-	// `low`. Defaults to `low`.
+	// Control how much effort the model will exert to match the style and features, especially facial features, of input images. This parameter is only supported for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
@@ -14474,8 +14462,6 @@ func NewToolLocalShellParam() ToolLocalShellParam {
 	}
 }
 
-// A tool that allows the model to execute shell commands in a local environment.
-//
 // This struct has a constant value, construct it with [NewToolLocalShellParam].
 type ToolLocalShellParam struct {
 	// The type of the local shell tool. Always `local_shell`.
