@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.5.1 (2025-10-18)
+
+Full Changelog: [v3.5.0...v3.5.1](https://github.com/openai/openai-go/compare/v3.5.0...v3.5.1)
+
+### Bug Fixes
+
+* **api:** internal openapi updates ([7ad9b02](https://github.com/openai/openai-go/commit/7ad9b02d1e86cb3235c779e4e0f6e2ee226662d3))
+
 ## 3.5.0 (2025-10-17)
 
 Full Changelog: [v3.4.0...v3.5.0](https://github.com/openai/openai-go/compare/v3.4.0...v3.5.0)
