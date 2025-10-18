@@ -32,7 +32,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		Conversation: responses.ResponseNewParamsConversationUnion{
 			OfString: openai.String("string"),
 		},
-		Include: []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
+		Include: []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String("string"),
 		},
@@ -116,7 +116,7 @@ func TestResponseGetWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"resp_677efb5139a88190b512bc3fef8e535d",
 		responses.ResponseGetParams{
-			Include:            []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
+			Include:            []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 			IncludeObfuscation: openai.Bool(true),
 			StartingAfter:      openai.Int(0),
 		},

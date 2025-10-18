@@ -40,7 +40,7 @@ func TestItemNewWithOptionalParams(t *testing.T) {
 					Type: responses.EasyInputMessageTypeMessage,
 				},
 			}},
-			Include: []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
+			Include: []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		},
 	)
 	if err != nil {
@@ -69,7 +69,7 @@ func TestItemGetWithOptionalParams(t *testing.T) {
 		"conv_123",
 		"msg_abc",
 		conversations.ItemGetParams{
-			Include: []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
+			Include: []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		},
 	)
 	if err != nil {
@@ -98,7 +98,7 @@ func TestItemListWithOptionalParams(t *testing.T) {
 		"conv_123",
 		conversations.ItemListParams{
 			After:   openai.String("after"),
-			Include: []responses.ResponseIncludable{responses.ResponseIncludableCodeInterpreterCallOutputs},
+			Include: []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 			Limit:   openai.Int(0),
 			Order:   conversations.ItemListParamsOrderAsc,
 		},
