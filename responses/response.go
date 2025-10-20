@@ -30,8 +30,9 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewResponseService] method instead.
 type ResponseService struct {
-	Options    []option.RequestOption
-	InputItems InputItemService
+	Options     []option.RequestOption
+	InputItems  InputItemService
+	InputTokens InputTokenService
 }
 
 // NewResponseService generates a new service that applies the given options to
@@ -41,6 +42,7 @@ func NewResponseService(opts ...option.RequestOption) (r ResponseService) {
 	r = ResponseService{}
 	r.Options = opts
 	r.InputItems = NewInputItemService(opts...)
+	r.InputTokens = NewInputTokenService(opts...)
 	return
 }
 
