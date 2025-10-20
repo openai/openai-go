@@ -196,6 +196,7 @@ type ResponseImageGenerationCallInProgress string            // Always "response
 type ResponseImageGenerationCallPartialImage string          // Always "response.image_generation_call.partial_image"
 type ResponseInProgress string                               // Always "response.in_progress"
 type ResponseIncomplete string                               // Always "response.incomplete"
+type ResponseInputTokens string                              // Always "response.input_tokens"
 type ResponseMcpCallArgumentsDelta string                    // Always "response.mcp_call_arguments.delta"
 type ResponseMcpCallArgumentsDone string                     // Always "response.mcp_call_arguments.done"
 type ResponseMcpCallCompleted string                         // Always "response.mcp_call.completed"
@@ -562,8 +563,9 @@ func (c ResponseImageGenerationCallInProgress) Default() ResponseImageGeneration
 func (c ResponseImageGenerationCallPartialImage) Default() ResponseImageGenerationCallPartialImage {
 	return "response.image_generation_call.partial_image"
 }
-func (c ResponseInProgress) Default() ResponseInProgress { return "response.in_progress" }
-func (c ResponseIncomplete) Default() ResponseIncomplete { return "response.incomplete" }
+func (c ResponseInProgress) Default() ResponseInProgress   { return "response.in_progress" }
+func (c ResponseIncomplete) Default() ResponseIncomplete   { return "response.incomplete" }
+func (c ResponseInputTokens) Default() ResponseInputTokens { return "response.input_tokens" }
 func (c ResponseMcpCallArgumentsDelta) Default() ResponseMcpCallArgumentsDelta {
 	return "response.mcp_call_arguments.delta"
 }
@@ -922,6 +924,7 @@ func (c ResponseImageGenerationCallPartialImage) MarshalJSON() ([]byte, error) {
 }
 func (c ResponseInProgress) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
 func (c ResponseIncomplete) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c ResponseInputTokens) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c ResponseMcpCallArgumentsDelta) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c ResponseMcpCallArgumentsDone) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c ResponseMcpCallCompleted) MarshalJSON() ([]byte, error)           { return marshalString(c) }
