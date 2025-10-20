@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.6.1 (2025-10-20)
+
+Full Changelog: [v3.6.0...v3.6.1](https://github.com/openai/openai-go/compare/v3.6.0...v3.6.1)
+
+### Bug Fixes
+
+* **api:** fix discriminator propertyName for ResponseFormatJsonSchema ([57b0505](https://github.com/openai/openai-go/commit/57b0505361029563b5fd56fb6085b58e813936cc))
+
 ## 3.6.0 (2025-10-20)
 
 Full Changelog: [v3.5.0...v3.6.0](https://github.com/openai/openai-go/compare/v3.5.0...v3.6.0)
