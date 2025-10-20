@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.6.0 (2025-10-20)
+
+Full Changelog: [v3.5.0...v3.6.0](https://github.com/openai/openai-go/compare/v3.5.0...v3.6.0)
+
+### Features
+
+* **api:** Add responses.input_tokens.count ([a43f2ce](https://github.com/openai/openai-go/commit/a43f2cef132d4cbd4a4a3dedf600f2da0a1ea2f5))
+
+
+### Bug Fixes
+
+* **api:** internal openapi updates ([7ad9b02](https://github.com/openai/openai-go/commit/7ad9b02d1e86cb3235c779e4e0f6e2ee226662d3))
+
 ## 3.5.0 (2025-10-17)
 
 Full Changelog: [v3.4.0...v3.5.0](https://github.com/openai/openai-go/compare/v3.4.0...v3.5.0)
