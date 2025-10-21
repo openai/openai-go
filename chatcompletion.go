@@ -3234,6 +3234,15 @@ func (u ChatCompletionNewParamsResponseFormatUnion) GetType() *string {
 	return nil
 }
 
+func init() {
+	apijson.RegisterUnion[ChatCompletionNewParamsResponseFormatUnion](
+		"type",
+		apijson.Discriminator[shared.ResponseFormatTextParam]("text"),
+		apijson.Discriminator[shared.ResponseFormatJSONSchemaParam]("json_schema"),
+		apijson.Discriminator[shared.ResponseFormatJSONObjectParam]("json_object"),
+	)
+}
+
 // Specifies the processing type used for serving the request.
 //
 //   - If set to 'auto', then the request will be processed with the service tier
