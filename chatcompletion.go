@@ -3056,6 +3056,8 @@ type ChatCompletionNewParams struct {
 	// Up to 4 sequences where the API will stop generating further tokens. The
 	// returned text will not contain the stop sequence.
 	Stop ChatCompletionNewParamsStopUnion `json:"stop,omitzero"`
+	// Stream option to stream events to client
+	Stream bool `json:"stream,omitzero"`
 	// Options for streaming response. Only set this when you set `stream: true`.
 	StreamOptions ChatCompletionStreamOptionsParam `json:"stream_options,omitzero"`
 	// Constrains the verbosity of the model's response. Lower values will result in
