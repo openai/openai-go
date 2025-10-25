@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.6.2 (2025-10-25)
+
+Full Changelog: [v3.6.1...v3.6.2](https://github.com/openai/openai-go/compare/v3.6.1...v3.6.2)
+
+### Bug Fixes
+
+* **api:** docs updates ([94d54c1](https://github.com/openai/openai-go/commit/94d54c1e19d0d58875f56058042e06410b23ac49))
+
 ## 3.6.1 (2025-10-20)
 
 Full Changelog: [v3.6.0...v3.6.1](https://github.com/openai/openai-go/compare/v3.6.0...v3.6.1)
