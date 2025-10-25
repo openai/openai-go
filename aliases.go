@@ -371,6 +371,8 @@ const ReasoningGenerateSummaryDetailed = shared.ReasoningGenerateSummaryDetailed
 // debugging and understanding the model's reasoning process. One of `auto`,
 // `concise`, or `detailed`.
 //
+// `concise` is only supported for `computer-use-preview` models.
+//
 // This is an alias to an internal type.
 type ReasoningSummary = shared.ReasoningSummary
 

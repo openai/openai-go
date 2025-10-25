@@ -769,6 +769,8 @@ type Reasoning struct {
 	// debugging and understanding the model's reasoning process. One of `auto`,
 	// `concise`, or `detailed`.
 	//
+	// `concise` is only supported for `computer-use-preview` models.
+	//
 	// Any of "auto", "concise", "detailed".
 	Summary ReasoningSummary `json:"summary,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -812,6 +814,8 @@ const (
 // A summary of the reasoning performed by the model. This can be useful for
 // debugging and understanding the model's reasoning process. One of `auto`,
 // `concise`, or `detailed`.
+//
+// `concise` is only supported for `computer-use-preview` models.
 type ReasoningSummary string
 
 const (
@@ -849,6 +853,8 @@ type ReasoningParam struct {
 	// A summary of the reasoning performed by the model. This can be useful for
 	// debugging and understanding the model's reasoning process. One of `auto`,
 	// `concise`, or `detailed`.
+	//
+	// `concise` is only supported for `computer-use-preview` models.
 	//
 	// Any of "auto", "concise", "detailed".
 	Summary ReasoningSummary `json:"summary,omitzero"`
