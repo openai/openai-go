@@ -223,6 +223,8 @@ func (r *ComputerToolParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// A custom tool that processes input using a specified format. Learn more about
+// [custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools)
 type CustomTool struct {
 	// The name of the custom tool, used to identify it in tool calls.
 	Name string `json:"name,required"`
@@ -258,6 +260,9 @@ func (r CustomTool) ToParam() CustomToolParam {
 	return param.Override[CustomToolParam](json.RawMessage(r.RawJSON()))
 }
 
+// A custom tool that processes input using a specified format. Learn more about
+// [custom tools](https://platform.openai.com/docs/guides/function-calling#custom-tools)
+//
 // The properties Name, Type are required.
 type CustomToolParam struct {
 	// The name of the custom tool, used to identify it in tool calls.
@@ -5708,8 +5713,7 @@ func (r *ResponseInputAudioInputAudioParam) UnmarshalJSON(data []byte) error {
 }
 
 // ResponseInputContentUnion contains all possible properties and values from
-// [ResponseInputText], [ResponseInputImage], [ResponseInputFile],
-// [ResponseInputAudio].
+// [ResponseInputText], [ResponseInputImage], [ResponseInputFile].
 //
 // Use the [ResponseInputContentUnion.AsAny] method to switch on the variant.
 //
@@ -5717,7 +5721,7 @@ func (r *ResponseInputAudioInputAudioParam) UnmarshalJSON(data []byte) error {
 type ResponseInputContentUnion struct {
 	// This field is from variant [ResponseInputText].
 	Text string `json:"text"`
-	// Any of "input_text", "input_image", "input_file", "input_audio".
+	// Any of "input_text", "input_image", "input_file".
 	Type string `json:"type"`
 	// This field is from variant [ResponseInputImage].
 	Detail ResponseInputImageDetail `json:"detail"`
@@ -5730,19 +5734,16 @@ type ResponseInputContentUnion struct {
 	FileURL string `json:"file_url"`
 	// This field is from variant [ResponseInputFile].
 	Filename string `json:"filename"`
-	// This field is from variant [ResponseInputAudio].
-	InputAudio ResponseInputAudioInputAudio `json:"input_audio"`
-	JSON       struct {
-		Text       respjson.Field
-		Type       respjson.Field
-		Detail     respjson.Field
-		FileID     respjson.Field
-		ImageURL   respjson.Field
-		FileData   respjson.Field
-		FileURL    respjson.Field
-		Filename   respjson.Field
-		InputAudio respjson.Field
-		raw        string
+	JSON     struct {
+		Text     respjson.Field
+		Type     respjson.Field
+		Detail   respjson.Field
+		FileID   respjson.Field
+		ImageURL respjson.Field
+		FileData respjson.Field
+		FileURL  respjson.Field
+		Filename respjson.Field
+		raw      string
 	} `json:"-"`
 }
 
@@ -5756,7 +5757,6 @@ type anyResponseInputContent interface {
 func (ResponseInputText) implResponseInputContentUnion()  {}
 func (ResponseInputImage) implResponseInputContentUnion() {}
 func (ResponseInputFile) implResponseInputContentUnion()  {}
-func (ResponseInputAudio) implResponseInputContentUnion() {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -5764,7 +5764,6 @@ func (ResponseInputAudio) implResponseInputContentUnion() {}
 //	case responses.ResponseInputText:
 //	case responses.ResponseInputImage:
 //	case responses.ResponseInputFile:
-//	case responses.ResponseInputAudio:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -5776,8 +5775,6 @@ func (u ResponseInputContentUnion) AsAny() anyResponseInputContent {
 		return u.AsInputImage()
 	case "input_file":
 		return u.AsInputFile()
-	case "input_audio":
-		return u.AsInputAudio()
 	}
 	return nil
 }
@@ -5793,11 +5790,6 @@ func (u ResponseInputContentUnion) AsInputImage() (v ResponseInputImage) {
 }
 
 func (u ResponseInputContentUnion) AsInputFile() (v ResponseInputFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ResponseInputContentUnion) AsInputAudio() (v ResponseInputAudio) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -5831,12 +5823,6 @@ func ResponseInputContentParamOfInputImage(detail ResponseInputImageDetail) Resp
 	return ResponseInputContentUnionParam{OfInputImage: &inputImage}
 }
 
-func ResponseInputContentParamOfInputAudio(inputAudio ResponseInputAudioInputAudioParam) ResponseInputContentUnionParam {
-	var variant ResponseInputAudioParam
-	variant.InputAudio = inputAudio
-	return ResponseInputContentUnionParam{OfInputAudio: &variant}
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -5844,12 +5830,11 @@ type ResponseInputContentUnionParam struct {
 	OfInputText  *ResponseInputTextParam  `json:",omitzero,inline"`
 	OfInputImage *ResponseInputImageParam `json:",omitzero,inline"`
 	OfInputFile  *ResponseInputFileParam  `json:",omitzero,inline"`
-	OfInputAudio *ResponseInputAudioParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponseInputContentUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage, u.OfInputFile, u.OfInputAudio)
+	return param.MarshalUnion(u, u.OfInputText, u.OfInputImage, u.OfInputFile)
 }
 func (u *ResponseInputContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -5862,8 +5847,6 @@ func (u *ResponseInputContentUnionParam) asAny() any {
 		return u.OfInputImage
 	} else if !param.IsOmitted(u.OfInputFile) {
 		return u.OfInputFile
-	} else if !param.IsOmitted(u.OfInputAudio) {
-		return u.OfInputAudio
 	}
 	return nil
 }
@@ -5917,22 +5900,12 @@ func (u ResponseInputContentUnionParam) GetFilename() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseInputContentUnionParam) GetInputAudio() *ResponseInputAudioInputAudioParam {
-	if vt := u.OfInputAudio; vt != nil {
-		return &vt.InputAudio
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputContentUnionParam) GetType() *string {
 	if vt := u.OfInputText; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfInputImage; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfInputFile; vt != nil {
-		return (*string)(&vt.Type)
-	} else if vt := u.OfInputAudio; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -5946,6 +5919,15 @@ func (u ResponseInputContentUnionParam) GetFileID() *string {
 		return &vt.FileID.Value
 	}
 	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseInputContentUnionParam](
+		"type",
+		apijson.Discriminator[ResponseInputTextParam]("input_text"),
+		apijson.Discriminator[ResponseInputImageParam]("input_image"),
+		apijson.Discriminator[ResponseInputFileParam]("input_file"),
+	)
 }
 
 // A file input to the model.
@@ -13581,6 +13563,7 @@ func (r *ToolImageGenerationInputImageMask) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// A tool that allows the model to execute shell commands in a local environment.
 type ToolLocalShell struct {
 	// The type of the local shell tool. Always `local_shell`.
 	Type constant.LocalShell `json:"type,required"`
@@ -14513,6 +14496,8 @@ func NewToolLocalShellParam() ToolLocalShellParam {
 	}
 }
 
+// A tool that allows the model to execute shell commands in a local environment.
+//
 // This struct has a constant value, construct it with [NewToolLocalShellParam].
 type ToolLocalShellParam struct {
 	// The type of the local shell tool. Always `local_shell`.
