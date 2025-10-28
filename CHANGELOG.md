@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.7.0 (2025-10-28)
+
+Full Changelog: [v3.6.1...v3.7.0](https://github.com/openai/openai-go/compare/v3.6.1...v3.7.0)
+
+### Features
+
+* **api:** remove InputAudio from ResponseInputContent ([cf50c53](https://github.com/openai/openai-go/commit/cf50c53f779784e1ee73b7d815456afaa3e1c447))
+* **azure:** allow passing custom scopes ([#541](https://github.com/openai/openai-go/issues/541)) ([dffa08e](https://github.com/openai/openai-go/commit/dffa08ece6c860ae1f87a01a5b8c26f18ce7ab2b))
+
+
+### Bug Fixes
+
+* **api:** docs updates ([94d54c1](https://github.com/openai/openai-go/commit/94d54c1e19d0d58875f56058042e06410b23ac49))
+
 ## 3.6.1 (2025-10-20)
 
 Full Changelog: [v3.6.0...v3.6.1](https://github.com/openai/openai-go/compare/v3.6.0...v3.6.1)
