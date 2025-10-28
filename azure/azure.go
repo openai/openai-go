@@ -91,30 +91,60 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 	})
 }
 
+type tokenCredentialConfig struct {
+	Scopes []string
+}
+
+// TokenCredentialOption is the type for any options that can be used to customize
+// [WithTokenCredential], including things like using custom scopes.
+type TokenCredentialOption func(*tokenCredentialConfig) error
+
+// WithTokenCredentialScopes overrides the default scope used when requesting access tokens.
+func WithTokenCredentialScopes(scopes []string) func(*tokenCredentialConfig) error {
+	return func(tc *tokenCredentialConfig) error {
+		tc.Scopes = scopes
+		return nil
+	}
+}
+
 // WithTokenCredential configures this client to authenticate using an [Azure Identity] TokenCredential.
 // This function should be paired with a call to [WithEndpoint] to point to your Azure OpenAI instance.
 //
 // [Azure Identity]: https://pkg.go.dev/github.com/Azure/azure-sdk-for-go/sdk/azidentity
-func WithTokenCredential(tokenCredential azcore.TokenCredential) option.RequestOption {
-	bearerTokenPolicy := runtime.NewBearerTokenPolicy(tokenCredential, []string{"https://cognitiveservices.azure.com/.default"}, nil)
-
-	// add in a middleware that uses the bearer token generated from the token credential
-	return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
-		pipeline := runtime.NewPipeline("azopenai-extensions", version, runtime.PipelineOptions{}, &policy.ClientOptions{
-			InsecureAllowCredentialWithHTTP: true, // allow for plain HTTP proxies, etc..
-			PerRetryPolicies: []policy.Policy{
-				bearerTokenPolicy,
-				policyAdapter(next),
-			},
-		})
-
-		req2, err := runtime.NewRequestFromRequest(req)
-
-		if err != nil {
-			return nil, err
+func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...TokenCredentialOption) option.RequestOption {
+	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		tc := &tokenCredentialConfig{
+			Scopes: []string{"https://cognitiveservices.azure.com/.default"},
 		}
 
-		return pipeline.Do(req2)
+		for _, option := range options {
+			if err := option(tc); err != nil {
+				return err
+			}
+		}
+
+		bearerTokenPolicy := runtime.NewBearerTokenPolicy(tokenCredential, tc.Scopes, nil)
+
+		// add in a middleware that uses the bearer token generated from the token credential
+		middlewareOption := option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			pipeline := runtime.NewPipeline("azopenai-extensions", version, runtime.PipelineOptions{}, &policy.ClientOptions{
+				InsecureAllowCredentialWithHTTP: true, // allow for plain HTTP proxies, etc..
+				PerRetryPolicies: []policy.Policy{
+					bearerTokenPolicy,
+					policyAdapter(next),
+				},
+			})
+
+			req2, err := runtime.NewRequestFromRequest(req)
+
+			if err != nil {
+				return nil, err
+			}
+
+			return pipeline.Do(req2)
+		})
+
+		return middlewareOption.Apply(rc)
 	})
 }
 
