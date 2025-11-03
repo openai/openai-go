@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.8.0 (2025-11-03)
+
+Full Changelog: [v3.7.0...v3.8.0](https://github.com/openai/openai-go/compare/v3.7.0...v3.8.0)
+
+### Features
+
+* **api:** Realtime API token_limits, Hybrid searching ranking options ([9495f4a](https://github.com/openai/openai-go/commit/9495f4aa72bd5784fe3291637349ae1b706d8f8c))
+
+
+### Chores
+
+* **internal:** grammar fix (it's -&gt; its) ([879772d](https://github.com/openai/openai-go/commit/879772dc881a3d4fecf1425afc94a4bc141e9fb8))
+
 ## 3.7.0 (2025-10-28)
 
 Full Changelog: [v3.6.1...v3.7.0](https://github.com/openai/openai-go/compare/v3.6.1...v3.7.0)
