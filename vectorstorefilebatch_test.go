@@ -29,7 +29,6 @@ func TestVectorStoreFileBatchNewWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"vs_abc123",
 		openai.VectorStoreFileBatchNewParams{
-			FileIDs: []string{"string"},
 			Attributes: map[string]openai.VectorStoreFileBatchNewParamsAttributeUnion{
 				"foo": {
 					OfString: openai.String("string"),
@@ -38,6 +37,18 @@ func TestVectorStoreFileBatchNewWithOptionalParams(t *testing.T) {
 			ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
 				OfAuto: &openai.AutoFileChunkingStrategyParam{},
 			},
+			FileIDs: []string{"string"},
+			Files: []openai.VectorStoreFileBatchNewParamsFile{{
+				FileID: "file_id",
+				Attributes: map[string]openai.VectorStoreFileBatchNewParamsFileAttributeUnion{
+					"foo": {
+						OfString: openai.String("string"),
+					},
+				},
+				ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
+					OfAuto: &openai.AutoFileChunkingStrategyParam{},
+				},
+			}},
 		},
 	)
 	if err != nil {

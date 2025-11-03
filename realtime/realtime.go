@@ -853,8 +853,19 @@ type RealtimeSessionCreateRequestParam struct {
 	ToolChoice RealtimeToolChoiceConfigUnionParam `json:"tool_choice,omitzero"`
 	// Tools available to the model.
 	Tools RealtimeToolsConfigParam `json:"tools,omitzero"`
-	// Controls how the realtime conversation is truncated prior to model inference.
-	// The default is `auto`.
+	// When the number of tokens in a conversation exceeds the model's input token
+	// limit, the conversation be truncated, meaning messages (starting from the
+	// oldest) will not be included in the model's context. A 32k context model with
+	// 4,096 max output tokens can only include 28,224 tokens in the context before
+	// truncation occurs. Clients can configure truncation behavior to truncate with a
+	// lower max token limit, which is an effective way to control token usage and
+	// cost. Truncation will reduce the number of cached tokens on the next turn
+	// (busting the cache), since messages are dropped from the beginning of the
+	// context. However, clients can also configure truncation to retain messages up to
+	// a fraction of the maximum context size, which will reduce the need for future
+	// truncations and thus improve the cache rate. Truncation can be disabled
+	// entirely, which means the server will never truncate but would instead return an
+	// error if the conversation exceeds the model's input token limit.
 	Truncation RealtimeTruncationUnionParam `json:"truncation,omitzero"`
 	// The type of session to create. Always `realtime` for the Realtime API.
 	//
@@ -1697,10 +1708,13 @@ type RealtimeTruncationUnion struct {
 	RetentionRatio float64 `json:"retention_ratio"`
 	// This field is from variant [RealtimeTruncationRetentionRatio].
 	Type constant.RetentionRatio `json:"type"`
-	JSON struct {
+	// This field is from variant [RealtimeTruncationRetentionRatio].
+	TokenLimits RealtimeTruncationRetentionRatioTokenLimits `json:"token_limits"`
+	JSON        struct {
 		OfRealtimeTruncationStrategy respjson.Field
 		RetentionRatio               respjson.Field
 		Type                         respjson.Field
+		TokenLimits                  respjson.Field
 		raw                          string
 	} `json:"-"`
 }
@@ -1778,15 +1792,21 @@ func (u *RealtimeTruncationUnionParam) asAny() any {
 // input token limit. This allows you to amortize truncations across multiple
 // turns, which can help improve cached token usage.
 type RealtimeTruncationRetentionRatio struct {
-	// Fraction of post-instruction conversation tokens to retain (0.0 - 1.0) when the
-	// conversation exceeds the input token limit.
+	// Fraction of post-instruction conversation tokens to retain (`0.0` - `1.0`) when
+	// the conversation exceeds the input token limit. Setting this to `0.8` means that
+	// messages will be dropped until 80% of the maximum allowed tokens are used. This
+	// helps reduce the frequency of truncations and improve cache rates.
 	RetentionRatio float64 `json:"retention_ratio,required"`
 	// Use retention ratio truncation.
 	Type constant.RetentionRatio `json:"type,required"`
+	// Optional custom token limits for this truncation strategy. If not provided, the
+	// model's default token limits will be used.
+	TokenLimits RealtimeTruncationRetentionRatioTokenLimits `json:"token_limits"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		RetentionRatio respjson.Field
 		Type           respjson.Field
+		TokenLimits    respjson.Field
 		ExtraFields    map[string]respjson.Field
 		raw            string
 	} `json:"-"`
@@ -1808,15 +1828,43 @@ func (r RealtimeTruncationRetentionRatio) ToParam() RealtimeTruncationRetentionR
 	return param.Override[RealtimeTruncationRetentionRatioParam](json.RawMessage(r.RawJSON()))
 }
 
+// Optional custom token limits for this truncation strategy. If not provided, the
+// model's default token limits will be used.
+type RealtimeTruncationRetentionRatioTokenLimits struct {
+	// Maximum tokens allowed in the conversation after instructions (which including
+	// tool definitions). For example, setting this to 5,000 would mean that truncation
+	// would occur when the conversation exceeds 5,000 tokens after instructions. This
+	// cannot be higher than the model's context window size minus the maximum output
+	// tokens.
+	PostInstructions int64 `json:"post_instructions"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		PostInstructions respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeTruncationRetentionRatioTokenLimits) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeTruncationRetentionRatioTokenLimits) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Retain a fraction of the conversation tokens when the conversation exceeds the
 // input token limit. This allows you to amortize truncations across multiple
 // turns, which can help improve cached token usage.
 //
 // The properties RetentionRatio, Type are required.
 type RealtimeTruncationRetentionRatioParam struct {
-	// Fraction of post-instruction conversation tokens to retain (0.0 - 1.0) when the
-	// conversation exceeds the input token limit.
+	// Fraction of post-instruction conversation tokens to retain (`0.0` - `1.0`) when
+	// the conversation exceeds the input token limit. Setting this to `0.8` means that
+	// messages will be dropped until 80% of the maximum allowed tokens are used. This
+	// helps reduce the frequency of truncations and improve cache rates.
 	RetentionRatio float64 `json:"retention_ratio,required"`
+	// Optional custom token limits for this truncation strategy. If not provided, the
+	// model's default token limits will be used.
+	TokenLimits RealtimeTruncationRetentionRatioTokenLimitsParam `json:"token_limits,omitzero"`
 	// Use retention ratio truncation.
 	//
 	// This field can be elided, and will marshal its zero value as "retention_ratio".
@@ -1829,5 +1877,25 @@ func (r RealtimeTruncationRetentionRatioParam) MarshalJSON() (data []byte, err e
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *RealtimeTruncationRetentionRatioParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Optional custom token limits for this truncation strategy. If not provided, the
+// model's default token limits will be used.
+type RealtimeTruncationRetentionRatioTokenLimitsParam struct {
+	// Maximum tokens allowed in the conversation after instructions (which including
+	// tool definitions). For example, setting this to 5,000 would mean that truncation
+	// would occur when the conversation exceeds 5,000 tokens after instructions. This
+	// cannot be higher than the model's context window size minus the maximum output
+	// tokens.
+	PostInstructions param.Opt[int64] `json:"post_instructions,omitzero"`
+	paramObj
+}
+
+func (r RealtimeTruncationRetentionRatioTokenLimitsParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeTruncationRetentionRatioTokenLimitsParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeTruncationRetentionRatioTokenLimitsParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }

@@ -258,10 +258,6 @@ const (
 )
 
 type VectorStoreFileBatchNewParams struct {
-	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
-	// the vector store should use. Useful for tools like `file_search` that can access
-	// files.
-	FileIDs []string `json:"file_ids,omitzero,required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
@@ -271,6 +267,16 @@ type VectorStoreFileBatchNewParams struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
 	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
+	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
+	// the vector store should use. Useful for tools like `file_search` that can access
+	// files. If `attributes` or `chunking_strategy` are provided, they will be applied
+	// to all files in the batch. Mutually exclusive with `files`.
+	FileIDs []string `json:"file_ids,omitzero"`
+	// A list of objects that each include a `file_id` plus optional `attributes` or
+	// `chunking_strategy`. Use this when you need to override metadata for specific
+	// files. The global `attributes` or `chunking_strategy` will be ignored and must
+	// be specified for each file. Mutually exclusive with `file_ids`.
+	Files []VectorStoreFileBatchNewParamsFile `json:"files,omitzero"`
 	paramObj
 }
 
@@ -300,6 +306,60 @@ func (u *VectorStoreFileBatchNewParamsAttributeUnion) UnmarshalJSON(data []byte)
 }
 
 func (u *VectorStoreFileBatchNewParamsAttributeUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfFloat) {
+		return &u.OfFloat.Value
+	} else if !param.IsOmitted(u.OfBool) {
+		return &u.OfBool.Value
+	}
+	return nil
+}
+
+// The property FileID is required.
+type VectorStoreFileBatchNewParamsFile struct {
+	// A [File](https://platform.openai.com/docs/api-reference/files) ID that the
+	// vector store should use. Useful for tools like `file_search` that can access
+	// files.
+	FileID string `json:"file_id,required"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard. Keys are strings with a maximum
+	// length of 64 characters. Values are strings with a maximum length of 512
+	// characters, booleans, or numbers.
+	Attributes map[string]VectorStoreFileBatchNewParamsFileAttributeUnion `json:"attributes,omitzero"`
+	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
+	// strategy. Only applicable if `file_ids` is non-empty.
+	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
+	paramObj
+}
+
+func (r VectorStoreFileBatchNewParamsFile) MarshalJSON() (data []byte, err error) {
+	type shadow VectorStoreFileBatchNewParamsFile
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VectorStoreFileBatchNewParamsFile) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type VectorStoreFileBatchNewParamsFileAttributeUnion struct {
+	OfString param.Opt[string]  `json:",omitzero,inline"`
+	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
+	OfBool   param.Opt[bool]    `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u VectorStoreFileBatchNewParamsFileAttributeUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool)
+}
+func (u *VectorStoreFileBatchNewParamsFileAttributeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *VectorStoreFileBatchNewParamsFileAttributeUnion) asAny() any {
 	if !param.IsOmitted(u.OfString) {
 		return &u.OfString.Value
 	} else if !param.IsOmitted(u.OfFloat) {
