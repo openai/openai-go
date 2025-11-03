@@ -521,6 +521,9 @@ func (r *FileSearchToolFiltersUnion) UnmarshalJSON(data []byte) error {
 
 // Ranking options for search.
 type FileSearchToolRankingOptions struct {
+	// Weights that control how reciprocal rank fusion balances semantic embedding
+	// matches versus sparse keyword matches when hybrid search is enabled.
+	HybridSearch FileSearchToolRankingOptionsHybridSearch `json:"hybrid_search"`
 	// The ranker to use for the file search.
 	//
 	// Any of "auto", "default-2024-11-15".
@@ -531,6 +534,7 @@ type FileSearchToolRankingOptions struct {
 	ScoreThreshold float64 `json:"score_threshold"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		HybridSearch   respjson.Field
 		Ranker         respjson.Field
 		ScoreThreshold respjson.Field
 		ExtraFields    map[string]respjson.Field
@@ -541,6 +545,28 @@ type FileSearchToolRankingOptions struct {
 // Returns the unmodified JSON received from the API
 func (r FileSearchToolRankingOptions) RawJSON() string { return r.JSON.raw }
 func (r *FileSearchToolRankingOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Weights that control how reciprocal rank fusion balances semantic embedding
+// matches versus sparse keyword matches when hybrid search is enabled.
+type FileSearchToolRankingOptionsHybridSearch struct {
+	// The weight of the embedding in the reciprocal ranking fusion.
+	EmbeddingWeight float64 `json:"embedding_weight,required"`
+	// The weight of the text in the reciprocal ranking fusion.
+	TextWeight float64 `json:"text_weight,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EmbeddingWeight respjson.Field
+		TextWeight      respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r FileSearchToolRankingOptionsHybridSearch) RawJSON() string { return r.JSON.raw }
+func (r *FileSearchToolRankingOptionsHybridSearch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -639,6 +665,9 @@ type FileSearchToolRankingOptionsParam struct {
 	// closer to 1 will attempt to return only the most relevant results, but may
 	// return fewer results.
 	ScoreThreshold param.Opt[float64] `json:"score_threshold,omitzero"`
+	// Weights that control how reciprocal rank fusion balances semantic embedding
+	// matches versus sparse keyword matches when hybrid search is enabled.
+	HybridSearch FileSearchToolRankingOptionsHybridSearchParam `json:"hybrid_search,omitzero"`
 	// The ranker to use for the file search.
 	//
 	// Any of "auto", "default-2024-11-15".
@@ -658,6 +687,26 @@ func init() {
 	apijson.RegisterFieldValidator[FileSearchToolRankingOptionsParam](
 		"ranker", "auto", "default-2024-11-15",
 	)
+}
+
+// Weights that control how reciprocal rank fusion balances semantic embedding
+// matches versus sparse keyword matches when hybrid search is enabled.
+//
+// The properties EmbeddingWeight, TextWeight are required.
+type FileSearchToolRankingOptionsHybridSearchParam struct {
+	// The weight of the embedding in the reciprocal ranking fusion.
+	EmbeddingWeight float64 `json:"embedding_weight,required"`
+	// The weight of the text in the reciprocal ranking fusion.
+	TextWeight float64 `json:"text_weight,required"`
+	paramObj
+}
+
+func (r FileSearchToolRankingOptionsHybridSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow FileSearchToolRankingOptionsHybridSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *FileSearchToolRankingOptionsHybridSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Defines a function in your own code the model can choose to call. Learn more
@@ -2844,18 +2893,18 @@ func (r *ResponseContentPartAddedEvent) UnmarshalJSON(data []byte) error {
 type ResponseContentPartAddedEventPartUnion struct {
 	// This field is from variant [ResponseOutputText].
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations"`
-	Text        string                              `json:"text"`
-	// Any of "output_text", "refusal", "reasoning_text".
-	Type string `json:"type"`
 	// This field is from variant [ResponseOutputText].
 	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
+	Text     string                      `json:"text"`
+	// Any of "output_text", "refusal", "reasoning_text".
+	Type string `json:"type"`
 	// This field is from variant [ResponseOutputRefusal].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
+		Logprobs    respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
-		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2980,18 +3029,18 @@ func (r *ResponseContentPartDoneEvent) UnmarshalJSON(data []byte) error {
 type ResponseContentPartDoneEventPartUnion struct {
 	// This field is from variant [ResponseOutputText].
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations"`
-	Text        string                              `json:"text"`
-	// Any of "output_text", "refusal", "reasoning_text".
-	Type string `json:"type"`
 	// This field is from variant [ResponseOutputText].
 	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
+	Text     string                      `json:"text"`
+	// Any of "output_text", "refusal", "reasoning_text".
+	Type string `json:"type"`
 	// This field is from variant [ResponseOutputRefusal].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
+		Logprobs    respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
-		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
@@ -10102,18 +10151,18 @@ type ResponseOutputMessageContentUnion struct {
 	// This field is from variant [ResponseOutputText].
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations"`
 	// This field is from variant [ResponseOutputText].
+	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
+	// This field is from variant [ResponseOutputText].
 	Text string `json:"text"`
 	// Any of "output_text", "refusal".
 	Type string `json:"type"`
-	// This field is from variant [ResponseOutputText].
-	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
 	// This field is from variant [ResponseOutputRefusal].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
+		Logprobs    respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
-		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
@@ -10240,17 +10289,17 @@ func (u ResponseOutputMessageContentUnionParam) GetAnnotations() []ResponseOutpu
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseOutputMessageContentUnionParam) GetText() *string {
+func (u ResponseOutputMessageContentUnionParam) GetLogprobs() []ResponseOutputTextLogprobParam {
 	if vt := u.OfOutputText; vt != nil {
-		return &vt.Text
+		return vt.Logprobs
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseOutputMessageContentUnionParam) GetLogprobs() []ResponseOutputTextLogprobParam {
+func (u ResponseOutputMessageContentUnionParam) GetText() *string {
 	if vt := u.OfOutputText; vt != nil {
-		return vt.Logprobs
+		return &vt.Text
 	}
 	return nil
 }
@@ -10338,17 +10387,17 @@ func (r *ResponseOutputRefusalParam) UnmarshalJSON(data []byte) error {
 type ResponseOutputText struct {
 	// The annotations of the text output.
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations,required"`
+	Logprobs    []ResponseOutputTextLogprob         `json:"logprobs,required"`
 	// The text output from the model.
 	Text string `json:"text,required"`
 	// The type of the output text. Always `output_text`.
-	Type     constant.OutputText         `json:"type,required"`
-	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
+	Type constant.OutputText `json:"type,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Annotations respjson.Field
+		Logprobs    respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
-		Logprobs    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -10632,13 +10681,13 @@ func (r *ResponseOutputTextLogprobTopLogprob) UnmarshalJSON(data []byte) error {
 
 // A text output from the model.
 //
-// The properties Annotations, Text, Type are required.
+// The properties Annotations, Logprobs, Text, Type are required.
 type ResponseOutputTextParam struct {
 	// The annotations of the text output.
 	Annotations []ResponseOutputTextAnnotationUnionParam `json:"annotations,omitzero,required"`
+	Logprobs    []ResponseOutputTextLogprobParam         `json:"logprobs,omitzero,required"`
 	// The text output from the model.
-	Text     string                           `json:"text,required"`
-	Logprobs []ResponseOutputTextLogprobParam `json:"logprobs,omitzero"`
+	Text string `json:"text,required"`
 	// The type of the output text. Always `output_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "output_text".
@@ -12363,19 +12412,19 @@ type ResponseStreamEventUnionPart struct {
 	// This field is from variant [ResponseContentPartAddedEventPartUnion],
 	// [ResponseContentPartDoneEventPartUnion].
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations"`
-	Text        string                              `json:"text"`
-	Type        string                              `json:"type"`
 	// This field is from variant [ResponseContentPartAddedEventPartUnion],
 	// [ResponseContentPartDoneEventPartUnion].
 	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
+	Text     string                      `json:"text"`
+	Type     string                      `json:"type"`
 	// This field is from variant [ResponseContentPartAddedEventPartUnion],
 	// [ResponseContentPartDoneEventPartUnion].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
+		Logprobs    respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
-		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
@@ -13343,11 +13392,15 @@ type ToolCodeInterpreterContainerUnion struct {
 	// This field is from variant
 	// [ToolCodeInterpreterContainerCodeInterpreterContainerAuto].
 	FileIDs []string `json:"file_ids"`
-	JSON    struct {
-		OfString respjson.Field
-		Type     respjson.Field
-		FileIDs  respjson.Field
-		raw      string
+	// This field is from variant
+	// [ToolCodeInterpreterContainerCodeInterpreterContainerAuto].
+	MemoryLimit string `json:"memory_limit"`
+	JSON        struct {
+		OfString    respjson.Field
+		Type        respjson.Field
+		FileIDs     respjson.Field
+		MemoryLimit respjson.Field
+		raw         string
 	} `json:"-"`
 }
 
@@ -13375,10 +13428,13 @@ type ToolCodeInterpreterContainerCodeInterpreterContainerAuto struct {
 	Type constant.Auto `json:"type,required"`
 	// An optional list of uploaded files to make available to your code.
 	FileIDs []string `json:"file_ids"`
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit string `json:"memory_limit,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
 		FileIDs     respjson.Field
+		MemoryLimit respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -13399,7 +13455,10 @@ type ToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
-	// Control how much effort the model will exert to match the style and features, especially facial features, of input images. This parameter is only supported for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. This parameter is only supported
+	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
+	// `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,nullable"`
@@ -14313,6 +14372,8 @@ func (u *ToolCodeInterpreterContainerUnionParam) asAny() any {
 //
 // The property Type is required.
 type ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam struct {
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit string `json:"memory_limit,omitzero"`
 	// An optional list of uploaded files to make available to your code.
 	FileIDs []string `json:"file_ids,omitzero"`
 	// Always `auto`.
@@ -14330,6 +14391,12 @@ func (r *ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam) Unmarsha
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam](
+		"memory_limit", "1g", "4g", "16g", "64g",
+	)
+}
+
 // A tool that generates images using a model like `gpt-image-1`.
 //
 // The property Type is required.
@@ -14339,7 +14406,10 @@ type ToolImageGenerationParam struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// Control how much effort the model will exert to match the style and features, especially facial features, of input images. This parameter is only supported for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. This parameter is only supported
+	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
+	// `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`

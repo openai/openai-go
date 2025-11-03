@@ -143,6 +143,8 @@ type Video struct {
 	Object constant.Video `json:"object,required"`
 	// Approximate completion percentage for the generation task.
 	Progress int64 `json:"progress,required"`
+	// The prompt that was used to generate the video.
+	Prompt string `json:"prompt,required"`
 	// Identifier of the source video if this video is a remix.
 	RemixedFromVideoID string `json:"remixed_from_video_id,required"`
 	// Duration of the generated clip in seconds.
@@ -167,6 +169,7 @@ type Video struct {
 		Model              respjson.Field
 		Object             respjson.Field
 		Progress           respjson.Field
+		Prompt             respjson.Field
 		RemixedFromVideoID respjson.Field
 		Seconds            respjson.Field
 		Size               respjson.Field
