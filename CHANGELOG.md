@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.8.1 (2025-11-04)
+
+Full Changelog: [v3.8.0...v3.8.1](https://github.com/openai/openai-go/compare/v3.8.0...v3.8.1)
+
+### Bug Fixes
+
+* **api:** fix nullability of logprobs ([b5aeb99](https://github.com/openai/openai-go/commit/b5aeb999e5088db4f9d1232a202a568a4a283019))
+
 ## 3.8.0 (2025-11-03)
 
 Full Changelog: [v3.7.0...v3.8.0](https://github.com/openai/openai-go/compare/v3.7.0...v3.8.0)
