@@ -2893,18 +2893,18 @@ func (r *ResponseContentPartAddedEvent) UnmarshalJSON(data []byte) error {
 type ResponseContentPartAddedEventPartUnion struct {
 	// This field is from variant [ResponseOutputText].
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations"`
-	// This field is from variant [ResponseOutputText].
-	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
-	Text     string                      `json:"text"`
+	Text        string                              `json:"text"`
 	// Any of "output_text", "refusal", "reasoning_text".
 	Type string `json:"type"`
+	// This field is from variant [ResponseOutputText].
+	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
 	// This field is from variant [ResponseOutputRefusal].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
-		Logprobs    respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
+		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
@@ -3029,18 +3029,18 @@ func (r *ResponseContentPartDoneEvent) UnmarshalJSON(data []byte) error {
 type ResponseContentPartDoneEventPartUnion struct {
 	// This field is from variant [ResponseOutputText].
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations"`
-	// This field is from variant [ResponseOutputText].
-	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
-	Text     string                      `json:"text"`
+	Text        string                              `json:"text"`
 	// Any of "output_text", "refusal", "reasoning_text".
 	Type string `json:"type"`
+	// This field is from variant [ResponseOutputText].
+	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
 	// This field is from variant [ResponseOutputRefusal].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
-		Logprobs    respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
+		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
@@ -10151,18 +10151,18 @@ type ResponseOutputMessageContentUnion struct {
 	// This field is from variant [ResponseOutputText].
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations"`
 	// This field is from variant [ResponseOutputText].
-	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
-	// This field is from variant [ResponseOutputText].
 	Text string `json:"text"`
 	// Any of "output_text", "refusal".
 	Type string `json:"type"`
+	// This field is from variant [ResponseOutputText].
+	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
 	// This field is from variant [ResponseOutputRefusal].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
-		Logprobs    respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
+		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
@@ -10289,17 +10289,17 @@ func (u ResponseOutputMessageContentUnionParam) GetAnnotations() []ResponseOutpu
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseOutputMessageContentUnionParam) GetLogprobs() []ResponseOutputTextLogprobParam {
+func (u ResponseOutputMessageContentUnionParam) GetText() *string {
 	if vt := u.OfOutputText; vt != nil {
-		return vt.Logprobs
+		return &vt.Text
 	}
 	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseOutputMessageContentUnionParam) GetText() *string {
+func (u ResponseOutputMessageContentUnionParam) GetLogprobs() []ResponseOutputTextLogprobParam {
 	if vt := u.OfOutputText; vt != nil {
-		return &vt.Text
+		return vt.Logprobs
 	}
 	return nil
 }
@@ -10387,17 +10387,17 @@ func (r *ResponseOutputRefusalParam) UnmarshalJSON(data []byte) error {
 type ResponseOutputText struct {
 	// The annotations of the text output.
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations,required"`
-	Logprobs    []ResponseOutputTextLogprob         `json:"logprobs,required"`
 	// The text output from the model.
 	Text string `json:"text,required"`
 	// The type of the output text. Always `output_text`.
-	Type constant.OutputText `json:"type,required"`
+	Type     constant.OutputText         `json:"type,required"`
+	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Annotations respjson.Field
-		Logprobs    respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
+		Logprobs    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -10681,13 +10681,13 @@ func (r *ResponseOutputTextLogprobTopLogprob) UnmarshalJSON(data []byte) error {
 
 // A text output from the model.
 //
-// The properties Annotations, Logprobs, Text, Type are required.
+// The properties Annotations, Text, Type are required.
 type ResponseOutputTextParam struct {
 	// The annotations of the text output.
 	Annotations []ResponseOutputTextAnnotationUnionParam `json:"annotations,omitzero,required"`
-	Logprobs    []ResponseOutputTextLogprobParam         `json:"logprobs,omitzero,required"`
 	// The text output from the model.
-	Text string `json:"text,required"`
+	Text     string                           `json:"text,required"`
+	Logprobs []ResponseOutputTextLogprobParam `json:"logprobs,omitzero"`
 	// The type of the output text. Always `output_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "output_text".
@@ -12412,19 +12412,19 @@ type ResponseStreamEventUnionPart struct {
 	// This field is from variant [ResponseContentPartAddedEventPartUnion],
 	// [ResponseContentPartDoneEventPartUnion].
 	Annotations []ResponseOutputTextAnnotationUnion `json:"annotations"`
+	Text        string                              `json:"text"`
+	Type        string                              `json:"type"`
 	// This field is from variant [ResponseContentPartAddedEventPartUnion],
 	// [ResponseContentPartDoneEventPartUnion].
 	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
-	Text     string                      `json:"text"`
-	Type     string                      `json:"type"`
 	// This field is from variant [ResponseContentPartAddedEventPartUnion],
 	// [ResponseContentPartDoneEventPartUnion].
 	Refusal string `json:"refusal"`
 	JSON    struct {
 		Annotations respjson.Field
-		Logprobs    respjson.Field
 		Text        respjson.Field
 		Type        respjson.Field
+		Logprobs    respjson.Field
 		Refusal     respjson.Field
 		raw         string
 	} `json:"-"`
