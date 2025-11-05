@@ -522,6 +522,9 @@ func (r *FileSearchToolFiltersUnion) UnmarshalJSON(data []byte) error {
 
 // Ranking options for search.
 type FileSearchToolRankingOptions struct {
+	// Weights that control how reciprocal rank fusion balances semantic embedding
+	// matches versus sparse keyword matches when hybrid search is enabled.
+	HybridSearch FileSearchToolRankingOptionsHybridSearch `json:"hybrid_search"`
 	// The ranker to use for the file search.
 	//
 	// Any of "auto", "default-2024-11-15".
@@ -532,6 +535,7 @@ type FileSearchToolRankingOptions struct {
 	ScoreThreshold float64 `json:"score_threshold"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		HybridSearch   respjson.Field
 		Ranker         respjson.Field
 		ScoreThreshold respjson.Field
 		ExtraFields    map[string]respjson.Field
@@ -542,6 +546,28 @@ type FileSearchToolRankingOptions struct {
 // Returns the unmodified JSON received from the API
 func (r FileSearchToolRankingOptions) RawJSON() string { return r.JSON.raw }
 func (r *FileSearchToolRankingOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Weights that control how reciprocal rank fusion balances semantic embedding
+// matches versus sparse keyword matches when hybrid search is enabled.
+type FileSearchToolRankingOptionsHybridSearch struct {
+	// The weight of the embedding in the reciprocal ranking fusion.
+	EmbeddingWeight float64 `json:"embedding_weight,required"`
+	// The weight of the text in the reciprocal ranking fusion.
+	TextWeight float64 `json:"text_weight,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EmbeddingWeight respjson.Field
+		TextWeight      respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r FileSearchToolRankingOptionsHybridSearch) RawJSON() string { return r.JSON.raw }
+func (r *FileSearchToolRankingOptionsHybridSearch) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -640,6 +666,9 @@ type FileSearchToolRankingOptionsParam struct {
 	// closer to 1 will attempt to return only the most relevant results, but may
 	// return fewer results.
 	ScoreThreshold param.Opt[float64] `json:"score_threshold,omitzero"`
+	// Weights that control how reciprocal rank fusion balances semantic embedding
+	// matches versus sparse keyword matches when hybrid search is enabled.
+	HybridSearch FileSearchToolRankingOptionsHybridSearchParam `json:"hybrid_search,omitzero"`
 	// The ranker to use for the file search.
 	//
 	// Any of "auto", "default-2024-11-15".
@@ -659,6 +688,26 @@ func init() {
 	apijson.RegisterFieldValidator[FileSearchToolRankingOptionsParam](
 		"ranker", "auto", "default-2024-11-15",
 	)
+}
+
+// Weights that control how reciprocal rank fusion balances semantic embedding
+// matches versus sparse keyword matches when hybrid search is enabled.
+//
+// The properties EmbeddingWeight, TextWeight are required.
+type FileSearchToolRankingOptionsHybridSearchParam struct {
+	// The weight of the embedding in the reciprocal ranking fusion.
+	EmbeddingWeight float64 `json:"embedding_weight,required"`
+	// The weight of the text in the reciprocal ranking fusion.
+	TextWeight float64 `json:"text_weight,required"`
+	paramObj
+}
+
+func (r FileSearchToolRankingOptionsHybridSearchParam) MarshalJSON() (data []byte, err error) {
+	type shadow FileSearchToolRankingOptionsHybridSearchParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *FileSearchToolRankingOptionsHybridSearchParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 func init() {
@@ -13426,11 +13475,15 @@ type ToolCodeInterpreterContainerUnion struct {
 	// This field is from variant
 	// [ToolCodeInterpreterContainerCodeInterpreterContainerAuto].
 	FileIDs []string `json:"file_ids"`
-	JSON    struct {
-		OfString respjson.Field
-		Type     respjson.Field
-		FileIDs  respjson.Field
-		raw      string
+	// This field is from variant
+	// [ToolCodeInterpreterContainerCodeInterpreterContainerAuto].
+	MemoryLimit string `json:"memory_limit"`
+	JSON        struct {
+		OfString    respjson.Field
+		Type        respjson.Field
+		FileIDs     respjson.Field
+		MemoryLimit respjson.Field
+		raw         string
 	} `json:"-"`
 }
 
@@ -13458,10 +13511,13 @@ type ToolCodeInterpreterContainerCodeInterpreterContainerAuto struct {
 	Type constant.Auto `json:"type,required"`
 	// An optional list of uploaded files to make available to your code.
 	FileIDs []string `json:"file_ids"`
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit string `json:"memory_limit,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
 		FileIDs     respjson.Field
+		MemoryLimit respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -13482,7 +13538,10 @@ type ToolImageGeneration struct {
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
-	// Control how much effort the model will exert to match the style and features, especially facial features, of input images. This parameter is only supported for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. This parameter is only supported
+	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
+	// `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,nullable"`
@@ -14372,6 +14431,8 @@ func (u *ToolCodeInterpreterContainerUnionParam) asAny() any {
 //
 // The property Type is required.
 type ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam struct {
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit string `json:"memory_limit,omitzero"`
 	// An optional list of uploaded files to make available to your code.
 	FileIDs []string `json:"file_ids,omitzero"`
 	// Always `auto`.
@@ -14389,6 +14450,12 @@ func (r *ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam) Unmarsha
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam](
+		"memory_limit", "1g", "4g", "16g", "64g",
+	)
+}
+
 // A tool that generates images using a model like `gpt-image-1`.
 //
 // The property Type is required.
@@ -14398,7 +14465,10 @@ type ToolImageGenerationParam struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// Control how much effort the model will exert to match the style and features, especially facial features, of input images. This parameter is only supported for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
+	// Control how much effort the model will exert to match the style and features,
+	// especially facial features, of input images. This parameter is only supported
+	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
+	// `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
