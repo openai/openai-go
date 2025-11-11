@@ -142,6 +142,94 @@ func TestStreamingAccumulatorWithToolCalls(t *testing.T) {
 	}
 }
 
+func TestAccumulateTokenDetails(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			res, err := next(req)
+			if err != nil {
+				return nil, err
+			}
+			res.Body = io.NopCloser(strings.NewReader(mockResponseBody))
+			return res, nil
+		}),
+	)
+
+	stream := client.Chat.Completions.NewStreaming(context.TODO(), openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			{OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Tell me about Greece"),
+				},
+			}},
+		},
+		Model: openai.ChatModelGPT4o,
+		StreamOptions: openai.ChatCompletionStreamOptionsParam{
+			IncludeUsage: openai.Bool(true),
+		},
+	})
+
+	acc := openai.ChatCompletionAccumulator{}
+	for stream.Next() {
+		chunk := stream.Current()
+		if !acc.AddChunk(chunk) {
+			t.Fatal("Failed to accumulate chunk")
+		}
+	}
+
+	if err := stream.Err(); err != nil {
+		t.Fatalf("Stream error: %v", err)
+	}
+
+	// First chunk: prompt=10, completion=100, total=110
+	// + Second chunk: prompt=0, completion=50, total=50
+	// = Accumulated: prompt=10, completion=150, total=160
+	if acc.Usage.PromptTokens != 10 {
+		t.Errorf("PromptTokens: expected 10, got %d", acc.Usage.PromptTokens)
+	}
+	if acc.Usage.CompletionTokens != 150 {
+		t.Errorf("CompletionTokens: expected 150, got %d", acc.Usage.CompletionTokens)
+	}
+	if acc.Usage.TotalTokens != 160 {
+		t.Errorf("TotalTokens: expected 160, got %d", acc.Usage.TotalTokens)
+	}
+
+	// First chunk: reasoning=5, audio=2, accepted=8, rejected=1
+	// + Second chunk: reasoning=3, audio=1, accepted=4, rejected=2
+	// = Accumulated: reasoning=8, audio=3, accepted=12, rejected=3
+	if acc.Usage.CompletionTokensDetails.ReasoningTokens != 8 {
+		t.Errorf("CompletionTokensDetails.ReasoningTokens: expected 8, got %d", acc.Usage.CompletionTokensDetails.ReasoningTokens)
+	}
+	if acc.Usage.CompletionTokensDetails.AudioTokens != 3 {
+		t.Errorf("CompletionTokensDetails.AudioTokens: expected 3, got %d", acc.Usage.CompletionTokensDetails.AudioTokens)
+	}
+	if acc.Usage.CompletionTokensDetails.AcceptedPredictionTokens != 12 {
+		t.Errorf("CompletionTokensDetails.AcceptedPredictionTokens: expected 12, got %d", acc.Usage.CompletionTokensDetails.AcceptedPredictionTokens)
+	}
+	if acc.Usage.CompletionTokensDetails.RejectedPredictionTokens != 3 {
+		t.Errorf("CompletionTokensDetails.RejectedPredictionTokens: expected 3, got %d", acc.Usage.CompletionTokensDetails.RejectedPredictionTokens)
+	}
+
+	// First chunk: audio=3, cached=20
+	// + Second chunk: audio=0, cached=10
+	// = Accumulated: audio=3, cached=30
+	if acc.Usage.PromptTokensDetails.AudioTokens != 3 {
+		t.Errorf("PromptTokensDetails.AudioTokens: expected 3, got %d", acc.Usage.PromptTokensDetails.AudioTokens)
+	}
+	if acc.Usage.PromptTokensDetails.CachedTokens != 30 {
+		t.Errorf("PromptTokensDetails.CachedTokens: expected 30, got %d", acc.Usage.PromptTokensDetails.CachedTokens)
+	}
+}
+
 // manually created on 11/3/2024
 var mockResponseBody = `data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":{"content":[],"refusal":null},"finish_reason":null}],"usage":null}
 
@@ -533,7 +621,9 @@ data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.c
 
 data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"tool_calls"}],"usage":null}
 
-data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[],"usage":{"prompt_tokens":57,"completion_tokens":202,"total_tokens":259}}
+data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[],"usage":{"prompt_tokens":10,"completion_tokens":100,"total_tokens":110,"completion_tokens_details":{"reasoning_tokens":5,"audio_tokens":2,"accepted_prediction_tokens":8,"rejected_prediction_tokens":1},"prompt_tokens_details":{"audio_tokens":3,"cached_tokens":20}}}
+
+data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[],"usage":{"prompt_tokens":0,"completion_tokens":50,"total_tokens":50,"completion_tokens_details":{"reasoning_tokens":3,"audio_tokens":1,"accepted_prediction_tokens":4,"rejected_prediction_tokens":2},"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":10}}}
 
 data: [DONE]
 
