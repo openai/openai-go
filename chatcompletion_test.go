@@ -35,7 +35,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 				Name: openai.String("name"),
 			},
 		}},
-		Model: shared.ChatModelGPT5,
+		Model: shared.ChatModelGPT5_1,
 		Audio: openai.ChatCompletionAudioParam{
 			Format: openai.ChatCompletionAudioParamFormatWAV,
 			Voice:  openai.ChatCompletionAudioParamVoiceAlloy,
@@ -68,9 +68,10 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 				OfString: openai.String("string"),
 			},
 		},
-		PresencePenalty: openai.Float(-2),
-		PromptCacheKey:  openai.String("prompt-cache-key-1234"),
-		ReasoningEffort: shared.ReasoningEffortMinimal,
+		PresencePenalty:      openai.Float(-2),
+		PromptCacheKey:       openai.String("prompt-cache-key-1234"),
+		PromptCacheRetention: openai.ChatCompletionNewParamsPromptCacheRetentionInMemory,
+		ReasoningEffort:      shared.ReasoningEffortNone,
 		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
 			OfText: &shared.ResponseFormatTextParam{},
 		},

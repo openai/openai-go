@@ -348,12 +348,13 @@ type BatchNewParams struct {
 	// Any of "24h".
 	CompletionWindow BatchNewParamsCompletionWindow `json:"completion_window,omitzero,required"`
 	// The endpoint to be used for all requests in the batch. Currently
-	// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, and `/v1/completions`
-	// are supported. Note that `/v1/embeddings` batches are also restricted to a
-	// maximum of 50,000 embedding inputs across all requests in the batch.
+	// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, `/v1/completions`,
+	// and `/v1/moderations` are supported. Note that `/v1/embeddings` batches are also
+	// restricted to a maximum of 50,000 embedding inputs across all requests in the
+	// batch.
 	//
 	// Any of "/v1/responses", "/v1/chat/completions", "/v1/embeddings",
-	// "/v1/completions".
+	// "/v1/completions", "/v1/moderations".
 	Endpoint BatchNewParamsEndpoint `json:"endpoint,omitzero,required"`
 	// The ID of an uploaded file that contains requests for the new batch.
 	//
@@ -395,9 +396,10 @@ const (
 )
 
 // The endpoint to be used for all requests in the batch. Currently
-// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, and `/v1/completions`
-// are supported. Note that `/v1/embeddings` batches are also restricted to a
-// maximum of 50,000 embedding inputs across all requests in the batch.
+// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, `/v1/completions`,
+// and `/v1/moderations` are supported. Note that `/v1/embeddings` batches are also
+// restricted to a maximum of 50,000 embedding inputs across all requests in the
+// batch.
 type BatchNewParamsEndpoint string
 
 const (
@@ -405,6 +407,7 @@ const (
 	BatchNewParamsEndpointV1ChatCompletions BatchNewParamsEndpoint = "/v1/chat/completions"
 	BatchNewParamsEndpointV1Embeddings      BatchNewParamsEndpoint = "/v1/embeddings"
 	BatchNewParamsEndpointV1Completions     BatchNewParamsEndpoint = "/v1/completions"
+	BatchNewParamsEndpointV1Moderations     BatchNewParamsEndpoint = "/v1/moderations"
 )
 
 // The expiration policy for the output and/or error file that are generated for a
