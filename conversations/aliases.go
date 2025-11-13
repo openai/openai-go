@@ -19,6 +19,21 @@ type Error = apierror.Error
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
 
+// Equals "gpt-5.1"
+const ChatModelGPT5_1 = shared.ChatModelGPT5_1
+
+// Equals "gpt-5.1-2025-11-13"
+const ChatModelGPT5_1_2025_11_13 = shared.ChatModelGPT5_1_2025_11_13
+
+// Equals "gpt-5.1-codex"
+const ChatModelGPT5_1Codex = shared.ChatModelGPT5_1Codex
+
+// Equals "gpt-5.1-mini"
+const ChatModelGPT5_1Mini = shared.ChatModelGPT5_1Mini
+
+// Equals "gpt-5.1-chat-latest"
+const ChatModelGPT5_1ChatLatest = shared.ChatModelGPT5_1ChatLatest
+
 // Equals "gpt-5"
 const ChatModelGPT5 = shared.ChatModelGPT5
 
@@ -403,15 +418,22 @@ type ReasoningParam = shared.ReasoningParam
 
 // Constrains effort on reasoning for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
-// effort can result in faster responses and fewer tokens used on reasoning in a
-// response.
+// supported values are `none`, `minimal`, `low`, `medium`, and `high`. Reducing
+// reasoning effort can result in faster responses and fewer tokens used on
+// reasoning in a response.
 //
-// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
-// effort.
+//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
+//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
+//     calls are supported for all reasoning values in gpt-5.1.
+//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
+//     support `none`.
+//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
 //
 // This is an alias to an internal type.
 type ReasoningEffort = shared.ReasoningEffort
+
+// Equals "none"
+const ReasoningEffortNone = shared.ReasoningEffortNone
 
 // Equals "minimal"
 const ReasoningEffortMinimal = shared.ReasoningEffortMinimal

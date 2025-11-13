@@ -28,14 +28,14 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Beta.Assistants.New(context.TODO(), openai.BetaAssistantNewParams{
-		Model:        shared.ChatModelGPT5,
+		Model:        shared.ChatModelGPT5_1,
 		Description:  openai.String("description"),
 		Instructions: openai.String("instructions"),
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
 		Name:            openai.String("name"),
-		ReasoningEffort: shared.ReasoningEffortMinimal,
+		ReasoningEffort: shared.ReasoningEffortNone,
 		ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{
 			OfAuto: constant.ValueOf[constant.Auto](),
 		},
@@ -116,7 +116,7 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 			},
 			Model:           openai.BetaAssistantUpdateParamsModelGPT5,
 			Name:            openai.String("name"),
-			ReasoningEffort: shared.ReasoningEffortMinimal,
+			ReasoningEffort: shared.ReasoningEffortNone,
 			ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{
 				OfAuto: constant.ValueOf[constant.Auto](),
 			},

@@ -54,9 +54,10 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			},
 			Version: openai.String("version"),
 		},
-		PromptCacheKey: openai.String("prompt-cache-key-1234"),
+		PromptCacheKey:       openai.String("prompt-cache-key-1234"),
+		PromptCacheRetention: responses.ResponseNewParamsPromptCacheRetentionInMemory,
 		Reasoning: shared.ReasoningParam{
-			Effort:          shared.ReasoningEffortMinimal,
+			Effort:          shared.ReasoningEffortNone,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
 			Summary:         shared.ReasoningSummaryAuto,
 		},

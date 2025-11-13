@@ -39,7 +39,7 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 		ParallelToolCalls:  openai.Bool(true),
 		PreviousResponseID: openai.String("resp_123"),
 		Reasoning: shared.ReasoningParam{
-			Effort:          shared.ReasoningEffortMinimal,
+			Effort:          shared.ReasoningEffortNone,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
 			Summary:         shared.ReasoningSummaryAuto,
 		},

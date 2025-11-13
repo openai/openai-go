@@ -2957,16 +2957,27 @@ type ChatCompletionNewParams struct {
 	//
 	// Any of "text", "audio".
 	Modalities []string `json:"modalities,omitzero"`
+	// The retention policy for the prompt cache. Set to `24h` to enable extended
+	// prompt caching, which keeps cached prefixes active for longer, up to a maximum
+	// of 24 hours.
+	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+	//
+	// Any of "in-memory", "24h".
+	PromptCacheRetention ChatCompletionNewParamsPromptCacheRetention `json:"prompt_cache_retention,omitzero"`
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
-	// effort can result in faster responses and fewer tokens used on reasoning in a
-	// response.
+	// supported values are `none`, `minimal`, `low`, `medium`, and `high`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response.
 	//
-	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
-	// effort.
+	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
+	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
+	//     calls are supported for all reasoning values in gpt-5.1.
+	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
+	//     support `none`.
+	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
 	//
-	// Any of "minimal", "low", "medium", "high".
+	// Any of "none", "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// Specifies the processing type used for serving the request.
 	//
@@ -3126,6 +3137,17 @@ func (r ChatCompletionNewParamsFunction) MarshalJSON() (data []byte, err error) 
 func (r *ChatCompletionNewParamsFunction) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+// The retention policy for the prompt cache. Set to `24h` to enable extended
+// prompt caching, which keeps cached prefixes active for longer, up to a maximum
+// of 24 hours.
+// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+type ChatCompletionNewParamsPromptCacheRetention string
+
+const (
+	ChatCompletionNewParamsPromptCacheRetentionInMemory ChatCompletionNewParamsPromptCacheRetention = "in-memory"
+	ChatCompletionNewParamsPromptCacheRetention24h      ChatCompletionNewParamsPromptCacheRetention = "24h"
+)
 
 // Only one field can be non-zero.
 //

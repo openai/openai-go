@@ -220,12 +220,14 @@ func init() {
 // Use [param.IsOmitted] to confirm if a field is set.
 type InputTokenCountParamsToolChoiceUnion struct {
 	// Check if union is this variant with !param.IsOmitted(union.OfToolChoiceMode)
-	OfToolChoiceMode param.Opt[ToolChoiceOptions] `json:",omitzero,inline"`
-	OfAllowedTools   *ToolChoiceAllowedParam      `json:",omitzero,inline"`
-	OfHostedTool     *ToolChoiceTypesParam        `json:",omitzero,inline"`
-	OfFunctionTool   *ToolChoiceFunctionParam     `json:",omitzero,inline"`
-	OfMcpTool        *ToolChoiceMcpParam          `json:",omitzero,inline"`
-	OfCustomTool     *ToolChoiceCustomParam       `json:",omitzero,inline"`
+	OfToolChoiceMode               param.Opt[ToolChoiceOptions] `json:",omitzero,inline"`
+	OfAllowedTools                 *ToolChoiceAllowedParam      `json:",omitzero,inline"`
+	OfHostedTool                   *ToolChoiceTypesParam        `json:",omitzero,inline"`
+	OfFunctionTool                 *ToolChoiceFunctionParam     `json:",omitzero,inline"`
+	OfMcpTool                      *ToolChoiceMcpParam          `json:",omitzero,inline"`
+	OfCustomTool                   *ToolChoiceCustomParam       `json:",omitzero,inline"`
+	OfSpecificApplyPatchToolChoice *ToolChoiceApplyPatchParam   `json:",omitzero,inline"`
+	OfSpecificShellToolChoice      *ToolChoiceShellParam        `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -235,7 +237,9 @@ func (u InputTokenCountParamsToolChoiceUnion) MarshalJSON() ([]byte, error) {
 		u.OfHostedTool,
 		u.OfFunctionTool,
 		u.OfMcpTool,
-		u.OfCustomTool)
+		u.OfCustomTool,
+		u.OfSpecificApplyPatchToolChoice,
+		u.OfSpecificShellToolChoice)
 }
 func (u *InputTokenCountParamsToolChoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -254,6 +258,10 @@ func (u *InputTokenCountParamsToolChoiceUnion) asAny() any {
 		return u.OfMcpTool
 	} else if !param.IsOmitted(u.OfCustomTool) {
 		return u.OfCustomTool
+	} else if !param.IsOmitted(u.OfSpecificApplyPatchToolChoice) {
+		return u.OfSpecificApplyPatchToolChoice
+	} else if !param.IsOmitted(u.OfSpecificShellToolChoice) {
+		return u.OfSpecificShellToolChoice
 	}
 	return nil
 }
@@ -293,6 +301,10 @@ func (u InputTokenCountParamsToolChoiceUnion) GetType() *string {
 	} else if vt := u.OfMcpTool; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfCustomTool; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfSpecificApplyPatchToolChoice; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfSpecificShellToolChoice; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
