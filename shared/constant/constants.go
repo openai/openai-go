@@ -20,6 +20,9 @@ func ValueOf[T Constant[T]]() T {
 
 type Active string                                           // Always "active"
 type AllowedTools string                                     // Always "allowed_tools"
+type ApplyPatch string                                       // Always "apply_patch"
+type ApplyPatchCall string                                   // Always "apply_patch_call"
+type ApplyPatchCallOutput string                             // Always "apply_patch_call_output"
 type Approximate string                                      // Always "approximate"
 type Assistant string                                        // Always "assistant"
 type AssistantDeleted string                                 // Always "assistant.deleted"
@@ -70,10 +73,12 @@ type ConversationItemRetrieve string                         // Always "conversa
 type ConversationItemRetrieved string                        // Always "conversation.item.retrieved"
 type ConversationItemTruncate string                         // Always "conversation.item.truncate"
 type ConversationItemTruncated string                        // Always "conversation.item.truncated"
+type CreateFile string                                       // Always "create_file"
 type CreatedAt string                                        // Always "created_at"
 type Custom string                                           // Always "custom"
 type CustomToolCall string                                   // Always "custom_tool_call"
 type CustomToolCallOutput string                             // Always "custom_tool_call_output"
+type DeleteFile string                                       // Always "delete_file"
 type Developer string                                        // Always "developer"
 type DoubleClick string                                      // Always "double_click"
 type Drag string                                             // Always "drag"
@@ -84,6 +89,7 @@ type EvalRunCanceled string                                  // Always "eval.run
 type EvalRunFailed string                                    // Always "eval.run.failed"
 type EvalRunSucceeded string                                 // Always "eval.run.succeeded"
 type Exec string                                             // Always "exec"
+type Exit string                                             // Always "exit"
 type File string                                             // Always "file"
 type FileCitation string                                     // Always "file_citation"
 type FilePath string                                         // Always "file_path"
@@ -236,6 +242,9 @@ type ServerVad string                                        // Always "server_v
 type SessionCreated string                                   // Always "session.created"
 type SessionUpdate string                                    // Always "session.update"
 type SessionUpdated string                                   // Always "session.updated"
+type Shell string                                            // Always "shell"
+type ShellCall string                                        // Always "shell_call"
+type ShellCallOutput string                                  // Always "shell_call_output"
 type Static string                                           // Always "static"
 type StringCheck string                                      // Always "string_check"
 type SubmitToolOutputs string                                // Always "submit_tool_outputs"
@@ -273,6 +282,7 @@ type ThreadRunStepDelta string                               // Always "thread.r
 type ThreadRunStepExpired string                             // Always "thread.run.step.expired"
 type ThreadRunStepFailed string                              // Always "thread.run.step.failed"
 type ThreadRunStepInProgress string                          // Always "thread.run.step.in_progress"
+type Timeout string                                          // Always "timeout"
 type Tokens string                                           // Always "tokens"
 type Tool string                                             // Always "tool"
 type ToolCalls string                                        // Always "tool_calls"
@@ -285,6 +295,7 @@ type Transcription string                                    // Always "transcri
 type TranscriptionSessionUpdate string                       // Always "transcription_session.update"
 type TranscriptionSessionUpdated string                      // Always "transcription_session.updated"
 type Type string                                             // Always "type"
+type UpdateFile string                                       // Always "update_file"
 type Upload string                                           // Always "upload"
 type UploadPart string                                       // Always "upload.part"
 type URL string                                              // Always "url"
@@ -305,6 +316,9 @@ type WebSearchCall string                                    // Always "web_sear
 
 func (c Active) Default() Active                               { return "active" }
 func (c AllowedTools) Default() AllowedTools                   { return "allowed_tools" }
+func (c ApplyPatch) Default() ApplyPatch                       { return "apply_patch" }
+func (c ApplyPatchCall) Default() ApplyPatchCall               { return "apply_patch_call" }
+func (c ApplyPatchCallOutput) Default() ApplyPatchCallOutput   { return "apply_patch_call_output" }
 func (c Approximate) Default() Approximate                     { return "approximate" }
 func (c Assistant) Default() Assistant                         { return "assistant" }
 func (c AssistantDeleted) Default() AssistantDeleted           { return "assistant.deleted" }
@@ -377,10 +391,12 @@ func (c ConversationItemTruncate) Default() ConversationItemTruncate {
 func (c ConversationItemTruncated) Default() ConversationItemTruncated {
 	return "conversation.item.truncated"
 }
+func (c CreateFile) Default() CreateFile                         { return "create_file" }
 func (c CreatedAt) Default() CreatedAt                           { return "created_at" }
 func (c Custom) Default() Custom                                 { return "custom" }
 func (c CustomToolCall) Default() CustomToolCall                 { return "custom_tool_call" }
 func (c CustomToolCallOutput) Default() CustomToolCallOutput     { return "custom_tool_call_output" }
+func (c DeleteFile) Default() DeleteFile                         { return "delete_file" }
 func (c Developer) Default() Developer                           { return "developer" }
 func (c DoubleClick) Default() DoubleClick                       { return "double_click" }
 func (c Drag) Default() Drag                                     { return "drag" }
@@ -391,6 +407,7 @@ func (c EvalRunCanceled) Default() EvalRunCanceled               { return "eval.
 func (c EvalRunFailed) Default() EvalRunFailed                   { return "eval.run.failed" }
 func (c EvalRunSucceeded) Default() EvalRunSucceeded             { return "eval.run.succeeded" }
 func (c Exec) Default() Exec                                     { return "exec" }
+func (c Exit) Default() Exit                                     { return "exit" }
 func (c File) Default() File                                     { return "file" }
 func (c FileCitation) Default() FileCitation                     { return "file_citation" }
 func (c FilePath) Default() FilePath                             { return "file_path" }
@@ -651,6 +668,9 @@ func (c ServerVad) Default() ServerVad                           { return "serve
 func (c SessionCreated) Default() SessionCreated                 { return "session.created" }
 func (c SessionUpdate) Default() SessionUpdate                   { return "session.update" }
 func (c SessionUpdated) Default() SessionUpdated                 { return "session.updated" }
+func (c Shell) Default() Shell                                   { return "shell" }
+func (c ShellCall) Default() ShellCall                           { return "shell_call" }
+func (c ShellCallOutput) Default() ShellCallOutput               { return "shell_call_output" }
 func (c Static) Default() Static                                 { return "static" }
 func (c StringCheck) Default() StringCheck                       { return "string_check" }
 func (c SubmitToolOutputs) Default() SubmitToolOutputs           { return "submit_tool_outputs" }
@@ -696,6 +716,7 @@ func (c ThreadRunStepFailed) Default() ThreadRunStepFailed       { return "threa
 func (c ThreadRunStepInProgress) Default() ThreadRunStepInProgress {
 	return "thread.run.step.in_progress"
 }
+func (c Timeout) Default() Timeout                             { return "timeout" }
 func (c Tokens) Default() Tokens                               { return "tokens" }
 func (c Tool) Default() Tool                                   { return "tool" }
 func (c ToolCalls) Default() ToolCalls                         { return "tool_calls" }
@@ -712,6 +733,7 @@ func (c TranscriptionSessionUpdated) Default() TranscriptionSessionUpdated {
 	return "transcription_session.updated"
 }
 func (c Type) Default() Type                             { return "type" }
+func (c UpdateFile) Default() UpdateFile                 { return "update_file" }
 func (c Upload) Default() Upload                         { return "upload" }
 func (c UploadPart) Default() UploadPart                 { return "upload.part" }
 func (c URL) Default() URL                               { return "url" }
@@ -736,6 +758,9 @@ func (c WebSearchCall) Default() WebSearchCall { return "web_search_call" }
 
 func (c Active) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c AllowedTools) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c ApplyPatch) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c ApplyPatchCall) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c ApplyPatchCallOutput) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c Approximate) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c Assistant) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c AssistantDeleted) MarshalJSON() ([]byte, error)        { return marshalString(c) }
@@ -794,10 +819,12 @@ func (c ConversationItemRetrieve) MarshalJSON() ([]byte, error)              { r
 func (c ConversationItemRetrieved) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c ConversationItemTruncate) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c ConversationItemTruncated) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c CreateFile) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c CreatedAt) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Custom) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c CustomToolCall) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c CustomToolCallOutput) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c DeleteFile) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Developer) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c DoubleClick) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Drag) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
@@ -808,6 +835,7 @@ func (c EvalRunCanceled) MarshalJSON() ([]byte, error)                       { r
 func (c EvalRunFailed) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c EvalRunSucceeded) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c Exec) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
+func (c Exit) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c File) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c FileCitation) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c FilePath) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
@@ -964,6 +992,9 @@ func (c ServerVad) MarshalJSON() ([]byte, error)                          { retu
 func (c SessionCreated) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c SessionUpdate) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c SessionUpdated) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c Shell) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c ShellCall) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c ShellCallOutput) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c Static) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c StringCheck) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SubmitToolOutputs) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
@@ -1001,6 +1032,7 @@ func (c ThreadRunStepDelta) MarshalJSON() ([]byte, error)                 { retu
 func (c ThreadRunStepExpired) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ThreadRunStepFailed) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c ThreadRunStepInProgress) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c Timeout) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Tokens) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Tool) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c ToolCalls) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
@@ -1013,6 +1045,7 @@ func (c Transcription) MarshalJSON() ([]byte, error)                      { retu
 func (c TranscriptionSessionUpdate) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c TranscriptionSessionUpdated) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c Type) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
+func (c UpdateFile) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Upload) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c UploadPart) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c URL) MarshalJSON() ([]byte, error)                                { return marshalString(c) }

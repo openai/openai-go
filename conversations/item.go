@@ -120,9 +120,13 @@ func (r *ItemService) Delete(ctx context.Context, conversationID string, itemID 
 // [responses.ResponseComputerToolCallOutputItem],
 // [responses.ResponseReasoningItem], [responses.ResponseCodeInterpreterToolCall],
 // [ConversationItemLocalShellCall], [ConversationItemLocalShellCallOutput],
-// [ConversationItemMcpListTools], [ConversationItemMcpApprovalRequest],
-// [ConversationItemMcpApprovalResponse], [ConversationItemMcpCall],
-// [responses.ResponseCustomToolCall], [responses.ResponseCustomToolCallOutput].
+// [responses.ResponseFunctionShellToolCall],
+// [responses.ResponseFunctionShellToolCallOutput],
+// [responses.ResponseApplyPatchToolCall],
+// [responses.ResponseApplyPatchToolCallOutput], [ConversationItemMcpListTools],
+// [ConversationItemMcpApprovalRequest], [ConversationItemMcpApprovalResponse],
+// [ConversationItemMcpCall], [responses.ResponseCustomToolCall],
+// [responses.ResponseCustomToolCallOutput].
 //
 // Use the [ConversationItemUnion.AsAny] method to switch on the variant.
 //
@@ -138,16 +142,18 @@ type ConversationItemUnion struct {
 	// Any of "message", "function_call", "function_call_output", "file_search_call",
 	// "web_search_call", "image_generation_call", "computer_call",
 	// "computer_call_output", "reasoning", "code_interpreter_call",
-	// "local_shell_call", "local_shell_call_output", "mcp_list_tools",
-	// "mcp_approval_request", "mcp_approval_response", "mcp_call", "custom_tool_call",
-	// "custom_tool_call_output".
+	// "local_shell_call", "local_shell_call_output", "shell_call",
+	// "shell_call_output", "apply_patch_call", "apply_patch_call_output",
+	// "mcp_list_tools", "mcp_approval_request", "mcp_approval_response", "mcp_call",
+	// "custom_tool_call", "custom_tool_call_output".
 	Type      string `json:"type"`
 	Arguments string `json:"arguments"`
 	CallID    string `json:"call_id"`
 	Name      string `json:"name"`
 	// This field is a union of
 	// [responses.ResponseFunctionToolCallOutputItemOutputUnion],
-	// [responses.ResponseComputerToolCallOutputScreenshot], [string], [string],
+	// [responses.ResponseComputerToolCallOutputScreenshot], [string],
+	// [[]responses.ResponseFunctionShellToolCallOutputOutput], [string], [string],
 	// [responses.ResponseCustomToolCallOutputOutputUnion]
 	Output ConversationItemUnionOutput `json:"output"`
 	// This field is from variant [responses.ResponseFileSearchToolCall].
@@ -156,7 +162,8 @@ type ConversationItemUnion struct {
 	Results []responses.ResponseFileSearchToolCallResult `json:"results"`
 	// This field is a union of [responses.ResponseFunctionWebSearchActionUnion],
 	// [responses.ResponseComputerToolCallActionUnion],
-	// [ConversationItemLocalShellCallAction]
+	// [ConversationItemLocalShellCallAction],
+	// [responses.ResponseFunctionShellToolCallAction]
 	Action ConversationItemUnionAction `json:"action"`
 	// This field is from variant [ConversationItemImageGenerationCall].
 	Result string `json:"result"`
@@ -173,8 +180,13 @@ type ConversationItemUnion struct {
 	// This field is from variant [responses.ResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
 	// This field is from variant [responses.ResponseCodeInterpreterToolCall].
-	Outputs     []responses.ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
-	ServerLabel string                                                 `json:"server_label"`
+	Outputs   []responses.ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
+	CreatedBy string                                                 `json:"created_by"`
+	// This field is from variant [responses.ResponseFunctionShellToolCallOutput].
+	MaxOutputLength int64 `json:"max_output_length"`
+	// This field is from variant [responses.ResponseApplyPatchToolCall].
+	Operation   responses.ResponseApplyPatchToolCallOperationUnion `json:"operation"`
+	ServerLabel string                                             `json:"server_label"`
 	// This field is from variant [ConversationItemMcpListTools].
 	Tools             []ConversationItemMcpListToolsTool `json:"tools"`
 	Error             string                             `json:"error"`
@@ -206,6 +218,9 @@ type ConversationItemUnion struct {
 		Code                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
+		CreatedBy                respjson.Field
+		MaxOutputLength          respjson.Field
+		Operation                respjson.Field
 		ServerLabel              respjson.Field
 		Tools                    respjson.Field
 		Error                    respjson.Field
@@ -247,6 +262,10 @@ func (ConversationItemMcpCall) ImplConversationItemUnion()              {}
 //	case responses.ResponseCodeInterpreterToolCall:
 //	case conversations.ConversationItemLocalShellCall:
 //	case conversations.ConversationItemLocalShellCallOutput:
+//	case responses.ResponseFunctionShellToolCall:
+//	case responses.ResponseFunctionShellToolCallOutput:
+//	case responses.ResponseApplyPatchToolCall:
+//	case responses.ResponseApplyPatchToolCallOutput:
 //	case conversations.ConversationItemMcpListTools:
 //	case conversations.ConversationItemMcpApprovalRequest:
 //	case conversations.ConversationItemMcpApprovalResponse:
@@ -282,6 +301,14 @@ func (u ConversationItemUnion) AsAny() anyConversationItem {
 		return u.AsLocalShellCall()
 	case "local_shell_call_output":
 		return u.AsLocalShellCallOutput()
+	case "shell_call":
+		return u.AsShellCall()
+	case "shell_call_output":
+		return u.AsShellCallOutput()
+	case "apply_patch_call":
+		return u.AsApplyPatchCall()
+	case "apply_patch_call_output":
+		return u.AsApplyPatchCallOutput()
 	case "mcp_list_tools":
 		return u.AsMcpListTools()
 	case "mcp_approval_request":
@@ -358,6 +385,26 @@ func (u ConversationItemUnion) AsLocalShellCallOutput() (v ConversationItemLocal
 	return
 }
 
+func (u ConversationItemUnion) AsShellCall() (v responses.ResponseFunctionShellToolCall) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConversationItemUnion) AsShellCallOutput() (v responses.ResponseFunctionShellToolCallOutput) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConversationItemUnion) AsApplyPatchCall() (v responses.ResponseApplyPatchToolCall) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConversationItemUnion) AsApplyPatchCallOutput() (v responses.ResponseApplyPatchToolCallOutput) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 func (u ConversationItemUnion) AsMcpListTools() (v ConversationItemMcpListTools) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
@@ -430,7 +477,8 @@ func (r *ConversationItemUnionContent) UnmarshalJSON(data []byte) error {
 // [ConversationItemUnion].
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfOutputContentList]
+// will be valid: OfString OfOutputContentList
+// OfResponseFunctionShellToolCallOutputOutputArray]
 type ConversationItemUnionOutput struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
@@ -438,6 +486,9 @@ type ConversationItemUnionOutput struct {
 	// [[]responses.ResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion]
 	// instead of an object.
 	OfOutputContentList []responses.ResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion `json:",inline"`
+	// This field will be present if the value is a
+	// [[]responses.ResponseFunctionShellToolCallOutputOutput] instead of an object.
+	OfResponseFunctionShellToolCallOutputOutputArray []responses.ResponseFunctionShellToolCallOutputOutput `json:",inline"`
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
 	Type constant.ComputerScreenshot `json:"type"`
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
@@ -445,12 +496,13 @@ type ConversationItemUnionOutput struct {
 	// This field is from variant [responses.ResponseComputerToolCallOutputScreenshot].
 	ImageURL string `json:"image_url"`
 	JSON     struct {
-		OfString            respjson.Field
-		OfOutputContentList respjson.Field
-		Type                respjson.Field
-		FileID              respjson.Field
-		ImageURL            respjson.Field
-		raw                 string
+		OfString                                         respjson.Field
+		OfOutputContentList                              respjson.Field
+		OfResponseFunctionShellToolCallOutputOutputArray respjson.Field
+		Type                                             respjson.Field
+		FileID                                           respjson.Field
+		ImageURL                                         respjson.Field
+		raw                                              string
 	} `json:"-"`
 }
 
@@ -490,14 +542,17 @@ type ConversationItemUnionAction struct {
 	// This field is from variant [ConversationItemLocalShellCallAction].
 	Command []string `json:"command"`
 	// This field is from variant [ConversationItemLocalShellCallAction].
-	Env map[string]string `json:"env"`
-	// This field is from variant [ConversationItemLocalShellCallAction].
-	TimeoutMs int64 `json:"timeout_ms"`
+	Env       map[string]string `json:"env"`
+	TimeoutMs int64             `json:"timeout_ms"`
 	// This field is from variant [ConversationItemLocalShellCallAction].
 	User string `json:"user"`
 	// This field is from variant [ConversationItemLocalShellCallAction].
 	WorkingDirectory string `json:"working_directory"`
-	JSON             struct {
+	// This field is from variant [responses.ResponseFunctionShellToolCallAction].
+	Commands []string `json:"commands"`
+	// This field is from variant [responses.ResponseFunctionShellToolCallAction].
+	MaxOutputLength int64 `json:"max_output_length"`
+	JSON            struct {
 		Query            respjson.Field
 		Type             respjson.Field
 		Sources          respjson.Field
@@ -516,6 +571,8 @@ type ConversationItemUnionAction struct {
 		TimeoutMs        respjson.Field
 		User             respjson.Field
 		WorkingDirectory respjson.Field
+		Commands         respjson.Field
+		MaxOutputLength  respjson.Field
 		raw              string
 	} `json:"-"`
 }

@@ -21,6 +21,11 @@ type ResponsesModel = string
 // aliased to make [param.APIObject] private when embedding
 
 const (
+	ChatModelGPT5_1                           ChatModel = "gpt-5.1"
+	ChatModelGPT5_1_2025_11_13                ChatModel = "gpt-5.1-2025-11-13"
+	ChatModelGPT5_1Codex                      ChatModel = "gpt-5.1-codex"
+	ChatModelGPT5_1Mini                       ChatModel = "gpt-5.1-mini"
+	ChatModelGPT5_1ChatLatest                 ChatModel = "gpt-5.1-chat-latest"
 	ChatModelGPT5                             ChatModel = "gpt-5"
 	ChatModelGPT5Mini                         ChatModel = "gpt-5-mini"
 	ChatModelGPT5Nano                         ChatModel = "gpt-5-nano"
@@ -752,14 +757,18 @@ type Metadata map[string]string
 type Reasoning struct {
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
-	// effort can result in faster responses and fewer tokens used on reasoning in a
-	// response.
+	// supported values are `none`, `minimal`, `low`, `medium`, and `high`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response.
 	//
-	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
-	// effort.
+	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
+	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
+	//     calls are supported for all reasoning values in gpt-5.1.
+	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
+	//     support `none`.
+	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
 	//
-	// Any of "minimal", "low", "medium", "high".
+	// Any of "none", "minimal", "low", "medium", "high".
 	Effort ReasoningEffort `json:"effort,nullable"`
 	// **Deprecated:** use `summary` instead.
 	//
@@ -837,14 +846,18 @@ const (
 type ReasoningParam struct {
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
-	// effort can result in faster responses and fewer tokens used on reasoning in a
-	// response.
+	// supported values are `none`, `minimal`, `low`, `medium`, and `high`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response.
 	//
-	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
-	// effort.
+	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
+	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
+	//     calls are supported for all reasoning values in gpt-5.1.
+	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
+	//     support `none`.
+	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
 	//
-	// Any of "minimal", "low", "medium", "high".
+	// Any of "none", "minimal", "low", "medium", "high".
 	Effort ReasoningEffort `json:"effort,omitzero"`
 	// **Deprecated:** use `summary` instead.
 	//
@@ -877,15 +890,20 @@ func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
 
 // Constrains effort on reasoning for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
-// effort can result in faster responses and fewer tokens used on reasoning in a
-// response.
+// supported values are `none`, `minimal`, `low`, `medium`, and `high`. Reducing
+// reasoning effort can result in faster responses and fewer tokens used on
+// reasoning in a response.
 //
-// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
-// effort.
+//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
+//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
+//     calls are supported for all reasoning values in gpt-5.1.
+//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
+//     support `none`.
+//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
 type ReasoningEffort string
 
 const (
+	ReasoningEffortNone    ReasoningEffort = "none"
 	ReasoningEffortMinimal ReasoningEffort = "minimal"
 	ReasoningEffortLow     ReasoningEffort = "low"
 	ReasoningEffortMedium  ReasoningEffort = "medium"
