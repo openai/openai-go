@@ -1,7 +1,8 @@
 package sentinel_test
 
 import (
-	"github.com/openai/openai-go/internal/encoding/json/sentinel"
+	"github.com/openai/openai-go/v3/internal/encoding/json/sentinel"
+	"github.com/openai/openai-go/v3/packages/param"
 	"reflect"
 	"slices"
 	"testing"
@@ -15,24 +16,18 @@ type Pair struct {
 func TestNullSlice(t *testing.T) {
 	var nilSlice []int = nil
 	var nonNilSlice []int = []int{1, 2, 3}
-	var nullSlice []int = sentinel.NullSlice[int]()
+	var nullSlice []int = param.NullSlice[[]int]()
 
 	cases := map[string]Pair{
-		"nilSlice":            {sentinel.IsNullSlice(nilSlice), false},
-		"nullSlice":           {sentinel.IsNullSlice(nullSlice), true},
-		"newNullSlice":        {sentinel.IsNullSlice(sentinel.NullSlice[int]()), true},
+		"nilSlice":            {sentinel.IsNull(nilSlice), false},
+		"nullSlice":           {sentinel.IsNull(nullSlice), true},
+		"newNullSlice":        {sentinel.IsNull(param.NullSlice[[]int]()), true},
 		"lenNullSlice":        {len(nullSlice) == 0, true},
-		"nilSliceValue":       {sentinel.IsValueNullSlice(reflect.ValueOf(nilSlice)), false},
-		"nullSliceValue":      {sentinel.IsValueNullSlice(reflect.ValueOf(nullSlice)), true},
+		"nilSliceValue":       {sentinel.IsValueNull(reflect.ValueOf(nilSlice)), false},
+		"nullSliceValue":      {sentinel.IsValueNull(reflect.ValueOf(nullSlice)), true},
 		"compareSlices":       {slices.Compare(nilSlice, nullSlice) == 0, true},
 		"compareNonNilSlices": {slices.Compare(nonNilSlice, nullSlice) == 0, false},
 	}
-
-	nilSlice = append(nullSlice, 12)
-	cases["append_result"] = Pair{sentinel.IsNullSlice(nilSlice), false}
-	cases["mutated_result"] = Pair{sentinel.IsNullSlice(nullSlice), true}
-	cases["append_result_len"] = Pair{len(nilSlice) == 1, true}
-	cases["append_null_slice_len"] = Pair{len(nullSlice) == 0, true}
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -44,37 +39,20 @@ func TestNullSlice(t *testing.T) {
 	}
 }
 
-func TestNullPtr(t *testing.T) {
-	var s *string = nil
-	var i *int = nil
-	var slice *[]int = nil
-
-	var nullptrStr *string = sentinel.NullPtr[string]()
-	var nullptrInt *int = sentinel.NullPtr[int]()
-	var nullptrSlice *[]int = sentinel.NullPtr[[]int]()
-
-	if *nullptrStr != "" {
-		t.Errorf("Failed to safely deref")
-	}
-	if *nullptrInt != 0 {
-		t.Errorf("Failed to safely deref")
-	}
-	if len(*nullptrSlice) != 0 {
-		t.Errorf("Failed to safely deref")
-	}
+func TestNullMap(t *testing.T) {
+	var nilMap map[string]int = nil
+	var nonNilMap map[string]int = map[string]int{"a": 1, "b": 2}
+	var nullMap map[string]int = param.NullMap[map[string]int]()
 
 	cases := map[string]Pair{
-		"nilStr":  {sentinel.IsNullPtr(s), false},
-		"nullStr": {sentinel.IsNullPtr(nullptrStr), true},
-
-		"nilInt":  {sentinel.IsNullPtr(i), false},
-		"nullInt": {sentinel.IsNullPtr(nullptrInt), true},
-
-		"nilSlice":  {sentinel.IsNullPtr(slice), false},
-		"nullSlice": {sentinel.IsNullPtr(nullptrSlice), true},
-
-		"nilValuePtr":  {sentinel.IsValueNullPtr(reflect.ValueOf(i)), false},
-		"nullValuePtr": {sentinel.IsValueNullPtr(reflect.ValueOf(nullptrInt)), true},
+		"nilMap":            {sentinel.IsNull(nilMap), false},
+		"nullMap":           {sentinel.IsNull(nullMap), true},
+		"newNullMap":        {sentinel.IsNull(param.NullMap[map[string]int]()), true},
+		"lenNullMap":        {len(nullMap) == 0, true},
+		"nilMapValue":       {sentinel.IsValueNull(reflect.ValueOf(nilMap)), false},
+		"nullMapValue":      {sentinel.IsValueNull(reflect.ValueOf(nullMap)), true},
+		"compareMaps":       {reflect.DeepEqual(nilMap, nullMap), false},
+		"compareNonNilMaps": {reflect.DeepEqual(nonNilMap, nullMap), false},
 	}
 
 	for name, test := range cases {
@@ -84,5 +62,30 @@ func TestNullPtr(t *testing.T) {
 				t.Errorf("got %v, want %v", got, want)
 			}
 		})
+	}
+}
+
+func TestIsNullRepeated(t *testing.T) {
+	// Test for slices
+	nullSlice1 := param.NullSlice[[]int]()
+	nullSlice2 := param.NullSlice[[]int]()
+	if !sentinel.IsNull(nullSlice1) {
+		t.Errorf("IsNull(nullSlice1) = false, want true")
+	}
+	if !sentinel.IsNull(nullSlice2) {
+		t.Errorf("IsNull(nullSlice2) = false, want true")
+	}
+	if !sentinel.IsNull(nullSlice1) || !sentinel.IsNull(nullSlice2) {
+		t.Errorf("IsNull should return true for all NullSlice instances")
+	}
+
+	// Test for maps
+	nullMap1 := param.NullMap[map[string]int]()
+	nullMap2 := param.NullMap[map[string]int]()
+	if !sentinel.IsNull(nullMap1) {
+		t.Errorf("IsNull(nullMap1) = false, want true")
+	}
+	if !sentinel.IsNull(nullMap2) {
+		t.Errorf("IsNull(nullMap2) = false, want true")
 	}
 }

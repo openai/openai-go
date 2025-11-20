@@ -31,8 +31,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
 )
 
 // WithEndpoint configures this client to connect to an Azure OpenAI endpoint.
@@ -91,30 +91,60 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 	})
 }
 
+type tokenCredentialConfig struct {
+	Scopes []string
+}
+
+// TokenCredentialOption is the type for any options that can be used to customize
+// [WithTokenCredential], including things like using custom scopes.
+type TokenCredentialOption func(*tokenCredentialConfig) error
+
+// WithTokenCredentialScopes overrides the default scope used when requesting access tokens.
+func WithTokenCredentialScopes(scopes []string) func(*tokenCredentialConfig) error {
+	return func(tc *tokenCredentialConfig) error {
+		tc.Scopes = scopes
+		return nil
+	}
+}
+
 // WithTokenCredential configures this client to authenticate using an [Azure Identity] TokenCredential.
 // This function should be paired with a call to [WithEndpoint] to point to your Azure OpenAI instance.
 //
 // [Azure Identity]: https://pkg.go.dev/github.com/Azure/azure-sdk-for-go/sdk/azidentity
-func WithTokenCredential(tokenCredential azcore.TokenCredential) option.RequestOption {
-	bearerTokenPolicy := runtime.NewBearerTokenPolicy(tokenCredential, []string{"https://cognitiveservices.azure.com/.default"}, nil)
-
-	// add in a middleware that uses the bearer token generated from the token credential
-	return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
-		pipeline := runtime.NewPipeline("azopenai-extensions", version, runtime.PipelineOptions{}, &policy.ClientOptions{
-			InsecureAllowCredentialWithHTTP: true, // allow for plain HTTP proxies, etc..
-			PerRetryPolicies: []policy.Policy{
-				bearerTokenPolicy,
-				policyAdapter(next),
-			},
-		})
-
-		req2, err := runtime.NewRequestFromRequest(req)
-
-		if err != nil {
-			return nil, err
+func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...TokenCredentialOption) option.RequestOption {
+	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		tc := &tokenCredentialConfig{
+			Scopes: []string{"https://cognitiveservices.azure.com/.default"},
 		}
 
-		return pipeline.Do(req2)
+		for _, option := range options {
+			if err := option(tc); err != nil {
+				return err
+			}
+		}
+
+		bearerTokenPolicy := runtime.NewBearerTokenPolicy(tokenCredential, tc.Scopes, nil)
+
+		// add in a middleware that uses the bearer token generated from the token credential
+		middlewareOption := option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			pipeline := runtime.NewPipeline("azopenai-extensions", version, runtime.PipelineOptions{}, &policy.ClientOptions{
+				InsecureAllowCredentialWithHTTP: true, // allow for plain HTTP proxies, etc..
+				PerRetryPolicies: []policy.Policy{
+					bearerTokenPolicy,
+					policyAdapter(next),
+				},
+			})
+
+			req2, err := runtime.NewRequestFromRequest(req)
+
+			if err != nil {
+				return nil, err
+			}
+
+			return pipeline.Do(req2)
+		})
+
+		return middlewareOption.Apply(rc)
 	})
 }
 
@@ -136,11 +166,12 @@ var jsonRoutes = map[string]bool{
 	"/openai/images/generations": true,
 }
 
-// audioMultipartRoutes have mime/multipart payloads. These are less generic - we're very much
+// multipartRoutes have mime/multipart payloads. These are less generic - we're very much
 // expecting a transcription or translation payload for these.
-var audioMultipartRoutes = map[string]bool{
+var multipartRoutes = map[string]bool{
 	"/openai/audio/transcriptions": true,
 	"/openai/audio/translations":   true,
+	"/openai/images/edits":         true,
 }
 
 // getReplacementPathWithDeployment parses the request body to extract out the Model parameter (or equivalent)
@@ -150,8 +181,8 @@ func getReplacementPathWithDeployment(req *http.Request) (string, error) {
 		return getJSONRoute(req)
 	}
 
-	if audioMultipartRoutes[req.URL.Path] {
-		return getAudioMultipartRoute(req)
+	if multipartRoutes[req.URL.Path] {
+		return getMultipartRoute(req)
 	}
 
 	// No need to relocate the path. We've already tacked on /openai when we setup the endpoint.
@@ -181,7 +212,7 @@ func getJSONRoute(req *http.Request) (string, error) {
 	return strings.Replace(req.URL.Path, "/openai/", "/openai/deployments/"+escapedDeployment+"/", 1), nil
 }
 
-func getAudioMultipartRoute(req *http.Request) (string, error) {
+func getMultipartRoute(req *http.Request) (string, error) {
 	// body is a multipart/mime body type instead.
 	mimeBytes, err := io.ReadAll(req.Body)
 

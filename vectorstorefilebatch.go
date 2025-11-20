@@ -9,15 +9,16 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // VectorStoreFileBatchService contains methods and other services that help with
@@ -41,7 +42,7 @@ func NewVectorStoreFileBatchService(opts ...option.RequestOption) (r VectorStore
 
 // Create a vector store file batch.
 func (r *VectorStoreFileBatchService) New(ctx context.Context, vectorStoreID string, body VectorStoreFileBatchNewParams, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
@@ -113,7 +114,7 @@ func (r *VectorStoreFileBatchService) UploadAndPoll(ctx context.Context, vectorS
 
 // Retrieves a vector store file batch.
 func (r *VectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
@@ -131,7 +132,7 @@ func (r *VectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID str
 // Cancel a vector store file batch. This attempts to cancel the processing of
 // files in this batch as soon as possible.
 func (r *VectorStoreFileBatchService) Cancel(ctx context.Context, vectorStoreID string, batchID string, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
@@ -149,7 +150,7 @@ func (r *VectorStoreFileBatchService) Cancel(ctx context.Context, vectorStoreID 
 // Returns a list of vector store files in a batch.
 func (r *VectorStoreFileBatchService) ListFiles(ctx context.Context, vectorStoreID string, batchID string, query VectorStoreFileBatchListFilesParams, opts ...option.RequestOption) (res *pagination.CursorPage[VectorStoreFile], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
@@ -257,10 +258,6 @@ const (
 )
 
 type VectorStoreFileBatchNewParams struct {
-	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
-	// the vector store should use. Useful for tools like `file_search` that can access
-	// files.
-	FileIDs []string `json:"file_ids,omitzero,required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
@@ -270,6 +267,16 @@ type VectorStoreFileBatchNewParams struct {
 	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
 	// strategy. Only applicable if `file_ids` is non-empty.
 	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
+	// A list of [File](https://platform.openai.com/docs/api-reference/files) IDs that
+	// the vector store should use. Useful for tools like `file_search` that can access
+	// files. If `attributes` or `chunking_strategy` are provided, they will be applied
+	// to all files in the batch. Mutually exclusive with `files`.
+	FileIDs []string `json:"file_ids,omitzero"`
+	// A list of objects that each include a `file_id` plus optional `attributes` or
+	// `chunking_strategy`. Use this when you need to override metadata for specific
+	// files. The global `attributes` or `chunking_strategy` will be ignored and must
+	// be specified for each file. Mutually exclusive with `file_ids`.
+	Files []VectorStoreFileBatchNewParamsFile `json:"files,omitzero"`
 	paramObj
 }
 
@@ -292,13 +299,67 @@ type VectorStoreFileBatchNewParamsAttributeUnion struct {
 }
 
 func (u VectorStoreFileBatchNewParamsAttributeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[VectorStoreFileBatchNewParamsAttributeUnion](u.OfString, u.OfFloat, u.OfBool)
+	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool)
 }
 func (u *VectorStoreFileBatchNewParamsAttributeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *VectorStoreFileBatchNewParamsAttributeUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfFloat) {
+		return &u.OfFloat.Value
+	} else if !param.IsOmitted(u.OfBool) {
+		return &u.OfBool.Value
+	}
+	return nil
+}
+
+// The property FileID is required.
+type VectorStoreFileBatchNewParamsFile struct {
+	// A [File](https://platform.openai.com/docs/api-reference/files) ID that the
+	// vector store should use. Useful for tools like `file_search` that can access
+	// files.
+	FileID string `json:"file_id,required"`
+	// Set of 16 key-value pairs that can be attached to an object. This can be useful
+	// for storing additional information about the object in a structured format, and
+	// querying for objects via API or the dashboard. Keys are strings with a maximum
+	// length of 64 characters. Values are strings with a maximum length of 512
+	// characters, booleans, or numbers.
+	Attributes map[string]VectorStoreFileBatchNewParamsFileAttributeUnion `json:"attributes,omitzero"`
+	// The chunking strategy used to chunk the file(s). If not set, will use the `auto`
+	// strategy. Only applicable if `file_ids` is non-empty.
+	ChunkingStrategy FileChunkingStrategyParamUnion `json:"chunking_strategy,omitzero"`
+	paramObj
+}
+
+func (r VectorStoreFileBatchNewParamsFile) MarshalJSON() (data []byte, err error) {
+	type shadow VectorStoreFileBatchNewParamsFile
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VectorStoreFileBatchNewParamsFile) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type VectorStoreFileBatchNewParamsFileAttributeUnion struct {
+	OfString param.Opt[string]  `json:",omitzero,inline"`
+	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
+	OfBool   param.Opt[bool]    `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u VectorStoreFileBatchNewParamsFileAttributeUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool)
+}
+func (u *VectorStoreFileBatchNewParamsFileAttributeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *VectorStoreFileBatchNewParamsFileAttributeUnion) asAny() any {
 	if !param.IsOmitted(u.OfString) {
 		return &u.OfString.Value
 	} else if !param.IsOmitted(u.OfFloat) {

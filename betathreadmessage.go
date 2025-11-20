@@ -9,16 +9,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // BetaThreadMessageService contains methods and other services that help with
@@ -46,7 +47,7 @@ func NewBetaThreadMessageService(opts ...option.RequestOption) (r BetaThreadMess
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadMessageService) New(ctx context.Context, threadID string, body BetaThreadMessageNewParams, opts ...option.RequestOption) (res *Message, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -61,7 +62,7 @@ func (r *BetaThreadMessageService) New(ctx context.Context, threadID string, bod
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadMessageService) Get(ctx context.Context, threadID string, messageID string, opts ...option.RequestOption) (res *Message, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -80,7 +81,7 @@ func (r *BetaThreadMessageService) Get(ctx context.Context, threadID string, mes
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadMessageService) Update(ctx context.Context, threadID string, messageID string, body BetaThreadMessageUpdateParams, opts ...option.RequestOption) (res *Message, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -100,7 +101,7 @@ func (r *BetaThreadMessageService) Update(ctx context.Context, threadID string, 
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadMessageService) List(ctx context.Context, threadID string, query BetaThreadMessageListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Message], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -130,7 +131,7 @@ func (r *BetaThreadMessageService) ListAutoPaging(ctx context.Context, threadID 
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadMessageService) Delete(ctx context.Context, threadID string, messageID string, opts ...option.RequestOption) (res *MessageDeleted, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -511,7 +512,7 @@ func (r *ImageFile) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ImageFileParam.Overrides()
 func (r ImageFile) ToParam() ImageFileParam {
-	return param.Override[ImageFileParam](r.RawJSON())
+	return param.Override[ImageFileParam](json.RawMessage(r.RawJSON()))
 }
 
 // Specifies the detail level of the image if specified by the user. `low` uses
@@ -573,7 +574,7 @@ func (r *ImageFileContentBlock) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ImageFileContentBlockParam.Overrides()
 func (r ImageFileContentBlock) ToParam() ImageFileContentBlockParam {
-	return param.Override[ImageFileContentBlockParam](r.RawJSON())
+	return param.Override[ImageFileContentBlockParam](json.RawMessage(r.RawJSON()))
 }
 
 // References an image [File](https://platform.openai.com/docs/api-reference/files)
@@ -686,7 +687,7 @@ func (r *ImageURL) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ImageURLParam.Overrides()
 func (r ImageURL) ToParam() ImageURLParam {
-	return param.Override[ImageURLParam](r.RawJSON())
+	return param.Override[ImageURLParam](json.RawMessage(r.RawJSON()))
 }
 
 // Specifies the detail level of the image. `low` uses fewer tokens, you can opt in
@@ -746,7 +747,7 @@ func (r *ImageURLContentBlock) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ImageURLContentBlockParam.Overrides()
 func (r ImageURLContentBlock) ToParam() ImageURLContentBlockParam {
-	return param.Override[ImageURLContentBlockParam](r.RawJSON())
+	return param.Override[ImageURLContentBlockParam](json.RawMessage(r.RawJSON()))
 }
 
 // References an image URL in the content of a message.
@@ -898,6 +899,8 @@ func (r Message) RawJSON() string { return r.JSON.raw }
 func (r *Message) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+func (Message) ImplConversationItemUnion() {}
 
 type MessageAttachment struct {
 	// The ID of the file to attach to the message.
@@ -1216,7 +1219,7 @@ type MessageContentPartParamUnion struct {
 }
 
 func (u MessageContentPartParamUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[MessageContentPartParamUnion](u.OfImageFile, u.OfImageURL, u.OfText)
+	return param.MarshalUnion(u, u.OfImageFile, u.OfImageURL, u.OfText)
 }
 func (u *MessageContentPartParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1541,7 +1544,7 @@ type BetaThreadMessageNewParamsContentUnion struct {
 }
 
 func (u BetaThreadMessageNewParamsContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadMessageNewParamsContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *BetaThreadMessageNewParamsContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1595,7 +1598,7 @@ type BetaThreadMessageNewParamsAttachmentToolUnion struct {
 }
 
 func (u BetaThreadMessageNewParamsAttachmentToolUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadMessageNewParamsAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+	return param.MarshalUnion(u, u.OfCodeInterpreter, u.OfFileSearch)
 }
 func (u *BetaThreadMessageNewParamsAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

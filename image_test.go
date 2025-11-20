@@ -10,9 +10,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/internal/testutil"
+	"github.com/openai/openai-go/v3/option"
 )
 
 func TestImageNewVariationWithOptionalParams(t *testing.T) {
@@ -60,15 +60,19 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 		Image: openai.ImageEditParamsImageUnion{
 			OfFile: io.Reader(bytes.NewBuffer([]byte("some file contents"))),
 		},
-		Prompt:         "A cute baby sea otter wearing a beret",
-		Background:     openai.ImageEditParamsBackgroundTransparent,
-		Mask:           io.Reader(bytes.NewBuffer([]byte("some file contents"))),
-		Model:          openai.ImageModelDallE2,
-		N:              openai.Int(1),
-		Quality:        openai.ImageEditParamsQualityHigh,
-		ResponseFormat: openai.ImageEditParamsResponseFormatURL,
-		Size:           openai.ImageEditParamsSize1024x1024,
-		User:           openai.String("user-1234"),
+		Prompt:            "A cute baby sea otter wearing a beret",
+		Background:        openai.ImageEditParamsBackgroundTransparent,
+		InputFidelity:     openai.ImageEditParamsInputFidelityHigh,
+		Mask:              io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		Model:             openai.ImageModelDallE2,
+		N:                 openai.Int(1),
+		OutputCompression: openai.Int(100),
+		OutputFormat:      openai.ImageEditParamsOutputFormatPNG,
+		PartialImages:     openai.Int(1),
+		Quality:           openai.ImageEditParamsQualityHigh,
+		ResponseFormat:    openai.ImageEditParamsResponseFormatURL,
+		Size:              openai.ImageEditParamsSize1024x1024,
+		User:              openai.String("user-1234"),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -99,6 +103,7 @@ func TestImageGenerateWithOptionalParams(t *testing.T) {
 		N:                 openai.Int(1),
 		OutputCompression: openai.Int(100),
 		OutputFormat:      openai.ImageGenerateParamsOutputFormatPNG,
+		PartialImages:     openai.Int(1),
 		Quality:           openai.ImageGenerateParamsQualityMedium,
 		ResponseFormat:    openai.ImageGenerateParamsResponseFormatURL,
 		Size:              openai.ImageGenerateParamsSize1024x1024,

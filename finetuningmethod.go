@@ -5,11 +5,11 @@ package openai
 import (
 	"encoding/json"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // FineTuningMethodService contains methods and other services that help with
@@ -68,7 +68,7 @@ func (r *DpoHyperparametersResp) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // DpoHyperparameters.Overrides()
 func (r DpoHyperparametersResp) ToParam() DpoHyperparameters {
-	return param.Override[DpoHyperparameters](r.RawJSON())
+	return param.Override[DpoHyperparameters](json.RawMessage(r.RawJSON()))
 }
 
 // DpoHyperparametersBatchSizeUnionResp contains all possible properties and values
@@ -255,7 +255,7 @@ type DpoHyperparametersBatchSizeUnion struct {
 }
 
 func (u DpoHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[DpoHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *DpoHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -281,7 +281,7 @@ type DpoHyperparametersBetaUnion struct {
 }
 
 func (u DpoHyperparametersBetaUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[DpoHyperparametersBetaUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *DpoHyperparametersBetaUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -307,7 +307,7 @@ type DpoHyperparametersLearningRateMultiplierUnion struct {
 }
 
 func (u DpoHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[DpoHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *DpoHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -333,7 +333,7 @@ type DpoHyperparametersNEpochsUnion struct {
 }
 
 func (u DpoHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[DpoHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *DpoHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -372,7 +372,7 @@ func (r *DpoMethod) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // DpoMethodParam.Overrides()
 func (r DpoMethod) ToParam() DpoMethodParam {
-	return param.Override[DpoMethodParam](r.RawJSON())
+	return param.Override[DpoMethodParam](json.RawMessage(r.RawJSON()))
 }
 
 // Configuration for the DPO fine-tuning method.
@@ -438,7 +438,7 @@ func (r *ReinforcementHyperparametersResp) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ReinforcementHyperparameters.Overrides()
 func (r ReinforcementHyperparametersResp) ToParam() ReinforcementHyperparameters {
-	return param.Override[ReinforcementHyperparameters](r.RawJSON())
+	return param.Override[ReinforcementHyperparameters](json.RawMessage(r.RawJSON()))
 }
 
 // ReinforcementHyperparametersBatchSizeUnionResp contains all possible properties
@@ -718,7 +718,7 @@ type ReinforcementHyperparametersBatchSizeUnion struct {
 }
 
 func (u ReinforcementHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *ReinforcementHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -744,7 +744,7 @@ type ReinforcementHyperparametersComputeMultiplierUnion struct {
 }
 
 func (u ReinforcementHyperparametersComputeMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersComputeMultiplierUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *ReinforcementHyperparametersComputeMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -770,7 +770,7 @@ type ReinforcementHyperparametersEvalIntervalUnion struct {
 }
 
 func (u ReinforcementHyperparametersEvalIntervalUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersEvalIntervalUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *ReinforcementHyperparametersEvalIntervalUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -796,7 +796,7 @@ type ReinforcementHyperparametersEvalSamplesUnion struct {
 }
 
 func (u ReinforcementHyperparametersEvalSamplesUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersEvalSamplesUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *ReinforcementHyperparametersEvalSamplesUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -822,7 +822,7 @@ type ReinforcementHyperparametersLearningRateMultiplierUnion struct {
 }
 
 func (u ReinforcementHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *ReinforcementHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -848,7 +848,7 @@ type ReinforcementHyperparametersNEpochsUnion struct {
 }
 
 func (u ReinforcementHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *ReinforcementHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -890,7 +890,7 @@ func (r *ReinforcementMethod) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ReinforcementMethodParam.Overrides()
 func (r ReinforcementMethod) ToParam() ReinforcementMethodParam {
-	return param.Override[ReinforcementMethodParam](r.RawJSON())
+	return param.Override[ReinforcementMethodParam](json.RawMessage(r.RawJSON()))
 }
 
 // ReinforcementMethodGraderUnion contains all possible properties and values from
@@ -917,7 +917,7 @@ type ReinforcementMethodGraderUnion struct {
 	// This field is from variant [ScoreModelGrader].
 	Range []float64 `json:"range"`
 	// This field is from variant [ScoreModelGrader].
-	SamplingParams any `json:"sampling_params"`
+	SamplingParams ScoreModelGraderSamplingParams `json:"sampling_params"`
 	// This field is from variant [MultiGrader].
 	CalculateOutput string `json:"calculate_output"`
 	// This field is from variant [MultiGrader].
@@ -1030,7 +1030,7 @@ type ReinforcementMethodGraderUnionParam struct {
 }
 
 func (u ReinforcementMethodGraderUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ReinforcementMethodGraderUnionParam](u.OfStringCheckGrader,
+	return param.MarshalUnion(u, u.OfStringCheckGrader,
 		u.OfTextSimilarityGrader,
 		u.OfPythonGrader,
 		u.OfScoreModelGrader,
@@ -1104,7 +1104,7 @@ func (u ReinforcementMethodGraderUnionParam) GetRange() []float64 {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ReinforcementMethodGraderUnionParam) GetSamplingParams() *any {
+func (u ReinforcementMethodGraderUnionParam) GetSamplingParams() *ScoreModelGraderSamplingParamsParam {
 	if vt := u.OfScoreModelGrader; vt != nil {
 		return &vt.SamplingParams
 	}
@@ -1230,7 +1230,7 @@ func (r *SupervisedHyperparametersResp) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // SupervisedHyperparameters.Overrides()
 func (r SupervisedHyperparametersResp) ToParam() SupervisedHyperparameters {
-	return param.Override[SupervisedHyperparameters](r.RawJSON())
+	return param.Override[SupervisedHyperparameters](json.RawMessage(r.RawJSON()))
 }
 
 // SupervisedHyperparametersBatchSizeUnionResp contains all possible properties and
@@ -1377,7 +1377,7 @@ type SupervisedHyperparametersBatchSizeUnion struct {
 }
 
 func (u SupervisedHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[SupervisedHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *SupervisedHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1403,7 +1403,7 @@ type SupervisedHyperparametersLearningRateMultiplierUnion struct {
 }
 
 func (u SupervisedHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[SupervisedHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *SupervisedHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1429,7 +1429,7 @@ type SupervisedHyperparametersNEpochsUnion struct {
 }
 
 func (u SupervisedHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[SupervisedHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *SupervisedHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1468,7 +1468,7 @@ func (r *SupervisedMethod) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // SupervisedMethodParam.Overrides()
 func (r SupervisedMethod) ToParam() SupervisedMethodParam {
-	return param.Override[SupervisedMethodParam](r.RawJSON())
+	return param.Override[SupervisedMethodParam](json.RawMessage(r.RawJSON()))
 }
 
 // Configuration for the supervised fine-tuning method.

@@ -1,13 +1,17 @@
 # OpenAI Go API Library
 
-<a href="https://pkg.go.dev/github.com/openai/openai-go"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
+<!-- x-release-please-start-version -->
+
+<a href="https://pkg.go.dev/github.com/openai/openai-go/v3"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
+
+<!-- x-release-please-end -->
 
 The OpenAI Go library provides convenient access to the [OpenAI REST API](https://platform.openai.com/docs)
 from applications written in Go.
 
 > [!WARNING]
-> The latest version of this package uses a new design with significant breaking changes.
-> Please refer to the [migration guide](./MIGRATION.md) for more information on how to update your code.
+> The latest version of this package has small and limited breaking changes.
+> See the [changelog](CHANGELOG.md) for details.
 
 ## Installation
 
@@ -15,7 +19,7 @@ from applications written in Go.
 
 ```go
 import (
-	"github.com/openai/openai-go" // imported as openai
+	"github.com/openai/openai-go/v3" // imported as openai
 )
 ```
 
@@ -26,15 +30,14 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go@v1.3.0'
+go get -u 'github.com/openai/openai-go/v2@v3.8.1'
 ```
 
 <!-- x-release-please-end -->
 
 ## Requirements
 
-This library requires Go 1.18+.
-
+This library requires Go 1.22+.
 ## Usage
 
 The full API of this library can be found in [api.md](api.md).
@@ -46,9 +49,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/shared"
 )
 
 func main() {
@@ -161,19 +164,21 @@ params := openai.ChatCompletionNewParams{
 	Messages: []openai.ChatCompletionMessageParamUnion{
 		openai.UserMessage(question),
 	},
-	Tools: []openai.ChatCompletionToolParam{
+	Tools: []openai.ChatCompletionToolUnionParam{
 		{
-			Function: openai.FunctionDefinitionParam{
-				Name:        "get_weather",
-				Description: openai.String("Get weather at the given location"),
-				Parameters: openai.FunctionParameters{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"location": map[string]string{
-							"type": "string",
+			OfFunction: &openai.ChatCompletionFunctionToolParam{
+				Function: openai.FunctionDefinitionParam{
+					Name:        "get_weather",
+					Description: openai.String("Get weather at the given location"),
+					Parameters: openai.FunctionParameters{
+						"type": "object",
+						"properties": map[string]interface{}{
+							"location": map[string]string{
+								"type": "string",
+							},
 						},
+						"required": []string{"location"},
 					},
-					"required": []string{"location"},
 				},
 			},
 		},
@@ -289,7 +294,6 @@ func main() {
 
 </details>
 
-
 ### Request fields
 
 The openai library uses the [`omitzero`](https://tip.golang.org/doc/go1.24#encodingjsonpkgencodingjson)
@@ -350,7 +354,7 @@ custom := param.Override[openai.FooParams](12)
 
 ### Request unions
 
-Unions are represented as a struct with fields prefixed by "Of" for each of it's variants,
+Unions are represented as a struct with fields prefixed by "Of" for each of its variants,
 only one field can be non-zero. The non-zero field will be serialized.
 
 Sub-properties of the union can be accessed via methods on the union struct.
@@ -499,6 +503,8 @@ client.Chat.Completions.New(context.TODO(), ...,
 )
 ```
 
+The request option `option.WithDebugLog(nil)` may be helpful while debugging.
+
 See the [full list of request options](https://pkg.go.dev/github.com/openai/openai-go/option).
 
 ### Pagination
@@ -587,7 +593,7 @@ client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -628,6 +634,121 @@ openai.FileNewParams{
 }
 ```
 
+## Webhook Verification
+
+Verifying webhook signatures is _optional but encouraged_.
+
+For more information about webhooks, see [the API docs](https://platform.openai.com/docs/guides/webhooks).
+
+### Parsing webhook payloads
+
+For most use cases, you will likely want to verify the webhook and parse the payload at the same time. To achieve this, we provide the method `client.Webhooks.Unwrap()`, which parses a webhook request and verifies that it was sent by OpenAI. This method will return an error if the signature is invalid.
+
+Note that the `body` parameter should be the raw JSON bytes sent from the server (do not parse it first). The `Unwrap()` method will parse this JSON for you into an event object after verifying the webhook was sent from OpenAI.
+
+```go
+package main
+
+import (
+	"io"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/webhooks"
+)
+
+func main() {
+	client := openai.NewClient(
+		option.WithWebhookSecret(os.Getenv("OPENAI_WEBHOOK_SECRET")), // env var used by default; explicit here.
+	)
+
+	r := gin.Default()
+
+	r.POST("/webhook", func(c *gin.Context) {
+		body, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
+			return
+		}
+		defer c.Request.Body.Close()
+
+		webhookEvent, err := client.Webhooks.Unwrap(body, c.Request.Header)
+		if err != nil {
+			log.Printf("Invalid webhook signature: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid signature"})
+			return
+		}
+
+		switch event := webhookEvent.AsAny().(type) {
+		case webhooks.ResponseCompletedWebhookEvent:
+			log.Printf("Response completed: %+v", event.Data)
+		case webhooks.ResponseFailedWebhookEvent:
+			log.Printf("Response failed: %+v", event.Data)
+		default:
+			log.Printf("Unhandled event type: %T", event)
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	})
+
+	r.Run(":8000")
+}
+```
+
+### Verifying webhook payloads directly
+
+In some cases, you may want to verify the webhook separately from parsing the payload. If you prefer to handle these steps separately, we provide the method `client.Webhooks.VerifySignature()` to _only verify_ the signature of a webhook request. Like `Unwrap()`, this method will return an error if the signature is invalid.
+
+Note that the `body` parameter should be the raw JSON bytes sent from the server (do not parse it first). You will then need to parse the body after verifying the signature.
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"io"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
+)
+
+func main() {
+	client := openai.NewClient(
+		option.WithWebhookSecret(os.Getenv("OPENAI_WEBHOOK_SECRET")), // env var used by default; explicit here.
+	)
+
+	r := gin.Default()
+
+	r.POST("/webhook", func(c *gin.Context) {
+		body, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
+			return
+		}
+		defer c.Request.Body.Close()
+
+		err = client.Webhooks.VerifySignature(body, c.Request.Header)
+		if err != nil {
+			log.Printf("Invalid webhook signature: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid signature"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	})
+
+	r.Run(":8000")
+}
+```
+
 ### Retries
 
 Certain errors will be automatically retried 2 times by default, with a short exponential backoff.
@@ -653,7 +774,7 @@ client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	},
 	option.WithMaxRetries(5),
 )
@@ -677,7 +798,7 @@ chatCompletion, err := client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 	},
 	option.WithResponseInto(&response),
 )
@@ -786,15 +907,15 @@ package main
 
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/azure"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/azure"
 )
 
 func main() {
 	const azureOpenAIEndpoint = "https://<azure-openai-resource>.openai.azure.com"
 
 	// The latest API versions, including previews, can be found here:
-	// ttps://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versionng
+	// https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versionng
 	const azureOpenAIAPIVersion = "2024-06-01"
 
 	tokenCredential, err := azidentity.NewDefaultAzureCredential(nil)
@@ -813,7 +934,6 @@ func main() {
 	)
 }
 ```
-
 
 ## Semantic versioning
 

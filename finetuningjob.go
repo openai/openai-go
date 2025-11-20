@@ -9,16 +9,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // FineTuningJobService contains methods and other services that help with
@@ -48,9 +49,9 @@ func NewFineTuningJobService(opts ...option.RequestOption) (r FineTuningJobServi
 // Response includes details of the enqueued job including job status and the name
 // of the fine-tuned models once complete.
 //
-// [Learn more about fine-tuning](https://platform.openai.com/docs/guides/fine-tuning)
+// [Learn more about fine-tuning](https://platform.openai.com/docs/guides/model-optimization)
 func (r *FineTuningJobService) New(ctx context.Context, body FineTuningJobNewParams, opts ...option.RequestOption) (res *FineTuningJob, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "fine_tuning/jobs"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -58,9 +59,9 @@ func (r *FineTuningJobService) New(ctx context.Context, body FineTuningJobNewPar
 
 // Get info about a fine-tuning job.
 //
-// [Learn more about fine-tuning](https://platform.openai.com/docs/guides/fine-tuning)
+// [Learn more about fine-tuning](https://platform.openai.com/docs/guides/model-optimization)
 func (r *FineTuningJobService) Get(ctx context.Context, fineTuningJobID string, opts ...option.RequestOption) (res *FineTuningJob, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")
 		return
@@ -73,7 +74,7 @@ func (r *FineTuningJobService) Get(ctx context.Context, fineTuningJobID string, 
 // List your organization's fine-tuning jobs
 func (r *FineTuningJobService) List(ctx context.Context, query FineTuningJobListParams, opts ...option.RequestOption) (res *pagination.CursorPage[FineTuningJob], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "fine_tuning/jobs"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -95,7 +96,7 @@ func (r *FineTuningJobService) ListAutoPaging(ctx context.Context, query FineTun
 
 // Immediately cancel a fine-tune job.
 func (r *FineTuningJobService) Cancel(ctx context.Context, fineTuningJobID string, opts ...option.RequestOption) (res *FineTuningJob, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")
 		return
@@ -108,7 +109,7 @@ func (r *FineTuningJobService) Cancel(ctx context.Context, fineTuningJobID strin
 // Get status updates for a fine-tuning job.
 func (r *FineTuningJobService) ListEvents(ctx context.Context, fineTuningJobID string, query FineTuningJobListEventsParams, opts ...option.RequestOption) (res *pagination.CursorPage[FineTuningJobEvent], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")
@@ -134,7 +135,7 @@ func (r *FineTuningJobService) ListEventsAutoPaging(ctx context.Context, fineTun
 
 // Pause a fine-tune job.
 func (r *FineTuningJobService) Pause(ctx context.Context, fineTuningJobID string, opts ...option.RequestOption) (res *FineTuningJob, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")
 		return
@@ -146,7 +147,7 @@ func (r *FineTuningJobService) Pause(ctx context.Context, fineTuningJobID string
 
 // Resume a fine-tune job.
 func (r *FineTuningJobService) Resume(ctx context.Context, fineTuningJobID string, opts ...option.RequestOption) (res *FineTuningJob, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")
 		return
@@ -590,7 +591,8 @@ type FineTuningJobNewParams struct {
 	// [preference](https://platform.openai.com/docs/api-reference/fine-tuning/preference-input)
 	// format.
 	//
-	// See the [fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)
+	// See the
+	// [fine-tuning guide](https://platform.openai.com/docs/guides/model-optimization)
 	// for more details.
 	TrainingFile string `json:"training_file,required"`
 	// The seed controls the reproducibility of the job. Passing in the same seed and
@@ -613,7 +615,8 @@ type FineTuningJobNewParams struct {
 	// Your dataset must be formatted as a JSONL file. You must upload your file with
 	// the purpose `fine-tune`.
 	//
-	// See the [fine-tuning guide](https://platform.openai.com/docs/guides/fine-tuning)
+	// See the
+	// [fine-tuning guide](https://platform.openai.com/docs/guides/model-optimization)
 	// for more details.
 	ValidationFile param.Opt[string] `json:"validation_file,omitzero"`
 	// A list of integrations to enable for your fine-tuning job.
@@ -688,7 +691,7 @@ type FineTuningJobNewParamsHyperparametersBatchSizeUnion struct {
 }
 
 func (u FineTuningJobNewParamsHyperparametersBatchSizeUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersBatchSizeUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *FineTuningJobNewParamsHyperparametersBatchSizeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -714,7 +717,7 @@ type FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion struct {
 }
 
 func (u FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion](u.OfAuto, u.OfFloat)
+	return param.MarshalUnion(u, u.OfAuto, u.OfFloat)
 }
 func (u *FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -740,7 +743,7 @@ type FineTuningJobNewParamsHyperparametersNEpochsUnion struct {
 }
 
 func (u FineTuningJobNewParamsHyperparametersNEpochsUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningJobNewParamsHyperparametersNEpochsUnion](u.OfAuto, u.OfInt)
+	return param.MarshalUnion(u, u.OfAuto, u.OfInt)
 }
 func (u *FineTuningJobNewParamsHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

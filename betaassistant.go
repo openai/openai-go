@@ -9,16 +9,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // BetaAssistantService contains methods and other services that help with
@@ -42,7 +43,7 @@ func NewBetaAssistantService(opts ...option.RequestOption) (r BetaAssistantServi
 
 // Create an assistant with a model and instructions.
 func (r *BetaAssistantService) New(ctx context.Context, body BetaAssistantNewParams, opts ...option.RequestOption) (res *Assistant, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	path := "assistants"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
@@ -51,7 +52,7 @@ func (r *BetaAssistantService) New(ctx context.Context, body BetaAssistantNewPar
 
 // Retrieves an assistant.
 func (r *BetaAssistantService) Get(ctx context.Context, assistantID string, opts ...option.RequestOption) (res *Assistant, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if assistantID == "" {
 		err = errors.New("missing required assistant_id parameter")
@@ -64,7 +65,7 @@ func (r *BetaAssistantService) Get(ctx context.Context, assistantID string, opts
 
 // Modifies an assistant.
 func (r *BetaAssistantService) Update(ctx context.Context, assistantID string, body BetaAssistantUpdateParams, opts ...option.RequestOption) (res *Assistant, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if assistantID == "" {
 		err = errors.New("missing required assistant_id parameter")
@@ -78,7 +79,7 @@ func (r *BetaAssistantService) Update(ctx context.Context, assistantID string, b
 // Returns a list of assistants.
 func (r *BetaAssistantService) List(ctx context.Context, query BetaAssistantListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Assistant], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	path := "assistants"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -100,7 +101,7 @@ func (r *BetaAssistantService) ListAutoPaging(ctx context.Context, query BetaAss
 
 // Delete an assistant.
 func (r *BetaAssistantService) Delete(ctx context.Context, assistantID string, opts ...option.RequestOption) (res *AssistantDeleted, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if assistantID == "" {
 		err = errors.New("missing required assistant_id parameter")
@@ -1407,7 +1408,7 @@ func (r *AssistantToolUnion) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // AssistantToolUnionParam.Overrides()
 func (r AssistantToolUnion) ToParam() AssistantToolUnionParam {
-	return param.Override[AssistantToolUnionParam](r.RawJSON())
+	return param.Override[AssistantToolUnionParam](json.RawMessage(r.RawJSON()))
 }
 
 func AssistantToolParamOfFunction(function shared.FunctionDefinitionParam) AssistantToolUnionParam {
@@ -1427,7 +1428,7 @@ type AssistantToolUnionParam struct {
 }
 
 func (u AssistantToolUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[AssistantToolUnionParam](u.OfCodeInterpreter, u.OfFileSearch, u.OfFunction)
+	return param.MarshalUnion(u, u.OfCodeInterpreter, u.OfFileSearch, u.OfFunction)
 }
 func (u *AssistantToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1504,7 +1505,7 @@ func (r *CodeInterpreterTool) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // CodeInterpreterToolParam.Overrides()
 func (r CodeInterpreterTool) ToParam() CodeInterpreterToolParam {
-	return param.Override[CodeInterpreterToolParam](r.RawJSON())
+	return param.Override[CodeInterpreterToolParam](json.RawMessage(r.RawJSON()))
 }
 
 func NewCodeInterpreterToolParam() CodeInterpreterToolParam {
@@ -1555,7 +1556,7 @@ func (r *FileSearchTool) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // FileSearchToolParam.Overrides()
 func (r FileSearchTool) ToParam() FileSearchToolParam {
-	return param.Override[FileSearchToolParam](r.RawJSON())
+	return param.Override[FileSearchToolParam](json.RawMessage(r.RawJSON()))
 }
 
 // Overrides for the file search tool.
@@ -1728,7 +1729,7 @@ func (r *FunctionTool) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // FunctionToolParam.Overrides()
 func (r FunctionTool) ToParam() FunctionToolParam {
-	return param.Override[FunctionToolParam](r.RawJSON())
+	return param.Override[FunctionToolParam](json.RawMessage(r.RawJSON()))
 }
 
 // The properties Function, Type are required.
@@ -1780,14 +1781,16 @@ type BetaAssistantNewParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,omitzero"`
-	// **o-series models only**
-	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
 	//
-	// Any of "low", "medium", "high".
+	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+	// effort.
+	//
+	// Any of "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// A set of resources that are used by the assistant's tools. The resources are
 	// specific to the type of tool. For example, the `code_interpreter` tool requires
@@ -1922,7 +1925,7 @@ type BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUni
 }
 
 func (u BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion](u.OfAuto, u.OfStatic)
+	return param.MarshalUnion(u, u.OfAuto, u.OfStatic)
 }
 func (u *BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -2051,14 +2054,16 @@ type BetaAssistantUpdateParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,omitzero"`
-	// **o-series models only**
-	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
 	//
-	// Any of "low", "medium", "high".
+	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+	// effort.
+	//
+	// Any of "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// A set of resources that are used by the assistant's tools. The resources are
 	// specific to the type of tool. For example, the `code_interpreter` tool requires
@@ -2115,6 +2120,12 @@ func (r *BetaAssistantUpdateParams) UnmarshalJSON(data []byte) error {
 type BetaAssistantUpdateParamsModel string
 
 const (
+	BetaAssistantUpdateParamsModelGPT5                    BetaAssistantUpdateParamsModel = "gpt-5"
+	BetaAssistantUpdateParamsModelGPT5Mini                BetaAssistantUpdateParamsModel = "gpt-5-mini"
+	BetaAssistantUpdateParamsModelGPT5Nano                BetaAssistantUpdateParamsModel = "gpt-5-nano"
+	BetaAssistantUpdateParamsModelGPT5_2025_08_07         BetaAssistantUpdateParamsModel = "gpt-5-2025-08-07"
+	BetaAssistantUpdateParamsModelGPT5Mini2025_08_07      BetaAssistantUpdateParamsModel = "gpt-5-mini-2025-08-07"
+	BetaAssistantUpdateParamsModelGPT5Nano2025_08_07      BetaAssistantUpdateParamsModel = "gpt-5-nano-2025-08-07"
 	BetaAssistantUpdateParamsModelGPT4_1                  BetaAssistantUpdateParamsModel = "gpt-4.1"
 	BetaAssistantUpdateParamsModelGPT4_1Mini              BetaAssistantUpdateParamsModel = "gpt-4.1-mini"
 	BetaAssistantUpdateParamsModelGPT4_1Nano              BetaAssistantUpdateParamsModel = "gpt-4.1-nano"

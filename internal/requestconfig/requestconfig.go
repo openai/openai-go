@@ -18,10 +18,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openai/openai-go/internal"
-	"github.com/openai/openai-go/internal/apierror"
-	"github.com/openai/openai-go/internal/apiform"
-	"github.com/openai/openai-go/internal/apiquery"
+	"github.com/openai/openai-go/v3/internal"
+	"github.com/openai/openai-go/v3/internal/apierror"
+	"github.com/openai/openai-go/v3/internal/apiform"
+	"github.com/openai/openai-go/v3/internal/apiquery"
 	"github.com/tidwall/gjson"
 )
 
@@ -137,11 +137,13 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 	// Fallback to json serialization if none of the serialization functions that we expect
 	// to see is present.
 	if body != nil && !hasSerializationFunc {
-		content, err := json.Marshal(body)
-		if err != nil {
+		buf := new(bytes.Buffer)
+		enc := json.NewEncoder(buf)
+		enc.SetEscapeHTML(false)
+		if err := enc.Encode(body); err != nil {
 			return nil, err
 		}
-		reader = bytes.NewBuffer(content)
+		reader = buf
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, u, nil)
@@ -214,6 +216,7 @@ type RequestConfig struct {
 	APIKey         string
 	Organization   string
 	Project        string
+	WebhookSecret  string
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
 	// ResponseBodyInto. If Destination is a []byte, then it will return the body as
 	// is.
@@ -462,6 +465,11 @@ func (cfg *RequestConfig) Execute() (err error) {
 			break
 		}
 
+		// Close the response body before retrying to prevent connection leaks
+		if res != nil && res.Body != nil {
+			res.Body.Close()
+		}
+
 		time.Sleep(retryDelay(res, retryCount))
 	}
 
@@ -539,15 +547,15 @@ func (cfg *RequestConfig) Execute() (err error) {
 		return nil
 	}
 
-	// If the response happens to be a byte array, deserialize the body as-is.
 	switch dst := cfg.ResponseBodyInto.(type) {
+	// If the response happens to be a byte array, deserialize the body as-is.
 	case *[]byte:
 		*dst = contents
-	}
-
-	err = json.NewDecoder(bytes.NewReader(contents)).Decode(cfg.ResponseBodyInto)
-	if err != nil {
-		return fmt.Errorf("error parsing response json: %w", err)
+	default:
+		err = json.NewDecoder(bytes.NewReader(contents)).Decode(cfg.ResponseBodyInto)
+		if err != nil {
+			return fmt.Errorf("error parsing response json: %w", err)
+		}
 	}
 
 	return nil
@@ -584,6 +592,7 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		APIKey:         cfg.APIKey,
 		Organization:   cfg.Organization,
 		Project:        cfg.Project,
+		WebhookSecret:  cfg.WebhookSecret,
 	}
 
 	return new

@@ -7,13 +7,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // UploadService contains methods and other services that help with interacting
@@ -57,7 +58,7 @@ func NewUploadService(opts ...option.RequestOption) (r UploadService) {
 // the documentation on
 // [creating a File](https://platform.openai.com/docs/api-reference/files/create).
 func (r *UploadService) New(ctx context.Context, body UploadNewParams, opts ...option.RequestOption) (res *Upload, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "uploads"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -65,7 +66,7 @@ func (r *UploadService) New(ctx context.Context, body UploadNewParams, opts ...o
 
 // Cancels the Upload. No Parts may be added after an Upload is cancelled.
 func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...option.RequestOption) (res *Upload, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if uploadID == "" {
 		err = errors.New("missing required upload_id parameter")
 		return
@@ -89,7 +90,7 @@ func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...opt
 // initially specified when creating the Upload object. No Parts may be added after
 // an Upload is completed.
 func (r *UploadService) Complete(ctx context.Context, uploadID string, body UploadCompleteParams, opts ...option.RequestOption) (res *Upload, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if uploadID == "" {
 		err = errors.New("missing required upload_id parameter")
 		return
@@ -172,6 +173,9 @@ type UploadNewParams struct {
 	//
 	// Any of "assistants", "batch", "fine-tune", "vision", "user_data", "evals".
 	Purpose FilePurpose `json:"purpose,omitzero,required"`
+	// The expiration policy for a file. By default, files with `purpose=batch` expire
+	// after 30 days and all other files are persisted until they are manually deleted.
+	ExpiresAfter UploadNewParamsExpiresAfter `json:"expires_after,omitzero"`
 	paramObj
 }
 
@@ -180,6 +184,30 @@ func (r UploadNewParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *UploadNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The expiration policy for a file. By default, files with `purpose=batch` expire
+// after 30 days and all other files are persisted until they are manually deleted.
+//
+// The properties Anchor, Seconds are required.
+type UploadNewParamsExpiresAfter struct {
+	// The number of seconds after the anchor time that the file will expire. Must be
+	// between 3600 (1 hour) and 2592000 (30 days).
+	Seconds int64 `json:"seconds,required"`
+	// Anchor timestamp after which the expiration policy applies. Supported anchors:
+	// `created_at`.
+	//
+	// This field can be elided, and will marshal its zero value as "created_at".
+	Anchor constant.CreatedAt `json:"anchor,required"`
+	paramObj
+}
+
+func (r UploadNewParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
+	type shadow UploadNewParamsExpiresAfter
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *UploadNewParamsExpiresAfter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

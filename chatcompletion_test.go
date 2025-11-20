@@ -8,10 +8,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/internal/testutil"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/shared"
 )
 
 func TestChatCompletionNewWithOptionalParams(t *testing.T) {
@@ -35,7 +35,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 				Name: openai.String("name"),
 			},
 		}},
-		Model: shared.ChatModelGPT4_1,
+		Model: shared.ChatModelGPT5,
 		Audio: openai.ChatCompletionAudioParam{
 			Format: openai.ChatCompletionAudioParamFormatWAV,
 			Voice:  openai.ChatCompletionAudioParamVoiceAlloy,
@@ -69,36 +69,42 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 			},
 		},
 		PresencePenalty: openai.Float(-2),
-		ReasoningEffort: shared.ReasoningEffortLow,
+		PromptCacheKey:  openai.String("prompt-cache-key-1234"),
+		ReasoningEffort: shared.ReasoningEffortMinimal,
 		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
 			OfText: &shared.ResponseFormatTextParam{},
 		},
-		Seed:        openai.Int(-9007199254740991),
-		ServiceTier: openai.ChatCompletionNewParamsServiceTierAuto,
+		SafetyIdentifier: openai.String("safety-identifier-1234"),
+		Seed:             openai.Int(-9007199254740991),
+		ServiceTier:      openai.ChatCompletionNewParamsServiceTierAuto,
 		Stop: openai.ChatCompletionNewParamsStopUnion{
 			OfString: openai.String("\n"),
 		},
 		Store: openai.Bool(true),
 		StreamOptions: openai.ChatCompletionStreamOptionsParam{
-			IncludeUsage: openai.Bool(true),
+			IncludeObfuscation: openai.Bool(true),
+			IncludeUsage:       openai.Bool(true),
 		},
 		Temperature: openai.Float(1),
 		ToolChoice: openai.ChatCompletionToolChoiceOptionUnionParam{
 			OfAuto: openai.String("none"),
 		},
-		Tools: []openai.ChatCompletionToolParam{{
-			Function: shared.FunctionDefinitionParam{
-				Name:        "name",
-				Description: openai.String("description"),
-				Parameters: shared.FunctionParameters{
-					"foo": "bar",
+		Tools: []openai.ChatCompletionToolUnionParam{{
+			OfFunction: &openai.ChatCompletionFunctionToolParam{
+				Function: shared.FunctionDefinitionParam{
+					Name:        "name",
+					Description: openai.String("description"),
+					Parameters: shared.FunctionParameters{
+						"foo": "bar",
+					},
+					Strict: openai.Bool(true),
 				},
-				Strict: openai.Bool(true),
 			},
 		}},
 		TopLogprobs: openai.Int(0),
 		TopP:        openai.Float(1),
 		User:        openai.String("user-1234"),
+		Verbosity:   openai.ChatCompletionNewParamsVerbosityLow,
 		WebSearchOptions: openai.ChatCompletionNewParamsWebSearchOptions{
 			SearchContextSize: "low",
 			UserLocation: openai.ChatCompletionNewParamsWebSearchOptionsUserLocation{

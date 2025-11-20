@@ -8,11 +8,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/responses"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/internal/testutil"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v3/shared"
 )
 
 func TestResponseNewWithOptionalParams(t *testing.T) {
@@ -28,31 +28,50 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
+		Background: openai.Bool(true),
+		Conversation: responses.ResponseNewParamsConversationUnion{
+			OfString: openai.String("string"),
+		},
+		Include: []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String("string"),
 		},
-		Model:           shared.ResponsesModel("gpt-4o"),
-		Background:      openai.Bool(true),
-		Include:         []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 		Instructions:    openai.String("instructions"),
 		MaxOutputTokens: openai.Int(0),
+		MaxToolCalls:    openai.Int(0),
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
+		Model:              shared.ResponsesModel("gpt-4o"),
 		ParallelToolCalls:  openai.Bool(true),
 		PreviousResponseID: openai.String("previous_response_id"),
+		Prompt: responses.ResponsePromptParam{
+			ID: "id",
+			Variables: map[string]responses.ResponsePromptVariableUnionParam{
+				"foo": {
+					OfString: openai.String("string"),
+				},
+			},
+			Version: openai.String("version"),
+		},
+		PromptCacheKey: openai.String("prompt-cache-key-1234"),
 		Reasoning: shared.ReasoningParam{
-			Effort:          shared.ReasoningEffortLow,
+			Effort:          shared.ReasoningEffortMinimal,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
 			Summary:         shared.ReasoningSummaryAuto,
 		},
-		ServiceTier: responses.ResponseNewParamsServiceTierAuto,
-		Store:       openai.Bool(true),
+		SafetyIdentifier: openai.String("safety-identifier-1234"),
+		ServiceTier:      responses.ResponseNewParamsServiceTierAuto,
+		Store:            openai.Bool(true),
+		StreamOptions: responses.ResponseNewParamsStreamOptions{
+			IncludeObfuscation: openai.Bool(true),
+		},
 		Temperature: openai.Float(1),
 		Text: responses.ResponseTextConfigParam{
 			Format: responses.ResponseFormatTextConfigUnionParam{
 				OfText: &shared.ResponseFormatTextParam{},
 			},
+			Verbosity: responses.ResponseTextConfigVerbosityLow,
 		},
 		ToolChoice: responses.ResponseNewParamsToolChoiceUnion{
 			OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
@@ -67,9 +86,10 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 				Description: openai.String("description"),
 			},
 		}},
-		TopP:       openai.Float(1),
-		Truncation: responses.ResponseNewParamsTruncationAuto,
-		User:       openai.String("user-1234"),
+		TopLogprobs: openai.Int(0),
+		TopP:        openai.Float(1),
+		Truncation:  responses.ResponseNewParamsTruncationAuto,
+		User:        openai.String("user-1234"),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -96,8 +116,9 @@ func TestResponseGetWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"resp_677efb5139a88190b512bc3fef8e535d",
 		responses.ResponseGetParams{
-			Include:       []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
-			StartingAfter: openai.Int(0),
+			Include:            []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
+			IncludeObfuscation: openai.Bool(true),
+			StartingAfter:      openai.Int(0),
 		},
 	)
 	if err != nil {

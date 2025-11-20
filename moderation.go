@@ -5,13 +5,14 @@ package openai
 import (
 	"context"
 	"net/http"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // ModerationService contains methods and other services that help with interacting
@@ -36,7 +37,7 @@ func NewModerationService(opts ...option.RequestOption) (r ModerationService) {
 // Classifies if text and/or image inputs are potentially harmful. Learn more in
 // the [moderation guide](https://platform.openai.com/docs/guides/moderation).
 func (r *ModerationService) New(ctx context.Context, body ModerationNewParams, opts ...option.RequestOption) (res *ModerationNewResponse, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "moderations"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -342,7 +343,7 @@ type ModerationMultiModalInputUnionParam struct {
 }
 
 func (u ModerationMultiModalInputUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ModerationMultiModalInputUnionParam](u.OfImageURL, u.OfText)
+	return param.MarshalUnion(u, u.OfImageURL, u.OfText)
 }
 func (u *ModerationMultiModalInputUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -467,7 +468,7 @@ type ModerationNewParamsInputUnion struct {
 }
 
 func (u ModerationNewParamsInputUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ModerationNewParamsInputUnion](u.OfString, u.OfStringArray, u.OfModerationMultiModalArray)
+	return param.MarshalUnion(u, u.OfString, u.OfStringArray, u.OfModerationMultiModalArray)
 }
 func (u *ModerationNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

@@ -8,15 +8,16 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // InputItemService contains methods and other services that help with interacting
@@ -41,7 +42,7 @@ func NewInputItemService(opts ...option.RequestOption) (r InputItemService) {
 // Returns a list of input items for a given response.
 func (r *InputItemService) List(ctx context.Context, responseID string, query InputItemListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ResponseItemUnion], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
@@ -98,8 +99,6 @@ func (r *ResponseItemList) UnmarshalJSON(data []byte) error {
 type InputItemListParams struct {
 	// An item ID to list items after, used in pagination.
 	After param.Opt[string] `query:"after,omitzero" json:"-"`
-	// An item ID to list items before, used in pagination.
-	Before param.Opt[string] `query:"before,omitzero" json:"-"`
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`

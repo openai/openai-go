@@ -2,6 +2,7 @@ package param
 
 import (
 	"encoding/json"
+	"github.com/openai/openai-go/v3/internal/encoding/json/sentinel"
 	"reflect"
 )
 
@@ -58,12 +59,21 @@ func IsOmitted(v any) bool {
 
 // IsNull returns true if v was set to the JSON value null.
 //
-// To set a param to null use [NullStruct] or [Null]
+// To set a param to null use [NullStruct], [Null], [NullMap], or [NullSlice]
 // depending on the type of v.
 //
 // IsNull returns false if the value is omitted.
-func IsNull(v ParamNullable) bool {
-	return v.null()
+func IsNull[T any](v T) bool {
+	if nullable, ok := any(v).(ParamNullable); ok {
+		return nullable.null()
+	}
+
+	switch reflect.TypeOf(v).Kind() {
+	case reflect.Slice, reflect.Map:
+		return sentinel.IsNull(v)
+	}
+
+	return false
 }
 
 // ParamNullable encapsulates all structs in parameters,

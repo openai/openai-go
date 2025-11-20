@@ -8,17 +8,18 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/packages/ssestream"
-	"github.com/openai/openai-go/shared"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/packages/ssestream"
+	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // BetaThreadRunService contains methods and other services that help with
@@ -49,7 +50,7 @@ func NewBetaThreadRunService(opts ...option.RequestOption) (r BetaThreadRunServi
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) New(ctx context.Context, threadID string, params BetaThreadRunNewParams, opts ...option.RequestOption) (res *Run, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -68,7 +69,7 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 		raw *http.Response
 		err error
 	)
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithJSONSet("stream", true)}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -83,7 +84,7 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) Get(ctx context.Context, threadID string, runID string, opts ...option.RequestOption) (res *Run, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -102,7 +103,7 @@ func (r *BetaThreadRunService) Get(ctx context.Context, threadID string, runID s
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) Update(ctx context.Context, threadID string, runID string, body BetaThreadRunUpdateParams, opts ...option.RequestOption) (res *Run, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -122,7 +123,7 @@ func (r *BetaThreadRunService) Update(ctx context.Context, threadID string, runI
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) List(ctx context.Context, threadID string, query BetaThreadRunListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Run], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -152,7 +153,7 @@ func (r *BetaThreadRunService) ListAutoPaging(ctx context.Context, threadID stri
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) Cancel(ctx context.Context, threadID string, runID string, opts ...option.RequestOption) (res *Run, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -174,7 +175,7 @@ func (r *BetaThreadRunService) Cancel(ctx context.Context, threadID string, runI
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadRunService) SubmitToolOutputs(ctx context.Context, threadID string, runID string, body BetaThreadRunSubmitToolOutputsParams, opts ...option.RequestOption) (res *Run, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -200,7 +201,7 @@ func (r *BetaThreadRunService) SubmitToolOutputsStreaming(ctx context.Context, t
 		raw *http.Response
 		err error
 	)
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithJSONSet("stream", true)}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -364,7 +365,7 @@ type Run struct {
 	// this run.
 	Tools []AssistantToolUnion `json:"tools,required"`
 	// Controls for how a thread will be truncated prior to the run. Use this to
-	// control the intial context window of the run.
+	// control the initial context window of the run.
 	TruncationStrategy RunTruncationStrategy `json:"truncation_strategy,required"`
 	// Usage statistics related to the run. This value will be `null` if the run is not
 	// in a terminal state (i.e. `in_progress`, `queued`, etc.).
@@ -499,7 +500,7 @@ func (r *RunRequiredActionSubmitToolOutputs) UnmarshalJSON(data []byte) error {
 }
 
 // Controls for how a thread will be truncated prior to the run. Use this to
-// control the intial context window of the run.
+// control the initial context window of the run.
 type RunTruncationStrategy struct {
 	// The truncation strategy to use for the thread. The default is `auto`. If set to
 	// `last_messages`, the thread will be truncated to the n most recent messages in
@@ -621,20 +622,22 @@ type BetaThreadRunNewParams struct {
 	// model associated with the assistant. If not, the model associated with the
 	// assistant will be used.
 	Model shared.ChatModel `json:"model,omitzero"`
-	// **o-series models only**
-	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
 	//
-	// Any of "low", "medium", "high".
+	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+	// effort.
+	//
+	// Any of "minimal", "low", "medium", "high".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// Override the tools the assistant can use for this run. This is useful for
 	// modifying the behavior on a per-run basis.
 	Tools []AssistantToolUnionParam `json:"tools,omitzero"`
 	// Controls for how a thread will be truncated prior to the run. Use this to
-	// control the intial context window of the run.
+	// control the initial context window of the run.
 	TruncationStrategy BetaThreadRunNewParamsTruncationStrategy `json:"truncation_strategy,omitzero"`
 	// A list of additional fields to include in the response. Currently the only
 	// supported value is `step_details.tool_calls[*].file_search.results[*].content`
@@ -741,7 +744,7 @@ type BetaThreadRunNewParamsAdditionalMessageContentUnion struct {
 }
 
 func (u BetaThreadRunNewParamsAdditionalMessageContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadRunNewParamsAdditionalMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *BetaThreadRunNewParamsAdditionalMessageContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -782,7 +785,7 @@ type BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion struct {
 }
 
 func (u BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+	return param.MarshalUnion(u, u.OfCodeInterpreter, u.OfFileSearch)
 }
 func (u *BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -838,7 +841,7 @@ func (r *BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch) Unmars
 }
 
 // Controls for how a thread will be truncated prior to the run. Use this to
-// control the intial context window of the run.
+// control the initial context window of the run.
 //
 // The property Type is required.
 type BetaThreadRunNewParamsTruncationStrategy struct {

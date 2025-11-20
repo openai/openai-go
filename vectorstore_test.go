@@ -8,10 +8,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/internal/testutil"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/shared"
 )
 
 func TestVectorStoreNewWithOptionalParams(t *testing.T) {
@@ -30,6 +30,7 @@ func TestVectorStoreNewWithOptionalParams(t *testing.T) {
 		ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
 			OfAuto: &openai.AutoFileChunkingStrategyParam{},
 		},
+		Description: openai.String("description"),
 		ExpiresAfter: openai.VectorStoreNewParamsExpiresAfter{
 			Days: 1,
 		},
@@ -183,7 +184,7 @@ func TestVectorStoreSearchWithOptionalParams(t *testing.T) {
 			},
 			MaxNumResults: openai.Int(1),
 			RankingOptions: openai.VectorStoreSearchParamsRankingOptions{
-				Ranker:         "auto",
+				Ranker:         "none",
 				ScoreThreshold: openai.Float(0),
 			},
 			RewriteQuery: openai.Bool(true),

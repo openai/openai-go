@@ -7,9 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
 )
 
 // ContainerFileContentService contains methods and other services that help with
@@ -33,7 +34,7 @@ func NewContainerFileContentService(opts ...option.RequestOption) (r ContainerFi
 
 // Retrieve Container File Content
 func (r *ContainerFileContentService) Get(ctx context.Context, containerID string, fileID string, opts ...option.RequestOption) (res *http.Response, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")

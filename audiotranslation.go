@@ -8,13 +8,14 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apiform"
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
+	"github.com/openai/openai-go/v3/internal/apiform"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
 )
 
 // AudioTranslationService contains methods and other services that help with
@@ -38,7 +39,7 @@ func NewAudioTranslationService(opts ...option.RequestOption) (r AudioTranslatio
 
 // Translates audio into English.
 func (r *AudioTranslationService) New(ctx context.Context, body AudioTranslationNewParams, opts ...option.RequestOption) (res *Translation, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "audio/translations"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return

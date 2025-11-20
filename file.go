@@ -11,16 +11,17 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apiform"
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apiform"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // FileService contains methods and other services that help with interacting with
@@ -44,27 +45,26 @@ func NewFileService(opts ...option.RequestOption) (r FileService) {
 
 // Upload a file that can be used across various endpoints. Individual files can be
 // up to 512 MB, and the size of all files uploaded by one organization can be up
-// to 100 GB.
+// to 1 TB.
 //
-// The Assistants API supports files up to 2 million tokens and of specific file
-// types. See the
-// [Assistants Tools guide](https://platform.openai.com/docs/assistants/tools) for
-// details.
-//
-// The Fine-tuning API only supports `.jsonl` files. The input also has certain
-// required formats for fine-tuning
-// [chat](https://platform.openai.com/docs/api-reference/fine-tuning/chat-input) or
-// [completions](https://platform.openai.com/docs/api-reference/fine-tuning/completions-input)
-// models.
-//
-// The Batch API only supports `.jsonl` files up to 200 MB in size. The input also
-// has a specific required
-// [format](https://platform.openai.com/docs/api-reference/batch/request-input).
+//   - The Assistants API supports files up to 2 million tokens and of specific file
+//     types. See the
+//     [Assistants Tools guide](https://platform.openai.com/docs/assistants/tools)
+//     for details.
+//   - The Fine-tuning API only supports `.jsonl` files. The input also has certain
+//     required formats for fine-tuning
+//     [chat](https://platform.openai.com/docs/api-reference/fine-tuning/chat-input)
+//     or
+//     [completions](https://platform.openai.com/docs/api-reference/fine-tuning/completions-input)
+//     models.
+//   - The Batch API only supports `.jsonl` files up to 200 MB in size. The input
+//     also has a specific required
+//     [format](https://platform.openai.com/docs/api-reference/batch/request-input).
 //
 // Please [contact us](https://help.openai.com/) if you need to increase these
 // storage limits.
 func (r *FileService) New(ctx context.Context, body FileNewParams, opts ...option.RequestOption) (res *FileObject, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "files"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -72,7 +72,7 @@ func (r *FileService) New(ctx context.Context, body FileNewParams, opts ...optio
 
 // Returns information about a specific file.
 func (r *FileService) Get(ctx context.Context, fileID string, opts ...option.RequestOption) (res *FileObject, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
 		return
@@ -85,7 +85,7 @@ func (r *FileService) Get(ctx context.Context, fileID string, opts ...option.Req
 // Returns a list of files.
 func (r *FileService) List(ctx context.Context, query FileListParams, opts ...option.RequestOption) (res *pagination.CursorPage[FileObject], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "files"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -105,9 +105,9 @@ func (r *FileService) ListAutoPaging(ctx context.Context, query FileListParams, 
 	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
-// Delete a file.
+// Delete a file and remove it from all vector stores.
 func (r *FileService) Delete(ctx context.Context, fileID string, opts ...option.RequestOption) (res *FileDeleted, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
 		return
@@ -119,7 +119,7 @@ func (r *FileService) Delete(ctx context.Context, fileID string, opts ...option.
 
 // Returns the contents of the specified file.
 func (r *FileService) Content(ctx context.Context, fileID string, opts ...option.RequestOption) (res *http.Response, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
@@ -163,11 +163,11 @@ type FileObject struct {
 	// The object type, which is always `file`.
 	Object constant.File `json:"object,required"`
 	// The intended purpose of the file. Supported values are `assistants`,
-	// `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results`
-	// and `vision`.
+	// `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results`,
+	// `vision`, and `user_data`.
 	//
 	// Any of "assistants", "assistants_output", "batch", "batch_output", "fine-tune",
-	// "fine-tune-results", "vision".
+	// "fine-tune-results", "vision", "user_data".
 	Purpose FileObjectPurpose `json:"purpose,required"`
 	// Deprecated. The current status of the file, which can be either `uploaded`,
 	// `processed`, or `error`.
@@ -206,8 +206,8 @@ func (r *FileObject) UnmarshalJSON(data []byte) error {
 }
 
 // The intended purpose of the file. Supported values are `assistants`,
-// `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results`
-// and `vision`.
+// `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results`,
+// `vision`, and `user_data`.
 type FileObjectPurpose string
 
 const (
@@ -218,6 +218,7 @@ const (
 	FileObjectPurposeFineTune         FileObjectPurpose = "fine-tune"
 	FileObjectPurposeFineTuneResults  FileObjectPurpose = "fine-tune-results"
 	FileObjectPurposeVision           FileObjectPurpose = "vision"
+	FileObjectPurposeUserData         FileObjectPurpose = "user_data"
 )
 
 // Deprecated. The current status of the file, which can be either `uploaded`,
@@ -255,6 +256,9 @@ type FileNewParams struct {
 	//
 	// Any of "assistants", "batch", "fine-tune", "vision", "user_data", "evals".
 	Purpose FilePurpose `json:"purpose,omitzero,required"`
+	// The expiration policy for a file. By default, files with `purpose=batch` expire
+	// after 30 days and all other files are persisted until they are manually deleted.
+	ExpiresAfter FileNewParamsExpiresAfter `json:"expires_after,omitzero"`
 	paramObj
 }
 
@@ -274,6 +278,30 @@ func (r FileNewParams) MarshalMultipart() (data []byte, contentType string, err 
 		return nil, "", err
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
+}
+
+// The expiration policy for a file. By default, files with `purpose=batch` expire
+// after 30 days and all other files are persisted until they are manually deleted.
+//
+// The properties Anchor, Seconds are required.
+type FileNewParamsExpiresAfter struct {
+	// The number of seconds after the anchor time that the file will expire. Must be
+	// between 3600 (1 hour) and 2592000 (30 days).
+	Seconds int64 `json:"seconds,required"`
+	// Anchor timestamp after which the expiration policy applies. Supported anchors:
+	// `created_at`.
+	//
+	// This field can be elided, and will marshal its zero value as "created_at".
+	Anchor constant.CreatedAt `json:"anchor,required"`
+	paramObj
+}
+
+func (r FileNewParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
+	type shadow FileNewParamsExpiresAfter
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *FileNewParamsExpiresAfter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type FileListParams struct {

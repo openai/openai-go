@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openai/openai-go/internal/requestconfig"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/tidwall/sjson"
 )
 
@@ -27,14 +27,15 @@ type RequestOption = requestconfig.RequestOption
 // For security reasons, ensure that the base URL is trusted.
 func WithBaseURL(base string) RequestOption {
 	u, err := url.Parse(base)
+	if err == nil && u.Path != "" && !strings.HasSuffix(u.Path, "/") {
+		u.Path += "/"
+	}
+
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		if err != nil {
-			return fmt.Errorf("requestoption: WithBaseURL failed to parse url %s\n", err)
+			return fmt.Errorf("requestoption: WithBaseURL failed to parse url %s", err)
 		}
 
-		if u.Path != "" && !strings.HasSuffix(u.Path, "/") {
-			u.Path += "/"
-		}
 		r.BaseURL = u
 		return nil
 	})
@@ -286,5 +287,13 @@ func WithProject(value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		r.Project = value
 		return r.Apply(WithHeader("OpenAI-Project", value))
+	})
+}
+
+// WithWebhookSecret returns a RequestOption that sets the client setting "webhook_secret".
+func WithWebhookSecret(value string) requestconfig.PreRequestOptionFunc {
+	return requestconfig.PreRequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.WebhookSecret = value
+		return nil
 	})
 }

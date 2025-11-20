@@ -3,7 +3,7 @@
 package openai
 
 import (
-	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/v3/option"
 )
 
 // BetaService contains methods and other services that help with interacting with
@@ -14,6 +14,7 @@ import (
 // the [NewBetaService] method instead.
 type BetaService struct {
 	Options    []option.RequestOption
+	ChatKit    BetaChatKitService
 	Assistants BetaAssistantService
 	// Deprecated: The Assistants API is deprecated in favor of the Responses API
 	Threads BetaThreadService
@@ -25,6 +26,7 @@ type BetaService struct {
 func NewBetaService(opts ...option.RequestOption) (r BetaService) {
 	r = BetaService{}
 	r.Options = opts
+	r.ChatKit = NewBetaChatKitService(opts...)
 	r.Assistants = NewBetaAssistantService(opts...)
 	r.Threads = NewBetaThreadService(opts...)
 	return

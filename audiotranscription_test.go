@@ -10,10 +10,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/internal/testutil"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {
@@ -35,6 +35,8 @@ func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {
 			OfAuto: constant.ValueOf[constant.Auto](),
 		},
 		Include:                []openai.TranscriptionInclude{openai.TranscriptionIncludeLogprobs},
+		KnownSpeakerNames:      []string{"string"},
+		KnownSpeakerReferences: []string{"string"},
 		Language:               openai.String("language"),
 		Prompt:                 openai.String("prompt"),
 		ResponseFormat:         openai.AudioResponseFormatJSON,

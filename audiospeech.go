@@ -5,11 +5,12 @@ package openai
 import (
 	"context"
 	"net/http"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/param"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/param"
 )
 
 // AudioSpeechService contains methods and other services that help with
@@ -33,7 +34,7 @@ func NewAudioSpeechService(opts ...option.RequestOption) (r AudioSpeechService) 
 
 // Generates audio from the input text.
 func (r *AudioSpeechService) New(ctx context.Context, body AudioSpeechNewParams, opts ...option.RequestOption) (res *http.Response, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/octet-stream")}, opts...)
 	path := "audio/speech"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
@@ -63,13 +64,18 @@ type AudioSpeechNewParams struct {
 	// work with `tts-1` or `tts-1-hd`.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
 	// The speed of the generated audio. Select a value from `0.25` to `4.0`. `1.0` is
-	// the default. Does not work with `gpt-4o-mini-tts`.
+	// the default.
 	Speed param.Opt[float64] `json:"speed,omitzero"`
 	// The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,
 	// `wav`, and `pcm`.
 	//
 	// Any of "mp3", "opus", "aac", "flac", "wav", "pcm".
 	ResponseFormat AudioSpeechNewParamsResponseFormat `json:"response_format,omitzero"`
+	// The format to stream the audio in. Supported formats are `sse` and `audio`.
+	// `sse` is not supported for `tts-1` or `tts-1-hd`.
+	//
+	// Any of "sse", "audio".
+	StreamFormat AudioSpeechNewParamsStreamFormat `json:"stream_format,omitzero"`
 	paramObj
 }
 
@@ -93,12 +99,11 @@ const (
 	AudioSpeechNewParamsVoiceBallad  AudioSpeechNewParamsVoice = "ballad"
 	AudioSpeechNewParamsVoiceCoral   AudioSpeechNewParamsVoice = "coral"
 	AudioSpeechNewParamsVoiceEcho    AudioSpeechNewParamsVoice = "echo"
-	AudioSpeechNewParamsVoiceFable   AudioSpeechNewParamsVoice = "fable"
-	AudioSpeechNewParamsVoiceOnyx    AudioSpeechNewParamsVoice = "onyx"
-	AudioSpeechNewParamsVoiceNova    AudioSpeechNewParamsVoice = "nova"
 	AudioSpeechNewParamsVoiceSage    AudioSpeechNewParamsVoice = "sage"
 	AudioSpeechNewParamsVoiceShimmer AudioSpeechNewParamsVoice = "shimmer"
 	AudioSpeechNewParamsVoiceVerse   AudioSpeechNewParamsVoice = "verse"
+	AudioSpeechNewParamsVoiceMarin   AudioSpeechNewParamsVoice = "marin"
+	AudioSpeechNewParamsVoiceCedar   AudioSpeechNewParamsVoice = "cedar"
 )
 
 // The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,
@@ -112,4 +117,13 @@ const (
 	AudioSpeechNewParamsResponseFormatFLAC AudioSpeechNewParamsResponseFormat = "flac"
 	AudioSpeechNewParamsResponseFormatWAV  AudioSpeechNewParamsResponseFormat = "wav"
 	AudioSpeechNewParamsResponseFormatPCM  AudioSpeechNewParamsResponseFormat = "pcm"
+)
+
+// The format to stream the audio in. Supported formats are `sse` and `audio`.
+// `sse` is not supported for `tts-1` or `tts-1-hd`.
+type AudioSpeechNewParamsStreamFormat string
+
+const (
+	AudioSpeechNewParamsStreamFormatSSE   AudioSpeechNewParamsStreamFormat = "sse"
+	AudioSpeechNewParamsStreamFormatAudio AudioSpeechNewParamsStreamFormat = "audio"
 )

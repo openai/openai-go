@@ -6,12 +6,13 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
 )
 
 // FineTuningAlphaGraderService contains methods and other services that help with
@@ -35,7 +36,7 @@ func NewFineTuningAlphaGraderService(opts ...option.RequestOption) (r FineTuning
 
 // Run a grader.
 func (r *FineTuningAlphaGraderService) Run(ctx context.Context, body FineTuningAlphaGraderRunParams, opts ...option.RequestOption) (res *FineTuningAlphaGraderRunResponse, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "fine_tuning/alpha/graders/run"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -43,7 +44,7 @@ func (r *FineTuningAlphaGraderService) Run(ctx context.Context, body FineTuningA
 
 // Validate a grader.
 func (r *FineTuningAlphaGraderService) Validate(ctx context.Context, body FineTuningAlphaGraderValidateParams, opts ...option.RequestOption) (res *FineTuningAlphaGraderValidateResponse, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "fine_tuning/alpha/graders/validate"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -182,7 +183,7 @@ type FineTuningAlphaGraderValidateResponseGraderUnion struct {
 	// This field is from variant [ScoreModelGrader].
 	Range []float64 `json:"range"`
 	// This field is from variant [ScoreModelGrader].
-	SamplingParams any `json:"sampling_params"`
+	SamplingParams ScoreModelGraderSamplingParams `json:"sampling_params"`
 	// This field is from variant [MultiGrader].
 	CalculateOutput string `json:"calculate_output"`
 	// This field is from variant [MultiGrader].
@@ -301,7 +302,7 @@ type FineTuningAlphaGraderRunParamsGraderUnion struct {
 }
 
 func (u FineTuningAlphaGraderRunParamsGraderUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningAlphaGraderRunParamsGraderUnion](u.OfStringCheck,
+	return param.MarshalUnion(u, u.OfStringCheck,
 		u.OfTextSimilarity,
 		u.OfPython,
 		u.OfScoreModel,
@@ -375,7 +376,7 @@ func (u FineTuningAlphaGraderRunParamsGraderUnion) GetRange() []float64 {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u FineTuningAlphaGraderRunParamsGraderUnion) GetSamplingParams() *any {
+func (u FineTuningAlphaGraderRunParamsGraderUnion) GetSamplingParams() *ScoreModelGraderSamplingParamsParam {
 	if vt := u.OfScoreModel; vt != nil {
 		return &vt.SamplingParams
 	}
@@ -505,7 +506,7 @@ type FineTuningAlphaGraderValidateParamsGraderUnion struct {
 }
 
 func (u FineTuningAlphaGraderValidateParamsGraderUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[FineTuningAlphaGraderValidateParamsGraderUnion](u.OfStringCheckGrader,
+	return param.MarshalUnion(u, u.OfStringCheckGrader,
 		u.OfTextSimilarityGrader,
 		u.OfPythonGrader,
 		u.OfScoreModelGrader,
@@ -579,7 +580,7 @@ func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetRange() []float64 {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetSamplingParams() *any {
+func (u FineTuningAlphaGraderValidateParamsGraderUnion) GetSamplingParams() *ScoreModelGraderSamplingParamsParam {
 	if vt := u.OfScoreModelGrader; vt != nil {
 		return &vt.SamplingParams
 	}

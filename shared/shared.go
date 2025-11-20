@@ -5,10 +5,10 @@ package shared
 import (
 	"encoding/json"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // aliased to make [param.APIUnion] private when embedding
@@ -21,6 +21,13 @@ type ResponsesModel = string
 // aliased to make [param.APIObject] private when embedding
 
 const (
+	ChatModelGPT5                             ChatModel = "gpt-5"
+	ChatModelGPT5Mini                         ChatModel = "gpt-5-mini"
+	ChatModelGPT5Nano                         ChatModel = "gpt-5-nano"
+	ChatModelGPT5_2025_08_07                  ChatModel = "gpt-5-2025-08-07"
+	ChatModelGPT5Mini2025_08_07               ChatModel = "gpt-5-mini-2025-08-07"
+	ChatModelGPT5Nano2025_08_07               ChatModel = "gpt-5-nano-2025-08-07"
+	ChatModelGPT5ChatLatest                   ChatModel = "gpt-5-chat-latest"
 	ChatModelGPT4_1                           ChatModel = "gpt-4.1"
 	ChatModelGPT4_1Mini                       ChatModel = "gpt-4.1-mini"
 	ChatModelGPT4_1Nano                       ChatModel = "gpt-4.1-nano"
@@ -83,7 +90,8 @@ const (
 type ComparisonFilter struct {
 	// The key to compare against the value.
 	Key string `json:"key,required"`
-	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
+	// `nin`.
 	//
 	// - `eq`: equals
 	// - `ne`: not equal
@@ -91,6 +99,8 @@ type ComparisonFilter struct {
 	// - `gte`: greater than or equal
 	// - `lt`: less than
 	// - `lte`: less than or equal
+	// - `in`: in
+	// - `nin`: not in
 	//
 	// Any of "eq", "ne", "gt", "gte", "lt", "lte".
 	Type ComparisonFilterType `json:"type,required"`
@@ -119,10 +129,11 @@ func (r *ComparisonFilter) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ComparisonFilterParam.Overrides()
 func (r ComparisonFilter) ToParam() ComparisonFilterParam {
-	return param.Override[ComparisonFilterParam](r.RawJSON())
+	return param.Override[ComparisonFilterParam](json.RawMessage(r.RawJSON()))
 }
 
-// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
+// `nin`.
 //
 // - `eq`: equals
 // - `ne`: not equal
@@ -130,6 +141,8 @@ func (r ComparisonFilter) ToParam() ComparisonFilterParam {
 // - `gte`: greater than or equal
 // - `lt`: less than
 // - `lte`: less than or equal
+// - `in`: in
+// - `nin`: not in
 type ComparisonFilterType string
 
 const (
@@ -142,12 +155,12 @@ const (
 )
 
 // ComparisonFilterValueUnion contains all possible properties and values from
-// [string], [float64], [bool].
+// [string], [float64], [bool], [[]ComparisonFilterValueArrayItemUnion].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfFloat OfBool]
+// will be valid: OfString OfFloat OfBool OfComparisonFilterValueArray]
 type ComparisonFilterValueUnion struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
@@ -155,11 +168,15 @@ type ComparisonFilterValueUnion struct {
 	OfFloat float64 `json:",inline"`
 	// This field will be present if the value is a [bool] instead of an object.
 	OfBool bool `json:",inline"`
-	JSON   struct {
-		OfString respjson.Field
-		OfFloat  respjson.Field
-		OfBool   respjson.Field
-		raw      string
+	// This field will be present if the value is a
+	// [[]ComparisonFilterValueArrayItemUnion] instead of an object.
+	OfComparisonFilterValueArray []ComparisonFilterValueArrayItemUnion `json:",inline"`
+	JSON                         struct {
+		OfString                     respjson.Field
+		OfFloat                      respjson.Field
+		OfBool                       respjson.Field
+		OfComparisonFilterValueArray respjson.Field
+		raw                          string
 	} `json:"-"`
 }
 
@@ -178,10 +195,51 @@ func (u ComparisonFilterValueUnion) AsBool() (v bool) {
 	return
 }
 
+func (u ComparisonFilterValueUnion) AsComparisonFilterValueArray() (v []ComparisonFilterValueArrayItemUnion) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u ComparisonFilterValueUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ComparisonFilterValueUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ComparisonFilterValueArrayItemUnion contains all possible properties and values
+// from [string], [float64].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfFloat]
+type ComparisonFilterValueArrayItemUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [float64] instead of an object.
+	OfFloat float64 `json:",inline"`
+	JSON    struct {
+		OfString respjson.Field
+		OfFloat  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (u ComparisonFilterValueArrayItemUnion) AsString() (v string) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ComparisonFilterValueArrayItemUnion) AsFloat() (v float64) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ComparisonFilterValueArrayItemUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ComparisonFilterValueArrayItemUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -192,7 +250,8 @@ func (r *ComparisonFilterValueUnion) UnmarshalJSON(data []byte) error {
 type ComparisonFilterParam struct {
 	// The key to compare against the value.
 	Key string `json:"key,required"`
-	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+	// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
+	// `nin`.
 	//
 	// - `eq`: equals
 	// - `ne`: not equal
@@ -200,6 +259,8 @@ type ComparisonFilterParam struct {
 	// - `gte`: greater than or equal
 	// - `lt`: less than
 	// - `lte`: less than or equal
+	// - `in`: in
+	// - `nin`: not in
 	//
 	// Any of "eq", "ne", "gt", "gte", "lt", "lte".
 	Type ComparisonFilterType `json:"type,omitzero,required"`
@@ -221,14 +282,15 @@ func (r *ComparisonFilterParam) UnmarshalJSON(data []byte) error {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ComparisonFilterValueUnionParam struct {
-	OfString param.Opt[string]  `json:",omitzero,inline"`
-	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
-	OfBool   param.Opt[bool]    `json:",omitzero,inline"`
+	OfString                     param.Opt[string]                          `json:",omitzero,inline"`
+	OfFloat                      param.Opt[float64]                         `json:",omitzero,inline"`
+	OfBool                       param.Opt[bool]                            `json:",omitzero,inline"`
+	OfComparisonFilterValueArray []ComparisonFilterValueArrayItemUnionParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ComparisonFilterValueUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[ComparisonFilterValueUnionParam](u.OfString, u.OfFloat, u.OfBool)
+	return param.MarshalUnion(u, u.OfString, u.OfFloat, u.OfBool, u.OfComparisonFilterValueArray)
 }
 func (u *ComparisonFilterValueUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -241,6 +303,33 @@ func (u *ComparisonFilterValueUnionParam) asAny() any {
 		return &u.OfFloat.Value
 	} else if !param.IsOmitted(u.OfBool) {
 		return &u.OfBool.Value
+	} else if !param.IsOmitted(u.OfComparisonFilterValueArray) {
+		return &u.OfComparisonFilterValueArray
+	}
+	return nil
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ComparisonFilterValueArrayItemUnionParam struct {
+	OfString param.Opt[string]  `json:",omitzero,inline"`
+	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ComparisonFilterValueArrayItemUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfFloat)
+}
+func (u *ComparisonFilterValueArrayItemUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *ComparisonFilterValueArrayItemUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfFloat) {
+		return &u.OfFloat.Value
 	}
 	return nil
 }
@@ -275,7 +364,7 @@ func (r *CompoundFilter) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // CompoundFilterParam.Overrides()
 func (r CompoundFilter) ToParam() CompoundFilterParam {
-	return param.Override[CompoundFilterParam](r.RawJSON())
+	return param.Override[CompoundFilterParam](json.RawMessage(r.RawJSON()))
 }
 
 // Type of operation: `and` or `or`.
@@ -306,6 +395,248 @@ func (r CompoundFilterParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *CompoundFilterParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+// CustomToolInputFormatUnion contains all possible properties and values from
+// [CustomToolInputFormatText], [CustomToolInputFormatGrammar].
+//
+// Use the [CustomToolInputFormatUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type CustomToolInputFormatUnion struct {
+	// Any of "text", "grammar".
+	Type string `json:"type"`
+	// This field is from variant [CustomToolInputFormatGrammar].
+	Definition string `json:"definition"`
+	// This field is from variant [CustomToolInputFormatGrammar].
+	Syntax string `json:"syntax"`
+	JSON   struct {
+		Type       respjson.Field
+		Definition respjson.Field
+		Syntax     respjson.Field
+		raw        string
+	} `json:"-"`
+}
+
+// anyCustomToolInputFormat is implemented by each variant of
+// [CustomToolInputFormatUnion] to add type safety for the return type of
+// [CustomToolInputFormatUnion.AsAny]
+type anyCustomToolInputFormat interface {
+	implCustomToolInputFormatUnion()
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := CustomToolInputFormatUnion.AsAny().(type) {
+//	case shared.CustomToolInputFormatText:
+//	case shared.CustomToolInputFormatGrammar:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u CustomToolInputFormatUnion) AsAny() anyCustomToolInputFormat {
+	switch u.Type {
+	case "text":
+		return u.AsText()
+	case "grammar":
+		return u.AsGrammar()
+	}
+	return nil
+}
+
+func (u CustomToolInputFormatUnion) AsText() (v CustomToolInputFormatText) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u CustomToolInputFormatUnion) AsGrammar() (v CustomToolInputFormatGrammar) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u CustomToolInputFormatUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *CustomToolInputFormatUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this CustomToolInputFormatUnion to a
+// CustomToolInputFormatUnionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// CustomToolInputFormatUnionParam.Overrides()
+func (r CustomToolInputFormatUnion) ToParam() CustomToolInputFormatUnionParam {
+	return param.Override[CustomToolInputFormatUnionParam](json.RawMessage(r.RawJSON()))
+}
+
+// Unconstrained free-form text.
+type CustomToolInputFormatText struct {
+	// Unconstrained text format. Always `text`.
+	Type constant.Text `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r CustomToolInputFormatText) RawJSON() string { return r.JSON.raw }
+func (r *CustomToolInputFormatText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (CustomToolInputFormatText) implCustomToolInputFormatUnion() {}
+
+// A grammar defined by the user.
+type CustomToolInputFormatGrammar struct {
+	// The grammar definition.
+	Definition string `json:"definition,required"`
+	// The syntax of the grammar definition. One of `lark` or `regex`.
+	//
+	// Any of "lark", "regex".
+	Syntax string `json:"syntax,required"`
+	// Grammar format. Always `grammar`.
+	Type constant.Grammar `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Definition  respjson.Field
+		Syntax      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r CustomToolInputFormatGrammar) RawJSON() string { return r.JSON.raw }
+func (r *CustomToolInputFormatGrammar) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (CustomToolInputFormatGrammar) implCustomToolInputFormatUnion() {}
+
+func CustomToolInputFormatParamOfGrammar(definition string, syntax string) CustomToolInputFormatUnionParam {
+	var grammar CustomToolInputFormatGrammarParam
+	grammar.Definition = definition
+	grammar.Syntax = syntax
+	return CustomToolInputFormatUnionParam{OfGrammar: &grammar}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type CustomToolInputFormatUnionParam struct {
+	OfText    *CustomToolInputFormatTextParam    `json:",omitzero,inline"`
+	OfGrammar *CustomToolInputFormatGrammarParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u CustomToolInputFormatUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfText, u.OfGrammar)
+}
+func (u *CustomToolInputFormatUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *CustomToolInputFormatUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfText) {
+		return u.OfText
+	} else if !param.IsOmitted(u.OfGrammar) {
+		return u.OfGrammar
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CustomToolInputFormatUnionParam) GetDefinition() *string {
+	if vt := u.OfGrammar; vt != nil {
+		return &vt.Definition
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CustomToolInputFormatUnionParam) GetSyntax() *string {
+	if vt := u.OfGrammar; vt != nil {
+		return &vt.Syntax
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u CustomToolInputFormatUnionParam) GetType() *string {
+	if vt := u.OfText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfGrammar; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[CustomToolInputFormatUnionParam](
+		"type",
+		apijson.Discriminator[CustomToolInputFormatTextParam]("text"),
+		apijson.Discriminator[CustomToolInputFormatGrammarParam]("grammar"),
+	)
+}
+
+func NewCustomToolInputFormatTextParam() CustomToolInputFormatTextParam {
+	return CustomToolInputFormatTextParam{
+		Type: "text",
+	}
+}
+
+// Unconstrained free-form text.
+//
+// This struct has a constant value, construct it with
+// [NewCustomToolInputFormatTextParam].
+type CustomToolInputFormatTextParam struct {
+	// Unconstrained text format. Always `text`.
+	Type constant.Text `json:"type,required"`
+	paramObj
+}
+
+func (r CustomToolInputFormatTextParam) MarshalJSON() (data []byte, err error) {
+	type shadow CustomToolInputFormatTextParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *CustomToolInputFormatTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A grammar defined by the user.
+//
+// The properties Definition, Syntax, Type are required.
+type CustomToolInputFormatGrammarParam struct {
+	// The grammar definition.
+	Definition string `json:"definition,required"`
+	// The syntax of the grammar definition. One of `lark` or `regex`.
+	//
+	// Any of "lark", "regex".
+	Syntax string `json:"syntax,omitzero,required"`
+	// Grammar format. Always `grammar`.
+	//
+	// This field can be elided, and will marshal its zero value as "grammar".
+	Type constant.Grammar `json:"type,required"`
+	paramObj
+}
+
+func (r CustomToolInputFormatGrammarParam) MarshalJSON() (data []byte, err error) {
+	type shadow CustomToolInputFormatGrammarParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *CustomToolInputFormatGrammarParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[CustomToolInputFormatGrammarParam](
+		"syntax", "lark", "regex",
+	)
 }
 
 type ErrorObject struct {
@@ -349,7 +680,7 @@ type FunctionDefinition struct {
 	// set to true, the model will follow the exact schema defined in the `parameters`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
-	// [function calling guide](docs/guides/function-calling).
+	// [function calling guide](https://platform.openai.com/docs/guides/function-calling).
 	Strict bool `json:"strict,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -374,7 +705,7 @@ func (r *FunctionDefinition) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // FunctionDefinitionParam.Overrides()
 func (r FunctionDefinition) ToParam() FunctionDefinitionParam {
-	return param.Override[FunctionDefinitionParam](r.RawJSON())
+	return param.Override[FunctionDefinitionParam](json.RawMessage(r.RawJSON()))
 }
 
 // The property Name is required.
@@ -386,7 +717,7 @@ type FunctionDefinitionParam struct {
 	// set to true, the model will follow the exact schema defined in the `parameters`
 	// field. Only a subset of JSON Schema is supported when `strict` is `true`. Learn
 	// more about Structured Outputs in the
-	// [function calling guide](docs/guides/function-calling).
+	// [function calling guide](https://platform.openai.com/docs/guides/function-calling).
 	Strict param.Opt[bool] `json:"strict,omitzero"`
 	// A description of what the function does, used by the model to choose when and
 	// how to call the function.
@@ -414,19 +745,21 @@ type FunctionParameters map[string]any
 
 type Metadata map[string]string
 
-// **o-series models only**
+// **gpt-5 and o-series models only**
 //
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type Reasoning struct {
-	// **o-series models only**
-	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
 	//
-	// Any of "low", "medium", "high".
+	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+	// effort.
+	//
+	// Any of "minimal", "low", "medium", "high".
 	Effort ReasoningEffort `json:"effort,nullable"`
 	// **Deprecated:** use `summary` instead.
 	//
@@ -441,6 +774,8 @@ type Reasoning struct {
 	// A summary of the reasoning performed by the model. This can be useful for
 	// debugging and understanding the model's reasoning process. One of `auto`,
 	// `concise`, or `detailed`.
+	//
+	// `concise` is only supported for `computer-use-preview` models.
 	//
 	// Any of "auto", "concise", "detailed".
 	Summary ReasoningSummary `json:"summary,nullable"`
@@ -466,7 +801,7 @@ func (r *Reasoning) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ReasoningParam.Overrides()
 func (r Reasoning) ToParam() ReasoningParam {
-	return param.Override[ReasoningParam](r.RawJSON())
+	return param.Override[ReasoningParam](json.RawMessage(r.RawJSON()))
 }
 
 // **Deprecated:** use `summary` instead.
@@ -485,6 +820,8 @@ const (
 // A summary of the reasoning performed by the model. This can be useful for
 // debugging and understanding the model's reasoning process. One of `auto`,
 // `concise`, or `detailed`.
+//
+// `concise` is only supported for `computer-use-preview` models.
 type ReasoningSummary string
 
 const (
@@ -493,19 +830,21 @@ const (
 	ReasoningSummaryDetailed ReasoningSummary = "detailed"
 )
 
-// **o-series models only**
+// **gpt-5 and o-series models only**
 //
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type ReasoningParam struct {
-	// **o-series models only**
-	//
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-	// result in faster responses and fewer tokens used on reasoning in a response.
+	// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+	// effort can result in faster responses and fewer tokens used on reasoning in a
+	// response.
 	//
-	// Any of "low", "medium", "high".
+	// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+	// effort.
+	//
+	// Any of "minimal", "low", "medium", "high".
 	Effort ReasoningEffort `json:"effort,omitzero"`
 	// **Deprecated:** use `summary` instead.
 	//
@@ -521,6 +860,8 @@ type ReasoningParam struct {
 	// debugging and understanding the model's reasoning process. One of `auto`,
 	// `concise`, or `detailed`.
 	//
+	// `concise` is only supported for `computer-use-preview` models.
+	//
 	// Any of "auto", "concise", "detailed".
 	Summary ReasoningSummary `json:"summary,omitzero"`
 	paramObj
@@ -534,18 +875,21 @@ func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// **o-series models only**
-//
 // Constrains effort on reasoning for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-// result in faster responses and fewer tokens used on reasoning in a response.
+// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+// effort can result in faster responses and fewer tokens used on reasoning in a
+// response.
+//
+// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+// effort.
 type ReasoningEffort string
 
 const (
-	ReasoningEffortLow    ReasoningEffort = "low"
-	ReasoningEffortMedium ReasoningEffort = "medium"
-	ReasoningEffortHigh   ReasoningEffort = "high"
+	ReasoningEffortMinimal ReasoningEffort = "minimal"
+	ReasoningEffortLow     ReasoningEffort = "low"
+	ReasoningEffortMedium  ReasoningEffort = "medium"
+	ReasoningEffortHigh    ReasoningEffort = "high"
 )
 
 // JSON object response format. An older method of generating JSON responses. Using
@@ -577,7 +921,7 @@ func (ResponseFormatJSONObject) ImplResponseFormatTextConfigUnion() {}
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseFormatJSONObjectParam.Overrides()
 func (r ResponseFormatJSONObject) ToParam() ResponseFormatJSONObjectParam {
-	return param.Override[ResponseFormatJSONObjectParam](r.RawJSON())
+	return param.Override[ResponseFormatJSONObjectParam](json.RawMessage(r.RawJSON()))
 }
 
 func NewResponseFormatJSONObjectParam() ResponseFormatJSONObjectParam {
@@ -636,7 +980,7 @@ func (r *ResponseFormatJSONSchema) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseFormatJSONSchemaParam.Overrides()
 func (r ResponseFormatJSONSchema) ToParam() ResponseFormatJSONSchemaParam {
-	return param.Override[ResponseFormatJSONSchemaParam](r.RawJSON())
+	return param.Override[ResponseFormatJSONSchemaParam](json.RawMessage(r.RawJSON()))
 }
 
 // Structured Outputs configuration options, including a JSON Schema.
@@ -752,7 +1096,7 @@ func (ResponseFormatText) ImplResponseFormatTextConfigUnion() {}
 // be used at the last possible moment before sending a request. Test for this with
 // ResponseFormatTextParam.Overrides()
 func (r ResponseFormatText) ToParam() ResponseFormatTextParam {
-	return param.Override[ResponseFormatTextParam](r.RawJSON())
+	return param.Override[ResponseFormatTextParam](json.RawMessage(r.RawJSON()))
 }
 
 func NewResponseFormatTextParam() ResponseFormatTextParam {
@@ -784,7 +1128,16 @@ func (r *ResponseFormatTextParam) UnmarshalJSON(data []byte) error {
 const (
 	ResponsesModelO1Pro                        ResponsesModel = "o1-pro"
 	ResponsesModelO1Pro2025_03_19              ResponsesModel = "o1-pro-2025-03-19"
+	ResponsesModelO3Pro                        ResponsesModel = "o3-pro"
+	ResponsesModelO3Pro2025_06_10              ResponsesModel = "o3-pro-2025-06-10"
+	ResponsesModelO3DeepResearch               ResponsesModel = "o3-deep-research"
+	ResponsesModelO3DeepResearch2025_06_26     ResponsesModel = "o3-deep-research-2025-06-26"
+	ResponsesModelO4MiniDeepResearch           ResponsesModel = "o4-mini-deep-research"
+	ResponsesModelO4MiniDeepResearch2025_06_26 ResponsesModel = "o4-mini-deep-research-2025-06-26"
 	ResponsesModelComputerUsePreview           ResponsesModel = "computer-use-preview"
 	ResponsesModelComputerUsePreview2025_03_11 ResponsesModel = "computer-use-preview-2025-03-11"
+	ResponsesModelGPT5Codex                    ResponsesModel = "gpt-5-codex"
+	ResponsesModelGPT5Pro                      ResponsesModel = "gpt-5-pro"
+	ResponsesModelGPT5Pro2025_10_06            ResponsesModel = "gpt-5-pro-2025-10-06"
 	// Or some ...[ChatModel]
 )

@@ -8,15 +8,16 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/packages/ssestream"
-	"github.com/openai/openai-go/shared"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/packages/ssestream"
+	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // BetaThreadService contains methods and other services that help with interacting
@@ -50,7 +51,7 @@ func NewBetaThreadService(opts ...option.RequestOption) (r BetaThreadService) {
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadService) New(ctx context.Context, body BetaThreadNewParams, opts ...option.RequestOption) (res *Thread, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	path := "threads"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
@@ -61,7 +62,7 @@ func (r *BetaThreadService) New(ctx context.Context, body BetaThreadNewParams, o
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadService) Get(ctx context.Context, threadID string, opts ...option.RequestOption) (res *Thread, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -76,7 +77,7 @@ func (r *BetaThreadService) Get(ctx context.Context, threadID string, opts ...op
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadService) Update(ctx context.Context, threadID string, body BetaThreadUpdateParams, opts ...option.RequestOption) (res *Thread, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -91,7 +92,7 @@ func (r *BetaThreadService) Update(ctx context.Context, threadID string, body Be
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadService) Delete(ctx context.Context, threadID string, opts ...option.RequestOption) (res *ThreadDeleted, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -106,7 +107,7 @@ func (r *BetaThreadService) Delete(ctx context.Context, threadID string, opts ..
 //
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 func (r *BetaThreadService) NewAndRun(ctx context.Context, body BetaThreadNewAndRunParams, opts ...option.RequestOption) (res *Run, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	path := "threads/runs"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
@@ -121,7 +122,7 @@ func (r *BetaThreadService) NewAndRunStreaming(ctx context.Context, body BetaThr
 		raw *http.Response
 		err error
 	)
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithJSONSet("stream", true)}, opts...)
 	path := "threads/runs"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
@@ -185,7 +186,7 @@ func (r *AssistantResponseFormatOptionUnion) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // AssistantResponseFormatOptionUnionParam.Overrides()
 func (r AssistantResponseFormatOptionUnion) ToParam() AssistantResponseFormatOptionUnionParam {
-	return param.Override[AssistantResponseFormatOptionUnionParam](r.RawJSON())
+	return param.Override[AssistantResponseFormatOptionUnionParam](json.RawMessage(r.RawJSON()))
 }
 
 func AssistantResponseFormatOptionParamOfAuto() AssistantResponseFormatOptionUnionParam {
@@ -211,7 +212,7 @@ type AssistantResponseFormatOptionUnionParam struct {
 }
 
 func (u AssistantResponseFormatOptionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[AssistantResponseFormatOptionUnionParam](u.OfAuto, u.OfText, u.OfJSONObject, u.OfJSONSchema)
+	return param.MarshalUnion(u, u.OfAuto, u.OfText, u.OfJSONObject, u.OfJSONSchema)
 }
 func (u *AssistantResponseFormatOptionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -279,7 +280,7 @@ func (r *AssistantToolChoice) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // AssistantToolChoiceParam.Overrides()
 func (r AssistantToolChoice) ToParam() AssistantToolChoiceParam {
-	return param.Override[AssistantToolChoiceParam](r.RawJSON())
+	return param.Override[AssistantToolChoiceParam](json.RawMessage(r.RawJSON()))
 }
 
 // The type of the tool. If type is `function`, the function name must be set
@@ -336,7 +337,7 @@ func (r *AssistantToolChoiceFunction) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // AssistantToolChoiceFunctionParam.Overrides()
 func (r AssistantToolChoiceFunction) ToParam() AssistantToolChoiceFunctionParam {
-	return param.Override[AssistantToolChoiceFunctionParam](r.RawJSON())
+	return param.Override[AssistantToolChoiceFunctionParam](json.RawMessage(r.RawJSON()))
 }
 
 // The property Name is required.
@@ -400,7 +401,7 @@ func (r *AssistantToolChoiceOptionUnion) UnmarshalJSON(data []byte) error {
 // be used at the last possible moment before sending a request. Test for this with
 // AssistantToolChoiceOptionUnionParam.Overrides()
 func (r AssistantToolChoiceOptionUnion) ToParam() AssistantToolChoiceOptionUnionParam {
-	return param.Override[AssistantToolChoiceOptionUnionParam](r.RawJSON())
+	return param.Override[AssistantToolChoiceOptionUnionParam](json.RawMessage(r.RawJSON()))
 }
 
 // `none` means the model will not call any tools and instead generates a message.
@@ -432,7 +433,7 @@ type AssistantToolChoiceOptionUnionParam struct {
 }
 
 func (u AssistantToolChoiceOptionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[AssistantToolChoiceOptionUnionParam](u.OfAuto, u.OfAssistantToolChoice)
+	return param.MarshalUnion(u, u.OfAuto, u.OfAssistantToolChoice)
 }
 func (u *AssistantToolChoiceOptionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -643,7 +644,7 @@ type BetaThreadNewParamsMessageContentUnion struct {
 }
 
 func (u BetaThreadNewParamsMessageContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewParamsMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *BetaThreadNewParamsMessageContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -684,7 +685,7 @@ type BetaThreadNewParamsMessageAttachmentToolUnion struct {
 }
 
 func (u BetaThreadNewParamsMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewParamsMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+	return param.MarshalUnion(u, u.OfCodeInterpreter, u.OfFileSearch)
 }
 func (u *BetaThreadNewParamsMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -831,7 +832,7 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion 
 }
 
 func (u BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion](u.OfAuto, u.OfStatic)
+	return param.MarshalUnion(u, u.OfAuto, u.OfStatic)
 }
 func (u *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1065,7 +1066,7 @@ type BetaThreadNewAndRunParams struct {
 	// modifying the behavior on a per-run basis.
 	Tools []AssistantToolUnionParam `json:"tools,omitzero"`
 	// Controls for how a thread will be truncated prior to the run. Use this to
-	// control the intial context window of the run.
+	// control the initial context window of the run.
 	TruncationStrategy BetaThreadNewAndRunParamsTruncationStrategy `json:"truncation_strategy,omitzero"`
 	// Specifies the format that the model must output. Compatible with
 	// [GPT-4o](https://platform.openai.com/docs/models#gpt-4o),
@@ -1188,7 +1189,7 @@ type BetaThreadNewAndRunParamsThreadMessageContentUnion struct {
 }
 
 func (u BetaThreadNewAndRunParamsThreadMessageContentUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadMessageContentUnion](u.OfString, u.OfArrayOfContentParts)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfContentParts)
 }
 func (u *BetaThreadNewAndRunParamsThreadMessageContentUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1229,7 +1230,7 @@ type BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion struct {
 }
 
 func (u BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion](u.OfCodeInterpreter, u.OfFileSearch)
+	return param.MarshalUnion(u, u.OfCodeInterpreter, u.OfFileSearch)
 }
 func (u *BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1376,7 +1377,7 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingSt
 }
 
 func (u BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion](u.OfAuto, u.OfStatic)
+	return param.MarshalUnion(u, u.OfAuto, u.OfStatic)
 }
 func (u *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1532,7 +1533,7 @@ func (r *BetaThreadNewAndRunParamsToolResourcesFileSearch) UnmarshalJSON(data []
 }
 
 // Controls for how a thread will be truncated prior to the run. Use this to
-// control the intial context window of the run.
+// control the initial context window of the run.
 //
 // The property Type is required.
 type BetaThreadNewAndRunParamsTruncationStrategy struct {

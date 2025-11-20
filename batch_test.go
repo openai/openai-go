@@ -8,10 +8,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/internal/testutil"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/shared"
 )
 
 func TestBatchNewWithOptionalParams(t *testing.T) {
@@ -32,6 +32,9 @@ func TestBatchNewWithOptionalParams(t *testing.T) {
 		InputFileID:      "input_file_id",
 		Metadata: shared.Metadata{
 			"foo": "string",
+		},
+		OutputExpiresAfter: openai.BatchNewParamsOutputExpiresAfter{
+			Seconds: 3600,
 		},
 	})
 	if err != nil {

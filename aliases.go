@@ -3,9 +3,9 @@
 package openai
 
 import (
-	"github.com/openai/openai-go/internal/apierror"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/shared"
+	"github.com/openai/openai-go/v3/internal/apierror"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/shared"
 )
 
 // aliased to make [param.APIUnion] private when embedding
@@ -18,6 +18,27 @@ type Error = apierror.Error
 
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
+
+// Equals "gpt-5"
+const ChatModelGPT5 = shared.ChatModelGPT5
+
+// Equals "gpt-5-mini"
+const ChatModelGPT5Mini = shared.ChatModelGPT5Mini
+
+// Equals "gpt-5-nano"
+const ChatModelGPT5Nano = shared.ChatModelGPT5Nano
+
+// Equals "gpt-5-2025-08-07"
+const ChatModelGPT5_2025_08_07 = shared.ChatModelGPT5_2025_08_07
+
+// Equals "gpt-5-mini-2025-08-07"
+const ChatModelGPT5Mini2025_08_07 = shared.ChatModelGPT5Mini2025_08_07
+
+// Equals "gpt-5-nano-2025-08-07"
+const ChatModelGPT5Nano2025_08_07 = shared.ChatModelGPT5Nano2025_08_07
+
+// Equals "gpt-5-chat-latest"
+const ChatModelGPT5ChatLatest = shared.ChatModelGPT5ChatLatest
 
 // Equals "gpt-4.1"
 const ChatModelGPT4_1 = shared.ChatModelGPT4_1
@@ -190,7 +211,8 @@ const ChatModelGPT3_5Turbo16k0613 = shared.ChatModelGPT3_5Turbo16k0613
 // This is an alias to an internal type.
 type ComparisonFilter = shared.ComparisonFilter
 
-// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+// Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
+// `nin`.
 //
 // - `eq`: equals
 // - `ne`: not equal
@@ -198,6 +220,8 @@ type ComparisonFilter = shared.ComparisonFilter
 // - `gte`: greater than or equal
 // - `lt`: less than
 // - `lte`: less than or equal
+// - `in`: in
+// - `nin`: not in
 //
 // This is an alias to an internal type.
 type ComparisonFilterType = shared.ComparisonFilterType
@@ -226,6 +250,9 @@ const ComparisonFilterTypeLte = shared.ComparisonFilterTypeLte
 // This is an alias to an internal type.
 type ComparisonFilterValueUnion = shared.ComparisonFilterValueUnion
 
+// This is an alias to an internal type.
+type ComparisonFilterValueArrayItemUnion = shared.ComparisonFilterValueArrayItemUnion
+
 // A filter used to compare a specified attribute key to a given value using a
 // defined comparison operation.
 //
@@ -237,6 +264,9 @@ type ComparisonFilterParam = shared.ComparisonFilterParam
 //
 // This is an alias to an internal type.
 type ComparisonFilterValueUnionParam = shared.ComparisonFilterValueUnionParam
+
+// This is an alias to an internal type.
+type ComparisonFilterValueArrayItemUnionParam = shared.ComparisonFilterValueArrayItemUnionParam
 
 // Combine multiple filters using `and` or `or`.
 //
@@ -258,6 +288,36 @@ const CompoundFilterTypeOr = shared.CompoundFilterTypeOr
 //
 // This is an alias to an internal type.
 type CompoundFilterParam = shared.CompoundFilterParam
+
+// The input format for the custom tool. Default is unconstrained text.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatUnion = shared.CustomToolInputFormatUnion
+
+// Unconstrained free-form text.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatText = shared.CustomToolInputFormatText
+
+// A grammar defined by the user.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatGrammar = shared.CustomToolInputFormatGrammar
+
+// The input format for the custom tool. Default is unconstrained text.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatUnionParam = shared.CustomToolInputFormatUnionParam
+
+// Unconstrained free-form text.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatTextParam = shared.CustomToolInputFormatTextParam
+
+// A grammar defined by the user.
+//
+// This is an alias to an internal type.
+type CustomToolInputFormatGrammarParam = shared.CustomToolInputFormatGrammarParam
 
 // This is an alias to an internal type.
 type ErrorObject = shared.ErrorObject
@@ -289,7 +349,7 @@ type FunctionParameters = shared.FunctionParameters
 // This is an alias to an internal type.
 type Metadata = shared.Metadata
 
-// **o-series models only**
+// **gpt-5 and o-series models only**
 //
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
@@ -319,6 +379,8 @@ const ReasoningGenerateSummaryDetailed = shared.ReasoningGenerateSummaryDetailed
 // debugging and understanding the model's reasoning process. One of `auto`,
 // `concise`, or `detailed`.
 //
+// `concise` is only supported for `computer-use-preview` models.
+//
 // This is an alias to an internal type.
 type ReasoningSummary = shared.ReasoningSummary
 
@@ -331,7 +393,7 @@ const ReasoningSummaryConcise = shared.ReasoningSummaryConcise
 // Equals "detailed"
 const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 
-// **o-series models only**
+// **gpt-5 and o-series models only**
 //
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
@@ -339,15 +401,20 @@ const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 // This is an alias to an internal type.
 type ReasoningParam = shared.ReasoningParam
 
-// **o-series models only**
-//
 // Constrains effort on reasoning for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `low`, `medium`, and `high`. Reducing reasoning effort can
-// result in faster responses and fewer tokens used on reasoning in a response.
+// supported values are `minimal`, `low`, `medium`, and `high`. Reducing reasoning
+// effort can result in faster responses and fewer tokens used on reasoning in a
+// response.
+//
+// Note: The `gpt-5-pro` model defaults to (and only supports) `high` reasoning
+// effort.
 //
 // This is an alias to an internal type.
 type ReasoningEffort = shared.ReasoningEffort
+
+// Equals "minimal"
+const ReasoningEffortMinimal = shared.ReasoningEffortMinimal
 
 // Equals "low"
 const ReasoningEffortLow = shared.ReasoningEffortLow
@@ -415,8 +482,35 @@ const ResponsesModelO1Pro = shared.ResponsesModelO1Pro
 // Equals "o1-pro-2025-03-19"
 const ResponsesModelO1Pro2025_03_19 = shared.ResponsesModelO1Pro2025_03_19
 
+// Equals "o3-pro"
+const ResponsesModelO3Pro = shared.ResponsesModelO3Pro
+
+// Equals "o3-pro-2025-06-10"
+const ResponsesModelO3Pro2025_06_10 = shared.ResponsesModelO3Pro2025_06_10
+
+// Equals "o3-deep-research"
+const ResponsesModelO3DeepResearch = shared.ResponsesModelO3DeepResearch
+
+// Equals "o3-deep-research-2025-06-26"
+const ResponsesModelO3DeepResearch2025_06_26 = shared.ResponsesModelO3DeepResearch2025_06_26
+
+// Equals "o4-mini-deep-research"
+const ResponsesModelO4MiniDeepResearch = shared.ResponsesModelO4MiniDeepResearch
+
+// Equals "o4-mini-deep-research-2025-06-26"
+const ResponsesModelO4MiniDeepResearch2025_06_26 = shared.ResponsesModelO4MiniDeepResearch2025_06_26
+
 // Equals "computer-use-preview"
 const ResponsesModelComputerUsePreview = shared.ResponsesModelComputerUsePreview
 
 // Equals "computer-use-preview-2025-03-11"
 const ResponsesModelComputerUsePreview2025_03_11 = shared.ResponsesModelComputerUsePreview2025_03_11
+
+// Equals "gpt-5-codex"
+const ResponsesModelGPT5Codex = shared.ResponsesModelGPT5Codex
+
+// Equals "gpt-5-pro"
+const ResponsesModelGPT5Pro = shared.ResponsesModelGPT5Pro
+
+// Equals "gpt-5-pro-2025-10-06"
+const ResponsesModelGPT5Pro2025_10_06 = shared.ResponsesModelGPT5Pro2025_10_06

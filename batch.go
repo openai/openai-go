@@ -8,16 +8,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/apiquery"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/pagination"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/shared"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // BatchService contains methods and other services that help with interacting with
@@ -41,7 +42,7 @@ func NewBatchService(opts ...option.RequestOption) (r BatchService) {
 
 // Creates and executes a batch from an uploaded file of requests
 func (r *BatchService) New(ctx context.Context, body BatchNewParams, opts ...option.RequestOption) (res *Batch, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "batches"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -49,7 +50,7 @@ func (r *BatchService) New(ctx context.Context, body BatchNewParams, opts ...opt
 
 // Retrieves a batch.
 func (r *BatchService) Get(ctx context.Context, batchID string, opts ...option.RequestOption) (res *Batch, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if batchID == "" {
 		err = errors.New("missing required batch_id parameter")
 		return
@@ -62,7 +63,7 @@ func (r *BatchService) Get(ctx context.Context, batchID string, opts ...option.R
 // List your organization's batches.
 func (r *BatchService) List(ctx context.Context, query BatchListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Batch], err error) {
 	var raw *http.Response
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "batches"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -86,7 +87,7 @@ func (r *BatchService) ListAutoPaging(ctx context.Context, query BatchListParams
 // 10 minutes, before changing to `cancelled`, where it will have partial results
 // (if any) available in the output file.
 func (r *BatchService) Cancel(ctx context.Context, batchID string, opts ...option.RequestOption) (res *Batch, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if batchID == "" {
 		err = errors.New("missing required batch_id parameter")
 		return
@@ -139,10 +140,20 @@ type Batch struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,nullable"`
+	// Model ID used to process the batch, like `gpt-5-2025-08-07`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
+	// [model guide](https://platform.openai.com/docs/models) to browse and compare
+	// available models.
+	Model string `json:"model"`
 	// The ID of the file containing the outputs of successfully executed requests.
 	OutputFileID string `json:"output_file_id"`
 	// The request counts for different statuses within the batch.
 	RequestCounts BatchRequestCounts `json:"request_counts"`
+	// Represents token usage details including input tokens, output tokens, a
+	// breakdown of output tokens, and the total tokens used. Only populated on batches
+	// created after September 7, 2025.
+	Usage BatchUsage `json:"usage"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID               respjson.Field
@@ -163,8 +174,10 @@ type Batch struct {
 		FinalizingAt     respjson.Field
 		InProgressAt     respjson.Field
 		Metadata         respjson.Field
+		Model            respjson.Field
 		OutputFileID     respjson.Field
 		RequestCounts    respjson.Field
+		Usage            respjson.Field
 		ExtraFields      map[string]respjson.Field
 		raw              string
 	} `json:"-"`
@@ -259,6 +272,75 @@ func (r *BatchRequestCounts) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Represents token usage details including input tokens, output tokens, a
+// breakdown of output tokens, and the total tokens used. Only populated on batches
+// created after September 7, 2025.
+type BatchUsage struct {
+	// The number of input tokens.
+	InputTokens int64 `json:"input_tokens,required"`
+	// A detailed breakdown of the input tokens.
+	InputTokensDetails BatchUsageInputTokensDetails `json:"input_tokens_details,required"`
+	// The number of output tokens.
+	OutputTokens int64 `json:"output_tokens,required"`
+	// A detailed breakdown of the output tokens.
+	OutputTokensDetails BatchUsageOutputTokensDetails `json:"output_tokens_details,required"`
+	// The total number of tokens used.
+	TotalTokens int64 `json:"total_tokens,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens         respjson.Field
+		InputTokensDetails  respjson.Field
+		OutputTokens        respjson.Field
+		OutputTokensDetails respjson.Field
+		TotalTokens         respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BatchUsage) RawJSON() string { return r.JSON.raw }
+func (r *BatchUsage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A detailed breakdown of the input tokens.
+type BatchUsageInputTokensDetails struct {
+	// The number of tokens that were retrieved from the cache.
+	// [More on prompt caching](https://platform.openai.com/docs/guides/prompt-caching).
+	CachedTokens int64 `json:"cached_tokens,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CachedTokens respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BatchUsageInputTokensDetails) RawJSON() string { return r.JSON.raw }
+func (r *BatchUsageInputTokensDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A detailed breakdown of the output tokens.
+type BatchUsageOutputTokensDetails struct {
+	// The number of reasoning tokens.
+	ReasoningTokens int64 `json:"reasoning_tokens,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ReasoningTokens respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BatchUsageOutputTokensDetails) RawJSON() string { return r.JSON.raw }
+func (r *BatchUsageOutputTokensDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type BatchNewParams struct {
 	// The time frame within which the batch should be processed. Currently only `24h`
 	// is supported.
@@ -290,6 +372,9 @@ type BatchNewParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,omitzero"`
+	// The expiration policy for the output and/or error file that are generated for a
+	// batch.
+	OutputExpiresAfter BatchNewParamsOutputExpiresAfter `json:"output_expires_after,omitzero"`
 	paramObj
 }
 
@@ -321,6 +406,31 @@ const (
 	BatchNewParamsEndpointV1Embeddings      BatchNewParamsEndpoint = "/v1/embeddings"
 	BatchNewParamsEndpointV1Completions     BatchNewParamsEndpoint = "/v1/completions"
 )
+
+// The expiration policy for the output and/or error file that are generated for a
+// batch.
+//
+// The properties Anchor, Seconds are required.
+type BatchNewParamsOutputExpiresAfter struct {
+	// The number of seconds after the anchor time that the file will expire. Must be
+	// between 3600 (1 hour) and 2592000 (30 days).
+	Seconds int64 `json:"seconds,required"`
+	// Anchor timestamp after which the expiration policy applies. Supported anchors:
+	// `created_at`. Note that the anchor is the file creation time, not the time the
+	// batch is created.
+	//
+	// This field can be elided, and will marshal its zero value as "created_at".
+	Anchor constant.CreatedAt `json:"anchor,required"`
+	paramObj
+}
+
+func (r BatchNewParamsOutputExpiresAfter) MarshalJSON() (data []byte, err error) {
+	type shadow BatchNewParamsOutputExpiresAfter
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BatchNewParamsOutputExpiresAfter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type BatchListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place

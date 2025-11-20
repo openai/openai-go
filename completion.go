@@ -5,14 +5,15 @@ package openai
 import (
 	"context"
 	"net/http"
+	"slices"
 
-	"github.com/openai/openai-go/internal/apijson"
-	"github.com/openai/openai-go/internal/requestconfig"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/packages/param"
-	"github.com/openai/openai-go/packages/respjson"
-	"github.com/openai/openai-go/packages/ssestream"
-	"github.com/openai/openai-go/shared/constant"
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/packages/ssestream"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // CompletionService contains methods and other services that help with interacting
@@ -36,7 +37,7 @@ func NewCompletionService(opts ...option.RequestOption) (r CompletionService) {
 
 // Creates a completion for the provided prompt and parameters.
 func (r *CompletionService) New(ctx context.Context, body CompletionNewParams, opts ...option.RequestOption) (res *Completion, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "completions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -48,7 +49,7 @@ func (r *CompletionService) NewStreaming(ctx context.Context, body CompletionNew
 		raw *http.Response
 		err error
 	)
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithJSONSet("stream", true)}, opts...)
 	path := "completions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
@@ -381,7 +382,7 @@ type CompletionNewParamsPromptUnion struct {
 }
 
 func (u CompletionNewParamsPromptUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[CompletionNewParamsPromptUnion](u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
+	return param.MarshalUnion(u, u.OfString, u.OfArrayOfStrings, u.OfArrayOfTokens, u.OfArrayOfTokenArrays)
 }
 func (u *CompletionNewParamsPromptUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -410,7 +411,7 @@ type CompletionNewParamsStopUnion struct {
 }
 
 func (u CompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion[CompletionNewParamsStopUnion](u.OfString, u.OfStringArray)
+	return param.MarshalUnion(u, u.OfString, u.OfStringArray)
 }
 func (u *CompletionNewParamsStopUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)

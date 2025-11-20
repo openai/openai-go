@@ -8,10 +8,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/internal/testutil"
-	"github.com/openai/openai-go/option"
-	"github.com/openai/openai-go/responses"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/internal/testutil"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/responses"
 )
 
 func TestInputItemListWithOptionalParams(t *testing.T) {
@@ -31,7 +31,6 @@ func TestInputItemListWithOptionalParams(t *testing.T) {
 		"response_id",
 		responses.InputItemListParams{
 			After:   openai.String("after"),
-			Before:  openai.String("before"),
 			Include: []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
 			Limit:   openai.Int(0),
 			Order:   responses.InputItemListParamsOrderAsc,

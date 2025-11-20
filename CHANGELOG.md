@@ -1,5 +1,513 @@
 # Changelog
 
+## 3.8.1 (2025-11-04)
+
+Full Changelog: [v3.8.0...v3.8.1](https://github.com/openai/openai-go/compare/v3.8.0...v3.8.1)
+
+### Bug Fixes
+
+* **api:** fix nullability of logprobs ([b5aeb99](https://github.com/openai/openai-go/commit/b5aeb999e5088db4f9d1232a202a568a4a283019))
+
+## 3.8.0 (2025-11-03)
+
+Full Changelog: [v3.7.0...v3.8.0](https://github.com/openai/openai-go/compare/v3.7.0...v3.8.0)
+
+### Features
+
+* **api:** Realtime API token_limits, Hybrid searching ranking options ([9495f4a](https://github.com/openai/openai-go/commit/9495f4aa72bd5784fe3291637349ae1b706d8f8c))
+
+
+### Chores
+
+* **internal:** grammar fix (it's -&gt; its) ([879772d](https://github.com/openai/openai-go/commit/879772dc881a3d4fecf1425afc94a4bc141e9fb8))
+
+## 3.7.0 (2025-10-28)
+
+Full Changelog: [v3.6.1...v3.7.0](https://github.com/openai/openai-go/compare/v3.6.1...v3.7.0)
+
+### Features
+
+* **api:** remove InputAudio from ResponseInputContent ([cf50c53](https://github.com/openai/openai-go/commit/cf50c53f779784e1ee73b7d815456afaa3e1c447))
+* **azure:** allow passing custom scopes ([#541](https://github.com/openai/openai-go/issues/541)) ([dffa08e](https://github.com/openai/openai-go/commit/dffa08ece6c860ae1f87a01a5b8c26f18ce7ab2b))
+
+
+### Bug Fixes
+
+* **api:** docs updates ([94d54c1](https://github.com/openai/openai-go/commit/94d54c1e19d0d58875f56058042e06410b23ac49))
+
+## 3.6.1 (2025-10-20)
+
+Full Changelog: [v3.6.0...v3.6.1](https://github.com/openai/openai-go/compare/v3.6.0...v3.6.1)
+
+### Bug Fixes
+
+* **api:** fix discriminator propertyName for ResponseFormatJsonSchema ([57b0505](https://github.com/openai/openai-go/commit/57b0505361029563b5fd56fb6085b58e813936cc))
+
+## 3.6.0 (2025-10-20)
+
+Full Changelog: [v3.5.0...v3.6.0](https://github.com/openai/openai-go/compare/v3.5.0...v3.6.0)
+
+### Features
+
+* **api:** Add responses.input_tokens.count ([a43f2ce](https://github.com/openai/openai-go/commit/a43f2cef132d4cbd4a4a3dedf600f2da0a1ea2f5))
+
+
+### Bug Fixes
+
+* **api:** internal openapi updates ([7ad9b02](https://github.com/openai/openai-go/commit/7ad9b02d1e86cb3235c779e4e0f6e2ee226662d3))
+
+## 3.5.0 (2025-10-17)
+
+Full Changelog: [v3.4.0...v3.5.0](https://github.com/openai/openai-go/compare/v3.4.0...v3.5.0)
+
+### Features
+
+* **api:** api update ([1aa78dd](https://github.com/openai/openai-go/commit/1aa78dda7aae7b72ce021250b5357ead8db36f46))
+
+## 3.4.0 (2025-10-16)
+
+Full Changelog: [v3.3.0...v3.4.0](https://github.com/openai/openai-go/compare/v3.3.0...v3.4.0)
+
+### Features
+
+* **api:** Add support for gpt-4o-transcribe-diarize on audio/transcriptions endpoint ([ee32400](https://github.com/openai/openai-go/commit/ee32400f70d6d16c583978c574806648bdeecd91))
+
+
+### Chores
+
+* **api:** internal updates ([74c8031](https://github.com/openai/openai-go/commit/74c8031304013f5d7c24bd9db93d73da80efba9f))
+* **client:** undo more naming changes ([db441bc](https://github.com/openai/openai-go/commit/db441bcb7fb830743d9489589a3a48ca79d2f80a))
+* **client:** undo some naming changes ([a5aa3d6](https://github.com/openai/openai-go/commit/a5aa3d6e0d6773f838f826bbd68f96b70fef0653))
+
+## 3.3.0 (2025-10-10)
+
+Full Changelog: [v3.2.0...v3.3.0](https://github.com/openai/openai-go/compare/v3.2.0...v3.3.0)
+
+### Features
+
+* **api:** comparison filter in/not in ([d6daca0](https://github.com/openai/openai-go/commit/d6daca0eedd998f49d8bfde0c3caba74d762c0d6))
+
+## 3.2.0 (2025-10-06)
+
+Full Changelog: [v3.1.0...v3.2.0](https://github.com/openai/openai-go/compare/v3.1.0...v3.2.0)
+
+### Features
+
+* **api:** dev day 2025 launches ([d40a768](https://github.com/openai/openai-go/commit/d40a7689c769fd8b581fa753c5b748805c8d7bd1))
+
+## 3.1.0 (2025-10-02)
+
+Full Changelog: [v3.0.1...v3.1.0](https://github.com/openai/openai-go/compare/v3.0.1...v3.1.0)
+
+### Features
+
+* **api:** add support for realtime calls ([565ca67](https://github.com/openai/openai-go/commit/565ca678729182ae35c634ff7791383273b29993))
+
+## 3.0.1 (2025-10-01)
+
+Full Changelog: [v3.0.0...v3.0.1](https://github.com/openai/openai-go/compare/v3.0.0...v3.0.1)
+
+### Bug Fixes
+
+* **api:** add status, approval_request_id to MCP tool call ([a7f95e4](https://github.com/openai/openai-go/commit/a7f95e4ef4335a8eb3fc0e51e0b70b11b144e5aa))
+
+## 3.0.0 (2025-09-30)
+
+Full Changelog: [v2.7.1...v3.0.0](https://github.com/openai/openai-go/compare/v2.7.1...v3.0.0)
+
+### ⚠ BREAKING CHANGES
+
+* **api:** `ResponseFunctionToolCallOutputItem.output` and `ResponseCustomToolCallOutput.output` now return `string | Array<ResponseInputText | ResponseInputImage | ResponseInputFile>` instead of `string` only. This may break existing callsites that assume `output` is always a string.
+
+### Features
+
+* **api:** Support images and files for function call outputs in responses, BatchUsage ([21901ef](https://github.com/openai/openai-go/commit/21901ef84eac7028b92939c3e54c4ec7f2c8663f))
+
+## 2.7.1 (2025-09-29)
+
+Full Changelog: [v2.7.0...v2.7.1](https://github.com/openai/openai-go/compare/v2.7.0...v2.7.1)
+
+### Bug Fixes
+
+* bugfix for setting JSON keys with special characters ([f9ae028](https://github.com/openai/openai-go/commit/f9ae0283fe34fef6a8a7909655423b45795e41fc))
+
+## 2.7.0 (2025-09-23)
+
+Full Changelog: [v2.6.1...v2.7.0](https://github.com/openai/openai-go/compare/v2.6.1...v2.7.0)
+
+### Features
+
+* **api:** gpt-5-codex ([b0eac3e](https://github.com/openai/openai-go/commit/b0eac3ed2bcf2b7f0a5d6d68c9e13e7b7e409f0f))
+
+## 2.6.1 (2025-09-22)
+
+Full Changelog: [v2.6.0...v2.6.1](https://github.com/openai/openai-go/compare/v2.6.0...v2.6.1)
+
+### Bug Fixes
+
+* **api:** fix mcp tool name ([6de601a](https://github.com/openai/openai-go/commit/6de601aa71c7325938f839cdc0f3b7c808a5d7f8))
+* use slices.Concat instead of sometimes modifying r.Options ([7312ee7](https://github.com/openai/openai-go/commit/7312ee73efec4bd523e18b9524072d6dcf8bab09))
+
+
+### Chores
+
+* **api:** openapi updates for conversations ([4a7d204](https://github.com/openai/openai-go/commit/4a7d204a4e1140babdeab43bdac59dfc8dae95b5))
+* bump minimum go version to 1.22 ([8396ab5](https://github.com/openai/openai-go/commit/8396ab5d918bf068b6d6f342c825ba32d1d982b0))
+* do not install brew dependencies in ./scripts/bootstrap by default ([d519b81](https://github.com/openai/openai-go/commit/d519b8100047bae1dbd1458112097c1c21880977))
+* update more docs for 1.22 ([1b0514d](https://github.com/openai/openai-go/commit/1b0514df9508a652a11cb8efa70ac30eaa088dbe))
+
+## 2.6.0 (2025-09-19)
+
+Full Changelog: [v2.5.0...v2.6.0](https://github.com/openai/openai-go/compare/v2.5.0...v2.6.0)
+
+### Features
+
+* **api:** add reasoning_text ([6ebf50d](https://github.com/openai/openai-go/commit/6ebf50d756f06d951cdccff432615835bbf3165f))
+
+## 2.5.0 (2025-09-17)
+
+Full Changelog: [v2.4.3...v2.5.0](https://github.com/openai/openai-go/compare/v2.4.3...v2.5.0)
+
+### Features
+
+* **api:** type updates for conversations, reasoning_effort and results for evals ([3e68a60](https://github.com/openai/openai-go/commit/3e68a60d764645c5bfc9003f61525401268ef3a1))
+
+## 2.4.3 (2025-09-15)
+
+Full Changelog: [v2.4.2...v2.4.3](https://github.com/openai/openai-go/compare/v2.4.2...v2.4.3)
+
+### Chores
+
+* **api:** docs and spec refactoring ([e67af66](https://github.com/openai/openai-go/commit/e67af66b35df49267ccc7e3af73220d8f51339e9))
+
+## 2.4.2 (2025-09-12)
+
+Full Changelog: [v2.4.1...v2.4.2](https://github.com/openai/openai-go/compare/v2.4.1...v2.4.2)
+
+### Chores
+
+* **api:** Minor docs and type updates for realtime ([d92ea48](https://github.com/openai/openai-go/commit/d92ea4850f3720ba7a372f7bc9f8ecff07392ba0))
+
+## 2.4.1 (2025-09-10)
+
+Full Changelog: [v2.4.0...v2.4.1](https://github.com/openai/openai-go/compare/v2.4.0...v2.4.1)
+
+### Chores
+
+* **api:** fix realtime GA types ([012b83e](https://github.com/openai/openai-go/commit/012b83e3fa37a69d39eeaf6b227c37f5d3e42134))
+
+## 2.4.0 (2025-09-08)
+
+Full Changelog: [v2.3.1...v2.4.0](https://github.com/openai/openai-go/compare/v2.3.1...v2.4.0)
+
+### Features
+
+* **api:** ship the RealtimeGA API shape ([2b6c6db](https://github.com/openai/openai-go/commit/2b6c6db63e4871f3fa12a29c568365ac09290b9d))
+
+## 2.3.1 (2025-09-05)
+
+Full Changelog: [v2.3.0...v2.3.1](https://github.com/openai/openai-go/compare/v2.3.0...v2.3.1)
+
+### Bug Fixes
+
+* **internal:** unmarshal correctly when there are multiple discriminators ([98596b2](https://github.com/openai/openai-go/commit/98596b2183dcf3a13297b0dc07b0efc015dff83f))
+
+## 2.3.0 (2025-09-03)
+
+Full Changelog: [v2.2.2...v2.3.0](https://github.com/openai/openai-go/compare/v2.2.2...v2.3.0)
+
+### Features
+
+* **api:** Add gpt-realtime models ([3cf6a34](https://github.com/openai/openai-go/commit/3cf6a3484108786df49cd8e44356fc5fcaf58d8a))
+
+## 2.2.2 (2025-09-02)
+
+Full Changelog: [v2.2.1...v2.2.2](https://github.com/openai/openai-go/compare/v2.2.1...v2.2.2)
+
+### Bug Fixes
+
+* update url to refresh pkg.go.dev ([edf94ce](https://github.com/openai/openai-go/commit/edf94ce95a9f3fae87722a338c213dcf57ac1bf2))
+* use release please annotations on more places ([2ff82f9](https://github.com/openai/openai-go/commit/2ff82f98ae636ff942cbdd8b909854f01279af90))
+
+## 2.2.1 (2025-09-02)
+
+Full Changelog: [v2.2.0...v2.2.1](https://github.com/openai/openai-go/compare/v2.2.0...v2.2.1)
+
+### Chores
+
+* **api:** manual updates for ResponseInputAudio ([8c0ebe5](https://github.com/openai/openai-go/commit/8c0ebe566fb03be01cd772a80eb2581b46b78f5c))
+
+## 2.2.0 (2025-09-02)
+
+Full Changelog: [v2.1.1...v2.2.0](https://github.com/openai/openai-go/compare/v2.1.1...v2.2.0)
+
+### Features
+
+* **api:** Add connectors support for MCP tool ([35888bc](https://github.com/openai/openai-go/commit/35888bcd26c7633e8ea68f9213cc3977b8ac49eb))
+* **api:** add web search filters ([6f2c71d](https://github.com/openai/openai-go/commit/6f2c71d4e28971fc73e7e291d40f3b875d9cc42a))
+* **api:** adding support for /v1/conversations to the API ([5b7c31b](https://github.com/openai/openai-go/commit/5b7c31bde9c1086d3fb71c88dfdf74228845b22e))
+* **api:** realtime API updates ([130fc8e](https://github.com/openai/openai-go/commit/130fc8ea5ba39e6c1457ed6d26ef827d931a6242))
+* **client:** add support for verifying signatures on incoming webhooks ([f7c8dbb](https://github.com/openai/openai-go/commit/f7c8dbb6b5bd5bab72b7d146dc255d543b0b5a71))
+
+
+### Bug Fixes
+
+* **azure:** compatibility with edit image endpoint ([#477](https://github.com/openai/openai-go/issues/477)) ([d156eec](https://github.com/openai/openai-go/commit/d156eeca37bc86a5d8e1c973063a8425744810f1))
+* close body before retrying ([8dfed35](https://github.com/openai/openai-go/commit/8dfed35f11a00970ad804ab985cf393c2332ea8f))
+
+
+### Chores
+
+* **internal/ci:** setup breaking change detection ([0af0cd0](https://github.com/openai/openai-go/commit/0af0cd01302d3859a4e43554ed8e665007f69aad))
+* **internal:** version bump ([3265795](https://github.com/openai/openai-go/commit/3265795fffa44fb40d65a800b300807d9f1e7b2b))
+
+## 2.1.1 (2025-08-20)
+
+Full Changelog: [v2.1.0...v2.1.1](https://github.com/openai/openai-go/compare/v2.1.0...v2.1.1)
+
+### Chores
+
+* **api:** accurately represent shape for verbosity on Chat Completions ([f81197b](https://github.com/openai/openai-go/commit/f81197b4b02f3aa022bc363d6db6949d0d105d92))
+
+## 2.1.0 (2025-08-18)
+
+Full Changelog: [v2.0.2...v2.1.0](https://github.com/openai/openai-go/compare/v2.0.2...v2.1.0)
+
+### Features
+
+* **api:** add new text parameters, expiration options ([323154c](https://github.com/openai/openai-go/commit/323154ccec2facf80d9ada76ed3c35553cb8896d))
+
+
+### Documentation
+
+* give https its missing "h" in Azure OpenAI REST API link ([#480](https://github.com/openai/openai-go/issues/480)) ([8a401c9](https://github.com/openai/openai-go/commit/8a401c9eecbe4936de487447be09757859001009))
+
+## 2.0.2 (2025-08-09)
+
+Full Changelog: [v2.0.1...v2.0.2](https://github.com/openai/openai-go/compare/v2.0.1...v2.0.2)
+
+### Chores
+
+* **internal:** update comment in script ([4be24de](https://github.com/openai/openai-go/commit/4be24dee6ab7b116ed34e50d56c99c1a36c0ef9d))
+* update @stainless-api/prism-cli to v5.15.0 ([eca22af](https://github.com/openai/openai-go/commit/eca22af6f1d1f2ac36fbee365616210c12267bb1))
+
+## 2.0.1 (2025-08-08)
+
+Full Changelog: [v2.0.0...v2.0.1](https://github.com/openai/openai-go/compare/v2.0.0...v2.0.1)
+
+### Bug Fixes
+
+* **client:** fix verbosity parameter location in Responses ([6e2e903](https://github.com/openai/openai-go/commit/6e2e903e7c63a3e2a5aef5c81bdae55d220c0292))
+
+## 2.0.0 (2025-08-07)
+
+Full Changelog: [v1.12.0...v2.0.0](https://github.com/openai/openai-go/compare/v1.12.0...v2.0.0)
+
+### Breaking changes
+
+With the launch of `custom` tools in Chat Completions, `function` tools have been renamed to clarify the difference between the two.
+
+`ChatCompletionToolParam` has become a union and is now named `ChatCompletionToolUnionParam`.
+
+Older versions of the SDK used function tools: to migrate 
+
+
+```diff
+- openai.ChatCompletionToolParam{
+-  Function: openai.FunctionDefinitionParam{
++ openai.ChatCompletionFunctionTool(
++  openai.FunctionDefinitionParam{
+    Name:        "get_weather",
+    Description: openai.String("Get weather at the given location"),
+    Parameters: openai.FunctionParameters{ … },
++  },
++ )
+- },
+```
+
+### Features
+
+* **api:** adds GPT-5 and new API features: platform.openai.com/docs/guides/gpt-5 ([af46c88](https://github.com/openai/openai-go/commit/af46c885ea2414ba2b960f5d3accce89699a6250))
+* **api:** manual updates ([219f209](https://github.com/openai/openai-go/commit/219f2092a6d7f1952d119b5b4ec32512956825ff))
+* **client:** remove HTML escaping in JSON ([aea5ebc](https://github.com/openai/openai-go/commit/aea5ebccacb4fd854197dbf2547821860a62debc))
+* **client:** rename union helpers ([645e881](https://github.com/openai/openai-go/commit/645e881dee5799d81fb4fd40d6494a296710d0ce))
+* **client:** support optional json html escaping ([1d2336b](https://github.com/openai/openai-go/commit/1d2336b0d92f810fad3bf5faf5bf9e74975adf61))
+
+
+### Bug Fixes
+
+* **client:** revert path param changes ([9239f06](https://github.com/openai/openai-go/commit/9239f06bf0cb537d80980cee140a90d07b6d14f2))
+
+
+### Chores
+
+* change readme warning and minimum version ([1d0e22f](https://github.com/openai/openai-go/commit/1d0e22f85593a70f006f285f4461a05243b0fd74))
+* document breaking changes ([afaa2b8](https://github.com/openai/openai-go/commit/afaa2b8482e8d10ea508716ad9b241517c9affa1))
+* migrate examples ([9c57dd7](https://github.com/openai/openai-go/commit/9c57dd72515aab1c6d05d604870c5d0cf7fc1652))
+
+## 1.12.0 (2025-07-30)
+
+Full Changelog: [v1.11.1...v1.12.0](https://github.com/openai/openai-go/compare/v1.11.1...v1.12.0)
+
+### Features
+
+* **api:** manual updates ([16312ea](https://github.com/openai/openai-go/commit/16312ea2fea76c7cd2db4f38dfa10e0839f52d3e))
+
+
+### Chores
+
+* **client:** refactor streaming slightly to better future proof it ([0b9cb85](https://github.com/openai/openai-go/commit/0b9cb85a6bf0f2386e5db13aed34fbfad645efbe))
+
+## 1.11.1 (2025-07-22)
+
+Full Changelog: [v1.11.0...v1.11.1](https://github.com/openai/openai-go/compare/v1.11.0...v1.11.1)
+
+### Bug Fixes
+
+* **client:** process custom base url ahead of time ([cc1c23e](https://github.com/openai/openai-go/commit/cc1c23e3b1f4645004cb07b75816e3df445e73df))
+
+
+### Chores
+
+* **api:** event shapes more accurate ([2acd10d](https://github.com/openai/openai-go/commit/2acd10df4df52d1954d9ee3a98e5a4e56531533b))
+
+## 1.11.0 (2025-07-16)
+
+Full Changelog: [v1.10.3...v1.11.0](https://github.com/openai/openai-go/compare/v1.10.3...v1.11.0)
+
+### Features
+
+* **api:** manual updates ([97ed7fd](https://github.com/openai/openai-go/commit/97ed7fd1d432ad0144ec76bcebb61c9aaa1148de))
+
+## 1.10.3 (2025-07-15)
+
+Full Changelog: [v1.10.2...v1.10.3](https://github.com/openai/openai-go/compare/v1.10.2...v1.10.3)
+
+## 1.10.2 (2025-07-15)
+
+Full Changelog: [v1.10.1...v1.10.2](https://github.com/openai/openai-go/compare/v1.10.1...v1.10.2)
+
+### Chores
+
+* **api:** update realtime specs, build config ([3d2afda](https://github.com/openai/openai-go/commit/3d2afda006bd1f9e7ebde27b2873efa67e5e480d))
+
+## 1.10.1 (2025-07-11)
+
+Full Changelog: [v1.10.0...v1.10.1](https://github.com/openai/openai-go/compare/v1.10.0...v1.10.1)
+
+### Chores
+
+* **api:** specification cleanup ([5dbf6d2](https://github.com/openai/openai-go/commit/5dbf6d2cebe770d980db7888d705d1642ccd9cbc))
+* lint tests in subpackages ([02f440d](https://github.com/openai/openai-go/commit/02f440dc6d899d7816b9fec9c47c09b393a7dd6c))
+
+## 1.10.0 (2025-07-10)
+
+Full Changelog: [v1.9.0...v1.10.0](https://github.com/openai/openai-go/compare/v1.9.0...v1.10.0)
+
+### Features
+
+* **api:** add file_url, fix event ID ([cb33971](https://github.com/openai/openai-go/commit/cb339714b65249844a87009192b2cf1508329673))
+
+## 1.9.0 (2025-07-10)
+
+Full Changelog: [v1.8.3...v1.9.0](https://github.com/openai/openai-go/compare/v1.8.3...v1.9.0)
+
+### Features
+
+* **client:** expand max streaming buffer size ([44390c8](https://github.com/openai/openai-go/commit/44390c81fdf33144f088b3ee8fef02269634dbe9))
+
+## 1.8.3 (2025-07-08)
+
+Full Changelog: [v1.8.2...v1.8.3](https://github.com/openai/openai-go/compare/v1.8.2...v1.8.3)
+
+### Chores
+
+* **ci:** only run for pushes and fork pull requests ([d6aab99](https://github.com/openai/openai-go/commit/d6aab99dadf267201add9812ba34ab2d5c70e0f4))
+* **internal:** fix lint script for tests ([9c0a745](https://github.com/openai/openai-go/commit/9c0a74553c57ea5c29fb55f5ca2e122ca96031a4))
+* lint tests ([2bd38d2](https://github.com/openai/openai-go/commit/2bd38d248cf2097254d1821a44c87827805732d1))
+
+## 1.8.2 (2025-06-27)
+
+Full Changelog: [v1.8.1...v1.8.2](https://github.com/openai/openai-go/compare/v1.8.1...v1.8.2)
+
+### Bug Fixes
+
+* don't try to deserialize as json when ResponseBodyInto is []byte ([74ad0f8](https://github.com/openai/openai-go/commit/74ad0f8fab0f956234503a9ba26fbd395944dcf8))
+* **pagination:** check if page data is empty in GetNextPage ([c9becdc](https://github.com/openai/openai-go/commit/c9becdc9908f2a1961160837c6ab8cd9064e7854))
+
+## 1.8.1 (2025-06-26)
+
+Full Changelog: [v1.8.0...v1.8.1](https://github.com/openai/openai-go/compare/v1.8.0...v1.8.1)
+
+### Chores
+
+* **api:** remove unsupported property ([e22316a](https://github.com/openai/openai-go/commit/e22316adcd8f2c5aa672b12453cbd287de0e1878))
+* **docs:** update README to include links to docs on Webhooks ([7bb8f85](https://github.com/openai/openai-go/commit/7bb8f8549fdd98997b1d145cbae98ff0146b4e43))
+
+## 1.8.0 (2025-06-26)
+
+Full Changelog: [v1.7.0...v1.8.0](https://github.com/openai/openai-go/compare/v1.7.0...v1.8.0)
+
+### Features
+
+* **api:** webhook and deep research support ([f6a7e7d](https://github.com/openai/openai-go/commit/f6a7e7dcd8801facc4f8d981f1ca43786c10de1e))
+
+
+### Chores
+
+* **internal:** add tests for breaking change detection ([339522d](https://github.com/openai/openai-go/commit/339522d38cd31b0753a8df37b8924f7e7dfb0b1d))
+
+## 1.7.0 (2025-06-23)
+
+Full Changelog: [v1.6.0...v1.7.0](https://github.com/openai/openai-go/compare/v1.6.0...v1.7.0)
+
+### Features
+
+* **api:** make model and inputs not required to create response ([19f0b76](https://github.com/openai/openai-go/commit/19f0b76378d35b3d81c60c85bf2e64d6bf85b9c2))
+* **api:** update api shapes for usage and code interpreter ([d24d42c](https://github.com/openai/openai-go/commit/d24d42cba60e565627e8ffb1cac63a5085ddb6da))
+* **client:** add escape hatch for null slice & maps ([9c633d6](https://github.com/openai/openai-go/commit/9c633d6f1dbcc0b153f42f831ee7e13d6fe62296))
+
+
+### Chores
+
+* fix documentation of null map ([8f3a134](https://github.com/openai/openai-go/commit/8f3a134e500b1b7791ab855adaef2d7b10d2d1c3))
+
+## 1.6.0 (2025-06-17)
+
+Full Changelog: [v1.5.0...v1.6.0](https://github.com/openai/openai-go/compare/v1.5.0...v1.6.0)
+
+### Features
+
+* **api:** add reusable prompt IDs ([280c698](https://github.com/openai/openai-go/commit/280c698015eba5f6bd47e2fce038eb401f6ef0f2))
+* **api:** manual updates ([740f840](https://github.com/openai/openai-go/commit/740f84006ac283a25f5ad96aaf845a3c8a51c6ac))
+* **client:** add debug log helper ([5715c49](https://github.com/openai/openai-go/commit/5715c491c483f8dab4ea2a900c400384f6810024))
+
+
+### Chores
+
+* **ci:** enable for pull requests ([9ed793a](https://github.com/openai/openai-go/commit/9ed793a51010423db464a7b7bd263d2fd275967f))
+
+## 1.5.0 (2025-06-10)
+
+Full Changelog: [v1.4.0...v1.5.0](https://github.com/openai/openai-go/compare/v1.4.0...v1.5.0)
+
+### Features
+
+* **api:** Add o3-pro model IDs ([3bbd0b8](https://github.com/openai/openai-go/commit/3bbd0b8f09030a6c571900d444742c4fc2a3c211))
+
+## 1.4.0 (2025-06-09)
+
+Full Changelog: [v1.3.0...v1.4.0](https://github.com/openai/openai-go/compare/v1.3.0...v1.4.0)
+
+### Features
+
+* **client:** allow overriding unions ([27c6299](https://github.com/openai/openai-go/commit/27c6299cb4ac275c6542b5691d81b795e65eeff6))
+
+
+### Bug Fixes
+
+* **client:** cast to raw message when converting to params ([a3282b0](https://github.com/openai/openai-go/commit/a3282b01a8d9a2c0cd04f24b298bf2ffcd160ebd))
+
 ## 1.3.0 (2025-06-03)
 
 Full Changelog: [v1.2.1...v1.3.0](https://github.com/openai/openai-go/compare/v1.2.1...v1.3.0)
