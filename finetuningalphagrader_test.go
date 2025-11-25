@@ -35,7 +35,7 @@ func TestFineTuningAlphaGraderRunWithOptionalParams(t *testing.T) {
 			},
 		},
 		ModelSample: "model_sample",
-		Item:        map[string]interface{}{},
+		Item:        map[string]any{},
 	})
 	if err != nil {
 		var apierr *openai.Error
