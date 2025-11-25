@@ -147,11 +147,15 @@ var mockResponseBody = `data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","ob
 
 data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[{"index":0,"delta":{"content":"Let's"},"logprobs":{"content":[{"token":"Let's","logprob":-2.3433902,"bytes":[76,101,116,39,115],"top_logprobs":[]}],"refusal":null},"finish_reason":null}],"usage":null}
 
+: ping - 1996-04-20 00:00:00+00:00
+
 data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[{"index":0,"delta":{"content":" take"},"logprobs":{"content":[{"token":" take","logprob":-2.0225642,"bytes":[32,116,97,107,101],"top_logprobs":[]}],"refusal":null},"finish_reason":null}],"usage":null}
 
 data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[{"index":0,"delta":{"content":" a"},"logprobs":{"content":[{"token":" a","logprob":-0.009433285,"bytes":[32,97],"top_logprobs":[]}],"refusal":null},"finish_reason":null}],"usage":null}
 
 data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[{"index":0,"delta":{"content":" journey"},"logprobs":{"content":[{"token":" journey","logprob":-0.10697952,"bytes":[32,106,111,117,114,110,101,121],"top_logprobs":[]}],"refusal":null},"finish_reason":null}],"usage":null}
+
+: comment - hello world
 
 data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[{"index":0,"delta":{"content":" to"},"logprobs":{"content":[{"token":" to","logprob":-0.0023115498,"bytes":[32,116,111],"top_logprobs":[]}],"refusal":null},"finish_reason":null}],"usage":null}
 
