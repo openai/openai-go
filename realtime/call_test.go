@@ -94,7 +94,7 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 					OfFunction: &realtime.RealtimeFunctionToolParam{
 						Description: openai.String("description"),
 						Name:        openai.String("name"),
-						Parameters:  map[string]interface{}{},
+						Parameters:  map[string]any{},
 						Type:        realtime.RealtimeFunctionToolTypeFunction,
 					},
 				}},
