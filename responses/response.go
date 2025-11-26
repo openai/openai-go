@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"slices"
+	"strings"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
@@ -11249,10 +11249,8 @@ func (r *ResponseMcpListToolsInProgressEvent) UnmarshalJSON(data []byte) error {
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseOutputItemUnion struct {
-	ID string `json:"id"`
-	// This field is a union of [[]ResponseOutputMessageContentUnion],
-	// [[]ResponseReasoningItemContent]
-	Content ResponseOutputItemUnionContent `json:"content"`
+	ID      string                              `json:"id"`
+	Content []ResponseOutputMessageContentUnion `json:"content"`
 	// This field is from variant [ResponseOutputMessage].
 	Role   constant.Assistant `json:"role"`
 	Status string             `json:"status"`
@@ -11512,34 +11510,6 @@ func (u ResponseOutputItemUnion) AsCustomToolCall() (v ResponseCustomToolCall) {
 func (u ResponseOutputItemUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ResponseOutputItemUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ResponseOutputItemUnionContent is an implicit subunion of
-// [ResponseOutputItemUnion]. ResponseOutputItemUnionContent provides convenient
-// access to the sub-properties of the union.
-//
-// For type safety it is recommended to directly use a variant of the
-// [ResponseOutputItemUnion].
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfResponseOutputMessageContentArray
-// OfResponseReasoningItemContentArray]
-type ResponseOutputItemUnionContent struct {
-	// This field will be present if the value is a
-	// [[]ResponseOutputMessageContentUnion] instead of an object.
-	OfResponseOutputMessageContentArray []ResponseOutputMessageContentUnion `json:",inline"`
-	// This field will be present if the value is a [[]ResponseReasoningItemContent]
-	// instead of an object.
-	OfResponseReasoningItemContentArray []ResponseReasoningItemContent `json:",inline"`
-	JSON                                struct {
-		OfResponseOutputMessageContentArray respjson.Field
-		OfResponseReasoningItemContentArray respjson.Field
-		raw                                 string
-	} `json:"-"`
-}
-
-func (r *ResponseOutputItemUnionContent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
