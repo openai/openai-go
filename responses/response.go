@@ -62,6 +62,14 @@ func (r *ResponseService) New(ctx context.Context, body ResponseNewParams, opts 
 	opts = slices.Concat(r.Options, opts)
 	path := "responses"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	if res != nil && res.IncompleteDetails.Reason == "max_tokens" {
+		return nil, fmt.Errorf("structured output was truncated due to max_tokens limit (IncompleteDetails.Reason = 'max_tokens')")
+	}
+
 	return
 }
 
