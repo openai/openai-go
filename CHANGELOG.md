@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.9.0 (2025-12-01)
+
+Full Changelog: [v3.8.1...v3.9.0](https://github.com/openai/openai-go/compare/v3.8.1...v3.9.0)
+
+### Features
+
+* **api:** gpt 5.1 ([470f91f](https://github.com/openai/openai-go/commit/470f91faac304e518019be9f7b12e6270af63bbd))
+
+
+### Bug Fixes
+
+* **api:** align types of input items / output items for typescript ([5b89d3b](https://github.com/openai/openai-go/commit/5b89d3ba03968ee9f5b49e7e065495c3c5c77710))
+* **client:** correctly specify Accept header with */* instead of empty ([fbadb4e](https://github.com/openai/openai-go/commit/fbadb4e8b1a81c99a7b3936da483ee9542de2c23))
+
+
+### Chores
+
+* bump gjson version ([305831f](https://github.com/openai/openai-go/commit/305831feb6c39d1f9f6e85c2e9f94f6c7f0dcd45))
+* fix empty interfaces ([2aaa980](https://github.com/openai/openai-go/commit/2aaa980c2f0cac814065e4e5e294b151500c2e3f))
+
 ## 3.8.1 (2025-11-04)
 
 Full Changelog: [v3.8.0...v3.8.1](https://github.com/openai/openai-go/compare/v3.8.0...v3.8.1)
