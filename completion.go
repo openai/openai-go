@@ -134,6 +134,7 @@ const (
 	CompletionChoiceFinishReasonStop          CompletionChoiceFinishReason = "stop"
 	CompletionChoiceFinishReasonLength        CompletionChoiceFinishReason = "length"
 	CompletionChoiceFinishReasonContentFilter CompletionChoiceFinishReason = "content_filter"
+	CompletionChoiceFinishReasonToolCalls     CompletionChoiceFinishReason = "tool_calls"
 )
 
 type CompletionChoiceLogprobs struct {
