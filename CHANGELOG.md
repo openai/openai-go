@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.10.0 (2025-12-04)
+
+Full Changelog: [v3.9.0...v3.10.0](https://github.com/openai/openai-go/compare/v3.9.0...v3.10.0)
+
+### Features
+
+* **api:** gpt-5.1-codex-max and responses/compact ([1e1ca2a](https://github.com/openai/openai-go/commit/1e1ca2a6369c79a79bb54df3ee40b2d5604a21c5))
+
 ## 3.9.0 (2025-12-01)
 
 Full Changelog: [v3.8.1...v3.9.0](https://github.com/openai/openai-go/compare/v3.8.1...v3.9.0)
