@@ -50,6 +50,7 @@ type Click string                                            // Always "click"
 type Closed string                                           // Always "closed"
 type CodeInterpreter string                                  // Always "code_interpreter"
 type CodeInterpreterCall string                              // Always "code_interpreter_call"
+type Compaction string                                       // Always "compaction"
 type ComputerCallOutput string                               // Always "computer_call_output"
 type ComputerScreenshot string                               // Always "computer_screenshot"
 type ComputerUsePreview string                               // Always "computer_use_preview"
@@ -123,6 +124,7 @@ type InputAudioBufferClear string                            // Always "input_au
 type InputAudioBufferCleared string                          // Always "input_audio_buffer.cleared"
 type InputAudioBufferCommit string                           // Always "input_audio_buffer.commit"
 type InputAudioBufferCommitted string                        // Always "input_audio_buffer.committed"
+type InputAudioBufferDtmfEventReceived string                // Always "input_audio_buffer.dtmf_event_received"
 type InputAudioBufferSpeechStarted string                    // Always "input_audio_buffer.speech_started"
 type InputAudioBufferSpeechStopped string                    // Always "input_audio_buffer.speech_stopped"
 type InputAudioBufferTimeoutTriggered string                 // Always "input_audio_buffer.timeout_triggered"
@@ -182,6 +184,7 @@ type ResponseCodeInterpreterCallCodeDone string              // Always "response
 type ResponseCodeInterpreterCallCompleted string             // Always "response.code_interpreter_call.completed"
 type ResponseCodeInterpreterCallInProgress string            // Always "response.code_interpreter_call.in_progress"
 type ResponseCodeInterpreterCallInterpreting string          // Always "response.code_interpreter_call.interpreting"
+type ResponseCompaction string                               // Always "response.compaction"
 type ResponseCompleted string                                // Always "response.completed"
 type ResponseContentPartAdded string                         // Always "response.content_part.added"
 type ResponseContentPartDone string                          // Always "response.content_part.done"
@@ -348,6 +351,7 @@ func (c Click) Default() Click                                   { return "click
 func (c Closed) Default() Closed                                 { return "closed" }
 func (c CodeInterpreter) Default() CodeInterpreter               { return "code_interpreter" }
 func (c CodeInterpreterCall) Default() CodeInterpreterCall       { return "code_interpreter_call" }
+func (c Compaction) Default() Compaction                         { return "compaction" }
 func (c ComputerCallOutput) Default() ComputerCallOutput         { return "computer_call_output" }
 func (c ComputerScreenshot) Default() ComputerScreenshot         { return "computer_screenshot" }
 func (c ComputerUsePreview) Default() ComputerUsePreview         { return "computer_use_preview" }
@@ -451,6 +455,9 @@ func (c InputAudioBufferCommit) Default() InputAudioBufferCommit { return "input
 func (c InputAudioBufferCommitted) Default() InputAudioBufferCommitted {
 	return "input_audio_buffer.committed"
 }
+func (c InputAudioBufferDtmfEventReceived) Default() InputAudioBufferDtmfEventReceived {
+	return "input_audio_buffer.dtmf_event_received"
+}
 func (c InputAudioBufferSpeechStarted) Default() InputAudioBufferSpeechStarted {
 	return "input_audio_buffer.speech_started"
 }
@@ -536,7 +543,8 @@ func (c ResponseCodeInterpreterCallInProgress) Default() ResponseCodeInterpreter
 func (c ResponseCodeInterpreterCallInterpreting) Default() ResponseCodeInterpreterCallInterpreting {
 	return "response.code_interpreter_call.interpreting"
 }
-func (c ResponseCompleted) Default() ResponseCompleted { return "response.completed" }
+func (c ResponseCompaction) Default() ResponseCompaction { return "response.compaction" }
+func (c ResponseCompleted) Default() ResponseCompleted   { return "response.completed" }
 func (c ResponseContentPartAdded) Default() ResponseContentPartAdded {
 	return "response.content_part.added"
 }
@@ -788,6 +796,7 @@ func (c Click) MarshalJSON() ([]byte, error)                   { return marshalS
 func (c Closed) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c CodeInterpreter) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c CodeInterpreterCall) MarshalJSON() ([]byte, error)     { return marshalString(c) }
+func (c Compaction) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c ComputerCallOutput) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c ComputerScreenshot) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c ComputerUsePreview) MarshalJSON() ([]byte, error)      { return marshalString(c) }
@@ -869,6 +878,7 @@ func (c InputAudioBufferClear) MarshalJSON() ([]byte, error)                 { r
 func (c InputAudioBufferCleared) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c InputAudioBufferCommit) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c InputAudioBufferCommitted) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c InputAudioBufferDtmfEventReceived) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c InputAudioBufferSpeechStarted) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c InputAudioBufferSpeechStopped) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c InputAudioBufferTimeoutTriggered) MarshalJSON() ([]byte, error)      { return marshalString(c) }
@@ -930,6 +940,7 @@ func (c ResponseCodeInterpreterCallInProgress) MarshalJSON() ([]byte, error) { r
 func (c ResponseCodeInterpreterCallInterpreting) MarshalJSON() ([]byte, error) {
 	return marshalString(c)
 }
+func (c ResponseCompaction) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c ResponseCompleted) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c ResponseContentPartAdded) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c ResponseContentPartDone) MarshalJSON() ([]byte, error)               { return marshalString(c) }
