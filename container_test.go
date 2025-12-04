@@ -31,7 +31,8 @@ func TestContainerNewWithOptionalParams(t *testing.T) {
 			Anchor:  "last_active_at",
 			Minutes: 0,
 		},
-		FileIDs: []string{"string"},
+		FileIDs:     []string{"string"},
+		MemoryLimit: openai.ContainerNewParamsMemoryLimit1g,
 	})
 	if err != nil {
 		var apierr *openai.Error

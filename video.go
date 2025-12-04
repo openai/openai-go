@@ -279,15 +279,17 @@ type VideoNewParams struct {
 	Prompt string `json:"prompt,required"`
 	// Optional image reference that guides generation.
 	InputReference io.Reader `json:"input_reference,omitzero" format:"binary"`
-	// The video generation model to use. Defaults to `sora-2`.
+	// The video generation model to use (allowed values: sora-2, sora-2-pro). Defaults
+	// to `sora-2`.
 	//
 	// Any of "sora-2", "sora-2-pro".
 	Model VideoModel `json:"model,omitzero"`
-	// Clip duration in seconds. Defaults to 4 seconds.
+	// Clip duration in seconds (allowed values: 4, 8, 12). Defaults to 4 seconds.
 	//
 	// Any of "4", "8", "12".
 	Seconds VideoSeconds `json:"seconds,omitzero"`
-	// Output resolution formatted as width x height. Defaults to 720x1280.
+	// Output resolution formatted as width x height (allowed values: 720x1280,
+	// 1280x720, 1024x1792, 1792x1024). Defaults to 720x1280.
 	//
 	// Any of "720x1280", "1280x720", "1024x1792", "1792x1024".
 	Size VideoSize `json:"size,omitzero"`

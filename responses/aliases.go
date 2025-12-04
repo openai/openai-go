@@ -418,9 +418,9 @@ type ReasoningParam = shared.ReasoningParam
 
 // Constrains effort on reasoning for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `none`, `minimal`, `low`, `medium`, and `high`. Reducing
-// reasoning effort can result in faster responses and fewer tokens used on
-// reasoning in a response.
+// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
+// Reducing reasoning effort can result in faster responses and fewer tokens used
+// on reasoning in a response.
 //
 //   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
 //     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
@@ -428,6 +428,7 @@ type ReasoningParam = shared.ReasoningParam
 //   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
 //     support `none`.
 //   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
+//   - `xhigh` is currently only supported for `gpt-5.1-codex-max`.
 //
 // This is an alias to an internal type.
 type ReasoningEffort = shared.ReasoningEffort
@@ -446,6 +447,9 @@ const ReasoningEffortMedium = shared.ReasoningEffortMedium
 
 // Equals "high"
 const ReasoningEffortHigh = shared.ReasoningEffortHigh
+
+// Equals "xhigh"
+const ReasoningEffortXhigh = shared.ReasoningEffortXhigh
 
 // JSON object response format. An older method of generating JSON responses. Using
 // `json_schema` is recommended for models that support it. Note that the model
@@ -536,3 +540,6 @@ const ResponsesModelGPT5Pro = shared.ResponsesModelGPT5Pro
 
 // Equals "gpt-5-pro-2025-10-06"
 const ResponsesModelGPT5Pro2025_10_06 = shared.ResponsesModelGPT5Pro2025_10_06
+
+// Equals "gpt-5.1-codex-max"
+const ResponsesModelGPT5_1CodexMax = shared.ResponsesModelGPT5_1CodexMax
