@@ -1049,9 +1049,9 @@ type ScoreModelGraderSamplingParams struct {
 	MaxCompletionsTokens int64 `json:"max_completions_tokens,nullable"`
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `none`, `minimal`, `low`, `medium`, and `high`. Reducing
-	// reasoning effort can result in faster responses and fewer tokens used on
-	// reasoning in a response.
+	// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
+	// Reducing reasoning effort can result in faster responses and fewer tokens used
+	// on reasoning in a response.
 	//
 	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
 	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
@@ -1059,8 +1059,9 @@ type ScoreModelGraderSamplingParams struct {
 	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
 	//     support `none`.
 	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
+	//   - `xhigh` is currently only supported for `gpt-5.1-codex-max`.
 	//
-	// Any of "none", "minimal", "low", "medium", "high".
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,nullable"`
 	// A seed value to initialize the randomness, during sampling.
 	Seed int64 `json:"seed,nullable"`
@@ -1301,9 +1302,9 @@ type ScoreModelGraderSamplingParamsParam struct {
 	TopP param.Opt[float64] `json:"top_p,omitzero"`
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `none`, `minimal`, `low`, `medium`, and `high`. Reducing
-	// reasoning effort can result in faster responses and fewer tokens used on
-	// reasoning in a response.
+	// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
+	// Reducing reasoning effort can result in faster responses and fewer tokens used
+	// on reasoning in a response.
 	//
 	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
 	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
@@ -1311,8 +1312,9 @@ type ScoreModelGraderSamplingParamsParam struct {
 	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
 	//     support `none`.
 	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
+	//   - `xhigh` is currently only supported for `gpt-5.1-codex-max`.
 	//
-	// Any of "none", "minimal", "low", "medium", "high".
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	paramObj
 }

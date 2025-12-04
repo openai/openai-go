@@ -42,7 +42,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
-		Model:              shared.ResponsesModel("gpt-4o"),
+		Model:              shared.ResponsesModel("gpt-5.1"),
 		ParallelToolCalls:  openai.Bool(true),
 		PreviousResponseID: openai.String("previous_response_id"),
 		Prompt: responses.ResponsePromptParam{
@@ -166,6 +166,35 @@ func TestResponseCancel(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Responses.Cancel(context.TODO(), "resp_677efb5139a88190b512bc3fef8e535d")
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestResponseCompactWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Responses.Compact(context.TODO(), responses.ResponseCompactParams{
+		Input: responses.ResponseCompactParamsInputUnion{
+			OfString: openai.String("string"),
+		},
+		Instructions:       openai.String("instructions"),
+		Model:              responses.ResponseCompactParamsModelGPT5_1,
+		PreviousResponseID: openai.String("resp_123"),
+	})
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {

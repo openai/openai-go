@@ -111,6 +111,12 @@ type ContainerNewResponse struct {
 	// point for the expiration. The minutes is the number of minutes after the anchor
 	// before the container expires.
 	ExpiresAfter ContainerNewResponseExpiresAfter `json:"expires_after"`
+	// Unix timestamp (in seconds) when the container was last active.
+	LastActiveAt int64 `json:"last_active_at"`
+	// The memory limit configured for the container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit ContainerNewResponseMemoryLimit `json:"memory_limit"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID           respjson.Field
@@ -119,6 +125,8 @@ type ContainerNewResponse struct {
 		Object       respjson.Field
 		Status       respjson.Field
 		ExpiresAfter respjson.Field
+		LastActiveAt respjson.Field
+		MemoryLimit  respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -155,6 +163,16 @@ func (r *ContainerNewResponseExpiresAfter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The memory limit configured for the container.
+type ContainerNewResponseMemoryLimit string
+
+const (
+	ContainerNewResponseMemoryLimit1g  ContainerNewResponseMemoryLimit = "1g"
+	ContainerNewResponseMemoryLimit4g  ContainerNewResponseMemoryLimit = "4g"
+	ContainerNewResponseMemoryLimit16g ContainerNewResponseMemoryLimit = "16g"
+	ContainerNewResponseMemoryLimit64g ContainerNewResponseMemoryLimit = "64g"
+)
+
 type ContainerGetResponse struct {
 	// Unique identifier for the container.
 	ID string `json:"id,required"`
@@ -170,6 +188,12 @@ type ContainerGetResponse struct {
 	// point for the expiration. The minutes is the number of minutes after the anchor
 	// before the container expires.
 	ExpiresAfter ContainerGetResponseExpiresAfter `json:"expires_after"`
+	// Unix timestamp (in seconds) when the container was last active.
+	LastActiveAt int64 `json:"last_active_at"`
+	// The memory limit configured for the container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit ContainerGetResponseMemoryLimit `json:"memory_limit"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID           respjson.Field
@@ -178,6 +202,8 @@ type ContainerGetResponse struct {
 		Object       respjson.Field
 		Status       respjson.Field
 		ExpiresAfter respjson.Field
+		LastActiveAt respjson.Field
+		MemoryLimit  respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -214,6 +240,16 @@ func (r *ContainerGetResponseExpiresAfter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The memory limit configured for the container.
+type ContainerGetResponseMemoryLimit string
+
+const (
+	ContainerGetResponseMemoryLimit1g  ContainerGetResponseMemoryLimit = "1g"
+	ContainerGetResponseMemoryLimit4g  ContainerGetResponseMemoryLimit = "4g"
+	ContainerGetResponseMemoryLimit16g ContainerGetResponseMemoryLimit = "16g"
+	ContainerGetResponseMemoryLimit64g ContainerGetResponseMemoryLimit = "64g"
+)
+
 type ContainerListResponse struct {
 	// Unique identifier for the container.
 	ID string `json:"id,required"`
@@ -229,6 +265,12 @@ type ContainerListResponse struct {
 	// point for the expiration. The minutes is the number of minutes after the anchor
 	// before the container expires.
 	ExpiresAfter ContainerListResponseExpiresAfter `json:"expires_after"`
+	// Unix timestamp (in seconds) when the container was last active.
+	LastActiveAt int64 `json:"last_active_at"`
+	// The memory limit configured for the container.
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit ContainerListResponseMemoryLimit `json:"memory_limit"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID           respjson.Field
@@ -237,6 +279,8 @@ type ContainerListResponse struct {
 		Object       respjson.Field
 		Status       respjson.Field
 		ExpiresAfter respjson.Field
+		LastActiveAt respjson.Field
+		MemoryLimit  respjson.Field
 		ExtraFields  map[string]respjson.Field
 		raw          string
 	} `json:"-"`
@@ -273,6 +317,16 @@ func (r *ContainerListResponseExpiresAfter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The memory limit configured for the container.
+type ContainerListResponseMemoryLimit string
+
+const (
+	ContainerListResponseMemoryLimit1g  ContainerListResponseMemoryLimit = "1g"
+	ContainerListResponseMemoryLimit4g  ContainerListResponseMemoryLimit = "4g"
+	ContainerListResponseMemoryLimit16g ContainerListResponseMemoryLimit = "16g"
+	ContainerListResponseMemoryLimit64g ContainerListResponseMemoryLimit = "64g"
+)
+
 type ContainerNewParams struct {
 	// Name of the container to create.
 	Name string `json:"name,required"`
@@ -280,6 +334,10 @@ type ContainerNewParams struct {
 	ExpiresAfter ContainerNewParamsExpiresAfter `json:"expires_after,omitzero"`
 	// IDs of files to copy to the container.
 	FileIDs []string `json:"file_ids,omitzero"`
+	// Optional memory limit for the container. Defaults to "1g".
+	//
+	// Any of "1g", "4g", "16g", "64g".
+	MemoryLimit ContainerNewParamsMemoryLimit `json:"memory_limit,omitzero"`
 	paramObj
 }
 
@@ -317,6 +375,16 @@ func init() {
 		"anchor", "last_active_at",
 	)
 }
+
+// Optional memory limit for the container. Defaults to "1g".
+type ContainerNewParamsMemoryLimit string
+
+const (
+	ContainerNewParamsMemoryLimit1g  ContainerNewParamsMemoryLimit = "1g"
+	ContainerNewParamsMemoryLimit4g  ContainerNewParamsMemoryLimit = "4g"
+	ContainerNewParamsMemoryLimit16g ContainerNewParamsMemoryLimit = "16g"
+	ContainerNewParamsMemoryLimit64g ContainerNewParamsMemoryLimit = "64g"
+)
 
 type ContainerListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place
