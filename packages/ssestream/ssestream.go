@@ -166,6 +166,10 @@ func (s *Stream[T]) Next() bool {
 		var nxt T
 
 		if s.decoder.Event().Type == "" || !strings.HasPrefix(s.decoder.Event().Type, "thread.") {
+			// An empty line in the for ": something" is a comment and should be ignored.
+			if s.decoder.Event().Data == nil {
+				continue
+			}
 			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
 			if ep.Exists() {
 				s.err = fmt.Errorf("received error while streaming: %s", ep.String())
