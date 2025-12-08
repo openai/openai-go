@@ -17766,6 +17766,12 @@ func (r ResponseGetParams) URLQuery() (v url.Values, err error) {
 }
 
 type ResponseCompactParams struct {
+	// Model ID used to generate the response, like `gpt-5` or `o3`. OpenAI offers a
+	// wide range of models with different capabilities, performance characteristics,
+	// and price points. Refer to the
+	// [model guide](https://platform.openai.com/docs/models) to browse and compare
+	// available models.
+	Model ResponseCompactParamsModel `json:"model,omitzero,required"`
 	// A system (or developer) message inserted into the model's context. When used
 	// along with `previous_response_id`, the instructions from a previous response
 	// will not be carried over to the next response. This makes it simple to swap out
@@ -17778,12 +17784,6 @@ type ResponseCompactParams struct {
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response
 	Input ResponseCompactParamsInputUnion `json:"input,omitzero"`
-	// Model ID used to generate the response, like `gpt-5` or `o3`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
-	// [model guide](https://platform.openai.com/docs/models) to browse and compare
-	// available models.
-	Model ResponseCompactParamsModel `json:"model,omitzero"`
 	paramObj
 }
 
@@ -17793,31 +17793,6 @@ func (r ResponseCompactParams) MarshalJSON() (data []byte, err error) {
 }
 func (r *ResponseCompactParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type ResponseCompactParamsInputUnion struct {
-	OfString                 param.Opt[string]             `json:",omitzero,inline"`
-	OfResponseInputItemArray []ResponseInputItemUnionParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u ResponseCompactParamsInputUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfResponseInputItemArray)
-}
-func (u *ResponseCompactParamsInputUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ResponseCompactParamsInputUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfResponseInputItemArray) {
-		return &u.OfResponseInputItemArray
-	}
-	return nil
 }
 
 // Model ID used to generate the response, like `gpt-5` or `o3`. OpenAI offers a
@@ -17910,3 +17885,28 @@ const (
 	ResponseCompactParamsModelGPT5Pro2025_10_06                ResponseCompactParamsModel = "gpt-5-pro-2025-10-06"
 	ResponseCompactParamsModelGPT5_1CodexMax                   ResponseCompactParamsModel = "gpt-5.1-codex-max"
 )
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseCompactParamsInputUnion struct {
+	OfString                 param.Opt[string]             `json:",omitzero,inline"`
+	OfResponseInputItemArray []ResponseInputItemUnionParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseCompactParamsInputUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfResponseInputItemArray)
+}
+func (u *ResponseCompactParamsInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *ResponseCompactParamsInputUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfResponseInputItemArray) {
+		return &u.OfResponseInputItemArray
+	}
+	return nil
+}
