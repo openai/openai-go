@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.11.0 (2025-12-10)
+
+Full Changelog: [v3.10.0...v3.11.0](https://github.com/openai/openai-go/compare/v3.10.0...v3.11.0)
+
+### Features
+
+* **api:** make model required for the responses/compact endpoint ([05f8f4d](https://github.com/openai/openai-go/commit/05f8f4de214bfdb5ad8946e7c5252b14a41e3122))
+
+
+### Bug Fixes
+
+* **mcp:** correct code tool API endpoint ([03d08f9](https://github.com/openai/openai-go/commit/03d08f934e5ee8294af09eb7278c1c7c4233e1f7))
+* rename param to avoid collision ([17d276d](https://github.com/openai/openai-go/commit/17d276d797f505a0254b112c3f7926490d1d789e))
+
+
+### Chores
+
+* elide duplicate aliases ([2bf988e](https://github.com/openai/openai-go/commit/2bf988eee937ced3ec3f53bd7773b6eab07bbdbf))
+* **internal:** codegen related update ([9b1a3e9](https://github.com/openai/openai-go/commit/9b1a3e99d31006ad9db6dd8e9dc2902a9b57cf02))
+
 ## 3.10.0 (2025-12-04)
 
 Full Changelog: [v3.9.0...v3.10.0](https://github.com/openai/openai-go/compare/v3.9.0...v3.10.0)
