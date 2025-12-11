@@ -62,7 +62,7 @@ func main() {
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage("Say this is a test"),
 		},
-		Model: openai.ChatModelGPT5_1,
+		Model: openai.ChatModelGPT5_2,
 	})
 	if err != nil {
 		panic(err.Error())
@@ -593,7 +593,7 @@ client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5_1,
+		Model: shared.ChatModelGPT5_2,
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -774,7 +774,7 @@ client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5_1,
+		Model: shared.ChatModelGPT5_2,
 	},
 	option.WithMaxRetries(5),
 )
@@ -798,7 +798,7 @@ chatCompletion, err := client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5_1,
+		Model: shared.ChatModelGPT5_2,
 	},
 	option.WithResponseInto(&response),
 )
