@@ -26,6 +26,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -38,7 +39,7 @@ import (
 // WithEndpoint configures this client to connect to an Azure OpenAI endpoint.
 //
 //   - endpoint - the Azure OpenAI endpoint to connect to. Ex: https://<azure-openai-resource>.openai.azure.com
-//   - apiVersion - the Azure OpenAI API version to target (ex: 2024-10-21). See [Azure OpenAI apiversions] for current API versions. This value cannot be empty.
+//   - apiVersion - the Azure OpenAI API version to target (ex: 2024-06-01). See [Azure OpenAI apiversions] for current API versions. This value cannot be empty.
 //
 // This function should be paired with a call to authenticate, like [azure.WithAPIKey] or [azure.WithTokenCredential], similar to this:
 //
@@ -70,7 +71,7 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
 		if apiVersion == "" {
-			return errors.New("apiVersion is an empty string, but needs to be set. See https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning for details")
+			return errors.New("apiVersion is an empty string, but needs to be set. See https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning for details.")
 		}
 
 		if err := withQueryAdd.Apply(rc); err != nil {
@@ -183,8 +184,8 @@ func getReplacementPathWithDeployment(req *http.Request) (string, error) {
 		return getMultipartRoute(req)
 	}
 
-	// No need to relocate the path. We've already tacked on /openai when we setup the endpoint.
-	return req.URL.Path, nil
+	// If route doesn't require deployment ID substitution, just return path with prefix.
+	return path.Join("/openai/", req.URL.Path), nil
 }
 
 func getJSONRoute(req *http.Request) (string, error) {
