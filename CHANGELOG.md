@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.12.0 (2025-12-11)
+
+Full Changelog: [v3.11.0...v3.12.0](https://github.com/openai/openai-go/compare/v3.11.0...v3.12.0)
+
+### Features
+
+* **api:** gpt 5.2 ([56b5d41](https://github.com/openai/openai-go/commit/56b5d410cb7ee90d2c7ddd4fb8650bf1dd818855))
+* **encoder:** support bracket encoding form-data object members ([a2cbacf](https://github.com/openai/openai-go/commit/a2cbacff1f0189e81ec4091a33f1ec350bbabd09))
+
 ## 3.11.0 (2025-12-10)
 
 Full Changelog: [v3.10.0...v3.11.0](https://github.com/openai/openai-go/compare/v3.10.0...v3.11.0)
