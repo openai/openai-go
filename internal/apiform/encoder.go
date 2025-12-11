@@ -60,6 +60,7 @@ type encoderField struct {
 type encoderEntry struct {
 	reflect.Type
 	dateFormat string
+	arrayFmt   string
 	root       bool
 }
 
@@ -77,6 +78,7 @@ func (e *encoder) typeEncoder(t reflect.Type) encoderFunc {
 	entry := encoderEntry{
 		Type:       t,
 		dateFormat: e.dateFormat,
+		arrayFmt:   e.arrayFmt,
 		root:       e.root,
 	}
 
@@ -178,34 +180,9 @@ func (e *encoder) newPrimitiveTypeEncoder(t reflect.Type) encoderFunc {
 	}
 }
 
-func arrayKeyEncoder(arrayFmt string) func(string, int) string {
-	var keyFn func(string, int) string
-	switch arrayFmt {
-	case "comma", "repeat":
-		keyFn = func(k string, _ int) string { return k }
-	case "brackets":
-		keyFn = func(key string, _ int) string { return key + "[]" }
-	case "indices:dots":
-		keyFn = func(k string, i int) string {
-			if k == "" {
-				return strconv.Itoa(i)
-			}
-			return k + "." + strconv.Itoa(i)
-		}
-	case "indices:brackets":
-		keyFn = func(k string, i int) string {
-			if k == "" {
-				return strconv.Itoa(i)
-			}
-			return k + "[" + strconv.Itoa(i) + "]"
-		}
-	}
-	return keyFn
-}
-
 func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 	itemEncoder := e.typeEncoder(t.Elem())
-	keyFn := arrayKeyEncoder(e.arrayFmt)
+	keyFn := e.arrayKeyEncoder()
 	return func(key string, v reflect.Value, writer *multipart.Writer) error {
 		if keyFn == nil {
 			return fmt.Errorf("apiform: unsupported array format")
@@ -303,13 +280,10 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 	})
 
 	return func(key string, value reflect.Value, writer *multipart.Writer) error {
-		if key != "" {
-			key = key + "."
-		}
-
+		keyFn := e.objKeyEncoder(key)
 		for _, ef := range encoderFields {
 			field := value.FieldByIndex(ef.idx)
-			err := ef.fn(key+ef.tag.name, field, writer)
+			err := ef.fn(keyFn(ef.tag.name), field, writer)
 			if err != nil {
 				return err
 			}
@@ -405,16 +379,49 @@ func (e *encoder) newReaderTypeEncoder() encoderFunc {
 	}
 }
 
+func (e encoder) arrayKeyEncoder() func(string, int) string {
+	var keyFn func(string, int) string
+	switch e.arrayFmt {
+	case "comma", "repeat":
+		keyFn = func(k string, _ int) string { return k }
+	case "brackets":
+		keyFn = func(key string, _ int) string { return key + "[]" }
+	case "indices:dots":
+		keyFn = func(k string, i int) string {
+			if k == "" {
+				return strconv.Itoa(i)
+			}
+			return k + "." + strconv.Itoa(i)
+		}
+	case "indices:brackets":
+		keyFn = func(k string, i int) string {
+			if k == "" {
+				return strconv.Itoa(i)
+			}
+			return k + "[" + strconv.Itoa(i) + "]"
+		}
+	}
+	return keyFn
+}
+
+func (e encoder) objKeyEncoder(parent string) func(string) string {
+	if parent == "" {
+		return func(child string) string { return child }
+	}
+	switch e.arrayFmt {
+	case "brackets":
+		return func(child string) string { return parent + "[" + child + "]" }
+	default:
+		return func(child string) string { return parent + "." + child }
+	}
+}
+
 // Given a []byte of json (may either be an empty object or an object that already contains entries)
 // encode all of the entries in the map to the json byte array.
 func (e *encoder) encodeMapEntries(key string, v reflect.Value, writer *multipart.Writer) error {
 	type mapPair struct {
 		key   string
 		value reflect.Value
-	}
-
-	if key != "" {
-		key = key + "."
 	}
 
 	pairs := []mapPair{}
@@ -434,8 +441,9 @@ func (e *encoder) encodeMapEntries(key string, v reflect.Value, writer *multipar
 	})
 
 	elementEncoder := e.typeEncoder(v.Type().Elem())
+	keyFn := e.objKeyEncoder(key)
 	for _, p := range pairs {
-		err := elementEncoder(key+string(p.key), p.value, writer)
+		err := elementEncoder(keyFn(p.key), p.value, writer)
 		if err != nil {
 			return err
 		}
