@@ -188,7 +188,7 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Responses.Compact(context.TODO(), responses.ResponseCompactParams{
-		Model: responses.ResponseCompactParamsModelGPT5_1,
+		Model: responses.ResponseCompactParamsModelGPT5_2,
 		Input: responses.ResponseCompactParamsInputUnion{
 			OfString: openai.String("string"),
 		},

@@ -20,6 +20,11 @@ type paramObj = param.APIObject
 type ChatModel = string
 
 const (
+	ChatModelGPT5_2                           ChatModel = "gpt-5.2"
+	ChatModelGPT5_2_2025_12_11                ChatModel = "gpt-5.2-2025-12-11"
+	ChatModelGPT5_2ChatLatest                 ChatModel = "gpt-5.2-chat-latest"
+	ChatModelGPT5_2Pro                        ChatModel = "gpt-5.2-pro"
+	ChatModelGPT5_2Pro2025_12_11              ChatModel = "gpt-5.2-pro-2025-12-11"
 	ChatModelGPT5_1                           ChatModel = "gpt-5.1"
 	ChatModelGPT5_1_2025_11_13                ChatModel = "gpt-5.1-2025-11-13"
 	ChatModelGPT5_1Codex                      ChatModel = "gpt-5.1-codex"
@@ -766,7 +771,7 @@ type Reasoning struct {
 	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
 	//     support `none`.
 	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-	//   - `xhigh` is currently only supported for `gpt-5.1-codex-max`.
+	//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
 	Effort ReasoningEffort `json:"effort,nullable"`
@@ -784,7 +789,8 @@ type Reasoning struct {
 	// debugging and understanding the model's reasoning process. One of `auto`,
 	// `concise`, or `detailed`.
 	//
-	// `concise` is only supported for `computer-use-preview` models.
+	// `concise` is supported for `computer-use-preview` models and all reasoning
+	// models after `gpt-5`.
 	//
 	// Any of "auto", "concise", "detailed".
 	Summary ReasoningSummary `json:"summary,nullable"`
@@ -830,7 +836,8 @@ const (
 // debugging and understanding the model's reasoning process. One of `auto`,
 // `concise`, or `detailed`.
 //
-// `concise` is only supported for `computer-use-preview` models.
+// `concise` is supported for `computer-use-preview` models and all reasoning
+// models after `gpt-5`.
 type ReasoningSummary string
 
 const (
@@ -856,7 +863,7 @@ type ReasoningParam struct {
 	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
 	//     support `none`.
 	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-	//   - `xhigh` is currently only supported for `gpt-5.1-codex-max`.
+	//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
 	//
 	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
 	Effort ReasoningEffort `json:"effort,omitzero"`
@@ -874,7 +881,8 @@ type ReasoningParam struct {
 	// debugging and understanding the model's reasoning process. One of `auto`,
 	// `concise`, or `detailed`.
 	//
-	// `concise` is only supported for `computer-use-preview` models.
+	// `concise` is supported for `computer-use-preview` models and all reasoning
+	// models after `gpt-5`.
 	//
 	// Any of "auto", "concise", "detailed".
 	Summary ReasoningSummary `json:"summary,omitzero"`
@@ -901,7 +909,7 @@ func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
 //   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
 //     support `none`.
 //   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-//   - `xhigh` is currently only supported for `gpt-5.1-codex-max`.
+//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
 type ReasoningEffort string
 
 const (

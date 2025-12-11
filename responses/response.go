@@ -17820,6 +17820,11 @@ func (r *ResponseCompactParams) UnmarshalJSON(data []byte) error {
 type ResponseCompactParamsModel string
 
 const (
+	ResponseCompactParamsModelGPT5_2                           ResponseCompactParamsModel = "gpt-5.2"
+	ResponseCompactParamsModelGPT5_2_2025_12_11                ResponseCompactParamsModel = "gpt-5.2-2025-12-11"
+	ResponseCompactParamsModelGPT5_2ChatLatest                 ResponseCompactParamsModel = "gpt-5.2-chat-latest"
+	ResponseCompactParamsModelGPT5_2Pro                        ResponseCompactParamsModel = "gpt-5.2-pro"
+	ResponseCompactParamsModelGPT5_2Pro2025_12_11              ResponseCompactParamsModel = "gpt-5.2-pro-2025-12-11"
 	ResponseCompactParamsModelGPT5_1                           ResponseCompactParamsModel = "gpt-5.1"
 	ResponseCompactParamsModelGPT5_1_2025_11_13                ResponseCompactParamsModel = "gpt-5.1-2025-11-13"
 	ResponseCompactParamsModelGPT5_1Codex                      ResponseCompactParamsModel = "gpt-5.1-codex"

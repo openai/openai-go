@@ -19,6 +19,21 @@ type Error = apierror.Error
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
 
+// Equals "gpt-5.2"
+const ChatModelGPT5_2 = shared.ChatModelGPT5_2
+
+// Equals "gpt-5.2-2025-12-11"
+const ChatModelGPT5_2_2025_12_11 = shared.ChatModelGPT5_2_2025_12_11
+
+// Equals "gpt-5.2-chat-latest"
+const ChatModelGPT5_2ChatLatest = shared.ChatModelGPT5_2ChatLatest
+
+// Equals "gpt-5.2-pro"
+const ChatModelGPT5_2Pro = shared.ChatModelGPT5_2Pro
+
+// Equals "gpt-5.2-pro-2025-12-11"
+const ChatModelGPT5_2Pro2025_12_11 = shared.ChatModelGPT5_2Pro2025_12_11
+
 // Equals "gpt-5.1"
 const ChatModelGPT5_1 = shared.ChatModelGPT5_1
 
@@ -394,7 +409,8 @@ const ReasoningGenerateSummaryDetailed = shared.ReasoningGenerateSummaryDetailed
 // debugging and understanding the model's reasoning process. One of `auto`,
 // `concise`, or `detailed`.
 //
-// `concise` is only supported for `computer-use-preview` models.
+// `concise` is supported for `computer-use-preview` models and all reasoning
+// models after `gpt-5`.
 //
 // This is an alias to an internal type.
 type ReasoningSummary = shared.ReasoningSummary
@@ -428,7 +444,7 @@ type ReasoningParam = shared.ReasoningParam
 //   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
 //     support `none`.
 //   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-//   - `xhigh` is currently only supported for `gpt-5.1-codex-max`.
+//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
 //
 // This is an alias to an internal type.
 type ReasoningEffort = shared.ReasoningEffort
