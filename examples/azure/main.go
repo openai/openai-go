@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"os"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/azure"
-	"github.com/openai/openai-go/responses"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/azure"
+	"github.com/openai/openai-go/v3/responses"
 )
 
 func main() {
