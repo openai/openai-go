@@ -252,6 +252,13 @@ func TestAccumulatorNegativeToolCallIndex(t *testing.T) {
 	}
 }
 
+func TestAccumulatorEmptyToolCallsArray(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+	chunk := openai.ChatCompletionChunk{}
+	chunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[]}}]}`))
+	acc.AddChunk(chunk)
+}
+
 // manually created on 11/3/2024
 var mockResponseBody = `data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":{"content":[],"refusal":null},"finish_reason":null}],"usage":null}
 
