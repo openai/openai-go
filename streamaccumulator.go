@@ -124,9 +124,10 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 
 		for j := range delta.Delta.ToolCalls {
 			deltaTool := &delta.Delta.ToolCalls[j]
+			toolIndex := clampToZero(deltaTool.Index)
 
-			choice.Message.ToolCalls = expandToFit(choice.Message.ToolCalls, int(deltaTool.Index))
-			tool := &choice.Message.ToolCalls[deltaTool.Index]
+			choice.Message.ToolCalls = expandToFit(choice.Message.ToolCalls, toolIndex)
+			tool := &choice.Message.ToolCalls[toolIndex]
 
 			if deltaTool.ID != "" {
 				tool.ID = deltaTool.ID
@@ -177,7 +178,7 @@ func (prev *chatCompletionResponseState) update(chunk ChatCompletionChunk) (just
 		new.state = refusalResponseState
 	case delta.JSON.ToolCalls.Valid():
 		new.state = toolResponseState
-		new.index = int(delta.ToolCalls[0].Index)
+		new.index = clampToZero(delta.ToolCalls[0].Index)
 	default:
 		new.state = finishedResponseState
 	}
@@ -188,6 +189,14 @@ func (prev *chatCompletionResponseState) update(chunk ChatCompletionChunk) (just
 	*prev = new
 
 	return
+}
+
+// clampToZero handles providers like AWS Bedrock that return tool call index -1.
+func clampToZero(index int64) int {
+	if index < 0 {
+		return 0
+	}
+	return int(index)
 }
 
 func expandToFit[T any](slice []T, index int) []T {
