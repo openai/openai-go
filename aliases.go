@@ -124,6 +124,24 @@ const ChatModelO1Mini = shared.ChatModelO1Mini
 // Equals "o1-mini-2024-09-12"
 const ChatModelO1Mini2024_09_12 = shared.ChatModelO1Mini2024_09_12
 
+// Equals "gpt-4-1"
+const ChatModelGPT4_1 = shared.ChatModelGPT4_1
+
+// Equals "gpt-4-1-2025-04-14"
+const ChatModelGPT4_1_2025_04_14 = shared.ChatModelGPT4_1_2025_04_14
+
+// Equals "gpt-4-1-mini"
+const ChatModelGPT4_1Mini = shared.ChatModelGPT4_1Mini
+
+// Equals "gpt-4-1-mini-2025-04-14"
+const ChatModelGPT4_1Mini_2025_04_14 = shared.ChatModelGPT4_1Mini_2025_04_14
+
+// Equals "gpt-4-1-nano"
+const ChatModelGPT4_1Nano = shared.ChatModelGPT4_1Nano
+
+// Equals "gpt-4-1-nano-2025-04-14"
+const ChatModelGPT4_1Nano_2025_04_14 = shared.ChatModelGPT4_1Nano_2025_04_14
+
 // Equals "gpt-4o"
 const ChatModelGPT4o = shared.ChatModelGPT4o
 
