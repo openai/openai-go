@@ -137,7 +137,8 @@ type Video struct {
 	ExpiresAt int64 `json:"expires_at,required"`
 	// The video generation model that produced the job.
 	//
-	// Any of "sora-2", "sora-2-pro".
+	// Any of "sora-2", "sora-2-pro", "sora-2-2025-10-06", "sora-2-pro-2025-10-06",
+	// "sora-2-2025-12-08".
 	Model VideoModel `json:"model,required"`
 	// The object type, which is always `video`.
 	Object constant.Video `json:"object,required"`
@@ -216,8 +217,11 @@ func (r *VideoCreateError) UnmarshalJSON(data []byte) error {
 type VideoModel string
 
 const (
-	VideoModelSora2    VideoModel = "sora-2"
-	VideoModelSora2Pro VideoModel = "sora-2-pro"
+	VideoModelSora2              VideoModel = "sora-2"
+	VideoModelSora2Pro           VideoModel = "sora-2-pro"
+	VideoModelSora2_2025_10_06   VideoModel = "sora-2-2025-10-06"
+	VideoModelSora2Pro2025_10_06 VideoModel = "sora-2-pro-2025-10-06"
+	VideoModelSora2_2025_12_08   VideoModel = "sora-2-2025-12-08"
 )
 
 type VideoSeconds string
@@ -269,7 +273,8 @@ type VideoNewParams struct {
 	// The video generation model to use (allowed values: sora-2, sora-2-pro). Defaults
 	// to `sora-2`.
 	//
-	// Any of "sora-2", "sora-2-pro".
+	// Any of "sora-2", "sora-2-pro", "sora-2-2025-10-06", "sora-2-pro-2025-10-06",
+	// "sora-2-2025-12-08".
 	Model VideoModel `json:"model,omitzero"`
 	// Clip duration in seconds (allowed values: 4, 8, 12). Defaults to 4 seconds.
 	//
