@@ -124,6 +124,7 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 
 		for j := range delta.Delta.ToolCalls {
 			deltaTool := &delta.Delta.ToolCalls[j]
+			// Clamp negative indices to 0 since the API may send -1 for single tool calls
 			toolIndex := clampToZero(deltaTool.Index)
 
 			choice.Message.ToolCalls = expandToFit(choice.Message.ToolCalls, toolIndex)
