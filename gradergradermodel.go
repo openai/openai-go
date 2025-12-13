@@ -33,6 +33,249 @@ func NewGraderGraderModelService(opts ...option.RequestOption) (r GraderGraderMo
 	return
 }
 
+type GraderInputs []GraderInputUnion
+
+// GraderInputUnion contains all possible properties and values from [string],
+// [responses.ResponseInputText], [GraderInputOutputText], [GraderInputInputImage],
+// [responses.ResponseInputAudio].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString]
+type GraderInputUnion struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	Text     string `json:"text"`
+	Type     string `json:"type"`
+	// This field is from variant [GraderInputInputImage].
+	ImageURL string `json:"image_url"`
+	// This field is from variant [GraderInputInputImage].
+	Detail string `json:"detail"`
+	// This field is from variant [responses.ResponseInputAudio].
+	InputAudio responses.ResponseInputAudioInputAudio `json:"input_audio"`
+	JSON       struct {
+		OfString   respjson.Field
+		Text       respjson.Field
+		Type       respjson.Field
+		ImageURL   respjson.Field
+		Detail     respjson.Field
+		InputAudio respjson.Field
+		raw        string
+	} `json:"-"`
+}
+
+func (u GraderInputUnion) AsString() (v string) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u GraderInputUnion) AsInputText() (v responses.ResponseInputText) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u GraderInputUnion) AsOutputText() (v GraderInputOutputText) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u GraderInputUnion) AsInputImage() (v GraderInputInputImage) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u GraderInputUnion) AsInputAudio() (v responses.ResponseInputAudio) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u GraderInputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *GraderInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A text output from the model.
+type GraderInputOutputText struct {
+	// The text output from the model.
+	Text string `json:"text,required"`
+	// The type of the output text. Always `output_text`.
+	Type constant.OutputText `json:"type,required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Text        respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r GraderInputOutputText) RawJSON() string { return r.JSON.raw }
+func (r *GraderInputOutputText) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An image input block used within EvalItem content arrays.
+type GraderInputInputImage struct {
+	// The URL of the image input.
+	ImageURL string `json:"image_url,required"`
+	// The type of the image input. Always `input_image`.
+	Type constant.InputImage `json:"type,required"`
+	// The detail level of the image to be sent to the model. One of `high`, `low`, or
+	// `auto`. Defaults to `auto`.
+	Detail string `json:"detail"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ImageURL    respjson.Field
+		Type        respjson.Field
+		Detail      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r GraderInputInputImage) RawJSON() string { return r.JSON.raw }
+func (r *GraderInputInputImage) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type GraderInputsParam []GraderInputUnionParam
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type GraderInputUnionParam struct {
+	OfString     param.Opt[string]                  `json:",omitzero,inline"`
+	OfInputText  *responses.ResponseInputTextParam  `json:",omitzero,inline"`
+	OfOutputText *GraderInputOutputTextParam        `json:",omitzero,inline"`
+	OfInputImage *GraderInputInputImageParam        `json:",omitzero,inline"`
+	OfInputAudio *responses.ResponseInputAudioParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u GraderInputUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString,
+		u.OfInputText,
+		u.OfOutputText,
+		u.OfInputImage,
+		u.OfInputAudio)
+}
+func (u *GraderInputUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *GraderInputUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfInputText) {
+		return u.OfInputText
+	} else if !param.IsOmitted(u.OfOutputText) {
+		return u.OfOutputText
+	} else if !param.IsOmitted(u.OfInputImage) {
+		return u.OfInputImage
+	} else if !param.IsOmitted(u.OfInputAudio) {
+		return u.OfInputAudio
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u GraderInputUnionParam) GetImageURL() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return &vt.ImageURL
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u GraderInputUnionParam) GetDetail() *string {
+	if vt := u.OfInputImage; vt != nil && vt.Detail.Valid() {
+		return &vt.Detail.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u GraderInputUnionParam) GetInputAudio() *responses.ResponseInputAudioInputAudioParam {
+	if vt := u.OfInputAudio; vt != nil {
+		return &vt.InputAudio
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u GraderInputUnionParam) GetText() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Text)
+	} else if vt := u.OfOutputText; vt != nil {
+		return (*string)(&vt.Text)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u GraderInputUnionParam) GetType() *string {
+	if vt := u.OfInputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfOutputText; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInputAudio; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// A text output from the model.
+//
+// The properties Text, Type are required.
+type GraderInputOutputTextParam struct {
+	// The text output from the model.
+	Text string `json:"text,required"`
+	// The type of the output text. Always `output_text`.
+	//
+	// This field can be elided, and will marshal its zero value as "output_text".
+	Type constant.OutputText `json:"type,required"`
+	paramObj
+}
+
+func (r GraderInputOutputTextParam) MarshalJSON() (data []byte, err error) {
+	type shadow GraderInputOutputTextParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *GraderInputOutputTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An image input block used within EvalItem content arrays.
+//
+// The properties ImageURL, Type are required.
+type GraderInputInputImageParam struct {
+	// The URL of the image input.
+	ImageURL string `json:"image_url,required"`
+	// The detail level of the image to be sent to the model. One of `high`, `low`, or
+	// `auto`. Defaults to `auto`.
+	Detail param.Opt[string] `json:"detail,omitzero"`
+	// The type of the image input. Always `input_image`.
+	//
+	// This field can be elided, and will marshal its zero value as "input_image".
+	Type constant.InputImage `json:"type,required"`
+	paramObj
+}
+
+func (r GraderInputInputImageParam) MarshalJSON() (data []byte, err error) {
+	type shadow GraderInputInputImageParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *GraderInputInputImageParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // A LabelModelGrader object which uses a model to assign labels to each item in
 // the evaluation.
 type LabelModelGrader struct {
@@ -81,7 +324,8 @@ func (r LabelModelGrader) ToParam() LabelModelGraderParam {
 // `assistant` role are presumed to have been generated by the model in previous
 // interactions.
 type LabelModelGraderInput struct {
-	// Inputs to the model - can contain template strings.
+	// Inputs to the model - can contain template strings. Supports text, output text,
+	// input images, and input audio, either as a single item or an array of items.
 	Content LabelModelGraderInputContentUnion `json:"content,required"`
 	// The role of the message input. One of `user`, `assistant`, `system`, or
 	// `developer`.
@@ -112,19 +356,20 @@ func (r *LabelModelGraderInput) UnmarshalJSON(data []byte) error {
 // from [string], [responses.ResponseInputText],
 // [LabelModelGraderInputContentOutputText],
 // [LabelModelGraderInputContentInputImage], [responses.ResponseInputAudio],
-// [[]any].
+// [GraderInputs].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfAnArrayOfInputTextInputImageAndInputAudio]
+// will be valid: OfString OfAnArrayOfInputTextOutputTextInputImageAndInputAudio]
 type LabelModelGraderInputContentUnion struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	// This field will be present if the value is a [[]any] instead of an object.
-	OfAnArrayOfInputTextInputImageAndInputAudio []any  `json:",inline"`
-	Text                                        string `json:"text"`
-	Type                                        string `json:"type"`
+	// This field will be present if the value is a [GraderInputs] instead of an
+	// object.
+	OfAnArrayOfInputTextOutputTextInputImageAndInputAudio GraderInputs `json:",inline"`
+	Text                                                  string       `json:"text"`
+	Type                                                  string       `json:"type"`
 	// This field is from variant [LabelModelGraderInputContentInputImage].
 	ImageURL string `json:"image_url"`
 	// This field is from variant [LabelModelGraderInputContentInputImage].
@@ -132,14 +377,14 @@ type LabelModelGraderInputContentUnion struct {
 	// This field is from variant [responses.ResponseInputAudio].
 	InputAudio responses.ResponseInputAudioInputAudio `json:"input_audio"`
 	JSON       struct {
-		OfString                                    respjson.Field
-		OfAnArrayOfInputTextInputImageAndInputAudio respjson.Field
-		Text                                        respjson.Field
-		Type                                        respjson.Field
-		ImageURL                                    respjson.Field
-		Detail                                      respjson.Field
-		InputAudio                                  respjson.Field
-		raw                                         string
+		OfString                                              respjson.Field
+		OfAnArrayOfInputTextOutputTextInputImageAndInputAudio respjson.Field
+		Text                                                  respjson.Field
+		Type                                                  respjson.Field
+		ImageURL                                              respjson.Field
+		Detail                                                respjson.Field
+		InputAudio                                            respjson.Field
+		raw                                                   string
 	} `json:"-"`
 }
 
@@ -168,7 +413,7 @@ func (u LabelModelGraderInputContentUnion) AsInputAudio() (v responses.ResponseI
 	return
 }
 
-func (u LabelModelGraderInputContentUnion) AsAnArrayOfInputTextInputImageAndInputAudio() (v []any) {
+func (u LabelModelGraderInputContentUnion) AsAnArrayOfInputTextOutputTextInputImageAndInputAudio() (v GraderInputs) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -201,7 +446,7 @@ func (r *LabelModelGraderInputContentOutputText) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An image input to the model.
+// An image input block used within EvalItem content arrays.
 type LabelModelGraderInputContentInputImage struct {
 	// The URL of the image input.
 	ImageURL string `json:"image_url,required"`
@@ -263,7 +508,8 @@ func (r *LabelModelGraderParam) UnmarshalJSON(data []byte) error {
 //
 // The properties Content, Role are required.
 type LabelModelGraderInputParam struct {
-	// Inputs to the model - can contain template strings.
+	// Inputs to the model - can contain template strings. Supports text, output text,
+	// input images, and input audio, either as a single item or an array of items.
 	Content LabelModelGraderInputContentUnionParam `json:"content,omitzero,required"`
 	// The role of the message input. One of `user`, `assistant`, `system`, or
 	// `developer`.
@@ -298,12 +544,12 @@ func init() {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type LabelModelGraderInputContentUnionParam struct {
-	OfString                                    param.Opt[string]                            `json:",omitzero,inline"`
-	OfInputText                                 *responses.ResponseInputTextParam            `json:",omitzero,inline"`
-	OfOutputText                                *LabelModelGraderInputContentOutputTextParam `json:",omitzero,inline"`
-	OfInputImage                                *LabelModelGraderInputContentInputImageParam `json:",omitzero,inline"`
-	OfInputAudio                                *responses.ResponseInputAudioParam           `json:",omitzero,inline"`
-	OfAnArrayOfInputTextInputImageAndInputAudio []any                                        `json:",omitzero,inline"`
+	OfString                                              param.Opt[string]                            `json:",omitzero,inline"`
+	OfInputText                                           *responses.ResponseInputTextParam            `json:",omitzero,inline"`
+	OfOutputText                                          *LabelModelGraderInputContentOutputTextParam `json:",omitzero,inline"`
+	OfInputImage                                          *LabelModelGraderInputContentInputImageParam `json:",omitzero,inline"`
+	OfInputAudio                                          *responses.ResponseInputAudioParam           `json:",omitzero,inline"`
+	OfAnArrayOfInputTextOutputTextInputImageAndInputAudio GraderInputsParam                            `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -313,7 +559,7 @@ func (u LabelModelGraderInputContentUnionParam) MarshalJSON() ([]byte, error) {
 		u.OfOutputText,
 		u.OfInputImage,
 		u.OfInputAudio,
-		u.OfAnArrayOfInputTextInputImageAndInputAudio)
+		u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio)
 }
 func (u *LabelModelGraderInputContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -330,8 +576,8 @@ func (u *LabelModelGraderInputContentUnionParam) asAny() any {
 		return u.OfInputImage
 	} else if !param.IsOmitted(u.OfInputAudio) {
 		return u.OfInputAudio
-	} else if !param.IsOmitted(u.OfAnArrayOfInputTextInputImageAndInputAudio) {
-		return &u.OfAnArrayOfInputTextInputImageAndInputAudio
+	} else if !param.IsOmitted(u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio) {
+		return &u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio
 	}
 	return nil
 }
@@ -405,7 +651,7 @@ func (r *LabelModelGraderInputContentOutputTextParam) UnmarshalJSON(data []byte)
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An image input to the model.
+// An image input block used within EvalItem content arrays.
 //
 // The properties ImageURL, Type are required.
 type LabelModelGraderInputContentInputImageParam struct {
@@ -899,7 +1145,8 @@ func (r ScoreModelGrader) ToParam() ScoreModelGraderParam {
 // `assistant` role are presumed to have been generated by the model in previous
 // interactions.
 type ScoreModelGraderInput struct {
-	// Inputs to the model - can contain template strings.
+	// Inputs to the model - can contain template strings. Supports text, output text,
+	// input images, and input audio, either as a single item or an array of items.
 	Content ScoreModelGraderInputContentUnion `json:"content,required"`
 	// The role of the message input. One of `user`, `assistant`, `system`, or
 	// `developer`.
@@ -930,19 +1177,20 @@ func (r *ScoreModelGraderInput) UnmarshalJSON(data []byte) error {
 // from [string], [responses.ResponseInputText],
 // [ScoreModelGraderInputContentOutputText],
 // [ScoreModelGraderInputContentInputImage], [responses.ResponseInputAudio],
-// [[]any].
+// [GraderInputs].
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfAnArrayOfInputTextInputImageAndInputAudio]
+// will be valid: OfString OfAnArrayOfInputTextOutputTextInputImageAndInputAudio]
 type ScoreModelGraderInputContentUnion struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
-	// This field will be present if the value is a [[]any] instead of an object.
-	OfAnArrayOfInputTextInputImageAndInputAudio []any  `json:",inline"`
-	Text                                        string `json:"text"`
-	Type                                        string `json:"type"`
+	// This field will be present if the value is a [GraderInputs] instead of an
+	// object.
+	OfAnArrayOfInputTextOutputTextInputImageAndInputAudio GraderInputs `json:",inline"`
+	Text                                                  string       `json:"text"`
+	Type                                                  string       `json:"type"`
 	// This field is from variant [ScoreModelGraderInputContentInputImage].
 	ImageURL string `json:"image_url"`
 	// This field is from variant [ScoreModelGraderInputContentInputImage].
@@ -950,14 +1198,14 @@ type ScoreModelGraderInputContentUnion struct {
 	// This field is from variant [responses.ResponseInputAudio].
 	InputAudio responses.ResponseInputAudioInputAudio `json:"input_audio"`
 	JSON       struct {
-		OfString                                    respjson.Field
-		OfAnArrayOfInputTextInputImageAndInputAudio respjson.Field
-		Text                                        respjson.Field
-		Type                                        respjson.Field
-		ImageURL                                    respjson.Field
-		Detail                                      respjson.Field
-		InputAudio                                  respjson.Field
-		raw                                         string
+		OfString                                              respjson.Field
+		OfAnArrayOfInputTextOutputTextInputImageAndInputAudio respjson.Field
+		Text                                                  respjson.Field
+		Type                                                  respjson.Field
+		ImageURL                                              respjson.Field
+		Detail                                                respjson.Field
+		InputAudio                                            respjson.Field
+		raw                                                   string
 	} `json:"-"`
 }
 
@@ -986,7 +1234,7 @@ func (u ScoreModelGraderInputContentUnion) AsInputAudio() (v responses.ResponseI
 	return
 }
 
-func (u ScoreModelGraderInputContentUnion) AsAnArrayOfInputTextInputImageAndInputAudio() (v []any) {
+func (u ScoreModelGraderInputContentUnion) AsAnArrayOfInputTextOutputTextInputImageAndInputAudio() (v GraderInputs) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -1019,7 +1267,7 @@ func (r *ScoreModelGraderInputContentOutputText) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An image input to the model.
+// An image input block used within EvalItem content arrays.
 type ScoreModelGraderInputContentInputImage struct {
 	// The URL of the image input.
 	ImageURL string `json:"image_url,required"`
@@ -1126,7 +1374,8 @@ func (r *ScoreModelGraderParam) UnmarshalJSON(data []byte) error {
 //
 // The properties Content, Role are required.
 type ScoreModelGraderInputParam struct {
-	// Inputs to the model - can contain template strings.
+	// Inputs to the model - can contain template strings. Supports text, output text,
+	// input images, and input audio, either as a single item or an array of items.
 	Content ScoreModelGraderInputContentUnionParam `json:"content,omitzero,required"`
 	// The role of the message input. One of `user`, `assistant`, `system`, or
 	// `developer`.
@@ -1161,12 +1410,12 @@ func init() {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ScoreModelGraderInputContentUnionParam struct {
-	OfString                                    param.Opt[string]                            `json:",omitzero,inline"`
-	OfInputText                                 *responses.ResponseInputTextParam            `json:",omitzero,inline"`
-	OfOutputText                                *ScoreModelGraderInputContentOutputTextParam `json:",omitzero,inline"`
-	OfInputImage                                *ScoreModelGraderInputContentInputImageParam `json:",omitzero,inline"`
-	OfInputAudio                                *responses.ResponseInputAudioParam           `json:",omitzero,inline"`
-	OfAnArrayOfInputTextInputImageAndInputAudio []any                                        `json:",omitzero,inline"`
+	OfString                                              param.Opt[string]                            `json:",omitzero,inline"`
+	OfInputText                                           *responses.ResponseInputTextParam            `json:",omitzero,inline"`
+	OfOutputText                                          *ScoreModelGraderInputContentOutputTextParam `json:",omitzero,inline"`
+	OfInputImage                                          *ScoreModelGraderInputContentInputImageParam `json:",omitzero,inline"`
+	OfInputAudio                                          *responses.ResponseInputAudioParam           `json:",omitzero,inline"`
+	OfAnArrayOfInputTextOutputTextInputImageAndInputAudio GraderInputsParam                            `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -1176,7 +1425,7 @@ func (u ScoreModelGraderInputContentUnionParam) MarshalJSON() ([]byte, error) {
 		u.OfOutputText,
 		u.OfInputImage,
 		u.OfInputAudio,
-		u.OfAnArrayOfInputTextInputImageAndInputAudio)
+		u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio)
 }
 func (u *ScoreModelGraderInputContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -1193,8 +1442,8 @@ func (u *ScoreModelGraderInputContentUnionParam) asAny() any {
 		return u.OfInputImage
 	} else if !param.IsOmitted(u.OfInputAudio) {
 		return u.OfInputAudio
-	} else if !param.IsOmitted(u.OfAnArrayOfInputTextInputImageAndInputAudio) {
-		return &u.OfAnArrayOfInputTextInputImageAndInputAudio
+	} else if !param.IsOmitted(u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio) {
+		return &u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio
 	}
 	return nil
 }
@@ -1268,7 +1517,7 @@ func (r *ScoreModelGraderInputContentOutputTextParam) UnmarshalJSON(data []byte)
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// An image input to the model.
+// An image input block used within EvalItem content arrays.
 //
 // The properties ImageURL, Type are required.
 type ScoreModelGraderInputContentInputImageParam struct {
