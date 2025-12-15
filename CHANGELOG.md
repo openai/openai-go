@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.13.0 (2025-12-15)
+
+Full Changelog: [v3.12.0...v3.13.0](https://github.com/openai/openai-go/compare/v3.12.0...v3.13.0)
+
+### Features
+
+* **api:** api update ([20b5112](https://github.com/openai/openai-go/commit/20b51126dc55b5fa357ae848593873d46514d820))
+* **api:** fix grader input list, add dated slugs for sora-2 ([e8f0b76](https://github.com/openai/openai-go/commit/e8f0b76c55abdcca2920372f74e08621d8a530b9))
+
+
+### Bug Fixes
+
+* **azure:** correct Azure OpenAI API URL construction and auth ([3ba3736](https://github.com/openai/openai-go/commit/3ba3736c4b1a6138c05df5ccb64944a3dca6ea74))
+
 ## 3.12.0 (2025-12-11)
 
 Full Changelog: [v3.11.0...v3.12.0](https://github.com/openai/openai-go/compare/v3.11.0...v3.12.0)
