@@ -15408,7 +15408,7 @@ func (r *ToolCodeInterpreterContainerCodeInterpreterContainerAuto) UnmarshalJSON
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// A tool that generates images using a model like `gpt-image-1`.
+// A tool that generates images using the GPT image models.
 type ToolImageGeneration struct {
 	// The type of the image generation tool. Always `image_generation`.
 	Type constant.ImageGeneration `json:"type,required"`
@@ -15428,8 +15428,6 @@ type ToolImageGeneration struct {
 	// `file_id` (string, optional).
 	InputImageMask ToolImageGenerationInputImageMask `json:"input_image_mask"`
 	// The image generation model to use. Default: `gpt-image-1`.
-	//
-	// Any of "gpt-image-1", "gpt-image-1-mini".
 	Model string `json:"model"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -16374,7 +16372,7 @@ func init() {
 	)
 }
 
-// A tool that generates images using a model like `gpt-image-1`.
+// A tool that generates images using the GPT image models.
 //
 // The property Type is required.
 type ToolImageGenerationParam struct {
@@ -16399,8 +16397,6 @@ type ToolImageGenerationParam struct {
 	// `file_id` (string, optional).
 	InputImageMask ToolImageGenerationInputImageMaskParam `json:"input_image_mask,omitzero"`
 	// The image generation model to use. Default: `gpt-image-1`.
-	//
-	// Any of "gpt-image-1", "gpt-image-1-mini".
 	Model string `json:"model,omitzero"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -16442,9 +16438,6 @@ func init() {
 	)
 	apijson.RegisterFieldValidator[ToolImageGenerationParam](
 		"input_fidelity", "high", "low",
-	)
-	apijson.RegisterFieldValidator[ToolImageGenerationParam](
-		"model", "gpt-image-1", "gpt-image-1-mini",
 	)
 	apijson.RegisterFieldValidator[ToolImageGenerationParam](
 		"moderation", "auto", "low",
