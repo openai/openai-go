@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.14.0 (2025-12-16)
+
+Full Changelog: [v3.13.0...v3.14.0](https://github.com/openai/openai-go/compare/v3.13.0...v3.14.0)
+
+### Features
+
+* **api:** gpt-image-1.5 ([6102f02](https://github.com/openai/openai-go/commit/6102f029e7ccbffe1dcf4d53b38f7da49dfbdbaa))
+
 ## 3.13.0 (2025-12-15)
 
 Full Changelog: [v3.12.0...v3.13.0](https://github.com/openai/openai-go/compare/v3.12.0...v3.13.0)
