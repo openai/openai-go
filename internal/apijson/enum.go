@@ -29,7 +29,7 @@ type validatorFunc func(reflect.Value) exactness
 var validators sync.Map
 var validationRegistry = map[reflect.Type][]validationEntry{}
 
-func RegisterFieldValidator[T any, V string | bool | int](fieldName string, values ...V) {
+func RegisterFieldValidator[T any, V string | bool | int | float64](fieldName string, values ...V) {
 	var t T
 	parentType := reflect.TypeOf(t)
 
