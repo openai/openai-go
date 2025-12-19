@@ -44,16 +44,17 @@ func (r *AudioSpeechService) New(ctx context.Context, body AudioSpeechNewParams,
 type SpeechModel = string
 
 const (
-	SpeechModelTTS1         SpeechModel = "tts-1"
-	SpeechModelTTS1HD       SpeechModel = "tts-1-hd"
-	SpeechModelGPT4oMiniTTS SpeechModel = "gpt-4o-mini-tts"
+	SpeechModelTTS1                   SpeechModel = "tts-1"
+	SpeechModelTTS1HD                 SpeechModel = "tts-1-hd"
+	SpeechModelGPT4oMiniTTS           SpeechModel = "gpt-4o-mini-tts"
+	SpeechModelGPT4oMiniTTS2025_12_15 SpeechModel = "gpt-4o-mini-tts-2025-12-15"
 )
 
 type AudioSpeechNewParams struct {
 	// The text to generate audio for. The maximum length is 4096 characters.
 	Input string `json:"input,required"`
 	// One of the available [TTS models](https://platform.openai.com/docs/models#tts):
-	// `tts-1`, `tts-1-hd` or `gpt-4o-mini-tts`.
+	// `tts-1`, `tts-1-hd`, `gpt-4o-mini-tts`, or `gpt-4o-mini-tts-2025-12-15`.
 	Model SpeechModel `json:"model,omitzero,required"`
 	// The voice to use when generating the audio. Supported voices are `alloy`, `ash`,
 	// `ballad`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`, `shimmer`, and

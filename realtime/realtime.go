@@ -42,11 +42,9 @@ type AudioTranscription struct {
 	// format will improve accuracy and latency.
 	Language string `json:"language"`
 	// The model to use for transcription. Current options are `whisper-1`,
-	// `gpt-4o-mini-transcribe`, `gpt-4o-transcribe`, and `gpt-4o-transcribe-diarize`.
-	// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
-	//
-	// Any of "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe",
-	// "gpt-4o-transcribe-diarize".
+	// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
+	// `gpt-4o-transcribe`, and `gpt-4o-transcribe-diarize`. Use
+	// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 	Model AudioTranscriptionModel `json:"model"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. For `whisper-1`, the
@@ -80,15 +78,17 @@ func (r AudioTranscription) ToParam() AudioTranscriptionParam {
 }
 
 // The model to use for transcription. Current options are `whisper-1`,
-// `gpt-4o-mini-transcribe`, `gpt-4o-transcribe`, and `gpt-4o-transcribe-diarize`.
-// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
+// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
+// `gpt-4o-transcribe`, and `gpt-4o-transcribe-diarize`. Use
+// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 type AudioTranscriptionModel string
 
 const (
-	AudioTranscriptionModelWhisper1               AudioTranscriptionModel = "whisper-1"
-	AudioTranscriptionModelGPT4oMiniTranscribe    AudioTranscriptionModel = "gpt-4o-mini-transcribe"
-	AudioTranscriptionModelGPT4oTranscribe        AudioTranscriptionModel = "gpt-4o-transcribe"
-	AudioTranscriptionModelGPT4oTranscribeDiarize AudioTranscriptionModel = "gpt-4o-transcribe-diarize"
+	AudioTranscriptionModelWhisper1                      AudioTranscriptionModel = "whisper-1"
+	AudioTranscriptionModelGPT4oMiniTranscribe           AudioTranscriptionModel = "gpt-4o-mini-transcribe"
+	AudioTranscriptionModelGPT4oMiniTranscribe2025_12_15 AudioTranscriptionModel = "gpt-4o-mini-transcribe-2025-12-15"
+	AudioTranscriptionModelGPT4oTranscribe               AudioTranscriptionModel = "gpt-4o-transcribe"
+	AudioTranscriptionModelGPT4oTranscribeDiarize        AudioTranscriptionModel = "gpt-4o-transcribe-diarize"
 )
 
 type AudioTranscriptionParam struct {
@@ -103,11 +103,9 @@ type AudioTranscriptionParam struct {
 	// prompt is a free text string, for example "expect words related to technology".
 	Prompt param.Opt[string] `json:"prompt,omitzero"`
 	// The model to use for transcription. Current options are `whisper-1`,
-	// `gpt-4o-mini-transcribe`, `gpt-4o-transcribe`, and `gpt-4o-transcribe-diarize`.
-	// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
-	//
-	// Any of "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe",
-	// "gpt-4o-transcribe-diarize".
+	// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
+	// `gpt-4o-transcribe`, and `gpt-4o-transcribe-diarize`. Use
+	// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 	Model AudioTranscriptionModel `json:"model,omitzero"`
 	paramObj
 }
@@ -935,8 +933,10 @@ const (
 	RealtimeSessionCreateRequestModelGPT4oMiniRealtimePreview2024_12_17 RealtimeSessionCreateRequestModel = "gpt-4o-mini-realtime-preview-2024-12-17"
 	RealtimeSessionCreateRequestModelGPTRealtimeMini                    RealtimeSessionCreateRequestModel = "gpt-realtime-mini"
 	RealtimeSessionCreateRequestModelGPTRealtimeMini2025_10_06          RealtimeSessionCreateRequestModel = "gpt-realtime-mini-2025-10-06"
+	RealtimeSessionCreateRequestModelGPTRealtimeMini2025_12_15          RealtimeSessionCreateRequestModel = "gpt-realtime-mini-2025-12-15"
 	RealtimeSessionCreateRequestModelGPTAudioMini                       RealtimeSessionCreateRequestModel = "gpt-audio-mini"
 	RealtimeSessionCreateRequestModelGPTAudioMini2025_10_06             RealtimeSessionCreateRequestModel = "gpt-audio-mini-2025-10-06"
+	RealtimeSessionCreateRequestModelGPTAudioMini2025_12_15             RealtimeSessionCreateRequestModel = "gpt-audio-mini-2025-12-15"
 )
 
 func RealtimeToolChoiceConfigParamOfFunctionTool(name string) RealtimeToolChoiceConfigUnionParam {
