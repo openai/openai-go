@@ -542,8 +542,10 @@ const (
 	RealtimeSessionCreateResponseModelGPT4oMiniRealtimePreview2024_12_17 RealtimeSessionCreateResponseModel = "gpt-4o-mini-realtime-preview-2024-12-17"
 	RealtimeSessionCreateResponseModelGPTRealtimeMini                    RealtimeSessionCreateResponseModel = "gpt-realtime-mini"
 	RealtimeSessionCreateResponseModelGPTRealtimeMini2025_10_06          RealtimeSessionCreateResponseModel = "gpt-realtime-mini-2025-10-06"
+	RealtimeSessionCreateResponseModelGPTRealtimeMini2025_12_15          RealtimeSessionCreateResponseModel = "gpt-realtime-mini-2025-12-15"
 	RealtimeSessionCreateResponseModelGPTAudioMini                       RealtimeSessionCreateResponseModel = "gpt-audio-mini"
 	RealtimeSessionCreateResponseModelGPTAudioMini2025_10_06             RealtimeSessionCreateResponseModel = "gpt-audio-mini-2025-10-06"
+	RealtimeSessionCreateResponseModelGPTAudioMini2025_12_15             RealtimeSessionCreateResponseModel = "gpt-audio-mini-2025-12-15"
 )
 
 // RealtimeSessionCreateResponseToolChoiceUnion contains all possible properties

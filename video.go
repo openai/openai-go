@@ -149,9 +149,6 @@ type Video struct {
 	// Unix timestamp (seconds) for when the downloadable assets expire, if set.
 	ExpiresAt int64 `json:"expires_at,required"`
 	// The video generation model that produced the job.
-	//
-	// Any of "sora-2", "sora-2-pro", "sora-2-2025-10-06", "sora-2-pro-2025-10-06",
-	// "sora-2-2025-12-08".
 	Model VideoModel `json:"model,required"`
 	// The object type, which is always `video`.
 	Object constant.Video `json:"object,required"`
@@ -285,9 +282,6 @@ type VideoNewParams struct {
 	InputReference io.Reader `json:"input_reference,omitzero" format:"binary"`
 	// The video generation model to use (allowed values: sora-2, sora-2-pro). Defaults
 	// to `sora-2`.
-	//
-	// Any of "sora-2", "sora-2-pro", "sora-2-2025-10-06", "sora-2-pro-2025-10-06",
-	// "sora-2-2025-12-08".
 	Model VideoModel `json:"model,omitzero"`
 	// Clip duration in seconds (allowed values: 4, 8, 12). Defaults to 4 seconds.
 	//
