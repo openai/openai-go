@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.15.0 (2025-12-19)
+
+Full Changelog: [v3.14.0...v3.15.0](https://github.com/openai/openai-go/compare/v3.14.0...v3.15.0)
+
+### Bug Fixes
+
+* rebuild ([8205ae7](https://github.com/openai/openai-go/commit/8205ae7c00de1bd4a543381ba61b34f9b5676eda))
+
+
+### Chores
+
+* add float64 to valid types for RegisterFieldValidator ([e67d89d](https://github.com/openai/openai-go/commit/e67d89d39bc14af7309df702592ae152d1dfd60b))
+
 ## 3.14.0 (2025-12-16)
 
 Full Changelog: [v3.13.0...v3.14.0](https://github.com/openai/openai-go/compare/v3.13.0...v3.14.0)
