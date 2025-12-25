@@ -49,6 +49,21 @@ type Event struct {
 	Data []byte
 }
 
+// isWhitespaceOrEmpty checks if data is empty or contains only whitespace characters.
+// This is used to detect ping events (SSE comments or empty data events) that should
+// be skipped without attempting JSON unmarshal.
+func isWhitespaceOrEmpty(data []byte) bool {
+	if len(data) == 0 {
+		return true
+	}
+	for _, b := range data {
+		if b != ' ' && b != '\t' && b != '\n' && b != '\r' {
+			return false
+		}
+	}
+	return true
+}
+
 // A base implementation of a Decoder for text/event-stream.
 type eventStreamDecoder struct {
 	evt Event
@@ -160,6 +175,13 @@ func (s *Stream[T]) Next() bool {
 		if bytes.HasPrefix(s.decoder.Event().Data, []byte("[DONE]")) {
 			// In this case we don't break because we still want to iterate through the full stream.
 			s.done = true
+			continue
+		}
+
+		// Skip ping events (empty or whitespace-only data)
+		// These are SSE comments or keep-alive events that should be ignored
+		// without attempting JSON unmarshal, which would fail and set an error state.
+		if isWhitespaceOrEmpty(s.decoder.Event().Data) {
 			continue
 		}
 
