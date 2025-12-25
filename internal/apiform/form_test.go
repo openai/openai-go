@@ -2,7 +2,7 @@ package apiform
 
 import (
 	"bytes"
-	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/Nordlys-Labs/openai-go/v3/packages/param"
 	"io"
 	"mime/multipart"
 	"strings"

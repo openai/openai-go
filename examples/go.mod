@@ -1,13 +1,13 @@
-module github.com/openai/openai-go/examples
+module github.com/Nordlys-Labs/openai-go/examples
 
-replace github.com/openai/openai-go/v3 => ../
+replace github.com/Nordlys-Labs/openai-go/v3 => ../
 
 go 1.22.4
 
 require (
 	github.com/ebitengine/oto/v3 v3.2.0
 	github.com/invopop/jsonschema v0.12.0
-	github.com/openai/openai-go/v3 v3.0.0
+	github.com/Nordlys-Labs/openai-go/v3 v3.0.0
 )
 
 require (

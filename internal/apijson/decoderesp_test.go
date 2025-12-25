@@ -2,8 +2,8 @@ package apijson_test
 
 import (
 	"encoding/json"
-	"github.com/openai/openai-go/v3/internal/apijson"
-	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/Nordlys-Labs/openai-go/v3/internal/apijson"
+	"github.com/Nordlys-Labs/openai-go/v3/packages/respjson"
 	"testing"
 )
 

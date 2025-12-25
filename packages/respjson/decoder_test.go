@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/openai/openai-go/v3/internal/apijson"
-	rj "github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/Nordlys-Labs/openai-go/v3/internal/apijson"
+	rj "github.com/Nordlys-Labs/openai-go/v3/packages/respjson"
 )
 
 type UnionOfStringIntOrObject struct {

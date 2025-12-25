@@ -32,8 +32,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
-	"github.com/openai/openai-go/v3/option"
+	"github.com/Nordlys-Labs/openai-go/v3/internal/requestconfig"
+	"github.com/Nordlys-Labs/openai-go/v3/option"
 )
 
 // WithEndpoint configures this client to connect to an Azure OpenAI endpoint.

@@ -10,10 +10,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/internal/testutil"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/shared/constant"
+	"github.com/Nordlys-Labs/openai-go/v3"
+	"github.com/Nordlys-Labs/openai-go/v3/internal/testutil"
+	"github.com/Nordlys-Labs/openai-go/v3/option"
+	"github.com/Nordlys-Labs/openai-go/v3/shared/constant"
 )
 
 func TestAudioTranscriptionNewWithOptionalParams(t *testing.T) {

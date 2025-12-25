@@ -1,6 +1,6 @@
 package openai
 
-import "github.com/openai/openai-go/v3/shared/constant"
+import "github.com/Nordlys-Labs/openai-go/v3/shared/constant"
 
 // Helper to accumulate chunks from a stream
 type ChatCompletionAccumulator struct {
