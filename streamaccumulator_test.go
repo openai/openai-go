@@ -230,6 +230,35 @@ func TestAccumulateTokenDetails(t *testing.T) {
 	}
 }
 
+func TestAccumulatorNegativeToolCallIndex(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+	chunk := openai.ChatCompletionChunk{}
+
+	// Some OpenAI-compatible providers (e.g., AWS Bedrock) return tool calls with index -1.
+	json := `{"id":"test","object":"chat.completion.chunk","created":0,"model":"test","choices":[{"index":0,"delta":{"tool_calls":[{"id":"call_123","index":-1,"type":"function","function":{"name":"test_func","arguments":"{}"}}]}}]}`
+	if err := chunk.UnmarshalJSON([]byte(json)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	if len(acc.Choices) != 1 || len(acc.Choices[0].Message.ToolCalls) != 1 {
+		t.Fatal("Expected 1 choice with 1 tool call")
+	}
+	if acc.Choices[0].Message.ToolCalls[0].Function.Name != "test_func" {
+		t.Errorf("Expected tool call name 'test_func', got %q", acc.Choices[0].Message.ToolCalls[0].Function.Name)
+	}
+}
+
+func TestAccumulatorEmptyToolCallsArray(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+	chunk := openai.ChatCompletionChunk{}
+	chunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[]}}]}`))
+	acc.AddChunk(chunk)
+}
+
 // manually created on 11/3/2024
 var mockResponseBody = `data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":{"content":[],"refusal":null},"finish_reason":null}],"usage":null}
 
