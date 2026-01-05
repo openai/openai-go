@@ -1549,6 +1549,23 @@ func (r *ChatCompletionMessage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// extraFieldsToAny converts ExtraFields from response type to a format suitable for request params.
+func extraFieldsToAny(extraFields map[string]respjson.Field) map[string]any {
+	if len(extraFields) == 0 {
+		return nil
+	}
+	result := make(map[string]any, len(extraFields))
+	for k, v := range extraFields {
+		if v.Valid() {
+			var val any
+			if err := json.Unmarshal([]byte(v.Raw()), &val); err == nil {
+				result[k] = val
+			}
+		}
+	}
+	return result
+}
+
 func (r ChatCompletionMessage) ToParam() ChatCompletionMessageParamUnion {
 	asst := r.ToAssistantMessageParam()
 	return ChatCompletionMessageParamUnion{OfAssistant: &asst}
@@ -1599,6 +1616,12 @@ func (r ChatCompletionMessage) ToAssistantMessageParam() ChatCompletionAssistant
 			p.ToolCalls = append(p.ToolCalls, u)
 		}
 	}
+
+	// Copy ExtraFields from the response to the param type
+	if extras := extraFieldsToAny(r.JSON.ExtraFields); len(extras) > 0 {
+		p.SetExtraFields(extras)
+	}
+
 	return p
 }
 
