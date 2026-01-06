@@ -46,7 +46,7 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 						},
 						Transcription: realtime.AudioTranscriptionParam{
 							Language: openai.String("language"),
-							Model:    realtime.AudioTranscriptionModelWhisper1,
+							Model:    realtime.AudioTranscriptionModel("string"),
 							Prompt:   openai.String("prompt"),
 						},
 						TurnDetection: realtime.RealtimeAudioInputTurnDetectionUnionParam{
@@ -68,7 +68,7 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 							},
 						},
 						Speed: openai.Float(0.25),
-						Voice: realtime.RealtimeAudioConfigOutputVoiceAlloy,
+						Voice: realtime.RealtimeAudioConfigOutputVoiceAsh,
 					},
 				},
 				Include:      []string{"item.input_audio_transcription.logprobs"},
@@ -76,7 +76,7 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 				MaxOutputTokens: realtime.RealtimeSessionCreateRequestMaxOutputTokensUnionParam{
 					OfInt: openai.Int(0),
 				},
-				Model:            realtime.RealtimeSessionCreateRequestModelGPTRealtime,
+				Model:            realtime.RealtimeSessionCreateRequestModel("string"),
 				OutputModalities: []string{"text"},
 				Prompt: responses.ResponsePromptParam{
 					ID: "id",
