@@ -32,7 +32,7 @@ func (r *VectorStoreFileService) PollStatus(ctx context.Context, vectorStoreID s
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
 	opts = append(opts, option.WithResponseInto(&raw))
 	for {
-		file, err := r.Get(ctx, fileID, vectorStoreID, opts...)
+		file, err := r.Get(ctx, vectorStoreID, fileID, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("vector store file poll: received %w", err)
 		}
@@ -67,7 +67,7 @@ func (r *VectorStoreFileBatchService) PollStatus(ctx context.Context, vectorStor
 	opts = append(opts, option.WithResponseInto(&raw))
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
 	for {
-		batch, err := r.Get(ctx, batchID, vectorStoreID, opts...)
+		batch, err := r.Get(ctx, vectorStoreID, batchID, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("vector store file batch poll: received %w", err)
 		}
