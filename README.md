@@ -62,7 +62,7 @@ func main() {
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage("Say this is a test"),
 		},
-		Model: openai.ChatModelGPT5_2,
+		Model: openai.ChatModelGPT4o,
 	})
 	if err != nil {
 		panic(err.Error())
@@ -556,7 +556,7 @@ To handle errors, we recommend that you use the `errors.As` pattern:
 
 ```go
 _, err := client.FineTuning.Jobs.New(context.TODO(), openai.FineTuningJobNewParams{
-	Model:        openai.FineTuningJobNewParamsModelBabbage002,
+	Model:        openai.FineTuningJobNewParamsModel("gpt-4o"),
 	TrainingFile: "file-abc123",
 })
 if err != nil {
@@ -593,7 +593,7 @@ client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5_2,
+		Model: shared.ChatModelGPT4o,
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -774,7 +774,7 @@ client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5_2,
+		Model: shared.ChatModelGPT4o,
 	},
 	option.WithMaxRetries(5),
 )
@@ -798,7 +798,7 @@ chatCompletion, err := client.Chat.Completions.New(
 				},
 			},
 		}},
-		Model: shared.ChatModelGPT5_2,
+		Model: shared.ChatModelGPT4o,
 	},
 	option.WithResponseInto(&response),
 )

@@ -28,7 +28,7 @@ func TestFineTuningJobNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.FineTuning.Jobs.New(context.TODO(), openai.FineTuningJobNewParams{
-		Model:        openai.FineTuningJobNewParamsModelBabbage002,
+		Model:        openai.FineTuningJobNewParamsModelGPT4oMini,
 		TrainingFile: "file-abc123",
 		Hyperparameters: openai.FineTuningJobNewParamsHyperparameters{
 			BatchSize: openai.FineTuningJobNewParamsHyperparametersBatchSizeUnion{
