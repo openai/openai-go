@@ -532,8 +532,9 @@ type ChatCompletionAudioParam struct {
 	//
 	// Any of "wav", "aac", "mp3", "flac", "opus", "pcm16".
 	Format ChatCompletionAudioParamFormat `json:"format,omitzero,required"`
-	// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
-	// `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, and `shimmer`.
+	// The voice the model uses to respond. Supported built-in voices are `alloy`,
+	// `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`,
+	// `marin`, and `cedar`.
 	Voice ChatCompletionAudioParamVoice `json:"voice,omitzero,required"`
 	paramObj
 }
@@ -559,8 +560,9 @@ const (
 	ChatCompletionAudioParamFormatPcm16 ChatCompletionAudioParamFormat = "pcm16"
 )
 
-// The voice the model uses to respond. Supported voices are `alloy`, `ash`,
-// `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, and `shimmer`.
+// The voice the model uses to respond. Supported built-in voices are `alloy`,
+// `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`,
+// `marin`, and `cedar`.
 type ChatCompletionAudioParamVoice string
 
 const (

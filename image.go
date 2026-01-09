@@ -49,7 +49,8 @@ func (r *ImageService) NewVariation(ctx context.Context, body ImageNewVariationP
 }
 
 // Creates an edited or extended image given one or more source images and a
-// prompt. This endpoint only supports `gpt-image-1` and `dall-e-2`.
+// prompt. This endpoint supports GPT Image models (`gpt-image-1.5`, `gpt-image-1`,
+// and `gpt-image-1-mini`) and `dall-e-2`.
 func (r *ImageService) Edit(ctx context.Context, body ImageEditParams, opts ...option.RequestOption) (res *ImagesResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "images/edits"
@@ -58,7 +59,8 @@ func (r *ImageService) Edit(ctx context.Context, body ImageEditParams, opts ...o
 }
 
 // Creates an edited or extended image given one or more source images and a
-// prompt. This endpoint only supports `gpt-image-1` and `dall-e-2`.
+// prompt. This endpoint supports GPT Image models (`gpt-image-1.5`, `gpt-image-1`,
+// and `gpt-image-1-mini`) and `dall-e-2`.
 func (r *ImageService) EditStreaming(ctx context.Context, body ImageEditParams, opts ...option.RequestOption) (stream *ssestream.Stream[ImageEditStreamEventUnion]) {
 	var (
 		raw *http.Response

@@ -220,10 +220,10 @@ type RealtimeAudioConfigOutputParam struct {
 	Speed param.Opt[float64] `json:"speed,omitzero"`
 	// The format of the output audio.
 	Format RealtimeAudioFormatsUnionParam `json:"format,omitzero"`
-	// The voice the model uses to respond. Voice cannot be changed during the session
-	// once the model has responded with audio at least once. Current voice options are
-	// `alloy`, `ash`, `ballad`, `coral`, `echo`, `sage`, `shimmer`, `verse`, `marin`,
-	// and `cedar`. We recommend `marin` and `cedar` for best quality.
+	// The voice the model uses to respond. Supported built-in voices are `alloy`,
+	// `ash`, `ballad`, `coral`, `echo`, `sage`, `shimmer`, `verse`, `marin`, and
+	// `cedar`. Voice cannot be changed during the session once the model has responded
+	// with audio at least once. We recommend `marin` and `cedar` for best quality.
 	Voice RealtimeAudioConfigOutputVoice `json:"voice,omitzero"`
 	paramObj
 }
@@ -236,10 +236,10 @@ func (r *RealtimeAudioConfigOutputParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The voice the model uses to respond. Voice cannot be changed during the session
-// once the model has responded with audio at least once. Current voice options are
-// `alloy`, `ash`, `ballad`, `coral`, `echo`, `sage`, `shimmer`, `verse`, `marin`,
-// and `cedar`. We recommend `marin` and `cedar` for best quality.
+// The voice the model uses to respond. Supported built-in voices are `alloy`,
+// `ash`, `ballad`, `coral`, `echo`, `sage`, `shimmer`, `verse`, `marin`, and
+// `cedar`. Voice cannot be changed during the session once the model has responded
+// with audio at least once. We recommend `marin` and `cedar` for best quality.
 type RealtimeAudioConfigOutputVoice string
 
 const (
