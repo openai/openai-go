@@ -29,7 +29,7 @@ func TestEmbeddingNewWithOptionalParams(t *testing.T) {
 		Input: openai.EmbeddingNewParamsInputUnion{
 			OfString: openai.String("The quick brown fox jumped over the lazy dog"),
 		},
-		Model:          openai.EmbeddingModelTextEmbeddingAda002,
+		Model:          openai.EmbeddingModelTextEmbedding3Small,
 		Dimensions:     openai.Int(1),
 		EncodingFormat: openai.EmbeddingNewParamsEncodingFormatFloat,
 		User:           openai.String("user-1234"),
