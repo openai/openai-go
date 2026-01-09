@@ -93,9 +93,7 @@ type InputTokenCountParams struct {
 	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
 	// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
 	Text InputTokenCountParamsText `json:"text,omitzero"`
-	// How the model should select which tool (or tools) to use when generating a
-	// response. See the `tools` parameter to see how to specify which tools the model
-	// can call.
+	// Controls which tool the model should use, if any.
 	ToolChoice InputTokenCountParamsToolChoiceUnion `json:"tool_choice,omitzero"`
 	// An array of tools the model may call while generating a response. You can
 	// specify which tool to use by setting the `tool_choice` parameter.

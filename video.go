@@ -206,8 +206,11 @@ const (
 	VideoStatusFailed     VideoStatus = "failed"
 )
 
+// An error that occurred while generating the response.
 type VideoCreateError struct {
-	Code    string `json:"code,required"`
+	// A machine-readable error code that was returned.
+	Code string `json:"code,required"`
+	// A human-readable description of the error that was returned.
 	Message string `json:"message,required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {

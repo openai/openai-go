@@ -521,6 +521,8 @@ type ConversationItemUnionAction struct {
 	Query string `json:"query"`
 	Type  string `json:"type"`
 	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
+	Queries []string `json:"queries"`
+	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
 	Sources []responses.ResponseFunctionWebSearchActionSearchSource `json:"sources"`
 	URL     string                                                  `json:"url"`
 	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
@@ -555,6 +557,7 @@ type ConversationItemUnionAction struct {
 	JSON            struct {
 		Query            respjson.Field
 		Type             respjson.Field
+		Queries          respjson.Field
 		Sources          respjson.Field
 		URL              respjson.Field
 		Pattern          respjson.Field
