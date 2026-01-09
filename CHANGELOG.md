@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.16.0 (2026-01-09)
+
+Full Changelog: [v3.15.0...v3.16.0](https://github.com/openai/openai-go/compare/v3.15.0...v3.16.0)
+
+### Features
+
+* **api:** add new Response completed_at prop ([bff6331](https://github.com/openai/openai-go/commit/bff6331c1b428de935966f59f2465e77df08f075))
+
+
+### Bug Fixes
+
+* **client:** use the correct order of params for vector store file and batch polling ([ef32641](https://github.com/openai/openai-go/commit/ef32641b81da84c7d0524c372ee8b45cda71fe2c))
+
+
+### Chores
+
+* **internal:** codegen related update ([1e529a4](https://github.com/openai/openai-go/commit/1e529a4b48c55a6bb611f5dcaf0ad1bfbd6f729d))
+* **internal:** use different example values for some enums ([a2836ee](https://github.com/openai/openai-go/commit/a2836eef250be42d9e0f135c36823219129cad1e))
+
+
+### Documentation
+
+* update URL version ([dc00e14](https://github.com/openai/openai-go/commit/dc00e14cae07daaefabeb5371daa12f90bb82dc8))
+
 ## 3.15.0 (2025-12-19)
 
 Full Changelog: [v3.14.0...v3.15.0](https://github.com/openai/openai-go/compare/v3.14.0...v3.15.0)
