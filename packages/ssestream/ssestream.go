@@ -163,6 +163,11 @@ func (s *Stream[T]) Next() bool {
 			continue
 		}
 
+		// Skip events with empty data (e.g., from SSE retry: or comment lines)
+		if len(s.decoder.Event().Data) == 0 {
+			continue
+		}
+
 		var nxt T
 
 		if s.decoder.Event().Type == "" || !strings.HasPrefix(s.decoder.Event().Type, "thread.") {
