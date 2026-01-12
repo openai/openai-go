@@ -9,7 +9,12 @@ import (
 	"github.com/openai/openai-go/v3"
 )
 
-// A struct that will be converted to a Structured Outputs response schema
+// A struct that will be converted to a Structured Outputs response schema.
+//
+// NOTE: Avoid using `omitempty` in JSON tags for structured output schemas. The
+// jsonschema library interprets `omitempty` as "optional", excluding the field
+// from the schema's "required" array. This can cause the API to reject the
+// schema (with Strict: true) or the model to silently skip populating those fields.
 type HistoricalComputer struct {
 	Origin       Origin   `json:"origin" jsonschema_description:"The origin of the computer"`
 	Name         string   `json:"full_name" jsonschema_description:"The name of the device model"`
