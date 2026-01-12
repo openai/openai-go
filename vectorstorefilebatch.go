@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"sync"
 	"slices"
+	"sync"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"

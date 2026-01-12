@@ -51,7 +51,6 @@ func (r *VideoService) New(ctx context.Context, body VideoNewParams, opts ...opt
 	return
 }
 
-
 // Create Video and Poll for Completion
 //
 // Polls the API and blocks until the task is complete.
