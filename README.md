@@ -38,59 +38,122 @@ go get -u 'github.com/openai/openai-go/v3@v3.16.0'
 ## Requirements
 
 This library requires Go 1.22+.
+
 ## Usage
 
 The full API of this library can be found in [api.md](api.md).
+
+The primary API for interacting with OpenAI models is the [Responses API](https://platform.openai.com/docs/api-reference/responses). You can generate text from the model with the code below.
 
 ```go
 package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/shared"
+	"github.com/openai/openai-go/v3/responses"
 )
 
 func main() {
 	client := openai.NewClient(
 		option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("OPENAI_API_KEY")
 	)
-	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: []openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage("Say this is a test"),
+
+	response, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
+		Model:        openai.ChatModelGPT4o,
+		Instructions: openai.String("You are a coding assistant that talks like a pirate."),
+		Input: responses.ResponseNewParamsInputUnion{
+			OfString: openai.String("How do I check if a slice is empty in Go?"),
 		},
-		Model: openai.ChatModelGPT4o,
 	})
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
-	println(chatCompletion.Choices[0].Message.Content)
-}
 
+	println(response.OutputText())
+}
 ```
+
+<details>
+<summary>Multi-turn Responses</summary>
+
+```go
+response, err := client.Responses.New(ctx, responses.ResponseNewParams{
+	Model: openai.ChatModelGPT4o,
+	Input: responses.ResponseNewParamsInputUnion{
+		OfString: openai.String("What is the capital of France?"),
+	},
+})
+if err != nil {
+	panic(err)
+}
+fmt.Println("First response:", response.OutputText())
+
+// Use PreviousResponseID to continue the conversation
+response, err = client.Responses.New(ctx, responses.ResponseNewParams{
+	Model:              openai.ChatModelGPT4o,
+	PreviousResponseID: openai.String(response.ID),
+	Input: responses.ResponseNewParamsInputUnion{
+		OfString: openai.String("And what is the population of that city?"),
+	},
+})
+if err != nil {
+	panic(err)
+}
+fmt.Println("Second response:", response.OutputText())
+```
+</details>
 
 <details>
 <summary>Conversations</summary>
 
 ```go
-param := openai.ChatCompletionNewParams{
-	Messages: []openai.ChatCompletionMessageParamUnion{
-		openai.UserMessage("What kind of houseplant is easy to take care of?"),
-	},
-	Seed:     openai.Int(1),
-	Model:    openai.ChatModelGPT4o,
+conv, err := client.Conversations.New(ctx, conversations.ConversationNewParams{})
+if err != nil {
+	panic(err)
 }
+fmt.Println("Created conversation:", conv.ID)
 
-completion, err := client.Chat.Completions.New(ctx, param)
+response, err := client.Responses.New(ctx, responses.ResponseNewParams{
+	Model: openai.ChatModelGPT4o,
+	Input: responses.ResponseNewParamsInputUnion{
+		OfString: openai.String("Hello! Remember that my favorite color is blue."),
+	},
+	Conversation: responses.ResponseNewParamsConversationUnion{
+		OfConversationObject: &responses.ResponseConversationParam{
+			ID: conv.ID,
+		},
+	},
+})
+if err != nil {
+	panic(err)
+}
+fmt.Println("First response:", response.OutputText())
 
-param.Messages = append(param.Messages, completion.Choices[0].Message.ToParam())
-param.Messages = append(param.Messages, openai.UserMessage("How big are those?"))
+// Continue the conversation
+response, err = client.Responses.New(ctx, responses.ResponseNewParams{
+	Model: openai.ChatModelGPT4o,
+	Input: responses.ResponseNewParamsInputUnion{
+		OfString: openai.String("What is my favorite color?"),
+	},
+	Conversation: responses.ResponseNewParamsConversationUnion{
+		OfConversationObject: &responses.ResponseConversationParam{
+			ID: conv.ID,
+		},
+	},
+})
+if err != nil {
+	panic(err)
+}
+fmt.Println("Second response:", response.OutputText())
 
-// continue the conversation
-completion, err = client.Chat.Completions.New(ctx, param)
+items, err := client.Conversations.Items.List(ctx, conv.ID, conversations.ItemListParams{})
+if err != nil {
+	panic(err)
+}
+fmt.Println("Conversation has", len(items.Data), "items")
 ```
 
 </details>
@@ -99,51 +162,26 @@ completion, err = client.Chat.Completions.New(ctx, param)
 <summary>Streaming responses</summary>
 
 ```go
-question := "Write an epic"
+ctx := context.Background()
 
-stream := client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
-	Messages: []openai.ChatCompletionMessageParamUnion{
-		openai.UserMessage(question),
-	},
-	Seed:  openai.Int(0),
+stream := client.Responses.NewStreaming(ctx, responses.ResponseNewParams{
 	Model: openai.ChatModelGPT4o,
+	Input: responses.ResponseNewParamsInputUnion{
+		OfString: openai.String("Write a haiku about programming"),
+	},
 })
 
-// optionally, an accumulator helper can be used
-acc := openai.ChatCompletionAccumulator{}
-
 for stream.Next() {
-	chunk := stream.Current()
-	acc.AddChunk(chunk)
-
-	if content, ok := acc.JustFinishedContent(); ok {
-		println("Content stream finished:", content)
-	}
-
-	// if using tool calls
-	if tool, ok := acc.JustFinishedToolCall(); ok {
-		println("Tool call stream finished:", tool.Index, tool.Name, tool.Arguments)
-	}
-
-	if refusal, ok := acc.JustFinishedRefusal(); ok {
-		println("Refusal stream finished:", refusal)
-	}
-
-	// it's best to use chunks after handling JustFinished events
-	if len(chunk.Choices) > 0 {
-		println(chunk.Choices[0].Delta.Content)
-	}
+	event := stream.Current()
+	print(event.Delta)
 }
 
 if stream.Err() != nil {
 	panic(stream.Err())
 }
-
-// After the stream is finished, acc can be used like a ChatCompletion
-_ = acc.Choices[0].Message.Content
 ```
 
-> See the [full streaming and accumulation example](./examples/chat-completion-accumulating/main.go)
+> See the [full streaming example](./examples/responses-streaming/main.go)
 
 </details>
 
@@ -151,67 +189,65 @@ _ = acc.Choices[0].Message.Content
 <summary>Tool calling</summary>
 
 ```go
-import (
-	"encoding/json"
-	// ...
-)
+ctx := context.Background()
 
-// ...
-
-question := "What is the weather in New York City?"
-
-params := openai.ChatCompletionNewParams{
-	Messages: []openai.ChatCompletionMessageParamUnion{
-		openai.UserMessage(question),
+params := responses.ResponseNewParams{
+	Model: openai.ChatModelGPT4o,
+	Input: responses.ResponseNewParamsInputUnion{
+		OfString: openai.String("What is the weather in New York City?"),
 	},
-	Tools: []openai.ChatCompletionToolUnionParam{
-		{
-			OfFunction: &openai.ChatCompletionFunctionToolParam{
-				Function: openai.FunctionDefinitionParam{
-					Name:        "get_weather",
-					Description: openai.String("Get weather at the given location"),
-					Parameters: openai.FunctionParameters{
-						"type": "object",
-						"properties": map[string]interface{}{
-							"location": map[string]string{
-								"type": "string",
-							},
-						},
-						"required": []string{"location"},
+	Tools: []responses.ToolUnionParam{{
+		OfFunction: &responses.FunctionToolParam{
+			Name:        "get_weather",
+			Description: openai.String("Get weather at the given location"),
+			Parameters: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"location": map[string]string{
+						"type": "string",
 					},
 				},
+				"required": []string{"location"},
 			},
 		},
-	},
-	Model: openai.ChatModelGPT4o,
+	}},
 }
 
-// If there is a was a function call, continue the conversation
-params.Messages = append(params.Messages, completion.Choices[0].Message.ToParam())
-for _, toolCall := range toolCalls {
-	if toolCall.Function.Name == "get_weather" {
-		// Extract the location from the function call arguments
-		var args map[string]interface{}
-		err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
-		if err != nil {
-			panic(err)
+response, _ := client.Responses.New(ctx, params)
+
+// Check for function calls in the response output
+for _, item := range response.Output {
+	if item.Type == "function_call" {
+		toolCall := item.AsFunctionCall()
+		if toolCall.Name == "get_weather" {
+			// Extract arguments and call your function
+			var args map[string]any
+			json.Unmarshal([]byte(toolCall.Arguments), &args)
+			location := args["location"].(string)
+
+			// Simulate getting weather data
+			weatherData := getWeather(location)
+			fmt.Printf("Weather in %s: %s\n", location, weatherData)
+
+			// Continue conversation with function result
+			response, _ = client.Responses.New(ctx, responses.ResponseNewParams{
+				Model:              openai.ChatModelGPT4o,
+				PreviousResponseID: openai.String(response.ID),
+				Input: responses.ResponseNewParamsInputUnion{
+					OfInputItemList: []responses.ResponseInputItemUnionParam{{
+						OfFunctionCallOutput: &responses.ResponseInputItemFunctionCallOutputParam{
+							CallID: toolCall.CallID,
+							Output: responses.ResponseInputItemFunctionCallOutputOutputUnionParam{
+								OfString: openai.String(weatherData),
+							},
+						},
+					}},
+				},
+			})
 		}
-		location := args["location"].(string)
-
-		// Simulate getting weather data
-		weatherData := getWeather(location)
-
-		// Print the weather data
-		fmt.Printf("Weather in %s: %s\n", location, weatherData)
-
-		params.Messages = append(params.Messages, openai.ToolMessage(weatherData, toolCall.ID))
 	}
 }
-
-// ... continue the conversation with the information provided by the tool
 ```
-
-> See the [full tool calling example](./examples/chat-completion-tool-calling/main.go)
 
 </details>
 
@@ -238,48 +274,48 @@ type Origin struct {
 	Organization string `json:"organization" jsonschema_description:"The organization that was in charge of its development"`
 }
 
-func GenerateSchema[T any]() interface{} {
-	// Structured Outputs uses a subset of JSON schema
-	// These flags are necessary to comply with the subset
+// Structured Outputs uses a subset of JSON schema
+// These flags are necessary to comply with the subset
+func GenerateSchema[T any]() map[string]any {
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
 		DoNotReference:            true,
 	}
 	var v T
 	schema := reflector.Reflect(v)
-	return schema
+
+	data, _ := json.Marshal(schema)
+	var result map[string]any
+	json.Unmarshal(data, &result)
+	return result
 }
 
 // Generate the JSON schema at initialization time
-var HistoricalComputerResponseSchema = GenerateSchema[HistoricalComputer]()
+var HistoricalComputerSchema = GenerateSchema[HistoricalComputer]()
 
 func main() {
+	client := openai.NewClient()
+	ctx := context.Background()
 
-	// ...
-
-	question := "What computer ran the first neural network?"
-
-	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
-		Name:        "historical_computer",
-		Description: openai.String("Notable information about a computer"),
-		Schema:      HistoricalComputerResponseSchema,
-		Strict:      openai.Bool(true),
-	}
-
-	chat, _ := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		// ...
-		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
-			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{
-				JSONSchema: schemaParam,
-			},
+	response, err := client.Responses.New(ctx, responses.ResponseNewParams{
+		Model: openai.ChatModelGPT4o,
+		Input: responses.ResponseNewParamsInputUnion{
+			OfString: openai.String("What computer ran the first neural network?"),
 		},
-		// only certain models can perform structured outputs
-		Model: openai.ChatModelGPT4o2024_08_06,
+		Text: responses.ResponseTextConfigParam{
+			Format: responses.ResponseFormatTextConfigParamOfJSONSchema(
+				"historical_computer",
+				HistoricalComputerSchema,
+			),
+		},
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	// extract into a well-typed struct
 	var historicalComputer HistoricalComputer
-	_ = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &historicalComputer)
+	_ = json.Unmarshal([]byte(response.OutputText()), &historicalComputer)
 
 	historicalComputer.Name
 	historicalComputer.Origin.YearBuilt
@@ -290,9 +326,40 @@ func main() {
 }
 ```
 
-> See the [full structured outputs example](./examples/structured-outputs/main.go)
+> See the [full structured outputs example](./examples/responses-structured-outputs/main.go)
 
 </details>
+
+### Chat Completions API
+
+The previous standard (supported indefinitely) for generating text is the [Chat Completions API](https://platform.openai.com/docs/api-reference/chat). You can use that API to generate text from the model with the code below.
+
+```go
+package main
+
+import (
+	"context"
+
+	"github.com/openai/openai-go/v3"
+)
+
+func main() {
+	client := openai.NewClient()
+
+	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.DeveloperMessage("You are a coding assistant that talks like a pirate."),
+			openai.UserMessage("How do I check if a slice is empty in Go?"),
+		},
+		Model: openai.ChatModelGPT4o,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	println(chatCompletion.Choices[0].Message.Content)
+}
+```
 
 ### Request fields
 
@@ -495,7 +562,7 @@ client := openai.NewClient(
 	option.WithHeader("X-Some-Header", "custom_header_info"),
 )
 
-client.Chat.Completions.New(context.TODO(), ...,
+client.Responses.New(context.TODO(), responses.ResponseNewParams{...},
 	// Override the header
 	option.WithHeader("X-Some-Header", "some_other_custom_header_info"),
 	// Add an undocumented field to the request body, using sjson syntax
@@ -583,17 +650,13 @@ To set a per-retry timeout, use `option.WithRequestTimeout()`.
 // This sets the timeout for the request, including all the retries.
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 defer cancel()
-client.Chat.Completions.New(
+client.Responses.New(
 	ctx,
-	openai.ChatCompletionNewParams{
-		Messages: []openai.ChatCompletionMessageParamUnion{{
-			OfUser: &openai.ChatCompletionUserMessageParam{
-				Content: openai.ChatCompletionUserMessageParamContentUnion{
-					OfString: openai.String("How can I list all files in a directory using Python?"),
-				},
-			},
-		}},
-		Model: shared.ChatModelGPT4o,
+	responses.ResponseNewParams{
+		Model: openai.ChatModelGPT4o,
+		Input: responses.ResponseNewParamsInputUnion{
+			OfString: openai.String("How can I list all files in a directory using Python?"),
+		},
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -764,17 +827,13 @@ client := openai.NewClient(
 )
 
 // Override per-request:
-client.Chat.Completions.New(
+client.Responses.New(
 	context.TODO(),
-	openai.ChatCompletionNewParams{
-		Messages: []openai.ChatCompletionMessageParamUnion{{
-			OfUser: &openai.ChatCompletionUserMessageParam{
-				Content: openai.ChatCompletionUserMessageParamContentUnion{
-					OfString: openai.String("How can I get the name of the current day in JavaScript?"),
-				},
-			},
-		}},
-		Model: shared.ChatModelGPT4o,
+	responses.ResponseNewParams{
+		Model: openai.ChatModelGPT4o,
+		Input: responses.ResponseNewParamsInputUnion{
+			OfString: openai.String("How can I get the name of the current day in JavaScript?"),
+		},
 	},
 	option.WithMaxRetries(5),
 )
@@ -787,28 +846,24 @@ you need to examine response headers, status codes, or other details.
 
 ```go
 // Create a variable to store the HTTP response
-var response *http.Response
-chatCompletion, err := client.Chat.Completions.New(
+var httpResp *http.Response
+response, err := client.Responses.New(
 	context.TODO(),
-	openai.ChatCompletionNewParams{
-		Messages: []openai.ChatCompletionMessageParamUnion{{
-			OfUser: &openai.ChatCompletionUserMessageParam{
-				Content: openai.ChatCompletionUserMessageParamContentUnion{
-					OfString: openai.String("Say this is a test"),
-				},
-			},
-		}},
-		Model: shared.ChatModelGPT4o,
+	responses.ResponseNewParams{
+		Model: openai.ChatModelGPT4o,
+		Input: responses.ResponseNewParamsInputUnion{
+			OfString: openai.String("Say this is a test"),
+		},
 	},
-	option.WithResponseInto(&response),
+	option.WithResponseInto(&httpResp),
 )
 if err != nil {
 	// handle error
 }
-fmt.Printf("%+v\n", chatCompletion)
+fmt.Printf("%+v\n", response)
 
-fmt.Printf("Status Code: %d\n", response.StatusCode)
-fmt.Printf("Headers: %+#v\n", response.Header)
+fmt.Printf("Status Code: %d\n", httpResp.StatusCode)
+fmt.Printf("Headers: %+#v\n", httpResp.Header)
 ```
 
 ### Making custom/undocumented requests
