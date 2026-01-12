@@ -3028,7 +3028,7 @@ type ChatCompletionNewParams struct {
 	// of 24 hours.
 	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
 	//
-	// Any of "in-memory", "24h".
+	// Any of "in_memory", "24h".
 	PromptCacheRetention ChatCompletionNewParamsPromptCacheRetention `json:"prompt_cache_retention,omitzero"`
 	// Constrains effort on reasoning for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
@@ -3212,7 +3212,7 @@ func (r *ChatCompletionNewParamsFunction) UnmarshalJSON(data []byte) error {
 type ChatCompletionNewParamsPromptCacheRetention string
 
 const (
-	ChatCompletionNewParamsPromptCacheRetentionInMemory ChatCompletionNewParamsPromptCacheRetention = "in-memory"
+	ChatCompletionNewParamsPromptCacheRetentionInMemory ChatCompletionNewParamsPromptCacheRetention = "in_memory"
 	ChatCompletionNewParamsPromptCacheRetention24h      ChatCompletionNewParamsPromptCacheRetention = "24h"
 )
 
