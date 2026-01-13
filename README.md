@@ -57,22 +57,23 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
 	client := openai.NewClient(
 		option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("OPENAI_API_KEY")
 	)
 
-	response, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
-		Model:        openai.ChatModelGPT4o,
-		Instructions: openai.String("You are a coding assistant that talks like a pirate."),
-		Input: responses.ResponseNewParamsInputUnion{
-			OfString: openai.String("How do I check if a slice is empty in Go?"),
-		},
+	question := "Write me a haiku about computers"
+
+	resp, err := client.Responses.New(ctx, responses.ResponseNewParams{
+		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(question)},
+		Model: openai.ChatModelGPT4,
 	})
+
 	if err != nil {
 		panic(err)
 	}
 
-	println(response.OutputText())
+	println(resp.OutputText())
 }
 ```
 
