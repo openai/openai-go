@@ -2691,8 +2691,42 @@ type ChatCompletionToolChoiceOptionUnionParam struct {
 func (u ChatCompletionToolChoiceOptionUnionParam) MarshalJSON() ([]byte, error) {
 	return param.MarshalUnion(u, u.OfAuto, u.OfAllowedTools, u.OfFunctionToolChoice, u.OfCustomToolChoice)
 }
+
+// https://github.com/openai/openai-go/issues/520
+// The issue: in union.go, newStructUnionDecoder method -> decoder.field.Type.Elem() calls .Elem() on the field type. When it encounters the OfAuto field (which is param.Opt[string]), calling .Elem() fails because param.Opt[string] is not a pointer type.
+// Solution: either handle it here or modify the newStructUnionDecoder code to handle param.Opt types.
 func (u *ChatCompletionToolChoiceOptionUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
+	// Handle simple string values first
+	var str string
+	if json.Unmarshal(data, &str) == nil {
+		u.OfAuto = param.Opt[string]{Value: str}
+		return nil
+	}
+
+	// Handle discriminated objects
+	var obj struct {
+		Type string `json:"type"`
+	}
+	if json.Unmarshal(data, &obj) != nil {
+		return nil // Invalid format, but don't error
+	}
+
+	// Unmarshal based on type using a single apijson.UnmarshalRoot call
+	switch obj.Type {
+	case "function":
+		var v ChatCompletionNamedToolChoiceParam
+		apijson.UnmarshalRoot(data, &v)
+		u.OfFunctionToolChoice = &v
+	case "allowed_tools":
+		var v ChatCompletionAllowedToolChoiceParam
+		apijson.UnmarshalRoot(data, &v)
+		u.OfAllowedTools = &v
+	case "custom":
+		var v ChatCompletionNamedToolChoiceCustomParam
+		apijson.UnmarshalRoot(data, &v)
+		u.OfCustomToolChoice = &v
+	}
+	return nil
 }
 
 func (u *ChatCompletionToolChoiceOptionUnionParam) asAny() any {
