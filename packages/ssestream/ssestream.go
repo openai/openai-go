@@ -5,12 +5,12 @@ package ssestream
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
+	json "github.com/goccy/go-json"
 	"github.com/tidwall/gjson"
 )
 
@@ -92,14 +92,9 @@ func (s *eventStreamDecoder) Next() bool {
 		case "event":
 			event = string(value)
 		case "data":
-			_, s.err = data.Write(value)
-			if s.err != nil {
-				break
-			}
-			_, s.err = data.WriteRune('\n')
-			if s.err != nil {
-				break
-			}
+			// err is always nil
+			_, _ = data.Write(value)
+			_, _ = data.WriteRune('\n')
 		}
 	}
 
@@ -136,6 +131,8 @@ func NewStream[T any](decoder Decoder, err error) *Stream[T] {
 	}
 }
 
+var donePrefix = []byte("[DONE]")
+
 // Next returns false if the stream has ended or an error occurred.
 // Call Stream.Current() to get the current value.
 // Call Stream.Err() to get the error.
@@ -157,35 +154,33 @@ func (s *Stream[T]) Next() bool {
 			continue
 		}
 
-		if bytes.HasPrefix(s.decoder.Event().Data, []byte("[DONE]")) {
+		ev := s.decoder.Event()
+		if bytes.HasPrefix(ev.Data, donePrefix) {
 			// In this case we don't break because we still want to iterate through the full stream.
 			s.done = true
 			continue
 		}
 
 		var nxt T
+		ep := gjson.GetBytes(ev.Data, "error")
 
-		if s.decoder.Event().Type == "" || !strings.HasPrefix(s.decoder.Event().Type, "thread.") {
-			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
+		if ev.Type == "" || !strings.HasPrefix(ev.Type, "thread.") {
 			if ep.Exists() {
 				s.err = fmt.Errorf("received error while streaming: %s", ep.String())
 				return false
 			}
-			s.err = json.Unmarshal(s.decoder.Event().Data, &nxt)
+			s.err = json.Unmarshal(ev.Data, &nxt)
 			if s.err != nil {
 				return false
 			}
 			s.cur = nxt
 			return true
 		} else {
-			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
 			if ep.Exists() {
 				s.err = fmt.Errorf("received error while streaming: %s", ep.String())
 				return false
 			}
-			event := s.decoder.Event().Type
-			data := s.decoder.Event().Data
-			s.err = json.Unmarshal([]byte(fmt.Sprintf(`{ "event": %q, "data": %s }`, event, data)), &nxt)
+			s.err = json.Unmarshal(fmt.Appendf(nil, `{ "event": %q, "data": %s }`, ev.Type, ev.Data), &nxt)
 			if s.err != nil {
 				return false
 			}
