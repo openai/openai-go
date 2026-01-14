@@ -49,6 +49,17 @@ type Event struct {
 	Data []byte
 }
 
+// StreamError represents an error event that occurred during streaming,
+// preserving the original event data for structured access.
+type StreamError struct {
+	Message string
+	Event   Event
+}
+
+func (e *StreamError) Error() string {
+	return e.Message
+}
+
 // A base implementation of a Decoder for text/event-stream.
 type eventStreamDecoder struct {
 	evt Event
@@ -165,7 +176,10 @@ func (s *Stream[T]) Next() bool {
 
 		ep := gjson.GetBytes(s.decoder.Event().Data, "error")
 		if ep.Exists() {
-			s.err = fmt.Errorf("received error while streaming: %s", ep.String())
+			s.err = &StreamError{
+				Message: fmt.Sprintf("received error while streaming: %s", ep.String()),
+				Event:   s.decoder.Event(),
+			}
 			return false
 		}
 		var nxt T
