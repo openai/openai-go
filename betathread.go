@@ -123,7 +123,8 @@ func (r *BetaThreadService) NewAndRunStreaming(ctx context.Context, body BetaThr
 		err error
 	)
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithJSONSet("stream", true)}, opts...)
+	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
+	opts = append(opts, option.WithJSONSet("stream", true))
 	path := "threads/runs"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStream[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
