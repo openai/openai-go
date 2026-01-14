@@ -81,7 +81,7 @@ func (r *ResponseService) NewStreaming(ctx context.Context, body ResponseNewPara
 		err error
 	)
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithJSONSet("stream", true)}, opts...)
+	opts = append(opts, option.WithJSONSet("stream", true))
 	path := "responses"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStream[ResponseStreamEventUnion](ssestream.NewDecoder(raw), err)
@@ -106,7 +106,7 @@ func (r *ResponseService) GetStreaming(ctx context.Context, responseID string, q
 		err error
 	)
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithJSONSet("stream", true)}, opts...)
+	opts = append(opts, option.WithJSONSet("stream", true))
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
 		return

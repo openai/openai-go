@@ -70,7 +70,8 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 		err error
 	)
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithJSONSet("stream", true)}, opts...)
+	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
+	opts = append(opts, option.WithJSONSet("stream", true))
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
@@ -202,7 +203,8 @@ func (r *BetaThreadRunService) SubmitToolOutputsStreaming(ctx context.Context, t
 		err error
 	)
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithJSONSet("stream", true)}, opts...)
+	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
+	opts = append(opts, option.WithJSONSet("stream", true))
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
 		return
