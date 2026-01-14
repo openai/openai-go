@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "==> Checking go.mod is tidy"
+go mod tidy
+if ! git diff --exit-code -- go.mod go.sum; then
+  echo "go.mod or go.sum has uncommitted changes. Please run 'go mod tidy' and commit the changes."
+  exit 1
+fi
+
+echo "==> Checking examples/go.mod is tidy"
+(cd examples && go mod tidy)
+if ! git diff --exit-code -- examples/go.mod examples/go.sum; then
+  echo "examples/go.mod or examples/go.sum has uncommitted changes. Please run 'cd examples && go mod tidy' and commit the changes."
+  exit 1
+fi
