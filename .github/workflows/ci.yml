@@ -28,7 +28,10 @@ jobs:
           go-version-file: ./go.mod
 
       - name: Run lints
-        run: ./scripts/lint && ./scripts/check-go-mod
+        run: ./scripts/lint
+
+      - name: Check go.mod is tidy
+        run: ./scripts/check-go-mod
   test:
     timeout-minutes: 10
     name: test
