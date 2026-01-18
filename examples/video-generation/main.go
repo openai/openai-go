@@ -13,7 +13,7 @@ func main() {
 	ctx := context.Background()
 
 	video, err := client.Videos.NewAndPoll(ctx, openai.VideoNewParams{
-		Model:  openai.VideoNewParamsModelSora2,
+		Model:  openai.VideoModelSora2,
 		Prompt: "A video of the words 'Thank you' in sparkling letters",
 	}, 1000)
 	if err != nil {
