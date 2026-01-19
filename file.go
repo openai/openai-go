@@ -231,10 +231,14 @@ const (
 	FileObjectStatusError     FileObjectStatus = "error"
 )
 
-// The intended purpose of the uploaded file. One of: - `assistants`: Used in the
-// Assistants API - `batch`: Used in the Batch API - `fine-tune`: Used for
-// fine-tuning - `vision`: Images used for vision fine-tuning - `user_data`:
-// Flexible file type for any purpose - `evals`: Used for eval data sets
+// The intended purpose of the uploaded file. One of:
+//
+// - `assistants`: Used in the Assistants API
+// - `batch`: Used in the Batch API
+// - `fine-tune`: Used for fine-tuning
+// - `vision`: Images used for vision fine-tuning
+// - `user_data`: Flexible file type for any purpose
+// - `evals`: Used for eval data sets
 type FilePurpose string
 
 const (
@@ -249,10 +253,14 @@ const (
 type FileNewParams struct {
 	// The File object (not file name) to be uploaded.
 	File io.Reader `json:"file,omitzero,required" format:"binary"`
-	// The intended purpose of the uploaded file. One of: - `assistants`: Used in the
-	// Assistants API - `batch`: Used in the Batch API - `fine-tune`: Used for
-	// fine-tuning - `vision`: Images used for vision fine-tuning - `user_data`:
-	// Flexible file type for any purpose - `evals`: Used for eval data sets
+	// The intended purpose of the uploaded file. One of:
+	//
+	// - `assistants`: Used in the Assistants API
+	// - `batch`: Used in the Batch API
+	// - `fine-tune`: Used for fine-tuning
+	// - `vision`: Images used for vision fine-tuning
+	// - `user_data`: Flexible file type for any purpose
+	// - `evals`: Used for eval data sets
 	//
 	// Any of "assistants", "batch", "fine-tune", "vision", "user_data", "evals".
 	Purpose FilePurpose `json:"purpose,omitzero,required"`
