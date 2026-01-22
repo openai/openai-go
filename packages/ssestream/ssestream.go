@@ -174,6 +174,14 @@ func (s *Stream[T]) Next() bool {
 			continue
 		}
 
+		ep := gjson.GetBytes(s.decoder.Event().Data, "error")
+		if ep.Exists() {
+			s.err = &StreamError{
+				Message: fmt.Sprintf("received error while streaming: %s", ep.String()),
+				Event:   s.decoder.Event(),
+			}
+			return false
+		}
 		var nxt T
 
 		if s.decoder.Event().Type == "" || !strings.HasPrefix(s.decoder.Event().Type, "thread.") {
