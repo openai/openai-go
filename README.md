@@ -66,7 +66,7 @@ func main() {
 
 	resp, err := client.Responses.New(ctx, responses.ResponseNewParams{
 		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(question)},
-		Model: openai.ChatModelGPT4,
+		Model: openai.ChatModelGPT5_2,
 	})
 
 	if err != nil {
@@ -82,7 +82,7 @@ func main() {
 
 ```go
 response, err := client.Responses.New(ctx, responses.ResponseNewParams{
-	Model: openai.ChatModelGPT4o,
+	Model: openai.ChatModelGPT5_2,
 	Input: responses.ResponseNewParamsInputUnion{
 		OfString: openai.String("What is the capital of France?"),
 	},
@@ -94,7 +94,7 @@ fmt.Println("First response:", response.OutputText())
 
 // Use PreviousResponseID to continue the conversation
 response, err = client.Responses.New(ctx, responses.ResponseNewParams{
-	Model:              openai.ChatModelGPT4o,
+	Model:              openai.ChatModelGPT5_2,
 	PreviousResponseID: openai.String(response.ID),
 	Input: responses.ResponseNewParamsInputUnion{
 		OfString: openai.String("And what is the population of that city?"),
@@ -118,7 +118,7 @@ if err != nil {
 fmt.Println("Created conversation:", conv.ID)
 
 response, err := client.Responses.New(ctx, responses.ResponseNewParams{
-	Model: openai.ChatModelGPT4o,
+	Model: openai.ChatModelGPT5_2,
 	Input: responses.ResponseNewParamsInputUnion{
 		OfString: openai.String("Hello! Remember that my favorite color is blue."),
 	},
@@ -135,7 +135,7 @@ fmt.Println("First response:", response.OutputText())
 
 // Continue the conversation
 response, err = client.Responses.New(ctx, responses.ResponseNewParams{
-	Model: openai.ChatModelGPT4o,
+	Model: openai.ChatModelGPT5_2,
 	Input: responses.ResponseNewParamsInputUnion{
 		OfString: openai.String("What is my favorite color?"),
 	},
@@ -166,7 +166,7 @@ fmt.Println("Conversation has", len(items.Data), "items")
 ctx := context.Background()
 
 stream := client.Responses.NewStreaming(ctx, responses.ResponseNewParams{
-	Model: openai.ChatModelGPT4o,
+	Model: openai.ChatModelGPT5_2,
 	Input: responses.ResponseNewParamsInputUnion{
 		OfString: openai.String("Write a haiku about programming"),
 	},
@@ -193,7 +193,7 @@ if stream.Err() != nil {
 ctx := context.Background()
 
 params := responses.ResponseNewParams{
-	Model: openai.ChatModelGPT4o,
+	Model: openai.ChatModelGPT5_2,
 	Input: responses.ResponseNewParamsInputUnion{
 		OfString: openai.String("What is the weather in New York City?"),
 	},
@@ -232,7 +232,7 @@ for _, item := range response.Output {
 
 			// Continue conversation with function result
 			response, _ = client.Responses.New(ctx, responses.ResponseNewParams{
-				Model:              openai.ChatModelGPT4o,
+				Model:              openai.ChatModelGPT5_2,
 				PreviousResponseID: openai.String(response.ID),
 				Input: responses.ResponseNewParamsInputUnion{
 					OfInputItemList: []responses.ResponseInputItemUnionParam{{
@@ -299,7 +299,7 @@ func main() {
 	ctx := context.Background()
 
 	response, err := client.Responses.New(ctx, responses.ResponseNewParams{
-		Model: openai.ChatModelGPT4o,
+		Model: openai.ChatModelGPT5_2,
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String("What computer ran the first neural network?"),
 		},
@@ -352,7 +352,7 @@ func main() {
 			openai.DeveloperMessage("You are a coding assistant that talks like a pirate."),
 			openai.UserMessage("How do I check if a slice is empty in Go?"),
 		},
-		Model: openai.ChatModelGPT4o,
+		Model: openai.ChatModelGPT5_2,
 	})
 	if err != nil {
 		panic(err)
@@ -654,7 +654,7 @@ defer cancel()
 client.Responses.New(
 	ctx,
 	responses.ResponseNewParams{
-		Model: openai.ChatModelGPT4o,
+		Model: openai.ChatModelGPT5_2,
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String("How can I list all files in a directory using Python?"),
 		},
@@ -831,7 +831,7 @@ client := openai.NewClient(
 client.Responses.New(
 	context.TODO(),
 	responses.ResponseNewParams{
-		Model: openai.ChatModelGPT4o,
+		Model: openai.ChatModelGPT5_2,
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String("How can I get the name of the current day in JavaScript?"),
 		},
@@ -851,7 +851,7 @@ var httpResp *http.Response
 response, err := client.Responses.New(
 	context.TODO(),
 	responses.ResponseNewParams{
-		Model: openai.ChatModelGPT4o,
+		Model: openai.ChatModelGPT5_2,
 		Input: responses.ResponseNewParamsInputUnion{
 			OfString: openai.String("Say this is a test"),
 		},
