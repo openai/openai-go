@@ -49,6 +49,17 @@ type Event struct {
 	Data []byte
 }
 
+// StreamError represents an error event that occurred during streaming,
+// preserving the original event data for structured access.
+type StreamError struct {
+	Message string
+	Event   Event
+}
+
+func (e *StreamError) Error() string {
+	return e.Message
+}
+
 // A base implementation of a Decoder for text/event-stream.
 type eventStreamDecoder struct {
 	evt Event
