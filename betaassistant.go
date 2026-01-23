@@ -42,6 +42,8 @@ func NewBetaAssistantService(opts ...option.RequestOption) (r BetaAssistantServi
 }
 
 // Create an assistant with a model and instructions.
+//
+// Deprecated: deprecated
 func (r *BetaAssistantService) New(ctx context.Context, body BetaAssistantNewParams, opts ...option.RequestOption) (res *Assistant, err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -51,6 +53,8 @@ func (r *BetaAssistantService) New(ctx context.Context, body BetaAssistantNewPar
 }
 
 // Retrieves an assistant.
+//
+// Deprecated: deprecated
 func (r *BetaAssistantService) Get(ctx context.Context, assistantID string, opts ...option.RequestOption) (res *Assistant, err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -64,6 +68,8 @@ func (r *BetaAssistantService) Get(ctx context.Context, assistantID string, opts
 }
 
 // Modifies an assistant.
+//
+// Deprecated: deprecated
 func (r *BetaAssistantService) Update(ctx context.Context, assistantID string, body BetaAssistantUpdateParams, opts ...option.RequestOption) (res *Assistant, err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -77,6 +83,8 @@ func (r *BetaAssistantService) Update(ctx context.Context, assistantID string, b
 }
 
 // Returns a list of assistants.
+//
+// Deprecated: deprecated
 func (r *BetaAssistantService) List(ctx context.Context, query BetaAssistantListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Assistant], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -95,11 +103,15 @@ func (r *BetaAssistantService) List(ctx context.Context, query BetaAssistantList
 }
 
 // Returns a list of assistants.
+//
+// Deprecated: deprecated
 func (r *BetaAssistantService) ListAutoPaging(ctx context.Context, query BetaAssistantListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[Assistant] {
 	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
 // Delete an assistant.
+//
+// Deprecated: deprecated
 func (r *BetaAssistantService) Delete(ctx context.Context, assistantID string, opts ...option.RequestOption) (res *AssistantDeleted, err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
@@ -113,6 +125,8 @@ func (r *BetaAssistantService) Delete(ctx context.Context, assistantID string, o
 }
 
 // Represents an `assistant` that can call the model and use tools.
+//
+// Deprecated: deprecated
 type Assistant struct {
 	// The identifier, which can be referenced in API endpoints.
 	ID string `json:"id,required"`
