@@ -29,6 +29,9 @@ jobs:
 
       - name: Run lints
         run: ./scripts/lint
+
+      - name: Check go.mod is tidy
+        run: ./scripts/check-go-mod
   test:
     timeout-minutes: 10
     name: test
