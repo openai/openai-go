@@ -31,7 +31,6 @@ func TestVideoNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Videos.New(context.TODO(), openai.VideoNewParams{
 		Prompt:         "x",
-		CharacterIDs:   []string{"char_123"},
 		InputReference: io.Reader(bytes.NewBuffer([]byte("some file contents"))),
 		Model:          openai.VideoModel("string"),
 		Seconds:        openai.VideoSeconds4,
