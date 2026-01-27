@@ -5414,6 +5414,11 @@ type ResponseFunctionShellToolCallOutput struct {
 	MaxOutputLength int64 `json:"max_output_length,required"`
 	// An array of shell call output contents
 	Output []ResponseFunctionShellToolCallOutputOutput `json:"output,required"`
+	// The status of the shell call output. One of `in_progress`, `completed`, or
+	// `incomplete`.
+	//
+	// Any of "in_progress", "completed", "incomplete".
+	Status ResponseFunctionShellToolCallOutputStatus `json:"status,required"`
 	// The type of the shell call output. Always `shell_call_output`.
 	Type constant.ShellCallOutput `json:"type,required"`
 	// The identifier of the actor that created the item.
@@ -5424,6 +5429,7 @@ type ResponseFunctionShellToolCallOutput struct {
 		CallID          respjson.Field
 		MaxOutputLength respjson.Field
 		Output          respjson.Field
+		Status          respjson.Field
 		Type            respjson.Field
 		CreatedBy       respjson.Field
 		ExtraFields     map[string]respjson.Field
@@ -5575,6 +5581,16 @@ func (r ResponseFunctionShellToolCallOutputOutputOutcomeExit) RawJSON() string {
 func (r *ResponseFunctionShellToolCallOutputOutputOutcomeExit) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+// The status of the shell call output. One of `in_progress`, `completed`, or
+// `incomplete`.
+type ResponseFunctionShellToolCallOutputStatus string
+
+const (
+	ResponseFunctionShellToolCallOutputStatusInProgress ResponseFunctionShellToolCallOutputStatus = "in_progress"
+	ResponseFunctionShellToolCallOutputStatusCompleted  ResponseFunctionShellToolCallOutputStatus = "completed"
+	ResponseFunctionShellToolCallOutputStatusIncomplete ResponseFunctionShellToolCallOutputStatus = "incomplete"
+)
 
 // A tool call to run a function. See the
 // [function calling guide](https://platform.openai.com/docs/guides/function-calling)
