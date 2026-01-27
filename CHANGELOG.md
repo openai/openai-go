@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.17.0 (2026-01-27)
+
+Full Changelog: [v3.16.0...v3.17.0](https://github.com/openai/openai-go/compare/v3.16.0...v3.17.0)
+
+### Features
+
+* **api:** api update ([a456c60](https://github.com/openai/openai-go/commit/a456c60498b33b7da048cc64bdff76c49a904117))
+* **api:** api updates ([21fd4a9](https://github.com/openai/openai-go/commit/21fd4a9534d5ef531c6a9bc497b90c14b68ebda3))
+* **client:** add a convenient param.SetJSON helper ([1b35ece](https://github.com/openai/openai-go/commit/1b35ece947934982609557e6acacfd3526289de1))
+* **client:** add a StreamError type to access raw events from sse streams ([fd14b30](https://github.com/openai/openai-go/commit/fd14b30e3cc2d14438a100be12627692e8ea045a))
+
+
+### Bug Fixes
+
+* **api:** mark assistants as deprecated ([9a8c9af](https://github.com/openai/openai-go/commit/9a8c9af8cf988069e543487c09a0897806408d67))
+* **client:** retain streaming when user sets request body ([3a7a22e](https://github.com/openai/openai-go/commit/3a7a22ec90c5ff44203321bbff94f9541a80601f))
+* **docs:** add missing pointer prefix to api.md return types ([dd641d9](https://github.com/openai/openai-go/commit/dd641d924ead979b4369b952f99387880879938d))
+
+
+### Chores
+
+* **internal:** codegen related update ([74d3989](https://github.com/openai/openai-go/commit/74d3989139a94407020f7bf43c8351c4dffe412c))
+* **internal:** update `actions/checkout` version ([2db54a5](https://github.com/openai/openai-go/commit/2db54a5d05e3240c415cb91320ede5704331828a))
+
 ## 3.16.0 (2026-01-09)
 
 Full Changelog: [v3.15.0...v3.16.0](https://github.com/openai/openai-go/compare/v3.15.0...v3.16.0)
