@@ -281,8 +281,6 @@ func (r *VideoDeleteResponse) UnmarshalJSON(data []byte) error {
 type VideoNewParams struct {
 	// Text prompt that describes the video to generate.
 	Prompt string `json:"prompt,required"`
-	// Character IDs to include in the generation.
-	CharacterIDs []string `json:"character_ids,omitzero"`
 	// Optional image reference that guides generation.
 	InputReference io.Reader `json:"input_reference,omitzero" format:"binary"`
 	// The video generation model to use (allowed values: sora-2, sora-2-pro). Defaults
