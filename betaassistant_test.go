@@ -114,7 +114,7 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 			Metadata: shared.Metadata{
 				"foo": "string",
 			},
-			Model:           openai.BetaAssistantUpdateParamsModel("string"),
+			Model:           openai.BetaAssistantUpdateParamsModelGPT5,
 			Name:            openai.String("name"),
 			ReasoningEffort: shared.ReasoningEffortNone,
 			ResponseFormat: openai.AssistantResponseFormatOptionUnionParam{

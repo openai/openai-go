@@ -29,7 +29,7 @@ func TestModerationNewWithOptionalParams(t *testing.T) {
 		Input: openai.ModerationNewParamsInputUnion{
 			OfString: openai.String("I want to kill them."),
 		},
-		Model: openai.ModerationModel("string"),
+		Model: openai.ModerationModelOmniModerationLatest,
 	})
 	if err != nil {
 		var apierr *openai.Error
