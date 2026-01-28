@@ -8058,6 +8058,10 @@ type ResponseInputItemShellCallOutput struct {
 	// The maximum number of UTF-8 characters captured for this shell call's combined
 	// output.
 	MaxOutputLength int64 `json:"max_output_length,nullable"`
+	// The status of the shell call output.
+	//
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		CallID          respjson.Field
@@ -8065,6 +8069,7 @@ type ResponseInputItemShellCallOutput struct {
 		Type            respjson.Field
 		ID              respjson.Field
 		MaxOutputLength respjson.Field
+		Status          respjson.Field
 		ExtraFields     map[string]respjson.Field
 		raw             string
 	} `json:"-"`
@@ -9010,6 +9015,8 @@ func (u ResponseInputItemUnionParam) GetStatus() *string {
 		return (*string)(&vt.Status)
 	} else if vt := u.OfShellCall; vt != nil {
 		return (*string)(&vt.Status)
+	} else if vt := u.OfShellCallOutput; vt != nil {
+		return (*string)(&vt.Status)
 	} else if vt := u.OfApplyPatchCall; vt != nil {
 		return (*string)(&vt.Status)
 	} else if vt := u.OfApplyPatchCallOutput; vt != nil {
@@ -9900,6 +9907,10 @@ type ResponseInputItemShellCallOutputParam struct {
 	// The maximum number of UTF-8 characters captured for this shell call's combined
 	// output.
 	MaxOutputLength param.Opt[int64] `json:"max_output_length,omitzero"`
+	// The status of the shell call output.
+	//
+	// Any of "in_progress", "completed", "incomplete".
+	Status string `json:"status,omitzero"`
 	// The type of the item. Always `shell_call_output`.
 	//
 	// This field can be elided, and will marshal its zero value as
@@ -9914,6 +9925,12 @@ func (r ResponseInputItemShellCallOutputParam) MarshalJSON() (data []byte, err e
 }
 func (r *ResponseInputItemShellCallOutputParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemShellCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
 }
 
 // A tool call representing a request to create, delete, or update files using diff
