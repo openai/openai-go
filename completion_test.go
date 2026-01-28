@@ -26,7 +26,7 @@ func TestCompletionNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Completions.New(context.TODO(), openai.CompletionNewParams{
-		Model: openai.CompletionNewParamsModel("string"),
+		Model: openai.CompletionNewParamsModelGPT3_5TurboInstruct,
 		Prompt: openai.CompletionNewParamsPromptUnion{
 			OfString: openai.String("This is a test."),
 		},
