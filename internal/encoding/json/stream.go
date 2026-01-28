@@ -8,6 +8,8 @@ import (
 	"bytes"
 	"errors"
 	"io"
+
+	"github.com/openai/openai-go/v3/internal/encoding/json/shims"
 )
 
 // A Decoder reads and decodes JSON values from an input stream.
@@ -190,7 +192,7 @@ type Encoder struct {
 
 // NewEncoder returns a new encoder that writes to w.
 func NewEncoder(w io.Writer) *Encoder {
-	return &Encoder{w: w, escapeHTML: true}
+	return &Encoder{w: w, escapeHTML: shims.EscapeHTMLByDefault}
 }
 
 // Encode writes the JSON encoding of v to the stream,
