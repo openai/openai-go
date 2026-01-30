@@ -89,71 +89,10 @@ func (s RequestOptionFunc) Apply(r *RequestConfig) error    { return s(r) }
 func (s PreRequestOptionFunc) Apply(r *RequestConfig) error { return s(r) }
 
 func NewRequestConfig(ctx context.Context, method string, u string, body any, dst any, opts ...RequestOption) (*RequestConfig, error) {
-	var reader io.Reader
-
-	contentType := "application/json"
-	hasSerializationFunc := false
-
-	if body, ok := body.(json.Marshaler); ok {
-		content, err := body.MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
-		reader = bytes.NewBuffer(content)
-		hasSerializationFunc = true
-	}
-	if body, ok := body.(apiform.Marshaler); ok {
-		var (
-			content []byte
-			err     error
-		)
-		content, contentType, err = body.MarshalMultipart()
-		if err != nil {
-			return nil, err
-		}
-		reader = bytes.NewBuffer(content)
-		hasSerializationFunc = true
-	}
-	if body, ok := body.(apiquery.Queryer); ok {
-		hasSerializationFunc = true
-		q, err := body.URLQuery()
-		if err != nil {
-			return nil, err
-		}
-		params := q.Encode()
-		if params != "" {
-			u = u + "?" + params
-		}
-	}
-	if body, ok := body.([]byte); ok {
-		reader = bytes.NewBuffer(body)
-		hasSerializationFunc = true
-	}
-	if body, ok := body.(io.Reader); ok {
-		reader = body
-		hasSerializationFunc = true
-	}
-
-	// Fallback to json serialization if none of the serialization functions that we expect
-	// to see is present.
-	if body != nil && !hasSerializationFunc {
-		buf := new(bytes.Buffer)
-		enc := json.NewEncoder(buf)
-		enc.SetEscapeHTML(false)
-		if err := enc.Encode(body); err != nil {
-			return nil, err
-		}
-		reader = buf
-	}
-
 	req, err := http.NewRequestWithContext(ctx, method, u, nil)
 	if err != nil {
 		return nil, err
 	}
-	if reader != nil {
-		req.Header.Set("Content-Type", contentType)
-	}
-
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("X-Stainless-Retry-Count", "0")
 	req.Header.Set("X-Stainless-Timeout", "0")
@@ -165,16 +104,81 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 		req.Header.Add(k, v)
 	}
 	cfg := RequestConfig{
-		MaxRetries: 2,
-		Context:    ctx,
-		Request:    req,
-		HTTPClient: http.DefaultClient,
-		Body:       reader,
+		MaxRetries:       2,
+		Context:          ctx,
+		Request:          req,
+		HTTPClient:       http.DefaultClient,
+		ResponseBodyInto: dst,
 	}
-	cfg.ResponseBodyInto = dst
 	err = cfg.Apply(opts...)
 	if err != nil {
 		return nil, err
+	}
+
+	var reader io.Reader
+
+	contentType := "application/json"
+	hasSerializationFunc := false
+
+	if body, ok := body.(apiquery.Queryer); ok {
+		hasSerializationFunc = true
+		q, err := body.URLQuery()
+		if err != nil {
+			return nil, err
+		}
+		params := q.Encode()
+		if params != "" {
+			u = u + "?" + params
+		}
+	}
+
+	if cfg.Body == nil {
+
+		if body, ok := body.(json.Marshaler); ok {
+			content, err := body.MarshalJSON()
+			if err != nil {
+				return nil, err
+			}
+			reader = bytes.NewBuffer(content)
+			hasSerializationFunc = true
+		}
+		if body, ok := body.(apiform.Marshaler); ok {
+			var (
+				content []byte
+				err     error
+			)
+			content, contentType, err = body.MarshalMultipart()
+			if err != nil {
+				return nil, err
+			}
+			reader = bytes.NewBuffer(content)
+			hasSerializationFunc = true
+		}
+		if body, ok := body.([]byte); ok {
+			reader = bytes.NewBuffer(body)
+			hasSerializationFunc = true
+		}
+		if body, ok := body.(io.Reader); ok {
+			reader = body
+			hasSerializationFunc = true
+		}
+
+		// Fallback to json serialization if none of the serialization functions that we expect
+		// to see is present.
+		if body != nil && !hasSerializationFunc {
+			buf := new(bytes.Buffer)
+			enc := json.NewEncoder(buf)
+			enc.SetEscapeHTML(false)
+			if err := enc.Encode(body); err != nil {
+				return nil, err
+			}
+			reader = buf
+		}
+
+		cfg.Body = reader
+		if reader != nil {
+			req.Header.Set("Content-Type", contentType)
+		}
 	}
 
 	// This must run after `cfg.Apply(...)` above in case the request timeout gets modified. We also only
