@@ -5894,7 +5894,7 @@ type ResponseFunctionWebSearch struct {
 	// The unique ID of the web search tool call.
 	ID string `json:"id,required"`
 	// An object describing the specific action taken in this web search call. Includes
-	// details on how the model used the web (search, open_page, find).
+	// details on how the model used the web (search, open_page, find_in_page).
 	Action ResponseFunctionWebSearchActionUnion `json:"action,required"`
 	// The status of the web search tool call.
 	//
@@ -6070,7 +6070,7 @@ type ResponseFunctionWebSearchActionOpenPage struct {
 	// The action type.
 	Type constant.OpenPage `json:"type,required"`
 	// The URL opened by the model.
-	URL string `json:"url,required" format:"uri"`
+	URL string `json:"url,nullable" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -6129,7 +6129,7 @@ type ResponseFunctionWebSearchParam struct {
 	// The unique ID of the web search tool call.
 	ID string `json:"id,required"`
 	// An object describing the specific action taken in this web search call. Includes
-	// details on how the model used the web (search, open_page, find).
+	// details on how the model used the web (search, open_page, find_in_page).
 	Action ResponseFunctionWebSearchActionUnionParam `json:"action,omitzero,required"`
 	// The status of the web search tool call.
 	//
@@ -6224,8 +6224,8 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetType() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseFunctionWebSearchActionUnionParam) GetURL() *string {
-	if vt := u.OfOpenPage; vt != nil {
-		return (*string)(&vt.URL)
+	if vt := u.OfOpenPage; vt != nil && vt.URL.Valid() {
+		return &vt.URL.Value
 	} else if vt := u.OfFind; vt != nil {
 		return (*string)(&vt.URL)
 	}
@@ -6289,10 +6289,10 @@ func (r *ResponseFunctionWebSearchActionSearchSourceParam) UnmarshalJSON(data []
 
 // Action type "open_page" - Opens a specific URL from search results.
 //
-// The properties Type, URL are required.
+// The property Type is required.
 type ResponseFunctionWebSearchActionOpenPageParam struct {
 	// The URL opened by the model.
-	URL string `json:"url,required" format:"uri"`
+	URL param.Opt[string] `json:"url,omitzero" format:"uri"`
 	// The action type.
 	//
 	// This field can be elided, and will marshal its zero value as "open_page".
@@ -14974,6 +14974,8 @@ type ToolUnion struct {
 	// This field is from variant [ToolCodeInterpreter].
 	Container ToolCodeInterpreterContainerUnion `json:"container"`
 	// This field is from variant [ToolImageGeneration].
+	Action string `json:"action"`
+	// This field is from variant [ToolImageGeneration].
 	Background string `json:"background"`
 	// This field is from variant [ToolImageGeneration].
 	InputFidelity string `json:"input_fidelity"`
@@ -15019,6 +15021,7 @@ type ToolUnion struct {
 		ServerDescription respjson.Field
 		ServerURL         respjson.Field
 		Container         respjson.Field
+		Action            respjson.Field
 		Background        respjson.Field
 		InputFidelity     respjson.Field
 		InputImageMask    respjson.Field
@@ -15510,6 +15513,10 @@ func (r *ToolCodeInterpreterContainerCodeInterpreterContainerAuto) UnmarshalJSON
 type ToolImageGeneration struct {
 	// The type of the image generation tool. Always `image_generation`.
 	Type constant.ImageGeneration `json:"type,required"`
+	// Whether to generate a new image or edit an existing image. Default: `auto`.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action"`
 	// Background type for the generated image. One of `transparent`, `opaque`, or
 	// `auto`. Default: `auto`.
 	//
@@ -15554,6 +15561,7 @@ type ToolImageGeneration struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type              respjson.Field
+		Action            respjson.Field
 		Background        respjson.Field
 		InputFidelity     respjson.Field
 		InputImageMask    respjson.Field
@@ -15872,6 +15880,14 @@ func (u ToolUnionParam) GetServerURL() *string {
 func (u ToolUnionParam) GetContainer() *ToolCodeInterpreterContainerUnionParam {
 	if vt := u.OfCodeInterpreter; vt != nil {
 		return &vt.Container
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ToolUnionParam) GetAction() *string {
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Action
 	}
 	return nil
 }
@@ -16488,6 +16504,10 @@ type ToolImageGenerationParam struct {
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
+	// Whether to generate a new image or edit an existing image. Default: `auto`.
+	//
+	// Any of "generate", "edit", "auto".
+	Action string `json:"action,omitzero"`
 	// Background type for the generated image. One of `transparent`, `opaque`, or
 	// `auto`. Default: `auto`.
 	//
@@ -16533,6 +16553,9 @@ func (r *ToolImageGenerationParam) UnmarshalJSON(data []byte) error {
 }
 
 func init() {
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"action", "generate", "edit", "auto",
+	)
 	apijson.RegisterFieldValidator[ToolImageGenerationParam](
 		"background", "transparent", "opaque", "auto",
 	)
