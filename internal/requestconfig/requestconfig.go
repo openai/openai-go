@@ -89,6 +89,19 @@ func (s RequestOptionFunc) Apply(r *RequestConfig) error    { return s(r) }
 func (s PreRequestOptionFunc) Apply(r *RequestConfig) error { return s(r) }
 
 func NewRequestConfig(ctx context.Context, method string, u string, body any, dst any, opts ...RequestOption) (*RequestConfig, error) {
+	hasSerializationFunc := false
+	if body, ok := body.(apiquery.Queryer); ok {
+		hasSerializationFunc = true
+		q, err := body.URLQuery()
+		if err != nil {
+			return nil, err
+		}
+		params := q.Encode()
+		if params != "" {
+			u = u + "?" + params
+		}
+	}
+
 	req, err := http.NewRequestWithContext(ctx, method, u, nil)
 	if err != nil {
 		return nil, err
@@ -118,19 +131,6 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 	var reader io.Reader
 
 	contentType := "application/json"
-	hasSerializationFunc := false
-
-	if body, ok := body.(apiquery.Queryer); ok {
-		hasSerializationFunc = true
-		q, err := body.URLQuery()
-		if err != nil {
-			return nil, err
-		}
-		params := q.Encode()
-		if params != "" {
-			u = u + "?" + params
-		}
-	}
 
 	if cfg.Body == nil {
 
