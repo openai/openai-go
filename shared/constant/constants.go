@@ -96,7 +96,7 @@ type FileCitation string                                     // Always "file_cit
 type FilePath string                                         // Always "file_path"
 type FileSearch string                                       // Always "file_search"
 type FileSearchCall string                                   // Always "file_search_call"
-type Find string                                             // Always "find"
+type FindInPage string                                       // Always "find_in_page"
 type FineTuningJob string                                    // Always "fine_tuning.job"
 type FineTuningJobCancelled string                           // Always "fine_tuning.job.cancelled"
 type FineTuningJobCheckpoint string                          // Always "fine_tuning.job.checkpoint"
@@ -417,7 +417,7 @@ func (c FileCitation) Default() FileCitation                     { return "file_
 func (c FilePath) Default() FilePath                             { return "file_path" }
 func (c FileSearch) Default() FileSearch                         { return "file_search" }
 func (c FileSearchCall) Default() FileSearchCall                 { return "file_search_call" }
-func (c Find) Default() Find                                     { return "find" }
+func (c FindInPage) Default() FindInPage                         { return "find_in_page" }
 func (c FineTuningJob) Default() FineTuningJob                   { return "fine_tuning.job" }
 func (c FineTuningJobCancelled) Default() FineTuningJobCancelled { return "fine_tuning.job.cancelled" }
 func (c FineTuningJobCheckpoint) Default() FineTuningJobCheckpoint {
@@ -850,7 +850,7 @@ func (c FileCitation) MarshalJSON() ([]byte, error)                          { r
 func (c FilePath) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c FileSearch) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c FileSearchCall) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
-func (c Find) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
+func (c FindInPage) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c FineTuningJob) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c FineTuningJobCancelled) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c FineTuningJobCheckpoint) MarshalJSON() ([]byte, error)               { return marshalString(c) }
