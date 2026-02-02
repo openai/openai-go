@@ -5934,7 +5934,7 @@ func (r ResponseFunctionWebSearch) ToParam() ResponseFunctionWebSearchParam {
 // ResponseFunctionWebSearchActionUnion contains all possible properties and values
 // from [ResponseFunctionWebSearchActionSearch],
 // [ResponseFunctionWebSearchActionOpenPage],
-// [ResponseFunctionWebSearchActionFind].
+// [ResponseFunctionWebSearchActionFindInPage].
 //
 // Use the [ResponseFunctionWebSearchActionUnion.AsAny] method to switch on the
 // variant.
@@ -5943,14 +5943,14 @@ func (r ResponseFunctionWebSearch) ToParam() ResponseFunctionWebSearchParam {
 type ResponseFunctionWebSearchActionUnion struct {
 	// This field is from variant [ResponseFunctionWebSearchActionSearch].
 	Query string `json:"query"`
-	// Any of "search", "open_page", "find".
+	// Any of "search", "open_page", "find_in_page".
 	Type string `json:"type"`
 	// This field is from variant [ResponseFunctionWebSearchActionSearch].
 	Queries []string `json:"queries"`
 	// This field is from variant [ResponseFunctionWebSearchActionSearch].
 	Sources []ResponseFunctionWebSearchActionSearchSource `json:"sources"`
 	URL     string                                        `json:"url"`
-	// This field is from variant [ResponseFunctionWebSearchActionFind].
+	// This field is from variant [ResponseFunctionWebSearchActionFindInPage].
 	Pattern string `json:"pattern"`
 	JSON    struct {
 		Query   respjson.Field
@@ -5970,16 +5970,16 @@ type anyResponseFunctionWebSearchAction interface {
 	implResponseFunctionWebSearchActionUnion()
 }
 
-func (ResponseFunctionWebSearchActionSearch) implResponseFunctionWebSearchActionUnion()   {}
-func (ResponseFunctionWebSearchActionOpenPage) implResponseFunctionWebSearchActionUnion() {}
-func (ResponseFunctionWebSearchActionFind) implResponseFunctionWebSearchActionUnion()     {}
+func (ResponseFunctionWebSearchActionSearch) implResponseFunctionWebSearchActionUnion()     {}
+func (ResponseFunctionWebSearchActionOpenPage) implResponseFunctionWebSearchActionUnion()   {}
+func (ResponseFunctionWebSearchActionFindInPage) implResponseFunctionWebSearchActionUnion() {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseFunctionWebSearchActionUnion.AsAny().(type) {
 //	case responses.ResponseFunctionWebSearchActionSearch:
 //	case responses.ResponseFunctionWebSearchActionOpenPage:
-//	case responses.ResponseFunctionWebSearchActionFind:
+//	case responses.ResponseFunctionWebSearchActionFindInPage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -5989,8 +5989,8 @@ func (u ResponseFunctionWebSearchActionUnion) AsAny() anyResponseFunctionWebSear
 		return u.AsSearch()
 	case "open_page":
 		return u.AsOpenPage()
-	case "find":
-		return u.AsFind()
+	case "find_in_page":
+		return u.AsFindInPage()
 	}
 	return nil
 }
@@ -6005,7 +6005,7 @@ func (u ResponseFunctionWebSearchActionUnion) AsOpenPage() (v ResponseFunctionWe
 	return
 }
 
-func (u ResponseFunctionWebSearchActionUnion) AsFind() (v ResponseFunctionWebSearchActionFind) {
+func (u ResponseFunctionWebSearchActionUnion) AsFindInPage() (v ResponseFunctionWebSearchActionFindInPage) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -6086,12 +6086,12 @@ func (r *ResponseFunctionWebSearchActionOpenPage) UnmarshalJSON(data []byte) err
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Action type "find": Searches for a pattern within a loaded page.
-type ResponseFunctionWebSearchActionFind struct {
+// Action type "find_in_page": Searches for a pattern within a loaded page.
+type ResponseFunctionWebSearchActionFindInPage struct {
 	// The pattern or text to search for within the page.
 	Pattern string `json:"pattern,required"`
 	// The action type.
-	Type constant.Find `json:"type,required"`
+	Type constant.FindInPage `json:"type,required"`
 	// The URL of the page searched for the pattern.
 	URL string `json:"url,required" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -6105,8 +6105,8 @@ type ResponseFunctionWebSearchActionFind struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ResponseFunctionWebSearchActionFind) RawJSON() string { return r.JSON.raw }
-func (r *ResponseFunctionWebSearchActionFind) UnmarshalJSON(data []byte) error {
+func (r ResponseFunctionWebSearchActionFindInPage) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFunctionWebSearchActionFindInPage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -6154,14 +6154,14 @@ func (r *ResponseFunctionWebSearchParam) UnmarshalJSON(data []byte) error {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponseFunctionWebSearchActionUnionParam struct {
-	OfSearch   *ResponseFunctionWebSearchActionSearchParam   `json:",omitzero,inline"`
-	OfOpenPage *ResponseFunctionWebSearchActionOpenPageParam `json:",omitzero,inline"`
-	OfFind     *ResponseFunctionWebSearchActionFindParam     `json:",omitzero,inline"`
+	OfSearch     *ResponseFunctionWebSearchActionSearchParam     `json:",omitzero,inline"`
+	OfOpenPage   *ResponseFunctionWebSearchActionOpenPageParam   `json:",omitzero,inline"`
+	OfFindInPage *ResponseFunctionWebSearchActionFindInPageParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponseFunctionWebSearchActionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfSearch, u.OfOpenPage, u.OfFind)
+	return param.MarshalUnion(u, u.OfSearch, u.OfOpenPage, u.OfFindInPage)
 }
 func (u *ResponseFunctionWebSearchActionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -6172,8 +6172,8 @@ func (u *ResponseFunctionWebSearchActionUnionParam) asAny() any {
 		return u.OfSearch
 	} else if !param.IsOmitted(u.OfOpenPage) {
 		return u.OfOpenPage
-	} else if !param.IsOmitted(u.OfFind) {
-		return u.OfFind
+	} else if !param.IsOmitted(u.OfFindInPage) {
+		return u.OfFindInPage
 	}
 	return nil
 }
@@ -6204,7 +6204,7 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetSources() []ResponseFuncti
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseFunctionWebSearchActionUnionParam) GetPattern() *string {
-	if vt := u.OfFind; vt != nil {
+	if vt := u.OfFindInPage; vt != nil {
 		return &vt.Pattern
 	}
 	return nil
@@ -6216,7 +6216,7 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfOpenPage; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfFind; vt != nil {
+	} else if vt := u.OfFindInPage; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -6226,7 +6226,7 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetType() *string {
 func (u ResponseFunctionWebSearchActionUnionParam) GetURL() *string {
 	if vt := u.OfOpenPage; vt != nil && vt.URL.Valid() {
 		return &vt.URL.Value
-	} else if vt := u.OfFind; vt != nil {
+	} else if vt := u.OfFindInPage; vt != nil {
 		return (*string)(&vt.URL)
 	}
 	return nil
@@ -6237,7 +6237,7 @@ func init() {
 		"type",
 		apijson.Discriminator[ResponseFunctionWebSearchActionSearchParam]("search"),
 		apijson.Discriminator[ResponseFunctionWebSearchActionOpenPageParam]("open_page"),
-		apijson.Discriminator[ResponseFunctionWebSearchActionFindParam]("find"),
+		apijson.Discriminator[ResponseFunctionWebSearchActionFindInPageParam]("find_in_page"),
 	)
 }
 
@@ -6308,26 +6308,26 @@ func (r *ResponseFunctionWebSearchActionOpenPageParam) UnmarshalJSON(data []byte
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Action type "find": Searches for a pattern within a loaded page.
+// Action type "find_in_page": Searches for a pattern within a loaded page.
 //
 // The properties Pattern, Type, URL are required.
-type ResponseFunctionWebSearchActionFindParam struct {
+type ResponseFunctionWebSearchActionFindInPageParam struct {
 	// The pattern or text to search for within the page.
 	Pattern string `json:"pattern,required"`
 	// The URL of the page searched for the pattern.
 	URL string `json:"url,required" format:"uri"`
 	// The action type.
 	//
-	// This field can be elided, and will marshal its zero value as "find".
-	Type constant.Find `json:"type,required"`
+	// This field can be elided, and will marshal its zero value as "find_in_page".
+	Type constant.FindInPage `json:"type,required"`
 	paramObj
 }
 
-func (r ResponseFunctionWebSearchActionFindParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponseFunctionWebSearchActionFindParam
+func (r ResponseFunctionWebSearchActionFindInPageParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseFunctionWebSearchActionFindInPageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponseFunctionWebSearchActionFindParam) UnmarshalJSON(data []byte) error {
+func (r *ResponseFunctionWebSearchActionFindInPageParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -8515,7 +8515,7 @@ func ResponseInputItemParamOfComputerCallOutput(callID string, output ResponseCo
 }
 
 func ResponseInputItemParamOfWebSearchCall[
-	T ResponseFunctionWebSearchActionSearchParam | ResponseFunctionWebSearchActionOpenPageParam | ResponseFunctionWebSearchActionFindParam,
+	T ResponseFunctionWebSearchActionSearchParam | ResponseFunctionWebSearchActionOpenPageParam | ResponseFunctionWebSearchActionFindInPageParam,
 ](action T, id string, status ResponseFunctionWebSearchStatus) ResponseInputItemUnionParam {
 	var webSearchCall ResponseFunctionWebSearchParam
 	switch v := any(action).(type) {
@@ -8523,8 +8523,8 @@ func ResponseInputItemParamOfWebSearchCall[
 		webSearchCall.Action.OfSearch = &v
 	case ResponseFunctionWebSearchActionOpenPageParam:
 		webSearchCall.Action.OfOpenPage = &v
-	case ResponseFunctionWebSearchActionFindParam:
-		webSearchCall.Action.OfFind = &v
+	case ResponseFunctionWebSearchActionFindInPageParam:
+		webSearchCall.Action.OfFindInPage = &v
 	}
 	webSearchCall.ID = id
 	webSearchCall.Status = status
@@ -9224,7 +9224,7 @@ func (u ResponseInputItemUnionParam) GetAction() (res responseInputItemUnionPara
 // [*ResponseComputerToolCallActionWaitParam],
 // [*ResponseFunctionWebSearchActionSearchParam],
 // [*ResponseFunctionWebSearchActionOpenPageParam],
-// [*ResponseFunctionWebSearchActionFindParam],
+// [*ResponseFunctionWebSearchActionFindInPageParam],
 // [*ResponseInputItemLocalShellCallActionParam],
 // [*ResponseInputItemShellCallActionParam]
 type responseInputItemUnionParamAction struct{ any }
@@ -9243,7 +9243,7 @@ type responseInputItemUnionParamAction struct{ any }
 //	case *responses.ResponseComputerToolCallActionWaitParam:
 //	case *responses.ResponseFunctionWebSearchActionSearchParam:
 //	case *responses.ResponseFunctionWebSearchActionOpenPageParam:
-//	case *responses.ResponseFunctionWebSearchActionFindParam:
+//	case *responses.ResponseFunctionWebSearchActionFindInPageParam:
 //	case *responses.ResponseInputItemLocalShellCallActionParam:
 //	case *responses.ResponseInputItemShellCallActionParam:
 //	default:
