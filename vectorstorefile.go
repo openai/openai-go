@@ -61,12 +61,12 @@ func (r *VectorStoreFileService) New(ctx context.Context, vectorStoreID string, 
 //
 // Polls the API and blocks until the task is complete.
 // Default polling interval is 1 second.
-func (r *VectorStoreFileService) NewAndPoll(ctx context.Context, vectorStoreId string, body VectorStoreFileNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
-	file, err := r.New(ctx, vectorStoreId, body, opts...)
+func (r *VectorStoreFileService) NewAndPoll(ctx context.Context, vectorStoreID string, body VectorStoreFileNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
+	file, err := r.New(ctx, vectorStoreID, body, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return r.PollStatus(ctx, vectorStoreId, file.ID, pollIntervalMs, opts...)
+	return r.PollStatus(ctx, vectorStoreID, file.ID, pollIntervalMs, opts...)
 }
 
 // Upload a file to the `files` API and then attach it to the given vector store.
