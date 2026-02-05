@@ -452,6 +452,12 @@ func (cfg *RequestConfig) Execute() (err error) {
 			break
 		}
 
+		// Drain and close response body to prevent connection leaks before retrying
+		if res != nil && res.Body != nil {
+			io.Copy(io.Discard, res.Body)
+			res.Body.Close()
+		}
+
 		// Prepare next request and wait for the retry delay
 		if cfg.Request.GetBody != nil {
 			cfg.Request.Body, err = cfg.Request.GetBody()
