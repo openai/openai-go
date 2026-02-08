@@ -29,6 +29,10 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
 		Background: openai.Bool(true),
+		ContextManagement: []responses.ResponseNewParamsContextManagement{{
+			Type:             "type",
+			CompactThreshold: openai.Int(1000),
+		}},
 		Conversation: responses.ResponseNewParamsConversationUnion{
 			OfString: openai.String("string"),
 		},
