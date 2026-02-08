@@ -15524,8 +15524,8 @@ type ToolImageGeneration struct {
 	Background string `json:"background"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
-	// `low`. Defaults to `low`.
+	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
+	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,nullable"`
@@ -16499,8 +16499,8 @@ type ToolImageGenerationParam struct {
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. This parameter is only supported
-	// for `gpt-image-1`. Unsupported for `gpt-image-1-mini`. Supports `high` and
-	// `low`. Defaults to `low`.
+	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
+	// `gpt-image-1-mini`. Supports `high` and `low`. Defaults to `low`.
 	//
 	// Any of "high", "low".
 	InputFidelity string `json:"input_fidelity,omitzero"`
@@ -17495,6 +17495,8 @@ type ResponseNewParams struct {
 	// similar requests and to help OpenAI detect and prevent abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
 	User param.Opt[string] `json:"user,omitzero"`
+	// Context management configuration for this request.
+	ContextManagement []ResponseNewParamsContextManagement `json:"context_management,omitzero"`
 	// The conversation that this response belongs to. Items from this conversation are
 	// prepended to `input_items` for this response request. Input items and output
 	// items from this response are automatically added to this conversation after this
@@ -17626,6 +17628,23 @@ func (r ResponseNewParams) MarshalJSON() (data []byte, err error) {
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ResponseNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The property Type is required.
+type ResponseNewParamsContextManagement struct {
+	// The context management entry type. Currently only 'compaction' is supported.
+	Type string `json:"type,required"`
+	// Token threshold at which compaction should be triggered for this entry.
+	CompactThreshold param.Opt[int64] `json:"compact_threshold,omitzero"`
+	paramObj
+}
+
+func (r ResponseNewParamsContextManagement) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseNewParamsContextManagement
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseNewParamsContextManagement) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
