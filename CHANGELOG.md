@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.19.0 (2026-02-09)
+
+Full Changelog: [v3.18.0...v3.19.0](https://github.com/openai/openai-go/compare/v3.18.0...v3.19.0)
+
+### Features
+
+* **api:** responses context_management ([199f230](https://github.com/openai/openai-go/commit/199f23025ab098f2ac0ac9a99dee37235613c287))
+
 ## 3.18.0 (2026-02-05)
 
 Full Changelog: [v3.17.0...v3.18.0](https://github.com/openai/openai-go/compare/v3.17.0...v3.18.0)
