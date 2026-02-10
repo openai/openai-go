@@ -40,6 +40,7 @@ type Client struct {
 	Realtime      realtime.RealtimeService
 	Conversations conversations.ConversationService
 	Containers    ContainerService
+	Skills        SkillService
 	Videos        VideoService
 }
 
@@ -95,6 +96,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Realtime = realtime.NewRealtimeService(opts...)
 	r.Conversations = conversations.NewConversationService(opts...)
 	r.Containers = NewContainerService(opts...)
+	r.Skills = NewSkillService(opts...)
 	r.Videos = NewVideoService(opts...)
 
 	return

@@ -180,8 +180,10 @@ type ConversationItemUnion struct {
 	// This field is from variant [responses.ResponseCodeInterpreterToolCall].
 	ContainerID string `json:"container_id"`
 	// This field is from variant [responses.ResponseCodeInterpreterToolCall].
-	Outputs   []responses.ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
-	CreatedBy string                                                 `json:"created_by"`
+	Outputs []responses.ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
+	// This field is from variant [responses.ResponseFunctionShellToolCall].
+	Environment responses.ResponseFunctionShellToolCallEnvironmentUnion `json:"environment"`
+	CreatedBy   string                                                  `json:"created_by"`
 	// This field is from variant [responses.ResponseFunctionShellToolCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [responses.ResponseApplyPatchToolCall].
@@ -218,6 +220,7 @@ type ConversationItemUnion struct {
 		Code                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
+		Environment              respjson.Field
 		CreatedBy                respjson.Field
 		MaxOutputLength          respjson.Field
 		Operation                respjson.Field

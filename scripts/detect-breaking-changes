@@ -47,6 +47,10 @@ TEST_PATHS=(
 	container_test.go
 	containerfile_test.go
 	containerfilecontent_test.go
+	skill_test.go
+	skillcontent_test.go
+	skillversion_test.go
+	skillversioncontent_test.go
 	video_test.go
 	usage_test.go
 	paginationauto_test.go

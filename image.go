@@ -50,7 +50,7 @@ func (r *ImageService) NewVariation(ctx context.Context, body ImageNewVariationP
 
 // Creates an edited or extended image given one or more source images and a
 // prompt. This endpoint supports GPT Image models (`gpt-image-1.5`, `gpt-image-1`,
-// and `gpt-image-1-mini`) and `dall-e-2`.
+// `gpt-image-1-mini`, and `chatgpt-image-latest`) and `dall-e-2`.
 func (r *ImageService) Edit(ctx context.Context, body ImageEditParams, opts ...option.RequestOption) (res *ImagesResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "images/edits"
@@ -60,7 +60,7 @@ func (r *ImageService) Edit(ctx context.Context, body ImageEditParams, opts ...o
 
 // Creates an edited or extended image given one or more source images and a
 // prompt. This endpoint supports GPT Image models (`gpt-image-1.5`, `gpt-image-1`,
-// and `gpt-image-1-mini`) and `dall-e-2`.
+// `gpt-image-1-mini`, and `chatgpt-image-latest`) and `dall-e-2`.
 func (r *ImageService) EditStreaming(ctx context.Context, body ImageEditParams, opts ...option.RequestOption) (stream *ssestream.Stream[ImageEditStreamEventUnion]) {
 	var (
 		raw *http.Response
@@ -957,7 +957,8 @@ type ImageEditParams struct {
 	//
 	// For the GPT image models (`gpt-image-1`, `gpt-image-1-mini`, and
 	// `gpt-image-1.5`), each image should be a `png`, `webp`, or `jpg` file less than
-	// 50MB. You can provide up to 16 images.
+	// 50MB. You can provide up to 16 images. `chatgpt-image-latest` follows the same
+	// input constraints as GPT image models.
 	//
 	// For `dall-e-2`, you can only provide one image, and it should be a square `png`
 	// file less than 4MB.
@@ -999,9 +1000,7 @@ type ImageEditParams struct {
 	//
 	// Any of "high", "low".
 	InputFidelity ImageEditParamsInputFidelity `json:"input_fidelity,omitzero"`
-	// The model to use for image generation. Only `dall-e-2` and the GPT image models
-	// are supported. Defaults to `dall-e-2` unless a parameter specific to the GPT
-	// image models is used.
+	// The model to use for image generation. Defaults to `gpt-image-1.5`.
 	Model ImageModel `json:"model,omitzero"`
 	// The format in which the generated images are returned. This parameter is only
 	// supported for the GPT image models. Must be one of `png`, `jpeg`, or `webp`. The
@@ -1009,16 +1008,15 @@ type ImageEditParams struct {
 	//
 	// Any of "png", "jpeg", "webp".
 	OutputFormat ImageEditParamsOutputFormat `json:"output_format,omitzero"`
-	// The quality of the image that will be generated. `high`, `medium` and `low` are
-	// only supported for the GPT image models. `dall-e-2` only supports `standard`
-	// quality. Defaults to `auto`.
+	// The quality of the image that will be generated for GPT image models. Defaults
+	// to `auto`.
 	//
 	// Any of "standard", "low", "medium", "high", "auto".
 	Quality ImageEditParamsQuality `json:"quality,omitzero"`
 	// The format in which the generated images are returned. Must be one of `url` or
 	// `b64_json`. URLs are only valid for 60 minutes after the image has been
-	// generated. This parameter is only supported for `dall-e-2`, as the GPT image
-	// models always return base64-encoded images.
+	// generated. This parameter is only supported for `dall-e-2` (default is `url` for
+	// `dall-e-2`), as GPT image models always return base64-encoded images.
 	//
 	// Any of "url", "b64_json".
 	ResponseFormat ImageEditParamsResponseFormat `json:"response_format,omitzero"`
@@ -1116,9 +1114,8 @@ const (
 	ImageEditParamsOutputFormatWebP ImageEditParamsOutputFormat = "webp"
 )
 
-// The quality of the image that will be generated. `high`, `medium` and `low` are
-// only supported for the GPT image models. `dall-e-2` only supports `standard`
-// quality. Defaults to `auto`.
+// The quality of the image that will be generated for GPT image models. Defaults
+// to `auto`.
 type ImageEditParamsQuality string
 
 const (
@@ -1131,8 +1128,8 @@ const (
 
 // The format in which the generated images are returned. Must be one of `url` or
 // `b64_json`. URLs are only valid for 60 minutes after the image has been
-// generated. This parameter is only supported for `dall-e-2`, as the GPT image
-// models always return base64-encoded images.
+// generated. This parameter is only supported for `dall-e-2` (default is `url` for
+// `dall-e-2`), as GPT image models always return base64-encoded images.
 type ImageEditParamsResponseFormat string
 
 const (
