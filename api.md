@@ -686,6 +686,49 @@ Methods:
 
 - <code title="get /containers/{container_id}/files/{file_id}/content">client.Containers.Files.Content.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ContainerFileContentService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, containerID <a href="https://pkg.go.dev/builtin#string">string</a>, fileID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*http.Response, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+# Skills
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DeletedSkill">DeletedSkill</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Skill">Skill</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillList">SkillList</a>
+
+Methods:
+
+- <code title="post /skills">client.Skills.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillNewParams">SkillNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Skill">Skill</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /skills/{skill_id}">client.Skills.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, skillID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Skill">Skill</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /skills/{skill_id}">client.Skills.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, skillID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillUpdateParams">SkillUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Skill">Skill</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /skills">client.Skills.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillListParams">SkillListParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#CursorPage">CursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Skill">Skill</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /skills/{skill_id}">client.Skills.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, skillID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DeletedSkill">DeletedSkill</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+## Content
+
+Methods:
+
+- <code title="get /skills/{skill_id}/content">client.Skills.Content.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillContentService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, skillID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*http.Response, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+## Versions
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DeletedSkillVersion">DeletedSkillVersion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersion">SkillVersion</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersionList">SkillVersionList</a>
+
+Methods:
+
+- <code title="post /skills/{skill_id}/versions">client.Skills.Versions.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersionService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, skillID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersionNewParams">SkillVersionNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersion">SkillVersion</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /skills/{skill_id}/versions/{version}">client.Skills.Versions.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersionService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, skillID <a href="https://pkg.go.dev/builtin#string">string</a>, version <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersion">SkillVersion</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /skills/{skill_id}/versions">client.Skills.Versions.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersionService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, skillID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersionListParams">SkillVersionListParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#CursorPage">CursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersion">SkillVersion</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /skills/{skill_id}/versions/{version}">client.Skills.Versions.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersionService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, skillID <a href="https://pkg.go.dev/builtin#string">string</a>, version <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#DeletedSkillVersion">DeletedSkillVersion</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+### Content
+
+Methods:
+
+- <code title="get /skills/{skill_id}/versions/{version}/content">client.Skills.Versions.Content.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#SkillVersionContentService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, skillID <a href="https://pkg.go.dev/builtin#string">string</a>, version <a href="https://pkg.go.dev/builtin#string">string</a>) (\*http.Response, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 # Videos
 
 Params Types:
