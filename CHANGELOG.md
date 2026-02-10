@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.21.0 (2026-02-10)
+
+Full Changelog: [v3.20.0...v3.21.0](https://github.com/openai/openai-go/compare/v3.20.0...v3.21.0)
+
+### Features
+
+* **api:** support for images in batch api ([e23aeb1](https://github.com/openai/openai-go/commit/e23aeb1b13bfd089cc73d3097c9635b687446f82))
+
 ## 3.20.0 (2026-02-10)
 
 Full Changelog: [v3.19.0...v3.20.0](https://github.com/openai/openai-go/compare/v3.19.0...v3.20.0)
