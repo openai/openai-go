@@ -83,6 +83,9 @@ func MarshalUnion[T ParamStruct](metadata T, variants ...any) ([]byte, error) {
 		}
 	}
 	if nPresent == 0 || presentIdx == -1 {
+		if metadata.null() {
+			return []byte("null"), nil
+		}
 		if ovr, ok := metadata.Overrides(); ok {
 			return shimjson.Marshal(ovr)
 		}

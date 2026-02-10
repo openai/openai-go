@@ -363,3 +363,15 @@ func TestOverriddenUnion(t *testing.T) {
 		})
 	}
 }
+
+func TestNullStructUnion(t *testing.T) {
+	nullUnion := param.NullStruct[PrimitiveUnion]()
+
+	b, err := json.Marshal(nullUnion)
+	if err != nil {
+		t.Fatalf("didn't expect error %v", err)
+	}
+	if string(b) != "null" {
+		t.Fatalf("expected null, received %s", string(b))
+	}
+}
