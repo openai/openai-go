@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.20.0 (2026-02-10)
+
+Full Changelog: [v3.19.0...v3.20.0](https://github.com/openai/openai-go/compare/v3.19.0...v3.20.0)
+
+### Features
+
+* **api:** skills and hosted shell ([9e191de](https://github.com/openai/openai-go/commit/9e191de75f67a6a693c8b25ac9ab1b9288673993))
+
 ## 3.19.0 (2026-02-09)
 
 Full Changelog: [v3.18.0...v3.19.0](https://github.com/openai/openai-go/compare/v3.18.0...v3.19.0)
