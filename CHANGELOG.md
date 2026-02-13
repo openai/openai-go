@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.22.0 (2026-02-13)
+
+Full Changelog: [v3.21.0...v3.22.0](https://github.com/openai/openai-go/compare/v3.21.0...v3.22.0)
+
+### Features
+
+* **api:** container network_policy and skills ([8e5ea23](https://github.com/openai/openai-go/commit/8e5ea2344580eefa186040cae3583dacf459e0b9))
+
+
+### Bug Fixes
+
+* **encoder:** correctly serialize NullStruct ([a6cb49e](https://github.com/openai/openai-go/commit/a6cb49ef3743b1c0b58d24f8dbc5e16e1a5f5852))
+
+
+### Documentation
+
+* update comment ([bc316d7](https://github.com/openai/openai-go/commit/bc316d7b10fa928289e0560123b0de16099edfb7))
+
 ## 3.21.0 (2026-02-10)
 
 Full Changelog: [v3.20.0...v3.21.0](https://github.com/openai/openai-go/compare/v3.20.0...v3.21.0)
