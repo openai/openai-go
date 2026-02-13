@@ -362,18 +362,19 @@ func retryDelay(res *http.Response, retryCount int) time.Duration {
 	// If the API asks us to wait a certain amount of time (and it's a reasonable amount),
 	// just do what it says.
 
-	if retryAfterDelay, ok := parseRetryAfterHeader(res); ok && 0 <= retryAfterDelay && retryAfterDelay < time.Minute {
-		return retryAfterDelay
-	}
-
 	maxDelay := 8 * time.Second
 	delay := time.Duration(0.5 * float64(time.Second) * math.Pow(2, float64(retryCount)))
-	if delay > maxDelay {
+
+	// clamp to safe range
+	if delay <= 0 || delay > maxDelay {
 		delay = maxDelay
 	}
 
-	jitter := rand.Int63n(int64(delay / 4))
-	delay -= time.Duration(jitter)
+	maxJitter := max(delay / 4, 1 * time.Second)
+	jitter := time.Duration(rand.Int63n(int64(maxJitter)))
+
+	delay -= jitter
+
 	return delay
 }
 
