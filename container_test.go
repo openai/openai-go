@@ -11,6 +11,7 @@ import (
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/internal/testutil"
 	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/responses"
 )
 
 func TestContainerNewWithOptionalParams(t *testing.T) {
@@ -33,6 +34,15 @@ func TestContainerNewWithOptionalParams(t *testing.T) {
 		},
 		FileIDs:     []string{"string"},
 		MemoryLimit: openai.ContainerNewParamsMemoryLimit1g,
+		NetworkPolicy: openai.ContainerNewParamsNetworkPolicyUnion{
+			OfDisabled: &responses.ContainerNetworkPolicyDisabledParam{},
+		},
+		Skills: []openai.ContainerNewParamsSkillUnion{{
+			OfSkillReference: &responses.SkillReferenceParam{
+				SkillID: "x",
+				Version: openai.String("version"),
+			},
+		}},
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -80,6 +90,7 @@ func TestContainerListWithOptionalParams(t *testing.T) {
 	_, err := client.Containers.List(context.TODO(), openai.ContainerListParams{
 		After: openai.String("after"),
 		Limit: openai.Int(0),
+		Name:  openai.String("name"),
 		Order: openai.ContainerListParamsOrderAsc,
 	})
 	if err != nil {

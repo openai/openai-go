@@ -17,6 +17,7 @@ import (
 	"github.com/openai/openai-go/v3/packages/pagination"
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/responses"
 )
 
 // ContainerService contains methods and other services that help with interacting
@@ -117,18 +118,21 @@ type ContainerNewResponse struct {
 	//
 	// Any of "1g", "4g", "16g", "64g".
 	MemoryLimit ContainerNewResponseMemoryLimit `json:"memory_limit"`
+	// Network access policy for the container.
+	NetworkPolicy ContainerNewResponseNetworkPolicy `json:"network_policy"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID           respjson.Field
-		CreatedAt    respjson.Field
-		Name         respjson.Field
-		Object       respjson.Field
-		Status       respjson.Field
-		ExpiresAfter respjson.Field
-		LastActiveAt respjson.Field
-		MemoryLimit  respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ID            respjson.Field
+		CreatedAt     respjson.Field
+		Name          respjson.Field
+		Object        respjson.Field
+		Status        respjson.Field
+		ExpiresAfter  respjson.Field
+		LastActiveAt  respjson.Field
+		MemoryLimit   respjson.Field
+		NetworkPolicy respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -173,6 +177,29 @@ const (
 	ContainerNewResponseMemoryLimit64g ContainerNewResponseMemoryLimit = "64g"
 )
 
+// Network access policy for the container.
+type ContainerNewResponseNetworkPolicy struct {
+	// The network policy mode.
+	//
+	// Any of "allowlist", "disabled".
+	Type string `json:"type,required"`
+	// Allowed outbound domains when `type` is `allowlist`.
+	AllowedDomains []string `json:"allowed_domains"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type           respjson.Field
+		AllowedDomains respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ContainerNewResponseNetworkPolicy) RawJSON() string { return r.JSON.raw }
+func (r *ContainerNewResponseNetworkPolicy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type ContainerGetResponse struct {
 	// Unique identifier for the container.
 	ID string `json:"id,required"`
@@ -194,18 +221,21 @@ type ContainerGetResponse struct {
 	//
 	// Any of "1g", "4g", "16g", "64g".
 	MemoryLimit ContainerGetResponseMemoryLimit `json:"memory_limit"`
+	// Network access policy for the container.
+	NetworkPolicy ContainerGetResponseNetworkPolicy `json:"network_policy"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID           respjson.Field
-		CreatedAt    respjson.Field
-		Name         respjson.Field
-		Object       respjson.Field
-		Status       respjson.Field
-		ExpiresAfter respjson.Field
-		LastActiveAt respjson.Field
-		MemoryLimit  respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ID            respjson.Field
+		CreatedAt     respjson.Field
+		Name          respjson.Field
+		Object        respjson.Field
+		Status        respjson.Field
+		ExpiresAfter  respjson.Field
+		LastActiveAt  respjson.Field
+		MemoryLimit   respjson.Field
+		NetworkPolicy respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -250,6 +280,29 @@ const (
 	ContainerGetResponseMemoryLimit64g ContainerGetResponseMemoryLimit = "64g"
 )
 
+// Network access policy for the container.
+type ContainerGetResponseNetworkPolicy struct {
+	// The network policy mode.
+	//
+	// Any of "allowlist", "disabled".
+	Type string `json:"type,required"`
+	// Allowed outbound domains when `type` is `allowlist`.
+	AllowedDomains []string `json:"allowed_domains"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type           respjson.Field
+		AllowedDomains respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ContainerGetResponseNetworkPolicy) RawJSON() string { return r.JSON.raw }
+func (r *ContainerGetResponseNetworkPolicy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type ContainerListResponse struct {
 	// Unique identifier for the container.
 	ID string `json:"id,required"`
@@ -271,18 +324,21 @@ type ContainerListResponse struct {
 	//
 	// Any of "1g", "4g", "16g", "64g".
 	MemoryLimit ContainerListResponseMemoryLimit `json:"memory_limit"`
+	// Network access policy for the container.
+	NetworkPolicy ContainerListResponseNetworkPolicy `json:"network_policy"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID           respjson.Field
-		CreatedAt    respjson.Field
-		Name         respjson.Field
-		Object       respjson.Field
-		Status       respjson.Field
-		ExpiresAfter respjson.Field
-		LastActiveAt respjson.Field
-		MemoryLimit  respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		ID            respjson.Field
+		CreatedAt     respjson.Field
+		Name          respjson.Field
+		Object        respjson.Field
+		Status        respjson.Field
+		ExpiresAfter  respjson.Field
+		LastActiveAt  respjson.Field
+		MemoryLimit   respjson.Field
+		NetworkPolicy respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -327,6 +383,29 @@ const (
 	ContainerListResponseMemoryLimit64g ContainerListResponseMemoryLimit = "64g"
 )
 
+// Network access policy for the container.
+type ContainerListResponseNetworkPolicy struct {
+	// The network policy mode.
+	//
+	// Any of "allowlist", "disabled".
+	Type string `json:"type,required"`
+	// Allowed outbound domains when `type` is `allowlist`.
+	AllowedDomains []string `json:"allowed_domains"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type           respjson.Field
+		AllowedDomains respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ContainerListResponseNetworkPolicy) RawJSON() string { return r.JSON.raw }
+func (r *ContainerListResponseNetworkPolicy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type ContainerNewParams struct {
 	// Name of the container to create.
 	Name string `json:"name,required"`
@@ -338,6 +417,10 @@ type ContainerNewParams struct {
 	//
 	// Any of "1g", "4g", "16g", "64g".
 	MemoryLimit ContainerNewParamsMemoryLimit `json:"memory_limit,omitzero"`
+	// Network access policy for the container.
+	NetworkPolicy ContainerNewParamsNetworkPolicyUnion `json:"network_policy,omitzero"`
+	// An optional list of skills referenced by id or inline data.
+	Skills []ContainerNewParamsSkillUnion `json:"skills,omitzero"`
 	paramObj
 }
 
@@ -386,6 +469,148 @@ const (
 	ContainerNewParamsMemoryLimit64g ContainerNewParamsMemoryLimit = "64g"
 )
 
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ContainerNewParamsNetworkPolicyUnion struct {
+	OfDisabled  *responses.ContainerNetworkPolicyDisabledParam  `json:",omitzero,inline"`
+	OfAllowlist *responses.ContainerNetworkPolicyAllowlistParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ContainerNewParamsNetworkPolicyUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfDisabled, u.OfAllowlist)
+}
+func (u *ContainerNewParamsNetworkPolicyUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *ContainerNewParamsNetworkPolicyUnion) asAny() any {
+	if !param.IsOmitted(u.OfDisabled) {
+		return u.OfDisabled
+	} else if !param.IsOmitted(u.OfAllowlist) {
+		return u.OfAllowlist
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsNetworkPolicyUnion) GetAllowedDomains() []string {
+	if vt := u.OfAllowlist; vt != nil {
+		return vt.AllowedDomains
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsNetworkPolicyUnion) GetDomainSecrets() []responses.ContainerNetworkPolicyDomainSecretParam {
+	if vt := u.OfAllowlist; vt != nil {
+		return vt.DomainSecrets
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsNetworkPolicyUnion) GetType() *string {
+	if vt := u.OfDisabled; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfAllowlist; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ContainerNewParamsNetworkPolicyUnion](
+		"type",
+		apijson.Discriminator[responses.ContainerNetworkPolicyDisabledParam]("disabled"),
+		apijson.Discriminator[responses.ContainerNetworkPolicyAllowlistParam]("allowlist"),
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ContainerNewParamsSkillUnion struct {
+	OfSkillReference *responses.SkillReferenceParam `json:",omitzero,inline"`
+	OfInline         *responses.InlineSkillParam    `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ContainerNewParamsSkillUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfSkillReference, u.OfInline)
+}
+func (u *ContainerNewParamsSkillUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *ContainerNewParamsSkillUnion) asAny() any {
+	if !param.IsOmitted(u.OfSkillReference) {
+		return u.OfSkillReference
+	} else if !param.IsOmitted(u.OfInline) {
+		return u.OfInline
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetSkillID() *string {
+	if vt := u.OfSkillReference; vt != nil {
+		return &vt.SkillID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetVersion() *string {
+	if vt := u.OfSkillReference; vt != nil && vt.Version.Valid() {
+		return &vt.Version.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetDescription() *string {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Description
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetName() *string {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Name
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetSource() *responses.InlineSkillSourceParam {
+	if vt := u.OfInline; vt != nil {
+		return &vt.Source
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ContainerNewParamsSkillUnion) GetType() *string {
+	if vt := u.OfSkillReference; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfInline; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ContainerNewParamsSkillUnion](
+		"type",
+		apijson.Discriminator[responses.SkillReferenceParam]("skill_reference"),
+		apijson.Discriminator[responses.InlineSkillParam]("inline"),
+	)
+}
+
 type ContainerListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
@@ -395,6 +620,8 @@ type ContainerListParams struct {
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// Filter results by container name.
+	Name param.Opt[string] `query:"name,omitzero" json:"-"`
 	// Sort order by the `created_at` timestamp of the objects. `asc` for ascending
 	// order and `desc` for descending order.
 	//
