@@ -2028,7 +2028,7 @@ type Response struct {
 	// of 24 hours.
 	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
 	//
-	// Any of "in-memory", "24h".
+	// Any of "in_memory", "24h".
 	PromptCacheRetention ResponsePromptCacheRetention `json:"prompt_cache_retention,nullable"`
 	// **gpt-5 and o-series models only**
 	//
@@ -2315,7 +2315,7 @@ func (r *ResponseConversation) UnmarshalJSON(data []byte) error {
 type ResponsePromptCacheRetention string
 
 const (
-	ResponsePromptCacheRetentionInMemory ResponsePromptCacheRetention = "in-memory"
+	ResponsePromptCacheRetentionInMemory ResponsePromptCacheRetention = "in_memory"
 	ResponsePromptCacheRetention24h      ResponsePromptCacheRetention = "24h"
 )
 
@@ -19121,7 +19121,7 @@ type ResponseNewParams struct {
 	// of 24 hours.
 	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
 	//
-	// Any of "in-memory", "24h".
+	// Any of "in_memory", "24h".
 	PromptCacheRetention ResponseNewParamsPromptCacheRetention `json:"prompt_cache_retention,omitzero"`
 	// Specifies the processing type used for serving the request.
 	//
@@ -19290,7 +19290,7 @@ func (u *ResponseNewParamsInputUnion) asAny() any {
 type ResponseNewParamsPromptCacheRetention string
 
 const (
-	ResponseNewParamsPromptCacheRetentionInMemory ResponseNewParamsPromptCacheRetention = "in-memory"
+	ResponseNewParamsPromptCacheRetentionInMemory ResponseNewParamsPromptCacheRetention = "in_memory"
 	ResponseNewParamsPromptCacheRetention24h      ResponseNewParamsPromptCacheRetention = "24h"
 )
 
