@@ -33,6 +33,8 @@ func NewAudioSpeechService(opts ...option.RequestOption) (r AudioSpeechService) 
 }
 
 // Generates audio from the input text.
+//
+// Returns the audio file content, or a stream of audio events.
 func (r *AudioSpeechService) New(ctx context.Context, body AudioSpeechNewParams, opts ...option.RequestOption) (res *http.Response, err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/octet-stream")}, opts...)

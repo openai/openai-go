@@ -57,6 +57,8 @@ func NewUploadService(opts ...option.RequestOption) (r UploadService) {
 // For guidance on the proper filename extensions for each purpose, please follow
 // the documentation on
 // [creating a File](https://platform.openai.com/docs/api-reference/files/create).
+//
+// Returns the Upload object with status `pending`.
 func (r *UploadService) New(ctx context.Context, body UploadNewParams, opts ...option.RequestOption) (res *Upload, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "uploads"
@@ -65,6 +67,8 @@ func (r *UploadService) New(ctx context.Context, body UploadNewParams, opts ...o
 }
 
 // Cancels the Upload. No Parts may be added after an Upload is cancelled.
+//
+// Returns the Upload object with status `cancelled`.
 func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...option.RequestOption) (res *Upload, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if uploadID == "" {
@@ -88,7 +92,9 @@ func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...opt
 //
 // The number of bytes uploaded upon completion must match the number of bytes
 // initially specified when creating the Upload object. No Parts may be added after
-// an Upload is completed.
+// an Upload is completed. Returns the Upload object with status `completed`,
+// including an additional `file` property containing the created usable File
+// object.
 func (r *UploadService) Complete(ctx context.Context, uploadID string, body UploadCompleteParams, opts ...option.RequestOption) (res *Upload, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if uploadID == "" {

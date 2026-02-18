@@ -43,7 +43,7 @@ func NewVideoService(opts ...option.RequestOption) (r VideoService) {
 	return
 }
 
-// Create a video
+// Create a new video generation job from a prompt and optional reference assets.
 func (r *VideoService) New(ctx context.Context, body VideoNewParams, opts ...option.RequestOption) (res *Video, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "videos"
@@ -51,7 +51,7 @@ func (r *VideoService) New(ctx context.Context, body VideoNewParams, opts ...opt
 	return
 }
 
-// Retrieve a video
+// Fetch the latest metadata for a generated video.
 func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.RequestOption) (res *Video, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if videoID == "" {
@@ -63,7 +63,7 @@ func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.R
 	return
 }
 
-// List videos
+// List recently generated videos for the current project.
 func (r *VideoService) List(ctx context.Context, query VideoListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[Video], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -81,12 +81,12 @@ func (r *VideoService) List(ctx context.Context, query VideoListParams, opts ...
 	return res, nil
 }
 
-// List videos
+// List recently generated videos for the current project.
 func (r *VideoService) ListAutoPaging(ctx context.Context, query VideoListParams, opts ...option.RequestOption) *pagination.ConversationCursorPageAutoPager[Video] {
 	return pagination.NewConversationCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
-// Delete a video
+// Permanently delete a completed or failed video and its stored assets.
 func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...option.RequestOption) (res *VideoDeleteResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if videoID == "" {
@@ -98,7 +98,9 @@ func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...optio
 	return
 }
 
-// Download video content
+// Download the generated video bytes or a derived preview asset.
+//
+// Streams the rendered video content for the specified video job.
 func (r *VideoService) DownloadContent(ctx context.Context, videoID string, query VideoDownloadContentParams, opts ...option.RequestOption) (res *http.Response, err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)
@@ -111,7 +113,7 @@ func (r *VideoService) DownloadContent(ctx context.Context, videoID string, quer
 	return
 }
 
-// Create a video remix
+// Create a remix of a completed video using a refreshed prompt.
 func (r *VideoService) Remix(ctx context.Context, videoID string, body VideoRemixParams, opts ...option.RequestOption) (res *Video, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if videoID == "" {
