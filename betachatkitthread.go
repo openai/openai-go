@@ -40,7 +40,7 @@ func NewBetaChatKitThreadService(opts ...option.RequestOption) (r BetaChatKitThr
 	return
 }
 
-// Retrieve a ChatKit thread
+// Retrieve a ChatKit thread by its identifier.
 func (r *BetaChatKitThreadService) Get(ctx context.Context, threadID string, opts ...option.RequestOption) (res *ChatKitThread, err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1")}, opts...)
@@ -53,7 +53,7 @@ func (r *BetaChatKitThreadService) Get(ctx context.Context, threadID string, opt
 	return
 }
 
-// List ChatKit threads
+// List ChatKit threads with optional pagination and user filters.
 func (r *BetaChatKitThreadService) List(ctx context.Context, query BetaChatKitThreadListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[ChatKitThread], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -71,12 +71,12 @@ func (r *BetaChatKitThreadService) List(ctx context.Context, query BetaChatKitTh
 	return res, nil
 }
 
-// List ChatKit threads
+// List ChatKit threads with optional pagination and user filters.
 func (r *BetaChatKitThreadService) ListAutoPaging(ctx context.Context, query BetaChatKitThreadListParams, opts ...option.RequestOption) *pagination.ConversationCursorPageAutoPager[ChatKitThread] {
 	return pagination.NewConversationCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
-// Delete a ChatKit thread
+// Delete a ChatKit thread along with its items and stored attachments.
 func (r *BetaChatKitThreadService) Delete(ctx context.Context, threadID string, opts ...option.RequestOption) (res *BetaChatKitThreadDeleteResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1")}, opts...)
@@ -89,7 +89,7 @@ func (r *BetaChatKitThreadService) Delete(ctx context.Context, threadID string, 
 	return
 }
 
-// List ChatKit thread items
+// List items that belong to a ChatKit thread.
 func (r *BetaChatKitThreadService) ListItems(ctx context.Context, threadID string, query BetaChatKitThreadListItemsParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[ChatKitThreadItemListDataUnion], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -111,7 +111,7 @@ func (r *BetaChatKitThreadService) ListItems(ctx context.Context, threadID strin
 	return res, nil
 }
 
-// List ChatKit thread items
+// List items that belong to a ChatKit thread.
 func (r *BetaChatKitThreadService) ListItemsAutoPaging(ctx context.Context, threadID string, query BetaChatKitThreadListItemsParams, opts ...option.RequestOption) *pagination.ConversationCursorPageAutoPager[ChatKitThreadItemListDataUnion] {
 	return pagination.NewConversationCursorPageAutoPager(r.ListItems(ctx, threadID, query, opts...))
 }

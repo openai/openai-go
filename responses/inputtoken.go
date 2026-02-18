@@ -35,7 +35,10 @@ func NewInputTokenService(opts ...option.RequestOption) (r InputTokenService) {
 	return
 }
 
-// Get input token counts
+// Returns input token counts of the request.
+//
+// Returns an object with `object` set to `response.input_tokens` and an
+// `input_tokens` count.
 func (r *InputTokenService) Count(ctx context.Context, body InputTokenCountParams, opts ...option.RequestOption) (res *InputTokenCountResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "responses/input_tokens"

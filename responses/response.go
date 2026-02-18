@@ -144,7 +144,12 @@ func (r *ResponseService) Cancel(ctx context.Context, responseID string, opts ..
 	return
 }
 
-// Compact conversation
+// Compact a conversation. Returns a compacted response object.
+//
+// Learn when and how to compact long-running conversations in the
+// [conversation state guide](https://platform.openai.com/docs/guides/conversation-state#managing-the-context-window).
+// For ZDR-compatible compaction details, see
+// [Compaction (advanced)](https://platform.openai.com/docs/guides/conversation-state#compaction-advanced).
 func (r *ResponseService) Compact(ctx context.Context, body ResponseCompactParams, opts ...option.RequestOption) (res *CompactedResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "responses/compact"

@@ -32,7 +32,7 @@ func NewSkillContentService(opts ...option.RequestOption) (r SkillContentService
 	return
 }
 
-// Get Skill Content
+// Download a skill zip bundle by its ID.
 func (r *SkillContentService) Get(ctx context.Context, skillID string, opts ...option.RequestOption) (res *http.Response, err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)

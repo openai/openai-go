@@ -45,7 +45,7 @@ func NewSkillVersionService(opts ...option.RequestOption) (r SkillVersionService
 	return
 }
 
-// Create Skill Version
+// Create a new immutable skill version.
 func (r *SkillVersionService) New(ctx context.Context, skillID string, body SkillVersionNewParams, opts ...option.RequestOption) (res *SkillVersion, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if skillID == "" {
@@ -57,7 +57,7 @@ func (r *SkillVersionService) New(ctx context.Context, skillID string, body Skil
 	return
 }
 
-// Get Skill Version
+// Get a specific skill version.
 func (r *SkillVersionService) Get(ctx context.Context, skillID string, version string, opts ...option.RequestOption) (res *SkillVersion, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if skillID == "" {
@@ -73,7 +73,7 @@ func (r *SkillVersionService) Get(ctx context.Context, skillID string, version s
 	return
 }
 
-// List Skill Versions
+// List skill versions for a skill.
 func (r *SkillVersionService) List(ctx context.Context, skillID string, query SkillVersionListParams, opts ...option.RequestOption) (res *pagination.CursorPage[SkillVersion], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -95,12 +95,12 @@ func (r *SkillVersionService) List(ctx context.Context, skillID string, query Sk
 	return res, nil
 }
 
-// List Skill Versions
+// List skill versions for a skill.
 func (r *SkillVersionService) ListAutoPaging(ctx context.Context, skillID string, query SkillVersionListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[SkillVersion] {
 	return pagination.NewCursorPageAutoPager(r.List(ctx, skillID, query, opts...))
 }
 
-// Delete Skill Version
+// Delete a skill version.
 func (r *SkillVersionService) Delete(ctx context.Context, skillID string, version string, opts ...option.RequestOption) (res *DeletedSkillVersion, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if skillID == "" {

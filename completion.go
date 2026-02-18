@@ -36,6 +36,9 @@ func NewCompletionService(opts ...option.RequestOption) (r CompletionService) {
 }
 
 // Creates a completion for the provided prompt and parameters.
+//
+// Returns a completion object, or a sequence of completion objects if the request
+// is streamed.
 func (r *CompletionService) New(ctx context.Context, body CompletionNewParams, opts ...option.RequestOption) (res *Completion, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "completions"
@@ -44,6 +47,9 @@ func (r *CompletionService) New(ctx context.Context, body CompletionNewParams, o
 }
 
 // Creates a completion for the provided prompt and parameters.
+//
+// Returns a completion object, or a sequence of completion objects if the request
+// is streamed.
 func (r *CompletionService) NewStreaming(ctx context.Context, body CompletionNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[Completion]) {
 	var (
 		raw *http.Response

@@ -47,7 +47,7 @@ func NewSkillService(opts ...option.RequestOption) (r SkillService) {
 	return
 }
 
-// Create Skill
+// Create a new skill.
 func (r *SkillService) New(ctx context.Context, body SkillNewParams, opts ...option.RequestOption) (res *Skill, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "skills"
@@ -55,7 +55,7 @@ func (r *SkillService) New(ctx context.Context, body SkillNewParams, opts ...opt
 	return
 }
 
-// Get Skill
+// Get a skill by its ID.
 func (r *SkillService) Get(ctx context.Context, skillID string, opts ...option.RequestOption) (res *Skill, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if skillID == "" {
@@ -67,7 +67,7 @@ func (r *SkillService) Get(ctx context.Context, skillID string, opts ...option.R
 	return
 }
 
-// Update Skill Default Version
+// Update the default version pointer for a skill.
 func (r *SkillService) Update(ctx context.Context, skillID string, body SkillUpdateParams, opts ...option.RequestOption) (res *Skill, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if skillID == "" {
@@ -79,7 +79,7 @@ func (r *SkillService) Update(ctx context.Context, skillID string, body SkillUpd
 	return
 }
 
-// List Skills
+// List all skills for the current project.
 func (r *SkillService) List(ctx context.Context, query SkillListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Skill], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -97,12 +97,12 @@ func (r *SkillService) List(ctx context.Context, query SkillListParams, opts ...
 	return res, nil
 }
 
-// List Skills
+// List all skills for the current project.
 func (r *SkillService) ListAutoPaging(ctx context.Context, query SkillListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[Skill] {
 	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
-// Delete Skill
+// Delete a skill by its ID.
 func (r *SkillService) Delete(ctx context.Context, skillID string, opts ...option.RequestOption) (res *DeletedSkill, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if skillID == "" {

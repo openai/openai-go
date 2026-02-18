@@ -61,6 +61,9 @@ func NewChatCompletionService(opts ...option.RequestOption) (r ChatCompletionSer
 // supported for reasoning models are noted below. For the current state of
 // unsupported parameters in reasoning models,
 // [refer to the reasoning guide](https://platform.openai.com/docs/guides/reasoning).
+//
+// Returns a chat completion object, or a streamed sequence of chat completion
+// chunk objects if the request is streamed.
 func (r *ChatCompletionService) New(ctx context.Context, body ChatCompletionNewParams, opts ...option.RequestOption) (res *ChatCompletion, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "chat/completions"
@@ -85,6 +88,9 @@ func (r *ChatCompletionService) New(ctx context.Context, body ChatCompletionNewP
 // supported for reasoning models are noted below. For the current state of
 // unsupported parameters in reasoning models,
 // [refer to the reasoning guide](https://platform.openai.com/docs/guides/reasoning).
+//
+// Returns a chat completion object, or a streamed sequence of chat completion
+// chunk objects if the request is streamed.
 func (r *ChatCompletionService) NewStreaming(ctx context.Context, body ChatCompletionNewParams, opts ...option.RequestOption) (stream *ssestream.Stream[ChatCompletionChunk]) {
 	var (
 		raw *http.Response
