@@ -27,7 +27,7 @@ func TestAutoPagination(t *testing.T) {
 	iter := client.FineTuning.Jobs.ListAutoPaging(context.TODO(), openai.FineTuningJobListParams{
 		Limit: openai.Int(20),
 	})
-	// Prism mock isn't going to give us real pagination
+	// The mock server isn't going to give us real pagination
 	for i := 0; i < 3 && iter.Next(); i++ {
 		job := iter.Current()
 		t.Logf("%+v\n", job.ID)
