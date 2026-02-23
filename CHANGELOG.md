@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.22.1 (2026-02-23)
+
+Full Changelog: [v3.22.0...v3.22.1](https://github.com/openai/openai-go/compare/v3.22.0...v3.22.1)
+
+### Bug Fixes
+
+* allow canceling a request while it is waiting to retry ([54672cf](https://github.com/openai/openai-go/commit/54672cf6b2c21a0e2ac0d2a7d7bed8680eee3e44))
+
+
+### Chores
+
+* update mock server docs ([3ac84dd](https://github.com/openai/openai-go/commit/3ac84dd90e21d9374c0141d86c07d21e0914c6b0))
+
+
+### Documentation
+
+* **api:** add batch size limit to vector store file batch parameters ([f751c40](https://github.com/openai/openai-go/commit/f751c40c522d6fba5c4eb244fd25f28c2317ca33))
+* **api:** clarify safety_identifier max length in chat completions and responses ([8257f9b](https://github.com/openai/openai-go/commit/8257f9b0e4d63038f2b088a42399e3a80e9c9bb6))
+* **api:** enhance method docstrings across audio/chat/completion/skill/upload/video APIs ([38b8f63](https://github.com/openai/openai-go/commit/38b8f63a16f9a50bb176561f7842baf976e88316))
+
 ## 3.22.0 (2026-02-13)
 
 Full Changelog: [v3.21.0...v3.22.0](https://github.com/openai/openai-go/compare/v3.21.0...v3.22.0)
