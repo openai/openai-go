@@ -547,6 +547,7 @@ type RealtimeSessionCreateResponseModel string
 
 const (
 	RealtimeSessionCreateResponseModelGPTRealtime                        RealtimeSessionCreateResponseModel = "gpt-realtime"
+	RealtimeSessionCreateResponseModelGPTRealtime1_5                     RealtimeSessionCreateResponseModel = "gpt-realtime-1.5"
 	RealtimeSessionCreateResponseModelGPTRealtime2025_08_28              RealtimeSessionCreateResponseModel = "gpt-realtime-2025-08-28"
 	RealtimeSessionCreateResponseModelGPT4oRealtimePreview               RealtimeSessionCreateResponseModel = "gpt-4o-realtime-preview"
 	RealtimeSessionCreateResponseModelGPT4oRealtimePreview2024_10_01     RealtimeSessionCreateResponseModel = "gpt-4o-realtime-preview-2024-10-01"
@@ -557,6 +558,7 @@ const (
 	RealtimeSessionCreateResponseModelGPTRealtimeMini                    RealtimeSessionCreateResponseModel = "gpt-realtime-mini"
 	RealtimeSessionCreateResponseModelGPTRealtimeMini2025_10_06          RealtimeSessionCreateResponseModel = "gpt-realtime-mini-2025-10-06"
 	RealtimeSessionCreateResponseModelGPTRealtimeMini2025_12_15          RealtimeSessionCreateResponseModel = "gpt-realtime-mini-2025-12-15"
+	RealtimeSessionCreateResponseModelGPTAudio1_5                        RealtimeSessionCreateResponseModel = "gpt-audio-1.5"
 	RealtimeSessionCreateResponseModelGPTAudioMini                       RealtimeSessionCreateResponseModel = "gpt-audio-mini"
 	RealtimeSessionCreateResponseModelGPTAudioMini2025_10_06             RealtimeSessionCreateResponseModel = "gpt-audio-mini-2025-10-06"
 	RealtimeSessionCreateResponseModelGPTAudioMini2025_12_15             RealtimeSessionCreateResponseModel = "gpt-audio-mini-2025-12-15"
