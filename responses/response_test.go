@@ -198,7 +198,6 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 		},
 		Instructions:       openai.String("instructions"),
 		PreviousResponseID: openai.String("resp_123"),
-		PromptCacheKey:     openai.String("prompt_cache_key"),
 	})
 	if err != nil {
 		var apierr *openai.Error
