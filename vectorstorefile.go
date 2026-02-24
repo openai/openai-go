@@ -209,34 +209,34 @@ func (r *VectorStoreFileService) ContentAutoPaging(ctx context.Context, vectorSt
 // A list of files attached to a vector store.
 type VectorStoreFile struct {
 	// The identifier, which can be referenced in API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the vector store file was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The last error associated with this vector store file. Will be `null` if there
 	// are no errors.
-	LastError VectorStoreFileLastError `json:"last_error,required"`
+	LastError VectorStoreFileLastError `json:"last_error" api:"required"`
 	// The object type, which is always `vector_store.file`.
-	Object constant.VectorStoreFile `json:"object,required"`
+	Object constant.VectorStoreFile `json:"object" api:"required"`
 	// The status of the vector store file, which can be either `in_progress`,
 	// `completed`, `cancelled`, or `failed`. The status `completed` indicates that the
 	// vector store file is ready for use.
 	//
 	// Any of "in_progress", "completed", "cancelled", "failed".
-	Status VectorStoreFileStatus `json:"status,required"`
+	Status VectorStoreFileStatus `json:"status" api:"required"`
 	// The total vector store usage in bytes. Note that this may be different from the
 	// original file size.
-	UsageBytes int64 `json:"usage_bytes,required"`
+	UsageBytes int64 `json:"usage_bytes" api:"required"`
 	// The ID of the
 	// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object)
 	// that the [File](https://platform.openai.com/docs/api-reference/files) is
 	// attached to.
-	VectorStoreID string `json:"vector_store_id,required"`
+	VectorStoreID string `json:"vector_store_id" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
 	// length of 64 characters. Values are strings with a maximum length of 512
 	// characters, booleans, or numbers.
-	Attributes map[string]VectorStoreFileAttributeUnion `json:"attributes,nullable"`
+	Attributes map[string]VectorStoreFileAttributeUnion `json:"attributes" api:"nullable"`
 	// The strategy used to chunk the file.
 	ChunkingStrategy FileChunkingStrategyUnion `json:"chunking_strategy"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -267,9 +267,9 @@ type VectorStoreFileLastError struct {
 	// One of `server_error`, `unsupported_file`, or `invalid_file`.
 	//
 	// Any of "server_error", "unsupported_file", "invalid_file".
-	Code string `json:"code,required"`
+	Code string `json:"code" api:"required"`
 	// A human-readable description of the error.
-	Message string `json:"message,required"`
+	Message string `json:"message" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Code        respjson.Field
@@ -342,9 +342,9 @@ func (r *VectorStoreFileAttributeUnion) UnmarshalJSON(data []byte) error {
 }
 
 type VectorStoreFileDeleted struct {
-	ID      string                          `json:"id,required"`
-	Deleted bool                            `json:"deleted,required"`
-	Object  constant.VectorStoreFileDeleted `json:"object,required"`
+	ID      string                          `json:"id" api:"required"`
+	Deleted bool                            `json:"deleted" api:"required"`
+	Object  constant.VectorStoreFileDeleted `json:"object" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -385,7 +385,7 @@ type VectorStoreFileNewParams struct {
 	// A [File](https://platform.openai.com/docs/api-reference/files) ID that the
 	// vector store should use. Useful for tools like `file_search` that can access
 	// files.
-	FileID string `json:"file_id,required"`
+	FileID string `json:"file_id" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
@@ -440,7 +440,7 @@ type VectorStoreFileUpdateParams struct {
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
 	// length of 64 characters. Values are strings with a maximum length of 512
 	// characters, booleans, or numbers.
-	Attributes map[string]VectorStoreFileUpdateParamsAttributeUnion `json:"attributes,omitzero,required"`
+	Attributes map[string]VectorStoreFileUpdateParamsAttributeUnion `json:"attributes,omitzero" api:"required"`
 	paramObj
 }
 

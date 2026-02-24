@@ -129,30 +129,30 @@ func (r *Image) UnmarshalJSON(data []byte) error {
 // Emitted when image editing has completed and the final image is available.
 type ImageEditCompletedEvent struct {
 	// Base64-encoded final edited image data, suitable for rendering as an image.
-	B64JSON string `json:"b64_json,required"`
+	B64JSON string `json:"b64_json" api:"required"`
 	// The background setting for the edited image.
 	//
 	// Any of "transparent", "opaque", "auto".
-	Background ImageEditCompletedEventBackground `json:"background,required"`
+	Background ImageEditCompletedEventBackground `json:"background" api:"required"`
 	// The Unix timestamp when the event was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The output format for the edited image.
 	//
 	// Any of "png", "webp", "jpeg".
-	OutputFormat ImageEditCompletedEventOutputFormat `json:"output_format,required"`
+	OutputFormat ImageEditCompletedEventOutputFormat `json:"output_format" api:"required"`
 	// The quality setting for the edited image.
 	//
 	// Any of "low", "medium", "high", "auto".
-	Quality ImageEditCompletedEventQuality `json:"quality,required"`
+	Quality ImageEditCompletedEventQuality `json:"quality" api:"required"`
 	// The size of the edited image.
 	//
 	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
-	Size ImageEditCompletedEventSize `json:"size,required"`
+	Size ImageEditCompletedEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_edit.completed`.
-	Type constant.ImageEditCompleted `json:"type,required"`
+	Type constant.ImageEditCompleted `json:"type" api:"required"`
 	// For the GPT image models only, the token usage information for the image
 	// generation.
-	Usage ImageEditCompletedEventUsage `json:"usage,required"`
+	Usage ImageEditCompletedEventUsage `json:"usage" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		B64JSON      respjson.Field
@@ -216,13 +216,13 @@ const (
 // generation.
 type ImageEditCompletedEventUsage struct {
 	// The number of tokens (images and text) in the input prompt.
-	InputTokens int64 `json:"input_tokens,required"`
+	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The input tokens detailed information for the image generation.
-	InputTokensDetails ImageEditCompletedEventUsageInputTokensDetails `json:"input_tokens_details,required"`
+	InputTokensDetails ImageEditCompletedEventUsageInputTokensDetails `json:"input_tokens_details" api:"required"`
 	// The number of image tokens in the output image.
-	OutputTokens int64 `json:"output_tokens,required"`
+	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// The total number of tokens (images and text) used for the image generation.
-	TotalTokens int64 `json:"total_tokens,required"`
+	TotalTokens int64 `json:"total_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		InputTokens        respjson.Field
@@ -243,9 +243,9 @@ func (r *ImageEditCompletedEventUsage) UnmarshalJSON(data []byte) error {
 // The input tokens detailed information for the image generation.
 type ImageEditCompletedEventUsageInputTokensDetails struct {
 	// The number of image tokens in the input prompt.
-	ImageTokens int64 `json:"image_tokens,required"`
+	ImageTokens int64 `json:"image_tokens" api:"required"`
 	// The number of text tokens in the input prompt.
-	TextTokens int64 `json:"text_tokens,required"`
+	TextTokens int64 `json:"text_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ImageTokens respjson.Field
@@ -264,29 +264,29 @@ func (r *ImageEditCompletedEventUsageInputTokensDetails) UnmarshalJSON(data []by
 // Emitted when a partial image is available during image editing streaming.
 type ImageEditPartialImageEvent struct {
 	// Base64-encoded partial image data, suitable for rendering as an image.
-	B64JSON string `json:"b64_json,required"`
+	B64JSON string `json:"b64_json" api:"required"`
 	// The background setting for the requested edited image.
 	//
 	// Any of "transparent", "opaque", "auto".
-	Background ImageEditPartialImageEventBackground `json:"background,required"`
+	Background ImageEditPartialImageEventBackground `json:"background" api:"required"`
 	// The Unix timestamp when the event was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The output format for the requested edited image.
 	//
 	// Any of "png", "webp", "jpeg".
-	OutputFormat ImageEditPartialImageEventOutputFormat `json:"output_format,required"`
+	OutputFormat ImageEditPartialImageEventOutputFormat `json:"output_format" api:"required"`
 	// 0-based index for the partial image (streaming).
-	PartialImageIndex int64 `json:"partial_image_index,required"`
+	PartialImageIndex int64 `json:"partial_image_index" api:"required"`
 	// The quality setting for the requested edited image.
 	//
 	// Any of "low", "medium", "high", "auto".
-	Quality ImageEditPartialImageEventQuality `json:"quality,required"`
+	Quality ImageEditPartialImageEventQuality `json:"quality" api:"required"`
 	// The size of the requested edited image.
 	//
 	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
-	Size ImageEditPartialImageEventSize `json:"size,required"`
+	Size ImageEditPartialImageEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_edit.partial_image`.
-	Type constant.ImageEditPartialImage `json:"type,required"`
+	Type constant.ImageEditPartialImage `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		B64JSON           respjson.Field
@@ -427,30 +427,30 @@ func (r *ImageEditStreamEventUnion) UnmarshalJSON(data []byte) error {
 // Emitted when image generation has completed and the final image is available.
 type ImageGenCompletedEvent struct {
 	// Base64-encoded image data, suitable for rendering as an image.
-	B64JSON string `json:"b64_json,required"`
+	B64JSON string `json:"b64_json" api:"required"`
 	// The background setting for the generated image.
 	//
 	// Any of "transparent", "opaque", "auto".
-	Background ImageGenCompletedEventBackground `json:"background,required"`
+	Background ImageGenCompletedEventBackground `json:"background" api:"required"`
 	// The Unix timestamp when the event was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The output format for the generated image.
 	//
 	// Any of "png", "webp", "jpeg".
-	OutputFormat ImageGenCompletedEventOutputFormat `json:"output_format,required"`
+	OutputFormat ImageGenCompletedEventOutputFormat `json:"output_format" api:"required"`
 	// The quality setting for the generated image.
 	//
 	// Any of "low", "medium", "high", "auto".
-	Quality ImageGenCompletedEventQuality `json:"quality,required"`
+	Quality ImageGenCompletedEventQuality `json:"quality" api:"required"`
 	// The size of the generated image.
 	//
 	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
-	Size ImageGenCompletedEventSize `json:"size,required"`
+	Size ImageGenCompletedEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_generation.completed`.
-	Type constant.ImageGenerationCompleted `json:"type,required"`
+	Type constant.ImageGenerationCompleted `json:"type" api:"required"`
 	// For the GPT image models only, the token usage information for the image
 	// generation.
-	Usage ImageGenCompletedEventUsage `json:"usage,required"`
+	Usage ImageGenCompletedEventUsage `json:"usage" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		B64JSON      respjson.Field
@@ -514,13 +514,13 @@ const (
 // generation.
 type ImageGenCompletedEventUsage struct {
 	// The number of tokens (images and text) in the input prompt.
-	InputTokens int64 `json:"input_tokens,required"`
+	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The input tokens detailed information for the image generation.
-	InputTokensDetails ImageGenCompletedEventUsageInputTokensDetails `json:"input_tokens_details,required"`
+	InputTokensDetails ImageGenCompletedEventUsageInputTokensDetails `json:"input_tokens_details" api:"required"`
 	// The number of image tokens in the output image.
-	OutputTokens int64 `json:"output_tokens,required"`
+	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// The total number of tokens (images and text) used for the image generation.
-	TotalTokens int64 `json:"total_tokens,required"`
+	TotalTokens int64 `json:"total_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		InputTokens        respjson.Field
@@ -541,9 +541,9 @@ func (r *ImageGenCompletedEventUsage) UnmarshalJSON(data []byte) error {
 // The input tokens detailed information for the image generation.
 type ImageGenCompletedEventUsageInputTokensDetails struct {
 	// The number of image tokens in the input prompt.
-	ImageTokens int64 `json:"image_tokens,required"`
+	ImageTokens int64 `json:"image_tokens" api:"required"`
 	// The number of text tokens in the input prompt.
-	TextTokens int64 `json:"text_tokens,required"`
+	TextTokens int64 `json:"text_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ImageTokens respjson.Field
@@ -562,29 +562,29 @@ func (r *ImageGenCompletedEventUsageInputTokensDetails) UnmarshalJSON(data []byt
 // Emitted when a partial image is available during image generation streaming.
 type ImageGenPartialImageEvent struct {
 	// Base64-encoded partial image data, suitable for rendering as an image.
-	B64JSON string `json:"b64_json,required"`
+	B64JSON string `json:"b64_json" api:"required"`
 	// The background setting for the requested image.
 	//
 	// Any of "transparent", "opaque", "auto".
-	Background ImageGenPartialImageEventBackground `json:"background,required"`
+	Background ImageGenPartialImageEventBackground `json:"background" api:"required"`
 	// The Unix timestamp when the event was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The output format for the requested image.
 	//
 	// Any of "png", "webp", "jpeg".
-	OutputFormat ImageGenPartialImageEventOutputFormat `json:"output_format,required"`
+	OutputFormat ImageGenPartialImageEventOutputFormat `json:"output_format" api:"required"`
 	// 0-based index for the partial image (streaming).
-	PartialImageIndex int64 `json:"partial_image_index,required"`
+	PartialImageIndex int64 `json:"partial_image_index" api:"required"`
 	// The quality setting for the requested image.
 	//
 	// Any of "low", "medium", "high", "auto".
-	Quality ImageGenPartialImageEventQuality `json:"quality,required"`
+	Quality ImageGenPartialImageEventQuality `json:"quality" api:"required"`
 	// The size of the requested image.
 	//
 	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
-	Size ImageGenPartialImageEventSize `json:"size,required"`
+	Size ImageGenPartialImageEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_generation.partial_image`.
-	Type constant.ImageGenerationPartialImage `json:"type,required"`
+	Type constant.ImageGenerationPartialImage `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		B64JSON           respjson.Field
@@ -735,7 +735,7 @@ const (
 // The response from the image generation endpoint.
 type ImagesResponse struct {
 	// The Unix timestamp (in seconds) of when the image was created.
-	Created int64 `json:"created,required"`
+	Created int64 `json:"created" api:"required"`
 	// The background parameter used for the image generation. Either `transparent` or
 	// `opaque`.
 	//
@@ -818,13 +818,13 @@ const (
 // For `gpt-image-1` only, the token usage information for the image generation.
 type ImagesResponseUsage struct {
 	// The number of tokens (images and text) in the input prompt.
-	InputTokens int64 `json:"input_tokens,required"`
+	InputTokens int64 `json:"input_tokens" api:"required"`
 	// The input tokens detailed information for the image generation.
-	InputTokensDetails ImagesResponseUsageInputTokensDetails `json:"input_tokens_details,required"`
+	InputTokensDetails ImagesResponseUsageInputTokensDetails `json:"input_tokens_details" api:"required"`
 	// The number of output tokens generated by the model.
-	OutputTokens int64 `json:"output_tokens,required"`
+	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// The total number of tokens (images and text) used for the image generation.
-	TotalTokens int64 `json:"total_tokens,required"`
+	TotalTokens int64 `json:"total_tokens" api:"required"`
 	// The output token details for the image generation.
 	OutputTokensDetails ImagesResponseUsageOutputTokensDetails `json:"output_tokens_details"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -848,9 +848,9 @@ func (r *ImagesResponseUsage) UnmarshalJSON(data []byte) error {
 // The input tokens detailed information for the image generation.
 type ImagesResponseUsageInputTokensDetails struct {
 	// The number of image tokens in the input prompt.
-	ImageTokens int64 `json:"image_tokens,required"`
+	ImageTokens int64 `json:"image_tokens" api:"required"`
 	// The number of text tokens in the input prompt.
-	TextTokens int64 `json:"text_tokens,required"`
+	TextTokens int64 `json:"text_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ImageTokens respjson.Field
@@ -869,9 +869,9 @@ func (r *ImagesResponseUsageInputTokensDetails) UnmarshalJSON(data []byte) error
 // The output token details for the image generation.
 type ImagesResponseUsageOutputTokensDetails struct {
 	// The number of image output tokens generated by the model.
-	ImageTokens int64 `json:"image_tokens,required"`
+	ImageTokens int64 `json:"image_tokens" api:"required"`
 	// The number of text output tokens generated by the model.
-	TextTokens int64 `json:"text_tokens,required"`
+	TextTokens int64 `json:"text_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ImageTokens respjson.Field
@@ -890,7 +890,7 @@ func (r *ImagesResponseUsageOutputTokensDetails) UnmarshalJSON(data []byte) erro
 type ImageNewVariationParams struct {
 	// The image to use as the basis for the variation(s). Must be a valid PNG file,
 	// less than 4MB, and square.
-	Image io.Reader `json:"image,omitzero,required" format:"binary"`
+	Image io.Reader `json:"image,omitzero" api:"required" format:"binary"`
 	// The number of images to generate. Must be between 1 and 10.
 	N param.Opt[int64] `json:"n,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
@@ -962,10 +962,10 @@ type ImageEditParams struct {
 	//
 	// For `dall-e-2`, you can only provide one image, and it should be a square `png`
 	// file less than 4MB.
-	Image ImageEditParamsImageUnion `json:"image,omitzero,required" format:"binary"`
+	Image ImageEditParamsImageUnion `json:"image,omitzero" api:"required" format:"binary"`
 	// A text description of the desired image(s). The maximum length is 1000
 	// characters for `dall-e-2`, and 32000 characters for the GPT image models.
-	Prompt string `json:"prompt,required"`
+	Prompt string `json:"prompt" api:"required"`
 	// The number of images to generate. Must be between 1 and 10.
 	N param.Opt[int64] `json:"n,omitzero"`
 	// The compression level (0-100%) for the generated images. This parameter is only
@@ -1155,7 +1155,7 @@ type ImageGenerateParams struct {
 	// A text description of the desired image(s). The maximum length is 32000
 	// characters for the GPT image models, 1000 characters for `dall-e-2` and 4000
 	// characters for `dall-e-3`.
-	Prompt string `json:"prompt,required"`
+	Prompt string `json:"prompt" api:"required"`
 	// The number of images to generate. Must be between 1 and 10. For `dall-e-3`, only
 	// `n=1` is supported.
 	N param.Opt[int64] `json:"n,omitzero"`

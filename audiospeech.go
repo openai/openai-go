@@ -54,16 +54,16 @@ const (
 
 type AudioSpeechNewParams struct {
 	// The text to generate audio for. The maximum length is 4096 characters.
-	Input string `json:"input,required"`
+	Input string `json:"input" api:"required"`
 	// One of the available [TTS models](https://platform.openai.com/docs/models#tts):
 	// `tts-1`, `tts-1-hd`, `gpt-4o-mini-tts`, or `gpt-4o-mini-tts-2025-12-15`.
-	Model SpeechModel `json:"model,omitzero,required"`
+	Model SpeechModel `json:"model,omitzero" api:"required"`
 	// The voice to use when generating the audio. Supported built-in voices are
 	// `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`,
 	// `shimmer`, `verse`, `marin`, and `cedar`. Previews of the voices are available
 	// in the
 	// [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
-	Voice AudioSpeechNewParamsVoice `json:"voice,omitzero,required"`
+	Voice AudioSpeechNewParamsVoice `json:"voice,omitzero" api:"required"`
 	// Control the voice of your generated audio with additional instructions. Does not
 	// work with `tts-1` or `tts-1-hd`.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`

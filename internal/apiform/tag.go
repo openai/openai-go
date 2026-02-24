@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+const apiStructTag = "api"
 const jsonStructTag = "json"
 const formStructTag = "form"
 const formatStructTag = "format"
@@ -42,7 +43,25 @@ func parseFormStructTag(field reflect.StructField) (tag parsedStructTag, ok bool
 			tag.omitzero = true
 		}
 	}
+
+	parseApiStructTag(field, &tag)
 	return
+}
+
+func parseApiStructTag(field reflect.StructField, tag *parsedStructTag) {
+	raw, ok := field.Tag.Lookup(apiStructTag)
+	if !ok {
+		return
+	}
+	parts := strings.Split(raw, ",")
+	for _, part := range parts {
+		switch part {
+		case "extrafields":
+			tag.extras = true
+		case "required":
+			tag.required = true
+		}
+	}
 }
 
 func parseFormatStructTag(field reflect.StructField) (format string, ok bool) {

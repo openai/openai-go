@@ -200,13 +200,13 @@ func (r *WebhookService) VerifySignatureWithToleranceAndTime(body []byte, header
 // Sent when a batch API request has been cancelled.
 type BatchCancelledWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request was cancelled.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data BatchCancelledWebhookEventData `json:"data,required"`
+	Data BatchCancelledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.cancelled`.
-	Type constant.BatchCancelled `json:"type,required"`
+	Type constant.BatchCancelled `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -232,7 +232,7 @@ func (r *BatchCancelledWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type BatchCancelledWebhookEventData struct {
 	// The unique ID of the batch API request.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -257,13 +257,13 @@ const (
 // Sent when a batch API request has been completed.
 type BatchCompletedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request was completed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data BatchCompletedWebhookEventData `json:"data,required"`
+	Data BatchCompletedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.completed`.
-	Type constant.BatchCompleted `json:"type,required"`
+	Type constant.BatchCompleted `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -289,7 +289,7 @@ func (r *BatchCompletedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type BatchCompletedWebhookEventData struct {
 	// The unique ID of the batch API request.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -314,13 +314,13 @@ const (
 // Sent when a batch API request has expired.
 type BatchExpiredWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request expired.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data BatchExpiredWebhookEventData `json:"data,required"`
+	Data BatchExpiredWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.expired`.
-	Type constant.BatchExpired `json:"type,required"`
+	Type constant.BatchExpired `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -346,7 +346,7 @@ func (r *BatchExpiredWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type BatchExpiredWebhookEventData struct {
 	// The unique ID of the batch API request.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -371,13 +371,13 @@ const (
 // Sent when a batch API request has failed.
 type BatchFailedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request failed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data BatchFailedWebhookEventData `json:"data,required"`
+	Data BatchFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.failed`.
-	Type constant.BatchFailed `json:"type,required"`
+	Type constant.BatchFailed `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -403,7 +403,7 @@ func (r *BatchFailedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type BatchFailedWebhookEventData struct {
 	// The unique ID of the batch API request.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -428,13 +428,13 @@ const (
 // Sent when an eval run has been canceled.
 type EvalRunCanceledWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the eval run was canceled.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data EvalRunCanceledWebhookEventData `json:"data,required"`
+	Data EvalRunCanceledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `eval.run.canceled`.
-	Type constant.EvalRunCanceled `json:"type,required"`
+	Type constant.EvalRunCanceled `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -460,7 +460,7 @@ func (r *EvalRunCanceledWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type EvalRunCanceledWebhookEventData struct {
 	// The unique ID of the eval run.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -485,13 +485,13 @@ const (
 // Sent when an eval run has failed.
 type EvalRunFailedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the eval run failed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data EvalRunFailedWebhookEventData `json:"data,required"`
+	Data EvalRunFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `eval.run.failed`.
-	Type constant.EvalRunFailed `json:"type,required"`
+	Type constant.EvalRunFailed `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -517,7 +517,7 @@ func (r *EvalRunFailedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type EvalRunFailedWebhookEventData struct {
 	// The unique ID of the eval run.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -542,13 +542,13 @@ const (
 // Sent when an eval run has succeeded.
 type EvalRunSucceededWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the eval run succeeded.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data EvalRunSucceededWebhookEventData `json:"data,required"`
+	Data EvalRunSucceededWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `eval.run.succeeded`.
-	Type constant.EvalRunSucceeded `json:"type,required"`
+	Type constant.EvalRunSucceeded `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -574,7 +574,7 @@ func (r *EvalRunSucceededWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type EvalRunSucceededWebhookEventData struct {
 	// The unique ID of the eval run.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -599,13 +599,13 @@ const (
 // Sent when a fine-tuning job has been cancelled.
 type FineTuningJobCancelledWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the fine-tuning job was cancelled.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data FineTuningJobCancelledWebhookEventData `json:"data,required"`
+	Data FineTuningJobCancelledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `fine_tuning.job.cancelled`.
-	Type constant.FineTuningJobCancelled `json:"type,required"`
+	Type constant.FineTuningJobCancelled `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -631,7 +631,7 @@ func (r *FineTuningJobCancelledWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type FineTuningJobCancelledWebhookEventData struct {
 	// The unique ID of the fine-tuning job.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -656,13 +656,13 @@ const (
 // Sent when a fine-tuning job has failed.
 type FineTuningJobFailedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the fine-tuning job failed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data FineTuningJobFailedWebhookEventData `json:"data,required"`
+	Data FineTuningJobFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `fine_tuning.job.failed`.
-	Type constant.FineTuningJobFailed `json:"type,required"`
+	Type constant.FineTuningJobFailed `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -688,7 +688,7 @@ func (r *FineTuningJobFailedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type FineTuningJobFailedWebhookEventData struct {
 	// The unique ID of the fine-tuning job.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -713,13 +713,13 @@ const (
 // Sent when a fine-tuning job has succeeded.
 type FineTuningJobSucceededWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the fine-tuning job succeeded.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data FineTuningJobSucceededWebhookEventData `json:"data,required"`
+	Data FineTuningJobSucceededWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `fine_tuning.job.succeeded`.
-	Type constant.FineTuningJobSucceeded `json:"type,required"`
+	Type constant.FineTuningJobSucceeded `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -745,7 +745,7 @@ func (r *FineTuningJobSucceededWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type FineTuningJobSucceededWebhookEventData struct {
 	// The unique ID of the fine-tuning job.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -770,13 +770,13 @@ const (
 // Sent when Realtime API Receives a incoming SIP call.
 type RealtimeCallIncomingWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was completed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data RealtimeCallIncomingWebhookEventData `json:"data,required"`
+	Data RealtimeCallIncomingWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `realtime.call.incoming`.
-	Type constant.RealtimeCallIncoming `json:"type,required"`
+	Type constant.RealtimeCallIncoming `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -802,9 +802,9 @@ func (r *RealtimeCallIncomingWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type RealtimeCallIncomingWebhookEventData struct {
 	// The unique ID of this call.
-	CallID string `json:"call_id,required"`
+	CallID string `json:"call_id" api:"required"`
 	// Headers from the SIP Invite.
-	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers,required"`
+	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		CallID      respjson.Field
@@ -823,9 +823,9 @@ func (r *RealtimeCallIncomingWebhookEventData) UnmarshalJSON(data []byte) error 
 // A header from the SIP Invite.
 type RealtimeCallIncomingWebhookEventDataSipHeader struct {
 	// Name of the SIP Header.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// Value of the SIP Header.
-	Value string `json:"value,required"`
+	Value string `json:"value" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Name        respjson.Field
@@ -851,13 +851,13 @@ const (
 // Sent when a background response has been cancelled.
 type ResponseCancelledWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was cancelled.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data ResponseCancelledWebhookEventData `json:"data,required"`
+	Data ResponseCancelledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.cancelled`.
-	Type constant.ResponseCancelled `json:"type,required"`
+	Type constant.ResponseCancelled `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -883,7 +883,7 @@ func (r *ResponseCancelledWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type ResponseCancelledWebhookEventData struct {
 	// The unique ID of the model response.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -908,13 +908,13 @@ const (
 // Sent when a background response has been completed.
 type ResponseCompletedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was completed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data ResponseCompletedWebhookEventData `json:"data,required"`
+	Data ResponseCompletedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.completed`.
-	Type constant.ResponseCompleted `json:"type,required"`
+	Type constant.ResponseCompleted `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -940,7 +940,7 @@ func (r *ResponseCompletedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type ResponseCompletedWebhookEventData struct {
 	// The unique ID of the model response.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -965,13 +965,13 @@ const (
 // Sent when a background response has failed.
 type ResponseFailedWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response failed.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data ResponseFailedWebhookEventData `json:"data,required"`
+	Data ResponseFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.failed`.
-	Type constant.ResponseFailed `json:"type,required"`
+	Type constant.ResponseFailed `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -997,7 +997,7 @@ func (r *ResponseFailedWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type ResponseFailedWebhookEventData struct {
 	// The unique ID of the model response.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1022,13 +1022,13 @@ const (
 // Sent when a background response has been interrupted.
 type ResponseIncompleteWebhookEvent struct {
 	// The unique ID of the event.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was interrupted.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Event data payload.
-	Data ResponseIncompleteWebhookEventData `json:"data,required"`
+	Data ResponseIncompleteWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.incomplete`.
-	Type constant.ResponseIncomplete `json:"type,required"`
+	Type constant.ResponseIncomplete `json:"type" api:"required"`
 	// The object of the event. Always `event`.
 	//
 	// Any of "event".
@@ -1054,7 +1054,7 @@ func (r *ResponseIncompleteWebhookEvent) UnmarshalJSON(data []byte) error {
 // Event data payload.
 type ResponseIncompleteWebhookEventData struct {
 	// The unique ID of the model response.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field

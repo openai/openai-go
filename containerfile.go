@@ -122,19 +122,19 @@ func (r *ContainerFileService) Delete(ctx context.Context, containerID string, f
 
 type ContainerFileNewResponse struct {
 	// Unique identifier for the file.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Size of the file in bytes.
-	Bytes int64 `json:"bytes,required"`
+	Bytes int64 `json:"bytes" api:"required"`
 	// The container this file belongs to.
-	ContainerID string `json:"container_id,required"`
+	ContainerID string `json:"container_id" api:"required"`
 	// Unix timestamp (in seconds) when the file was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The type of this object (`container.file`).
-	Object constant.ContainerFile `json:"object,required"`
+	Object constant.ContainerFile `json:"object" api:"required"`
 	// Path of the file in the container.
-	Path string `json:"path,required"`
+	Path string `json:"path" api:"required"`
 	// Source of the file (e.g., `user`, `assistant`).
-	Source string `json:"source,required"`
+	Source string `json:"source" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -157,19 +157,19 @@ func (r *ContainerFileNewResponse) UnmarshalJSON(data []byte) error {
 
 type ContainerFileGetResponse struct {
 	// Unique identifier for the file.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Size of the file in bytes.
-	Bytes int64 `json:"bytes,required"`
+	Bytes int64 `json:"bytes" api:"required"`
 	// The container this file belongs to.
-	ContainerID string `json:"container_id,required"`
+	ContainerID string `json:"container_id" api:"required"`
 	// Unix timestamp (in seconds) when the file was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The type of this object (`container.file`).
-	Object constant.ContainerFile `json:"object,required"`
+	Object constant.ContainerFile `json:"object" api:"required"`
 	// Path of the file in the container.
-	Path string `json:"path,required"`
+	Path string `json:"path" api:"required"`
 	// Source of the file (e.g., `user`, `assistant`).
-	Source string `json:"source,required"`
+	Source string `json:"source" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -192,19 +192,19 @@ func (r *ContainerFileGetResponse) UnmarshalJSON(data []byte) error {
 
 type ContainerFileListResponse struct {
 	// Unique identifier for the file.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Size of the file in bytes.
-	Bytes int64 `json:"bytes,required"`
+	Bytes int64 `json:"bytes" api:"required"`
 	// The container this file belongs to.
-	ContainerID string `json:"container_id,required"`
+	ContainerID string `json:"container_id" api:"required"`
 	// Unix timestamp (in seconds) when the file was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The type of this object (`container.file`).
-	Object constant.ContainerFile `json:"object,required"`
+	Object constant.ContainerFile `json:"object" api:"required"`
 	// Path of the file in the container.
-	Path string `json:"path,required"`
+	Path string `json:"path" api:"required"`
 	// Source of the file (e.g., `user`, `assistant`).
-	Source string `json:"source,required"`
+	Source string `json:"source" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field

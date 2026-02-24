@@ -15,10 +15,10 @@ import (
 // made and the API returns a response with a HTTP status code. Other errors are
 // not wrapped by this SDK.
 type Error struct {
-	Code    string `json:"code,required"`
-	Message string `json:"message,required"`
-	Param   string `json:"param,required"`
-	Type    string `json:"type,required"`
+	Code    string `json:"code" api:"required"`
+	Message string `json:"message" api:"required"`
+	Param   string `json:"param" api:"required"`
+	Type    string `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Code        respjson.Field

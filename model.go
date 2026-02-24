@@ -90,13 +90,13 @@ func (r *ModelService) Delete(ctx context.Context, model string, opts ...option.
 // Describes an OpenAI model offering that can be used with the API.
 type Model struct {
 	// The model identifier, which can be referenced in the API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) when the model was created.
-	Created int64 `json:"created,required"`
+	Created int64 `json:"created" api:"required"`
 	// The object type, which is always "model".
-	Object constant.Model `json:"object,required"`
+	Object constant.Model `json:"object" api:"required"`
 	// The organization that owns the model.
-	OwnedBy string `json:"owned_by,required"`
+	OwnedBy string `json:"owned_by" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -115,9 +115,9 @@ func (r *Model) UnmarshalJSON(data []byte) error {
 }
 
 type ModelDeleted struct {
-	ID      string `json:"id,required"`
-	Deleted bool   `json:"deleted,required"`
-	Object  string `json:"object,required"`
+	ID      string `json:"id" api:"required"`
+	Deleted bool   `json:"deleted" api:"required"`
+	Object  string `json:"object" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field

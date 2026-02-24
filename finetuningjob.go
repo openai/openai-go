@@ -161,61 +161,61 @@ func (r *FineTuningJobService) Resume(ctx context.Context, fineTuningJobID strin
 // through the API.
 type FineTuningJob struct {
 	// The object identifier, which can be referenced in the API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the fine-tuning job was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// For fine-tuning jobs that have `failed`, this will contain more information on
 	// the cause of the failure.
-	Error FineTuningJobError `json:"error,required"`
+	Error FineTuningJobError `json:"error" api:"required"`
 	// The name of the fine-tuned model that is being created. The value will be null
 	// if the fine-tuning job is still running.
-	FineTunedModel string `json:"fine_tuned_model,required"`
+	FineTunedModel string `json:"fine_tuned_model" api:"required"`
 	// The Unix timestamp (in seconds) for when the fine-tuning job was finished. The
 	// value will be null if the fine-tuning job is still running.
-	FinishedAt int64 `json:"finished_at,required"`
+	FinishedAt int64 `json:"finished_at" api:"required"`
 	// The hyperparameters used for the fine-tuning job. This value will only be
 	// returned when running `supervised` jobs.
-	Hyperparameters FineTuningJobHyperparameters `json:"hyperparameters,required"`
+	Hyperparameters FineTuningJobHyperparameters `json:"hyperparameters" api:"required"`
 	// The base model that is being fine-tuned.
-	Model string `json:"model,required"`
+	Model string `json:"model" api:"required"`
 	// The object type, which is always "fine_tuning.job".
-	Object constant.FineTuningJob `json:"object,required"`
+	Object constant.FineTuningJob `json:"object" api:"required"`
 	// The organization that owns the fine-tuning job.
-	OrganizationID string `json:"organization_id,required"`
+	OrganizationID string `json:"organization_id" api:"required"`
 	// The compiled results file ID(s) for the fine-tuning job. You can retrieve the
 	// results with the
 	// [Files API](https://platform.openai.com/docs/api-reference/files/retrieve-contents).
-	ResultFiles []string `json:"result_files,required"`
+	ResultFiles []string `json:"result_files" api:"required"`
 	// The seed used for the fine-tuning job.
-	Seed int64 `json:"seed,required"`
+	Seed int64 `json:"seed" api:"required"`
 	// The current status of the fine-tuning job, which can be either
 	// `validating_files`, `queued`, `running`, `succeeded`, `failed`, or `cancelled`.
 	//
 	// Any of "validating_files", "queued", "running", "succeeded", "failed",
 	// "cancelled".
-	Status FineTuningJobStatus `json:"status,required"`
+	Status FineTuningJobStatus `json:"status" api:"required"`
 	// The total number of billable tokens processed by this fine-tuning job. The value
 	// will be null if the fine-tuning job is still running.
-	TrainedTokens int64 `json:"trained_tokens,required"`
+	TrainedTokens int64 `json:"trained_tokens" api:"required"`
 	// The file ID used for training. You can retrieve the training data with the
 	// [Files API](https://platform.openai.com/docs/api-reference/files/retrieve-contents).
-	TrainingFile string `json:"training_file,required"`
+	TrainingFile string `json:"training_file" api:"required"`
 	// The file ID used for validation. You can retrieve the validation results with
 	// the
 	// [Files API](https://platform.openai.com/docs/api-reference/files/retrieve-contents).
-	ValidationFile string `json:"validation_file,required"`
+	ValidationFile string `json:"validation_file" api:"required"`
 	// The Unix timestamp (in seconds) for when the fine-tuning job is estimated to
 	// finish. The value will be null if the fine-tuning job is not running.
-	EstimatedFinish int64 `json:"estimated_finish,nullable"`
+	EstimatedFinish int64 `json:"estimated_finish" api:"nullable"`
 	// A list of integrations to enable for this fine-tuning job.
-	Integrations []FineTuningJobWandbIntegrationObject `json:"integrations,nullable"`
+	Integrations []FineTuningJobWandbIntegrationObject `json:"integrations" api:"nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.Metadata `json:"metadata,nullable"`
+	Metadata shared.Metadata `json:"metadata" api:"nullable"`
 	// The method used for fine-tuning.
 	Method FineTuningJobMethod `json:"method"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -254,12 +254,12 @@ func (r *FineTuningJob) UnmarshalJSON(data []byte) error {
 // the cause of the failure.
 type FineTuningJobError struct {
 	// A machine-readable error code.
-	Code string `json:"code,required"`
+	Code string `json:"code" api:"required"`
 	// A human-readable error message.
-	Message string `json:"message,required"`
+	Message string `json:"message" api:"required"`
 	// The parameter that was invalid, usually `training_file` or `validation_file`.
 	// This field will be null if the failure was not parameter-specific.
-	Param string `json:"param,required"`
+	Param string `json:"param" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Code        respjson.Field
@@ -281,7 +281,7 @@ func (r *FineTuningJobError) UnmarshalJSON(data []byte) error {
 type FineTuningJobHyperparameters struct {
 	// Number of examples in each batch. A larger batch size means that model
 	// parameters are updated less frequently, but with lower variance.
-	BatchSize FineTuningJobHyperparametersBatchSizeUnion `json:"batch_size,nullable"`
+	BatchSize FineTuningJobHyperparametersBatchSizeUnion `json:"batch_size" api:"nullable"`
 	// Scaling factor for the learning rate. A smaller learning rate may be useful to
 	// avoid overfitting.
 	LearningRateMultiplier FineTuningJobHyperparametersLearningRateMultiplierUnion `json:"learning_rate_multiplier"`
@@ -433,7 +433,7 @@ type FineTuningJobMethod struct {
 	// The type of method. Is either `supervised`, `dpo`, or `reinforcement`.
 	//
 	// Any of "supervised", "dpo", "reinforcement".
-	Type string `json:"type,required"`
+	Type string `json:"type" api:"required"`
 	// Configuration for the DPO fine-tuning method.
 	Dpo DpoMethod `json:"dpo"`
 	// Configuration for the reinforcement fine-tuning method.
@@ -460,17 +460,17 @@ func (r *FineTuningJobMethod) UnmarshalJSON(data []byte) error {
 // Fine-tuning job event object
 type FineTuningJobEvent struct {
 	// The object identifier.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the fine-tuning job was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The log level of the event.
 	//
 	// Any of "info", "warn", "error".
-	Level FineTuningJobEventLevel `json:"level,required"`
+	Level FineTuningJobEventLevel `json:"level" api:"required"`
 	// The message of the event.
-	Message string `json:"message,required"`
+	Message string `json:"message" api:"required"`
 	// The object type, which is always "fine_tuning.job.event".
-	Object constant.FineTuningJobEvent `json:"object,required"`
+	Object constant.FineTuningJobEvent `json:"object" api:"required"`
 	// The data associated with the event.
 	Data any `json:"data"`
 	// The type of event.
@@ -520,14 +520,14 @@ const (
 // entity (team, username, etc) to be associated with your run.
 type FineTuningJobWandbIntegration struct {
 	// The name of the project that the new run will be created under.
-	Project string `json:"project,required"`
+	Project string `json:"project" api:"required"`
 	// The entity to use for the run. This allows you to set the team or username of
 	// the WandB user that you would like associated with the run. If not set, the
 	// default entity for the registered WandB API key is used.
-	Entity string `json:"entity,nullable"`
+	Entity string `json:"entity" api:"nullable"`
 	// A display name to set for the run. If not set, we will use the Job ID as the
 	// name.
-	Name string `json:"name,nullable"`
+	Name string `json:"name" api:"nullable"`
 	// A list of tags to be attached to the newly created run. These tags are passed
 	// through directly to WandB. Some default tags are generated by OpenAI:
 	// "openai/finetune", "openai/{base-model}", "openai/{ftjob-abcdef}".
@@ -551,12 +551,12 @@ func (r *FineTuningJobWandbIntegration) UnmarshalJSON(data []byte) error {
 
 type FineTuningJobWandbIntegrationObject struct {
 	// The type of the integration being enabled for the fine-tuning job
-	Type constant.Wandb `json:"type,required"`
+	Type constant.Wandb `json:"type" api:"required"`
 	// The settings for your integration with Weights and Biases. This payload
 	// specifies the project that metrics will be sent to. Optionally, you can set an
 	// explicit display name for your run, add tags to your run, and set a default
 	// entity (team, username, etc) to be associated with your run.
-	Wandb FineTuningJobWandbIntegration `json:"wandb,required"`
+	Wandb FineTuningJobWandbIntegration `json:"wandb" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -575,7 +575,7 @@ func (r *FineTuningJobWandbIntegrationObject) UnmarshalJSON(data []byte) error {
 type FineTuningJobNewParams struct {
 	// The name of the model to fine-tune. You can select one of the
 	// [supported models](https://platform.openai.com/docs/guides/fine-tuning#which-models-can-be-fine-tuned).
-	Model FineTuningJobNewParamsModel `json:"model,omitzero,required"`
+	Model FineTuningJobNewParamsModel `json:"model,omitzero" api:"required"`
 	// The ID of an uploaded file that contains training data.
 	//
 	// See [upload file](https://platform.openai.com/docs/api-reference/files/create)
@@ -594,7 +594,7 @@ type FineTuningJobNewParams struct {
 	// See the
 	// [fine-tuning guide](https://platform.openai.com/docs/guides/model-optimization)
 	// for more details.
-	TrainingFile string `json:"training_file,required"`
+	TrainingFile string `json:"training_file" api:"required"`
 	// The seed controls the reproducibility of the job. Passing in the same seed and
 	// job parameters should produce the same results, but may differ in rare cases. If
 	// a seed is not specified, one will be generated for you.
@@ -764,12 +764,12 @@ type FineTuningJobNewParamsIntegration struct {
 	// specifies the project that metrics will be sent to. Optionally, you can set an
 	// explicit display name for your run, add tags to your run, and set a default
 	// entity (team, username, etc) to be associated with your run.
-	Wandb FineTuningJobNewParamsIntegrationWandb `json:"wandb,omitzero,required"`
+	Wandb FineTuningJobNewParamsIntegrationWandb `json:"wandb,omitzero" api:"required"`
 	// The type of integration to enable. Currently, only "wandb" (Weights and Biases)
 	// is supported.
 	//
 	// This field can be elided, and will marshal its zero value as "wandb".
-	Type constant.Wandb `json:"type,required"`
+	Type constant.Wandb `json:"type" api:"required"`
 	paramObj
 }
 
@@ -789,7 +789,7 @@ func (r *FineTuningJobNewParamsIntegration) UnmarshalJSON(data []byte) error {
 // The property Project is required.
 type FineTuningJobNewParamsIntegrationWandb struct {
 	// The name of the project that the new run will be created under.
-	Project string `json:"project,required"`
+	Project string `json:"project" api:"required"`
 	// The entity to use for the run. This allows you to set the team or username of
 	// the WandB user that you would like associated with the run. If not set, the
 	// default entity for the registered WandB API key is used.
@@ -819,7 +819,7 @@ type FineTuningJobNewParamsMethod struct {
 	// The type of method. Is either `supervised`, `dpo`, or `reinforcement`.
 	//
 	// Any of "supervised", "dpo", "reinforcement".
-	Type string `json:"type,omitzero,required"`
+	Type string `json:"type,omitzero" api:"required"`
 	// Configuration for the DPO fine-tuning method.
 	Dpo DpoMethodParam `json:"dpo,omitzero"`
 	// Configuration for the reinforcement fine-tuning method.

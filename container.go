@@ -99,15 +99,15 @@ func (r *ContainerService) Delete(ctx context.Context, containerID string, opts 
 
 type ContainerNewResponse struct {
 	// Unique identifier for the container.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the container was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Name of the container.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// The type of this object.
-	Object string `json:"object,required"`
+	Object string `json:"object" api:"required"`
 	// Status of the container (e.g., active, deleted).
-	Status string `json:"status,required"`
+	Status string `json:"status" api:"required"`
 	// The container will expire after this time period. The anchor is the reference
 	// point for the expiration. The minutes is the number of minutes after the anchor
 	// before the container expires.
@@ -182,7 +182,7 @@ type ContainerNewResponseNetworkPolicy struct {
 	// The network policy mode.
 	//
 	// Any of "allowlist", "disabled".
-	Type string `json:"type,required"`
+	Type string `json:"type" api:"required"`
 	// Allowed outbound domains when `type` is `allowlist`.
 	AllowedDomains []string `json:"allowed_domains"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -202,15 +202,15 @@ func (r *ContainerNewResponseNetworkPolicy) UnmarshalJSON(data []byte) error {
 
 type ContainerGetResponse struct {
 	// Unique identifier for the container.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the container was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Name of the container.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// The type of this object.
-	Object string `json:"object,required"`
+	Object string `json:"object" api:"required"`
 	// Status of the container (e.g., active, deleted).
-	Status string `json:"status,required"`
+	Status string `json:"status" api:"required"`
 	// The container will expire after this time period. The anchor is the reference
 	// point for the expiration. The minutes is the number of minutes after the anchor
 	// before the container expires.
@@ -285,7 +285,7 @@ type ContainerGetResponseNetworkPolicy struct {
 	// The network policy mode.
 	//
 	// Any of "allowlist", "disabled".
-	Type string `json:"type,required"`
+	Type string `json:"type" api:"required"`
 	// Allowed outbound domains when `type` is `allowlist`.
 	AllowedDomains []string `json:"allowed_domains"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -305,15 +305,15 @@ func (r *ContainerGetResponseNetworkPolicy) UnmarshalJSON(data []byte) error {
 
 type ContainerListResponse struct {
 	// Unique identifier for the container.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the container was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Name of the container.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// The type of this object.
-	Object string `json:"object,required"`
+	Object string `json:"object" api:"required"`
 	// Status of the container (e.g., active, deleted).
-	Status string `json:"status,required"`
+	Status string `json:"status" api:"required"`
 	// The container will expire after this time period. The anchor is the reference
 	// point for the expiration. The minutes is the number of minutes after the anchor
 	// before the container expires.
@@ -388,7 +388,7 @@ type ContainerListResponseNetworkPolicy struct {
 	// The network policy mode.
 	//
 	// Any of "allowlist", "disabled".
-	Type string `json:"type,required"`
+	Type string `json:"type" api:"required"`
 	// Allowed outbound domains when `type` is `allowlist`.
 	AllowedDomains []string `json:"allowed_domains"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -408,7 +408,7 @@ func (r *ContainerListResponseNetworkPolicy) UnmarshalJSON(data []byte) error {
 
 type ContainerNewParams struct {
 	// Name of the container to create.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// Container expiration time in seconds relative to the 'anchor' time.
 	ExpiresAfter ContainerNewParamsExpiresAfter `json:"expires_after,omitzero"`
 	// IDs of files to copy to the container.
@@ -440,8 +440,8 @@ type ContainerNewParamsExpiresAfter struct {
 	// supported.
 	//
 	// Any of "last_active_at".
-	Anchor  string `json:"anchor,omitzero,required"`
-	Minutes int64  `json:"minutes,required"`
+	Anchor  string `json:"anchor,omitzero" api:"required"`
+	Minutes int64  `json:"minutes" api:"required"`
 	paramObj
 }
 

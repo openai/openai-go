@@ -46,7 +46,7 @@ func (r *AudioTranslationService) New(ctx context.Context, body AudioTranslation
 }
 
 type Translation struct {
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -64,10 +64,10 @@ func (r *Translation) UnmarshalJSON(data []byte) error {
 type AudioTranslationNewParams struct {
 	// The audio file object (not file name) translate, in one of these formats: flac,
 	// mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm.
-	File io.Reader `json:"file,omitzero,required" format:"binary"`
+	File io.Reader `json:"file,omitzero" api:"required" format:"binary"`
 	// ID of the model to use. Only `whisper-1` (which is powered by our open source
 	// Whisper V2 model) is currently available.
-	Model AudioModel `json:"model,omitzero,required"`
+	Model AudioModel `json:"model,omitzero" api:"required"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. The
 	// [prompt](https://platform.openai.com/docs/guides/speech-to-text#prompting)

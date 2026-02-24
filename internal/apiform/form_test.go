@@ -48,18 +48,18 @@ type DateTime struct {
 
 type AdditionalProperties struct {
 	A      bool           `form:"a"`
-	Extras map[string]any `form:"-,extras"`
+	Extras map[string]any `form:"-" api:"extrafields"`
 }
 
 type TypedAdditionalProperties struct {
 	A      bool           `form:"a"`
-	Extras map[string]int `form:"-,extras"`
+	Extras map[string]int `form:"-" api:"extrafields"`
 }
 
 type EmbeddedStructs struct {
 	AdditionalProperties
 	A      *int           `form:"number2"`
-	Extras map[string]any `form:"-,extras"`
+	Extras map[string]any `form:"-" api:"extrafields"`
 }
 
 type Recursive struct {

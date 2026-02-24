@@ -131,9 +131,9 @@ func (r *FileService) Content(ctx context.Context, fileID string, opts ...option
 }
 
 type FileDeleted struct {
-	ID      string        `json:"id,required"`
-	Deleted bool          `json:"deleted,required"`
-	Object  constant.File `json:"object,required"`
+	ID      string        `json:"id" api:"required"`
+	Deleted bool          `json:"deleted" api:"required"`
+	Object  constant.File `json:"object" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -153,29 +153,29 @@ func (r *FileDeleted) UnmarshalJSON(data []byte) error {
 // The `File` object represents a document that has been uploaded to OpenAI.
 type FileObject struct {
 	// The file identifier, which can be referenced in the API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The size of the file, in bytes.
-	Bytes int64 `json:"bytes,required"`
+	Bytes int64 `json:"bytes" api:"required"`
 	// The Unix timestamp (in seconds) for when the file was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The name of the file.
-	Filename string `json:"filename,required"`
+	Filename string `json:"filename" api:"required"`
 	// The object type, which is always `file`.
-	Object constant.File `json:"object,required"`
+	Object constant.File `json:"object" api:"required"`
 	// The intended purpose of the file. Supported values are `assistants`,
 	// `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results`,
 	// `vision`, and `user_data`.
 	//
 	// Any of "assistants", "assistants_output", "batch", "batch_output", "fine-tune",
 	// "fine-tune-results", "vision", "user_data".
-	Purpose FileObjectPurpose `json:"purpose,required"`
+	Purpose FileObjectPurpose `json:"purpose" api:"required"`
 	// Deprecated. The current status of the file, which can be either `uploaded`,
 	// `processed`, or `error`.
 	//
 	// Any of "uploaded", "processed", "error".
 	//
 	// Deprecated: deprecated
-	Status FileObjectStatus `json:"status,required"`
+	Status FileObjectStatus `json:"status" api:"required"`
 	// The Unix timestamp (in seconds) for when the file will expire.
 	ExpiresAt int64 `json:"expires_at"`
 	// Deprecated. For details on why a fine-tuning training file failed validation,
@@ -252,7 +252,7 @@ const (
 
 type FileNewParams struct {
 	// The File object (not file name) to be uploaded.
-	File io.Reader `json:"file,omitzero,required" format:"binary"`
+	File io.Reader `json:"file,omitzero" api:"required" format:"binary"`
 	// The intended purpose of the uploaded file. One of:
 	//
 	// - `assistants`: Used in the Assistants API
@@ -263,7 +263,7 @@ type FileNewParams struct {
 	// - `evals`: Used for eval data sets
 	//
 	// Any of "assistants", "batch", "fine-tune", "vision", "user_data", "evals".
-	Purpose FilePurpose `json:"purpose,omitzero,required"`
+	Purpose FilePurpose `json:"purpose,omitzero" api:"required"`
 	// The expiration policy for a file. By default, files with `purpose=batch` expire
 	// after 30 days and all other files are persisted until they are manually deleted.
 	ExpiresAfter FileNewParamsExpiresAfter `json:"expires_after,omitzero"`
@@ -295,12 +295,12 @@ func (r FileNewParams) MarshalMultipart() (data []byte, contentType string, err 
 type FileNewParamsExpiresAfter struct {
 	// The number of seconds after the anchor time that the file will expire. Must be
 	// between 3600 (1 hour) and 2592000 (30 days).
-	Seconds int64 `json:"seconds,required"`
+	Seconds int64 `json:"seconds" api:"required"`
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `created_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "created_at".
-	Anchor constant.CreatedAt `json:"anchor,required"`
+	Anchor constant.CreatedAt `json:"anchor" api:"required"`
 	paramObj
 }
 

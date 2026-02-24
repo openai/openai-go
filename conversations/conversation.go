@@ -88,12 +88,12 @@ func (r *ConversationService) Delete(ctx context.Context, conversationID string,
 // A screenshot of a computer.
 type ComputerScreenshotContent struct {
 	// The identifier of an uploaded file that contains the screenshot.
-	FileID string `json:"file_id,required"`
+	FileID string `json:"file_id" api:"required"`
 	// The URL of the screenshot image.
-	ImageURL string `json:"image_url,required"`
+	ImageURL string `json:"image_url" api:"required"`
 	// Specifies the event type. For a computer screenshot, this property is always set
 	// to `computer_screenshot`.
-	Type constant.ComputerScreenshot `json:"type,required"`
+	Type constant.ComputerScreenshot `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		FileID      respjson.Field
@@ -112,18 +112,18 @@ func (r *ComputerScreenshotContent) UnmarshalJSON(data []byte) error {
 
 type Conversation struct {
 	// The unique ID of the conversation.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The time at which the conversation was created, measured in seconds since the
 	// Unix epoch.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
 	// length of 64 characters. Values are strings with a maximum length of 512
 	// characters.
-	Metadata any `json:"metadata,required"`
+	Metadata any `json:"metadata" api:"required"`
 	// The object type, which is always `conversation`.
-	Object constant.Conversation `json:"object,required"`
+	Object constant.Conversation `json:"object" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -142,9 +142,9 @@ func (r *Conversation) UnmarshalJSON(data []byte) error {
 }
 
 type ConversationDeletedResource struct {
-	ID      string                       `json:"id,required"`
-	Deleted bool                         `json:"deleted,required"`
-	Object  constant.ConversationDeleted `json:"object,required"`
+	ID      string                       `json:"id" api:"required"`
+	Deleted bool                         `json:"deleted" api:"required"`
+	Object  constant.ConversationDeleted `json:"object" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -164,22 +164,22 @@ func (r *ConversationDeletedResource) UnmarshalJSON(data []byte) error {
 // A message to or from the model.
 type Message struct {
 	// The unique ID of the message.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The content of the message
-	Content []MessageContentUnion `json:"content,required"`
+	Content []MessageContentUnion `json:"content" api:"required"`
 	// The role of the message. One of `unknown`, `user`, `assistant`, `system`,
 	// `critic`, `discriminator`, `developer`, or `tool`.
 	//
 	// Any of "unknown", "user", "assistant", "system", "critic", "discriminator",
 	// "developer", "tool".
-	Role MessageRole `json:"role,required"`
+	Role MessageRole `json:"role" api:"required"`
 	// The status of item. One of `in_progress`, `completed`, or `incomplete`.
 	// Populated when items are returned via API.
 	//
 	// Any of "in_progress", "completed", "incomplete".
-	Status MessageStatus `json:"status,required"`
+	Status MessageStatus `json:"status" api:"required"`
 	// The type of the message. Always set to `message`.
-	Type constant.Message `json:"type,required"`
+	Type constant.Message `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -349,9 +349,9 @@ func (r *MessageContentUnion) UnmarshalJSON(data []byte) error {
 // Reasoning text from the model.
 type MessageContentReasoningText struct {
 	// The reasoning text from the model.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// The type of the reasoning text. Always `reasoning_text`.
-	Type constant.ReasoningText `json:"type,required"`
+	Type constant.ReasoningText `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -395,9 +395,9 @@ const (
 // A summary text from the model.
 type SummaryTextContent struct {
 	// A summary of the reasoning output from the model so far.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// The type of the object. Always `summary_text`.
-	Type constant.SummaryText `json:"type,required"`
+	Type constant.SummaryText `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -415,8 +415,8 @@ func (r *SummaryTextContent) UnmarshalJSON(data []byte) error {
 
 // A text content.
 type TextContent struct {
-	Text string        `json:"text,required"`
-	Type constant.Text `json:"type,required"`
+	Text string        `json:"text" api:"required"`
+	Type constant.Text `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -461,7 +461,7 @@ type ConversationUpdateParams struct {
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.Metadata `json:"metadata,omitzero,required"`
+	Metadata shared.Metadata `json:"metadata,omitzero" api:"required"`
 	paramObj
 }
 
