@@ -958,8 +958,8 @@ type EasyInputMessage struct {
 	//
 	// Any of "user", "assistant", "system", "developer".
 	Role EasyInputMessageRole `json:"role" api:"required"`
-	// Labels an assistant message as intermediate commentary ("commentary") or the
-	// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
 	// sending follow-up requests, preserve and resend phase on all assistant messages
 	// — dropping it can degrade performance. Not used for user messages.
 	//
@@ -1043,8 +1043,8 @@ const (
 	EasyInputMessageRoleDeveloper EasyInputMessageRole = "developer"
 )
 
-// Labels an assistant message as intermediate commentary ("commentary") or the
-// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
 // sending follow-up requests, preserve and resend phase on all assistant messages
 // — dropping it can degrade performance. Not used for user messages.
 type EasyInputMessagePhase string
@@ -1076,8 +1076,8 @@ type EasyInputMessageParam struct {
 	//
 	// Any of "user", "assistant", "system", "developer".
 	Role EasyInputMessageRole `json:"role,omitzero" api:"required"`
-	// Labels an assistant message as intermediate commentary ("commentary") or the
-	// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
 	// sending follow-up requests, preserve and resend phase on all assistant messages
 	// — dropping it can degrade performance. Not used for user messages.
 	//
@@ -13441,8 +13441,8 @@ type ResponseOutputMessage struct {
 	Status ResponseOutputMessageStatus `json:"status" api:"required"`
 	// The type of the output message. Always `message`.
 	Type constant.Message `json:"type" api:"required"`
-	// Labels an assistant message as intermediate commentary ("commentary") or the
-	// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
 	// sending follow-up requests, preserve and resend phase on all assistant messages
 	// — dropping it can degrade performance. Not used for user messages.
 	//
@@ -13559,8 +13559,8 @@ const (
 	ResponseOutputMessageStatusIncomplete ResponseOutputMessageStatus = "incomplete"
 )
 
-// Labels an assistant message as intermediate commentary ("commentary") or the
-// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
 // sending follow-up requests, preserve and resend phase on all assistant messages
 // — dropping it can degrade performance. Not used for user messages.
 type ResponseOutputMessagePhase string
@@ -13582,8 +13582,8 @@ type ResponseOutputMessageParam struct {
 	//
 	// Any of "in_progress", "completed", "incomplete".
 	Status ResponseOutputMessageStatus `json:"status,omitzero" api:"required"`
-	// Labels an assistant message as intermediate commentary ("commentary") or the
-	// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
 	// sending follow-up requests, preserve and resend phase on all assistant messages
 	// — dropping it can degrade performance. Not used for user messages.
 	//
