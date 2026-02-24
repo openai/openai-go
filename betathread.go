@@ -127,7 +127,7 @@ func (r *BetaThreadService) NewAndRunStreaming(ctx context.Context, body BetaThr
 	opts = append(opts, option.WithJSONSet("stream", true))
 	path := "threads/runs"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
-	return ssestream.NewStream[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
+	return ssestream.NewStreamWithSynthesizeEventData[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
 
 // AssistantResponseFormatOptionUnion contains all possible properties and values

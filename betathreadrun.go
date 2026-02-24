@@ -78,7 +78,7 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 	}
 	path := fmt.Sprintf("threads/%s/runs", threadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &raw, opts...)
-	return ssestream.NewStream[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
+	return ssestream.NewStreamWithSynthesizeEventData[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
 
 // Retrieves a run.
@@ -215,7 +215,7 @@ func (r *BetaThreadRunService) SubmitToolOutputsStreaming(ctx context.Context, t
 	}
 	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
-	return ssestream.NewStream[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
+	return ssestream.NewStreamWithSynthesizeEventData[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
 
 // Tool call objects

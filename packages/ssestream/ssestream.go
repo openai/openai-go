@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strings"
 
+	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 	"github.com/tidwall/gjson"
 )
 
@@ -134,16 +135,25 @@ func (s *eventStreamDecoder) Err() error {
 }
 
 type Stream[T any] struct {
-	decoder Decoder
-	cur     T
-	err     error
-	done    bool
+	decoder             Decoder
+	cur                 T
+	err                 error
+	done                bool
+	synthesizeEventData bool
 }
 
 func NewStream[T any](decoder Decoder, err error) *Stream[T] {
 	return &Stream[T]{
 		decoder: decoder,
 		err:     err,
+	}
+}
+
+func NewStreamWithSynthesizeEventData[T any](decoder Decoder, err error) *Stream[T] {
+	return &Stream[T]{
+		decoder:             decoder,
+		err:                 err,
+		synthesizeEventData: true,
 	}
 }
 
@@ -183,34 +193,32 @@ func (s *Stream[T]) Next() bool {
 			return false
 		}
 		var nxt T
-
-		if s.decoder.Event().Type == "" || !strings.HasPrefix(s.decoder.Event().Type, "thread.") {
-			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
-			if ep.Exists() {
-				s.err = fmt.Errorf("received error while streaming: %s", ep.String())
-				return false
+		data := s.decoder.Event().Data
+		if s.decoder.Event().Type != "" && strings.HasPrefix(s.decoder.Event().Type, "thread.") {
+			synthesized := map[string]any{
+				"event": s.decoder.Event().Type,
+				"data":  json.RawMessage(data),
 			}
-			s.err = json.Unmarshal(s.decoder.Event().Data, &nxt)
+			data, s.err = shimjson.Marshal(synthesized)
 			if s.err != nil {
 				return false
 			}
-			s.cur = nxt
-			return true
-		} else {
-			ep := gjson.GetBytes(s.decoder.Event().Data, "error")
-			if ep.Exists() {
-				s.err = fmt.Errorf("received error while streaming: %s", ep.String())
-				return false
+		} else if s.synthesizeEventData {
+			synthesized := map[string]any{
+				"event": s.decoder.Event().Type,
+				"data":  json.RawMessage(data),
 			}
-			event := s.decoder.Event().Type
-			data := s.decoder.Event().Data
-			s.err = json.Unmarshal([]byte(fmt.Sprintf(`{ "event": %q, "data": %s }`, event, data)), &nxt)
+			data, s.err = shimjson.Marshal(synthesized)
 			if s.err != nil {
 				return false
 			}
-			s.cur = nxt
-			return true
 		}
+		s.err = json.Unmarshal(data, &nxt)
+		if s.err != nil {
+			return false
+		}
+		s.cur = nxt
+		return true
 	}
 
 	// decoder.Next() may be false because of an error
