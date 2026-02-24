@@ -957,12 +957,14 @@ type EasyInputMessage struct {
 	//
 	// Any of "user", "assistant", "system", "developer".
 	Role EasyInputMessageRole `json:"role" api:"required"`
-	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
-	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
-	// sending follow-up requests, preserve and resend phase on all assistant messages
-	// — dropping it can degrade performance. Not used for user messages.
+	// The phase of an assistant message.
 	//
-	// Any of "commentary".
+	// Use `commentary` for an intermediate assistant message and `final_answer` for
+	// the final assistant message. For follow-up requests with models like
+	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+	// Omitting it can degrade performance. Not used for user messages.
+	//
+	// Any of "commentary", "final_answer".
 	Phase EasyInputMessagePhase `json:"phase" api:"nullable"`
 	// The type of the message input. Always `message`.
 	//
@@ -1042,14 +1044,17 @@ const (
 	EasyInputMessageRoleDeveloper EasyInputMessageRole = "developer"
 )
 
-// Labels an `assistant` message as intermediate commentary (`commentary`) or the
-// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
-// sending follow-up requests, preserve and resend phase on all assistant messages
-// — dropping it can degrade performance. Not used for user messages.
+// The phase of an assistant message.
+//
+// Use `commentary` for an intermediate assistant message and `final_answer` for
+// the final assistant message. For follow-up requests with models like
+// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+// Omitting it can degrade performance. Not used for user messages.
 type EasyInputMessagePhase string
 
 const (
-	EasyInputMessagePhaseCommentary EasyInputMessagePhase = "commentary"
+	EasyInputMessagePhaseCommentary  EasyInputMessagePhase = "commentary"
+	EasyInputMessagePhaseFinalAnswer EasyInputMessagePhase = "final_answer"
 )
 
 // The type of the message input. Always `message`.
@@ -1075,12 +1080,14 @@ type EasyInputMessageParam struct {
 	//
 	// Any of "user", "assistant", "system", "developer".
 	Role EasyInputMessageRole `json:"role,omitzero" api:"required"`
-	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
-	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
-	// sending follow-up requests, preserve and resend phase on all assistant messages
-	// — dropping it can degrade performance. Not used for user messages.
+	// The phase of an assistant message.
 	//
-	// Any of "commentary".
+	// Use `commentary` for an intermediate assistant message and `final_answer` for
+	// the final assistant message. For follow-up requests with models like
+	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+	// Omitting it can degrade performance. Not used for user messages.
+	//
+	// Any of "commentary", "final_answer".
 	Phase EasyInputMessagePhase `json:"phase,omitzero"`
 	// The type of the message input. Always `message`.
 	//
@@ -13458,12 +13465,14 @@ type ResponseOutputMessage struct {
 	Status ResponseOutputMessageStatus `json:"status" api:"required"`
 	// The type of the output message. Always `message`.
 	Type constant.Message `json:"type" api:"required"`
-	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
-	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
-	// sending follow-up requests, preserve and resend phase on all assistant messages
-	// — dropping it can degrade performance. Not used for user messages.
+	// The phase of an assistant message.
 	//
-	// Any of "commentary".
+	// Use `commentary` for an intermediate assistant message and `final_answer` for
+	// the final assistant message. For follow-up requests with models like
+	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+	// Omitting it can degrade performance. Not used for user messages.
+	//
+	// Any of "commentary", "final_answer".
 	Phase ResponseOutputMessagePhase `json:"phase" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -13576,14 +13585,17 @@ const (
 	ResponseOutputMessageStatusIncomplete ResponseOutputMessageStatus = "incomplete"
 )
 
-// Labels an `assistant` message as intermediate commentary (`commentary`) or the
-// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
-// sending follow-up requests, preserve and resend phase on all assistant messages
-// — dropping it can degrade performance. Not used for user messages.
+// The phase of an assistant message.
+//
+// Use `commentary` for an intermediate assistant message and `final_answer` for
+// the final assistant message. For follow-up requests with models like
+// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+// Omitting it can degrade performance. Not used for user messages.
 type ResponseOutputMessagePhase string
 
 const (
-	ResponseOutputMessagePhaseCommentary ResponseOutputMessagePhase = "commentary"
+	ResponseOutputMessagePhaseCommentary  ResponseOutputMessagePhase = "commentary"
+	ResponseOutputMessagePhaseFinalAnswer ResponseOutputMessagePhase = "final_answer"
 )
 
 // An output message from the model.
@@ -13599,12 +13611,14 @@ type ResponseOutputMessageParam struct {
 	//
 	// Any of "in_progress", "completed", "incomplete".
 	Status ResponseOutputMessageStatus `json:"status,omitzero" api:"required"`
-	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
-	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
-	// sending follow-up requests, preserve and resend phase on all assistant messages
-	// — dropping it can degrade performance. Not used for user messages.
+	// The phase of an assistant message.
 	//
-	// Any of "commentary".
+	// Use `commentary` for an intermediate assistant message and `final_answer` for
+	// the final assistant message. For follow-up requests with models like
+	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+	// Omitting it can degrade performance. Not used for user messages.
+	//
+	// Any of "commentary", "final_answer".
 	Phase ResponseOutputMessagePhase `json:"phase,omitzero"`
 	// The role of the output message. Always `assistant`.
 	//
