@@ -958,6 +958,13 @@ type EasyInputMessage struct {
 	//
 	// Any of "user", "assistant", "system", "developer".
 	Role EasyInputMessageRole `json:"role" api:"required"`
+	// Labels an assistant message as intermediate commentary ("commentary") or the
+	// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+	// sending follow-up requests, preserve and resend phase on all assistant messages
+	// — dropping it can degrade performance. Not used for user messages.
+	//
+	// Any of "commentary".
+	Phase EasyInputMessagePhase `json:"phase" api:"nullable"`
 	// The type of the message input. Always `message`.
 	//
 	// Any of "message".
@@ -966,6 +973,7 @@ type EasyInputMessage struct {
 	JSON struct {
 		Content     respjson.Field
 		Role        respjson.Field
+		Phase       respjson.Field
 		Type        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -1035,6 +1043,16 @@ const (
 	EasyInputMessageRoleDeveloper EasyInputMessageRole = "developer"
 )
 
+// Labels an assistant message as intermediate commentary ("commentary") or the
+// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+// sending follow-up requests, preserve and resend phase on all assistant messages
+// — dropping it can degrade performance. Not used for user messages.
+type EasyInputMessagePhase string
+
+const (
+	EasyInputMessagePhaseCommentary EasyInputMessagePhase = "commentary"
+)
+
 // The type of the message input. Always `message`.
 type EasyInputMessageType string
 
@@ -1058,6 +1076,13 @@ type EasyInputMessageParam struct {
 	//
 	// Any of "user", "assistant", "system", "developer".
 	Role EasyInputMessageRole `json:"role,omitzero" api:"required"`
+	// Labels an assistant message as intermediate commentary ("commentary") or the
+	// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+	// sending follow-up requests, preserve and resend phase on all assistant messages
+	// — dropping it can degrade performance. Not used for user messages.
+	//
+	// Any of "commentary".
+	Phase EasyInputMessagePhase `json:"phase,omitzero"`
 	// The type of the message input. Always `message`.
 	//
 	// Any of "message".
@@ -8270,6 +8295,7 @@ type ResponseInputItemUnion struct {
 	// [[]ResponseReasoningItemContent]
 	Content ResponseInputItemUnionContent `json:"content"`
 	Role    string                        `json:"role"`
+	Phase   string                        `json:"phase"`
 	// Any of "message", "message", "message", "file_search_call", "computer_call",
 	// "computer_call_output", "web_search_call", "function_call",
 	// "function_call_output", "reasoning", "compaction", "image_generation_call",
@@ -8332,6 +8358,7 @@ type ResponseInputItemUnion struct {
 	JSON  struct {
 		Content                  respjson.Field
 		Role                     respjson.Field
+		Phase                    respjson.Field
 		Type                     respjson.Field
 		Status                   respjson.Field
 		ID                       respjson.Field
@@ -10099,6 +10126,16 @@ func (u ResponseInputItemUnionParam) GetRole() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetPhase() *string {
+	if vt := u.OfMessage; vt != nil {
+		return (*string)(&vt.Phase)
+	} else if vt := u.OfOutputMessage; vt != nil {
+		return (*string)(&vt.Phase)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputItemUnionParam) GetType() *string {
 	if vt := u.OfMessage; vt != nil {
 		return (*string)(&vt.Type)
@@ -11759,6 +11796,8 @@ type ResponseItemUnion struct {
 	// "shell_call_output", "apply_patch_call", "apply_patch_call_output",
 	// "mcp_list_tools", "mcp_approval_request", "mcp_approval_response", "mcp_call".
 	Type string `json:"type"`
+	// This field is from variant [ResponseOutputMessage].
+	Phase ResponseOutputMessagePhase `json:"phase"`
 	// This field is from variant [ResponseFileSearchToolCall].
 	Queries []string `json:"queries"`
 	// This field is from variant [ResponseFileSearchToolCall].
@@ -11808,6 +11847,7 @@ type ResponseItemUnion struct {
 		Role                     respjson.Field
 		Status                   respjson.Field
 		Type                     respjson.Field
+		Phase                    respjson.Field
 		Queries                  respjson.Field
 		Results                  respjson.Field
 		Action                   respjson.Field
@@ -12737,6 +12777,8 @@ type ResponseOutputItemUnion struct {
 	// "apply_patch_call", "apply_patch_call_output", "mcp_call", "mcp_list_tools",
 	// "mcp_approval_request", "custom_tool_call".
 	Type string `json:"type"`
+	// This field is from variant [ResponseOutputMessage].
+	Phase ResponseOutputMessagePhase `json:"phase"`
 	// This field is from variant [ResponseFileSearchToolCall].
 	Queries []string `json:"queries"`
 	// This field is from variant [ResponseFileSearchToolCall].
@@ -12785,6 +12827,7 @@ type ResponseOutputItemUnion struct {
 		Role                respjson.Field
 		Status              respjson.Field
 		Type                respjson.Field
+		Phase               respjson.Field
 		Queries             respjson.Field
 		Results             respjson.Field
 		Arguments           respjson.Field
@@ -13398,6 +13441,13 @@ type ResponseOutputMessage struct {
 	Status ResponseOutputMessageStatus `json:"status" api:"required"`
 	// The type of the output message. Always `message`.
 	Type constant.Message `json:"type" api:"required"`
+	// Labels an assistant message as intermediate commentary ("commentary") or the
+	// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+	// sending follow-up requests, preserve and resend phase on all assistant messages
+	// — dropping it can degrade performance. Not used for user messages.
+	//
+	// Any of "commentary".
+	Phase ResponseOutputMessagePhase `json:"phase" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -13405,6 +13455,7 @@ type ResponseOutputMessage struct {
 		Role        respjson.Field
 		Status      respjson.Field
 		Type        respjson.Field
+		Phase       respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -13508,6 +13559,16 @@ const (
 	ResponseOutputMessageStatusIncomplete ResponseOutputMessageStatus = "incomplete"
 )
 
+// Labels an assistant message as intermediate commentary ("commentary") or the
+// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+// sending follow-up requests, preserve and resend phase on all assistant messages
+// — dropping it can degrade performance. Not used for user messages.
+type ResponseOutputMessagePhase string
+
+const (
+	ResponseOutputMessagePhaseCommentary ResponseOutputMessagePhase = "commentary"
+)
+
 // An output message from the model.
 //
 // The properties ID, Content, Role, Status, Type are required.
@@ -13521,6 +13582,13 @@ type ResponseOutputMessageParam struct {
 	//
 	// Any of "in_progress", "completed", "incomplete".
 	Status ResponseOutputMessageStatus `json:"status,omitzero" api:"required"`
+	// Labels an assistant message as intermediate commentary ("commentary") or the
+	// final answer ("final_answer"). For models like gpt-5.3-codex and beyond, when
+	// sending follow-up requests, preserve and resend phase on all assistant messages
+	// — dropping it can degrade performance. Not used for user messages.
+	//
+	// Any of "commentary".
+	Phase ResponseOutputMessagePhase `json:"phase,omitzero"`
 	// The role of the output message. Always `assistant`.
 	//
 	// This field can be elided, and will marshal its zero value as "assistant".
@@ -19509,6 +19577,8 @@ type ResponseCompactParams struct {
 	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
 	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
+	// A key to use when reading from or writing to the prompt cache.
+	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response
 	Input ResponseCompactParamsInputUnion `json:"input,omitzero"`
 	paramObj
