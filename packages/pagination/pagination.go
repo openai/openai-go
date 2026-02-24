@@ -21,7 +21,7 @@ type paramObj = param.APIObject
 
 type Page[T any] struct {
 	Data   []T    `json:"data"`
-	Object string `json:"object,required"`
+	Object string `json:"object" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field

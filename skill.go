@@ -115,9 +115,9 @@ func (r *SkillService) Delete(ctx context.Context, skillID string, opts ...optio
 }
 
 type DeletedSkill struct {
-	ID      string                `json:"id,required"`
-	Deleted bool                  `json:"deleted,required"`
-	Object  constant.SkillDeleted `json:"object,required"`
+	ID      string                `json:"id" api:"required"`
+	Deleted bool                  `json:"deleted" api:"required"`
+	Object  constant.SkillDeleted `json:"object" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -136,19 +136,19 @@ func (r *DeletedSkill) UnmarshalJSON(data []byte) error {
 
 type Skill struct {
 	// Unique identifier for the skill.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Unix timestamp (seconds) for when the skill was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// Default version for the skill.
-	DefaultVersion string `json:"default_version,required"`
+	DefaultVersion string `json:"default_version" api:"required"`
 	// Description of the skill.
-	Description string `json:"description,required"`
+	Description string `json:"description" api:"required"`
 	// Latest version for the skill.
-	LatestVersion string `json:"latest_version,required"`
+	LatestVersion string `json:"latest_version" api:"required"`
 	// Name of the skill.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// The object type, which is `skill`.
-	Object constant.Skill `json:"object,required"`
+	Object constant.Skill `json:"object" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID             respjson.Field
@@ -171,15 +171,15 @@ func (r *Skill) UnmarshalJSON(data []byte) error {
 
 type SkillList struct {
 	// A list of items
-	Data []Skill `json:"data,required"`
+	Data []Skill `json:"data" api:"required"`
 	// The ID of the first item in the list.
-	FirstID string `json:"first_id,required"`
+	FirstID string `json:"first_id" api:"required"`
 	// Whether there are more items available.
-	HasMore bool `json:"has_more,required"`
+	HasMore bool `json:"has_more" api:"required"`
 	// The ID of the last item in the list.
-	LastID string `json:"last_id,required"`
+	LastID string `json:"last_id" api:"required"`
 	// The type of object returned, must be `list`.
-	Object constant.List `json:"object,required"`
+	Object constant.List `json:"object" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -249,7 +249,7 @@ func (u *SkillNewParamsFilesUnion) asAny() any {
 
 type SkillUpdateParams struct {
 	// The skill version number to set as default.
-	DefaultVersion string `json:"default_version,required"`
+	DefaultVersion string `json:"default_version" api:"required"`
 	paramObj
 }
 

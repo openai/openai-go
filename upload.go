@@ -109,27 +109,27 @@ func (r *UploadService) Complete(ctx context.Context, uploadID string, body Uplo
 // The Upload object can accept byte chunks in the form of Parts.
 type Upload struct {
 	// The Upload unique identifier, which can be referenced in API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The intended number of bytes to be uploaded.
-	Bytes int64 `json:"bytes,required"`
+	Bytes int64 `json:"bytes" api:"required"`
 	// The Unix timestamp (in seconds) for when the Upload was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The Unix timestamp (in seconds) for when the Upload will expire.
-	ExpiresAt int64 `json:"expires_at,required"`
+	ExpiresAt int64 `json:"expires_at" api:"required"`
 	// The name of the file to be uploaded.
-	Filename string `json:"filename,required"`
+	Filename string `json:"filename" api:"required"`
 	// The object type, which is always "upload".
-	Object constant.Upload `json:"object,required"`
+	Object constant.Upload `json:"object" api:"required"`
 	// The intended purpose of the file.
 	// [Please refer here](https://platform.openai.com/docs/api-reference/files/object#files/object-purpose)
 	// for acceptable values.
-	Purpose string `json:"purpose,required"`
+	Purpose string `json:"purpose" api:"required"`
 	// The status of the Upload.
 	//
 	// Any of "pending", "completed", "cancelled", "expired".
-	Status UploadStatus `json:"status,required"`
+	Status UploadStatus `json:"status" api:"required"`
 	// The `File` object represents a document that has been uploaded to OpenAI.
-	File FileObject `json:"file,nullable"`
+	File FileObject `json:"file" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -164,21 +164,21 @@ const (
 
 type UploadNewParams struct {
 	// The number of bytes in the file you are uploading.
-	Bytes int64 `json:"bytes,required"`
+	Bytes int64 `json:"bytes" api:"required"`
 	// The name of the file to upload.
-	Filename string `json:"filename,required"`
+	Filename string `json:"filename" api:"required"`
 	// The MIME type of the file.
 	//
 	// This must fall within the supported MIME types for your file purpose. See the
 	// supported MIME types for assistants and vision.
-	MimeType string `json:"mime_type,required"`
+	MimeType string `json:"mime_type" api:"required"`
 	// The intended purpose of the uploaded file.
 	//
 	// See the
 	// [documentation on File purposes](https://platform.openai.com/docs/api-reference/files/create#files-create-purpose).
 	//
 	// Any of "assistants", "batch", "fine-tune", "vision", "user_data", "evals".
-	Purpose FilePurpose `json:"purpose,omitzero,required"`
+	Purpose FilePurpose `json:"purpose,omitzero" api:"required"`
 	// The expiration policy for a file. By default, files with `purpose=batch` expire
 	// after 30 days and all other files are persisted until they are manually deleted.
 	ExpiresAfter UploadNewParamsExpiresAfter `json:"expires_after,omitzero"`
@@ -200,12 +200,12 @@ func (r *UploadNewParams) UnmarshalJSON(data []byte) error {
 type UploadNewParamsExpiresAfter struct {
 	// The number of seconds after the anchor time that the file will expire. Must be
 	// between 3600 (1 hour) and 2592000 (30 days).
-	Seconds int64 `json:"seconds,required"`
+	Seconds int64 `json:"seconds" api:"required"`
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `created_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "created_at".
-	Anchor constant.CreatedAt `json:"anchor,required"`
+	Anchor constant.CreatedAt `json:"anchor" api:"required"`
 	paramObj
 }
 
@@ -219,7 +219,7 @@ func (r *UploadNewParamsExpiresAfter) UnmarshalJSON(data []byte) error {
 
 type UploadCompleteParams struct {
 	// The ordered list of Part IDs.
-	PartIDs []string `json:"part_ids,omitzero,required"`
+	PartIDs []string `json:"part_ids,omitzero" api:"required"`
 	// The optional md5 checksum for the file contents to verify if the bytes uploaded
 	// matches what you expect.
 	Md5 param.Opt[string] `json:"md5,omitzero"`

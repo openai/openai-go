@@ -110,13 +110,13 @@ func (r *FineTuningCheckpointPermissionService) Delete(ctx context.Context, fine
 // model checkpoint.
 type FineTuningCheckpointPermissionNewResponse struct {
 	// The permission identifier, which can be referenced in the API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the permission was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The object type, which is always "checkpoint.permission".
-	Object constant.CheckpointPermission `json:"object,required"`
+	Object constant.CheckpointPermission `json:"object" api:"required"`
 	// The project identifier that the permission is for.
-	ProjectID string `json:"project_id,required"`
+	ProjectID string `json:"project_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -135,11 +135,11 @@ func (r *FineTuningCheckpointPermissionNewResponse) UnmarshalJSON(data []byte) e
 }
 
 type FineTuningCheckpointPermissionGetResponse struct {
-	Data    []FineTuningCheckpointPermissionGetResponseData `json:"data,required"`
-	HasMore bool                                            `json:"has_more,required"`
-	Object  constant.List                                   `json:"object,required"`
-	FirstID string                                          `json:"first_id,nullable"`
-	LastID  string                                          `json:"last_id,nullable"`
+	Data    []FineTuningCheckpointPermissionGetResponseData `json:"data" api:"required"`
+	HasMore bool                                            `json:"has_more" api:"required"`
+	Object  constant.List                                   `json:"object" api:"required"`
+	FirstID string                                          `json:"first_id" api:"nullable"`
+	LastID  string                                          `json:"last_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -162,13 +162,13 @@ func (r *FineTuningCheckpointPermissionGetResponse) UnmarshalJSON(data []byte) e
 // model checkpoint.
 type FineTuningCheckpointPermissionGetResponseData struct {
 	// The permission identifier, which can be referenced in the API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the permission was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The object type, which is always "checkpoint.permission".
-	Object constant.CheckpointPermission `json:"object,required"`
+	Object constant.CheckpointPermission `json:"object" api:"required"`
 	// The project identifier that the permission is for.
-	ProjectID string `json:"project_id,required"`
+	ProjectID string `json:"project_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -188,11 +188,11 @@ func (r *FineTuningCheckpointPermissionGetResponseData) UnmarshalJSON(data []byt
 
 type FineTuningCheckpointPermissionDeleteResponse struct {
 	// The ID of the fine-tuned model checkpoint permission that was deleted.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// Whether the fine-tuned model checkpoint permission was successfully deleted.
-	Deleted bool `json:"deleted,required"`
+	Deleted bool `json:"deleted" api:"required"`
 	// The object type, which is always "checkpoint.permission".
-	Object constant.CheckpointPermission `json:"object,required"`
+	Object constant.CheckpointPermission `json:"object" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -211,7 +211,7 @@ func (r *FineTuningCheckpointPermissionDeleteResponse) UnmarshalJSON(data []byte
 
 type FineTuningCheckpointPermissionNewParams struct {
 	// The project identifiers to grant access to.
-	ProjectIDs []string `json:"project_ids,omitzero,required"`
+	ProjectIDs []string `json:"project_ids,omitzero" api:"required"`
 	paramObj
 }
 

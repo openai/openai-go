@@ -66,15 +66,15 @@ func (r *CompletionService) NewStreaming(ctx context.Context, body CompletionNew
 // non-streamed response objects share the same shape (unlike the chat endpoint).
 type Completion struct {
 	// A unique identifier for the completion.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The list of completion choices the model generated for the input prompt.
-	Choices []CompletionChoice `json:"choices,required"`
+	Choices []CompletionChoice `json:"choices" api:"required"`
 	// The Unix timestamp (in seconds) of when the completion was created.
-	Created int64 `json:"created,required"`
+	Created int64 `json:"created" api:"required"`
 	// The model used for completion.
-	Model string `json:"model,required"`
+	Model string `json:"model" api:"required"`
 	// The object type, which is always "text_completion"
-	Object constant.TextCompletion `json:"object,required"`
+	Object constant.TextCompletion `json:"object" api:"required"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	//
 	// Can be used in conjunction with the `seed` request parameter to understand when
@@ -109,10 +109,10 @@ type CompletionChoice struct {
 	// content was omitted due to a flag from our content filters.
 	//
 	// Any of "stop", "length", "content_filter".
-	FinishReason CompletionChoiceFinishReason `json:"finish_reason,required"`
-	Index        int64                        `json:"index,required"`
-	Logprobs     CompletionChoiceLogprobs     `json:"logprobs,required"`
-	Text         string                       `json:"text,required"`
+	FinishReason CompletionChoiceFinishReason `json:"finish_reason" api:"required"`
+	Index        int64                        `json:"index" api:"required"`
+	Logprobs     CompletionChoiceLogprobs     `json:"logprobs" api:"required"`
+	Text         string                       `json:"text" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		FinishReason respjson.Field
@@ -167,11 +167,11 @@ func (r *CompletionChoiceLogprobs) UnmarshalJSON(data []byte) error {
 // Usage statistics for the completion request.
 type CompletionUsage struct {
 	// Number of tokens in the generated completion.
-	CompletionTokens int64 `json:"completion_tokens,required"`
+	CompletionTokens int64 `json:"completion_tokens" api:"required"`
 	// Number of tokens in the prompt.
-	PromptTokens int64 `json:"prompt_tokens,required"`
+	PromptTokens int64 `json:"prompt_tokens" api:"required"`
 	// Total number of tokens used in the request (prompt + completion).
-	TotalTokens int64 `json:"total_tokens,required"`
+	TotalTokens int64 `json:"total_tokens" api:"required"`
 	// Breakdown of tokens used in a completion.
 	CompletionTokensDetails CompletionUsageCompletionTokensDetails `json:"completion_tokens_details"`
 	// Breakdown of tokens used in the prompt.
@@ -253,13 +253,13 @@ type CompletionNewParams struct {
 	// Note that <|endoftext|> is the document separator that the model sees during
 	// training, so if a prompt is not specified the model will generate as if from the
 	// beginning of a new document.
-	Prompt CompletionNewParamsPromptUnion `json:"prompt,omitzero,required"`
+	Prompt CompletionNewParamsPromptUnion `json:"prompt,omitzero" api:"required"`
 	// ID of the model to use. You can use the
 	// [List models](https://platform.openai.com/docs/api-reference/models/list) API to
 	// see all of your available models, or see our
 	// [Model overview](https://platform.openai.com/docs/models) for descriptions of
 	// them.
-	Model CompletionNewParamsModel `json:"model,omitzero,required"`
+	Model CompletionNewParamsModel `json:"model,omitzero" api:"required"`
 	// Generates `best_of` completions server-side and returns the "best" (the one with
 	// the highest log probability per token). Results cannot be streamed.
 	//

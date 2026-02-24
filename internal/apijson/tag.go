@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+const apiStructTag = "api"
 const jsonStructTag = "json"
 const formatStructTag = "format"
 
@@ -38,7 +39,26 @@ func parseJSONStructTag(field reflect.StructField) (tag parsedStructTag, ok bool
 			tag.inline = true
 		}
 	}
+
+	// the `api` struct tag is only used alongside `json` for custom behaviour
+	parseApiStructTag(field, &tag)
 	return
+}
+
+func parseApiStructTag(field reflect.StructField, tag *parsedStructTag) {
+	raw, ok := field.Tag.Lookup(apiStructTag)
+	if !ok {
+		return
+	}
+	parts := strings.Split(raw, ",")
+	for _, part := range parts {
+		switch part {
+		case "extrafields":
+			tag.extras = true
+		case "required":
+			tag.required = true
+		}
+	}
 }
 
 func parseFormatStructTag(field reflect.StructField) (format string, ok bool) {

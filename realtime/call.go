@@ -105,7 +105,7 @@ func (r *CallAcceptParams) UnmarshalJSON(data []byte) error {
 type CallReferParams struct {
 	// URI that should appear in the SIP Refer-To header. Supports values like
 	// `tel:+14155550123` or `sip:agent@example.com`.
-	TargetUri string `json:"target_uri,required"`
+	TargetUri string `json:"target_uri" api:"required"`
 	paramObj
 }
 

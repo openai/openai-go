@@ -73,7 +73,7 @@ func (r *AudioTranscriptionService) NewStreaming(ctx context.Context, body Audio
 // input.
 type Transcription struct {
 	// The transcribed text.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// The log probabilities of the tokens in the transcription. Only returned with the
 	// models `gpt-4o-transcribe` and `gpt-4o-mini-transcribe` if `logprobs` is added
 	// to the `include` array.
@@ -197,13 +197,13 @@ func (r *TranscriptionUsageUnion) UnmarshalJSON(data []byte) error {
 // Usage statistics for models billed by token usage.
 type TranscriptionUsageTokens struct {
 	// Number of input tokens billed for this request.
-	InputTokens int64 `json:"input_tokens,required"`
+	InputTokens int64 `json:"input_tokens" api:"required"`
 	// Number of output tokens generated.
-	OutputTokens int64 `json:"output_tokens,required"`
+	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// Total number of tokens used (input + output).
-	TotalTokens int64 `json:"total_tokens,required"`
+	TotalTokens int64 `json:"total_tokens" api:"required"`
 	// The type of the usage object. Always `tokens` for this variant.
-	Type constant.Tokens `json:"type,required"`
+	Type constant.Tokens `json:"type" api:"required"`
 	// Details about the input tokens billed for this request.
 	InputTokenDetails TranscriptionUsageTokensInputTokenDetails `json:"input_token_details"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -248,9 +248,9 @@ func (r *TranscriptionUsageTokensInputTokenDetails) UnmarshalJSON(data []byte) e
 // Usage statistics for models billed by audio input duration.
 type TranscriptionUsageDuration struct {
 	// Duration of the input audio in seconds.
-	Seconds float64 `json:"seconds,required"`
+	Seconds float64 `json:"seconds" api:"required"`
 	// The type of the usage object. Always `duration` for this variant.
-	Type constant.Duration `json:"type,required"`
+	Type constant.Duration `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Seconds     respjson.Field
@@ -274,28 +274,28 @@ const (
 
 type TranscriptionSegment struct {
 	// Unique identifier of the segment.
-	ID int64 `json:"id,required"`
+	ID int64 `json:"id" api:"required"`
 	// Average logprob of the segment. If the value is lower than -1, consider the
 	// logprobs failed.
-	AvgLogprob float64 `json:"avg_logprob,required"`
+	AvgLogprob float64 `json:"avg_logprob" api:"required"`
 	// Compression ratio of the segment. If the value is greater than 2.4, consider the
 	// compression failed.
-	CompressionRatio float64 `json:"compression_ratio,required"`
+	CompressionRatio float64 `json:"compression_ratio" api:"required"`
 	// End time of the segment in seconds.
-	End float64 `json:"end,required"`
+	End float64 `json:"end" api:"required"`
 	// Probability of no speech in the segment. If the value is higher than 1.0 and the
 	// `avg_logprob` is below -1, consider this segment silent.
-	NoSpeechProb float64 `json:"no_speech_prob,required"`
+	NoSpeechProb float64 `json:"no_speech_prob" api:"required"`
 	// Seek offset of the segment.
-	Seek int64 `json:"seek,required"`
+	Seek int64 `json:"seek" api:"required"`
 	// Start time of the segment in seconds.
-	Start float64 `json:"start,required"`
+	Start float64 `json:"start" api:"required"`
 	// Temperature parameter used for generating the segment.
-	Temperature float64 `json:"temperature,required"`
+	Temperature float64 `json:"temperature" api:"required"`
 	// Text content of the segment.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// Array of token IDs for the text content.
-	Tokens []int64 `json:"tokens,required"`
+	Tokens []int64 `json:"tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID               respjson.Field
@@ -451,9 +451,9 @@ func (r *TranscriptionStreamEventUnionLogprobs) UnmarshalJSON(data []byte) error
 // with the `Stream` parameter set to `true`.
 type TranscriptionTextDeltaEvent struct {
 	// The text delta that was additionally transcribed.
-	Delta string `json:"delta,required"`
+	Delta string `json:"delta" api:"required"`
 	// The type of the event. Always `transcript.text.delta`.
-	Type constant.TranscriptTextDelta `json:"type,required"`
+	Type constant.TranscriptTextDelta `json:"type" api:"required"`
 	// The log probabilities of the delta. Only included if you
 	// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
 	// with the `include[]` parameter set to `logprobs`.
@@ -507,9 +507,9 @@ func (r *TranscriptionTextDeltaEventLogprob) UnmarshalJSON(data []byte) error {
 // with the `Stream` parameter set to `true`.
 type TranscriptionTextDoneEvent struct {
 	// The text that was transcribed.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// The type of the event. Always `transcript.text.done`.
-	Type constant.TranscriptTextDone `json:"type,required"`
+	Type constant.TranscriptTextDone `json:"type" api:"required"`
 	// The log probabilities of the individual tokens in the transcription. Only
 	// included if you
 	// [create a transcription](https://platform.openai.com/docs/api-reference/audio/create-transcription)
@@ -560,13 +560,13 @@ func (r *TranscriptionTextDoneEventLogprob) UnmarshalJSON(data []byte) error {
 // Usage statistics for models billed by token usage.
 type TranscriptionTextDoneEventUsage struct {
 	// Number of input tokens billed for this request.
-	InputTokens int64 `json:"input_tokens,required"`
+	InputTokens int64 `json:"input_tokens" api:"required"`
 	// Number of output tokens generated.
-	OutputTokens int64 `json:"output_tokens,required"`
+	OutputTokens int64 `json:"output_tokens" api:"required"`
 	// Total number of tokens used (input + output).
-	TotalTokens int64 `json:"total_tokens,required"`
+	TotalTokens int64 `json:"total_tokens" api:"required"`
 	// The type of the usage object. Always `tokens` for this variant.
-	Type constant.Tokens `json:"type,required"`
+	Type constant.Tokens `json:"type" api:"required"`
 	// Details about the input tokens billed for this request.
 	InputTokenDetails TranscriptionTextDoneEventUsageInputTokenDetails `json:"input_token_details"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -614,17 +614,17 @@ func (r *TranscriptionTextDoneEventUsageInputTokenDetails) UnmarshalJSON(data []
 // with `stream` set to `true` and `response_format` set to `diarized_json`.
 type TranscriptionTextSegmentEvent struct {
 	// Unique identifier for the segment.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// End timestamp of the segment in seconds.
-	End float64 `json:"end,required"`
+	End float64 `json:"end" api:"required"`
 	// Speaker label for this segment.
-	Speaker string `json:"speaker,required"`
+	Speaker string `json:"speaker" api:"required"`
 	// Start timestamp of the segment in seconds.
-	Start float64 `json:"start,required"`
+	Start float64 `json:"start" api:"required"`
 	// Transcript text for this segment.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// The type of the event. Always `transcript.text.segment`.
-	Type constant.TranscriptTextSegment `json:"type,required"`
+	Type constant.TranscriptTextSegment `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -648,11 +648,11 @@ func (r *TranscriptionTextSegmentEvent) UnmarshalJSON(data []byte) error {
 // provided input.
 type TranscriptionVerbose struct {
 	// The duration of the input audio.
-	Duration float64 `json:"duration,required"`
+	Duration float64 `json:"duration" api:"required"`
 	// The language of the input audio.
-	Language string `json:"language,required"`
+	Language string `json:"language" api:"required"`
 	// The transcribed text.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// Segments of the transcribed text and their corresponding details.
 	Segments []TranscriptionSegment `json:"segments"`
 	// Usage statistics for models billed by audio input duration.
@@ -681,9 +681,9 @@ func (r *TranscriptionVerbose) UnmarshalJSON(data []byte) error {
 // Usage statistics for models billed by audio input duration.
 type TranscriptionVerboseUsage struct {
 	// Duration of the input audio in seconds.
-	Seconds float64 `json:"seconds,required"`
+	Seconds float64 `json:"seconds" api:"required"`
 	// The type of the usage object. Always `duration` for this variant.
-	Type constant.Duration `json:"type,required"`
+	Type constant.Duration `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Seconds     respjson.Field
@@ -701,11 +701,11 @@ func (r *TranscriptionVerboseUsage) UnmarshalJSON(data []byte) error {
 
 type TranscriptionWord struct {
 	// End time of the word in seconds.
-	End float64 `json:"end,required"`
+	End float64 `json:"end" api:"required"`
 	// Start time of the word in seconds.
-	Start float64 `json:"start,required"`
+	Start float64 `json:"start" api:"required"`
 	// The text content of the word.
-	Word string `json:"word,required"`
+	Word string `json:"word" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		End         respjson.Field
@@ -804,12 +804,12 @@ func (r *AudioTranscriptionNewResponseUnionUsage) UnmarshalJSON(data []byte) err
 type AudioTranscriptionNewParams struct {
 	// The audio file object (not file name) to transcribe, in one of these formats:
 	// flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm.
-	File io.Reader `json:"file,omitzero,required" format:"binary"`
+	File io.Reader `json:"file,omitzero" api:"required" format:"binary"`
 	// ID of the model to use. The options are `gpt-4o-transcribe`,
 	// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`, `whisper-1`
 	// (which is powered by our open source Whisper V2 model), and
 	// `gpt-4o-transcribe-diarize`.
-	Model AudioModel `json:"model,omitzero,required"`
+	Model AudioModel `json:"model,omitzero" api:"required"`
 	// The language of the input audio. Supplying the input language in
 	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) (e.g. `en`)
 	// format will improve accuracy and latency.
@@ -919,7 +919,7 @@ type AudioTranscriptionNewParamsChunkingStrategyVadConfig struct {
 	// Must be set to `server_vad` to enable manual chunking using server side VAD.
 	//
 	// Any of "server_vad".
-	Type string `json:"type,omitzero,required"`
+	Type string `json:"type,omitzero" api:"required"`
 	// Amount of audio to include before the VAD detected speech (in milliseconds).
 	PrefixPaddingMs param.Opt[int64] `json:"prefix_padding_ms,omitzero"`
 	// Duration of silence to detect speech stop (in milliseconds). With shorter values

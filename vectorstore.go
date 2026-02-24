@@ -158,7 +158,7 @@ func NewAutoFileChunkingStrategyParam() AutoFileChunkingStrategyParam {
 // [NewAutoFileChunkingStrategyParam].
 type AutoFileChunkingStrategyParam struct {
 	// Always `auto`.
-	Type constant.Auto `json:"type,required"`
+	Type constant.Auto `json:"type" api:"required"`
 	paramObj
 }
 
@@ -295,7 +295,7 @@ func init() {
 // introduced in the API.
 type OtherFileChunkingStrategyObject struct {
 	// Always `other`.
-	Type constant.Other `json:"type,required"`
+	Type constant.Other `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -314,10 +314,10 @@ type StaticFileChunkingStrategy struct {
 	// The number of tokens that overlap between chunks. The default value is `400`.
 	//
 	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens,required"`
+	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens" api:"required"`
 	// The maximum number of tokens in each chunk. The default value is `800`. The
 	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens,required"`
+	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ChunkOverlapTokens respjson.Field
@@ -348,10 +348,10 @@ type StaticFileChunkingStrategyParam struct {
 	// The number of tokens that overlap between chunks. The default value is `400`.
 	//
 	// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
-	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens,required"`
+	ChunkOverlapTokens int64 `json:"chunk_overlap_tokens" api:"required"`
 	// The maximum number of tokens in each chunk. The default value is `800`. The
 	// minimum value is `100` and the maximum value is `4096`.
-	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens,required"`
+	MaxChunkSizeTokens int64 `json:"max_chunk_size_tokens" api:"required"`
 	paramObj
 }
 
@@ -364,9 +364,9 @@ func (r *StaticFileChunkingStrategyParam) UnmarshalJSON(data []byte) error {
 }
 
 type StaticFileChunkingStrategyObject struct {
-	Static StaticFileChunkingStrategy `json:"static,required"`
+	Static StaticFileChunkingStrategy `json:"static" api:"required"`
 	// Always `static`.
-	Type constant.Static `json:"type,required"`
+	Type constant.Static `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Static      respjson.Field
@@ -386,11 +386,11 @@ func (r *StaticFileChunkingStrategyObject) UnmarshalJSON(data []byte) error {
 //
 // The properties Static, Type are required.
 type StaticFileChunkingStrategyObjectParam struct {
-	Static StaticFileChunkingStrategyParam `json:"static,omitzero,required"`
+	Static StaticFileChunkingStrategyParam `json:"static,omitzero" api:"required"`
 	// Always `static`.
 	//
 	// This field can be elided, and will marshal its zero value as "static".
-	Type constant.Static `json:"type,required"`
+	Type constant.Static `json:"type" api:"required"`
 	paramObj
 }
 
@@ -406,35 +406,35 @@ func (r *StaticFileChunkingStrategyObjectParam) UnmarshalJSON(data []byte) error
 // `file_search` tool.
 type VectorStore struct {
 	// The identifier, which can be referenced in API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the vector store was created.
-	CreatedAt  int64                 `json:"created_at,required"`
-	FileCounts VectorStoreFileCounts `json:"file_counts,required"`
+	CreatedAt  int64                 `json:"created_at" api:"required"`
+	FileCounts VectorStoreFileCounts `json:"file_counts" api:"required"`
 	// The Unix timestamp (in seconds) for when the vector store was last active.
-	LastActiveAt int64 `json:"last_active_at,required"`
+	LastActiveAt int64 `json:"last_active_at" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.
 	//
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
-	Metadata shared.Metadata `json:"metadata,required"`
+	Metadata shared.Metadata `json:"metadata" api:"required"`
 	// The name of the vector store.
-	Name string `json:"name,required"`
+	Name string `json:"name" api:"required"`
 	// The object type, which is always `vector_store`.
-	Object constant.VectorStore `json:"object,required"`
+	Object constant.VectorStore `json:"object" api:"required"`
 	// The status of the vector store, which can be either `expired`, `in_progress`, or
 	// `completed`. A status of `completed` indicates that the vector store is ready
 	// for use.
 	//
 	// Any of "expired", "in_progress", "completed".
-	Status VectorStoreStatus `json:"status,required"`
+	Status VectorStoreStatus `json:"status" api:"required"`
 	// The total number of bytes used by the files in the vector store.
-	UsageBytes int64 `json:"usage_bytes,required"`
+	UsageBytes int64 `json:"usage_bytes" api:"required"`
 	// The expiration policy for a vector store.
 	ExpiresAfter VectorStoreExpiresAfter `json:"expires_after"`
 	// The Unix timestamp (in seconds) for when the vector store will expire.
-	ExpiresAt int64 `json:"expires_at,nullable"`
+	ExpiresAt int64 `json:"expires_at" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID           respjson.Field
@@ -461,15 +461,15 @@ func (r *VectorStore) UnmarshalJSON(data []byte) error {
 
 type VectorStoreFileCounts struct {
 	// The number of files that were cancelled.
-	Cancelled int64 `json:"cancelled,required"`
+	Cancelled int64 `json:"cancelled" api:"required"`
 	// The number of files that have been successfully processed.
-	Completed int64 `json:"completed,required"`
+	Completed int64 `json:"completed" api:"required"`
 	// The number of files that have failed to process.
-	Failed int64 `json:"failed,required"`
+	Failed int64 `json:"failed" api:"required"`
 	// The number of files that are currently being processed.
-	InProgress int64 `json:"in_progress,required"`
+	InProgress int64 `json:"in_progress" api:"required"`
 	// The total number of files.
-	Total int64 `json:"total,required"`
+	Total int64 `json:"total" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Cancelled   respjson.Field
@@ -503,9 +503,9 @@ const (
 type VectorStoreExpiresAfter struct {
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
-	Anchor constant.LastActiveAt `json:"anchor,required"`
+	Anchor constant.LastActiveAt `json:"anchor" api:"required"`
 	// The number of days after the anchor time that the vector store will expire.
-	Days int64 `json:"days,required"`
+	Days int64 `json:"days" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Anchor      respjson.Field
@@ -522,9 +522,9 @@ func (r *VectorStoreExpiresAfter) UnmarshalJSON(data []byte) error {
 }
 
 type VectorStoreDeleted struct {
-	ID      string                      `json:"id,required"`
-	Deleted bool                        `json:"deleted,required"`
-	Object  constant.VectorStoreDeleted `json:"object,required"`
+	ID      string                      `json:"id" api:"required"`
+	Deleted bool                        `json:"deleted" api:"required"`
+	Object  constant.VectorStoreDeleted `json:"object" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -547,15 +547,15 @@ type VectorStoreSearchResponse struct {
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
 	// length of 64 characters. Values are strings with a maximum length of 512
 	// characters, booleans, or numbers.
-	Attributes map[string]VectorStoreSearchResponseAttributeUnion `json:"attributes,required"`
+	Attributes map[string]VectorStoreSearchResponseAttributeUnion `json:"attributes" api:"required"`
 	// Content chunks from the file.
-	Content []VectorStoreSearchResponseContent `json:"content,required"`
+	Content []VectorStoreSearchResponseContent `json:"content" api:"required"`
 	// The ID of the vector store file.
-	FileID string `json:"file_id,required"`
+	FileID string `json:"file_id" api:"required"`
 	// The name of the vector store file.
-	Filename string `json:"filename,required"`
+	Filename string `json:"filename" api:"required"`
 	// The similarity score for the result.
-	Score float64 `json:"score,required"`
+	Score float64 `json:"score" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Attributes  respjson.Field
@@ -620,11 +620,11 @@ func (r *VectorStoreSearchResponseAttributeUnion) UnmarshalJSON(data []byte) err
 
 type VectorStoreSearchResponseContent struct {
 	// The text content returned from search.
-	Text string `json:"text,required"`
+	Text string `json:"text" api:"required"`
 	// The type of content.
 	//
 	// Any of "text".
-	Type string `json:"type,required"`
+	Type string `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -678,12 +678,12 @@ func (r *VectorStoreNewParams) UnmarshalJSON(data []byte) error {
 // The properties Anchor, Days are required.
 type VectorStoreNewParamsExpiresAfter struct {
 	// The number of days after the anchor time that the vector store will expire.
-	Days int64 `json:"days,required"`
+	Days int64 `json:"days" api:"required"`
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "last_active_at".
-	Anchor constant.LastActiveAt `json:"anchor,required"`
+	Anchor constant.LastActiveAt `json:"anchor" api:"required"`
 	paramObj
 }
 
@@ -723,12 +723,12 @@ func (r *VectorStoreUpdateParams) UnmarshalJSON(data []byte) error {
 // The properties Anchor, Days are required.
 type VectorStoreUpdateParamsExpiresAfter struct {
 	// The number of days after the anchor time that the vector store will expire.
-	Days int64 `json:"days,required"`
+	Days int64 `json:"days" api:"required"`
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "last_active_at".
-	Anchor constant.LastActiveAt `json:"anchor,required"`
+	Anchor constant.LastActiveAt `json:"anchor" api:"required"`
 	paramObj
 }
 
@@ -781,7 +781,7 @@ const (
 
 type VectorStoreSearchParams struct {
 	// A query string for a search
-	Query VectorStoreSearchParamsQueryUnion `json:"query,omitzero,required"`
+	Query VectorStoreSearchParamsQueryUnion `json:"query,omitzero" api:"required"`
 	// The maximum number of results to return. This number should be between 1 and 50
 	// inclusive.
 	MaxNumResults param.Opt[int64] `json:"max_num_results,omitzero"`

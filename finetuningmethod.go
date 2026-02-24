@@ -866,7 +866,7 @@ func (u *ReinforcementHyperparametersNEpochsUnion) asAny() any {
 // Configuration for the reinforcement fine-tuning method.
 type ReinforcementMethod struct {
 	// The grader used for the fine-tuning job.
-	Grader ReinforcementMethodGraderUnion `json:"grader,required"`
+	Grader ReinforcementMethodGraderUnion `json:"grader" api:"required"`
 	// The hyperparameters used for the reinforcement fine-tuning job.
 	Hyperparameters ReinforcementHyperparametersResp `json:"hyperparameters"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -1003,7 +1003,7 @@ func (r *ReinforcementMethodGraderUnionInput) UnmarshalJSON(data []byte) error {
 // The property Grader is required.
 type ReinforcementMethodParam struct {
 	// The grader used for the fine-tuning job.
-	Grader ReinforcementMethodGraderUnionParam `json:"grader,omitzero,required"`
+	Grader ReinforcementMethodGraderUnionParam `json:"grader,omitzero" api:"required"`
 	// The hyperparameters used for the reinforcement fine-tuning job.
 	Hyperparameters ReinforcementHyperparameters `json:"hyperparameters,omitzero"`
 	paramObj

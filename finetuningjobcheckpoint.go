@@ -70,19 +70,19 @@ func (r *FineTuningJobCheckpointService) ListAutoPaging(ctx context.Context, fin
 // fine-tuning job that is ready to use.
 type FineTuningJobCheckpoint struct {
 	// The checkpoint identifier, which can be referenced in the API endpoints.
-	ID string `json:"id,required"`
+	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the checkpoint was created.
-	CreatedAt int64 `json:"created_at,required"`
+	CreatedAt int64 `json:"created_at" api:"required"`
 	// The name of the fine-tuned checkpoint model that is created.
-	FineTunedModelCheckpoint string `json:"fine_tuned_model_checkpoint,required"`
+	FineTunedModelCheckpoint string `json:"fine_tuned_model_checkpoint" api:"required"`
 	// The name of the fine-tuning job that this checkpoint was created from.
-	FineTuningJobID string `json:"fine_tuning_job_id,required"`
+	FineTuningJobID string `json:"fine_tuning_job_id" api:"required"`
 	// Metrics at the step number during the fine-tuning job.
-	Metrics FineTuningJobCheckpointMetrics `json:"metrics,required"`
+	Metrics FineTuningJobCheckpointMetrics `json:"metrics" api:"required"`
 	// The object type, which is always "fine_tuning.job.checkpoint".
-	Object constant.FineTuningJobCheckpoint `json:"object,required"`
+	Object constant.FineTuningJobCheckpoint `json:"object" api:"required"`
 	// The step number that the checkpoint was created at.
-	StepNumber int64 `json:"step_number,required"`
+	StepNumber int64 `json:"step_number" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                       respjson.Field
