@@ -963,6 +963,11 @@ type EasyInputMessage struct {
 	// sending follow-up requests, preserve and resend phase on all assistant messages
 	// — dropping it can degrade performance. Not used for user messages.
 	//
+	// Use `commentary` for an intermediate assistant message and `final_answer` for
+	// the final assistant message. For follow-up requests with models like
+	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+	// Omitting it can degrade performance. Not used for user messages.
+	//
 	// Any of "commentary".
 	Phase EasyInputMessagePhase `json:"phase" api:"nullable"`
 	// The type of the message input. Always `message`.
@@ -1047,6 +1052,11 @@ const (
 // final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
 // sending follow-up requests, preserve and resend phase on all assistant messages
 // — dropping it can degrade performance. Not used for user messages.
+//
+// Use `commentary` for an intermediate assistant message and `final_answer` for
+// the final assistant message. For follow-up requests with models like
+// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+// Omitting it can degrade performance. Not used for user messages.
 type EasyInputMessagePhase string
 
 const (
@@ -1080,6 +1090,11 @@ type EasyInputMessageParam struct {
 	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
 	// sending follow-up requests, preserve and resend phase on all assistant messages
 	// — dropping it can degrade performance. Not used for user messages.
+	//
+	// Use `commentary` for an intermediate assistant message and `final_answer` for
+	// the final assistant message. For follow-up requests with models like
+	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+	// Omitting it can degrade performance. Not used for user messages.
 	//
 	// Any of "commentary".
 	Phase EasyInputMessagePhase `json:"phase,omitzero"`
@@ -13446,6 +13461,11 @@ type ResponseOutputMessage struct {
 	// sending follow-up requests, preserve and resend phase on all assistant messages
 	// — dropping it can degrade performance. Not used for user messages.
 	//
+	// Use `commentary` for an intermediate assistant message and `final_answer` for
+	// the final assistant message. For follow-up requests with models like
+	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+	// Omitting it can degrade performance. Not used for user messages.
+	//
 	// Any of "commentary".
 	Phase ResponseOutputMessagePhase `json:"phase" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -13563,6 +13583,11 @@ const (
 // final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
 // sending follow-up requests, preserve and resend phase on all assistant messages
 // — dropping it can degrade performance. Not used for user messages.
+//
+// Use `commentary` for an intermediate assistant message and `final_answer` for
+// the final assistant message. For follow-up requests with models like
+// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+// Omitting it can degrade performance. Not used for user messages.
 type ResponseOutputMessagePhase string
 
 const (
@@ -13586,6 +13611,11 @@ type ResponseOutputMessageParam struct {
 	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
 	// sending follow-up requests, preserve and resend phase on all assistant messages
 	// — dropping it can degrade performance. Not used for user messages.
+	//
+	// Use `commentary` for an intermediate assistant message and `final_answer` for
+	// the final assistant message. For follow-up requests with models like
+	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
+	// Omitting it can degrade performance. Not used for user messages.
 	//
 	// Any of "commentary".
 	Phase ResponseOutputMessagePhase `json:"phase,omitzero"`
