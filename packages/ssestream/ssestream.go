@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strings"
 
+	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 	"github.com/tidwall/gjson"
 )
 
@@ -134,16 +135,25 @@ func (s *eventStreamDecoder) Err() error {
 }
 
 type Stream[T any] struct {
-	decoder Decoder
-	cur     T
-	err     error
-	done    bool
+	decoder             Decoder
+	cur                 T
+	err                 error
+	done                bool
+	synthesizeEventData bool
 }
 
 func NewStream[T any](decoder Decoder, err error) *Stream[T] {
 	return &Stream[T]{
 		decoder: decoder,
 		err:     err,
+	}
+}
+
+func NewStreamWithSynthesizeEventData[T any](decoder Decoder, err error) *Stream[T] {
+	return &Stream[T]{
+		decoder:             decoder,
+		err:                 err,
+		synthesizeEventData: true,
 	}
 }
 
@@ -183,7 +193,18 @@ func (s *Stream[T]) Next() bool {
 			return false
 		}
 		var nxt T
-		s.err = json.Unmarshal(s.decoder.Event().Data, &nxt)
+		data := s.decoder.Event().Data
+		if s.synthesizeEventData {
+			synthesized := map[string]any{
+				"event": s.decoder.Event().Type,
+				"data":  json.RawMessage(data),
+			}
+			data, s.err = shimjson.Marshal(synthesized)
+			if s.err != nil {
+				return false
+			}
+		}
+		s.err = json.Unmarshal(data, &nxt)
 		if s.err != nil {
 			return false
 		}
