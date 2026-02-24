@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.23.0 (2026-02-24)
+
+Full Changelog: [v3.22.1...v3.23.0](https://github.com/openai/openai-go/compare/v3.22.1...v3.23.0)
+
+### Features
+
+* **api:** add gpt-realtime-1.5 and gpt-audio-1.5 models to realtime session ([9076e2f](https://github.com/openai/openai-go/commit/9076e2f2fab882d5a8ba9992096e5997902c5589))
+
 ## 3.22.1 (2026-02-23)
 
 Full Changelog: [v3.22.0...v3.22.1](https://github.com/openai/openai-go/compare/v3.22.0...v3.22.1)
