@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.24.0 (2026-02-24)
+
+Full Changelog: [v3.23.0...v3.24.0](https://github.com/openai/openai-go/compare/v3.23.0...v3.24.0)
+
+### Features
+
+* **api:** add phase ([72366d8](https://github.com/openai/openai-go/commit/72366d895c78b5188a590ee7f9b572b567447b32))
+
+
+### Bug Fixes
+
+* **api:** fix phase enum ([5712ebf](https://github.com/openai/openai-go/commit/5712ebf1f30e63d148a72c451f1df48620b14a2d))
+* **api:** phase docs ([b67dd66](https://github.com/openai/openai-go/commit/b67dd6680110c013c1660c37dde5467e2cd50030))
+
+
+### Chores
+
+* **internal:** move custom custom `json` tags to `api` ([0735303](https://github.com/openai/openai-go/commit/0735303849ece03c57adbb0f899d7f3a0b60bc50))
+* **internal:** refactor sse event parsing ([45dc6bb](https://github.com/openai/openai-go/commit/45dc6bb18120330de4470739a07b13f08d7f7666))
+
 ## 3.23.0 (2026-02-24)
 
 Full Changelog: [v3.22.1...v3.23.0](https://github.com/openai/openai-go/compare/v3.22.1...v3.23.0)
