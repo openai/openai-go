@@ -34,9 +34,8 @@ func TestConversationNewWithOptionalParams(t *testing.T) {
 				Content: responses.EasyInputMessageContentUnionParam{
 					OfString: openai.String("string"),
 				},
-				Role:  responses.EasyInputMessageRoleUser,
-				Phase: responses.EasyInputMessagePhaseCommentary,
-				Type:  responses.EasyInputMessageTypeMessage,
+				Role: responses.EasyInputMessageRoleUser,
+				Type: responses.EasyInputMessageTypeMessage,
 			},
 		}},
 		Metadata: shared.Metadata{
