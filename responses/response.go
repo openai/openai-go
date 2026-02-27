@@ -967,7 +967,7 @@ type EasyInputMessage struct {
 	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
 	// Omitting it can degrade performance. Not used for user messages.
 	//
-	// Any of "commentary".
+	// Any of "commentary", "final_answer".
 	Phase EasyInputMessagePhase `json:"phase" api:"nullable"`
 	// The type of the message input. Always `message`.
 	//
@@ -1059,7 +1059,8 @@ const (
 type EasyInputMessagePhase string
 
 const (
-	EasyInputMessagePhaseCommentary EasyInputMessagePhase = "commentary"
+	EasyInputMessagePhaseCommentary  EasyInputMessagePhase = "commentary"
+	EasyInputMessagePhaseFinalAnswer EasyInputMessagePhase = "final_answer"
 )
 
 // The type of the message input. Always `message`.
@@ -1095,7 +1096,7 @@ type EasyInputMessageParam struct {
 	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
 	// Omitting it can degrade performance. Not used for user messages.
 	//
-	// Any of "commentary".
+	// Any of "commentary", "final_answer".
 	Phase EasyInputMessagePhase `json:"phase,omitzero"`
 	// The type of the message input. Always `message`.
 	//
@@ -13483,7 +13484,7 @@ type ResponseOutputMessage struct {
 	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
 	// Omitting it can degrade performance. Not used for user messages.
 	//
-	// Any of "commentary".
+	// Any of "commentary", "final_answer".
 	Phase ResponseOutputMessagePhase `json:"phase" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -13608,7 +13609,8 @@ const (
 type ResponseOutputMessagePhase string
 
 const (
-	ResponseOutputMessagePhaseCommentary ResponseOutputMessagePhase = "commentary"
+	ResponseOutputMessagePhaseCommentary  ResponseOutputMessagePhase = "commentary"
+	ResponseOutputMessagePhaseFinalAnswer ResponseOutputMessagePhase = "final_answer"
 )
 
 // An output message from the model.
@@ -13634,7 +13636,7 @@ type ResponseOutputMessageParam struct {
 	// `gpt-5.3-codex` and later, preserve and resend phase on all assistant messages.
 	// Omitting it can degrade performance. Not used for user messages.
 	//
-	// Any of "commentary".
+	// Any of "commentary", "final_answer".
 	Phase ResponseOutputMessagePhase `json:"phase,omitzero"`
 	// The role of the output message. Always `assistant`.
 	//
