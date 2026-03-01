@@ -955,7 +955,7 @@ middleware has been applied.
 
 ## Microsoft Azure OpenAI
 
-To use this library with [Azure OpenAI]https://learn.microsoft.com/azure/ai-services/openai/overview),
+To use this library with [Azure OpenAI](https://learn.microsoft.com/azure/ai-services/openai/overview),
 use the option.RequestOption functions in the `azure` package.
 
 ```go
