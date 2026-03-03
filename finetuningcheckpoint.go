@@ -13,7 +13,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewFineTuningCheckpointService] method instead.
 type FineTuningCheckpointService struct {
-	Options     []option.RequestOption
+	Options []option.RequestOption
+	// Manage fine-tuning jobs to tailor a model to your specific training data.
 	Permissions FineTuningCheckpointPermissionService
 }
 

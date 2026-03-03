@@ -13,10 +13,13 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewAudioService] method instead.
 type AudioService struct {
-	Options        []option.RequestOption
+	Options []option.RequestOption
+	// Turn audio into text or text into audio.
 	Transcriptions AudioTranscriptionService
-	Translations   AudioTranslationService
-	Speech         AudioSpeechService
+	// Turn audio into text or text into audio.
+	Translations AudioTranslationService
+	// Turn audio into text or text into audio.
+	Speech AudioSpeechService
 }
 
 // NewAudioService generates a new service that applies the given options to each

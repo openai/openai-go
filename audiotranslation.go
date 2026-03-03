@@ -18,6 +18,8 @@ import (
 	"github.com/openai/openai-go/v3/packages/respjson"
 )
 
+// Turn audio into text or text into audio.
+//
 // AudioTranslationService contains methods and other services that help with
 // interacting with the openai API.
 //

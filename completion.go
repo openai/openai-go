@@ -16,6 +16,9 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Given a prompt, the model will return one or more predicted completions, and can
+// also return the probabilities of alternative tokens at each position.
+//
 // CompletionService contains methods and other services that help with interacting
 // with the openai API.
 //

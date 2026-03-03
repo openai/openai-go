@@ -15,6 +15,9 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Get a vector representation of a given input that can be easily consumed by
+// machine learning models and algorithms.
+//
 // EmbeddingService contains methods and other services that help with interacting
 // with the openai API.
 //

@@ -20,6 +20,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Build Assistants that can call models and use tools.
+//
 // BetaThreadService contains methods and other services that help with interacting
 // with the openai API.
 //
@@ -30,8 +32,12 @@ import (
 // Deprecated: The Assistants API is deprecated in favor of the Responses API
 type BetaThreadService struct {
 	Options []option.RequestOption
+	// Build Assistants that can call models and use tools.
+	//
 	// Deprecated: The Assistants API is deprecated in favor of the Responses API
 	Runs BetaThreadRunService
+	// Build Assistants that can call models and use tools.
+	//
 	// Deprecated: The Assistants API is deprecated in favor of the Responses API
 	Messages BetaThreadMessageService
 }

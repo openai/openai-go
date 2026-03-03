@@ -13,6 +13,8 @@ import (
 	"github.com/openai/openai-go/v3/packages/param"
 )
 
+// Turn audio into text or text into audio.
+//
 // AudioSpeechService contains methods and other services that help with
 // interacting with the openai API.
 //

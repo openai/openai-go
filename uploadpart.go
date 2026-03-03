@@ -20,6 +20,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Use Uploads to upload large files in multiple parts.
+//
 // UploadPartService contains methods and other services that help with interacting
 // with the openai API.
 //
