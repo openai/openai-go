@@ -21,6 +21,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Given a prompt and/or an input image, the model will generate a new image.
+//
 // ImageService contains methods and other services that help with interacting with
 // the openai API.
 //

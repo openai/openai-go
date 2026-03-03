@@ -13,7 +13,9 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewChatService] method instead.
 type ChatService struct {
-	Options     []option.RequestOption
+	Options []option.RequestOption
+	// Given a list of messages comprising a conversation, the model will return a
+	// response.
 	Completions ChatCompletionService
 }
 

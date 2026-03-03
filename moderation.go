@@ -15,6 +15,9 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Given text and/or image inputs, classifies if those inputs are potentially
+// harmful.
+//
 // ModerationService contains methods and other services that help with interacting
 // with the openai API.
 //

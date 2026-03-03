@@ -21,6 +21,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Create large batches of API requests to run asynchronously.
+//
 // BatchService contains methods and other services that help with interacting with
 // the openai API.
 //

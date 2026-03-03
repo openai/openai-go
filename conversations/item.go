@@ -22,6 +22,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Manage conversations and conversation items.
+//
 // ItemService contains methods and other services that help with interacting with
 // the openai API.
 //

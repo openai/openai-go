@@ -14,6 +14,7 @@ import (
 // the [NewFineTuningAlphaService] method instead.
 type FineTuningAlphaService struct {
 	Options []option.RequestOption
+	// Manage fine-tuning jobs to tailor a model to your specific training data.
 	Graders FineTuningAlphaGraderService
 }
 

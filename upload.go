@@ -17,6 +17,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Use Uploads to upload large files in multiple parts.
+//
 // UploadService contains methods and other services that help with interacting
 // with the openai API.
 //
@@ -25,7 +27,8 @@ import (
 // the [NewUploadService] method instead.
 type UploadService struct {
 	Options []option.RequestOption
-	Parts   UploadPartService
+	// Use Uploads to upload large files in multiple parts.
+	Parts UploadPartService
 }
 
 // NewUploadService generates a new service that applies the given options to each

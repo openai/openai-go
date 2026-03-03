@@ -15,6 +15,8 @@ import (
 	"github.com/openai/openai-go/v3/packages/respjson"
 )
 
+// Manage fine-tuning jobs to tailor a model to your specific training data.
+//
 // FineTuningAlphaGraderService contains methods and other services that help with
 // interacting with the openai API.
 //

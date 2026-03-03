@@ -22,6 +22,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Manage fine-tuning jobs to tailor a model to your specific training data.
+//
 // FineTuningJobService contains methods and other services that help with
 // interacting with the openai API.
 //
@@ -29,7 +31,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewFineTuningJobService] method instead.
 type FineTuningJobService struct {
-	Options     []option.RequestOption
+	Options []option.RequestOption
+	// Manage fine-tuning jobs to tailor a model to your specific training data.
 	Checkpoints FineTuningJobCheckpointService
 }
 
