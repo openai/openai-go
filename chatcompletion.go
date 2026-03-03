@@ -23,6 +23,9 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Given a list of messages comprising a conversation, the model will return a
+// response.
+//
 // ChatCompletionService contains methods and other services that help with
 // interacting with the openai API.
 //
@@ -30,7 +33,9 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewChatCompletionService] method instead.
 type ChatCompletionService struct {
-	Options  []option.RequestOption
+	Options []option.RequestOption
+	// Given a list of messages comprising a conversation, the model will return a
+	// response.
 	Messages ChatCompletionMessageService
 }
 

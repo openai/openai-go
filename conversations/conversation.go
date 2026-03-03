@@ -20,6 +20,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Manage conversations and conversation items.
+//
 // ConversationService contains methods and other services that help with
 // interacting with the openai API.
 //
@@ -28,7 +30,8 @@ import (
 // the [NewConversationService] method instead.
 type ConversationService struct {
 	Options []option.RequestOption
-	Items   ItemService
+	// Manage conversations and conversation items.
+	Items ItemService
 }
 
 // NewConversationService generates a new service that applies the given options to

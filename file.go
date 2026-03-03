@@ -24,6 +24,9 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Files are used to upload documents that can be used with features like
+// Assistants and Fine-tuning.
+//
 // FileService contains methods and other services that help with interacting with
 // the openai API.
 //

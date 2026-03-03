@@ -22,6 +22,8 @@ import (
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
+// Build Assistants that can call models and use tools.
+//
 // BetaAssistantService contains methods and other services that help with
 // interacting with the openai API.
 //

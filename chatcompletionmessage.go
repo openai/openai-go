@@ -17,6 +17,9 @@ import (
 	"github.com/openai/openai-go/v3/packages/param"
 )
 
+// Given a list of messages comprising a conversation, the model will return a
+// response.
+//
 // ChatCompletionMessageService contains methods and other services that help with
 // interacting with the openai API.
 //
