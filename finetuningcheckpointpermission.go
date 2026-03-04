@@ -78,6 +78,9 @@ func (r *FineTuningCheckpointPermissionService) NewAutoPaging(ctx context.Contex
 //
 // Organization owners can use this endpoint to view all permissions for a
 // fine-tuned model checkpoint.
+//
+// Deprecated: Retrieve is deprecated. Please swap to the paginated list method
+// instead.
 func (r *FineTuningCheckpointPermissionService) Get(ctx context.Context, fineTunedModelCheckpoint string, query FineTuningCheckpointPermissionGetParams, opts ...option.RequestOption) (res *FineTuningCheckpointPermissionGetResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if fineTunedModelCheckpoint == "" {
@@ -87,6 +90,39 @@ func (r *FineTuningCheckpointPermissionService) Get(ctx context.Context, fineTun
 	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
+}
+
+// **NOTE:** This endpoint requires an [admin API key](../admin-api-keys).
+//
+// Organization owners can use this endpoint to view all permissions for a
+// fine-tuned model checkpoint.
+func (r *FineTuningCheckpointPermissionService) List(ctx context.Context, fineTunedModelCheckpoint string, query FineTuningCheckpointPermissionListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[FineTuningCheckpointPermissionListResponse], err error) {
+	var raw *http.Response
+	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
+	if fineTunedModelCheckpoint == "" {
+		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
+		return
+	}
+	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// **NOTE:** This endpoint requires an [admin API key](../admin-api-keys).
+//
+// Organization owners can use this endpoint to view all permissions for a
+// fine-tuned model checkpoint.
+func (r *FineTuningCheckpointPermissionService) ListAutoPaging(ctx context.Context, fineTunedModelCheckpoint string, query FineTuningCheckpointPermissionListParams, opts ...option.RequestOption) *pagination.ConversationCursorPageAutoPager[FineTuningCheckpointPermissionListResponse] {
+	return pagination.NewConversationCursorPageAutoPager(r.List(ctx, fineTunedModelCheckpoint, query, opts...))
 }
 
 // **NOTE:** This endpoint requires an [admin API key](../admin-api-keys).
@@ -188,6 +224,34 @@ func (r *FineTuningCheckpointPermissionGetResponseData) UnmarshalJSON(data []byt
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The `checkpoint.permission` object represents a permission for a fine-tuned
+// model checkpoint.
+type FineTuningCheckpointPermissionListResponse struct {
+	// The permission identifier, which can be referenced in the API endpoints.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp (in seconds) for when the permission was created.
+	CreatedAt int64 `json:"created_at" api:"required"`
+	// The object type, which is always "checkpoint.permission".
+	Object constant.CheckpointPermission `json:"object" api:"required"`
+	// The project identifier that the permission is for.
+	ProjectID string `json:"project_id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Object      respjson.Field
+		ProjectID   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r FineTuningCheckpointPermissionListResponse) RawJSON() string { return r.JSON.raw }
+func (r *FineTuningCheckpointPermissionListResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type FineTuningCheckpointPermissionDeleteResponse struct {
 	// The ID of the fine-tuned model checkpoint permission that was deleted.
 	ID string `json:"id" api:"required"`
@@ -254,4 +318,35 @@ type FineTuningCheckpointPermissionGetParamsOrder string
 const (
 	FineTuningCheckpointPermissionGetParamsOrderAscending  FineTuningCheckpointPermissionGetParamsOrder = "ascending"
 	FineTuningCheckpointPermissionGetParamsOrderDescending FineTuningCheckpointPermissionGetParamsOrder = "descending"
+)
+
+type FineTuningCheckpointPermissionListParams struct {
+	// Identifier for the last permission ID from the previous pagination request.
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
+	// Number of permissions to retrieve.
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// The ID of the project to get permissions for.
+	ProjectID param.Opt[string] `query:"project_id,omitzero" json:"-"`
+	// The order in which to retrieve permissions.
+	//
+	// Any of "ascending", "descending".
+	Order FineTuningCheckpointPermissionListParamsOrder `query:"order,omitzero" json:"-"`
+	paramObj
+}
+
+// URLQuery serializes [FineTuningCheckpointPermissionListParams]'s query
+// parameters as `url.Values`.
+func (r FineTuningCheckpointPermissionListParams) URLQuery() (v url.Values, err error) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+// The order in which to retrieve permissions.
+type FineTuningCheckpointPermissionListParamsOrder string
+
+const (
+	FineTuningCheckpointPermissionListParamsOrderAscending  FineTuningCheckpointPermissionListParamsOrder = "ascending"
+	FineTuningCheckpointPermissionListParamsOrderDescending FineTuningCheckpointPermissionListParamsOrder = "descending"
 )
