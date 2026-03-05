@@ -120,6 +120,7 @@ func (r *ItemService) Delete(ctx context.Context, conversationID string, itemID 
 // [responses.ResponseFileSearchToolCall], [responses.ResponseFunctionWebSearch],
 // [ConversationItemImageGenerationCall], [responses.ResponseComputerToolCall],
 // [responses.ResponseComputerToolCallOutputItem],
+// [responses.ResponseToolSearchCall], [responses.ResponseToolSearchOutputItem],
 // [responses.ResponseReasoningItem], [responses.ResponseCodeInterpreterToolCall],
 // [ConversationItemLocalShellCall], [ConversationItemLocalShellCallOutput],
 // [responses.ResponseFunctionShellToolCall],
@@ -143,15 +144,18 @@ type ConversationItemUnion struct {
 	Status string      `json:"status"`
 	// Any of "message", "function_call", "function_call_output", "file_search_call",
 	// "web_search_call", "image_generation_call", "computer_call",
-	// "computer_call_output", "reasoning", "code_interpreter_call",
-	// "local_shell_call", "local_shell_call_output", "shell_call",
-	// "shell_call_output", "apply_patch_call", "apply_patch_call_output",
-	// "mcp_list_tools", "mcp_approval_request", "mcp_approval_response", "mcp_call",
-	// "custom_tool_call", "custom_tool_call_output".
-	Type      string `json:"type"`
-	Arguments string `json:"arguments"`
-	CallID    string `json:"call_id"`
-	Name      string `json:"name"`
+	// "computer_call_output", "tool_search_call", "tool_search_output", "reasoning",
+	// "code_interpreter_call", "local_shell_call", "local_shell_call_output",
+	// "shell_call", "shell_call_output", "apply_patch_call",
+	// "apply_patch_call_output", "mcp_list_tools", "mcp_approval_request",
+	// "mcp_approval_response", "mcp_call", "custom_tool_call",
+	// "custom_tool_call_output".
+	Type string `json:"type"`
+	// This field is a union of [string], [any], [string], [string]
+	Arguments ConversationItemUnionArguments `json:"arguments"`
+	CallID    string                         `json:"call_id"`
+	Name      string                         `json:"name"`
+	Namespace string                         `json:"namespace"`
 	// This field is a union of
 	// [responses.ResponseFunctionToolCallOutputItemOutputUnion],
 	// [responses.ResponseComputerToolCallOutputScreenshot], [string],
@@ -171,8 +175,15 @@ type ConversationItemUnion struct {
 	Result string `json:"result"`
 	// This field is from variant [responses.ResponseComputerToolCall].
 	PendingSafetyChecks []responses.ResponseComputerToolCallPendingSafetyCheck `json:"pending_safety_checks"`
+	// This field is from variant [responses.ResponseComputerToolCall].
+	Actions responses.ComputerActionList `json:"actions"`
 	// This field is from variant [responses.ResponseComputerToolCallOutputItem].
 	AcknowledgedSafetyChecks []responses.ResponseComputerToolCallOutputItemAcknowledgedSafetyCheck `json:"acknowledged_safety_checks"`
+	Execution                string                                                                `json:"execution"`
+	CreatedBy                string                                                                `json:"created_by"`
+	// This field is a union of [[]responses.ToolUnion],
+	// [[]ConversationItemMcpListToolsTool]
+	Tools ConversationItemUnionTools `json:"tools"`
 	// This field is from variant [responses.ResponseReasoningItem].
 	Summary []responses.ResponseReasoningItemSummary `json:"summary"`
 	// This field is from variant [responses.ResponseReasoningItem].
@@ -185,16 +196,13 @@ type ConversationItemUnion struct {
 	Outputs []responses.ResponseCodeInterpreterToolCallOutputUnion `json:"outputs"`
 	// This field is from variant [responses.ResponseFunctionShellToolCall].
 	Environment responses.ResponseFunctionShellToolCallEnvironmentUnion `json:"environment"`
-	CreatedBy   string                                                  `json:"created_by"`
 	// This field is from variant [responses.ResponseFunctionShellToolCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [responses.ResponseApplyPatchToolCall].
-	Operation   responses.ResponseApplyPatchToolCallOperationUnion `json:"operation"`
-	ServerLabel string                                             `json:"server_label"`
-	// This field is from variant [ConversationItemMcpListTools].
-	Tools             []ConversationItemMcpListToolsTool `json:"tools"`
-	Error             string                             `json:"error"`
-	ApprovalRequestID string                             `json:"approval_request_id"`
+	Operation         responses.ResponseApplyPatchToolCallOperationUnion `json:"operation"`
+	ServerLabel       string                                             `json:"server_label"`
+	Error             string                                             `json:"error"`
+	ApprovalRequestID string                                             `json:"approval_request_id"`
 	// This field is from variant [ConversationItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ConversationItemMcpApprovalResponse].
@@ -210,24 +218,27 @@ type ConversationItemUnion struct {
 		Arguments                respjson.Field
 		CallID                   respjson.Field
 		Name                     respjson.Field
+		Namespace                respjson.Field
 		Output                   respjson.Field
 		Queries                  respjson.Field
 		Results                  respjson.Field
 		Action                   respjson.Field
 		Result                   respjson.Field
 		PendingSafetyChecks      respjson.Field
+		Actions                  respjson.Field
 		AcknowledgedSafetyChecks respjson.Field
+		Execution                respjson.Field
+		CreatedBy                respjson.Field
+		Tools                    respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Code                     respjson.Field
 		ContainerID              respjson.Field
 		Outputs                  respjson.Field
 		Environment              respjson.Field
-		CreatedBy                respjson.Field
 		MaxOutputLength          respjson.Field
 		Operation                respjson.Field
 		ServerLabel              respjson.Field
-		Tools                    respjson.Field
 		Error                    respjson.Field
 		ApprovalRequestID        respjson.Field
 		Approve                  respjson.Field
@@ -263,6 +274,8 @@ func (ConversationItemMcpCall) ImplConversationItemUnion()              {}
 //	case conversations.ConversationItemImageGenerationCall:
 //	case responses.ResponseComputerToolCall:
 //	case responses.ResponseComputerToolCallOutputItem:
+//	case responses.ResponseToolSearchCall:
+//	case responses.ResponseToolSearchOutputItem:
 //	case responses.ResponseReasoningItem:
 //	case responses.ResponseCodeInterpreterToolCall:
 //	case conversations.ConversationItemLocalShellCall:
@@ -298,6 +311,10 @@ func (u ConversationItemUnion) AsAny() anyConversationItem {
 		return u.AsComputerCall()
 	case "computer_call_output":
 		return u.AsComputerCallOutput()
+	case "tool_search_call":
+		return u.AsToolSearchCall()
+	case "tool_search_output":
+		return u.AsToolSearchOutput()
 	case "reasoning":
 		return u.AsReasoning()
 	case "code_interpreter_call":
@@ -366,6 +383,16 @@ func (u ConversationItemUnion) AsComputerCall() (v responses.ResponseComputerToo
 }
 
 func (u ConversationItemUnion) AsComputerCallOutput() (v responses.ResponseComputerToolCallOutputItem) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConversationItemUnion) AsToolSearchCall() (v responses.ResponseToolSearchCall) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConversationItemUnion) AsToolSearchOutput() (v responses.ResponseToolSearchOutputItem) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -471,6 +498,31 @@ type ConversationItemUnionContent struct {
 }
 
 func (r *ConversationItemUnionContent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ConversationItemUnionArguments is an implicit subunion of
+// [ConversationItemUnion]. ConversationItemUnionArguments provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ConversationItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString OfResponseToolSearchCallArguments]
+type ConversationItemUnionArguments struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	// This field will be present if the value is a [any] instead of an object.
+	OfResponseToolSearchCallArguments any `json:",inline"`
+	JSON                              struct {
+		OfString                          respjson.Field
+		OfResponseToolSearchCallArguments respjson.Field
+		raw                               string
+	} `json:"-"`
+}
+
+func (r *ConversationItemUnionArguments) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -586,6 +638,33 @@ type ConversationItemUnionAction struct {
 }
 
 func (r *ConversationItemUnionAction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ConversationItemUnionTools is an implicit subunion of [ConversationItemUnion].
+// ConversationItemUnionTools provides convenient access to the sub-properties of
+// the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ConversationItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfToolArray OfConversationItemMcpListToolsTools]
+type ConversationItemUnionTools struct {
+	// This field will be present if the value is a [[]responses.ToolUnion] instead of
+	// an object.
+	OfToolArray []responses.ToolUnion `json:",inline"`
+	// This field will be present if the value is a
+	// [[]ConversationItemMcpListToolsTool] instead of an object.
+	OfConversationItemMcpListToolsTools []ConversationItemMcpListToolsTool `json:",inline"`
+	JSON                                struct {
+		OfToolArray                         respjson.Field
+		OfConversationItemMcpListToolsTools respjson.Field
+		raw                                 string
+	} `json:"-"`
+}
+
+func (r *ConversationItemUnionTools) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

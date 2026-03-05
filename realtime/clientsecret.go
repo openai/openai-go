@@ -632,6 +632,8 @@ type RealtimeSessionCreateResponseToolUnion struct {
 	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
 	ConnectorID string `json:"connector_id"`
 	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
+	DeferLoading bool `json:"defer_loading"`
+	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
 	Headers map[string]string `json:"headers"`
 	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
 	RequireApproval RealtimeSessionCreateResponseToolMcpToolRequireApprovalUnion `json:"require_approval"`
@@ -648,6 +650,7 @@ type RealtimeSessionCreateResponseToolUnion struct {
 		AllowedTools      respjson.Field
 		Authorization     respjson.Field
 		ConnectorID       respjson.Field
+		DeferLoading      respjson.Field
 		Headers           respjson.Field
 		RequireApproval   respjson.Field
 		ServerDescription respjson.Field
@@ -707,6 +710,8 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 	// "connector_googledrive", "connector_microsoftteams",
 	// "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint".
 	ConnectorID string `json:"connector_id"`
+	// Whether this MCP tool is deferred and discovered via tool search.
+	DeferLoading bool `json:"defer_loading"`
 	// Optional HTTP headers to send to the MCP server. Use for authentication or other
 	// purposes.
 	Headers map[string]string `json:"headers" api:"nullable"`
@@ -724,6 +729,7 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 		AllowedTools      respjson.Field
 		Authorization     respjson.Field
 		ConnectorID       respjson.Field
+		DeferLoading      respjson.Field
 		Headers           respjson.Field
 		RequireApproval   respjson.Field
 		ServerDescription respjson.Field

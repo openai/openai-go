@@ -21,6 +21,8 @@ type ResponsesModel = string
 // aliased to make [param.APIObject] private when embedding
 
 const (
+	ChatModelGPT5_4                           ChatModel = "gpt-5.4"
+	ChatModelGPT5_3ChatLatest                 ChatModel = "gpt-5.3-chat-latest"
 	ChatModelGPT5_2                           ChatModel = "gpt-5.2"
 	ChatModelGPT5_2_2025_12_11                ChatModel = "gpt-5.2-2025-12-11"
 	ChatModelGPT5_2ChatLatest                 ChatModel = "gpt-5.2-chat-latest"

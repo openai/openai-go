@@ -19,6 +19,12 @@ type Error = apierror.Error
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
 
+// Equals "gpt-5.4"
+const ChatModelGPT5_4 = shared.ChatModelGPT5_4
+
+// Equals "gpt-5.3-chat-latest"
+const ChatModelGPT5_3ChatLatest = shared.ChatModelGPT5_3ChatLatest
+
 // Equals "gpt-5.2"
 const ChatModelGPT5_2 = shared.ChatModelGPT5_2
 
