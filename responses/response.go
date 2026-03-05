@@ -1112,24 +1112,13 @@ type ComputerActionListParam []ComputerActionUnionParam
 // A tool that controls a virtual computer. Learn more about the
 // [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
 type ComputerTool struct {
-	// The height of the computer display.
-	DisplayHeight int64 `json:"display_height" api:"required"`
-	// The width of the computer display.
-	DisplayWidth int64 `json:"display_width" api:"required"`
-	// The type of computer environment to control.
-	//
-	// Any of "windows", "mac", "linux", "ubuntu", "browser".
-	Environment ComputerToolEnvironment `json:"environment" api:"required"`
-	// The type of the computer use tool. Always `computer_use_preview`.
-	Type constant.ComputerUsePreview `json:"type" api:"required"`
+	// The type of the computer tool. Always `computer`.
+	Type constant.Computer `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		DisplayHeight respjson.Field
-		DisplayWidth  respjson.Field
-		Environment   respjson.Field
-		Type          respjson.Field
-		ExtraFields   map[string]respjson.Field
-		raw           string
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
 	} `json:"-"`
 }
 
@@ -1148,35 +1137,19 @@ func (r ComputerTool) ToParam() ComputerToolParam {
 	return param.Override[ComputerToolParam](json.RawMessage(r.RawJSON()))
 }
 
-// The type of computer environment to control.
-type ComputerToolEnvironment string
-
-const (
-	ComputerToolEnvironmentWindows ComputerToolEnvironment = "windows"
-	ComputerToolEnvironmentMac     ComputerToolEnvironment = "mac"
-	ComputerToolEnvironmentLinux   ComputerToolEnvironment = "linux"
-	ComputerToolEnvironmentUbuntu  ComputerToolEnvironment = "ubuntu"
-	ComputerToolEnvironmentBrowser ComputerToolEnvironment = "browser"
-)
+func NewComputerToolParam() ComputerToolParam {
+	return ComputerToolParam{
+		Type: "computer",
+	}
+}
 
 // A tool that controls a virtual computer. Learn more about the
 // [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
 //
-// The properties DisplayHeight, DisplayWidth, Environment, Type are required.
+// This struct has a constant value, construct it with [NewComputerToolParam].
 type ComputerToolParam struct {
-	// The height of the computer display.
-	DisplayHeight int64 `json:"display_height" api:"required"`
-	// The width of the computer display.
-	DisplayWidth int64 `json:"display_width" api:"required"`
-	// The type of computer environment to control.
-	//
-	// Any of "windows", "mac", "linux", "ubuntu", "browser".
-	Environment ComputerToolEnvironment `json:"environment,omitzero" api:"required"`
-	// The type of the computer use tool. Always `computer_use_preview`.
-	//
-	// This field can be elided, and will marshal its zero value as
-	// "computer_use_preview".
-	Type constant.ComputerUsePreview `json:"type" api:"required"`
+	// The type of the computer tool. Always `computer`.
+	Type constant.Computer `json:"type" api:"required"`
 	paramObj
 }
 
@@ -1190,53 +1163,80 @@ func (r *ComputerToolParam) UnmarshalJSON(data []byte) error {
 
 // A tool that controls a virtual computer. Learn more about the
 // [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
-type ComputerUseTool struct {
-	// The type of the computer tool. Always `computer`.
-	Type constant.Computer `json:"type" api:"required"`
+type ComputerUsePreviewTool struct {
+	// The height of the computer display.
+	DisplayHeight int64 `json:"display_height" api:"required"`
+	// The width of the computer display.
+	DisplayWidth int64 `json:"display_width" api:"required"`
+	// The type of computer environment to control.
+	//
+	// Any of "windows", "mac", "linux", "ubuntu", "browser".
+	Environment ComputerUsePreviewToolEnvironment `json:"environment" api:"required"`
+	// The type of the computer use tool. Always `computer_use_preview`.
+	Type constant.ComputerUsePreview `json:"type" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		DisplayHeight respjson.Field
+		DisplayWidth  respjson.Field
+		Environment   respjson.Field
+		Type          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
-func (r ComputerUseTool) RawJSON() string { return r.JSON.raw }
-func (r *ComputerUseTool) UnmarshalJSON(data []byte) error {
+func (r ComputerUsePreviewTool) RawJSON() string { return r.JSON.raw }
+func (r *ComputerUsePreviewTool) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// ToParam converts this ComputerUseTool to a ComputerUseToolParam.
+// ToParam converts this ComputerUsePreviewTool to a ComputerUsePreviewToolParam.
 //
 // Warning: the fields of the param type will not be present. ToParam should only
 // be used at the last possible moment before sending a request. Test for this with
-// ComputerUseToolParam.Overrides()
-func (r ComputerUseTool) ToParam() ComputerUseToolParam {
-	return param.Override[ComputerUseToolParam](json.RawMessage(r.RawJSON()))
+// ComputerUsePreviewToolParam.Overrides()
+func (r ComputerUsePreviewTool) ToParam() ComputerUsePreviewToolParam {
+	return param.Override[ComputerUsePreviewToolParam](json.RawMessage(r.RawJSON()))
 }
 
-func NewComputerUseToolParam() ComputerUseToolParam {
-	return ComputerUseToolParam{
-		Type: "computer",
-	}
-}
+// The type of computer environment to control.
+type ComputerUsePreviewToolEnvironment string
+
+const (
+	ComputerUsePreviewToolEnvironmentWindows ComputerUsePreviewToolEnvironment = "windows"
+	ComputerUsePreviewToolEnvironmentMac     ComputerUsePreviewToolEnvironment = "mac"
+	ComputerUsePreviewToolEnvironmentLinux   ComputerUsePreviewToolEnvironment = "linux"
+	ComputerUsePreviewToolEnvironmentUbuntu  ComputerUsePreviewToolEnvironment = "ubuntu"
+	ComputerUsePreviewToolEnvironmentBrowser ComputerUsePreviewToolEnvironment = "browser"
+)
 
 // A tool that controls a virtual computer. Learn more about the
 // [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
 //
-// This struct has a constant value, construct it with [NewComputerUseToolParam].
-type ComputerUseToolParam struct {
-	// The type of the computer tool. Always `computer`.
-	Type constant.Computer `json:"type" api:"required"`
+// The properties DisplayHeight, DisplayWidth, Environment, Type are required.
+type ComputerUsePreviewToolParam struct {
+	// The height of the computer display.
+	DisplayHeight int64 `json:"display_height" api:"required"`
+	// The width of the computer display.
+	DisplayWidth int64 `json:"display_width" api:"required"`
+	// The type of computer environment to control.
+	//
+	// Any of "windows", "mac", "linux", "ubuntu", "browser".
+	Environment ComputerUsePreviewToolEnvironment `json:"environment,omitzero" api:"required"`
+	// The type of the computer use tool. Always `computer_use_preview`.
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "computer_use_preview".
+	Type constant.ComputerUsePreview `json:"type" api:"required"`
 	paramObj
 }
 
-func (r ComputerUseToolParam) MarshalJSON() (data []byte, err error) {
-	type shadow ComputerUseToolParam
+func (r ComputerUsePreviewToolParam) MarshalJSON() (data []byte, err error) {
+	type shadow ComputerUsePreviewToolParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ComputerUseToolParam) UnmarshalJSON(data []byte) error {
+func (r *ComputerUsePreviewToolParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -18192,8 +18192,8 @@ func (r *SkillReferenceParam) UnmarshalJSON(data []byte) error {
 }
 
 // ToolUnion contains all possible properties and values from [FunctionTool],
-// [FileSearchTool], [ComputerUseTool], [ComputerTool], [WebSearchTool], [ToolMcp],
-// [ToolCodeInterpreter], [ToolImageGeneration], [ToolLocalShell],
+// [FileSearchTool], [ComputerTool], [ComputerUsePreviewTool], [WebSearchTool],
+// [ToolMcp], [ToolCodeInterpreter], [ToolImageGeneration], [ToolLocalShell],
 // [FunctionShellTool], [CustomTool], [NamespaceTool], [ToolSearchTool],
 // [WebSearchPreviewTool], [ApplyPatchTool].
 //
@@ -18219,11 +18219,11 @@ type ToolUnion struct {
 	MaxNumResults int64 `json:"max_num_results"`
 	// This field is from variant [FileSearchTool].
 	RankingOptions FileSearchToolRankingOptions `json:"ranking_options"`
-	// This field is from variant [ComputerTool].
+	// This field is from variant [ComputerUsePreviewTool].
 	DisplayHeight int64 `json:"display_height"`
-	// This field is from variant [ComputerTool].
+	// This field is from variant [ComputerUsePreviewTool].
 	DisplayWidth int64 `json:"display_width"`
-	// This field is a union of [ComputerToolEnvironment],
+	// This field is a union of [ComputerUsePreviewToolEnvironment],
 	// [FunctionShellToolEnvironmentUnion]
 	Environment       ToolUnionEnvironment `json:"environment"`
 	SearchContextSize string               `json:"search_context_size"`
@@ -18332,12 +18332,12 @@ func (u ToolUnion) AsFileSearch() (v FileSearchTool) {
 	return
 }
 
-func (u ToolUnion) AsComputer() (v ComputerUseTool) {
+func (u ToolUnion) AsComputer() (v ComputerTool) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u ToolUnion) AsComputerUsePreview() (v ComputerTool) {
+func (u ToolUnion) AsComputerUsePreview() (v ComputerUsePreviewTool) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -18439,12 +18439,12 @@ func (r *ToolUnionFilters) UnmarshalJSON(data []byte) error {
 // For type safety it is recommended to directly use a variant of the [ToolUnion].
 //
 // If the underlying value is not a json object, one of the following properties
-// will be valid: OfComputerToolEnvironment]
+// will be valid: OfComputerUsePreviewToolEnvironment]
 type ToolUnionEnvironment struct {
-	// This field will be present if the value is a [ComputerToolEnvironment] instead
-	// of an object.
-	OfComputerToolEnvironment ComputerToolEnvironment `json:",inline"`
-	Type                      string                  `json:"type"`
+	// This field will be present if the value is a [ComputerUsePreviewToolEnvironment]
+	// instead of an object.
+	OfComputerUsePreviewToolEnvironment ComputerUsePreviewToolEnvironment `json:",inline"`
+	Type                                string                            `json:"type"`
 	// This field is from variant [FunctionShellToolEnvironmentUnion].
 	FileIDs []string `json:"file_ids"`
 	// This field is from variant [FunctionShellToolEnvironmentUnion].
@@ -18456,14 +18456,14 @@ type ToolUnionEnvironment struct {
 	// This field is from variant [FunctionShellToolEnvironmentUnion].
 	ContainerID string `json:"container_id"`
 	JSON        struct {
-		OfComputerToolEnvironment respjson.Field
-		Type                      respjson.Field
-		FileIDs                   respjson.Field
-		MemoryLimit               respjson.Field
-		NetworkPolicy             respjson.Field
-		Skills                    respjson.Field
-		ContainerID               respjson.Field
-		raw                       string
+		OfComputerUsePreviewToolEnvironment respjson.Field
+		Type                                respjson.Field
+		FileIDs                             respjson.Field
+		MemoryLimit                         respjson.Field
+		NetworkPolicy                       respjson.Field
+		Skills                              respjson.Field
+		ContainerID                         respjson.Field
+		raw                                 string
 	} `json:"-"`
 }
 
@@ -19087,8 +19087,8 @@ func ToolParamOfFileSearch(vectorStoreIDs []string) ToolUnionParam {
 	return ToolUnionParam{OfFileSearch: &fileSearch}
 }
 
-func ToolParamOfComputerUsePreview(displayHeight int64, displayWidth int64, environment ComputerToolEnvironment) ToolUnionParam {
-	var computerUsePreview ComputerToolParam
+func ToolParamOfComputerUsePreview(displayHeight int64, displayWidth int64, environment ComputerUsePreviewToolEnvironment) ToolUnionParam {
+	var computerUsePreview ComputerUsePreviewToolParam
 	computerUsePreview.DisplayHeight = displayHeight
 	computerUsePreview.DisplayWidth = displayWidth
 	computerUsePreview.Environment = environment
@@ -19144,21 +19144,21 @@ func ToolParamOfWebSearchPreview(type_ WebSearchPreviewToolType) ToolUnionParam 
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ToolUnionParam struct {
-	OfFunction           *FunctionToolParam         `json:",omitzero,inline"`
-	OfFileSearch         *FileSearchToolParam       `json:",omitzero,inline"`
-	OfComputer           *ComputerUseToolParam      `json:",omitzero,inline"`
-	OfComputerUsePreview *ComputerToolParam         `json:",omitzero,inline"`
-	OfWebSearch          *WebSearchToolParam        `json:",omitzero,inline"`
-	OfMcp                *ToolMcpParam              `json:",omitzero,inline"`
-	OfCodeInterpreter    *ToolCodeInterpreterParam  `json:",omitzero,inline"`
-	OfImageGeneration    *ToolImageGenerationParam  `json:",omitzero,inline"`
-	OfLocalShell         *ToolLocalShellParam       `json:",omitzero,inline"`
-	OfShell              *FunctionShellToolParam    `json:",omitzero,inline"`
-	OfCustom             *CustomToolParam           `json:",omitzero,inline"`
-	OfNamespace          *NamespaceToolParam        `json:",omitzero,inline"`
-	OfToolSearch         *ToolSearchToolParam       `json:",omitzero,inline"`
-	OfWebSearchPreview   *WebSearchPreviewToolParam `json:",omitzero,inline"`
-	OfApplyPatch         *ApplyPatchToolParam       `json:",omitzero,inline"`
+	OfFunction           *FunctionToolParam           `json:",omitzero,inline"`
+	OfFileSearch         *FileSearchToolParam         `json:",omitzero,inline"`
+	OfComputer           *ComputerToolParam           `json:",omitzero,inline"`
+	OfComputerUsePreview *ComputerUsePreviewToolParam `json:",omitzero,inline"`
+	OfWebSearch          *WebSearchToolParam          `json:",omitzero,inline"`
+	OfMcp                *ToolMcpParam                `json:",omitzero,inline"`
+	OfCodeInterpreter    *ToolCodeInterpreterParam    `json:",omitzero,inline"`
+	OfImageGeneration    *ToolImageGenerationParam    `json:",omitzero,inline"`
+	OfLocalShell         *ToolLocalShellParam         `json:",omitzero,inline"`
+	OfShell              *FunctionShellToolParam      `json:",omitzero,inline"`
+	OfCustom             *CustomToolParam             `json:",omitzero,inline"`
+	OfNamespace          *NamespaceToolParam          `json:",omitzero,inline"`
+	OfToolSearch         *ToolSearchToolParam         `json:",omitzero,inline"`
+	OfWebSearchPreview   *WebSearchPreviewToolParam   `json:",omitzero,inline"`
+	OfApplyPatch         *ApplyPatchToolParam         `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -19823,8 +19823,8 @@ func init() {
 		"type",
 		apijson.Discriminator[FunctionToolParam]("function"),
 		apijson.Discriminator[FileSearchToolParam]("file_search"),
-		apijson.Discriminator[ComputerUseToolParam]("computer"),
-		apijson.Discriminator[ComputerToolParam]("computer_use_preview"),
+		apijson.Discriminator[ComputerToolParam]("computer"),
+		apijson.Discriminator[ComputerUsePreviewToolParam]("computer_use_preview"),
 		apijson.Discriminator[WebSearchToolParam]("web_search"),
 		apijson.Discriminator[WebSearchToolParam]("web_search_2025_08_26"),
 		apijson.Discriminator[ToolMcpParam]("mcp"),
