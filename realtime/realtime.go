@@ -1100,6 +1100,14 @@ func (u RealtimeToolsConfigUnionParam) GetConnectorID() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeToolsConfigUnionParam) GetDeferLoading() *bool {
+	if vt := u.OfMcp; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u RealtimeToolsConfigUnionParam) GetHeaders() map[string]string {
 	if vt := u.OfMcp; vt != nil {
 		return vt.Headers
@@ -1161,6 +1169,8 @@ type RealtimeToolsConfigUnionMcpParam struct {
 	// custom MCP server URL or a service connector. Your application must handle the
 	// OAuth authorization flow and provide the token here.
 	Authorization param.Opt[string] `json:"authorization,omitzero"`
+	// Whether this MCP tool is deferred and discovered via tool search.
+	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
 	// Optional description of the MCP server, used to provide more context.
 	ServerDescription param.Opt[string] `json:"server_description,omitzero"`
 	// The URL for the MCP server. One of `server_url` or `connector_id` must be

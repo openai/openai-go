@@ -1922,8 +1922,9 @@ type BetaAssistantNewParamsToolResourcesFileSearchVectorStore struct {
 	// strategy.
 	ChunkingStrategy BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion `json:"chunking_strategy,omitzero"`
 	// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to
-	// add to the vector store. There can be a maximum of 10000 files in a vector
-	// store.
+	// add to the vector store. For vector stores created before Nov 2025, there can be
+	// a maximum of 10,000 files in a vector store. For vector stores created starting
+	// in Nov 2025, the limit is 100,000,000 files.
 	FileIDs []string `json:"file_ids,omitzero"`
 	paramObj
 }

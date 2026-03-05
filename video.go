@@ -159,9 +159,8 @@ type Video struct {
 	Prompt string `json:"prompt" api:"required"`
 	// Identifier of the source video if this video is a remix.
 	RemixedFromVideoID string `json:"remixed_from_video_id" api:"required"`
-	// Duration of the generated clip in seconds.
-	//
-	// Any of "4", "8", "12".
+	// Duration of the generated clip in seconds. For extensions, this is the stitched
+	// total duration.
 	Seconds VideoSeconds `json:"seconds" api:"required"`
 	// The resolution of the generated video.
 	//
@@ -282,7 +281,7 @@ func (r *VideoDeleteResponse) UnmarshalJSON(data []byte) error {
 type VideoNewParams struct {
 	// Text prompt that describes the video to generate.
 	Prompt string `json:"prompt" api:"required"`
-	// Optional image reference that guides generation.
+	// Optional multipart reference asset that guides generation.
 	InputReference io.Reader `json:"input_reference,omitzero" format:"binary"`
 	// The video generation model to use (allowed values: sora-2, sora-2-pro). Defaults
 	// to `sora-2`.
