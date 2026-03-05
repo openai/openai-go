@@ -54,6 +54,7 @@ type Closed string                                           // Always "closed"
 type CodeInterpreter string                                  // Always "code_interpreter"
 type CodeInterpreterCall string                              // Always "code_interpreter_call"
 type Compaction string                                       // Always "compaction"
+type Computer string                                         // Always "computer"
 type ComputerCallOutput string                               // Always "computer_call_output"
 type ComputerScreenshot string                               // Always "computer_screenshot"
 type ComputerUsePreview string                               // Always "computer_use_preview"
@@ -163,6 +164,7 @@ type MessageCreation string                                  // Always "message_
 type Model string                                            // Always "model"
 type Move string                                             // Always "move"
 type Multi string                                            // Always "multi"
+type Namespace string                                        // Always "namespace"
 type OpenPage string                                         // Always "open_page"
 type Other string                                            // Always "other"
 type OutputAudio string                                      // Always "output_audio"
@@ -303,6 +305,9 @@ type Tokens string                                           // Always "tokens"
 type Tool string                                             // Always "tool"
 type ToolCalls string                                        // Always "tool_calls"
 type ToolExecutionError string                               // Always "tool_execution_error"
+type ToolSearch string                                       // Always "tool_search"
+type ToolSearchCall string                                   // Always "tool_search_call"
+type ToolSearchOutput string                                 // Always "tool_search_output"
 type Transcribe string                                       // Always "transcribe"
 type TranscriptTextDelta string                              // Always "transcript.text.delta"
 type TranscriptTextDone string                               // Always "transcript.text.done"
@@ -368,6 +373,7 @@ func (c Closed) Default() Closed                                 { return "close
 func (c CodeInterpreter) Default() CodeInterpreter               { return "code_interpreter" }
 func (c CodeInterpreterCall) Default() CodeInterpreterCall       { return "code_interpreter_call" }
 func (c Compaction) Default() Compaction                         { return "compaction" }
+func (c Computer) Default() Computer                             { return "computer" }
 func (c ComputerCallOutput) Default() ComputerCallOutput         { return "computer_call_output" }
 func (c ComputerScreenshot) Default() ComputerScreenshot         { return "computer_screenshot" }
 func (c ComputerUsePreview) Default() ComputerUsePreview         { return "computer_use_preview" }
@@ -515,6 +521,7 @@ func (c MessageCreation) Default() MessageCreation               { return "messa
 func (c Model) Default() Model                                   { return "model" }
 func (c Move) Default() Move                                     { return "move" }
 func (c Multi) Default() Multi                                   { return "multi" }
+func (c Namespace) Default() Namespace                           { return "namespace" }
 func (c OpenPage) Default() OpenPage                             { return "open_page" }
 func (c Other) Default() Other                                   { return "other" }
 func (c OutputAudio) Default() OutputAudio                       { return "output_audio" }
@@ -755,6 +762,9 @@ func (c Tokens) Default() Tokens                               { return "tokens"
 func (c Tool) Default() Tool                                   { return "tool" }
 func (c ToolCalls) Default() ToolCalls                         { return "tool_calls" }
 func (c ToolExecutionError) Default() ToolExecutionError       { return "tool_execution_error" }
+func (c ToolSearch) Default() ToolSearch                       { return "tool_search" }
+func (c ToolSearchCall) Default() ToolSearchCall               { return "tool_search_call" }
+func (c ToolSearchOutput) Default() ToolSearchOutput           { return "tool_search_output" }
 func (c Transcribe) Default() Transcribe                       { return "transcribe" }
 func (c TranscriptTextDelta) Default() TranscriptTextDelta     { return "transcript.text.delta" }
 func (c TranscriptTextDone) Default() TranscriptTextDone       { return "transcript.text.done" }
@@ -826,6 +836,7 @@ func (c Closed) MarshalJSON() ([]byte, error)                  { return marshalS
 func (c CodeInterpreter) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c CodeInterpreterCall) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c Compaction) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c Computer) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c ComputerCallOutput) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c ComputerScreenshot) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c ComputerUsePreview) MarshalJSON() ([]byte, error)      { return marshalString(c) }
@@ -943,6 +954,7 @@ func (c MessageCreation) MarshalJSON() ([]byte, error)                       { r
 func (c Model) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c Move) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c Multi) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
+func (c Namespace) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c OpenPage) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c Other) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
 func (c OutputAudio) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
@@ -1087,6 +1099,9 @@ func (c Tokens) MarshalJSON() ([]byte, error)                             { retu
 func (c Tool) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c ToolCalls) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c ToolExecutionError) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c ToolSearch) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c ToolSearchCall) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c ToolSearchOutput) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
 func (c Transcribe) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c TranscriptTextDelta) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c TranscriptTextDone) MarshalJSON() ([]byte, error)                 { return marshalString(c) }

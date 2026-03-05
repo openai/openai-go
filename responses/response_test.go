@@ -87,8 +87,9 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 				Parameters: map[string]any{
 					"foo": "bar",
 				},
-				Strict:      openai.Bool(true),
-				Description: openai.String("description"),
+				Strict:       openai.Bool(true),
+				DeferLoading: openai.Bool(true),
+				Description:  openai.String("description"),
 			},
 		}},
 		TopLogprobs: openai.Int(0),
@@ -192,7 +193,7 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Responses.Compact(context.TODO(), responses.ResponseCompactParams{
-		Model: responses.ResponseCompactParamsModelGPT5_2,
+		Model: responses.ResponseCompactParamsModelGPT5_4,
 		Input: responses.ResponseCompactParamsInputUnion{
 			OfString: openai.String("string"),
 		},

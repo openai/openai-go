@@ -58,8 +58,9 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 				Parameters: map[string]any{
 					"foo": "bar",
 				},
-				Strict:      openai.Bool(true),
-				Description: openai.String("description"),
+				Strict:       openai.Bool(true),
+				DeferLoading: openai.Bool(true),
+				Description:  openai.String("description"),
 			},
 		}},
 		Truncation: responses.InputTokenCountParamsTruncationAuto,
