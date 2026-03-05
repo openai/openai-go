@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.26.0 (2026-03-05)
+
+Full Changelog: [v3.25.0...v3.26.0](https://github.com/openai/openai-go/compare/v3.25.0...v3.26.0)
+
+### Features
+
+* **api:** The GA ComputerTool now uses the CompuerTool class. The 'computer_use_preview' tool is moved to ComputerUsePreview ([347418b](https://github.com/openai/openai-go/commit/347418be8d4fa33881d9ac30f6c7132f2f545f2b))
+
 ## 3.25.0 (2026-03-05)
 
 Full Changelog: [v3.24.0...v3.25.0](https://github.com/openai/openai-go/compare/v3.24.0...v3.25.0)
