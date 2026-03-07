@@ -29,7 +29,7 @@ func TestSkillNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Skills.New(context.TODO(), openai.SkillNewParams{
 		Files: openai.SkillNewParamsFilesUnion{
-			OfFileArray: []io.Reader{io.Reader(bytes.NewBuffer([]byte("some file contents")))},
+			OfFileArray: []io.Reader{io.Reader(bytes.NewBuffer([]byte("Example data")))},
 		},
 	})
 	if err != nil {
