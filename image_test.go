@@ -28,7 +28,7 @@ func TestImageNewVariationWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Images.NewVariation(context.TODO(), openai.ImageNewVariationParams{
-		Image:          io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		Image:          io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		Model:          openai.ImageModelGPTImage1_5,
 		N:              openai.Int(1),
 		ResponseFormat: openai.ImageNewVariationParamsResponseFormatURL,
@@ -58,12 +58,12 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Images.Edit(context.TODO(), openai.ImageEditParams{
 		Image: openai.ImageEditParamsImageUnion{
-			OfFile: io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+			OfFile: io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		},
 		Prompt:            "A cute baby sea otter wearing a beret",
 		Background:        openai.ImageEditParamsBackgroundTransparent,
 		InputFidelity:     openai.ImageEditParamsInputFidelityHigh,
-		Mask:              io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		Mask:              io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		Model:             openai.ImageModelGPTImage1_5,
 		N:                 openai.Int(1),
 		OutputCompression: openai.Int(100),

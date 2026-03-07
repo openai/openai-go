@@ -31,7 +31,7 @@ func TestUploadPartNew(t *testing.T) {
 		context.TODO(),
 		"upload_abc123",
 		openai.UploadPartNewParams{
-			Data: io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+			Data: io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		},
 	)
 	if err != nil {

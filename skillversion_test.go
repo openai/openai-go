@@ -33,7 +33,7 @@ func TestSkillVersionNewWithOptionalParams(t *testing.T) {
 		openai.SkillVersionNewParams{
 			Default: openai.Bool(true),
 			Files: openai.SkillVersionNewParamsFilesUnion{
-				OfFileArray: []io.Reader{io.Reader(bytes.NewBuffer([]byte("some file contents")))},
+				OfFileArray: []io.Reader{io.Reader(bytes.NewBuffer([]byte("Example data")))},
 			},
 		},
 	)

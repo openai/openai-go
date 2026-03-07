@@ -27,14 +27,18 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Get GitHub OIDC Token
-        if: github.repository == 'stainless-sdks/openai-go'
+        if: |-
+          github.repository == 'stainless-sdks/openai-go' &&
+          !startsWith(github.ref, 'refs/heads/stl/')
         id: github-oidc
         uses: actions/github-script@v8
         with:
           script: core.setOutput('github_token', await core.getIDToken());
 
       - name: Upload tarball
-        if: github.repository == 'stainless-sdks/openai-go'
+        if: |-
+          github.repository == 'stainless-sdks/openai-go' &&
+          !startsWith(github.ref, 'refs/heads/stl/')
         env:
           URL: https://pkg.stainless.com/s
           AUTH: ${{ steps.github-oidc.outputs.github_token }}
