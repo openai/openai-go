@@ -393,7 +393,7 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 
 		for _, decoder := range anonymousDecoders {
 			// ignore errors
-			decoder.fn(node, value.FieldByIndex(decoder.idx), state)
+			_ = decoder.fn(node, value.FieldByIndex(decoder.idx), state)
 		}
 
 		for _, inlineDecoder := range inlineDecoders {
@@ -462,7 +462,7 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type) decoderFunc {
 
 			// Handle null [param.Opt]
 			if itemNode.Type == gjson.Null && dest.IsValid() && dest.Type().Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
-				dest.Addr().Interface().(json.Unmarshaler).UnmarshalJSON([]byte(itemNode.Raw))
+				_ = dest.Addr().Interface().(json.Unmarshaler).UnmarshalJSON([]byte(itemNode.Raw))
 				continue
 			}
 
@@ -684,8 +684,5 @@ func guardUnknown(state *decoderState, v reflect.Value) bool {
 
 	constantString, ok := v.Interface().(interface{ Default() string })
 	named := v.Type() != stringType
-	if guardStrict(state, ok && named && v.Equal(reflect.ValueOf(constantString.Default()))) {
-		return true
-	}
-	return false
+	return guardStrict(state, ok && named && v.Equal(reflect.ValueOf(constantString.Default())))
 }
