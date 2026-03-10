@@ -57,6 +57,8 @@ func parseApiStructTag(field reflect.StructField, tag *parsedStructTag) {
 			tag.extras = true
 		case "required":
 			tag.required = true
+		case "metadata":
+			tag.metadata = true
 		}
 	}
 }
