@@ -286,7 +286,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 				return nil, err
 			}
 		}
-		return
+		return json, err
 	}
 }
 

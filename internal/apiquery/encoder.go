@@ -103,7 +103,7 @@ func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
 		encoder := e.typeEncoder(t.Elem())
 		return func(key string, value reflect.Value) (pairs []Pair, err error) {
 			if !value.IsValid() || value.IsNil() {
-				return
+				return pairs, err
 			}
 			return encoder(key, value.Elem())
 		}
@@ -205,7 +205,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 			}
 			pairs = append(pairs, subpairs...)
 		}
-		return
+		return pairs, err
 	}
 }
 
@@ -256,7 +256,7 @@ func (e *encoder) newMapEncoder(t reflect.Type) encoderFunc {
 			}
 			pairs = append(pairs, subpairs...)
 		}
-		return
+		return pairs, err
 	}
 }
 
@@ -300,7 +300,7 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 				}
 				pairs = append(pairs, subpairs...)
 			}
-			return
+			return pairs, err
 		}
 	case ArrayQueryFormatIndices:
 		panic("The array indices format is not supported yet")
@@ -315,7 +315,7 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 				}
 				pairs = append(pairs, subpairs...)
 			}
-			return
+			return pairs, err
 		}
 	default:
 		panic(fmt.Sprintf("Unknown ArrayFormat value: %d", e.settings.ArrayFormat))

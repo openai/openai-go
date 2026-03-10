@@ -268,7 +268,7 @@ type MarshallingUnionStruct struct {
 func (r *MarshallingUnionStruct) UnmarshalJSON(data []byte) (err error) {
 	*r = MarshallingUnionStruct{}
 	err = UnmarshalRoot(data, &r.Union)
-	return
+	return err
 }
 
 func (r MarshallingUnionStruct) MarshalJSON() (data []byte, err error) {
