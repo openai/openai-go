@@ -43,7 +43,7 @@ func (r *InputTokenService) Count(ctx context.Context, body InputTokenCountParam
 	opts = slices.Concat(r.Options, opts)
 	path := "responses/input_tokens"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 type InputTokenCountResponse struct {

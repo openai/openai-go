@@ -46,7 +46,7 @@ func (r *ContainerService) New(ctx context.Context, body ContainerNewParams, opt
 	opts = slices.Concat(r.Options, opts)
 	path := "containers"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieve Container
@@ -54,11 +54,11 @@ func (r *ContainerService) Get(ctx context.Context, containerID string, opts ...
 	opts = slices.Concat(r.Options, opts)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("containers/%s", containerID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // List Containers
@@ -90,11 +90,11 @@ func (r *ContainerService) Delete(ctx context.Context, containerID string, opts 
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("containers/%s", containerID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
-	return
+	return err
 }
 
 type ContainerNewResponse struct {

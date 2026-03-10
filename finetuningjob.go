@@ -57,7 +57,7 @@ func (r *FineTuningJobService) New(ctx context.Context, body FineTuningJobNewPar
 	opts = slices.Concat(r.Options, opts)
 	path := "fine_tuning/jobs"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Get info about a fine-tuning job.
@@ -67,11 +67,11 @@ func (r *FineTuningJobService) Get(ctx context.Context, fineTuningJobID string, 
 	opts = slices.Concat(r.Options, opts)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("fine_tuning/jobs/%s", fineTuningJobID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // List your organization's fine-tuning jobs
@@ -102,11 +102,11 @@ func (r *FineTuningJobService) Cancel(ctx context.Context, fineTuningJobID strin
 	opts = slices.Concat(r.Options, opts)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("fine_tuning/jobs/%s/cancel", fineTuningJobID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Get status updates for a fine-tuning job.
@@ -116,7 +116,7 @@ func (r *FineTuningJobService) ListEvents(ctx context.Context, fineTuningJobID s
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("fine_tuning/jobs/%s/events", fineTuningJobID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -141,11 +141,11 @@ func (r *FineTuningJobService) Pause(ctx context.Context, fineTuningJobID string
 	opts = slices.Concat(r.Options, opts)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("fine_tuning/jobs/%s/pause", fineTuningJobID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Resume a fine-tune job.
@@ -153,11 +153,11 @@ func (r *FineTuningJobService) Resume(ctx context.Context, fineTuningJobID strin
 	opts = slices.Concat(r.Options, opts)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("fine_tuning/jobs/%s/resume", fineTuningJobID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // The `fine_tuning.job` object represents a fine-tuning job that has been created

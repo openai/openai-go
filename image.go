@@ -47,7 +47,7 @@ func (r *ImageService) NewVariation(ctx context.Context, body ImageNewVariationP
 	opts = slices.Concat(r.Options, opts)
 	path := "images/variations"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Creates an edited or extended image given one or more source images and a
@@ -57,7 +57,7 @@ func (r *ImageService) Edit(ctx context.Context, body ImageEditParams, opts ...o
 	opts = slices.Concat(r.Options, opts)
 	path := "images/edits"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Creates an edited or extended image given one or more source images and a
@@ -83,7 +83,7 @@ func (r *ImageService) Generate(ctx context.Context, body ImageGenerateParams, o
 	opts = slices.Concat(r.Options, opts)
 	path := "images/generations"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Creates an image given a prompt.

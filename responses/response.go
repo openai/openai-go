@@ -61,7 +61,7 @@ func (r *ResponseService) New(ctx context.Context, body ResponseNewParams, opts 
 	opts = slices.Concat(r.Options, opts)
 	path := "responses"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Creates a model response. Provide
@@ -92,11 +92,11 @@ func (r *ResponseService) Get(ctx context.Context, responseID string, query Resp
 	opts = slices.Concat(r.Options, opts)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a model response with the given ID.
@@ -109,7 +109,7 @@ func (r *ResponseService) GetStreaming(ctx context.Context, responseID string, q
 	opts = append(opts, option.WithJSONSet("stream", true))
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
-		return
+		return ssestream.NewStream[ResponseStreamEventUnion](nil, err)
 	}
 	path := fmt.Sprintf("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &raw, opts...)
@@ -122,11 +122,11 @@ func (r *ResponseService) Delete(ctx context.Context, responseID string, opts ..
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
-	return
+	return err
 }
 
 // Cancels a model response with the given ID. Only responses created with the
@@ -136,11 +136,11 @@ func (r *ResponseService) Cancel(ctx context.Context, responseID string, opts ..
 	opts = slices.Concat(r.Options, opts)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("responses/%s/cancel", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Compact a conversation. Returns a compacted response object.
@@ -153,7 +153,7 @@ func (r *ResponseService) Compact(ctx context.Context, body ResponseCompactParam
 	opts = slices.Concat(r.Options, opts)
 	path := "responses/compact"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Allows the assistant to create, delete, or update files using unified diffs.

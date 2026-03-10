@@ -53,11 +53,11 @@ func (r *ContainerFileService) New(ctx context.Context, containerID string, body
 	opts = slices.Concat(r.Options, opts)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("containers/%s/files", containerID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieve Container File
@@ -65,15 +65,15 @@ func (r *ContainerFileService) Get(ctx context.Context, containerID string, file
 	opts = slices.Concat(r.Options, opts)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return nil, err
 	}
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("containers/%s/files/%s", containerID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // List Container files
@@ -83,7 +83,7 @@ func (r *ContainerFileService) List(ctx context.Context, containerID string, que
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("containers/%s/files", containerID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -109,15 +109,15 @@ func (r *ContainerFileService) Delete(ctx context.Context, containerID string, f
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if containerID == "" {
 		err = errors.New("missing required container_id parameter")
-		return
+		return err
 	}
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("containers/%s/files/%s", containerID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
-	return
+	return err
 }
 
 type ContainerFileNewResponse struct {

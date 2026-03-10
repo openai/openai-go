@@ -45,11 +45,11 @@ func (r *VectorStoreFileBatchService) New(ctx context.Context, vectorStoreID str
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("vector_stores/%s/file_batches", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a vector store file batch.
@@ -58,15 +58,15 @@ func (r *VectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID str
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
 	if batchID == "" {
 		err = errors.New("missing required batch_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("vector_stores/%s/file_batches/%s", vectorStoreID, batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Cancel a vector store file batch. This attempts to cancel the processing of
@@ -76,15 +76,15 @@ func (r *VectorStoreFileBatchService) Cancel(ctx context.Context, vectorStoreID 
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
 	if batchID == "" {
 		err = errors.New("missing required batch_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("vector_stores/%s/file_batches/%s/cancel", vectorStoreID, batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns a list of vector store files in a batch.
@@ -94,11 +94,11 @@ func (r *VectorStoreFileBatchService) ListFiles(ctx context.Context, vectorStore
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
 	if batchID == "" {
 		err = errors.New("missing required batch_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("vector_stores/%s/file_batches/%s/files", vectorStoreID, batchID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)

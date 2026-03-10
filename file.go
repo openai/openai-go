@@ -70,7 +70,7 @@ func (r *FileService) New(ctx context.Context, body FileNewParams, opts ...optio
 	opts = slices.Concat(r.Options, opts)
 	path := "files"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns information about a specific file.
@@ -78,11 +78,11 @@ func (r *FileService) Get(ctx context.Context, fileID string, opts ...option.Req
 	opts = slices.Concat(r.Options, opts)
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("files/%s", fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns a list of files.
@@ -113,11 +113,11 @@ func (r *FileService) Delete(ctx context.Context, fileID string, opts ...option.
 	opts = slices.Concat(r.Options, opts)
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("files/%s", fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns the contents of the specified file.
@@ -126,11 +126,11 @@ func (r *FileService) Content(ctx context.Context, fileID string, opts ...option
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)
 	if fileID == "" {
 		err = errors.New("missing required file_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("files/%s/content", fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 type FileDeleted struct {

@@ -51,7 +51,7 @@ func (r *FineTuningCheckpointPermissionService) New(ctx context.Context, fineTun
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if fineTunedModelCheckpoint == "" {
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodPost, path, body, &res, opts...)
@@ -85,11 +85,11 @@ func (r *FineTuningCheckpointPermissionService) Get(ctx context.Context, fineTun
 	opts = slices.Concat(r.Options, opts)
 	if fineTunedModelCheckpoint == "" {
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // **NOTE:** This endpoint requires an [admin API key](../admin-api-keys).
@@ -102,7 +102,7 @@ func (r *FineTuningCheckpointPermissionService) List(ctx context.Context, fineTu
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if fineTunedModelCheckpoint == "" {
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -133,15 +133,15 @@ func (r *FineTuningCheckpointPermissionService) Delete(ctx context.Context, fine
 	opts = slices.Concat(r.Options, opts)
 	if fineTunedModelCheckpoint == "" {
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
-		return
+		return nil, err
 	}
 	if permissionID == "" {
 		err = errors.New("missing required permission_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions/%s", fineTunedModelCheckpoint, permissionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // The `checkpoint.permission` object represents a permission for a fine-tuned

@@ -46,7 +46,7 @@ func (r *InputItemService) List(ctx context.Context, responseID string, query In
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("responses/%s/input_items", responseID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)

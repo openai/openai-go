@@ -46,7 +46,7 @@ func (r *CompletionService) New(ctx context.Context, body CompletionNewParams, o
 	opts = slices.Concat(r.Options, opts)
 	path := "completions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Creates a completion for the provided prompt and parameters.

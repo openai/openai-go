@@ -40,7 +40,7 @@ func (r *BetaChatKitSessionService) New(ctx context.Context, body BetaChatKitSes
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1")}, opts...)
 	path := "chatkit/sessions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Cancel an active ChatKit session and return its most recent metadata.
@@ -51,11 +51,11 @@ func (r *BetaChatKitSessionService) Cancel(ctx context.Context, sessionID string
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1")}, opts...)
 	if sessionID == "" {
 		err = errors.New("missing required session_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("chatkit/sessions/%s/cancel", sessionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 type BetaChatKitSessionNewParams struct {
