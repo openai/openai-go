@@ -48,7 +48,7 @@ func (r *VideoService) New(ctx context.Context, body VideoNewParams, opts ...opt
 	opts = slices.Concat(r.Options, opts)
 	path := "videos"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Create Video and Poll for Completion
@@ -68,11 +68,11 @@ func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.R
 	opts = slices.Concat(r.Options, opts)
 	if videoID == "" {
 		err = errors.New("missing required video_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("videos/%s", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // List recently generated videos for the current project.
@@ -103,11 +103,11 @@ func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...optio
 	opts = slices.Concat(r.Options, opts)
 	if videoID == "" {
 		err = errors.New("missing required video_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("videos/%s", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Download the generated video bytes or a derived preview asset.
@@ -118,11 +118,11 @@ func (r *VideoService) DownloadContent(ctx context.Context, videoID string, quer
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)
 	if videoID == "" {
 		err = errors.New("missing required video_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("videos/%s/content", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Create a remix of a completed video using a refreshed prompt.
@@ -130,11 +130,11 @@ func (r *VideoService) Remix(ctx context.Context, videoID string, body VideoRemi
 	opts = slices.Concat(r.Options, opts)
 	if videoID == "" {
 		err = errors.New("missing required video_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("videos/%s/remix", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Structured information describing a generated video job.

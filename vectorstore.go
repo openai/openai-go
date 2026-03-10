@@ -51,7 +51,7 @@ func (r *VectorStoreService) New(ctx context.Context, body VectorStoreNewParams,
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	path := "vector_stores"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a vector store.
@@ -60,11 +60,11 @@ func (r *VectorStoreService) Get(ctx context.Context, vectorStoreID string, opts
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("vector_stores/%s", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Modifies a vector store.
@@ -73,11 +73,11 @@ func (r *VectorStoreService) Update(ctx context.Context, vectorStoreID string, b
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("vector_stores/%s", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns a list of vector stores.
@@ -109,11 +109,11 @@ func (r *VectorStoreService) Delete(ctx context.Context, vectorStoreID string, o
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("vector_stores/%s", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Search a vector store for relevant chunks based on a query and file attributes
@@ -124,7 +124,7 @@ func (r *VectorStoreService) Search(ctx context.Context, vectorStoreID string, b
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	if vectorStoreID == "" {
 		err = errors.New("missing required vector_store_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("vector_stores/%s/search", vectorStoreID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodPost, path, body, &res, opts...)

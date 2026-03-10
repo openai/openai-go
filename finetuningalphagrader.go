@@ -41,7 +41,7 @@ func (r *FineTuningAlphaGraderService) Run(ctx context.Context, body FineTuningA
 	opts = slices.Concat(r.Options, opts)
 	path := "fine_tuning/alpha/graders/run"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Validate a grader.
@@ -49,7 +49,7 @@ func (r *FineTuningAlphaGraderService) Validate(ctx context.Context, body FineTu
 	opts = slices.Concat(r.Options, opts)
 	path := "fine_tuning/alpha/graders/validate"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 type FineTuningAlphaGraderRunResponse struct {

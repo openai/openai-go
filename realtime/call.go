@@ -43,11 +43,11 @@ func (r *CallService) Accept(ctx context.Context, callID string, body CallAccept
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if callID == "" {
 		err = errors.New("missing required call_id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("realtime/calls/%s/accept", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
-	return
+	return err
 }
 
 // End an active Realtime API call, whether it was initiated over SIP or WebRTC.
@@ -56,11 +56,11 @@ func (r *CallService) Hangup(ctx context.Context, callID string, opts ...option.
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if callID == "" {
 		err = errors.New("missing required call_id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("realtime/calls/%s/hangup", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, nil, opts...)
-	return
+	return err
 }
 
 // Transfer an active SIP call to a new destination using the SIP REFER verb.
@@ -69,11 +69,11 @@ func (r *CallService) Refer(ctx context.Context, callID string, body CallReferPa
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if callID == "" {
 		err = errors.New("missing required call_id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("realtime/calls/%s/refer", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
-	return
+	return err
 }
 
 // Decline an incoming SIP call by returning a SIP status code to the caller.
@@ -82,11 +82,11 @@ func (r *CallService) Reject(ctx context.Context, callID string, body CallReject
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if callID == "" {
 		err = errors.New("missing required call_id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("realtime/calls/%s/reject", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
-	return
+	return err
 }
 
 type CallAcceptParams struct {

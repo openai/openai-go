@@ -46,11 +46,11 @@ func (r *BetaChatKitThreadService) Get(ctx context.Context, threadID string, opt
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("chatkit/threads/%s", threadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // List ChatKit threads with optional pagination and user filters.
@@ -82,11 +82,11 @@ func (r *BetaChatKitThreadService) Delete(ctx context.Context, threadID string, 
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("chatkit/threads/%s", threadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // List items that belong to a ChatKit thread.
@@ -96,7 +96,7 @@ func (r *BetaChatKitThreadService) ListItems(ctx context.Context, threadID strin
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1"), option.WithResponseInto(&raw)}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("chatkit/threads/%s/items", threadID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)

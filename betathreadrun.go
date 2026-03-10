@@ -58,11 +58,11 @@ func (r *BetaThreadRunService) New(ctx context.Context, threadID string, params 
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("threads/%s/runs", threadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Create a run.
@@ -78,7 +78,7 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 	opts = append(opts, option.WithJSONSet("stream", true))
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return ssestream.NewStream[AssistantStreamEventUnion](nil, err)
 	}
 	path := fmt.Sprintf("threads/%s/runs", threadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &raw, opts...)
@@ -93,15 +93,15 @@ func (r *BetaThreadRunService) Get(ctx context.Context, threadID string, runID s
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	if runID == "" {
 		err = errors.New("missing required run_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("threads/%s/runs/%s", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Modifies a run.
@@ -112,15 +112,15 @@ func (r *BetaThreadRunService) Update(ctx context.Context, threadID string, runI
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	if runID == "" {
 		err = errors.New("missing required run_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("threads/%s/runs/%s", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns a list of runs belonging to a thread.
@@ -132,7 +132,7 @@ func (r *BetaThreadRunService) List(ctx context.Context, threadID string, query 
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("threads/%s/runs", threadID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -162,15 +162,15 @@ func (r *BetaThreadRunService) Cancel(ctx context.Context, threadID string, runI
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	if runID == "" {
 		err = errors.New("missing required run_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("threads/%s/runs/%s/cancel", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // When a run has the `status: "requires_action"` and `required_action.type` is
@@ -184,15 +184,15 @@ func (r *BetaThreadRunService) SubmitToolOutputs(ctx context.Context, threadID s
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	if runID == "" {
 		err = errors.New("missing required run_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // When a run has the `status: "requires_action"` and `required_action.type` is
@@ -211,11 +211,11 @@ func (r *BetaThreadRunService) SubmitToolOutputsStreaming(ctx context.Context, t
 	opts = append(opts, option.WithJSONSet("stream", true))
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return ssestream.NewStream[AssistantStreamEventUnion](nil, err)
 	}
 	if runID == "" {
 		err = errors.New("missing required run_id parameter")
-		return
+		return ssestream.NewStream[AssistantStreamEventUnion](nil, err)
 	}
 	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
