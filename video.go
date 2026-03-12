@@ -3,13 +3,17 @@
 package openai
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"slices"
 
+	"github.com/openai/openai-go/v3/internal/apiform"
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
@@ -284,9 +288,8 @@ func (r *VideoDeleteResponse) UnmarshalJSON(data []byte) error {
 type VideoNewParams struct {
 	// Text prompt that describes the video to generate.
 	Prompt string `json:"prompt" api:"required"`
-	// Optional reference object that guides generation. Provide exactly one of
-	// `image_url` or `file_id`.
-	InputReference VideoNewParamsInputReference `json:"input_reference,omitzero"`
+	// Optional reference asset upload or reference object that guides generation.
+	InputReference VideoNewParamsInputReferenceUnion `json:"input_reference,omitzero" format:"binary"`
 	// The video generation model to use (allowed values: sora-2, sora-2-pro). Defaults
 	// to `sora-2`.
 	Model VideoModel `json:"model,omitzero"`
@@ -302,28 +305,61 @@ type VideoNewParams struct {
 	paramObj
 }
 
-func (r VideoNewParams) MarshalJSON() (data []byte, err error) {
-	type shadow VideoNewParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *VideoNewParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func (r VideoNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
+	buf := bytes.NewBuffer(nil)
+	writer := multipart.NewWriter(buf)
+	err = apiform.MarshalRoot(r, writer)
+	if err == nil {
+		err = apiform.WriteExtras(writer, r.ExtraFields())
+	}
+	if err != nil {
+		writer.Close()
+		return nil, "", err
+	}
+	err = writer.Close()
+	if err != nil {
+		return nil, "", err
+	}
+	return buf.Bytes(), writer.FormDataContentType(), nil
 }
 
-// Optional reference object that guides generation. Provide exactly one of
-// `image_url` or `file_id`.
-type VideoNewParamsInputReference struct {
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type VideoNewParamsInputReferenceUnion struct {
+	OfFile                                  io.Reader                                   `json:",omitzero,inline"`
+	OfVideoNewsInputReferenceImageRefParam2 *VideoNewParamsInputReferenceImageRefParam2 `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u VideoNewParamsInputReferenceUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfFile, u.OfVideoNewsInputReferenceImageRefParam2)
+}
+func (u *VideoNewParamsInputReferenceUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *VideoNewParamsInputReferenceUnion) asAny() any {
+	if !param.IsOmitted(u.OfFile) {
+		return &u.OfFile
+	} else if !param.IsOmitted(u.OfVideoNewsInputReferenceImageRefParam2) {
+		return u.OfVideoNewsInputReferenceImageRefParam2
+	}
+	return nil
+}
+
+type VideoNewParamsInputReferenceImageRefParam2 struct {
 	FileID param.Opt[string] `json:"file_id,omitzero"`
 	// A fully qualified URL or base64-encoded data URL.
 	ImageURL param.Opt[string] `json:"image_url,omitzero"`
 	paramObj
 }
 
-func (r VideoNewParamsInputReference) MarshalJSON() (data []byte, err error) {
-	type shadow VideoNewParamsInputReference
+func (r VideoNewParamsInputReferenceImageRefParam2) MarshalJSON() (data []byte, err error) {
+	type shadow VideoNewParamsInputReferenceImageRefParam2
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *VideoNewParamsInputReference) UnmarshalJSON(data []byte) error {
+func (r *VideoNewParamsInputReferenceImageRefParam2) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -387,32 +423,67 @@ type VideoEditParams struct {
 	// Text prompt that describes how to edit the source video.
 	Prompt string `json:"prompt" api:"required"`
 	// Reference to the completed video to edit.
-	Video VideoEditParamsVideo `json:"video,omitzero" api:"required"`
+	Video VideoEditParamsVideoUnion `json:"video,omitzero" api:"required" format:"binary"`
 	paramObj
 }
 
-func (r VideoEditParams) MarshalJSON() (data []byte, err error) {
-	type shadow VideoEditParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *VideoEditParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func (r VideoEditParams) MarshalMultipart() (data []byte, contentType string, err error) {
+	buf := bytes.NewBuffer(nil)
+	writer := multipart.NewWriter(buf)
+	err = apiform.MarshalRoot(r, writer)
+	if err == nil {
+		err = apiform.WriteExtras(writer, r.ExtraFields())
+	}
+	if err != nil {
+		writer.Close()
+		return nil, "", err
+	}
+	err = writer.Close()
+	if err != nil {
+		return nil, "", err
+	}
+	return buf.Bytes(), writer.FormDataContentType(), nil
 }
 
-// Reference to the completed video to edit.
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type VideoEditParamsVideoUnion struct {
+	OfFile                                    io.Reader                                     `json:",omitzero,inline"`
+	OfVideoEditsVideoVideoReferenceInputParam *VideoEditParamsVideoVideoReferenceInputParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u VideoEditParamsVideoUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfFile, u.OfVideoEditsVideoVideoReferenceInputParam)
+}
+func (u *VideoEditParamsVideoUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *VideoEditParamsVideoUnion) asAny() any {
+	if !param.IsOmitted(u.OfFile) {
+		return &u.OfFile
+	} else if !param.IsOmitted(u.OfVideoEditsVideoVideoReferenceInputParam) {
+		return u.OfVideoEditsVideoVideoReferenceInputParam
+	}
+	return nil
+}
+
+// Reference to the completed video.
 //
 // The property ID is required.
-type VideoEditParamsVideo struct {
+type VideoEditParamsVideoVideoReferenceInputParam struct {
 	// The identifier of the completed video.
 	ID string `json:"id" api:"required"`
 	paramObj
 }
 
-func (r VideoEditParamsVideo) MarshalJSON() (data []byte, err error) {
-	type shadow VideoEditParamsVideo
+func (r VideoEditParamsVideoVideoReferenceInputParam) MarshalJSON() (data []byte, err error) {
+	type shadow VideoEditParamsVideoVideoReferenceInputParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *VideoEditParamsVideo) UnmarshalJSON(data []byte) error {
+func (r *VideoEditParamsVideoVideoReferenceInputParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -424,33 +495,68 @@ type VideoExtendParams struct {
 	//
 	// Any of "4", "8", "12".
 	Seconds VideoSeconds `json:"seconds,omitzero" api:"required"`
-	// Reference to the completed video to extend.
-	Video VideoExtendParamsVideo `json:"video,omitzero" api:"required"`
+	// Reference to the completed video.
+	Video VideoExtendParamsVideoUnion `json:"video,omitzero" api:"required" format:"binary"`
 	paramObj
 }
 
-func (r VideoExtendParams) MarshalJSON() (data []byte, err error) {
-	type shadow VideoExtendParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *VideoExtendParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func (r VideoExtendParams) MarshalMultipart() (data []byte, contentType string, err error) {
+	buf := bytes.NewBuffer(nil)
+	writer := multipart.NewWriter(buf)
+	err = apiform.MarshalRoot(r, writer)
+	if err == nil {
+		err = apiform.WriteExtras(writer, r.ExtraFields())
+	}
+	if err != nil {
+		writer.Close()
+		return nil, "", err
+	}
+	err = writer.Close()
+	if err != nil {
+		return nil, "", err
+	}
+	return buf.Bytes(), writer.FormDataContentType(), nil
 }
 
-// Reference to the completed video to extend.
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type VideoExtendParamsVideoUnion struct {
+	OfVideoExtendsVideoVideoReferenceInputParam *VideoExtendParamsVideoVideoReferenceInputParam `json:",omitzero,inline"`
+	OfFile                                      io.Reader                                       `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u VideoExtendParamsVideoUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfVideoExtendsVideoVideoReferenceInputParam, u.OfFile)
+}
+func (u *VideoExtendParamsVideoUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *VideoExtendParamsVideoUnion) asAny() any {
+	if !param.IsOmitted(u.OfVideoExtendsVideoVideoReferenceInputParam) {
+		return u.OfVideoExtendsVideoVideoReferenceInputParam
+	} else if !param.IsOmitted(u.OfFile) {
+		return &u.OfFile
+	}
+	return nil
+}
+
+// Reference to the completed video.
 //
 // The property ID is required.
-type VideoExtendParamsVideo struct {
+type VideoExtendParamsVideoVideoReferenceInputParam struct {
 	// The identifier of the completed video.
 	ID string `json:"id" api:"required"`
 	paramObj
 }
 
-func (r VideoExtendParamsVideo) MarshalJSON() (data []byte, err error) {
-	type shadow VideoExtendParamsVideo
+func (r VideoExtendParamsVideoVideoReferenceInputParam) MarshalJSON() (data []byte, err error) {
+	type shadow VideoExtendParamsVideoVideoReferenceInputParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *VideoExtendParamsVideo) UnmarshalJSON(data []byte) error {
+func (r *VideoExtendParamsVideoVideoReferenceInputParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

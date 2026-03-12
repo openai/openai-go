@@ -31,9 +31,8 @@ func TestVideoNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Videos.New(context.TODO(), openai.VideoNewParams{
 		Prompt: "x",
-		InputReference: openai.VideoNewParamsInputReference{
-			FileID:   openai.String("file-123"),
-			ImageURL: openai.String("image_url"),
+		InputReference: openai.VideoNewParamsInputReferenceUnion{
+			OfFile: io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		},
 		Model:   openai.VideoModelSora2,
 		Seconds: openai.VideoSeconds4,
@@ -172,8 +171,8 @@ func TestVideoEdit(t *testing.T) {
 	)
 	_, err := client.Videos.Edit(context.TODO(), openai.VideoEditParams{
 		Prompt: "x",
-		Video: openai.VideoEditParamsVideo{
-			ID: "video_123",
+		Video: openai.VideoEditParamsVideoUnion{
+			OfFile: io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		},
 	})
 	if err != nil {
@@ -200,8 +199,10 @@ func TestVideoExtend(t *testing.T) {
 	_, err := client.Videos.Extend(context.TODO(), openai.VideoExtendParams{
 		Prompt:  "x",
 		Seconds: openai.VideoSeconds4,
-		Video: openai.VideoExtendParamsVideo{
-			ID: "video_123",
+		Video: openai.VideoExtendParamsVideoUnion{
+			OfVideoExtendsVideoVideoReferenceInputParam: &openai.VideoExtendParamsVideoVideoReferenceInputParam{
+				ID: "video_123",
+			},
 		},
 	})
 	if err != nil {
