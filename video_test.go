@@ -30,11 +30,14 @@ func TestVideoNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Videos.New(context.TODO(), openai.VideoNewParams{
-		Prompt:         "x",
-		InputReference: io.Reader(bytes.NewBuffer([]byte("Example data"))),
-		Model:          openai.VideoModelSora2,
-		Seconds:        openai.VideoSeconds4,
-		Size:           openai.VideoSize720x1280,
+		Prompt: "x",
+		InputReference: openai.VideoNewParamsInputReference{
+			FileID:   openai.String("file-123"),
+			ImageURL: openai.String("image_url"),
+		},
+		Model:   openai.VideoModelSora2,
+		Seconds: openai.VideoSeconds4,
+		Size:    openai.VideoSize720x1280,
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -152,6 +155,61 @@ func TestVideoDownloadContentWithOptionalParams(t *testing.T) {
 	}
 	if !bytes.Equal(b, []byte("abc")) {
 		t.Fatalf("return value not %s: %s", "abc", b)
+	}
+}
+
+func TestVideoEdit(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Videos.Edit(context.TODO(), openai.VideoEditParams{
+		Prompt: "x",
+		Video: openai.VideoEditParamsVideo{
+			ID: "video_123",
+		},
+	})
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestVideoExtend(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Videos.Extend(context.TODO(), openai.VideoExtendParams{
+		Prompt:  "x",
+		Seconds: openai.VideoSeconds4,
+		Video: openai.VideoExtendParamsVideo{
+			ID: "video_123",
+		},
+	})
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
 	}
 }
 

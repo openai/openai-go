@@ -3,17 +3,13 @@
 package openai
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"slices"
 
-	"github.com/openai/openai-go/v3/internal/apiform"
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
@@ -31,7 +27,8 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewVideoService] method instead.
 type VideoService struct {
-	Options []option.RequestOption
+	Options   []option.RequestOption
+	Character VideoCharacterService
 }
 
 // NewVideoService generates a new service that applies the given options to each
@@ -40,6 +37,7 @@ type VideoService struct {
 func NewVideoService(opts ...option.RequestOption) (r VideoService) {
 	r = VideoService{}
 	r.Options = opts
+	r.Character = NewVideoCharacterService(opts...)
 	return
 }
 
@@ -122,6 +120,23 @@ func (r *VideoService) DownloadContent(ctx context.Context, videoID string, quer
 	}
 	path := fmt.Sprintf("videos/%s/content", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	return res, err
+}
+
+// Create a new video generation job by editing a source video or existing
+// generated video.
+func (r *VideoService) Edit(ctx context.Context, body VideoEditParams, opts ...option.RequestOption) (res *Video, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := "videos/edits"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
+// Create an extension of a completed video.
+func (r *VideoService) Extend(ctx context.Context, body VideoExtendParams, opts ...option.RequestOption) (res *Video, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := "videos/extensions"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
 
@@ -281,8 +296,9 @@ func (r *VideoDeleteResponse) UnmarshalJSON(data []byte) error {
 type VideoNewParams struct {
 	// Text prompt that describes the video to generate.
 	Prompt string `json:"prompt" api:"required"`
-	// Optional multipart reference asset that guides generation.
-	InputReference io.Reader `json:"input_reference,omitzero" format:"binary"`
+	// Optional reference object that guides generation. Provide exactly one of
+	// `image_url` or `file_id`.
+	InputReference VideoNewParamsInputReference `json:"input_reference,omitzero"`
 	// The video generation model to use (allowed values: sora-2, sora-2-pro). Defaults
 	// to `sora-2`.
 	Model VideoModel `json:"model,omitzero"`
@@ -298,22 +314,29 @@ type VideoNewParams struct {
 	paramObj
 }
 
-func (r VideoNewParams) MarshalMultipart() (data []byte, contentType string, err error) {
-	buf := bytes.NewBuffer(nil)
-	writer := multipart.NewWriter(buf)
-	err = apiform.MarshalRoot(r, writer)
-	if err == nil {
-		err = apiform.WriteExtras(writer, r.ExtraFields())
-	}
-	if err != nil {
-		writer.Close()
-		return nil, "", err
-	}
-	err = writer.Close()
-	if err != nil {
-		return nil, "", err
-	}
-	return buf.Bytes(), writer.FormDataContentType(), nil
+func (r VideoNewParams) MarshalJSON() (data []byte, err error) {
+	type shadow VideoNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VideoNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Optional reference object that guides generation. Provide exactly one of
+// `image_url` or `file_id`.
+type VideoNewParamsInputReference struct {
+	FileID param.Opt[string] `json:"file_id,omitzero"`
+	// A fully qualified URL or base64-encoded data URL.
+	ImageURL param.Opt[string] `json:"image_url,omitzero"`
+	paramObj
+}
+
+func (r VideoNewParamsInputReference) MarshalJSON() (data []byte, err error) {
+	type shadow VideoNewParamsInputReference
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VideoNewParamsInputReference) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type VideoListParams struct {
@@ -371,6 +394,77 @@ const (
 	VideoDownloadContentParamsVariantThumbnail   VideoDownloadContentParamsVariant = "thumbnail"
 	VideoDownloadContentParamsVariantSpritesheet VideoDownloadContentParamsVariant = "spritesheet"
 )
+
+type VideoEditParams struct {
+	// Text prompt that describes how to edit the source video.
+	Prompt string `json:"prompt" api:"required"`
+	// Reference to the completed video to edit.
+	Video VideoEditParamsVideo `json:"video,omitzero" api:"required"`
+	paramObj
+}
+
+func (r VideoEditParams) MarshalJSON() (data []byte, err error) {
+	type shadow VideoEditParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VideoEditParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reference to the completed video to edit.
+//
+// The property ID is required.
+type VideoEditParamsVideo struct {
+	// The identifier of the completed video.
+	ID string `json:"id" api:"required"`
+	paramObj
+}
+
+func (r VideoEditParamsVideo) MarshalJSON() (data []byte, err error) {
+	type shadow VideoEditParamsVideo
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VideoEditParamsVideo) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type VideoExtendParams struct {
+	// Updated text prompt that directs the extension generation.
+	Prompt string `json:"prompt" api:"required"`
+	// Length of the newly generated extension segment in seconds (allowed values: 4,
+	// 8, 12, 16, 20).
+	//
+	// Any of "4", "8", "12".
+	Seconds VideoSeconds `json:"seconds,omitzero" api:"required"`
+	// Reference to the completed video to extend.
+	Video VideoExtendParamsVideo `json:"video,omitzero" api:"required"`
+	paramObj
+}
+
+func (r VideoExtendParams) MarshalJSON() (data []byte, err error) {
+	type shadow VideoExtendParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VideoExtendParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Reference to the completed video to extend.
+//
+// The property ID is required.
+type VideoExtendParamsVideo struct {
+	// The identifier of the completed video.
+	ID string `json:"id" api:"required"`
+	paramObj
+}
+
+func (r VideoExtendParamsVideo) MarshalJSON() (data []byte, err error) {
+	type shadow VideoExtendParamsVideo
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *VideoExtendParamsVideo) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type VideoRemixParams struct {
 	// Updated text prompt that directs the remix generation.
