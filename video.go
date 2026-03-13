@@ -31,8 +31,7 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewVideoService] method instead.
 type VideoService struct {
-	Options   []option.RequestOption
-	Character VideoCharacterService
+	Options []option.RequestOption
 }
 
 // NewVideoService generates a new service that applies the given options to each
@@ -41,7 +40,6 @@ type VideoService struct {
 func NewVideoService(opts ...option.RequestOption) (r VideoService) {
 	r = VideoService{}
 	r.Options = opts
-	r.Character = NewVideoCharacterService(opts...)
 	return
 }
 
@@ -100,6 +98,14 @@ func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...optio
 	return res, err
 }
 
+// Create a character from an uploaded video.
+func (r *VideoService) NewCharacter(ctx context.Context, body VideoNewCharacterParams, opts ...option.RequestOption) (res *VideoNewCharacterResponse, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := "videos/characters"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
 // Download the generated video bytes or a derived preview asset.
 //
 // Streams the rendered video content for the specified video job.
@@ -132,6 +138,18 @@ func (r *VideoService) Extend(ctx context.Context, body VideoExtendParams, opts 
 	return res, err
 }
 
+// Fetch a character.
+func (r *VideoService) GetCharacter(ctx context.Context, characterID string, opts ...option.RequestOption) (res *VideoGetCharacterResponse, err error) {
+	opts = slices.Concat(r.Options, opts)
+	if characterID == "" {
+		err = errors.New("missing required character_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("videos/characters/%s", characterID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
 // Create a remix of a completed video using a refreshed prompt.
 func (r *VideoService) Remix(ctx context.Context, videoID string, body VideoRemixParams, opts ...option.RequestOption) (res *Video, err error) {
 	opts = slices.Concat(r.Options, opts)
@@ -142,6 +160,21 @@ func (r *VideoService) Remix(ctx context.Context, videoID string, body VideoRemi
 	path := fmt.Sprintf("videos/%s/remix", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
+}
+
+type ImageInputReferenceParam struct {
+	FileID param.Opt[string] `json:"file_id,omitzero"`
+	// A fully qualified URL or base64-encoded data URL.
+	ImageURL param.Opt[string] `json:"image_url,omitzero"`
+	paramObj
+}
+
+func (r ImageInputReferenceParam) MarshalJSON() (data []byte, err error) {
+	type shadow ImageInputReferenceParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ImageInputReferenceParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Structured information describing a generated video job.
@@ -285,6 +318,52 @@ func (r *VideoDeleteResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type VideoNewCharacterResponse struct {
+	// Identifier for the character creation cameo.
+	ID string `json:"id" api:"required"`
+	// Unix timestamp (in seconds) when the character was created.
+	CreatedAt int64 `json:"created_at" api:"required"`
+	// Display name for the character.
+	Name string `json:"name" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r VideoNewCharacterResponse) RawJSON() string { return r.JSON.raw }
+func (r *VideoNewCharacterResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type VideoGetCharacterResponse struct {
+	// Identifier for the character creation cameo.
+	ID string `json:"id" api:"required"`
+	// Unix timestamp (in seconds) when the character was created.
+	CreatedAt int64 `json:"created_at" api:"required"`
+	// Display name for the character.
+	Name string `json:"name" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r VideoGetCharacterResponse) RawJSON() string { return r.JSON.raw }
+func (r *VideoGetCharacterResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type VideoNewParams struct {
 	// Text prompt that describes the video to generate.
 	Prompt string `json:"prompt" api:"required"`
@@ -327,13 +406,13 @@ func (r VideoNewParams) MarshalMultipart() (data []byte, contentType string, err
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type VideoNewParamsInputReferenceUnion struct {
-	OfFile                                  io.Reader                                   `json:",omitzero,inline"`
-	OfVideoNewsInputReferenceImageRefParam2 *VideoNewParamsInputReferenceImageRefParam2 `json:",omitzero,inline"`
+	OfFile                io.Reader                 `json:",omitzero,inline"`
+	OfImageInputReference *ImageInputReferenceParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u VideoNewParamsInputReferenceUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfFile, u.OfVideoNewsInputReferenceImageRefParam2)
+	return param.MarshalUnion(u, u.OfFile, u.OfImageInputReference)
 }
 func (u *VideoNewParamsInputReferenceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -342,25 +421,10 @@ func (u *VideoNewParamsInputReferenceUnion) UnmarshalJSON(data []byte) error {
 func (u *VideoNewParamsInputReferenceUnion) asAny() any {
 	if !param.IsOmitted(u.OfFile) {
 		return &u.OfFile
-	} else if !param.IsOmitted(u.OfVideoNewsInputReferenceImageRefParam2) {
-		return u.OfVideoNewsInputReferenceImageRefParam2
+	} else if !param.IsOmitted(u.OfImageInputReference) {
+		return u.OfImageInputReference
 	}
 	return nil
-}
-
-type VideoNewParamsInputReferenceImageRefParam2 struct {
-	FileID param.Opt[string] `json:"file_id,omitzero"`
-	// A fully qualified URL or base64-encoded data URL.
-	ImageURL param.Opt[string] `json:"image_url,omitzero"`
-	paramObj
-}
-
-func (r VideoNewParamsInputReferenceImageRefParam2) MarshalJSON() (data []byte, err error) {
-	type shadow VideoNewParamsInputReferenceImageRefParam2
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *VideoNewParamsInputReferenceImageRefParam2) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
 }
 
 type VideoListParams struct {
@@ -392,6 +456,32 @@ const (
 	VideoListParamsOrderAsc  VideoListParamsOrder = "asc"
 	VideoListParamsOrderDesc VideoListParamsOrder = "desc"
 )
+
+type VideoNewCharacterParams struct {
+	// Display name for this API character.
+	Name string `json:"name" api:"required"`
+	// Video file used to create a character.
+	Video io.Reader `json:"video,omitzero" api:"required" format:"binary"`
+	paramObj
+}
+
+func (r VideoNewCharacterParams) MarshalMultipart() (data []byte, contentType string, err error) {
+	buf := bytes.NewBuffer(nil)
+	writer := multipart.NewWriter(buf)
+	err = apiform.MarshalRoot(r, writer)
+	if err == nil {
+		err = apiform.WriteExtras(writer, r.ExtraFields())
+	}
+	if err != nil {
+		writer.Close()
+		return nil, "", err
+	}
+	err = writer.Close()
+	if err != nil {
+		return nil, "", err
+	}
+	return buf.Bytes(), writer.FormDataContentType(), nil
+}
 
 type VideoDownloadContentParams struct {
 	// Which downloadable asset to return. Defaults to the MP4 video.
@@ -495,7 +585,7 @@ type VideoExtendParams struct {
 	//
 	// Any of "4", "8", "12".
 	Seconds VideoSeconds `json:"seconds,omitzero" api:"required"`
-	// Reference to the completed video.
+	// Reference to the completed video to extend.
 	Video VideoExtendParamsVideoUnion `json:"video,omitzero" api:"required" format:"binary"`
 	paramObj
 }
@@ -522,23 +612,23 @@ func (r VideoExtendParams) MarshalMultipart() (data []byte, contentType string, 
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type VideoExtendParamsVideoUnion struct {
-	OfVideoExtendsVideoVideoReferenceInputParam *VideoExtendParamsVideoVideoReferenceInputParam `json:",omitzero,inline"`
 	OfFile                                      io.Reader                                       `json:",omitzero,inline"`
+	OfVideoExtendsVideoVideoReferenceInputParam *VideoExtendParamsVideoVideoReferenceInputParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u VideoExtendParamsVideoUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfVideoExtendsVideoVideoReferenceInputParam, u.OfFile)
+	return param.MarshalUnion(u, u.OfFile, u.OfVideoExtendsVideoVideoReferenceInputParam)
 }
 func (u *VideoExtendParamsVideoUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
 func (u *VideoExtendParamsVideoUnion) asAny() any {
-	if !param.IsOmitted(u.OfVideoExtendsVideoVideoReferenceInputParam) {
-		return u.OfVideoExtendsVideoVideoReferenceInputParam
-	} else if !param.IsOmitted(u.OfFile) {
+	if !param.IsOmitted(u.OfFile) {
 		return &u.OfFile
+	} else if !param.IsOmitted(u.OfVideoExtendsVideoVideoReferenceInputParam) {
+		return u.OfVideoExtendsVideoVideoReferenceInputParam
 	}
 	return nil
 }
