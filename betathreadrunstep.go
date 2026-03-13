@@ -53,19 +53,19 @@ func (r *BetaThreadRunStepService) Get(ctx context.Context, threadID string, run
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	if runID == "" {
 		err = errors.New("missing required run_id parameter")
-		return
+		return nil, err
 	}
 	if stepID == "" {
 		err = errors.New("missing required step_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("threads/%s/runs/%s/steps/%s", threadID, runID, stepID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns a list of run steps belonging to a run.
@@ -77,11 +77,11 @@ func (r *BetaThreadRunStepService) List(ctx context.Context, threadID string, ru
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "assistants=v2"), option.WithResponseInto(&raw)}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
-		return
+		return nil, err
 	}
 	if runID == "" {
 		err = errors.New("missing required run_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("threads/%s/runs/%s/steps", threadID, runID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)

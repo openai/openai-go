@@ -52,7 +52,7 @@ func (r *SkillService) New(ctx context.Context, body SkillNewParams, opts ...opt
 	opts = slices.Concat(r.Options, opts)
 	path := "skills"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Get a skill by its ID.
@@ -60,11 +60,11 @@ func (r *SkillService) Get(ctx context.Context, skillID string, opts ...option.R
 	opts = slices.Concat(r.Options, opts)
 	if skillID == "" {
 		err = errors.New("missing required skill_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("skills/%s", skillID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Update the default version pointer for a skill.
@@ -72,11 +72,11 @@ func (r *SkillService) Update(ctx context.Context, skillID string, body SkillUpd
 	opts = slices.Concat(r.Options, opts)
 	if skillID == "" {
 		err = errors.New("missing required skill_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("skills/%s", skillID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // List all skills for the current project.
@@ -107,11 +107,11 @@ func (r *SkillService) Delete(ctx context.Context, skillID string, opts ...optio
 	opts = slices.Concat(r.Options, opts)
 	if skillID == "" {
 		err = errors.New("missing required skill_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("skills/%s", skillID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 type DeletedSkill struct {

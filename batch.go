@@ -47,7 +47,7 @@ func (r *BatchService) New(ctx context.Context, body BatchNewParams, opts ...opt
 	opts = slices.Concat(r.Options, opts)
 	path := "batches"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a batch.
@@ -55,11 +55,11 @@ func (r *BatchService) Get(ctx context.Context, batchID string, opts ...option.R
 	opts = slices.Concat(r.Options, opts)
 	if batchID == "" {
 		err = errors.New("missing required batch_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("batches/%s", batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // List your organization's batches.
@@ -92,11 +92,11 @@ func (r *BatchService) Cancel(ctx context.Context, batchID string, opts ...optio
 	opts = slices.Concat(r.Options, opts)
 	if batchID == "" {
 		err = errors.New("missing required batch_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("batches/%s/cancel", batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 type Batch struct {

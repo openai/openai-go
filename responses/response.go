@@ -62,7 +62,7 @@ func (r *ResponseService) New(ctx context.Context, body ResponseNewParams, opts 
 	opts = slices.Concat(r.Options, opts)
 	path := "responses"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Creates a model response. Provide
@@ -93,11 +93,11 @@ func (r *ResponseService) Get(ctx context.Context, responseID string, query Resp
 	opts = slices.Concat(r.Options, opts)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Retrieves a model response with the given ID.
@@ -110,7 +110,7 @@ func (r *ResponseService) GetStreaming(ctx context.Context, responseID string, q
 	opts = append(opts, option.WithJSONSet("stream", true))
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
-		return
+		return ssestream.NewStream[ResponseStreamEventUnion](nil, err)
 	}
 	path := fmt.Sprintf("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &raw, opts...)
@@ -123,11 +123,11 @@ func (r *ResponseService) Delete(ctx context.Context, responseID string, opts ..
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
-	return
+	return err
 }
 
 // Cancels a model response with the given ID. Only responses created with the
@@ -137,11 +137,11 @@ func (r *ResponseService) Cancel(ctx context.Context, responseID string, opts ..
 	opts = slices.Concat(r.Options, opts)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("responses/%s/cancel", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Compact a conversation. Returns a compacted response object.
@@ -154,7 +154,7 @@ func (r *ResponseService) Compact(ctx context.Context, body ResponseCompactParam
 	opts = slices.Concat(r.Options, opts)
 	path := "responses/compact"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Allows the assistant to create, delete, or update files using unified diffs.
@@ -6160,9 +6160,10 @@ type ResponseCustomToolCallOutputOutputOutputContentListItemUnion struct {
 	// This field is from variant [ResponseInputText].
 	Text string `json:"text"`
 	// Any of "input_text", "input_image", "input_file".
-	Type   string `json:"type"`
-	Detail string `json:"detail"`
-	FileID string `json:"file_id"`
+	Type string `json:"type"`
+	// This field is from variant [ResponseInputImage].
+	Detail ResponseInputImageDetail `json:"detail"`
+	FileID string                   `json:"file_id"`
 	// This field is from variant [ResponseInputImage].
 	ImageURL string `json:"image_url"`
 	// This field is from variant [ResponseInputFile].
@@ -6330,6 +6331,14 @@ func (u ResponseCustomToolCallOutputOutputOutputContentListItemUnionParam) GetTe
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseCustomToolCallOutputOutputOutputContentListItemUnionParam) GetDetail() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Detail)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseCustomToolCallOutputOutputOutputContentListItemUnionParam) GetImageURL() *string {
 	if vt := u.OfInputImage; vt != nil && vt.ImageURL.Valid() {
 		return &vt.ImageURL.Value
@@ -6369,16 +6378,6 @@ func (u ResponseCustomToolCallOutputOutputOutputContentListItemUnionParam) GetTy
 		return (*string)(&vt.Type)
 	} else if vt := u.OfInputFile; vt != nil {
 		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponseCustomToolCallOutputOutputOutputContentListItemUnionParam) GetDetail() *string {
-	if vt := u.OfInputImage; vt != nil {
-		return (*string)(&vt.Detail)
-	} else if vt := u.OfInputFile; vt != nil {
-		return (*string)(&vt.Detail)
 	}
 	return nil
 }
@@ -7148,9 +7147,10 @@ type ResponseFunctionCallOutputItemUnion struct {
 	// This field is from variant [ResponseInputTextContent].
 	Text string `json:"text"`
 	// Any of "input_text", "input_image", "input_file".
-	Type   string `json:"type"`
-	Detail string `json:"detail"`
-	FileID string `json:"file_id"`
+	Type string `json:"type"`
+	// This field is from variant [ResponseInputImageContent].
+	Detail ResponseInputImageContentDetail `json:"detail"`
+	FileID string                          `json:"file_id"`
 	// This field is from variant [ResponseInputImageContent].
 	ImageURL string `json:"image_url"`
 	// This field is from variant [ResponseInputFileContent].
@@ -7279,6 +7279,14 @@ func (u ResponseFunctionCallOutputItemUnionParam) GetText() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseFunctionCallOutputItemUnionParam) GetDetail() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Detail)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseFunctionCallOutputItemUnionParam) GetImageURL() *string {
 	if vt := u.OfInputImage; vt != nil && vt.ImageURL.Valid() {
 		return &vt.ImageURL.Value
@@ -7318,16 +7326,6 @@ func (u ResponseFunctionCallOutputItemUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfInputFile; vt != nil {
 		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponseFunctionCallOutputItemUnionParam) GetDetail() *string {
-	if vt := u.OfInputImage; vt != nil {
-		return (*string)(&vt.Detail)
-	} else if vt := u.OfInputFile; vt != nil {
-		return (*string)(&vt.Detail)
 	}
 	return nil
 }
@@ -8149,9 +8147,10 @@ type ResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion struct {
 	// This field is from variant [ResponseInputText].
 	Text string `json:"text"`
 	// Any of "input_text", "input_image", "input_file".
-	Type   string `json:"type"`
-	Detail string `json:"detail"`
-	FileID string `json:"file_id"`
+	Type string `json:"type"`
+	// This field is from variant [ResponseInputImage].
+	Detail ResponseInputImageDetail `json:"detail"`
+	FileID string                   `json:"file_id"`
 	// This field is from variant [ResponseInputImage].
 	ImageURL string `json:"image_url"`
 	// This field is from variant [ResponseInputFile].
@@ -8989,9 +8988,10 @@ type ResponseInputContentUnion struct {
 	// This field is from variant [ResponseInputText].
 	Text string `json:"text"`
 	// Any of "input_text", "input_image", "input_file".
-	Type   string `json:"type"`
-	Detail string `json:"detail"`
-	FileID string `json:"file_id"`
+	Type string `json:"type"`
+	// This field is from variant [ResponseInputImage].
+	Detail ResponseInputImageDetail `json:"detail"`
+	FileID string                   `json:"file_id"`
 	// This field is from variant [ResponseInputImage].
 	ImageURL string `json:"image_url"`
 	// This field is from variant [ResponseInputFile].
@@ -9126,6 +9126,14 @@ func (u ResponseInputContentUnionParam) GetText() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputContentUnionParam) GetDetail() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Detail)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputContentUnionParam) GetImageURL() *string {
 	if vt := u.OfInputImage; vt != nil && vt.ImageURL.Valid() {
 		return &vt.ImageURL.Value
@@ -9170,16 +9178,6 @@ func (u ResponseInputContentUnionParam) GetType() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseInputContentUnionParam) GetDetail() *string {
-	if vt := u.OfInputImage; vt != nil {
-		return (*string)(&vt.Detail)
-	} else if vt := u.OfInputFile; vt != nil {
-		return (*string)(&vt.Detail)
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputContentUnionParam) GetFileID() *string {
 	if vt := u.OfInputImage; vt != nil && vt.FileID.Valid() {
 		return &vt.FileID.Value
@@ -9202,11 +9200,6 @@ func init() {
 type ResponseInputFile struct {
 	// The type of the input item. Always `input_file`.
 	Type constant.InputFile `json:"type" api:"required"`
-	// The detail level of the file to be sent to the model. One of `high` or `low`.
-	// Defaults to `high`.
-	//
-	// Any of "low", "high".
-	Detail ResponseInputFileDetail `json:"detail"`
 	// The content of the file to be sent to the model.
 	FileData string `json:"file_data"`
 	// The ID of the file to be sent to the model.
@@ -9218,7 +9211,6 @@ type ResponseInputFile struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
-		Detail      respjson.Field
 		FileData    respjson.Field
 		FileID      respjson.Field
 		FileURL     respjson.Field
@@ -9245,15 +9237,6 @@ func (r ResponseInputFile) ToParam() ResponseInputFileParam {
 	return param.Override[ResponseInputFileParam](json.RawMessage(r.RawJSON()))
 }
 
-// The detail level of the file to be sent to the model. One of `high` or `low`.
-// Defaults to `high`.
-type ResponseInputFileDetail string
-
-const (
-	ResponseInputFileDetailLow  ResponseInputFileDetail = "low"
-	ResponseInputFileDetailHigh ResponseInputFileDetail = "high"
-)
-
 // A file input to the model.
 //
 // The property Type is required.
@@ -9266,11 +9249,6 @@ type ResponseInputFileParam struct {
 	FileURL param.Opt[string] `json:"file_url,omitzero"`
 	// The name of the file to be sent to the model.
 	Filename param.Opt[string] `json:"filename,omitzero"`
-	// The detail level of the file to be sent to the model. One of `high` or `low`.
-	// Defaults to `high`.
-	//
-	// Any of "low", "high".
-	Detail ResponseInputFileDetail `json:"detail,omitzero"`
 	// The type of the input item. Always `input_file`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_file".
@@ -9290,11 +9268,6 @@ func (r *ResponseInputFileParam) UnmarshalJSON(data []byte) error {
 type ResponseInputFileContent struct {
 	// The type of the input item. Always `input_file`.
 	Type constant.InputFile `json:"type" api:"required"`
-	// The detail level of the file to be sent to the model. One of `high` or `low`.
-	// Defaults to `high`.
-	//
-	// Any of "high", "low".
-	Detail ResponseInputFileContentDetail `json:"detail"`
 	// The base64-encoded data of the file to be sent to the model.
 	FileData string `json:"file_data" api:"nullable"`
 	// The ID of the file to be sent to the model.
@@ -9306,7 +9279,6 @@ type ResponseInputFileContent struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
-		Detail      respjson.Field
 		FileData    respjson.Field
 		FileID      respjson.Field
 		FileURL     respjson.Field
@@ -9332,15 +9304,6 @@ func (r ResponseInputFileContent) ToParam() ResponseInputFileContentParam {
 	return param.Override[ResponseInputFileContentParam](json.RawMessage(r.RawJSON()))
 }
 
-// The detail level of the file to be sent to the model. One of `high` or `low`.
-// Defaults to `high`.
-type ResponseInputFileContentDetail string
-
-const (
-	ResponseInputFileContentDetailHigh ResponseInputFileContentDetail = "high"
-	ResponseInputFileContentDetailLow  ResponseInputFileContentDetail = "low"
-)
-
 // A file input to the model.
 //
 // The property Type is required.
@@ -9353,11 +9316,6 @@ type ResponseInputFileContentParam struct {
 	FileURL param.Opt[string] `json:"file_url,omitzero"`
 	// The name of the file to be sent to the model.
 	Filename param.Opt[string] `json:"filename,omitzero"`
-	// The detail level of the file to be sent to the model. One of `high` or `low`.
-	// Defaults to `high`.
-	//
-	// Any of "high", "low".
-	Detail ResponseInputFileContentDetail `json:"detail,omitzero"`
 	// The type of the input item. Always `input_file`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_file".
@@ -16097,10 +16055,11 @@ type ResponsePromptVariableUnion struct {
 	// This field will be present if the value is a [string] instead of an object.
 	OfString string `json:",inline"`
 	// This field is from variant [ResponseInputText].
-	Text   string `json:"text"`
-	Type   string `json:"type"`
-	Detail string `json:"detail"`
-	FileID string `json:"file_id"`
+	Text string `json:"text"`
+	Type string `json:"type"`
+	// This field is from variant [ResponseInputImage].
+	Detail ResponseInputImageDetail `json:"detail"`
+	FileID string                   `json:"file_id"`
 	// This field is from variant [ResponseInputImage].
 	ImageURL string `json:"image_url"`
 	// This field is from variant [ResponseInputFile].
@@ -16214,6 +16173,14 @@ func (u ResponsePromptVariableUnionParam) GetText() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u ResponsePromptVariableUnionParam) GetDetail() *string {
+	if vt := u.OfInputImage; vt != nil {
+		return (*string)(&vt.Detail)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u ResponsePromptVariableUnionParam) GetImageURL() *string {
 	if vt := u.OfInputImage; vt != nil && vt.ImageURL.Valid() {
 		return &vt.ImageURL.Value
@@ -16253,16 +16220,6 @@ func (u ResponsePromptVariableUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfInputFile; vt != nil {
 		return (*string)(&vt.Type)
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
-func (u ResponsePromptVariableUnionParam) GetDetail() *string {
-	if vt := u.OfInputImage; vt != nil {
-		return (*string)(&vt.Detail)
-	} else if vt := u.OfInputFile; vt != nil {
-		return (*string)(&vt.Detail)
 	}
 	return nil
 }

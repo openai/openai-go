@@ -31,7 +31,7 @@ func TestContainerFileNewWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"container_id",
 		openai.ContainerFileNewParams{
-			File:   io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+			File:   io.Reader(bytes.NewBuffer([]byte("Example data"))),
 			FileID: openai.String("file_id"),
 		},
 	)

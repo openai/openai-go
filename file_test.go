@@ -30,7 +30,7 @@ func TestFileNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Files.New(context.TODO(), openai.FileNewParams{
-		File:    io.Reader(bytes.NewBuffer([]byte("some file contents"))),
+		File:    io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		Purpose: openai.FilePurposeAssistants,
 		ExpiresAfter: openai.FileNewParamsExpiresAfter{
 			Seconds: 3600,

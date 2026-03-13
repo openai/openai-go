@@ -585,14 +585,17 @@ func TestEncode(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			buf := bytes.NewBuffer(nil)
 			writer := multipart.NewWriter(buf)
-			writer.SetBoundary("xxx")
+			err := writer.SetBoundary("xxx")
+			if err != nil {
+				t.Errorf("setting boundary for %v failed with error %v", test.val, err)
+			}
 
-			var arrayFmt string = "indices:dots"
+			arrayFmt := "indices:dots"
 			if tags := strings.Split(name, ","); len(tags) > 1 {
 				arrayFmt = tags[1]
 			}
 
-			err := MarshalWithSettings(test.val, writer, arrayFmt)
+			err = MarshalWithSettings(test.val, writer, arrayFmt)
 			if err != nil {
 				t.Errorf("serialization of %v failed with error %v", test.val, err)
 			}

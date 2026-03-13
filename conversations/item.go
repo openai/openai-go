@@ -48,11 +48,11 @@ func (r *ItemService) New(ctx context.Context, conversationID string, params Ite
 	opts = slices.Concat(r.Options, opts)
 	if conversationID == "" {
 		err = errors.New("missing required conversation_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("conversations/%s/items", conversationID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
-	return
+	return res, err
 }
 
 // Get a single item from a conversation with the given IDs.
@@ -60,15 +60,15 @@ func (r *ItemService) Get(ctx context.Context, conversationID string, itemID str
 	opts = slices.Concat(r.Options, opts)
 	if conversationID == "" {
 		err = errors.New("missing required conversation_id parameter")
-		return
+		return nil, err
 	}
 	if itemID == "" {
 		err = errors.New("missing required item_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("conversations/%s/items/%s", conversationID, itemID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // List all items for a conversation with the given ID.
@@ -78,7 +78,7 @@ func (r *ItemService) List(ctx context.Context, conversationID string, query Ite
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if conversationID == "" {
 		err = errors.New("missing required conversation_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("conversations/%s/items", conversationID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -103,15 +103,15 @@ func (r *ItemService) Delete(ctx context.Context, conversationID string, itemID 
 	opts = slices.Concat(r.Options, opts)
 	if conversationID == "" {
 		err = errors.New("missing required conversation_id parameter")
-		return
+		return nil, err
 	}
 	if itemID == "" {
 		err = errors.New("missing required item_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("conversations/%s/items/%s", conversationID, itemID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // ConversationItemUnion contains all possible properties and values from

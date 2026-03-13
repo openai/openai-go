@@ -286,28 +286,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 				return nil, err
 			}
 		}
-		return
-	}
-}
-
-func (e *encoder) newFieldTypeEncoder(t reflect.Type) encoderFunc {
-	f, _ := t.FieldByName("Value")
-	enc := e.typeEncoder(f.Type)
-
-	return func(value reflect.Value) (json []byte, err error) {
-		present := value.FieldByName("Present")
-		if !present.Bool() {
-			return nil, nil
-		}
-		null := value.FieldByName("Null")
-		if null.Bool() {
-			return []byte("null"), nil
-		}
-		raw := value.FieldByName("Raw")
-		if !raw.IsNil() {
-			return e.typeEncoder(raw.Type())(raw)
-		}
-		return enc(value.FieldByName("Value"))
+		return json, err
 	}
 }
 

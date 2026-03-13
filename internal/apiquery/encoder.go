@@ -103,7 +103,7 @@ func (e *encoder) newTypeEncoder(t reflect.Type) encoderFunc {
 		encoder := e.typeEncoder(t.Elem())
 		return func(key string, value reflect.Value) (pairs []Pair, err error) {
 			if !value.IsValid() || value.IsNil() {
-				return
+				return pairs, err
 			}
 			return encoder(key, value.Elem())
 		}
@@ -193,7 +193,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 
 	return func(key string, value reflect.Value) (pairs []Pair, err error) {
 		for _, ef := range encoderFields {
-			var subkey string = e.renderKeyPath(key, ef.tag.name)
+			subkey := e.renderKeyPath(key, ef.tag.name)
 			if ef.tag.inline {
 				subkey = key
 			}
@@ -205,7 +205,7 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 			}
 			pairs = append(pairs, subpairs...)
 		}
-		return
+		return pairs, err
 	}
 }
 
@@ -256,7 +256,7 @@ func (e *encoder) newMapEncoder(t reflect.Type) encoderFunc {
 			}
 			pairs = append(pairs, subpairs...)
 		}
-		return
+		return pairs, err
 	}
 }
 
@@ -300,7 +300,7 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 				}
 				pairs = append(pairs, subpairs...)
 			}
-			return
+			return pairs, err
 		}
 	case ArrayQueryFormatIndices:
 		panic("The array indices format is not supported yet")
@@ -315,7 +315,7 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 				}
 				pairs = append(pairs, subpairs...)
 			}
-			return
+			return pairs, err
 		}
 	default:
 		panic(fmt.Sprintf("Unknown ArrayFormat value: %d", e.settings.ArrayFormat))
@@ -369,27 +369,6 @@ func (e *encoder) newPrimitiveTypeEncoder(t reflect.Type) encoderFunc {
 		return func(key string, v reflect.Value) ([]Pair, error) {
 			return nil, nil
 		}
-	}
-}
-
-func (e *encoder) newFieldTypeEncoder(t reflect.Type) encoderFunc {
-	f, _ := t.FieldByName("Value")
-	enc := e.typeEncoder(f.Type)
-
-	return func(key string, value reflect.Value) ([]Pair, error) {
-		present := value.FieldByName("Present")
-		if !present.Bool() {
-			return nil, nil
-		}
-		null := value.FieldByName("Null")
-		if null.Bool() {
-			return nil, fmt.Errorf("apiquery: field cannot be null")
-		}
-		raw := value.FieldByName("Raw")
-		if !raw.IsNil() {
-			return e.typeEncoder(raw.Type())(key, raw)
-		}
-		return enc(key, value.FieldByName("Value"))
 	}
 }
 

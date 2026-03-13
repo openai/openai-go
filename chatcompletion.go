@@ -73,7 +73,7 @@ func (r *ChatCompletionService) New(ctx context.Context, body ChatCompletionNewP
 	opts = slices.Concat(r.Options, opts)
 	path := "chat/completions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // **Starting a new project?** We recommend trying
@@ -114,11 +114,11 @@ func (r *ChatCompletionService) Get(ctx context.Context, completionID string, op
 	opts = slices.Concat(r.Options, opts)
 	if completionID == "" {
 		err = errors.New("missing required completion_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("chat/completions/%s", completionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Modify a stored chat completion. Only Chat Completions that have been created
@@ -128,11 +128,11 @@ func (r *ChatCompletionService) Update(ctx context.Context, completionID string,
 	opts = slices.Concat(r.Options, opts)
 	if completionID == "" {
 		err = errors.New("missing required completion_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("chat/completions/%s", completionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // List stored Chat Completions. Only Chat Completions that have been stored with
@@ -166,11 +166,11 @@ func (r *ChatCompletionService) Delete(ctx context.Context, completionID string,
 	opts = slices.Concat(r.Options, opts)
 	if completionID == "" {
 		err = errors.New("missing required completion_id parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("chat/completions/%s", completionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Represents a chat completion response returned by model, based on the provided

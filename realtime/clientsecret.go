@@ -55,7 +55,7 @@ func (r *ClientSecretService) New(ctx context.Context, body ClientSecretNewParam
 	opts = slices.Concat(r.Options, opts)
 	path := "realtime/client_secrets"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Ephemeral key returned by the API.
