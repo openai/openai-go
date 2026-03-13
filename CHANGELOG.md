@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.27.0 (2026-03-13)
+
+Full Changelog: [v3.26.0...v3.27.0](https://github.com/openai/openai-go/compare/v3.26.0...v3.27.0)
+
+### Features
+
+* **api:** add video character/edit/extend, remove Azure/webhook/polling/accumulator ([20da043](https://github.com/openai/openai-go/commit/20da043643286aa444450f4bf4ab6f68c5401455))
+* **api:** add video edits/extensions/character, remove Azure/webhook/polling helpers ([fa9413f](https://github.com/openai/openai-go/commit/fa9413f9b7c00ec36b124c4b3714daf2b2cd978d))
+* **api:** api update ([c88c6c9](https://github.com/openai/openai-go/commit/c88c6c9732f7b7a8cd739b8006a56d564ab59183))
+* **api:** sora api improvements: character api, video extensions/edits, higher resolution exports. ([93f6779](https://github.com/openai/openai-go/commit/93f6779c0c2a1beb7f68b570c61aae8fda52fd1f))
+
+
+### Chores
+
+* **internal:** codegen related update ([d531232](https://github.com/openai/openai-go/commit/d5312325255bcac5934636d320653c338bb9622e))
+* **internal:** codegen related update ([1748c11](https://github.com/openai/openai-go/commit/1748c114b2d642b38fdacfef7823cbd4130c29c5))
+* **internal:** codegen related update ([531ece1](https://github.com/openai/openai-go/commit/531ece1703028189ba6081a168f3a979481dcf0c))
+* **internal:** codegen related update ([ce9f435](https://github.com/openai/openai-go/commit/ce9f4357c22b533fff0d3385058dbadc033928e8))
+
 ## 3.26.0 (2026-03-05)
 
 Full Changelog: [v3.25.0...v3.26.0](https://github.com/openai/openai-go/compare/v3.25.0...v3.26.0)
