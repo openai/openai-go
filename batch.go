@@ -351,13 +351,14 @@ type BatchNewParams struct {
 	CompletionWindow BatchNewParamsCompletionWindow `json:"completion_window,omitzero" api:"required"`
 	// The endpoint to be used for all requests in the batch. Currently
 	// `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, `/v1/completions`,
-	// `/v1/moderations`, `/v1/images/generations`, and `/v1/images/edits` are
-	// supported. Note that `/v1/embeddings` batches are also restricted to a maximum
-	// of 50,000 embedding inputs across all requests in the batch.
+	// `/v1/moderations`, `/v1/images/generations`, `/v1/images/edits`, and
+	// `/v1/videos` are supported. Note that `/v1/embeddings` batches are also
+	// restricted to a maximum of 50,000 embedding inputs across all requests in the
+	// batch.
 	//
 	// Any of "/v1/responses", "/v1/chat/completions", "/v1/embeddings",
 	// "/v1/completions", "/v1/moderations", "/v1/images/generations",
-	// "/v1/images/edits".
+	// "/v1/images/edits", "/v1/videos".
 	Endpoint BatchNewParamsEndpoint `json:"endpoint,omitzero" api:"required"`
 	// The ID of an uploaded file that contains requests for the new batch.
 	//
@@ -400,9 +401,10 @@ const (
 
 // The endpoint to be used for all requests in the batch. Currently
 // `/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, `/v1/completions`,
-// `/v1/moderations`, `/v1/images/generations`, and `/v1/images/edits` are
-// supported. Note that `/v1/embeddings` batches are also restricted to a maximum
-// of 50,000 embedding inputs across all requests in the batch.
+// `/v1/moderations`, `/v1/images/generations`, `/v1/images/edits`, and
+// `/v1/videos` are supported. Note that `/v1/embeddings` batches are also
+// restricted to a maximum of 50,000 embedding inputs across all requests in the
+// batch.
 type BatchNewParamsEndpoint string
 
 const (
@@ -413,6 +415,7 @@ const (
 	BatchNewParamsEndpointV1Moderations       BatchNewParamsEndpoint = "/v1/moderations"
 	BatchNewParamsEndpointV1ImagesGenerations BatchNewParamsEndpoint = "/v1/images/generations"
 	BatchNewParamsEndpointV1ImagesEdits       BatchNewParamsEndpoint = "/v1/images/edits"
+	BatchNewParamsEndpointV1Videos            BatchNewParamsEndpoint = "/v1/videos"
 )
 
 // The expiration policy for the output and/or error file that are generated for a
