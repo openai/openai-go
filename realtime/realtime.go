@@ -222,9 +222,11 @@ type RealtimeAudioConfigOutputParam struct {
 	Format RealtimeAudioFormatsUnionParam `json:"format,omitzero"`
 	// The voice the model uses to respond. Supported built-in voices are `alloy`,
 	// `ash`, `ballad`, `coral`, `echo`, `sage`, `shimmer`, `verse`, `marin`, and
-	// `cedar`. Voice cannot be changed during the session once the model has responded
-	// with audio at least once. We recommend `marin` and `cedar` for best quality.
-	Voice RealtimeAudioConfigOutputVoice `json:"voice,omitzero"`
+	// `cedar`. You may also provide a custom voice object with an `id`, for example
+	// `{ "id": "voice_1234" }`. Voice cannot be changed during the session once the
+	// model has responded with audio at least once. We recommend `marin` and `cedar`
+	// for best quality.
+	Voice RealtimeAudioConfigOutputVoiceUnionParam `json:"voice,omitzero"`
 	paramObj
 }
 
@@ -236,24 +238,67 @@ func (r *RealtimeAudioConfigOutputParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The voice the model uses to respond. Supported built-in voices are `alloy`,
-// `ash`, `ballad`, `coral`, `echo`, `sage`, `shimmer`, `verse`, `marin`, and
-// `cedar`. Voice cannot be changed during the session once the model has responded
-// with audio at least once. We recommend `marin` and `cedar` for best quality.
-type RealtimeAudioConfigOutputVoice string
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type RealtimeAudioConfigOutputVoiceUnionParam struct {
+	OfString param.Opt[string] `json:",omitzero,inline"`
+	// Check if union is this variant with
+	// !param.IsOmitted(union.OfRealtimeAudioConfigOutputVoiceString)
+	OfRealtimeAudioConfigOutputVoiceString param.Opt[string]                      `json:",omitzero,inline"`
+	OfRealtimeAudioConfigOutputVoiceID     *RealtimeAudioConfigOutputVoiceIDParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u RealtimeAudioConfigOutputVoiceUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfRealtimeAudioConfigOutputVoiceString, u.OfRealtimeAudioConfigOutputVoiceID)
+}
+func (u *RealtimeAudioConfigOutputVoiceUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *RealtimeAudioConfigOutputVoiceUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfRealtimeAudioConfigOutputVoiceString) {
+		return &u.OfRealtimeAudioConfigOutputVoiceString
+	} else if !param.IsOmitted(u.OfRealtimeAudioConfigOutputVoiceID) {
+		return u.OfRealtimeAudioConfigOutputVoiceID
+	}
+	return nil
+}
+
+type RealtimeAudioConfigOutputVoiceString string
 
 const (
-	RealtimeAudioConfigOutputVoiceAlloy   RealtimeAudioConfigOutputVoice = "alloy"
-	RealtimeAudioConfigOutputVoiceAsh     RealtimeAudioConfigOutputVoice = "ash"
-	RealtimeAudioConfigOutputVoiceBallad  RealtimeAudioConfigOutputVoice = "ballad"
-	RealtimeAudioConfigOutputVoiceCoral   RealtimeAudioConfigOutputVoice = "coral"
-	RealtimeAudioConfigOutputVoiceEcho    RealtimeAudioConfigOutputVoice = "echo"
-	RealtimeAudioConfigOutputVoiceSage    RealtimeAudioConfigOutputVoice = "sage"
-	RealtimeAudioConfigOutputVoiceShimmer RealtimeAudioConfigOutputVoice = "shimmer"
-	RealtimeAudioConfigOutputVoiceVerse   RealtimeAudioConfigOutputVoice = "verse"
-	RealtimeAudioConfigOutputVoiceMarin   RealtimeAudioConfigOutputVoice = "marin"
-	RealtimeAudioConfigOutputVoiceCedar   RealtimeAudioConfigOutputVoice = "cedar"
+	RealtimeAudioConfigOutputVoiceStringAlloy   RealtimeAudioConfigOutputVoiceString = "alloy"
+	RealtimeAudioConfigOutputVoiceStringAsh     RealtimeAudioConfigOutputVoiceString = "ash"
+	RealtimeAudioConfigOutputVoiceStringBallad  RealtimeAudioConfigOutputVoiceString = "ballad"
+	RealtimeAudioConfigOutputVoiceStringCoral   RealtimeAudioConfigOutputVoiceString = "coral"
+	RealtimeAudioConfigOutputVoiceStringEcho    RealtimeAudioConfigOutputVoiceString = "echo"
+	RealtimeAudioConfigOutputVoiceStringSage    RealtimeAudioConfigOutputVoiceString = "sage"
+	RealtimeAudioConfigOutputVoiceStringShimmer RealtimeAudioConfigOutputVoiceString = "shimmer"
+	RealtimeAudioConfigOutputVoiceStringVerse   RealtimeAudioConfigOutputVoiceString = "verse"
+	RealtimeAudioConfigOutputVoiceStringMarin   RealtimeAudioConfigOutputVoiceString = "marin"
+	RealtimeAudioConfigOutputVoiceStringCedar   RealtimeAudioConfigOutputVoiceString = "cedar"
 )
+
+// Custom voice reference.
+//
+// The property ID is required.
+type RealtimeAudioConfigOutputVoiceIDParam struct {
+	// The custom voice ID, e.g. `voice_1234`.
+	ID string `json:"id" api:"required"`
+	paramObj
+}
+
+func (r RealtimeAudioConfigOutputVoiceIDParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeAudioConfigOutputVoiceIDParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeAudioConfigOutputVoiceIDParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // RealtimeAudioFormatsUnion contains all possible properties and values from
 // [RealtimeAudioFormatsAudioPCM], [RealtimeAudioFormatsAudioPCMU],

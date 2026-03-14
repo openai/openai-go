@@ -62,10 +62,11 @@ type AudioSpeechNewParams struct {
 	Model SpeechModel `json:"model,omitzero" api:"required"`
 	// The voice to use when generating the audio. Supported built-in voices are
 	// `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`,
-	// `shimmer`, `verse`, `marin`, and `cedar`. Previews of the voices are available
-	// in the
+	// `shimmer`, `verse`, `marin`, and `cedar`. You may also provide a custom voice
+	// object with an `id`, for example `{ "id": "voice_1234" }`. Previews of the
+	// voices are available in the
 	// [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
-	Voice AudioSpeechNewParamsVoice `json:"voice,omitzero" api:"required"`
+	Voice AudioSpeechNewParamsVoiceUnion `json:"voice,omitzero" api:"required"`
 	// Control the voice of your generated audio with additional instructions. Does not
 	// work with `tts-1` or `tts-1-hd`.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
@@ -93,25 +94,67 @@ func (r *AudioSpeechNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The voice to use when generating the audio. Supported built-in voices are
-// `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`,
-// `shimmer`, `verse`, `marin`, and `cedar`. Previews of the voices are available
-// in the
-// [Text to speech guide](https://platform.openai.com/docs/guides/text-to-speech#voice-options).
-type AudioSpeechNewParamsVoice string
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type AudioSpeechNewParamsVoiceUnion struct {
+	OfString param.Opt[string] `json:",omitzero,inline"`
+	// Check if union is this variant with
+	// !param.IsOmitted(union.OfAudioSpeechNewsVoiceString)
+	OfAudioSpeechNewsVoiceString param.Opt[string]            `json:",omitzero,inline"`
+	OfAudioSpeechNewsVoiceID     *AudioSpeechNewParamsVoiceID `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u AudioSpeechNewParamsVoiceUnion) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfString, u.OfAudioSpeechNewsVoiceString, u.OfAudioSpeechNewsVoiceID)
+}
+func (u *AudioSpeechNewParamsVoiceUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *AudioSpeechNewParamsVoiceUnion) asAny() any {
+	if !param.IsOmitted(u.OfString) {
+		return &u.OfString.Value
+	} else if !param.IsOmitted(u.OfAudioSpeechNewsVoiceString) {
+		return &u.OfAudioSpeechNewsVoiceString
+	} else if !param.IsOmitted(u.OfAudioSpeechNewsVoiceID) {
+		return u.OfAudioSpeechNewsVoiceID
+	}
+	return nil
+}
+
+type AudioSpeechNewParamsVoiceString string
 
 const (
-	AudioSpeechNewParamsVoiceAlloy   AudioSpeechNewParamsVoice = "alloy"
-	AudioSpeechNewParamsVoiceAsh     AudioSpeechNewParamsVoice = "ash"
-	AudioSpeechNewParamsVoiceBallad  AudioSpeechNewParamsVoice = "ballad"
-	AudioSpeechNewParamsVoiceCoral   AudioSpeechNewParamsVoice = "coral"
-	AudioSpeechNewParamsVoiceEcho    AudioSpeechNewParamsVoice = "echo"
-	AudioSpeechNewParamsVoiceSage    AudioSpeechNewParamsVoice = "sage"
-	AudioSpeechNewParamsVoiceShimmer AudioSpeechNewParamsVoice = "shimmer"
-	AudioSpeechNewParamsVoiceVerse   AudioSpeechNewParamsVoice = "verse"
-	AudioSpeechNewParamsVoiceMarin   AudioSpeechNewParamsVoice = "marin"
-	AudioSpeechNewParamsVoiceCedar   AudioSpeechNewParamsVoice = "cedar"
+	AudioSpeechNewParamsVoiceStringAlloy   AudioSpeechNewParamsVoiceString = "alloy"
+	AudioSpeechNewParamsVoiceStringAsh     AudioSpeechNewParamsVoiceString = "ash"
+	AudioSpeechNewParamsVoiceStringBallad  AudioSpeechNewParamsVoiceString = "ballad"
+	AudioSpeechNewParamsVoiceStringCoral   AudioSpeechNewParamsVoiceString = "coral"
+	AudioSpeechNewParamsVoiceStringEcho    AudioSpeechNewParamsVoiceString = "echo"
+	AudioSpeechNewParamsVoiceStringSage    AudioSpeechNewParamsVoiceString = "sage"
+	AudioSpeechNewParamsVoiceStringShimmer AudioSpeechNewParamsVoiceString = "shimmer"
+	AudioSpeechNewParamsVoiceStringVerse   AudioSpeechNewParamsVoiceString = "verse"
+	AudioSpeechNewParamsVoiceStringMarin   AudioSpeechNewParamsVoiceString = "marin"
+	AudioSpeechNewParamsVoiceStringCedar   AudioSpeechNewParamsVoiceString = "cedar"
 )
+
+// Custom voice reference.
+//
+// The property ID is required.
+type AudioSpeechNewParamsVoiceID struct {
+	// The custom voice ID, e.g. `voice_1234`.
+	ID string `json:"id" api:"required"`
+	paramObj
+}
+
+func (r AudioSpeechNewParamsVoiceID) MarshalJSON() (data []byte, err error) {
+	type shadow AudioSpeechNewParamsVoiceID
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AudioSpeechNewParamsVoiceID) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // The format to audio in. Supported formats are `mp3`, `opus`, `aac`, `flac`,
 // `wav`, and `pcm`.

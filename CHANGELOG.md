@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.28.0 (2026-03-14)
+
+Full Changelog: [v3.27.0...v3.28.0](https://github.com/openai/openai-go/compare/v3.27.0...v3.28.0)
+
+### Features
+
+* **api:** add /v1/videos endpoint option to batch ([7b2d67e](https://github.com/openai/openai-go/commit/7b2d67e3d65737572d89536d16ed81a3ce39688f))
+* **api:** add defer_loading field to function tools ([6d4b683](https://github.com/openai/openai-go/commit/6d4b6833e5b0b29a9b1d0c99062a231290e8b93f))
+* **api:** custom voices ([d00b782](https://github.com/openai/openai-go/commit/d00b782c32db4c953b8e39edc5a77504693c70f3))
+
+### ⚠ BREAKING CHANGES
+
+* **api:** The `voice` param and resouce has changed from a `string` to a `string | {id: string}`. This is a breaking change for Go.
+
 ## 3.27.0 (2026-03-13)
 
 Full Changelog: [v3.26.0...v3.27.0](https://github.com/openai/openai-go/compare/v3.26.0...v3.27.0)
