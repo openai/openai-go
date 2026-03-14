@@ -2927,23 +2927,22 @@ func (r NamespaceTool) ToParam() NamespaceToolParam {
 type NamespaceToolToolUnion struct {
 	Name string `json:"name"`
 	// Any of "function", "custom".
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	Type         string `json:"type"`
+	DeferLoading bool   `json:"defer_loading"`
+	Description  string `json:"description"`
 	// This field is from variant [NamespaceToolToolFunction].
 	Parameters any `json:"parameters"`
 	// This field is from variant [NamespaceToolToolFunction].
 	Strict bool `json:"strict"`
 	// This field is from variant [CustomTool].
-	DeferLoading bool `json:"defer_loading"`
-	// This field is from variant [CustomTool].
 	Format shared.CustomToolInputFormatUnion `json:"format"`
 	JSON   struct {
 		Name         respjson.Field
 		Type         respjson.Field
+		DeferLoading respjson.Field
 		Description  respjson.Field
 		Parameters   respjson.Field
 		Strict       respjson.Field
-		DeferLoading respjson.Field
 		Format       respjson.Field
 		raw          string
 	} `json:"-"`
@@ -2994,20 +2993,23 @@ func (r *NamespaceToolToolUnion) UnmarshalJSON(data []byte) error {
 }
 
 type NamespaceToolToolFunction struct {
-	Name        string            `json:"name" api:"required"`
-	Type        constant.Function `json:"type" api:"required"`
-	Description string            `json:"description" api:"nullable"`
-	Parameters  any               `json:"parameters" api:"nullable"`
-	Strict      bool              `json:"strict" api:"nullable"`
+	Name string            `json:"name" api:"required"`
+	Type constant.Function `json:"type" api:"required"`
+	// Whether this function should be deferred and discovered via tool search.
+	DeferLoading bool   `json:"defer_loading"`
+	Description  string `json:"description" api:"nullable"`
+	Parameters   any    `json:"parameters" api:"nullable"`
+	Strict       bool   `json:"strict" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Name        respjson.Field
-		Type        respjson.Field
-		Description respjson.Field
-		Parameters  respjson.Field
-		Strict      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Name         respjson.Field
+		Type         respjson.Field
+		DeferLoading respjson.Field
+		Description  respjson.Field
+		Parameters   respjson.Field
+		Strict       respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -3084,14 +3086,6 @@ func (u NamespaceToolToolUnionParam) GetStrict() *bool {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u NamespaceToolToolUnionParam) GetDeferLoading() *bool {
-	if vt := u.OfCustom; vt != nil && vt.DeferLoading.Valid() {
-		return &vt.DeferLoading.Value
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u NamespaceToolToolUnionParam) GetFormat() *shared.CustomToolInputFormatUnionParam {
 	if vt := u.OfCustom; vt != nil {
 		return &vt.Format
@@ -3120,6 +3114,16 @@ func (u NamespaceToolToolUnionParam) GetType() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u NamespaceToolToolUnionParam) GetDeferLoading() *bool {
+	if vt := u.OfFunction; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	} else if vt := u.OfCustom; vt != nil && vt.DeferLoading.Valid() {
+		return &vt.DeferLoading.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u NamespaceToolToolUnionParam) GetDescription() *string {
 	if vt := u.OfFunction; vt != nil && vt.Description.Valid() {
 		return &vt.Description.Value
@@ -3142,7 +3146,9 @@ type NamespaceToolToolFunctionParam struct {
 	Name        string            `json:"name" api:"required"`
 	Description param.Opt[string] `json:"description,omitzero"`
 	Strict      param.Opt[bool]   `json:"strict,omitzero"`
-	Parameters  any               `json:"parameters,omitzero"`
+	// Whether this function should be deferred and discovered via tool search.
+	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
+	Parameters   any             `json:"parameters,omitzero"`
 	// This field can be elided, and will marshal its zero value as "function".
 	Type constant.Function `json:"type" api:"required"`
 	paramObj
