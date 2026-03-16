@@ -114,7 +114,7 @@ type ComparisonFilter struct {
 	// - `in`: in
 	// - `nin`: not in
 	//
-	// Any of "eq", "ne", "gt", "gte", "lt", "lte".
+	// Any of "eq", "ne", "gt", "gte", "lt", "lte", "in", "nin".
 	Type ComparisonFilterType `json:"type" api:"required"`
 	// The value to compare against the attribute key; supports string, number, or
 	// boolean types.
@@ -164,6 +164,8 @@ const (
 	ComparisonFilterTypeGte ComparisonFilterType = "gte"
 	ComparisonFilterTypeLt  ComparisonFilterType = "lt"
 	ComparisonFilterTypeLte ComparisonFilterType = "lte"
+	ComparisonFilterTypeIn  ComparisonFilterType = "in"
+	ComparisonFilterTypeNin ComparisonFilterType = "nin"
 )
 
 // ComparisonFilterValueUnion contains all possible properties and values from
@@ -274,7 +276,7 @@ type ComparisonFilterParam struct {
 	// - `in`: in
 	// - `nin`: not in
 	//
-	// Any of "eq", "ne", "gt", "gte", "lt", "lte".
+	// Any of "eq", "ne", "gt", "gte", "lt", "lte", "in", "nin".
 	Type ComparisonFilterType `json:"type,omitzero" api:"required"`
 	// The value to compare against the attribute key; supports string, number, or
 	// boolean types.

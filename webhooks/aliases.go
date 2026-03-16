@@ -280,6 +280,12 @@ const ComparisonFilterTypeLt = shared.ComparisonFilterTypeLt
 // Equals "lte"
 const ComparisonFilterTypeLte = shared.ComparisonFilterTypeLte
 
+// Equals "in"
+const ComparisonFilterTypeIn = shared.ComparisonFilterTypeIn
+
+// Equals "nin"
+const ComparisonFilterTypeNin = shared.ComparisonFilterTypeNin
+
 // The value to compare against the attribute key; supports string, number, or
 // boolean types.
 //
