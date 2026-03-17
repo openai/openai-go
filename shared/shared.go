@@ -22,6 +22,10 @@ type ResponsesModel = string
 
 const (
 	ChatModelGPT5_4                           ChatModel = "gpt-5.4"
+	ChatModelGPT5_4Mini                       ChatModel = "gpt-5.4-mini"
+	ChatModelGPT5_4Nano                       ChatModel = "gpt-5.4-nano"
+	ChatModelGPT5_4Mini2026_03_17             ChatModel = "gpt-5.4-mini-2026-03-17"
+	ChatModelGPT5_4Nano2026_03_17             ChatModel = "gpt-5.4-nano-2026-03-17"
 	ChatModelGPT5_3ChatLatest                 ChatModel = "gpt-5.3-chat-latest"
 	ChatModelGPT5_2                           ChatModel = "gpt-5.2"
 	ChatModelGPT5_2_2025_12_11                ChatModel = "gpt-5.2-2025-12-11"

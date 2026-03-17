@@ -22,6 +22,18 @@ type ChatModel = shared.ChatModel
 // Equals "gpt-5.4"
 const ChatModelGPT5_4 = shared.ChatModelGPT5_4
 
+// Equals "gpt-5.4-mini"
+const ChatModelGPT5_4Mini = shared.ChatModelGPT5_4Mini
+
+// Equals "gpt-5.4-nano"
+const ChatModelGPT5_4Nano = shared.ChatModelGPT5_4Nano
+
+// Equals "gpt-5.4-mini-2026-03-17"
+const ChatModelGPT5_4Mini2026_03_17 = shared.ChatModelGPT5_4Mini2026_03_17
+
+// Equals "gpt-5.4-nano-2026-03-17"
+const ChatModelGPT5_4Nano2026_03_17 = shared.ChatModelGPT5_4Nano2026_03_17
+
 // Equals "gpt-5.3-chat-latest"
 const ChatModelGPT5_3ChatLatest = shared.ChatModelGPT5_3ChatLatest
 
