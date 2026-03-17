@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.29.0 (2026-03-17)
+
+Full Changelog: [v3.28.0...v3.29.0](https://github.com/openai/openai-go/compare/v3.28.0...v3.29.0)
+
+### Features
+
+* **api:** 5.4 nano and mini model slugs ([c4ebb48](https://github.com/openai/openai-go/commit/c4ebb48b3314d41ae1ca8006ccf7d5b9facad61e))
+* **api:** add in and nin values to comparison filter type ([d060d44](https://github.com/openai/openai-go/commit/d060d4473d6ca87e0427eea709f87d5edd0e7c78))
+
+
+### Chores
+
+* **internal:** tweak CI branches ([6379626](https://github.com/openai/openai-go/commit/63796269b563770b6cbb24144edade0e57051e50))
+
 ## 3.28.0 (2026-03-14)
 
 Full Changelog: [v3.27.0...v3.28.0](https://github.com/openai/openai-go/compare/v3.27.0...v3.28.0)
