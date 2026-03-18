@@ -425,6 +425,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 
 	var res *http.Response
 	var cancel context.CancelFunc
+	var connErr error
 	for retryCount := 0; retryCount <= cfg.MaxRetries; retryCount += 1 {
 		ctx := cfg.Request.Context()
 		if cfg.RequestTimeout != time.Duration(0) && isBeforeContextDeadline(time.Now().Add(cfg.RequestTimeout), ctx) {
@@ -442,7 +443,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 			req.Header.Set("X-Stainless-Retry-Count", strconv.Itoa(retryCount))
 		}
 
-		res, err = handler(req)
+		res, connErr = handler(req)
 		if ctx != nil && ctx.Err() != nil {
 			return ctx.Err()
 		}
@@ -487,8 +488,8 @@ func (cfg *RequestConfig) Execute() (err error) {
 
 	// If there was a connection error in the final request or any other transport error,
 	// return that early without trying to coerce into an APIError.
-	if err != nil {
-		return err
+	if connErr != nil {
+		return connErr
 	}
 
 	if res.StatusCode >= 400 {
