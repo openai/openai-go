@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.29.1 (2026-03-22)
+
+Full Changelog: [v3.29.0...v3.29.1](https://github.com/openai/openai-go/compare/v3.29.0...v3.29.1)
+
+### Chores
+
+* **tests:** bump steady to v0.19.4 ([a0561c3](https://github.com/openai/openai-go/commit/a0561c3014b5d5fbeee9d7de58dad3f9be9e2d9f))
+* **tests:** bump steady to v0.19.5 ([56c5c36](https://github.com/openai/openai-go/commit/56c5c3631cb1dec68b8cb68c1e03d62e69fe3a70))
+
+
+### Refactors
+
+* **tests:** switch from prism to steady ([2185358](https://github.com/openai/openai-go/commit/21853589203e202637f9ebc7f7be5d4c73f2a471))
+
 ## 3.29.0 (2026-03-17)
 
 Full Changelog: [v3.28.0...v3.29.0](https://github.com/openai/openai-go/compare/v3.28.0...v3.29.0)
