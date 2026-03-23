@@ -13084,22 +13084,20 @@ type ResponseInputMessageItem struct {
 	//
 	// Any of "user", "system", "developer".
 	Role ResponseInputMessageItemRole `json:"role" api:"required"`
+	// The type of the message input. Always set to `message`.
+	Type constant.Message `json:"type" api:"required"`
 	// The status of item. One of `in_progress`, `completed`, or `incomplete`.
 	// Populated when items are returned via API.
 	//
 	// Any of "in_progress", "completed", "incomplete".
 	Status ResponseInputMessageItemStatus `json:"status"`
-	// The type of the message input. Always set to `message`.
-	//
-	// Any of "message".
-	Type ResponseInputMessageItemType `json:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
 		Content     respjson.Field
 		Role        respjson.Field
-		Status      respjson.Field
 		Type        respjson.Field
+		Status      respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -13128,13 +13126,6 @@ const (
 	ResponseInputMessageItemStatusInProgress ResponseInputMessageItemStatus = "in_progress"
 	ResponseInputMessageItemStatusCompleted  ResponseInputMessageItemStatus = "completed"
 	ResponseInputMessageItemStatusIncomplete ResponseInputMessageItemStatus = "incomplete"
-)
-
-// The type of the message input. Always set to `message`.
-type ResponseInputMessageItemType string
-
-const (
-	ResponseInputMessageItemTypeMessage ResponseInputMessageItemType = "message"
 )
 
 // A text input to the model.
@@ -13264,7 +13255,6 @@ type ResponseItemUnion struct {
 	// [[]ResponseOutputMessageContentUnion]
 	Content ResponseItemUnionContent `json:"content"`
 	Role    string                   `json:"role"`
-	Status  string                   `json:"status"`
 	// Any of "message", "message", "file_search_call", "computer_call",
 	// "computer_call_output", "web_search_call", "function_call",
 	// "function_call_output", "tool_search_call", "tool_search_output",
@@ -13272,7 +13262,8 @@ type ResponseItemUnion struct {
 	// "local_shell_call_output", "shell_call", "shell_call_output",
 	// "apply_patch_call", "apply_patch_call_output", "mcp_list_tools",
 	// "mcp_approval_request", "mcp_approval_response", "mcp_call".
-	Type string `json:"type"`
+	Type   string `json:"type"`
+	Status string `json:"status"`
 	// This field is from variant [ResponseOutputMessage].
 	Phase ResponseOutputMessagePhase `json:"phase"`
 	// This field is from variant [ResponseFileSearchToolCall].
@@ -13328,8 +13319,8 @@ type ResponseItemUnion struct {
 		ID                       respjson.Field
 		Content                  respjson.Field
 		Role                     respjson.Field
-		Status                   respjson.Field
 		Type                     respjson.Field
+		Status                   respjson.Field
 		Phase                    respjson.Field
 		Queries                  respjson.Field
 		Results                  respjson.Field
