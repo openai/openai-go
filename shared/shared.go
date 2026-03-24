@@ -17,6 +17,27 @@ type paramUnion = param.APIUnion
 // aliased to make [param.APIObject] private when embedding
 type paramObj = param.APIObject
 
+// AllModels also accepts any [string] or [ChatModel]
+type AllModels = string
+
+const (
+	AllModelsO1Pro                        AllModels = "o1-pro"
+	AllModelsO1Pro2025_03_19              AllModels = "o1-pro-2025-03-19"
+	AllModelsO3Pro                        AllModels = "o3-pro"
+	AllModelsO3Pro2025_06_10              AllModels = "o3-pro-2025-06-10"
+	AllModelsO3DeepResearch               AllModels = "o3-deep-research"
+	AllModelsO3DeepResearch2025_06_26     AllModels = "o3-deep-research-2025-06-26"
+	AllModelsO4MiniDeepResearch           AllModels = "o4-mini-deep-research"
+	AllModelsO4MiniDeepResearch2025_06_26 AllModels = "o4-mini-deep-research-2025-06-26"
+	AllModelsComputerUsePreview           AllModels = "computer-use-preview"
+	AllModelsComputerUsePreview2025_03_11 AllModels = "computer-use-preview-2025-03-11"
+	AllModelsGPT5Codex                    AllModels = "gpt-5-codex"
+	AllModelsGPT5Pro                      AllModels = "gpt-5-pro"
+	AllModelsGPT5Pro2025_10_06            AllModels = "gpt-5-pro-2025-10-06"
+	AllModelsGPT5_1CodexMax               AllModels = "gpt-5.1-codex-max"
+	// Or some ...[ChatModel]
+)
+
 type ChatModel = string
 
 const (
