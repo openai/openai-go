@@ -17,6 +17,51 @@ type paramObj = param.APIObject
 type Error = apierror.Error
 
 // This is an alias to an internal type.
+type AllModels = shared.AllModels
+
+// Equals "o1-pro"
+const AllModelsO1Pro = shared.AllModelsO1Pro
+
+// Equals "o1-pro-2025-03-19"
+const AllModelsO1Pro2025_03_19 = shared.AllModelsO1Pro2025_03_19
+
+// Equals "o3-pro"
+const AllModelsO3Pro = shared.AllModelsO3Pro
+
+// Equals "o3-pro-2025-06-10"
+const AllModelsO3Pro2025_06_10 = shared.AllModelsO3Pro2025_06_10
+
+// Equals "o3-deep-research"
+const AllModelsO3DeepResearch = shared.AllModelsO3DeepResearch
+
+// Equals "o3-deep-research-2025-06-26"
+const AllModelsO3DeepResearch2025_06_26 = shared.AllModelsO3DeepResearch2025_06_26
+
+// Equals "o4-mini-deep-research"
+const AllModelsO4MiniDeepResearch = shared.AllModelsO4MiniDeepResearch
+
+// Equals "o4-mini-deep-research-2025-06-26"
+const AllModelsO4MiniDeepResearch2025_06_26 = shared.AllModelsO4MiniDeepResearch2025_06_26
+
+// Equals "computer-use-preview"
+const AllModelsComputerUsePreview = shared.AllModelsComputerUsePreview
+
+// Equals "computer-use-preview-2025-03-11"
+const AllModelsComputerUsePreview2025_03_11 = shared.AllModelsComputerUsePreview2025_03_11
+
+// Equals "gpt-5-codex"
+const AllModelsGPT5Codex = shared.AllModelsGPT5Codex
+
+// Equals "gpt-5-pro"
+const AllModelsGPT5Pro = shared.AllModelsGPT5Pro
+
+// Equals "gpt-5-pro-2025-10-06"
+const AllModelsGPT5Pro2025_10_06 = shared.AllModelsGPT5Pro2025_10_06
+
+// Equals "gpt-5.1-codex-max"
+const AllModelsGPT5_1CodexMax = shared.AllModelsGPT5_1CodexMax
+
+// This is an alias to an internal type.
 type ChatModel = shared.ChatModel
 
 // Equals "gpt-5.4"
