@@ -110,7 +110,7 @@ type Batch struct {
 	// The ID of the input file for the batch.
 	InputFileID string `json:"input_file_id" api:"required"`
 	// The object type, which is always `batch`.
-	Object constant.Batch `json:"object" api:"required"`
+	Object constant.Batch `json:"object" default:"batch"`
 	// The current status of the batch.
 	//
 	// Any of "validating", "failed", "in_progress", "finalizing", "completed",
@@ -431,7 +431,7 @@ type BatchNewParamsOutputExpiresAfter struct {
 	// batch is created.
 	//
 	// This field can be elided, and will marshal its zero value as "created_at".
-	Anchor constant.CreatedAt `json:"anchor" api:"required"`
+	Anchor constant.CreatedAt `json:"anchor" default:"created_at"`
 	paramObj
 }
 

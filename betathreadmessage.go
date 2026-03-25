@@ -302,7 +302,7 @@ type FileCitationAnnotation struct {
 	// The text in the message content that needs to be replaced.
 	Text string `json:"text" api:"required"`
 	// Always `file_citation`.
-	Type constant.FileCitation `json:"type" api:"required"`
+	Type constant.FileCitation `json:"type" default:"file_citation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndIndex     respjson.Field
@@ -345,7 +345,7 @@ type FileCitationDeltaAnnotation struct {
 	// The index of the annotation in the text content part.
 	Index int64 `json:"index" api:"required"`
 	// Always `file_citation`.
-	Type         constant.FileCitation                   `json:"type" api:"required"`
+	Type         constant.FileCitation                   `json:"type" default:"file_citation"`
 	EndIndex     int64                                   `json:"end_index"`
 	FileCitation FileCitationDeltaAnnotationFileCitation `json:"file_citation"`
 	StartIndex   int64                                   `json:"start_index"`
@@ -399,7 +399,7 @@ type FilePathAnnotation struct {
 	// The text in the message content that needs to be replaced.
 	Text string `json:"text" api:"required"`
 	// Always `file_path`.
-	Type constant.FilePath `json:"type" api:"required"`
+	Type constant.FilePath `json:"type" default:"file_path"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndIndex    respjson.Field
@@ -441,7 +441,7 @@ type FilePathDeltaAnnotation struct {
 	// The index of the annotation in the text content part.
 	Index int64 `json:"index" api:"required"`
 	// Always `file_path`.
-	Type       constant.FilePath               `json:"type" api:"required"`
+	Type       constant.FilePath               `json:"type" default:"file_path"`
 	EndIndex   int64                           `json:"end_index"`
 	FilePath   FilePathDeltaAnnotationFilePath `json:"file_path"`
 	StartIndex int64                           `json:"start_index"`
@@ -554,7 +554,7 @@ func (r *ImageFileParam) UnmarshalJSON(data []byte) error {
 type ImageFileContentBlock struct {
 	ImageFile ImageFile `json:"image_file" api:"required"`
 	// Always `image_file`.
-	Type constant.ImageFile `json:"type" api:"required"`
+	Type constant.ImageFile `json:"type" default:"image_file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ImageFile   respjson.Field
@@ -588,7 +588,7 @@ type ImageFileContentBlockParam struct {
 	// Always `image_file`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_file".
-	Type constant.ImageFile `json:"type" api:"required"`
+	Type constant.ImageFile `json:"type" default:"image_file"`
 	paramObj
 }
 
@@ -641,7 +641,7 @@ type ImageFileDeltaBlock struct {
 	// The index of the content part in the message.
 	Index int64 `json:"index" api:"required"`
 	// Always `image_file`.
-	Type      constant.ImageFile `json:"type" api:"required"`
+	Type      constant.ImageFile `json:"type" default:"image_file"`
 	ImageFile ImageFileDelta     `json:"image_file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -727,7 +727,7 @@ func (r *ImageURLParam) UnmarshalJSON(data []byte) error {
 type ImageURLContentBlock struct {
 	ImageURL ImageURL `json:"image_url" api:"required"`
 	// The type of the content part.
-	Type constant.ImageURL `json:"type" api:"required"`
+	Type constant.ImageURL `json:"type" default:"image_url"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ImageURL    respjson.Field
@@ -760,7 +760,7 @@ type ImageURLContentBlockParam struct {
 	// The type of the content part.
 	//
 	// This field can be elided, and will marshal its zero value as "image_url".
-	Type constant.ImageURL `json:"type" api:"required"`
+	Type constant.ImageURL `json:"type" default:"image_url"`
 	paramObj
 }
 
@@ -811,7 +811,7 @@ type ImageURLDeltaBlock struct {
 	// The index of the content part in the message.
 	Index int64 `json:"index" api:"required"`
 	// Always `image_url`.
-	Type     constant.ImageURL `json:"type" api:"required"`
+	Type     constant.ImageURL `json:"type" default:"image_url"`
 	ImageURL ImageURLDelta     `json:"image_url"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -858,7 +858,7 @@ type Message struct {
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata" api:"required"`
 	// The object type, which is always `thread.message`.
-	Object constant.ThreadMessage `json:"object" api:"required"`
+	Object constant.ThreadMessage `json:"object" default:"thread.message"`
 	// The entity that produced the message. One of `user` or `assistant`.
 	//
 	// Any of "user", "assistant".
@@ -955,7 +955,7 @@ func (r *MessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 
 type MessageAttachmentToolFileSearchTool struct {
 	// The type of tool being defined: `file_search`
-	Type constant.FileSearch `json:"type" api:"required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -1286,7 +1286,7 @@ func init() {
 type MessageDeleted struct {
 	ID      string                        `json:"id" api:"required"`
 	Deleted bool                          `json:"deleted" api:"required"`
-	Object  constant.ThreadMessageDeleted `json:"object" api:"required"`
+	Object  constant.ThreadMessageDeleted `json:"object" default:"thread.message.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1342,7 +1342,7 @@ type MessageDeltaEvent struct {
 	// The delta containing the fields that have changed on the Message.
 	Delta MessageDelta `json:"delta" api:"required"`
 	// The object type, which is always `thread.message.delta`.
-	Object constant.ThreadMessageDelta `json:"object" api:"required"`
+	Object constant.ThreadMessageDelta `json:"object" default:"thread.message.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1363,7 +1363,7 @@ func (r *MessageDeltaEvent) UnmarshalJSON(data []byte) error {
 type RefusalContentBlock struct {
 	Refusal string `json:"refusal" api:"required"`
 	// Always `refusal`.
-	Type constant.Refusal `json:"type" api:"required"`
+	Type constant.Refusal `json:"type" default:"refusal"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Refusal     respjson.Field
@@ -1384,7 +1384,7 @@ type RefusalDeltaBlock struct {
 	// The index of the refusal part in the message.
 	Index int64 `json:"index" api:"required"`
 	// Always `refusal`.
-	Type    constant.Refusal `json:"type" api:"required"`
+	Type    constant.Refusal `json:"type" default:"refusal"`
 	Refusal string           `json:"refusal"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1425,7 +1425,7 @@ func (r *Text) UnmarshalJSON(data []byte) error {
 type TextContentBlock struct {
 	Text Text `json:"text" api:"required"`
 	// Always `text`.
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -1450,7 +1450,7 @@ type TextContentBlockParam struct {
 	// Always `text`.
 	//
 	// This field can be elided, and will marshal its zero value as "text".
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	paramObj
 }
 
@@ -1486,7 +1486,7 @@ type TextDeltaBlock struct {
 	// The index of the content part in the message.
 	Index int64 `json:"index" api:"required"`
 	// Always `text`.
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	Text TextDelta     `json:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1643,7 +1643,7 @@ func NewBetaThreadMessageNewParamsAttachmentToolFileSearch() BetaThreadMessageNe
 // [NewBetaThreadMessageNewParamsAttachmentToolFileSearch].
 type BetaThreadMessageNewParamsAttachmentToolFileSearch struct {
 	// The type of tool being defined: `file_search`
-	Type constant.FileSearch `json:"type" api:"required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	paramObj
 }
 

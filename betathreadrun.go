@@ -233,7 +233,7 @@ type RequiredActionFunctionToolCall struct {
 	Function RequiredActionFunctionToolCallFunction `json:"function" api:"required"`
 	// The type of tool call the output is required for. For now, this is always
 	// `function`.
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -317,7 +317,7 @@ type Run struct {
 	// this run.
 	Model string `json:"model" api:"required"`
 	// The object type, which is always `thread.run`.
-	Object constant.ThreadRun `json:"object" api:"required"`
+	Object constant.ThreadRun `json:"object" default:"thread.run"`
 	// Whether to enable
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
@@ -471,7 +471,7 @@ type RunRequiredAction struct {
 	// Details on the tool outputs needed for this run to continue.
 	SubmitToolOutputs RunRequiredActionSubmitToolOutputs `json:"submit_tool_outputs" api:"required"`
 	// For now, this is always `submit_tool_outputs`.
-	Type constant.SubmitToolOutputs `json:"type" api:"required"`
+	Type constant.SubmitToolOutputs `json:"type" default:"submit_tool_outputs"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		SubmitToolOutputs respjson.Field
@@ -839,7 +839,7 @@ func NewBetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch() BetaTh
 // [NewBetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch].
 type BetaThreadRunNewParamsAdditionalMessageAttachmentToolFileSearch struct {
 	// The type of tool being defined: `file_search`
-	Type constant.FileSearch `json:"type" api:"required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	paramObj
 }
 

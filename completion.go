@@ -77,7 +77,7 @@ type Completion struct {
 	// The model used for completion.
 	Model string `json:"model" api:"required"`
 	// The object type, which is always "text_completion"
-	Object constant.TextCompletion `json:"object" api:"required"`
+	Object constant.TextCompletion `json:"object" default:"text_completion"`
 	// This fingerprint represents the backend configuration that the model runs with.
 	//
 	// Can be used in conjunction with the `seed` request parameter to understand when

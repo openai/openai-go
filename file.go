@@ -136,7 +136,7 @@ func (r *FileService) Content(ctx context.Context, fileID string, opts ...option
 type FileDeleted struct {
 	ID      string        `json:"id" api:"required"`
 	Deleted bool          `json:"deleted" api:"required"`
-	Object  constant.File `json:"object" api:"required"`
+	Object  constant.File `json:"object" default:"file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -164,7 +164,7 @@ type FileObject struct {
 	// The name of the file.
 	Filename string `json:"filename" api:"required"`
 	// The object type, which is always `file`.
-	Object constant.File `json:"object" api:"required"`
+	Object constant.File `json:"object" default:"file"`
 	// The intended purpose of the file. Supported values are `assistants`,
 	// `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results`,
 	// `vision`, and `user_data`.
@@ -303,7 +303,7 @@ type FileNewParamsExpiresAfter struct {
 	// `created_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "created_at".
-	Anchor constant.CreatedAt `json:"anchor" api:"required"`
+	Anchor constant.CreatedAt `json:"anchor" default:"created_at"`
 	paramObj
 }
 

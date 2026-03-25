@@ -117,7 +117,7 @@ func (r *SkillService) Delete(ctx context.Context, skillID string, opts ...optio
 type DeletedSkill struct {
 	ID      string                `json:"id" api:"required"`
 	Deleted bool                  `json:"deleted" api:"required"`
-	Object  constant.SkillDeleted `json:"object" api:"required"`
+	Object  constant.SkillDeleted `json:"object" default:"skill.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -148,7 +148,7 @@ type Skill struct {
 	// Name of the skill.
 	Name string `json:"name" api:"required"`
 	// The object type, which is `skill`.
-	Object constant.Skill `json:"object" api:"required"`
+	Object constant.Skill `json:"object" default:"skill"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID             respjson.Field
@@ -179,7 +179,7 @@ type SkillList struct {
 	// The ID of the last item in the list.
 	LastID string `json:"last_id" api:"required"`
 	// The type of object returned, must be `list`.
-	Object constant.List `json:"object" api:"required"`
+	Object constant.List `json:"object" default:"list"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field

@@ -48,7 +48,7 @@ func (r *InputTokenService) Count(ctx context.Context, body InputTokenCountParam
 
 type InputTokenCountResponse struct {
 	InputTokens int64                        `json:"input_tokens" api:"required"`
-	Object      constant.ResponseInputTokens `json:"object" api:"required"`
+	Object      constant.ResponseInputTokens `json:"object" default:"response.input_tokens"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		InputTokens respjson.Field

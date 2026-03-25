@@ -470,7 +470,7 @@ type Thread struct {
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata" api:"required"`
 	// The object type, which is always `thread`.
-	Object constant.Thread `json:"object" api:"required"`
+	Object constant.Thread `json:"object" default:"thread"`
 	// A set of resources that are made available to the assistant's tools in this
 	// thread. The resources are specific to the type of tool. For example, the
 	// `code_interpreter` tool requires a list of file IDs, while the `file_search`
@@ -558,7 +558,7 @@ func (r *ThreadToolResourcesFileSearch) UnmarshalJSON(data []byte) error {
 type ThreadDeleted struct {
 	ID      string                 `json:"id" api:"required"`
 	Deleted bool                   `json:"deleted" api:"required"`
-	Object  constant.ThreadDeleted `json:"object" api:"required"`
+	Object  constant.ThreadDeleted `json:"object" default:"thread.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -735,7 +735,7 @@ func NewBetaThreadNewParamsMessageAttachmentToolFileSearch() BetaThreadNewParams
 // [NewBetaThreadNewParamsMessageAttachmentToolFileSearch].
 type BetaThreadNewParamsMessageAttachmentToolFileSearch struct {
 	// The type of tool being defined: `file_search`
-	Type constant.FileSearch `json:"type" api:"required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	paramObj
 }
 
@@ -894,7 +894,7 @@ func NewBetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAut
 // [NewBetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto].
 type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto struct {
 	// Always `auto`.
-	Type constant.Auto `json:"type" api:"required"`
+	Type constant.Auto `json:"type" default:"auto"`
 	paramObj
 }
 
@@ -912,7 +912,7 @@ type BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyStatic
 	// Always `static`.
 	//
 	// This field can be elided, and will marshal its zero value as "static".
-	Type constant.Static `json:"type" api:"required"`
+	Type constant.Static `json:"type" default:"static"`
 	paramObj
 }
 
@@ -1281,7 +1281,7 @@ func NewBetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch() BetaThr
 // [NewBetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch].
 type BetaThreadNewAndRunParamsThreadMessageAttachmentToolFileSearch struct {
 	// The type of tool being defined: `file_search`
-	Type constant.FileSearch `json:"type" api:"required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	paramObj
 }
 
@@ -1440,7 +1440,7 @@ func NewBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkin
 // [NewBetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto].
 type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyAuto struct {
 	// Always `auto`.
-	Type constant.Auto `json:"type" api:"required"`
+	Type constant.Auto `json:"type" default:"auto"`
 	paramObj
 }
 
@@ -1458,7 +1458,7 @@ type BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingSt
 	// Always `static`.
 	//
 	// This field can be elided, and will marshal its zero value as "static".
-	Type constant.Static `json:"type" api:"required"`
+	Type constant.Static `json:"type" default:"static"`
 	paramObj
 }
 

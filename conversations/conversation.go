@@ -101,7 +101,7 @@ type ComputerScreenshotContent struct {
 	ImageURL string `json:"image_url" api:"required"`
 	// Specifies the event type. For a computer screenshot, this property is always set
 	// to `computer_screenshot`.
-	Type constant.ComputerScreenshot `json:"type" api:"required"`
+	Type constant.ComputerScreenshot `json:"type" default:"computer_screenshot"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Detail      respjson.Field
@@ -143,7 +143,7 @@ type Conversation struct {
 	// characters.
 	Metadata any `json:"metadata" api:"required"`
 	// The object type, which is always `conversation`.
-	Object constant.Conversation `json:"object" api:"required"`
+	Object constant.Conversation `json:"object" default:"conversation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -164,7 +164,7 @@ func (r *Conversation) UnmarshalJSON(data []byte) error {
 type ConversationDeletedResource struct {
 	ID      string                       `json:"id" api:"required"`
 	Deleted bool                         `json:"deleted" api:"required"`
-	Object  constant.ConversationDeleted `json:"object" api:"required"`
+	Object  constant.ConversationDeleted `json:"object" default:"conversation.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -199,7 +199,7 @@ type Message struct {
 	// Any of "in_progress", "completed", "incomplete".
 	Status MessageStatus `json:"status" api:"required"`
 	// The type of the message. Always set to `message`.
-	Type constant.Message `json:"type" api:"required"`
+	Type constant.Message `json:"type" default:"message"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -370,7 +370,7 @@ type MessageContentReasoningText struct {
 	// The reasoning text from the model.
 	Text string `json:"text" api:"required"`
 	// The type of the reasoning text. Always `reasoning_text`.
-	Type constant.ReasoningText `json:"type" api:"required"`
+	Type constant.ReasoningText `json:"type" default:"reasoning_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -416,7 +416,7 @@ type SummaryTextContent struct {
 	// A summary of the reasoning output from the model so far.
 	Text string `json:"text" api:"required"`
 	// The type of the object. Always `summary_text`.
-	Type constant.SummaryText `json:"type" api:"required"`
+	Type constant.SummaryText `json:"type" default:"summary_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -435,7 +435,7 @@ func (r *SummaryTextContent) UnmarshalJSON(data []byte) error {
 // A text content.
 type TextContent struct {
 	Text string        `json:"text" api:"required"`
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
