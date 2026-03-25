@@ -108,7 +108,7 @@ type CodeInterpreterLogs struct {
 	// The index of the output in the outputs array.
 	Index int64 `json:"index" api:"required"`
 	// Always `logs`.
-	Type constant.Logs `json:"type" api:"required"`
+	Type constant.Logs `json:"type" default:"logs"`
 	// The text output from the Code Interpreter tool call.
 	Logs string `json:"logs"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -131,7 +131,7 @@ type CodeInterpreterOutputImage struct {
 	// The index of the output in the outputs array.
 	Index int64 `json:"index" api:"required"`
 	// Always `image`.
-	Type  constant.Image                  `json:"type" api:"required"`
+	Type  constant.Image                  `json:"type" default:"image"`
 	Image CodeInterpreterOutputImageImage `json:"image"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -175,7 +175,7 @@ type CodeInterpreterToolCall struct {
 	CodeInterpreter CodeInterpreterToolCallCodeInterpreter `json:"code_interpreter" api:"required"`
 	// The type of tool call. This is always going to be `code_interpreter` for this
 	// type of tool call.
-	Type constant.CodeInterpreter `json:"type" api:"required"`
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID              respjson.Field
@@ -290,7 +290,7 @@ type CodeInterpreterToolCallCodeInterpreterOutputLogs struct {
 	// The text output from the Code Interpreter tool call.
 	Logs string `json:"logs" api:"required"`
 	// Always `logs`.
-	Type constant.Logs `json:"type" api:"required"`
+	Type constant.Logs `json:"type" default:"logs"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Logs        respjson.Field
@@ -309,7 +309,7 @@ func (r *CodeInterpreterToolCallCodeInterpreterOutputLogs) UnmarshalJSON(data []
 type CodeInterpreterToolCallCodeInterpreterOutputImage struct {
 	Image CodeInterpreterToolCallCodeInterpreterOutputImageImage `json:"image" api:"required"`
 	// Always `image`.
-	Type constant.Image `json:"type" api:"required"`
+	Type constant.Image `json:"type" default:"image"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Image       respjson.Field
@@ -349,7 +349,7 @@ type CodeInterpreterToolCallDelta struct {
 	Index int64 `json:"index" api:"required"`
 	// The type of tool call. This is always going to be `code_interpreter` for this
 	// type of tool call.
-	Type constant.CodeInterpreter `json:"type" api:"required"`
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
 	// The ID of the tool call.
 	ID string `json:"id"`
 	// The Code Interpreter tool call definition.
@@ -471,7 +471,7 @@ type FileSearchToolCall struct {
 	FileSearch FileSearchToolCallFileSearch `json:"file_search" api:"required"`
 	// The type of tool call. This is always going to be `file_search` for this type of
 	// tool call.
-	Type constant.FileSearch `json:"type" api:"required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -592,7 +592,7 @@ type FileSearchToolCallDelta struct {
 	Index int64 `json:"index" api:"required"`
 	// The type of tool call. This is always going to be `file_search` for this type of
 	// tool call.
-	Type constant.FileSearch `json:"type" api:"required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	// The ID of the tool call object.
 	ID string `json:"id"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -619,7 +619,7 @@ type FunctionToolCall struct {
 	Function FunctionToolCallFunction `json:"function" api:"required"`
 	// The type of tool call. This is always going to be `function` for this type of
 	// tool call.
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -667,7 +667,7 @@ type FunctionToolCallDelta struct {
 	Index int64 `json:"index" api:"required"`
 	// The type of tool call. This is always going to be `function` for this type of
 	// tool call.
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	// The ID of the tool call object.
 	ID string `json:"id"`
 	// The definition of the function that was called.
@@ -719,7 +719,7 @@ func (r *FunctionToolCallDeltaFunction) UnmarshalJSON(data []byte) error {
 type MessageCreationStepDetails struct {
 	MessageCreation MessageCreationStepDetailsMessageCreation `json:"message_creation" api:"required"`
 	// Always `message_creation`.
-	Type constant.MessageCreation `json:"type" api:"required"`
+	Type constant.MessageCreation `json:"type" default:"message_creation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		MessageCreation respjson.Field
@@ -782,7 +782,7 @@ type RunStep struct {
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata" api:"required"`
 	// The object type, which is always `thread.run.step`.
-	Object constant.ThreadRunStep `json:"object" api:"required"`
+	Object constant.ThreadRunStep `json:"object" default:"thread.run.step"`
 	// The ID of the [run](https://platform.openai.com/docs/api-reference/runs) that
 	// this run step is a part of.
 	RunID string `json:"run_id" api:"required"`
@@ -1059,7 +1059,7 @@ type RunStepDeltaEvent struct {
 	// The delta containing the fields that have changed on the run step.
 	Delta RunStepDelta `json:"delta" api:"required"`
 	// The object type, which is always `thread.run.step.delta`.
-	Object constant.ThreadRunStepDelta `json:"object" api:"required"`
+	Object constant.ThreadRunStepDelta `json:"object" default:"thread.run.step.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1079,7 +1079,7 @@ func (r *RunStepDeltaEvent) UnmarshalJSON(data []byte) error {
 // Details of the message creation by the run step.
 type RunStepDeltaMessageDelta struct {
 	// Always `message_creation`.
-	Type            constant.MessageCreation                `json:"type" api:"required"`
+	Type            constant.MessageCreation                `json:"type" default:"message_creation"`
 	MessageCreation RunStepDeltaMessageDeltaMessageCreation `json:"message_creation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -1283,7 +1283,7 @@ func (r *ToolCallDeltaUnion) UnmarshalJSON(data []byte) error {
 // Details of the tool call.
 type ToolCallDeltaObject struct {
 	// Always `tool_calls`.
-	Type constant.ToolCalls `json:"type" api:"required"`
+	Type constant.ToolCalls `json:"type" default:"tool_calls"`
 	// An array of tool calls the run step was involved in. These can be associated
 	// with one of three types of tools: `code_interpreter`, `file_search`, or
 	// `function`.
@@ -1310,7 +1310,7 @@ type ToolCallsStepDetails struct {
 	// `function`.
 	ToolCalls []ToolCallUnion `json:"tool_calls" api:"required"`
 	// Always `tool_calls`.
-	Type constant.ToolCalls `json:"type" api:"required"`
+	Type constant.ToolCalls `json:"type" default:"tool_calls"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ToolCalls   respjson.Field

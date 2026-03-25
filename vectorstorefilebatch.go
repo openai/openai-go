@@ -187,7 +187,7 @@ type VectorStoreFileBatch struct {
 	CreatedAt  int64                          `json:"created_at" api:"required"`
 	FileCounts VectorStoreFileBatchFileCounts `json:"file_counts" api:"required"`
 	// The object type, which is always `vector_store.file_batch`.
-	Object constant.VectorStoreFilesBatch `json:"object" api:"required"`
+	Object constant.VectorStoreFilesBatch `json:"object" default:"vector_store.files_batch"`
 	// The status of the vector store files batch, which can be either `in_progress`,
 	// `completed`, `cancelled` or `failed`.
 	//

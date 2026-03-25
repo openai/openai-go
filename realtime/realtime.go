@@ -731,7 +731,7 @@ type RealtimeAudioInputTurnDetectionServerVadParam struct {
 	// Type of turn detection, `server_vad` to turn on simple Server VAD.
 	//
 	// This field can be elided, and will marshal its zero value as "server_vad".
-	Type constant.ServerVad `json:"type" api:"required"`
+	Type constant.ServerVad `json:"type" default:"server_vad"`
 	paramObj
 }
 
@@ -765,7 +765,7 @@ type RealtimeAudioInputTurnDetectionSemanticVadParam struct {
 	// Type of turn detection, `semantic_vad` to turn on Semantic VAD.
 	//
 	// This field can be elided, and will marshal its zero value as "semantic_vad".
-	Type constant.SemanticVad `json:"type" api:"required"`
+	Type constant.SemanticVad `json:"type" default:"semantic_vad"`
 	paramObj
 }
 
@@ -926,7 +926,7 @@ type RealtimeSessionCreateRequestParam struct {
 	// The type of session to create. Always `realtime` for the Realtime API.
 	//
 	// This field can be elided, and will marshal its zero value as "realtime".
-	Type constant.Realtime `json:"type" api:"required"`
+	Type constant.Realtime `json:"type" default:"realtime"`
 	paramObj
 }
 
@@ -1251,7 +1251,7 @@ type RealtimeToolsConfigUnionMcpParam struct {
 	// The type of the MCP tool. Always `mcp`.
 	//
 	// This field can be elided, and will marshal its zero value as "mcp".
-	Type constant.Mcp `json:"type" api:"required"`
+	Type constant.Mcp `json:"type" default:"mcp"`
 	paramObj
 }
 
@@ -1691,7 +1691,7 @@ type RealtimeTranscriptionSessionAudioInputTurnDetectionServerVadParam struct {
 	// Type of turn detection, `server_vad` to turn on simple Server VAD.
 	//
 	// This field can be elided, and will marshal its zero value as "server_vad".
-	Type constant.ServerVad `json:"type" api:"required"`
+	Type constant.ServerVad `json:"type" default:"server_vad"`
 	paramObj
 }
 
@@ -1725,7 +1725,7 @@ type RealtimeTranscriptionSessionAudioInputTurnDetectionSemanticVadParam struct 
 	// Type of turn detection, `semantic_vad` to turn on Semantic VAD.
 	//
 	// This field can be elided, and will marshal its zero value as "semantic_vad".
-	Type constant.SemanticVad `json:"type" api:"required"`
+	Type constant.SemanticVad `json:"type" default:"semantic_vad"`
 	paramObj
 }
 
@@ -1760,7 +1760,7 @@ type RealtimeTranscriptionSessionCreateRequestParam struct {
 	// sessions.
 	//
 	// This field can be elided, and will marshal its zero value as "transcription".
-	Type constant.Transcription `json:"type" api:"required"`
+	Type constant.Transcription `json:"type" default:"transcription"`
 	paramObj
 }
 
@@ -1876,7 +1876,7 @@ type RealtimeTruncationRetentionRatio struct {
 	// helps reduce the frequency of truncations and improve cache rates.
 	RetentionRatio float64 `json:"retention_ratio" api:"required"`
 	// Use retention ratio truncation.
-	Type constant.RetentionRatio `json:"type" api:"required"`
+	Type constant.RetentionRatio `json:"type" default:"retention_ratio"`
 	// Optional custom token limits for this truncation strategy. If not provided, the
 	// model's default token limits will be used.
 	TokenLimits RealtimeTruncationRetentionRatioTokenLimits `json:"token_limits"`
@@ -1946,7 +1946,7 @@ type RealtimeTruncationRetentionRatioParam struct {
 	// Use retention ratio truncation.
 	//
 	// This field can be elided, and will marshal its zero value as "retention_ratio".
-	Type constant.RetentionRatio `json:"type" api:"required"`
+	Type constant.RetentionRatio `json:"type" default:"retention_ratio"`
 	paramObj
 }
 

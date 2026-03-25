@@ -96,7 +96,7 @@ type Model struct {
 	// The Unix timestamp (in seconds) when the model was created.
 	Created int64 `json:"created" api:"required"`
 	// The object type, which is always "model".
-	Object constant.Model `json:"object" api:"required"`
+	Object constant.Model `json:"object" default:"model"`
 	// The organization that owns the model.
 	OwnedBy string `json:"owned_by" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].

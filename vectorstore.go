@@ -158,7 +158,7 @@ func NewAutoFileChunkingStrategyParam() AutoFileChunkingStrategyParam {
 // [NewAutoFileChunkingStrategyParam].
 type AutoFileChunkingStrategyParam struct {
 	// Always `auto`.
-	Type constant.Auto `json:"type" api:"required"`
+	Type constant.Auto `json:"type" default:"auto"`
 	paramObj
 }
 
@@ -295,7 +295,7 @@ func init() {
 // introduced in the API.
 type OtherFileChunkingStrategyObject struct {
 	// Always `other`.
-	Type constant.Other `json:"type" api:"required"`
+	Type constant.Other `json:"type" default:"other"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -366,7 +366,7 @@ func (r *StaticFileChunkingStrategyParam) UnmarshalJSON(data []byte) error {
 type StaticFileChunkingStrategyObject struct {
 	Static StaticFileChunkingStrategy `json:"static" api:"required"`
 	// Always `static`.
-	Type constant.Static `json:"type" api:"required"`
+	Type constant.Static `json:"type" default:"static"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Static      respjson.Field
@@ -390,7 +390,7 @@ type StaticFileChunkingStrategyObjectParam struct {
 	// Always `static`.
 	//
 	// This field can be elided, and will marshal its zero value as "static".
-	Type constant.Static `json:"type" api:"required"`
+	Type constant.Static `json:"type" default:"static"`
 	paramObj
 }
 
@@ -422,7 +422,7 @@ type VectorStore struct {
 	// The name of the vector store.
 	Name string `json:"name" api:"required"`
 	// The object type, which is always `vector_store`.
-	Object constant.VectorStore `json:"object" api:"required"`
+	Object constant.VectorStore `json:"object" default:"vector_store"`
 	// The status of the vector store, which can be either `expired`, `in_progress`, or
 	// `completed`. A status of `completed` indicates that the vector store is ready
 	// for use.
@@ -503,7 +503,7 @@ const (
 type VectorStoreExpiresAfter struct {
 	// Anchor timestamp after which the expiration policy applies. Supported anchors:
 	// `last_active_at`.
-	Anchor constant.LastActiveAt `json:"anchor" api:"required"`
+	Anchor constant.LastActiveAt `json:"anchor" default:"last_active_at"`
 	// The number of days after the anchor time that the vector store will expire.
 	Days int64 `json:"days" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -524,7 +524,7 @@ func (r *VectorStoreExpiresAfter) UnmarshalJSON(data []byte) error {
 type VectorStoreDeleted struct {
 	ID      string                      `json:"id" api:"required"`
 	Deleted bool                        `json:"deleted" api:"required"`
-	Object  constant.VectorStoreDeleted `json:"object" api:"required"`
+	Object  constant.VectorStoreDeleted `json:"object" default:"vector_store.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -683,7 +683,7 @@ type VectorStoreNewParamsExpiresAfter struct {
 	// `last_active_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "last_active_at".
-	Anchor constant.LastActiveAt `json:"anchor" api:"required"`
+	Anchor constant.LastActiveAt `json:"anchor" default:"last_active_at"`
 	paramObj
 }
 
@@ -728,7 +728,7 @@ type VectorStoreUpdateParamsExpiresAfter struct {
 	// `last_active_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "last_active_at".
-	Anchor constant.LastActiveAt `json:"anchor" api:"required"`
+	Anchor constant.LastActiveAt `json:"anchor" default:"last_active_at"`
 	paramObj
 }
 

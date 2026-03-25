@@ -204,7 +204,7 @@ type Video struct {
 	// The video generation model that produced the job.
 	Model VideoModel `json:"model" api:"required"`
 	// The object type, which is always `video`.
-	Object constant.Video `json:"object" api:"required"`
+	Object constant.Video `json:"object" default:"video"`
 	// Approximate completion percentage for the generation task.
 	Progress int64 `json:"progress" api:"required"`
 	// The prompt that was used to generate the video.
@@ -313,7 +313,7 @@ type VideoDeleteResponse struct {
 	// Indicates that the video resource was deleted.
 	Deleted bool `json:"deleted" api:"required"`
 	// The object type that signals the deletion response.
-	Object constant.VideoDeleted `json:"object" api:"required"`
+	Object constant.VideoDeleted `json:"object" default:"video.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field

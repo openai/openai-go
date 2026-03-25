@@ -77,7 +77,7 @@ type ResponseItemList struct {
 	// The ID of the last item in the list.
 	LastID string `json:"last_id" api:"required"`
 	// The type of object returned, must be `list`.
-	Object constant.List `json:"object" api:"required"`
+	Object constant.List `json:"object" default:"list"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field

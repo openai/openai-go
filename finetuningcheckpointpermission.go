@@ -152,7 +152,7 @@ type FineTuningCheckpointPermissionNewResponse struct {
 	// The Unix timestamp (in seconds) for when the permission was created.
 	CreatedAt int64 `json:"created_at" api:"required"`
 	// The object type, which is always "checkpoint.permission".
-	Object constant.CheckpointPermission `json:"object" api:"required"`
+	Object constant.CheckpointPermission `json:"object" default:"checkpoint.permission"`
 	// The project identifier that the permission is for.
 	ProjectID string `json:"project_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -175,7 +175,7 @@ func (r *FineTuningCheckpointPermissionNewResponse) UnmarshalJSON(data []byte) e
 type FineTuningCheckpointPermissionGetResponse struct {
 	Data    []FineTuningCheckpointPermissionGetResponseData `json:"data" api:"required"`
 	HasMore bool                                            `json:"has_more" api:"required"`
-	Object  constant.List                                   `json:"object" api:"required"`
+	Object  constant.List                                   `json:"object" default:"list"`
 	FirstID string                                          `json:"first_id" api:"nullable"`
 	LastID  string                                          `json:"last_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -204,7 +204,7 @@ type FineTuningCheckpointPermissionGetResponseData struct {
 	// The Unix timestamp (in seconds) for when the permission was created.
 	CreatedAt int64 `json:"created_at" api:"required"`
 	// The object type, which is always "checkpoint.permission".
-	Object constant.CheckpointPermission `json:"object" api:"required"`
+	Object constant.CheckpointPermission `json:"object" default:"checkpoint.permission"`
 	// The project identifier that the permission is for.
 	ProjectID string `json:"project_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -232,7 +232,7 @@ type FineTuningCheckpointPermissionListResponse struct {
 	// The Unix timestamp (in seconds) for when the permission was created.
 	CreatedAt int64 `json:"created_at" api:"required"`
 	// The object type, which is always "checkpoint.permission".
-	Object constant.CheckpointPermission `json:"object" api:"required"`
+	Object constant.CheckpointPermission `json:"object" default:"checkpoint.permission"`
 	// The project identifier that the permission is for.
 	ProjectID string `json:"project_id" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -258,7 +258,7 @@ type FineTuningCheckpointPermissionDeleteResponse struct {
 	// Whether the fine-tuned model checkpoint permission was successfully deleted.
 	Deleted bool `json:"deleted" api:"required"`
 	// The object type, which is always "checkpoint.permission".
-	Object constant.CheckpointPermission `json:"object" api:"required"`
+	Object constant.CheckpointPermission `json:"object" default:"checkpoint.permission"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
