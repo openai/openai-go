@@ -265,6 +265,14 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 					}
 					return typeEncoderFn(key, value, writer)
 				}
+			} else if ptag.defaultValue != nil {
+				typeEncoderFn := e.typeEncoder(field.Type)
+				encoderFn = func(key string, value reflect.Value, writer *multipart.Writer) error {
+					if value.IsZero() {
+						return typeEncoderFn(key, reflect.ValueOf(ptag.defaultValue), writer)
+					}
+					return typeEncoderFn(key, value, writer)
+				}
 			} else {
 				encoderFn = e.typeEncoder(field.Type)
 			}
