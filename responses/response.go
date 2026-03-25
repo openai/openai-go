@@ -250,13 +250,12 @@ type ComputerActionUnion struct {
 	Button string `json:"button"`
 	// Any of "click", "double_click", "drag", "keypress", "move", "screenshot",
 	// "scroll", "type", "wait".
-	Type string `json:"type"`
-	X    int64  `json:"x"`
-	Y    int64  `json:"y"`
+	Type string   `json:"type"`
+	X    int64    `json:"x"`
+	Y    int64    `json:"y"`
+	Keys []string `json:"keys"`
 	// This field is from variant [ComputerActionDrag].
 	Path []ComputerActionDragPath `json:"path"`
-	// This field is from variant [ComputerActionKeypress].
-	Keys []string `json:"keys"`
 	// This field is from variant [ComputerActionScroll].
 	ScrollX int64 `json:"scroll_x"`
 	// This field is from variant [ComputerActionScroll].
@@ -268,8 +267,8 @@ type ComputerActionUnion struct {
 		Type    respjson.Field
 		X       respjson.Field
 		Y       respjson.Field
-		Path    respjson.Field
 		Keys    respjson.Field
+		Path    respjson.Field
 		ScrollX respjson.Field
 		ScrollY respjson.Field
 		Text    respjson.Field
@@ -406,12 +405,15 @@ type ComputerActionClick struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the click occurred.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while clicking.
+	Keys []string `json:"keys" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Button      respjson.Field
 		Type        respjson.Field
 		X           respjson.Field
 		Y           respjson.Field
+		Keys        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -425,6 +427,8 @@ func (r *ComputerActionClick) UnmarshalJSON(data []byte) error {
 
 // A double click action.
 type ComputerActionDoubleClick struct {
+	// The keys being held while double-clicking.
+	Keys []string `json:"keys" api:"required"`
 	// Specifies the event type. For a double click action, this property is always set
 	// to `double_click`.
 	Type constant.DoubleClick `json:"type" default:"double_click"`
@@ -434,6 +438,7 @@ type ComputerActionDoubleClick struct {
 	Y int64 `json:"y" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Keys        respjson.Field
 		Type        respjson.Field
 		X           respjson.Field
 		Y           respjson.Field
@@ -465,10 +470,13 @@ type ComputerActionDrag struct {
 	// Specifies the event type. For a drag action, this property is always set to
 	// `drag`.
 	Type constant.Drag `json:"type" default:"drag"`
+	// The keys being held while dragging the mouse.
+	Keys []string `json:"keys" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Path        respjson.Field
 		Type        respjson.Field
+		Keys        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -533,11 +541,14 @@ type ComputerActionMove struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate to move to.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while moving the mouse.
+	Keys []string `json:"keys" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
 		X           respjson.Field
 		Y           respjson.Field
+		Keys        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -581,6 +592,8 @@ type ComputerActionScroll struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the scroll occurred.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while scrolling.
+	Keys []string `json:"keys" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ScrollX     respjson.Field
@@ -588,6 +601,7 @@ type ComputerActionScroll struct {
 		Type        respjson.Field
 		X           respjson.Field
 		Y           respjson.Field
+		Keys        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -648,8 +662,9 @@ func ComputerActionParamOfClick(button string, x int64, y int64) ComputerActionU
 	return ComputerActionUnionParam{OfClick: &click}
 }
 
-func ComputerActionParamOfDoubleClick(x int64, y int64) ComputerActionUnionParam {
+func ComputerActionParamOfDoubleClick(keys []string, x int64, y int64) ComputerActionUnionParam {
 	var doubleClick ComputerActionDoubleClickParam
+	doubleClick.Keys = keys
 	doubleClick.X = x
 	doubleClick.Y = y
 	return ComputerActionUnionParam{OfDoubleClick: &doubleClick}
@@ -751,14 +766,6 @@ func (u ComputerActionUnionParam) GetPath() []ComputerActionDragPathParam {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ComputerActionUnionParam) GetKeys() []string {
-	if vt := u.OfKeypress; vt != nil {
-		return vt.Keys
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u ComputerActionUnionParam) GetScrollX() *int64 {
 	if vt := u.OfScroll; vt != nil {
 		return &vt.ScrollX
@@ -834,6 +841,24 @@ func (u ComputerActionUnionParam) GetY() *int64 {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's Keys property, if present.
+func (u ComputerActionUnionParam) GetKeys() []string {
+	if vt := u.OfClick; vt != nil {
+		return vt.Keys
+	} else if vt := u.OfDoubleClick; vt != nil {
+		return vt.Keys
+	} else if vt := u.OfDrag; vt != nil {
+		return vt.Keys
+	} else if vt := u.OfKeypress; vt != nil {
+		return vt.Keys
+	} else if vt := u.OfMove; vt != nil {
+		return vt.Keys
+	} else if vt := u.OfScroll; vt != nil {
+		return vt.Keys
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[ComputerActionUnionParam](
 		"type",
@@ -862,6 +887,8 @@ type ComputerActionClickParam struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the click occurred.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while clicking.
+	Keys []string `json:"keys,omitzero"`
 	// Specifies the event type. For a click action, this property is always `click`.
 	//
 	// This field can be elided, and will marshal its zero value as "click".
@@ -885,8 +912,10 @@ func init() {
 
 // A double click action.
 //
-// The properties Type, X, Y are required.
+// The properties Keys, Type, X, Y are required.
 type ComputerActionDoubleClickParam struct {
+	// The keys being held while double-clicking.
+	Keys []string `json:"keys,omitzero" api:"required"`
 	// The x-coordinate where the double click occurred.
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the double click occurred.
@@ -923,6 +952,8 @@ type ComputerActionDragParam struct {
 	// ]
 	// ```
 	Path []ComputerActionDragPathParam `json:"path,omitzero" api:"required"`
+	// The keys being held while dragging the mouse.
+	Keys []string `json:"keys,omitzero"`
 	// Specifies the event type. For a drag action, this property is always set to
 	// `drag`.
 	//
@@ -989,6 +1020,8 @@ type ComputerActionMoveParam struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate to move to.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while moving the mouse.
+	Keys []string `json:"keys,omitzero"`
 	// Specifies the event type. For a move action, this property is always set to
 	// `move`.
 	//
@@ -1042,6 +1075,8 @@ type ComputerActionScrollParam struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the scroll occurred.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while scrolling.
+	Keys []string `json:"keys,omitzero"`
 	// Specifies the event type. For a scroll action, this property is always set to
 	// `scroll`.
 	//
@@ -4597,13 +4632,12 @@ type ResponseComputerToolCallActionUnion struct {
 	Button string `json:"button"`
 	// Any of "click", "double_click", "drag", "keypress", "move", "screenshot",
 	// "scroll", "type", "wait".
-	Type string `json:"type"`
-	X    int64  `json:"x"`
-	Y    int64  `json:"y"`
+	Type string   `json:"type"`
+	X    int64    `json:"x"`
+	Y    int64    `json:"y"`
+	Keys []string `json:"keys"`
 	// This field is from variant [ResponseComputerToolCallActionDrag].
 	Path []ResponseComputerToolCallActionDragPath `json:"path"`
-	// This field is from variant [ResponseComputerToolCallActionKeypress].
-	Keys []string `json:"keys"`
 	// This field is from variant [ResponseComputerToolCallActionScroll].
 	ScrollX int64 `json:"scroll_x"`
 	// This field is from variant [ResponseComputerToolCallActionScroll].
@@ -4615,8 +4649,8 @@ type ResponseComputerToolCallActionUnion struct {
 		Type    respjson.Field
 		X       respjson.Field
 		Y       respjson.Field
-		Path    respjson.Field
 		Keys    respjson.Field
+		Path    respjson.Field
 		ScrollX respjson.Field
 		ScrollY respjson.Field
 		Text    respjson.Field
@@ -4745,12 +4779,15 @@ type ResponseComputerToolCallActionClick struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the click occurred.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while clicking.
+	Keys []string `json:"keys" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Button      respjson.Field
 		Type        respjson.Field
 		X           respjson.Field
 		Y           respjson.Field
+		Keys        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4764,6 +4801,8 @@ func (r *ResponseComputerToolCallActionClick) UnmarshalJSON(data []byte) error {
 
 // A double click action.
 type ResponseComputerToolCallActionDoubleClick struct {
+	// The keys being held while double-clicking.
+	Keys []string `json:"keys" api:"required"`
 	// Specifies the event type. For a double click action, this property is always set
 	// to `double_click`.
 	Type constant.DoubleClick `json:"type" default:"double_click"`
@@ -4773,6 +4812,7 @@ type ResponseComputerToolCallActionDoubleClick struct {
 	Y int64 `json:"y" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Keys        respjson.Field
 		Type        respjson.Field
 		X           respjson.Field
 		Y           respjson.Field
@@ -4804,10 +4844,13 @@ type ResponseComputerToolCallActionDrag struct {
 	// Specifies the event type. For a drag action, this property is always set to
 	// `drag`.
 	Type constant.Drag `json:"type" default:"drag"`
+	// The keys being held while dragging the mouse.
+	Keys []string `json:"keys" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Path        respjson.Field
 		Type        respjson.Field
+		Keys        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4872,11 +4915,14 @@ type ResponseComputerToolCallActionMove struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate to move to.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while moving the mouse.
+	Keys []string `json:"keys" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
 		X           respjson.Field
 		Y           respjson.Field
+		Keys        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4920,6 +4966,8 @@ type ResponseComputerToolCallActionScroll struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the scroll occurred.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while scrolling.
+	Keys []string `json:"keys" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ScrollX     respjson.Field
@@ -4927,6 +4975,7 @@ type ResponseComputerToolCallActionScroll struct {
 		Type        respjson.Field
 		X           respjson.Field
 		Y           respjson.Field
+		Keys        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -5108,14 +5157,6 @@ func (u ResponseComputerToolCallActionUnionParam) GetPath() []ResponseComputerTo
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u ResponseComputerToolCallActionUnionParam) GetKeys() []string {
-	if vt := u.OfKeypress; vt != nil {
-		return vt.Keys
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u ResponseComputerToolCallActionUnionParam) GetScrollX() *int64 {
 	if vt := u.OfScroll; vt != nil {
 		return &vt.ScrollX
@@ -5191,6 +5232,24 @@ func (u ResponseComputerToolCallActionUnionParam) GetY() *int64 {
 	return nil
 }
 
+// Returns a pointer to the underlying variant's Keys property, if present.
+func (u ResponseComputerToolCallActionUnionParam) GetKeys() []string {
+	if vt := u.OfClick; vt != nil {
+		return vt.Keys
+	} else if vt := u.OfDoubleClick; vt != nil {
+		return vt.Keys
+	} else if vt := u.OfDrag; vt != nil {
+		return vt.Keys
+	} else if vt := u.OfKeypress; vt != nil {
+		return vt.Keys
+	} else if vt := u.OfMove; vt != nil {
+		return vt.Keys
+	} else if vt := u.OfScroll; vt != nil {
+		return vt.Keys
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[ResponseComputerToolCallActionUnionParam](
 		"type",
@@ -5219,6 +5278,8 @@ type ResponseComputerToolCallActionClickParam struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the click occurred.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while clicking.
+	Keys []string `json:"keys,omitzero"`
 	// Specifies the event type. For a click action, this property is always `click`.
 	//
 	// This field can be elided, and will marshal its zero value as "click".
@@ -5242,8 +5303,10 @@ func init() {
 
 // A double click action.
 //
-// The properties Type, X, Y are required.
+// The properties Keys, Type, X, Y are required.
 type ResponseComputerToolCallActionDoubleClickParam struct {
+	// The keys being held while double-clicking.
+	Keys []string `json:"keys,omitzero" api:"required"`
 	// The x-coordinate where the double click occurred.
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the double click occurred.
@@ -5280,6 +5343,8 @@ type ResponseComputerToolCallActionDragParam struct {
 	// ]
 	// ```
 	Path []ResponseComputerToolCallActionDragPathParam `json:"path,omitzero" api:"required"`
+	// The keys being held while dragging the mouse.
+	Keys []string `json:"keys,omitzero"`
 	// Specifies the event type. For a drag action, this property is always set to
 	// `drag`.
 	//
@@ -5346,6 +5411,8 @@ type ResponseComputerToolCallActionMoveParam struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate to move to.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while moving the mouse.
+	Keys []string `json:"keys,omitzero"`
 	// Specifies the event type. For a move action, this property is always set to
 	// `move`.
 	//
@@ -5399,6 +5466,8 @@ type ResponseComputerToolCallActionScrollParam struct {
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the scroll occurred.
 	Y int64 `json:"y" api:"required"`
+	// The keys being held while scrolling.
+	Keys []string `json:"keys,omitzero"`
 	// Specifies the event type. For a scroll action, this property is always set to
 	// `scroll`.
 	//
@@ -9937,14 +10006,13 @@ func (r *ResponseInputItemUnionContent) UnmarshalJSON(data []byte) error {
 // [ResponseInputItemUnion].
 type ResponseInputItemUnionAction struct {
 	// This field is from variant [ResponseComputerToolCallActionUnion].
-	Button string `json:"button"`
-	Type   string `json:"type"`
-	X      int64  `json:"x"`
-	Y      int64  `json:"y"`
+	Button string   `json:"button"`
+	Type   string   `json:"type"`
+	X      int64    `json:"x"`
+	Y      int64    `json:"y"`
+	Keys   []string `json:"keys"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	Path []ResponseComputerToolCallActionDragPath `json:"path"`
-	// This field is from variant [ResponseComputerToolCallActionUnion].
-	Keys []string `json:"keys"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	ScrollX int64 `json:"scroll_x"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
@@ -9978,8 +10046,8 @@ type ResponseInputItemUnionAction struct {
 		Type             respjson.Field
 		X                respjson.Field
 		Y                respjson.Field
-		Path             respjson.Field
 		Keys             respjson.Field
+		Path             respjson.Field
 		ScrollX          respjson.Field
 		ScrollY          respjson.Field
 		Text             respjson.Field
@@ -11869,15 +11937,6 @@ func (u responseInputItemUnionParamAction) GetPath() []ResponseComputerToolCallA
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u responseInputItemUnionParamAction) GetKeys() []string {
-	switch vt := u.any.(type) {
-	case *ResponseComputerToolCallActionUnionParam:
-		return vt.GetKeys()
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u responseInputItemUnionParamAction) GetScrollX() *int64 {
 	switch vt := u.any.(type) {
 	case *ResponseComputerToolCallActionUnionParam:
@@ -12041,6 +12100,15 @@ func (u responseInputItemUnionParamAction) GetTimeoutMs() *int64 {
 		return paramutil.AddrIfPresent(vt.TimeoutMs)
 	case *ResponseInputItemShellCallActionParam:
 		return paramutil.AddrIfPresent(vt.TimeoutMs)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's Keys property, if present.
+func (u responseInputItemUnionParamAction) GetKeys() []string {
+	switch vt := u.any.(type) {
+	case *ResponseComputerToolCallActionUnionParam:
+		return vt.GetKeys()
 	}
 	return nil
 }
@@ -13609,14 +13677,13 @@ func (r *ResponseItemUnionContent) UnmarshalJSON(data []byte) error {
 // [ResponseItemUnion].
 type ResponseItemUnionAction struct {
 	// This field is from variant [ResponseComputerToolCallActionUnion].
-	Button string `json:"button"`
-	Type   string `json:"type"`
-	X      int64  `json:"x"`
-	Y      int64  `json:"y"`
+	Button string   `json:"button"`
+	Type   string   `json:"type"`
+	X      int64    `json:"x"`
+	Y      int64    `json:"y"`
+	Keys   []string `json:"keys"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	Path []ResponseComputerToolCallActionDragPath `json:"path"`
-	// This field is from variant [ResponseComputerToolCallActionUnion].
-	Keys []string `json:"keys"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	ScrollX int64 `json:"scroll_x"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
@@ -13650,8 +13717,8 @@ type ResponseItemUnionAction struct {
 		Type             respjson.Field
 		X                respjson.Field
 		Y                respjson.Field
-		Path             respjson.Field
 		Keys             respjson.Field
+		Path             respjson.Field
 		ScrollX          respjson.Field
 		ScrollY          respjson.Field
 		Text             respjson.Field
@@ -14691,13 +14758,12 @@ type ResponseOutputItemUnionAction struct {
 	// This field is from variant [ResponseFunctionWebSearchActionUnion].
 	Pattern string `json:"pattern"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
-	Button string `json:"button"`
-	X      int64  `json:"x"`
-	Y      int64  `json:"y"`
+	Button string   `json:"button"`
+	X      int64    `json:"x"`
+	Y      int64    `json:"y"`
+	Keys   []string `json:"keys"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	Path []ResponseComputerToolCallActionDragPath `json:"path"`
-	// This field is from variant [ResponseComputerToolCallActionUnion].
-	Keys []string `json:"keys"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
 	ScrollX int64 `json:"scroll_x"`
 	// This field is from variant [ResponseComputerToolCallActionUnion].
@@ -14727,8 +14793,8 @@ type ResponseOutputItemUnionAction struct {
 		Button           respjson.Field
 		X                respjson.Field
 		Y                respjson.Field
-		Path             respjson.Field
 		Keys             respjson.Field
+		Path             respjson.Field
 		ScrollX          respjson.Field
 		ScrollY          respjson.Field
 		Text             respjson.Field
