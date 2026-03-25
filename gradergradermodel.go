@@ -102,7 +102,7 @@ type GraderInputOutputText struct {
 	// The text output from the model.
 	Text string `json:"text" api:"required"`
 	// The type of the output text. Always `output_text`.
-	Type constant.OutputText `json:"type" api:"required"`
+	Type constant.OutputText `json:"type" default:"output_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -123,7 +123,7 @@ type GraderInputInputImage struct {
 	// The URL of the image input.
 	ImageURL string `json:"image_url" api:"required"`
 	// The type of the image input. Always `input_image`.
-	Type constant.InputImage `json:"type" api:"required"`
+	Type constant.InputImage `json:"type" default:"input_image"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`, or
 	// `auto`. Defaults to `auto`.
 	Detail string `json:"detail"`
@@ -240,7 +240,7 @@ type GraderInputOutputTextParam struct {
 	// The type of the output text. Always `output_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "output_text".
-	Type constant.OutputText `json:"type" api:"required"`
+	Type constant.OutputText `json:"type" default:"output_text"`
 	paramObj
 }
 
@@ -264,7 +264,7 @@ type GraderInputInputImageParam struct {
 	// The type of the image input. Always `input_image`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_image".
-	Type constant.InputImage `json:"type" api:"required"`
+	Type constant.InputImage `json:"type" default:"input_image"`
 	paramObj
 }
 
@@ -289,7 +289,7 @@ type LabelModelGrader struct {
 	// The labels that indicate a passing result. Must be a subset of labels.
 	PassingLabels []string `json:"passing_labels" api:"required"`
 	// The object type, which is always `label_model`.
-	Type constant.LabelModel `json:"type" api:"required"`
+	Type constant.LabelModel `json:"type" default:"label_model"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Input         respjson.Field
@@ -430,7 +430,7 @@ type LabelModelGraderInputContentOutputText struct {
 	// The text output from the model.
 	Text string `json:"text" api:"required"`
 	// The type of the output text. Always `output_text`.
-	Type constant.OutputText `json:"type" api:"required"`
+	Type constant.OutputText `json:"type" default:"output_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -451,7 +451,7 @@ type LabelModelGraderInputContentInputImage struct {
 	// The URL of the image input.
 	ImageURL string `json:"image_url" api:"required"`
 	// The type of the image input. Always `input_image`.
-	Type constant.InputImage `json:"type" api:"required"`
+	Type constant.InputImage `json:"type" default:"input_image"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`, or
 	// `auto`. Defaults to `auto`.
 	Detail string `json:"detail"`
@@ -488,7 +488,7 @@ type LabelModelGraderParam struct {
 	// The object type, which is always `label_model`.
 	//
 	// This field can be elided, and will marshal its zero value as "label_model".
-	Type constant.LabelModel `json:"type" api:"required"`
+	Type constant.LabelModel `json:"type" default:"label_model"`
 	paramObj
 }
 
@@ -639,7 +639,7 @@ type LabelModelGraderInputContentOutputTextParam struct {
 	// The type of the output text. Always `output_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "output_text".
-	Type constant.OutputText `json:"type" api:"required"`
+	Type constant.OutputText `json:"type" default:"output_text"`
 	paramObj
 }
 
@@ -663,7 +663,7 @@ type LabelModelGraderInputContentInputImageParam struct {
 	// The type of the image input. Always `input_image`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_image".
-	Type constant.InputImage `json:"type" api:"required"`
+	Type constant.InputImage `json:"type" default:"input_image"`
 	paramObj
 }
 
@@ -686,7 +686,7 @@ type MultiGrader struct {
 	// The name of the grader.
 	Name string `json:"name" api:"required"`
 	// The object type, which is always `multi`.
-	Type constant.Multi `json:"type" api:"required"`
+	Type constant.Multi `json:"type" default:"multi"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		CalculateOutput respjson.Field
@@ -838,7 +838,7 @@ type MultiGraderParam struct {
 	// The object type, which is always `multi`.
 	//
 	// This field can be elided, and will marshal its zero value as "multi".
-	Type constant.Multi `json:"type" api:"required"`
+	Type constant.Multi `json:"type" default:"multi"`
 	paramObj
 }
 
@@ -1042,7 +1042,7 @@ type PythonGrader struct {
 	// The source code of the python script.
 	Source string `json:"source" api:"required"`
 	// The object type, which is always `python`.
-	Type constant.Python `json:"type" api:"required"`
+	Type constant.Python `json:"type" default:"python"`
 	// The image tag to use for the python script.
 	ImageTag string `json:"image_tag"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -1084,7 +1084,7 @@ type PythonGraderParam struct {
 	// The object type, which is always `python`.
 	//
 	// This field can be elided, and will marshal its zero value as "python".
-	Type constant.Python `json:"type" api:"required"`
+	Type constant.Python `json:"type" default:"python"`
 	paramObj
 }
 
@@ -1106,7 +1106,7 @@ type ScoreModelGrader struct {
 	// The name of the grader.
 	Name string `json:"name" api:"required"`
 	// The object type, which is always `score_model`.
-	Type constant.ScoreModel `json:"type" api:"required"`
+	Type constant.ScoreModel `json:"type" default:"score_model"`
 	// The range of the score. Defaults to `[0, 1]`.
 	Range []float64 `json:"range"`
 	// The sampling parameters for the model.
@@ -1251,7 +1251,7 @@ type ScoreModelGraderInputContentOutputText struct {
 	// The text output from the model.
 	Text string `json:"text" api:"required"`
 	// The type of the output text. Always `output_text`.
-	Type constant.OutputText `json:"type" api:"required"`
+	Type constant.OutputText `json:"type" default:"output_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -1272,7 +1272,7 @@ type ScoreModelGraderInputContentInputImage struct {
 	// The URL of the image input.
 	ImageURL string `json:"image_url" api:"required"`
 	// The type of the image input. Always `input_image`.
-	Type constant.InputImage `json:"type" api:"required"`
+	Type constant.InputImage `json:"type" default:"input_image"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`, or
 	// `auto`. Defaults to `auto`.
 	Detail string `json:"detail"`
@@ -1354,7 +1354,7 @@ type ScoreModelGraderParam struct {
 	// The object type, which is always `score_model`.
 	//
 	// This field can be elided, and will marshal its zero value as "score_model".
-	Type constant.ScoreModel `json:"type" api:"required"`
+	Type constant.ScoreModel `json:"type" default:"score_model"`
 	paramObj
 }
 
@@ -1505,7 +1505,7 @@ type ScoreModelGraderInputContentOutputTextParam struct {
 	// The type of the output text. Always `output_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "output_text".
-	Type constant.OutputText `json:"type" api:"required"`
+	Type constant.OutputText `json:"type" default:"output_text"`
 	paramObj
 }
 
@@ -1529,7 +1529,7 @@ type ScoreModelGraderInputContentInputImageParam struct {
 	// The type of the image input. Always `input_image`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_image".
-	Type constant.InputImage `json:"type" api:"required"`
+	Type constant.InputImage `json:"type" default:"input_image"`
 	paramObj
 }
 
@@ -1592,7 +1592,7 @@ type StringCheckGrader struct {
 	// The reference text. This may include template strings.
 	Reference string `json:"reference" api:"required"`
 	// The object type, which is always `string_check`.
-	Type constant.StringCheck `json:"type" api:"required"`
+	Type constant.StringCheck `json:"type" default:"string_check"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Input       respjson.Field
@@ -1648,7 +1648,7 @@ type StringCheckGraderParam struct {
 	// The object type, which is always `string_check`.
 	//
 	// This field can be elided, and will marshal its zero value as "string_check".
-	Type constant.StringCheck `json:"type" api:"required"`
+	Type constant.StringCheck `json:"type" default:"string_check"`
 	paramObj
 }
 
@@ -1675,7 +1675,7 @@ type TextSimilarityGrader struct {
 	// The text being graded against.
 	Reference string `json:"reference" api:"required"`
 	// The type of grader.
-	Type constant.TextSimilarity `json:"type" api:"required"`
+	Type constant.TextSimilarity `json:"type" default:"text_similarity"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EvaluationMetric respjson.Field
@@ -1740,7 +1740,7 @@ type TextSimilarityGraderParam struct {
 	// The type of grader.
 	//
 	// This field can be elided, and will marshal its zero value as "text_similarity".
-	Type constant.TextSimilarity `json:"type" api:"required"`
+	Type constant.TextSimilarity `json:"type" default:"text_similarity"`
 	paramObj
 }
 

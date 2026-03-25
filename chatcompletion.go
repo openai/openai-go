@@ -186,7 +186,7 @@ type ChatCompletion struct {
 	// The model used for the chat completion.
 	Model string `json:"model" api:"required"`
 	// The object type, which is always `chat.completion`.
-	Object constant.ChatCompletion `json:"object" api:"required"`
+	Object constant.ChatCompletion `json:"object" default:"chat.completion"`
 	// Specifies the processing type used for serving the request.
 	//
 	//   - If set to 'auto', then the request will be processed with the service tier
@@ -325,7 +325,7 @@ type ChatCompletionAllowedToolChoiceParam struct {
 	// Allowed tool configuration type. Always `allowed_tools`.
 	//
 	// This field can be elided, and will marshal its zero value as "allowed_tools".
-	Type constant.AllowedTools `json:"type" api:"required"`
+	Type constant.AllowedTools `json:"type" default:"allowed_tools"`
 	paramObj
 }
 
@@ -362,7 +362,7 @@ type ChatCompletionAssistantMessageParam struct {
 	// The role of the messages author, in this case `assistant`.
 	//
 	// This field can be elided, and will marshal its zero value as "assistant".
-	Role constant.Assistant `json:"role" api:"required"`
+	Role constant.Assistant `json:"role" default:"assistant"`
 	paramObj
 }
 
@@ -650,7 +650,7 @@ type ChatCompletionChunk struct {
 	// The model to generate the completion.
 	Model string `json:"model" api:"required"`
 	// The object type, which is always `chat.completion.chunk`.
-	Object constant.ChatCompletionChunk `json:"object" api:"required"`
+	Object constant.ChatCompletionChunk `json:"object" default:"chat.completion.chunk"`
 	// Specifies the processing type used for serving the request.
 	//
 	//   - If set to 'auto', then the request will be processed with the service tier
@@ -1015,7 +1015,7 @@ type ChatCompletionContentPartFileParam struct {
 	// The type of the content part. Always `file`.
 	//
 	// This field can be elided, and will marshal its zero value as "file".
-	Type constant.File `json:"type" api:"required"`
+	Type constant.File `json:"type" default:"file"`
 	paramObj
 }
 
@@ -1050,7 +1050,7 @@ func (r *ChatCompletionContentPartFileFileParam) UnmarshalJSON(data []byte) erro
 type ChatCompletionContentPartImage struct {
 	ImageURL ChatCompletionContentPartImageImageURL `json:"image_url" api:"required"`
 	// The type of the content part.
-	Type constant.ImageURL `json:"type" api:"required"`
+	Type constant.ImageURL `json:"type" default:"image_url"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ImageURL    respjson.Field
@@ -1107,7 +1107,7 @@ type ChatCompletionContentPartImageParam struct {
 	// The type of the content part.
 	//
 	// This field can be elided, and will marshal its zero value as "image_url".
-	Type constant.ImageURL `json:"type" api:"required"`
+	Type constant.ImageURL `json:"type" default:"image_url"`
 	paramObj
 }
 
@@ -1153,7 +1153,7 @@ type ChatCompletionContentPartInputAudioParam struct {
 	// The type of the content part. Always `input_audio`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_audio".
-	Type constant.InputAudio `json:"type" api:"required"`
+	Type constant.InputAudio `json:"type" default:"input_audio"`
 	paramObj
 }
 
@@ -1197,7 +1197,7 @@ type ChatCompletionContentPartRefusalParam struct {
 	// The type of the content part.
 	//
 	// This field can be elided, and will marshal its zero value as "refusal".
-	Type constant.Refusal `json:"type" api:"required"`
+	Type constant.Refusal `json:"type" default:"refusal"`
 	paramObj
 }
 
@@ -1215,7 +1215,7 @@ type ChatCompletionContentPartText struct {
 	// The text content.
 	Text string `json:"text" api:"required"`
 	// The type of the content part.
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -1251,7 +1251,7 @@ type ChatCompletionContentPartTextParam struct {
 	// The type of the content part.
 	//
 	// This field can be elided, and will marshal its zero value as "text".
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	paramObj
 }
 
@@ -1272,7 +1272,7 @@ type ChatCompletionCustomToolParam struct {
 	// The type of the custom tool. Always `custom`.
 	//
 	// This field can be elided, and will marshal its zero value as "custom".
-	Type constant.Custom `json:"type" api:"required"`
+	Type constant.Custom `json:"type" default:"custom"`
 	paramObj
 }
 
@@ -1368,7 +1368,7 @@ func NewChatCompletionCustomToolCustomFormatTextParam() ChatCompletionCustomTool
 // [NewChatCompletionCustomToolCustomFormatTextParam].
 type ChatCompletionCustomToolCustomFormatTextParam struct {
 	// Unconstrained text format. Always `text`.
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	paramObj
 }
 
@@ -1389,7 +1389,7 @@ type ChatCompletionCustomToolCustomFormatGrammarParam struct {
 	// Grammar format. Always `grammar`.
 	//
 	// This field can be elided, and will marshal its zero value as "grammar".
-	Type constant.Grammar `json:"type" api:"required"`
+	Type constant.Grammar `json:"type" default:"grammar"`
 	paramObj
 }
 
@@ -1434,7 +1434,7 @@ type ChatCompletionDeleted struct {
 	// Whether the chat completion was deleted.
 	Deleted bool `json:"deleted" api:"required"`
 	// The type of object being deleted.
-	Object constant.ChatCompletionDeleted `json:"object" api:"required"`
+	Object constant.ChatCompletionDeleted `json:"object" default:"chat.completion.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1465,7 +1465,7 @@ type ChatCompletionDeveloperMessageParam struct {
 	// The role of the messages author, in this case `developer`.
 	//
 	// This field can be elided, and will marshal its zero value as "developer".
-	Role constant.Developer `json:"role" api:"required"`
+	Role constant.Developer `json:"role" default:"developer"`
 	paramObj
 }
 
@@ -1531,7 +1531,7 @@ type ChatCompletionFunctionMessageParam struct {
 	// The role of the messages author, in this case `function`.
 	//
 	// This field can be elided, and will marshal its zero value as "function".
-	Role constant.Function `json:"role" api:"required"`
+	Role constant.Function `json:"role" default:"function"`
 	paramObj
 }
 
@@ -1551,7 +1551,7 @@ type ChatCompletionFunctionToolParam struct {
 	// The type of the tool. Currently, only `function` is supported.
 	//
 	// This field can be elided, and will marshal its zero value as "function".
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	paramObj
 }
 
@@ -1570,7 +1570,7 @@ type ChatCompletionMessage struct {
 	// The refusal message generated by the model.
 	Refusal string `json:"refusal" api:"required"`
 	// The role of the author of this message.
-	Role constant.Assistant `json:"role" api:"required"`
+	Role constant.Assistant `json:"role" default:"assistant"`
 	// Annotations for the message, when applicable, as when using the
 	// [web search tool](https://platform.openai.com/docs/guides/tools-web-search?api-mode=chat).
 	Annotations []ChatCompletionMessageAnnotation `json:"annotations"`
@@ -1608,7 +1608,7 @@ func (r *ChatCompletionMessage) UnmarshalJSON(data []byte) error {
 // A URL citation when using web search.
 type ChatCompletionMessageAnnotation struct {
 	// The type of the URL citation. Always `url_citation`.
-	Type constant.URLCitation `json:"type" api:"required"`
+	Type constant.URLCitation `json:"type" default:"url_citation"`
 	// A URL citation when using web search.
 	URLCitation ChatCompletionMessageAnnotationURLCitation `json:"url_citation" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -1687,7 +1687,7 @@ type ChatCompletionMessageCustomToolCall struct {
 	// The custom tool that the model called.
 	Custom ChatCompletionMessageCustomToolCallCustom `json:"custom" api:"required"`
 	// The type of the tool. Always `custom`.
-	Type constant.Custom `json:"type" api:"required"`
+	Type constant.Custom `json:"type" default:"custom"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1746,7 +1746,7 @@ type ChatCompletionMessageCustomToolCallParam struct {
 	// The type of the tool. Always `custom`.
 	//
 	// This field can be elided, and will marshal its zero value as "custom".
-	Type constant.Custom `json:"type" api:"required"`
+	Type constant.Custom `json:"type" default:"custom"`
 	paramObj
 }
 
@@ -1784,7 +1784,7 @@ type ChatCompletionMessageFunctionToolCall struct {
 	// The function that the model called.
 	Function ChatCompletionMessageFunctionToolCallFunction `json:"function" api:"required"`
 	// The type of the tool. Currently, only `function` is supported.
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1846,7 +1846,7 @@ type ChatCompletionMessageFunctionToolCallParam struct {
 	// The type of the tool. Currently, only `function` is supported.
 	//
 	// This field can be elided, and will marshal its zero value as "function".
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	paramObj
 }
 
@@ -2268,7 +2268,7 @@ type ChatCompletionNamedToolChoiceParam struct {
 	// For function calling, the type is always `function`.
 	//
 	// This field can be elided, and will marshal its zero value as "function".
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	paramObj
 }
 
@@ -2304,7 +2304,7 @@ type ChatCompletionNamedToolChoiceCustomParam struct {
 	// For custom tool calling, the type is always `custom`.
 	//
 	// This field can be elided, and will marshal its zero value as "custom".
-	Type constant.Custom `json:"type" api:"required"`
+	Type constant.Custom `json:"type" default:"custom"`
 	paramObj
 }
 
@@ -2344,7 +2344,7 @@ type ChatCompletionPredictionContentParam struct {
 	// always `content`.
 	//
 	// This field can be elided, and will marshal its zero value as "content".
-	Type constant.Content `json:"type" api:"required"`
+	Type constant.Content `json:"type" default:"content"`
 	paramObj
 }
 
@@ -2481,7 +2481,7 @@ type ChatCompletionSystemMessageParam struct {
 	// The role of the messages author, in this case `system`.
 	//
 	// This field can be elided, and will marshal its zero value as "system".
-	Role constant.System `json:"role" api:"required"`
+	Role constant.System `json:"role" default:"system"`
 	paramObj
 }
 
@@ -2756,7 +2756,7 @@ type ChatCompletionToolMessageParam struct {
 	// The role of the messages author, in this case `tool`.
 	//
 	// This field can be elided, and will marshal its zero value as "tool".
-	Role constant.Tool `json:"role" api:"required"`
+	Role constant.Tool `json:"role" default:"tool"`
 	paramObj
 }
 
@@ -2806,7 +2806,7 @@ type ChatCompletionUserMessageParam struct {
 	// The role of the messages author, in this case `user`.
 	//
 	// This field can be elided, and will marshal its zero value as "user".
-	Role constant.User `json:"role" api:"required"`
+	Role constant.User `json:"role" default:"user"`
 	paramObj
 }
 
@@ -3365,7 +3365,7 @@ type ChatCompletionNewParamsWebSearchOptionsUserLocation struct {
 	// The type of location approximation. Always `approximate`.
 	//
 	// This field can be elided, and will marshal its zero value as "approximate".
-	Type constant.Approximate `json:"type" api:"required"`
+	Type constant.Approximate `json:"type" default:"approximate"`
 	paramObj
 }
 

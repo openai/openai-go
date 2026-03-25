@@ -159,7 +159,7 @@ func (r *ResponseService) Compact(ctx context.Context, body ResponseCompactParam
 // Allows the assistant to create, delete, or update files using unified diffs.
 type ApplyPatchTool struct {
 	// The type of the tool. Always `apply_patch`.
-	Type constant.ApplyPatch `json:"type" api:"required"`
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -194,7 +194,7 @@ func NewApplyPatchToolParam() ApplyPatchToolParam {
 // This struct has a constant value, construct it with [NewApplyPatchToolParam].
 type ApplyPatchToolParam struct {
 	// The type of the tool. Always `apply_patch`.
-	Type constant.ApplyPatch `json:"type" api:"required"`
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
 	paramObj
 }
 
@@ -212,7 +212,7 @@ type CompactedResponse struct {
 	// Unix timestamp (in seconds) when the compacted conversation was created.
 	CreatedAt int64 `json:"created_at" api:"required"`
 	// The object type. Always `response.compaction`.
-	Object constant.ResponseCompaction `json:"object" api:"required"`
+	Object constant.ResponseCompaction `json:"object" default:"response.compaction"`
 	// The compacted list of output items. This is a list of all user messages,
 	// followed by a single compaction item.
 	Output []ResponseOutputItemUnion `json:"output" api:"required"`
@@ -401,7 +401,7 @@ type ComputerActionClick struct {
 	// Any of "left", "right", "wheel", "back", "forward".
 	Button string `json:"button" api:"required"`
 	// Specifies the event type. For a click action, this property is always `click`.
-	Type constant.Click `json:"type" api:"required"`
+	Type constant.Click `json:"type" default:"click"`
 	// The x-coordinate where the click occurred.
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the click occurred.
@@ -427,7 +427,7 @@ func (r *ComputerActionClick) UnmarshalJSON(data []byte) error {
 type ComputerActionDoubleClick struct {
 	// Specifies the event type. For a double click action, this property is always set
 	// to `double_click`.
-	Type constant.DoubleClick `json:"type" api:"required"`
+	Type constant.DoubleClick `json:"type" default:"double_click"`
 	// The x-coordinate where the double click occurred.
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the double click occurred.
@@ -464,7 +464,7 @@ type ComputerActionDrag struct {
 	Path []ComputerActionDragPath `json:"path" api:"required"`
 	// Specifies the event type. For a drag action, this property is always set to
 	// `drag`.
-	Type constant.Drag `json:"type" api:"required"`
+	Type constant.Drag `json:"type" default:"drag"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Path        respjson.Field
@@ -508,7 +508,7 @@ type ComputerActionKeypress struct {
 	Keys []string `json:"keys" api:"required"`
 	// Specifies the event type. For a keypress action, this property is always set to
 	// `keypress`.
-	Type constant.Keypress `json:"type" api:"required"`
+	Type constant.Keypress `json:"type" default:"keypress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Keys        respjson.Field
@@ -528,7 +528,7 @@ func (r *ComputerActionKeypress) UnmarshalJSON(data []byte) error {
 type ComputerActionMove struct {
 	// Specifies the event type. For a move action, this property is always set to
 	// `move`.
-	Type constant.Move `json:"type" api:"required"`
+	Type constant.Move `json:"type" default:"move"`
 	// The x-coordinate to move to.
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate to move to.
@@ -553,7 +553,7 @@ func (r *ComputerActionMove) UnmarshalJSON(data []byte) error {
 type ComputerActionScreenshot struct {
 	// Specifies the event type. For a screenshot action, this property is always set
 	// to `screenshot`.
-	Type constant.Screenshot `json:"type" api:"required"`
+	Type constant.Screenshot `json:"type" default:"screenshot"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -576,7 +576,7 @@ type ComputerActionScroll struct {
 	ScrollY int64 `json:"scroll_y" api:"required"`
 	// Specifies the event type. For a scroll action, this property is always set to
 	// `scroll`.
-	Type constant.Scroll `json:"type" api:"required"`
+	Type constant.Scroll `json:"type" default:"scroll"`
 	// The x-coordinate where the scroll occurred.
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the scroll occurred.
@@ -605,7 +605,7 @@ type ComputerActionType struct {
 	Text string `json:"text" api:"required"`
 	// Specifies the event type. For a type action, this property is always set to
 	// `type`.
-	Type constant.Type `json:"type" api:"required"`
+	Type constant.Type `json:"type" default:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -625,7 +625,7 @@ func (r *ComputerActionType) UnmarshalJSON(data []byte) error {
 type ComputerActionWait struct {
 	// Specifies the event type. For a wait action, this property is always set to
 	// `wait`.
-	Type constant.Wait `json:"type" api:"required"`
+	Type constant.Wait `json:"type" default:"wait"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -865,7 +865,7 @@ type ComputerActionClickParam struct {
 	// Specifies the event type. For a click action, this property is always `click`.
 	//
 	// This field can be elided, and will marshal its zero value as "click".
-	Type constant.Click `json:"type" api:"required"`
+	Type constant.Click `json:"type" default:"click"`
 	paramObj
 }
 
@@ -895,7 +895,7 @@ type ComputerActionDoubleClickParam struct {
 	// to `double_click`.
 	//
 	// This field can be elided, and will marshal its zero value as "double_click".
-	Type constant.DoubleClick `json:"type" api:"required"`
+	Type constant.DoubleClick `json:"type" default:"double_click"`
 	paramObj
 }
 
@@ -927,7 +927,7 @@ type ComputerActionDragParam struct {
 	// `drag`.
 	//
 	// This field can be elided, and will marshal its zero value as "drag".
-	Type constant.Drag `json:"type" api:"required"`
+	Type constant.Drag `json:"type" default:"drag"`
 	paramObj
 }
 
@@ -969,7 +969,7 @@ type ComputerActionKeypressParam struct {
 	// `keypress`.
 	//
 	// This field can be elided, and will marshal its zero value as "keypress".
-	Type constant.Keypress `json:"type" api:"required"`
+	Type constant.Keypress `json:"type" default:"keypress"`
 	paramObj
 }
 
@@ -993,7 +993,7 @@ type ComputerActionMoveParam struct {
 	// `move`.
 	//
 	// This field can be elided, and will marshal its zero value as "move".
-	Type constant.Move `json:"type" api:"required"`
+	Type constant.Move `json:"type" default:"move"`
 	paramObj
 }
 
@@ -1018,7 +1018,7 @@ func NewComputerActionScreenshotParam() ComputerActionScreenshotParam {
 type ComputerActionScreenshotParam struct {
 	// Specifies the event type. For a screenshot action, this property is always set
 	// to `screenshot`.
-	Type constant.Screenshot `json:"type" api:"required"`
+	Type constant.Screenshot `json:"type" default:"screenshot"`
 	paramObj
 }
 
@@ -1046,7 +1046,7 @@ type ComputerActionScrollParam struct {
 	// `scroll`.
 	//
 	// This field can be elided, and will marshal its zero value as "scroll".
-	Type constant.Scroll `json:"type" api:"required"`
+	Type constant.Scroll `json:"type" default:"scroll"`
 	paramObj
 }
 
@@ -1068,7 +1068,7 @@ type ComputerActionTypeParam struct {
 	// `type`.
 	//
 	// This field can be elided, and will marshal its zero value as "type".
-	Type constant.Type `json:"type" api:"required"`
+	Type constant.Type `json:"type" default:"type"`
 	paramObj
 }
 
@@ -1093,7 +1093,7 @@ func NewComputerActionWaitParam() ComputerActionWaitParam {
 type ComputerActionWaitParam struct {
 	// Specifies the event type. For a wait action, this property is always set to
 	// `wait`.
-	Type constant.Wait `json:"type" api:"required"`
+	Type constant.Wait `json:"type" default:"wait"`
 	paramObj
 }
 
@@ -1113,7 +1113,7 @@ type ComputerActionListParam []ComputerActionUnionParam
 // [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
 type ComputerTool struct {
 	// The type of the computer tool. Always `computer`.
-	Type constant.Computer `json:"type" api:"required"`
+	Type constant.Computer `json:"type" default:"computer"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -1149,7 +1149,7 @@ func NewComputerToolParam() ComputerToolParam {
 // This struct has a constant value, construct it with [NewComputerToolParam].
 type ComputerToolParam struct {
 	// The type of the computer tool. Always `computer`.
-	Type constant.Computer `json:"type" api:"required"`
+	Type constant.Computer `json:"type" default:"computer"`
 	paramObj
 }
 
@@ -1173,7 +1173,7 @@ type ComputerUsePreviewTool struct {
 	// Any of "windows", "mac", "linux", "ubuntu", "browser".
 	Environment ComputerUsePreviewToolEnvironment `json:"environment" api:"required"`
 	// The type of the computer use tool. Always `computer_use_preview`.
-	Type constant.ComputerUsePreview `json:"type" api:"required"`
+	Type constant.ComputerUsePreview `json:"type" default:"computer_use_preview"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		DisplayHeight respjson.Field
@@ -1228,7 +1228,7 @@ type ComputerUsePreviewToolParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "computer_use_preview".
-	Type constant.ComputerUsePreview `json:"type" api:"required"`
+	Type constant.ComputerUsePreview `json:"type" default:"computer_use_preview"`
 	paramObj
 }
 
@@ -1242,7 +1242,7 @@ func (r *ComputerUsePreviewToolParam) UnmarshalJSON(data []byte) error {
 
 type ContainerAuto struct {
 	// Automatically creates a container for this request
-	Type constant.ContainerAuto `json:"type" api:"required"`
+	Type constant.ContainerAuto `json:"type" default:"container_auto"`
 	// An optional list of uploaded files to make available to your code.
 	FileIDs []string `json:"file_ids"`
 	// The memory limit for the container.
@@ -1446,7 +1446,7 @@ type ContainerAutoParam struct {
 	// Automatically creates a container for this request
 	//
 	// This field can be elided, and will marshal its zero value as "container_auto".
-	Type constant.ContainerAuto `json:"type" api:"required"`
+	Type constant.ContainerAuto `json:"type" default:"container_auto"`
 	paramObj
 }
 
@@ -1604,7 +1604,7 @@ type ContainerNetworkPolicyAllowlist struct {
 	// A list of allowed domains when type is `allowlist`.
 	AllowedDomains []string `json:"allowed_domains" api:"required"`
 	// Allow outbound network access only to specified domains. Always `allowlist`.
-	Type constant.Allowlist `json:"type" api:"required"`
+	Type constant.Allowlist `json:"type" default:"allowlist"`
 	// Optional domain-scoped secrets for allowlisted domains.
 	DomainSecrets []ContainerNetworkPolicyDomainSecret `json:"domain_secrets"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -1642,7 +1642,7 @@ type ContainerNetworkPolicyAllowlistParam struct {
 	// Allow outbound network access only to specified domains. Always `allowlist`.
 	//
 	// This field can be elided, and will marshal its zero value as "allowlist".
-	Type constant.Allowlist `json:"type" api:"required"`
+	Type constant.Allowlist `json:"type" default:"allowlist"`
 	paramObj
 }
 
@@ -1656,7 +1656,7 @@ func (r *ContainerNetworkPolicyAllowlistParam) UnmarshalJSON(data []byte) error 
 
 type ContainerNetworkPolicyDisabled struct {
 	// Disable outbound network access. Always `disabled`.
-	Type constant.Disabled `json:"type" api:"required"`
+	Type constant.Disabled `json:"type" default:"disabled"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -1691,7 +1691,7 @@ func NewContainerNetworkPolicyDisabledParam() ContainerNetworkPolicyDisabledPara
 // [NewContainerNetworkPolicyDisabledParam].
 type ContainerNetworkPolicyDisabledParam struct {
 	// Disable outbound network access. Always `disabled`.
-	Type constant.Disabled `json:"type" api:"required"`
+	Type constant.Disabled `json:"type" default:"disabled"`
 	paramObj
 }
 
@@ -1759,7 +1759,7 @@ type ContainerReference struct {
 	// The ID of the referenced container.
 	ContainerID string `json:"container_id" api:"required"`
 	// References a container created with the /v1/containers endpoint
-	Type constant.ContainerReference `json:"type" api:"required"`
+	Type constant.ContainerReference `json:"type" default:"container_reference"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContainerID respjson.Field
@@ -1792,7 +1792,7 @@ type ContainerReferenceParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "container_reference".
-	Type constant.ContainerReference `json:"type" api:"required"`
+	Type constant.ContainerReference `json:"type" default:"container_reference"`
 	paramObj
 }
 
@@ -1810,7 +1810,7 @@ type CustomTool struct {
 	// The name of the custom tool, used to identify it in tool calls.
 	Name string `json:"name" api:"required"`
 	// The type of the custom tool. Always `custom`.
-	Type constant.Custom `json:"type" api:"required"`
+	Type constant.Custom `json:"type" default:"custom"`
 	// Whether this tool should be deferred and discovered via tool search.
 	DeferLoading bool `json:"defer_loading"`
 	// Optional description of the custom tool, used to provide more context.
@@ -1860,7 +1860,7 @@ type CustomToolParam struct {
 	// The type of the custom tool. Always `custom`.
 	//
 	// This field can be elided, and will marshal its zero value as "custom".
-	Type constant.Custom `json:"type" api:"required"`
+	Type constant.Custom `json:"type" default:"custom"`
 	paramObj
 }
 
@@ -2057,7 +2057,7 @@ func (u *EasyInputMessageContentUnionParam) asAny() any {
 // [file search tool](https://platform.openai.com/docs/guides/tools-file-search).
 type FileSearchTool struct {
 	// The type of the file search tool. Always `file_search`.
-	Type constant.FileSearch `json:"type" api:"required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	// The IDs of the vector stores to search.
 	VectorStoreIDs []string `json:"vector_store_ids" api:"required"`
 	// A filter to apply.
@@ -2201,7 +2201,7 @@ type FileSearchToolParam struct {
 	// The type of the file search tool. Always `file_search`.
 	//
 	// This field can be elided, and will marshal its zero value as "file_search".
-	Type constant.FileSearch `json:"type" api:"required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	paramObj
 }
 
@@ -2325,7 +2325,7 @@ func (r *FileSearchToolRankingOptionsHybridSearchParam) UnmarshalJSON(data []byt
 // A tool that allows the model to execute shell commands.
 type FunctionShellTool struct {
 	// The type of the shell tool. Always `shell`.
-	Type        constant.Shell                    `json:"type" api:"required"`
+	Type        constant.Shell                    `json:"type" default:"shell"`
 	Environment FunctionShellToolEnvironmentUnion `json:"environment" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -2471,7 +2471,7 @@ type FunctionShellToolParam struct {
 	// The type of the shell tool. Always `shell`.
 	//
 	// This field can be elided, and will marshal its zero value as "shell".
-	Type constant.Shell `json:"type" api:"required"`
+	Type constant.Shell `json:"type" default:"shell"`
 	paramObj
 }
 
@@ -2601,7 +2601,7 @@ type FunctionTool struct {
 	// Whether to enforce strict parameter validation. Default `true`.
 	Strict bool `json:"strict" api:"required"`
 	// The type of the function tool. Always `function`.
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	// Whether this function is deferred and loaded via tool search.
 	DeferLoading bool `json:"defer_loading"`
 	// A description of the function. Used by the model to determine whether or not to
@@ -2655,7 +2655,7 @@ type FunctionToolParam struct {
 	// The type of the function tool. Always `function`.
 	//
 	// This field can be elided, and will marshal its zero value as "function".
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	paramObj
 }
 
@@ -2675,7 +2675,7 @@ type InlineSkill struct {
 	// Inline skill payload
 	Source InlineSkillSource `json:"source" api:"required"`
 	// Defines an inline skill for this request.
-	Type constant.Inline `json:"type" api:"required"`
+	Type constant.Inline `json:"type" default:"inline"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Description respjson.Field
@@ -2713,7 +2713,7 @@ type InlineSkillParam struct {
 	// Defines an inline skill for this request.
 	//
 	// This field can be elided, and will marshal its zero value as "inline".
-	Type constant.Inline `json:"type" api:"required"`
+	Type constant.Inline `json:"type" default:"inline"`
 	paramObj
 }
 
@@ -2730,9 +2730,9 @@ type InlineSkillSource struct {
 	// Base64-encoded skill zip bundle.
 	Data string `json:"data" api:"required"`
 	// The media type of the inline skill payload. Must be `application/zip`.
-	MediaType constant.ApplicationZip `json:"media_type" api:"required"`
+	MediaType constant.ApplicationZip `json:"media_type" default:"application/zip"`
 	// The type of the inline skill source. Must be `base64`.
-	Type constant.Base64 `json:"type" api:"required"`
+	Type constant.Base64 `json:"type" default:"base64"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -2767,11 +2767,11 @@ type InlineSkillSourceParam struct {
 	// The media type of the inline skill payload. Must be `application/zip`.
 	//
 	// This field can be elided, and will marshal its zero value as "application/zip".
-	MediaType constant.ApplicationZip `json:"media_type" api:"required"`
+	MediaType constant.ApplicationZip `json:"media_type" default:"application/zip"`
 	// The type of the inline skill source. Must be `base64`.
 	//
 	// This field can be elided, and will marshal its zero value as "base64".
-	Type constant.Base64 `json:"type" api:"required"`
+	Type constant.Base64 `json:"type" default:"base64"`
 	paramObj
 }
 
@@ -2785,7 +2785,7 @@ func (r *InlineSkillSourceParam) UnmarshalJSON(data []byte) error {
 
 type LocalEnvironment struct {
 	// Use a local computer environment.
-	Type constant.Local `json:"type" api:"required"`
+	Type constant.Local `json:"type" default:"local"`
 	// An optional list of skills.
 	Skills []LocalSkill `json:"skills"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -2819,7 +2819,7 @@ type LocalEnvironmentParam struct {
 	// Use a local computer environment.
 	//
 	// This field can be elided, and will marshal its zero value as "local".
-	Type constant.Local `json:"type" api:"required"`
+	Type constant.Local `json:"type" default:"local"`
 	paramObj
 }
 
@@ -2891,7 +2891,7 @@ type NamespaceTool struct {
 	// The function/custom tools available inside this namespace.
 	Tools []NamespaceToolToolUnion `json:"tools" api:"required"`
 	// The type of the tool. Always `namespace`.
-	Type constant.Namespace `json:"type" api:"required"`
+	Type constant.Namespace `json:"type" default:"namespace"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Description respjson.Field
@@ -2994,7 +2994,7 @@ func (r *NamespaceToolToolUnion) UnmarshalJSON(data []byte) error {
 
 type NamespaceToolToolFunction struct {
 	Name string            `json:"name" api:"required"`
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	// Whether this function should be deferred and discovered via tool search.
 	DeferLoading bool   `json:"defer_loading"`
 	Description  string `json:"description" api:"nullable"`
@@ -3032,7 +3032,7 @@ type NamespaceToolParam struct {
 	// The type of the tool. Always `namespace`.
 	//
 	// This field can be elided, and will marshal its zero value as "namespace".
-	Type constant.Namespace `json:"type" api:"required"`
+	Type constant.Namespace `json:"type" default:"namespace"`
 	paramObj
 }
 
@@ -3150,7 +3150,7 @@ type NamespaceToolToolFunctionParam struct {
 	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
 	Parameters   any             `json:"parameters,omitzero"`
 	// This field can be elided, and will marshal its zero value as "function".
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	paramObj
 }
 
@@ -3191,7 +3191,7 @@ type Response struct {
 	// available models.
 	Model shared.ResponsesModel `json:"model" api:"required"`
 	// The object type of this resource - always set to `response`.
-	Object constant.Response `json:"object" api:"required"`
+	Object constant.Response `json:"object" default:"response"`
 	// An array of content items generated by the model.
 	//
 	//   - The length and order of items in the `output` array is dependent on the
@@ -3607,7 +3607,7 @@ type ResponseApplyPatchToolCall struct {
 	// Any of "in_progress", "completed".
 	Status ResponseApplyPatchToolCallStatus `json:"status" api:"required"`
 	// The type of the item. Always `apply_patch_call`.
-	Type constant.ApplyPatchCall `json:"type" api:"required"`
+	Type constant.ApplyPatchCall `json:"type" default:"apply_patch_call"`
 	// The ID of the entity that created this tool call.
 	CreatedBy string `json:"created_by"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -3714,7 +3714,7 @@ type ResponseApplyPatchToolCallOperationCreateFile struct {
 	// Path of the file to create.
 	Path string `json:"path" api:"required"`
 	// Create a new file with the provided diff.
-	Type constant.CreateFile `json:"type" api:"required"`
+	Type constant.CreateFile `json:"type" default:"create_file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Diff        respjson.Field
@@ -3736,7 +3736,7 @@ type ResponseApplyPatchToolCallOperationDeleteFile struct {
 	// Path of the file to delete.
 	Path string `json:"path" api:"required"`
 	// Delete the specified file.
-	Type constant.DeleteFile `json:"type" api:"required"`
+	Type constant.DeleteFile `json:"type" default:"delete_file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Path        respjson.Field
@@ -3759,7 +3759,7 @@ type ResponseApplyPatchToolCallOperationUpdateFile struct {
 	// Path of the file to update.
 	Path string `json:"path" api:"required"`
 	// Update an existing file with the provided diff.
-	Type constant.UpdateFile `json:"type" api:"required"`
+	Type constant.UpdateFile `json:"type" default:"update_file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Diff        respjson.Field
@@ -3796,7 +3796,7 @@ type ResponseApplyPatchToolCallOutput struct {
 	// Any of "completed", "failed".
 	Status ResponseApplyPatchToolCallOutputStatus `json:"status" api:"required"`
 	// The type of the item. Always `apply_patch_call_output`.
-	Type constant.ApplyPatchCallOutput `json:"type" api:"required"`
+	Type constant.ApplyPatchCallOutput `json:"type" default:"apply_patch_call_output"`
 	// The ID of the entity that created this tool call output.
 	CreatedBy string `json:"created_by"`
 	// Optional textual output returned by the apply patch tool.
@@ -3837,7 +3837,7 @@ type ResponseAudioDeltaEvent struct {
 	// A sequence number for this chunk of the stream response.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.audio.delta`.
-	Type constant.ResponseAudioDelta `json:"type" api:"required"`
+	Type constant.ResponseAudioDelta `json:"type" default:"response.audio.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delta          respjson.Field
@@ -3859,7 +3859,7 @@ type ResponseAudioDoneEvent struct {
 	// The sequence number of the delta.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.audio.done`.
-	Type constant.ResponseAudioDone `json:"type" api:"required"`
+	Type constant.ResponseAudioDone `json:"type" default:"response.audio.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		SequenceNumber respjson.Field
@@ -3882,7 +3882,7 @@ type ResponseAudioTranscriptDeltaEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.audio.transcript.delta`.
-	Type constant.ResponseAudioTranscriptDelta `json:"type" api:"required"`
+	Type constant.ResponseAudioTranscriptDelta `json:"type" default:"response.audio.transcript.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delta          respjson.Field
@@ -3904,7 +3904,7 @@ type ResponseAudioTranscriptDoneEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.audio.transcript.done`.
-	Type constant.ResponseAudioTranscriptDone `json:"type" api:"required"`
+	Type constant.ResponseAudioTranscriptDone `json:"type" default:"response.audio.transcript.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		SequenceNumber respjson.Field
@@ -3932,7 +3932,7 @@ type ResponseCodeInterpreterCallCodeDeltaEvent struct {
 	// The sequence number of this event, used to order streaming events.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.code_interpreter_call_code.delta`.
-	Type constant.ResponseCodeInterpreterCallCodeDelta `json:"type" api:"required"`
+	Type constant.ResponseCodeInterpreterCallCodeDelta `json:"type" default:"response.code_interpreter_call_code.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delta          respjson.Field
@@ -3962,7 +3962,7 @@ type ResponseCodeInterpreterCallCodeDoneEvent struct {
 	// The sequence number of this event, used to order streaming events.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.code_interpreter_call_code.done`.
-	Type constant.ResponseCodeInterpreterCallCodeDone `json:"type" api:"required"`
+	Type constant.ResponseCodeInterpreterCallCodeDone `json:"type" default:"response.code_interpreter_call_code.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Code           respjson.Field
@@ -3991,7 +3991,7 @@ type ResponseCodeInterpreterCallCompletedEvent struct {
 	// The sequence number of this event, used to order streaming events.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.code_interpreter_call.completed`.
-	Type constant.ResponseCodeInterpreterCallCompleted `json:"type" api:"required"`
+	Type constant.ResponseCodeInterpreterCallCompleted `json:"type" default:"response.code_interpreter_call.completed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -4019,7 +4019,7 @@ type ResponseCodeInterpreterCallInProgressEvent struct {
 	// The sequence number of this event, used to order streaming events.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.code_interpreter_call.in_progress`.
-	Type constant.ResponseCodeInterpreterCallInProgress `json:"type" api:"required"`
+	Type constant.ResponseCodeInterpreterCallInProgress `json:"type" default:"response.code_interpreter_call.in_progress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -4047,7 +4047,7 @@ type ResponseCodeInterpreterCallInterpretingEvent struct {
 	// The sequence number of this event, used to order streaming events.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.code_interpreter_call.interpreting`.
-	Type constant.ResponseCodeInterpreterCallInterpreting `json:"type" api:"required"`
+	Type constant.ResponseCodeInterpreterCallInterpreting `json:"type" default:"response.code_interpreter_call.interpreting"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -4082,7 +4082,7 @@ type ResponseCodeInterpreterToolCall struct {
 	// Any of "in_progress", "completed", "incomplete", "interpreting", "failed".
 	Status ResponseCodeInterpreterToolCallStatus `json:"status" api:"required"`
 	// The type of the code interpreter tool call. Always `code_interpreter_call`.
-	Type constant.CodeInterpreterCall `json:"type" api:"required"`
+	Type constant.CodeInterpreterCall `json:"type" default:"code_interpreter_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -4187,7 +4187,7 @@ type ResponseCodeInterpreterToolCallOutputLogs struct {
 	// The logs output from the code interpreter.
 	Logs string `json:"logs" api:"required"`
 	// The type of the output. Always `logs`.
-	Type constant.Logs `json:"type" api:"required"`
+	Type constant.Logs `json:"type" default:"logs"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Logs        respjson.Field
@@ -4206,7 +4206,7 @@ func (r *ResponseCodeInterpreterToolCallOutputLogs) UnmarshalJSON(data []byte) e
 // The image output from the code interpreter.
 type ResponseCodeInterpreterToolCallOutputImage struct {
 	// The type of the output. Always `image`.
-	Type constant.Image `json:"type" api:"required"`
+	Type constant.Image `json:"type" default:"image"`
 	// The URL of the image output from the code interpreter.
 	URL string `json:"url" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -4258,7 +4258,7 @@ type ResponseCodeInterpreterToolCallParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "code_interpreter_call".
-	Type constant.CodeInterpreterCall `json:"type" api:"required"`
+	Type constant.CodeInterpreterCall `json:"type" default:"code_interpreter_call"`
 	paramObj
 }
 
@@ -4338,7 +4338,7 @@ type ResponseCodeInterpreterToolCallOutputLogsParam struct {
 	// The type of the output. Always `logs`.
 	//
 	// This field can be elided, and will marshal its zero value as "logs".
-	Type constant.Logs `json:"type" api:"required"`
+	Type constant.Logs `json:"type" default:"logs"`
 	paramObj
 }
 
@@ -4359,7 +4359,7 @@ type ResponseCodeInterpreterToolCallOutputImageParam struct {
 	// The type of the output. Always `image`.
 	//
 	// This field can be elided, and will marshal its zero value as "image".
-	Type constant.Image `json:"type" api:"required"`
+	Type constant.Image `json:"type" default:"image"`
 	paramObj
 }
 
@@ -4379,7 +4379,7 @@ type ResponseCompactionItem struct {
 	// The encrypted content that was produced by compaction.
 	EncryptedContent string `json:"encrypted_content" api:"required"`
 	// The type of the item. Always `compaction`.
-	Type constant.Compaction `json:"type" api:"required"`
+	Type constant.Compaction `json:"type" default:"compaction"`
 	// The identifier of the actor that created the item.
 	CreatedBy string `json:"created_by"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -4405,7 +4405,7 @@ type ResponseCompactionItemParamResp struct {
 	// The encrypted content of the compaction summary.
 	EncryptedContent string `json:"encrypted_content" api:"required"`
 	// The type of the item. Always `compaction`.
-	Type constant.Compaction `json:"type" api:"required"`
+	Type constant.Compaction `json:"type" default:"compaction"`
 	// The ID of the compaction item.
 	ID string `json:"id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -4446,7 +4446,7 @@ type ResponseCompactionItemParam struct {
 	// The type of the item. Always `compaction`.
 	//
 	// This field can be elided, and will marshal its zero value as "compaction".
-	Type constant.Compaction `json:"type" api:"required"`
+	Type constant.Compaction `json:"type" default:"compaction"`
 	paramObj
 }
 
@@ -4465,7 +4465,7 @@ type ResponseCompletedEvent struct {
 	// The sequence number for this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.completed`.
-	Type constant.ResponseCompleted `json:"type" api:"required"`
+	Type constant.ResponseCompleted `json:"type" default:"response.completed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Response       respjson.Field
@@ -4740,7 +4740,7 @@ type ResponseComputerToolCallActionClick struct {
 	// Any of "left", "right", "wheel", "back", "forward".
 	Button string `json:"button" api:"required"`
 	// Specifies the event type. For a click action, this property is always `click`.
-	Type constant.Click `json:"type" api:"required"`
+	Type constant.Click `json:"type" default:"click"`
 	// The x-coordinate where the click occurred.
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the click occurred.
@@ -4766,7 +4766,7 @@ func (r *ResponseComputerToolCallActionClick) UnmarshalJSON(data []byte) error {
 type ResponseComputerToolCallActionDoubleClick struct {
 	// Specifies the event type. For a double click action, this property is always set
 	// to `double_click`.
-	Type constant.DoubleClick `json:"type" api:"required"`
+	Type constant.DoubleClick `json:"type" default:"double_click"`
 	// The x-coordinate where the double click occurred.
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the double click occurred.
@@ -4803,7 +4803,7 @@ type ResponseComputerToolCallActionDrag struct {
 	Path []ResponseComputerToolCallActionDragPath `json:"path" api:"required"`
 	// Specifies the event type. For a drag action, this property is always set to
 	// `drag`.
-	Type constant.Drag `json:"type" api:"required"`
+	Type constant.Drag `json:"type" default:"drag"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Path        respjson.Field
@@ -4847,7 +4847,7 @@ type ResponseComputerToolCallActionKeypress struct {
 	Keys []string `json:"keys" api:"required"`
 	// Specifies the event type. For a keypress action, this property is always set to
 	// `keypress`.
-	Type constant.Keypress `json:"type" api:"required"`
+	Type constant.Keypress `json:"type" default:"keypress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Keys        respjson.Field
@@ -4867,7 +4867,7 @@ func (r *ResponseComputerToolCallActionKeypress) UnmarshalJSON(data []byte) erro
 type ResponseComputerToolCallActionMove struct {
 	// Specifies the event type. For a move action, this property is always set to
 	// `move`.
-	Type constant.Move `json:"type" api:"required"`
+	Type constant.Move `json:"type" default:"move"`
 	// The x-coordinate to move to.
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate to move to.
@@ -4892,7 +4892,7 @@ func (r *ResponseComputerToolCallActionMove) UnmarshalJSON(data []byte) error {
 type ResponseComputerToolCallActionScreenshot struct {
 	// Specifies the event type. For a screenshot action, this property is always set
 	// to `screenshot`.
-	Type constant.Screenshot `json:"type" api:"required"`
+	Type constant.Screenshot `json:"type" default:"screenshot"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -4915,7 +4915,7 @@ type ResponseComputerToolCallActionScroll struct {
 	ScrollY int64 `json:"scroll_y" api:"required"`
 	// Specifies the event type. For a scroll action, this property is always set to
 	// `scroll`.
-	Type constant.Scroll `json:"type" api:"required"`
+	Type constant.Scroll `json:"type" default:"scroll"`
 	// The x-coordinate where the scroll occurred.
 	X int64 `json:"x" api:"required"`
 	// The y-coordinate where the scroll occurred.
@@ -4944,7 +4944,7 @@ type ResponseComputerToolCallActionType struct {
 	Text string `json:"text" api:"required"`
 	// Specifies the event type. For a type action, this property is always set to
 	// `type`.
-	Type constant.Type `json:"type" api:"required"`
+	Type constant.Type `json:"type" default:"type"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -4964,7 +4964,7 @@ func (r *ResponseComputerToolCallActionType) UnmarshalJSON(data []byte) error {
 type ResponseComputerToolCallActionWait struct {
 	// Specifies the event type. For a wait action, this property is always set to
 	// `wait`.
-	Type constant.Wait `json:"type" api:"required"`
+	Type constant.Wait `json:"type" default:"wait"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -5222,7 +5222,7 @@ type ResponseComputerToolCallActionClickParam struct {
 	// Specifies the event type. For a click action, this property is always `click`.
 	//
 	// This field can be elided, and will marshal its zero value as "click".
-	Type constant.Click `json:"type" api:"required"`
+	Type constant.Click `json:"type" default:"click"`
 	paramObj
 }
 
@@ -5252,7 +5252,7 @@ type ResponseComputerToolCallActionDoubleClickParam struct {
 	// to `double_click`.
 	//
 	// This field can be elided, and will marshal its zero value as "double_click".
-	Type constant.DoubleClick `json:"type" api:"required"`
+	Type constant.DoubleClick `json:"type" default:"double_click"`
 	paramObj
 }
 
@@ -5284,7 +5284,7 @@ type ResponseComputerToolCallActionDragParam struct {
 	// `drag`.
 	//
 	// This field can be elided, and will marshal its zero value as "drag".
-	Type constant.Drag `json:"type" api:"required"`
+	Type constant.Drag `json:"type" default:"drag"`
 	paramObj
 }
 
@@ -5326,7 +5326,7 @@ type ResponseComputerToolCallActionKeypressParam struct {
 	// `keypress`.
 	//
 	// This field can be elided, and will marshal its zero value as "keypress".
-	Type constant.Keypress `json:"type" api:"required"`
+	Type constant.Keypress `json:"type" default:"keypress"`
 	paramObj
 }
 
@@ -5350,7 +5350,7 @@ type ResponseComputerToolCallActionMoveParam struct {
 	// `move`.
 	//
 	// This field can be elided, and will marshal its zero value as "move".
-	Type constant.Move `json:"type" api:"required"`
+	Type constant.Move `json:"type" default:"move"`
 	paramObj
 }
 
@@ -5375,7 +5375,7 @@ func NewResponseComputerToolCallActionScreenshotParam() ResponseComputerToolCall
 type ResponseComputerToolCallActionScreenshotParam struct {
 	// Specifies the event type. For a screenshot action, this property is always set
 	// to `screenshot`.
-	Type constant.Screenshot `json:"type" api:"required"`
+	Type constant.Screenshot `json:"type" default:"screenshot"`
 	paramObj
 }
 
@@ -5403,7 +5403,7 @@ type ResponseComputerToolCallActionScrollParam struct {
 	// `scroll`.
 	//
 	// This field can be elided, and will marshal its zero value as "scroll".
-	Type constant.Scroll `json:"type" api:"required"`
+	Type constant.Scroll `json:"type" default:"scroll"`
 	paramObj
 }
 
@@ -5425,7 +5425,7 @@ type ResponseComputerToolCallActionTypeParam struct {
 	// `type`.
 	//
 	// This field can be elided, and will marshal its zero value as "type".
-	Type constant.Type `json:"type" api:"required"`
+	Type constant.Type `json:"type" default:"type"`
 	paramObj
 }
 
@@ -5450,7 +5450,7 @@ func NewResponseComputerToolCallActionWaitParam() ResponseComputerToolCallAction
 type ResponseComputerToolCallActionWaitParam struct {
 	// Specifies the event type. For a wait action, this property is always set to
 	// `wait`.
-	Type constant.Wait `json:"type" api:"required"`
+	Type constant.Wait `json:"type" default:"wait"`
 	paramObj
 }
 
@@ -5470,7 +5470,7 @@ type ResponseComputerToolCallOutputItem struct {
 	// A computer screenshot image used with the computer use tool.
 	Output ResponseComputerToolCallOutputScreenshot `json:"output" api:"required"`
 	// The type of the computer tool call output. Always `computer_call_output`.
-	Type constant.ComputerCallOutput `json:"type" api:"required"`
+	Type constant.ComputerCallOutput `json:"type" default:"computer_call_output"`
 	// The safety checks reported by the API that have been acknowledged by the
 	// developer.
 	AcknowledgedSafetyChecks []ResponseComputerToolCallOutputItemAcknowledgedSafetyCheck `json:"acknowledged_safety_checks"`
@@ -5540,7 +5540,7 @@ const (
 type ResponseComputerToolCallOutputScreenshot struct {
 	// Specifies the event type. For a computer screenshot, this property is always set
 	// to `computer_screenshot`.
-	Type constant.ComputerScreenshot `json:"type" api:"required"`
+	Type constant.ComputerScreenshot `json:"type" default:"computer_screenshot"`
 	// The identifier of an uploaded file that contains the screenshot.
 	FileID string `json:"file_id"`
 	// The URL of the screenshot image.
@@ -5584,7 +5584,7 @@ type ResponseComputerToolCallOutputScreenshotParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "computer_screenshot".
-	Type constant.ComputerScreenshot `json:"type" api:"required"`
+	Type constant.ComputerScreenshot `json:"type" default:"computer_screenshot"`
 	paramObj
 }
 
@@ -5600,7 +5600,7 @@ func (r *ResponseComputerToolCallOutputScreenshotParam) UnmarshalJSON(data []byt
 type ResponseContainerReference struct {
 	ContainerID string `json:"container_id" api:"required"`
 	// The environment type. Always `container_reference`.
-	Type constant.ContainerReference `json:"type" api:"required"`
+	Type constant.ContainerReference `json:"type" default:"container_reference"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContainerID respjson.Field
@@ -5629,7 +5629,7 @@ type ResponseContentPartAddedEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.content_part.added`.
-	Type constant.ResponseContentPartAdded `json:"type" api:"required"`
+	Type constant.ResponseContentPartAdded `json:"type" default:"response.content_part.added"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex   respjson.Field
@@ -5736,7 +5736,7 @@ type ResponseContentPartAddedEventPartReasoningText struct {
 	// The reasoning text from the model.
 	Text string `json:"text" api:"required"`
 	// The type of the reasoning text. Always `reasoning_text`.
-	Type constant.ReasoningText `json:"type" api:"required"`
+	Type constant.ReasoningText `json:"type" default:"reasoning_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -5765,7 +5765,7 @@ type ResponseContentPartDoneEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.content_part.done`.
-	Type constant.ResponseContentPartDone `json:"type" api:"required"`
+	Type constant.ResponseContentPartDone `json:"type" default:"response.content_part.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex   respjson.Field
@@ -5872,7 +5872,7 @@ type ResponseContentPartDoneEventPartReasoningText struct {
 	// The reasoning text from the model.
 	Text string `json:"text" api:"required"`
 	// The type of the reasoning text. Always `reasoning_text`.
-	Type constant.ReasoningText `json:"type" api:"required"`
+	Type constant.ReasoningText `json:"type" default:"reasoning_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -5912,7 +5912,7 @@ type ResponseCreatedEvent struct {
 	// The sequence number for this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.created`.
-	Type constant.ResponseCreated `json:"type" api:"required"`
+	Type constant.ResponseCreated `json:"type" default:"response.created"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Response       respjson.Field
@@ -5938,7 +5938,7 @@ type ResponseCustomToolCall struct {
 	// The name of the custom tool being called.
 	Name string `json:"name" api:"required"`
 	// The type of the custom tool call. Always `custom_tool_call`.
-	Type constant.CustomToolCall `json:"type" api:"required"`
+	Type constant.CustomToolCall `json:"type" default:"custom_tool_call"`
 	// The unique ID of the custom tool call in the OpenAI platform.
 	ID string `json:"id"`
 	// The namespace of the custom tool being called.
@@ -5990,7 +5990,7 @@ type ResponseCustomToolCallParam struct {
 	// The type of the custom tool call. Always `custom_tool_call`.
 	//
 	// This field can be elided, and will marshal its zero value as "custom_tool_call".
-	Type constant.CustomToolCall `json:"type" api:"required"`
+	Type constant.CustomToolCall `json:"type" default:"custom_tool_call"`
 	paramObj
 }
 
@@ -6013,7 +6013,7 @@ type ResponseCustomToolCallInputDeltaEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The event type identifier.
-	Type constant.ResponseCustomToolCallInputDelta `json:"type" api:"required"`
+	Type constant.ResponseCustomToolCallInputDelta `json:"type" default:"response.custom_tool_call_input.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delta          respjson.Field
@@ -6043,7 +6043,7 @@ type ResponseCustomToolCallInputDoneEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The event type identifier.
-	Type constant.ResponseCustomToolCallInputDone `json:"type" api:"required"`
+	Type constant.ResponseCustomToolCallInputDone `json:"type" default:"response.custom_tool_call_input.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Input          respjson.Field
@@ -6070,7 +6070,7 @@ type ResponseCustomToolCallOutput struct {
 	// an list of output content.
 	Output ResponseCustomToolCallOutputOutputUnion `json:"output" api:"required"`
 	// The type of the custom tool call output. Always `custom_tool_call_output`.
-	Type constant.CustomToolCallOutput `json:"type" api:"required"`
+	Type constant.CustomToolCallOutput `json:"type" default:"custom_tool_call_output"`
 	// The unique ID of the custom tool call output in the OpenAI platform.
 	ID string `json:"id"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -6250,7 +6250,7 @@ type ResponseCustomToolCallOutputParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "custom_tool_call_output".
-	Type constant.CustomToolCallOutput `json:"type" api:"required"`
+	Type constant.CustomToolCallOutput `json:"type" default:"custom_tool_call_output"`
 	paramObj
 }
 
@@ -6457,7 +6457,7 @@ type ResponseErrorEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `error`.
-	Type constant.Error `json:"type" api:"required"`
+	Type constant.Error `json:"type" default:"error"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Code           respjson.Field
@@ -6483,7 +6483,7 @@ type ResponseFailedEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.failed`.
-	Type constant.ResponseFailed `json:"type" api:"required"`
+	Type constant.ResponseFailed `json:"type" default:"response.failed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Response       respjson.Field
@@ -6509,7 +6509,7 @@ type ResponseFileSearchCallCompletedEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.file_search_call.completed`.
-	Type constant.ResponseFileSearchCallCompleted `json:"type" api:"required"`
+	Type constant.ResponseFileSearchCallCompleted `json:"type" default:"response.file_search_call.completed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -6536,7 +6536,7 @@ type ResponseFileSearchCallInProgressEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.file_search_call.in_progress`.
-	Type constant.ResponseFileSearchCallInProgress `json:"type" api:"required"`
+	Type constant.ResponseFileSearchCallInProgress `json:"type" default:"response.file_search_call.in_progress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -6563,7 +6563,7 @@ type ResponseFileSearchCallSearchingEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.file_search_call.searching`.
-	Type constant.ResponseFileSearchCallSearching `json:"type" api:"required"`
+	Type constant.ResponseFileSearchCallSearching `json:"type" default:"response.file_search_call.searching"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -6595,7 +6595,7 @@ type ResponseFileSearchToolCall struct {
 	// Any of "in_progress", "searching", "completed", "incomplete", "failed".
 	Status ResponseFileSearchToolCallStatus `json:"status" api:"required"`
 	// The type of the file search tool call. Always `file_search_call`.
-	Type constant.FileSearchCall `json:"type" api:"required"`
+	Type constant.FileSearchCall `json:"type" default:"file_search_call"`
 	// The results of the file search tool call.
 	Results []ResponseFileSearchToolCallResult `json:"results" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -6737,7 +6737,7 @@ type ResponseFileSearchToolCallParam struct {
 	// The type of the file search tool call. Always `file_search_call`.
 	//
 	// This field can be elided, and will marshal its zero value as "file_search_call".
-	Type constant.FileSearchCall `json:"type" api:"required"`
+	Type constant.FileSearchCall `json:"type" default:"file_search_call"`
 	paramObj
 }
 
@@ -6992,7 +6992,7 @@ type ResponseFormatTextJSONSchemaConfig struct {
 	// to build JSON schemas [here](https://json-schema.org/).
 	Schema map[string]any `json:"schema" api:"required"`
 	// The type of response format being defined. Always `json_schema`.
-	Type constant.JSONSchema `json:"type" api:"required"`
+	Type constant.JSONSchema `json:"type" default:"json_schema"`
 	// A description of what the response format is for, used by the model to determine
 	// how to respond in the format.
 	Description string `json:"description"`
@@ -7054,7 +7054,7 @@ type ResponseFormatTextJSONSchemaConfigParam struct {
 	// The type of response format being defined. Always `json_schema`.
 	//
 	// This field can be elided, and will marshal its zero value as "json_schema".
-	Type constant.JSONSchema `json:"type" api:"required"`
+	Type constant.JSONSchema `json:"type" default:"json_schema"`
 	paramObj
 }
 
@@ -7077,7 +7077,7 @@ type ResponseFunctionCallArgumentsDeltaEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.function_call_arguments.delta`.
-	Type constant.ResponseFunctionCallArgumentsDelta `json:"type" api:"required"`
+	Type constant.ResponseFunctionCallArgumentsDelta `json:"type" default:"response.function_call_arguments.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delta          respjson.Field
@@ -7108,7 +7108,7 @@ type ResponseFunctionCallArgumentsDoneEvent struct {
 	OutputIndex int64 `json:"output_index" api:"required"`
 	// The sequence number of this event.
 	SequenceNumber int64                                      `json:"sequence_number" api:"required"`
-	Type           constant.ResponseFunctionCallArgumentsDone `json:"type" api:"required"`
+	Type           constant.ResponseFunctionCallArgumentsDone `json:"type" default:"response.function_call_arguments.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Arguments      respjson.Field
@@ -7451,7 +7451,7 @@ func (r *ResponseFunctionShellCallOutputContentOutcomeUnion) UnmarshalJSON(data 
 // Indicates that the shell call exceeded its configured time limit.
 type ResponseFunctionShellCallOutputContentOutcomeTimeout struct {
 	// The outcome type. Always `timeout`.
-	Type constant.Timeout `json:"type" api:"required"`
+	Type constant.Timeout `json:"type" default:"timeout"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -7471,7 +7471,7 @@ type ResponseFunctionShellCallOutputContentOutcomeExit struct {
 	// The exit code returned by the shell process.
 	ExitCode int64 `json:"exit_code" api:"required"`
 	// The outcome type. Always `exit`.
-	Type constant.Exit `json:"type" api:"required"`
+	Type constant.Exit `json:"type" default:"exit"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ExitCode    respjson.Field
@@ -7571,7 +7571,7 @@ func NewResponseFunctionShellCallOutputContentOutcomeTimeoutParam() ResponseFunc
 // [NewResponseFunctionShellCallOutputContentOutcomeTimeoutParam].
 type ResponseFunctionShellCallOutputContentOutcomeTimeoutParam struct {
 	// The outcome type. Always `timeout`.
-	Type constant.Timeout `json:"type" api:"required"`
+	Type constant.Timeout `json:"type" default:"timeout"`
 	paramObj
 }
 
@@ -7592,7 +7592,7 @@ type ResponseFunctionShellCallOutputContentOutcomeExitParam struct {
 	// The outcome type. Always `exit`.
 	//
 	// This field can be elided, and will marshal its zero value as "exit".
-	Type constant.Exit `json:"type" api:"required"`
+	Type constant.Exit `json:"type" default:"exit"`
 	paramObj
 }
 
@@ -7621,7 +7621,7 @@ type ResponseFunctionShellToolCall struct {
 	// Any of "in_progress", "completed", "incomplete".
 	Status ResponseFunctionShellToolCallStatus `json:"status" api:"required"`
 	// The type of the item. Always `shell_call`.
-	Type constant.ShellCall `json:"type" api:"required"`
+	Type constant.ShellCall `json:"type" default:"shell_call"`
 	// The ID of the entity that created this tool call.
 	CreatedBy string `json:"created_by"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -7761,7 +7761,7 @@ type ResponseFunctionShellToolCallOutput struct {
 	// Any of "in_progress", "completed", "incomplete".
 	Status ResponseFunctionShellToolCallOutputStatus `json:"status" api:"required"`
 	// The type of the shell call output. Always `shell_call_output`.
-	Type constant.ShellCallOutput `json:"type" api:"required"`
+	Type constant.ShellCallOutput `json:"type" default:"shell_call_output"`
 	// The identifier of the actor that created the item.
 	CreatedBy string `json:"created_by"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -7887,7 +7887,7 @@ func (r *ResponseFunctionShellToolCallOutputOutputOutcomeUnion) UnmarshalJSON(da
 // Indicates that the shell call exceeded its configured time limit.
 type ResponseFunctionShellToolCallOutputOutputOutcomeTimeout struct {
 	// The outcome type. Always `timeout`.
-	Type constant.Timeout `json:"type" api:"required"`
+	Type constant.Timeout `json:"type" default:"timeout"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -7907,7 +7907,7 @@ type ResponseFunctionShellToolCallOutputOutputOutcomeExit struct {
 	// Exit code from the shell process.
 	ExitCode int64 `json:"exit_code" api:"required"`
 	// The outcome type. Always `exit`.
-	Type constant.Exit `json:"type" api:"required"`
+	Type constant.Exit `json:"type" default:"exit"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ExitCode    respjson.Field
@@ -7944,7 +7944,7 @@ type ResponseFunctionToolCall struct {
 	// The name of the function to run.
 	Name string `json:"name" api:"required"`
 	// The type of the function tool call. Always `function_call`.
-	Type constant.FunctionCall `json:"type" api:"required"`
+	Type constant.FunctionCall `json:"type" default:"function_call"`
 	// The unique ID of the function tool call.
 	ID string `json:"id"`
 	// The namespace of the function to run.
@@ -8018,7 +8018,7 @@ type ResponseFunctionToolCallParam struct {
 	// The type of the function tool call. Always `function_call`.
 	//
 	// This field can be elided, and will marshal its zero value as "function_call".
-	Type constant.FunctionCall `json:"type" api:"required"`
+	Type constant.FunctionCall `json:"type" default:"function_call"`
 	paramObj
 }
 
@@ -8062,7 +8062,7 @@ type ResponseFunctionToolCallOutputItem struct {
 	// list of output content.
 	Output ResponseFunctionToolCallOutputItemOutputUnion `json:"output" api:"required"`
 	// The type of the function tool call output. Always `function_call_output`.
-	Type constant.FunctionCallOutput `json:"type" api:"required"`
+	Type constant.FunctionCallOutput `json:"type" default:"function_call_output"`
 	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
 	// Populated when items are returned via API.
 	//
@@ -8247,7 +8247,7 @@ type ResponseFunctionWebSearch struct {
 	// Any of "in_progress", "searching", "completed", "failed".
 	Status ResponseFunctionWebSearchStatus `json:"status" api:"required"`
 	// The type of the web search tool call. Always `web_search_call`.
-	Type constant.WebSearchCall `json:"type" api:"required"`
+	Type constant.WebSearchCall `json:"type" default:"web_search_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -8368,7 +8368,7 @@ type ResponseFunctionWebSearchActionSearch struct {
 	// [DEPRECATED] The search query.
 	Query string `json:"query" api:"required"`
 	// The action type.
-	Type constant.Search `json:"type" api:"required"`
+	Type constant.Search `json:"type" default:"search"`
 	// The search queries.
 	Queries []string `json:"queries"`
 	// The sources used in the search.
@@ -8393,7 +8393,7 @@ func (r *ResponseFunctionWebSearchActionSearch) UnmarshalJSON(data []byte) error
 // A source used in the search.
 type ResponseFunctionWebSearchActionSearchSource struct {
 	// The type of source. Always `url`.
-	Type constant.URL `json:"type" api:"required"`
+	Type constant.URL `json:"type" default:"url"`
 	// The URL of the source.
 	URL string `json:"url" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -8414,7 +8414,7 @@ func (r *ResponseFunctionWebSearchActionSearchSource) UnmarshalJSON(data []byte)
 // Action type "open_page" - Opens a specific URL from search results.
 type ResponseFunctionWebSearchActionOpenPage struct {
 	// The action type.
-	Type constant.OpenPage `json:"type" api:"required"`
+	Type constant.OpenPage `json:"type" default:"open_page"`
 	// The URL opened by the model.
 	URL string `json:"url" api:"nullable" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -8437,7 +8437,7 @@ type ResponseFunctionWebSearchActionFindInPage struct {
 	// The pattern or text to search for within the page.
 	Pattern string `json:"pattern" api:"required"`
 	// The action type.
-	Type constant.FindInPage `json:"type" api:"required"`
+	Type constant.FindInPage `json:"type" default:"find_in_page"`
 	// The URL of the page searched for the pattern.
 	URL string `json:"url" api:"required" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -8484,7 +8484,7 @@ type ResponseFunctionWebSearchParam struct {
 	// The type of the web search tool call. Always `web_search_call`.
 	//
 	// This field can be elided, and will marshal its zero value as "web_search_call".
-	Type constant.WebSearchCall `json:"type" api:"required"`
+	Type constant.WebSearchCall `json:"type" default:"web_search_call"`
 	paramObj
 }
 
@@ -8600,7 +8600,7 @@ type ResponseFunctionWebSearchActionSearchParam struct {
 	// The action type.
 	//
 	// This field can be elided, and will marshal its zero value as "search".
-	Type constant.Search `json:"type" api:"required"`
+	Type constant.Search `json:"type" default:"search"`
 	paramObj
 }
 
@@ -8621,7 +8621,7 @@ type ResponseFunctionWebSearchActionSearchSourceParam struct {
 	// The type of source. Always `url`.
 	//
 	// This field can be elided, and will marshal its zero value as "url".
-	Type constant.URL `json:"type" api:"required"`
+	Type constant.URL `json:"type" default:"url"`
 	paramObj
 }
 
@@ -8642,7 +8642,7 @@ type ResponseFunctionWebSearchActionOpenPageParam struct {
 	// The action type.
 	//
 	// This field can be elided, and will marshal its zero value as "open_page".
-	Type constant.OpenPage `json:"type" api:"required"`
+	Type constant.OpenPage `json:"type" default:"open_page"`
 	paramObj
 }
 
@@ -8665,7 +8665,7 @@ type ResponseFunctionWebSearchActionFindInPageParam struct {
 	// The action type.
 	//
 	// This field can be elided, and will marshal its zero value as "find_in_page".
-	Type constant.FindInPage `json:"type" api:"required"`
+	Type constant.FindInPage `json:"type" default:"find_in_page"`
 	paramObj
 }
 
@@ -8687,7 +8687,7 @@ type ResponseImageGenCallCompletedEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.image_generation_call.completed'.
-	Type constant.ResponseImageGenerationCallCompleted `json:"type" api:"required"`
+	Type constant.ResponseImageGenerationCallCompleted `json:"type" default:"response.image_generation_call.completed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -8715,7 +8715,7 @@ type ResponseImageGenCallGeneratingEvent struct {
 	// The sequence number of the image generation item being processed.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.image_generation_call.generating'.
-	Type constant.ResponseImageGenerationCallGenerating `json:"type" api:"required"`
+	Type constant.ResponseImageGenerationCallGenerating `json:"type" default:"response.image_generation_call.generating"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -8742,7 +8742,7 @@ type ResponseImageGenCallInProgressEvent struct {
 	// The sequence number of the image generation item being processed.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.image_generation_call.in_progress'.
-	Type constant.ResponseImageGenerationCallInProgress `json:"type" api:"required"`
+	Type constant.ResponseImageGenerationCallInProgress `json:"type" default:"response.image_generation_call.in_progress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -8774,7 +8774,7 @@ type ResponseImageGenCallPartialImageEvent struct {
 	// The sequence number of the image generation item being processed.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.image_generation_call.partial_image'.
-	Type constant.ResponseImageGenerationCallPartialImage `json:"type" api:"required"`
+	Type constant.ResponseImageGenerationCallPartialImage `json:"type" default:"response.image_generation_call.partial_image"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID            respjson.Field
@@ -8801,7 +8801,7 @@ type ResponseInProgressEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.in_progress`.
-	Type constant.ResponseInProgress `json:"type" api:"required"`
+	Type constant.ResponseInProgress `json:"type" default:"response.in_progress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Response       respjson.Field
@@ -8856,7 +8856,7 @@ type ResponseIncompleteEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.incomplete`.
-	Type constant.ResponseIncomplete `json:"type" api:"required"`
+	Type constant.ResponseIncomplete `json:"type" default:"response.incomplete"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Response       respjson.Field
@@ -8879,7 +8879,7 @@ type ResponseInputParam []ResponseInputItemUnionParam
 type ResponseInputAudio struct {
 	InputAudio ResponseInputAudioInputAudio `json:"input_audio" api:"required"`
 	// The type of the input item. Always `input_audio`.
-	Type constant.InputAudio `json:"type" api:"required"`
+	Type constant.InputAudio `json:"type" default:"input_audio"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		InputAudio  respjson.Field
@@ -8934,7 +8934,7 @@ type ResponseInputAudioParam struct {
 	// The type of the input item. Always `input_audio`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_audio".
-	Type constant.InputAudio `json:"type" api:"required"`
+	Type constant.InputAudio `json:"type" default:"input_audio"`
 	paramObj
 }
 
@@ -9192,7 +9192,7 @@ func init() {
 // A file input to the model.
 type ResponseInputFile struct {
 	// The type of the input item. Always `input_file`.
-	Type constant.InputFile `json:"type" api:"required"`
+	Type constant.InputFile `json:"type" default:"input_file"`
 	// The content of the file to be sent to the model.
 	FileData string `json:"file_data"`
 	// The ID of the file to be sent to the model.
@@ -9245,7 +9245,7 @@ type ResponseInputFileParam struct {
 	// The type of the input item. Always `input_file`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_file".
-	Type constant.InputFile `json:"type" api:"required"`
+	Type constant.InputFile `json:"type" default:"input_file"`
 	paramObj
 }
 
@@ -9260,7 +9260,7 @@ func (r *ResponseInputFileParam) UnmarshalJSON(data []byte) error {
 // A file input to the model.
 type ResponseInputFileContent struct {
 	// The type of the input item. Always `input_file`.
-	Type constant.InputFile `json:"type" api:"required"`
+	Type constant.InputFile `json:"type" default:"input_file"`
 	// The base64-encoded data of the file to be sent to the model.
 	FileData string `json:"file_data" api:"nullable"`
 	// The ID of the file to be sent to the model.
@@ -9312,7 +9312,7 @@ type ResponseInputFileContentParam struct {
 	// The type of the input item. Always `input_file`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_file".
-	Type constant.InputFile `json:"type" api:"required"`
+	Type constant.InputFile `json:"type" default:"input_file"`
 	paramObj
 }
 
@@ -9333,7 +9333,7 @@ type ResponseInputImage struct {
 	// Any of "low", "high", "auto", "original".
 	Detail ResponseInputImageDetail `json:"detail" api:"required"`
 	// The type of the input item. Always `input_image`.
-	Type constant.InputImage `json:"type" api:"required"`
+	Type constant.InputImage `json:"type" default:"input_image"`
 	// The ID of the file to be sent to the model.
 	FileID string `json:"file_id" api:"nullable"`
 	// The URL of the image to be sent to the model. A fully qualified URL or base64
@@ -9396,7 +9396,7 @@ type ResponseInputImageParam struct {
 	// The type of the input item. Always `input_image`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_image".
-	Type constant.InputImage `json:"type" api:"required"`
+	Type constant.InputImage `json:"type" default:"input_image"`
 	paramObj
 }
 
@@ -9412,7 +9412,7 @@ func (r *ResponseInputImageParam) UnmarshalJSON(data []byte) error {
 // [image inputs](https://platform.openai.com/docs/guides/vision)
 type ResponseInputImageContent struct {
 	// The type of the input item. Always `input_image`.
-	Type constant.InputImage `json:"type" api:"required"`
+	Type constant.InputImage `json:"type" default:"input_image"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`,
 	// `auto`, or `original`. Defaults to `auto`.
 	//
@@ -9479,7 +9479,7 @@ type ResponseInputImageContentParam struct {
 	// The type of the input item. Always `input_image`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_image".
-	Type constant.InputImage `json:"type" api:"required"`
+	Type constant.InputImage `json:"type" default:"input_image"`
 	paramObj
 }
 
@@ -10152,7 +10152,7 @@ type ResponseInputItemComputerCallOutput struct {
 	// A computer screenshot image used with the computer use tool.
 	Output ResponseComputerToolCallOutputScreenshot `json:"output" api:"required"`
 	// The type of the computer tool call output. Always `computer_call_output`.
-	Type constant.ComputerCallOutput `json:"type" api:"required"`
+	Type constant.ComputerCallOutput `json:"type" default:"computer_call_output"`
 	// The ID of the computer tool call output.
 	ID string `json:"id" api:"nullable"`
 	// The safety checks reported by the API that have been acknowledged by the
@@ -10215,7 +10215,7 @@ type ResponseInputItemFunctionCallOutput struct {
 	// Text, image, or file output of the function tool call.
 	Output ResponseInputItemFunctionCallOutputOutputUnion `json:"output" api:"required"`
 	// The type of the function tool call output. Always `function_call_output`.
-	Type constant.FunctionCallOutput `json:"type" api:"required"`
+	Type constant.FunctionCallOutput `json:"type" default:"function_call_output"`
 	// The unique ID of the function tool call output. Populated when this item is
 	// returned via API.
 	ID string `json:"id" api:"nullable"`
@@ -10283,7 +10283,7 @@ type ResponseInputItemToolSearchCall struct {
 	// The arguments supplied to the tool search call.
 	Arguments any `json:"arguments" api:"required"`
 	// The item type. Always `tool_search_call`.
-	Type constant.ToolSearchCall `json:"type" api:"required"`
+	Type constant.ToolSearchCall `json:"type" default:"tool_search_call"`
 	// The unique ID of this tool search call.
 	ID string `json:"id" api:"nullable"`
 	// The unique ID of the tool search call generated by the model.
@@ -10326,7 +10326,7 @@ type ResponseInputItemImageGenerationCall struct {
 	// Any of "in_progress", "completed", "generating", "failed".
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
-	Type constant.ImageGenerationCall `json:"type" api:"required"`
+	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -10357,7 +10357,7 @@ type ResponseInputItemLocalShellCall struct {
 	// Any of "in_progress", "completed", "incomplete".
 	Status string `json:"status" api:"required"`
 	// The type of the local shell call. Always `local_shell_call`.
-	Type constant.LocalShellCall `json:"type" api:"required"`
+	Type constant.LocalShellCall `json:"type" default:"local_shell_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -10383,7 +10383,7 @@ type ResponseInputItemLocalShellCallAction struct {
 	// Environment variables to set for the command.
 	Env map[string]string `json:"env" api:"required"`
 	// The type of the local shell action. Always `exec`.
-	Type constant.Exec `json:"type" api:"required"`
+	Type constant.Exec `json:"type" default:"exec"`
 	// Optional timeout in milliseconds for the command.
 	TimeoutMs int64 `json:"timeout_ms" api:"nullable"`
 	// Optional user to run the command as.
@@ -10416,7 +10416,7 @@ type ResponseInputItemLocalShellCallOutput struct {
 	// A JSON string of the output of the local shell tool call.
 	Output string `json:"output" api:"required"`
 	// The type of the local shell tool call output. Always `local_shell_call_output`.
-	Type constant.LocalShellCallOutput `json:"type" api:"required"`
+	Type constant.LocalShellCallOutput `json:"type" default:"local_shell_call_output"`
 	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
 	//
 	// Any of "in_progress", "completed", "incomplete".
@@ -10445,7 +10445,7 @@ type ResponseInputItemShellCall struct {
 	// The unique ID of the shell tool call generated by the model.
 	CallID string `json:"call_id" api:"required"`
 	// The type of the item. Always `shell_call`.
-	Type constant.ShellCall `json:"type" api:"required"`
+	Type constant.ShellCall `json:"type" default:"shell_call"`
 	// The unique ID of the shell tool call. Populated when this item is returned via
 	// API.
 	ID string `json:"id" api:"nullable"`
@@ -10575,7 +10575,7 @@ type ResponseInputItemShellCallOutput struct {
 	// outcomes.
 	Output []ResponseFunctionShellCallOutputContent `json:"output" api:"required"`
 	// The type of the item. Always `shell_call_output`.
-	Type constant.ShellCallOutput `json:"type" api:"required"`
+	Type constant.ShellCallOutput `json:"type" default:"shell_call_output"`
 	// The unique ID of the shell tool call output. Populated when this item is
 	// returned via API.
 	ID string `json:"id" api:"nullable"`
@@ -10618,7 +10618,7 @@ type ResponseInputItemApplyPatchCall struct {
 	// Any of "in_progress", "completed".
 	Status string `json:"status" api:"required"`
 	// The type of the item. Always `apply_patch_call`.
-	Type constant.ApplyPatchCall `json:"type" api:"required"`
+	Type constant.ApplyPatchCall `json:"type" default:"apply_patch_call"`
 	// The unique ID of the apply patch tool call. Populated when this item is returned
 	// via API.
 	ID string `json:"id" api:"nullable"`
@@ -10726,7 +10726,7 @@ type ResponseInputItemApplyPatchCallOperationCreateFile struct {
 	// Path of the file to create relative to the workspace root.
 	Path string `json:"path" api:"required"`
 	// The operation type. Always `create_file`.
-	Type constant.CreateFile `json:"type" api:"required"`
+	Type constant.CreateFile `json:"type" default:"create_file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Diff        respjson.Field
@@ -10748,7 +10748,7 @@ type ResponseInputItemApplyPatchCallOperationDeleteFile struct {
 	// Path of the file to delete relative to the workspace root.
 	Path string `json:"path" api:"required"`
 	// The operation type. Always `delete_file`.
-	Type constant.DeleteFile `json:"type" api:"required"`
+	Type constant.DeleteFile `json:"type" default:"delete_file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Path        respjson.Field
@@ -10771,7 +10771,7 @@ type ResponseInputItemApplyPatchCallOperationUpdateFile struct {
 	// Path of the file to update relative to the workspace root.
 	Path string `json:"path" api:"required"`
 	// The operation type. Always `update_file`.
-	Type constant.UpdateFile `json:"type" api:"required"`
+	Type constant.UpdateFile `json:"type" default:"update_file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Diff        respjson.Field
@@ -10797,7 +10797,7 @@ type ResponseInputItemApplyPatchCallOutput struct {
 	// Any of "completed", "failed".
 	Status string `json:"status" api:"required"`
 	// The type of the item. Always `apply_patch_call_output`.
-	Type constant.ApplyPatchCallOutput `json:"type" api:"required"`
+	Type constant.ApplyPatchCallOutput `json:"type" default:"apply_patch_call_output"`
 	// The unique ID of the apply patch tool call output. Populated when this item is
 	// returned via API.
 	ID string `json:"id" api:"nullable"`
@@ -10831,7 +10831,7 @@ type ResponseInputItemMcpListTools struct {
 	// The tools available on the server.
 	Tools []ResponseInputItemMcpListToolsTool `json:"tools" api:"required"`
 	// The type of the item. Always `mcp_list_tools`.
-	Type constant.McpListTools `json:"type" api:"required"`
+	Type constant.McpListTools `json:"type" default:"mcp_list_tools"`
 	// Error message if the server could not list tools.
 	Error string `json:"error" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -10890,7 +10890,7 @@ type ResponseInputItemMcpApprovalRequest struct {
 	// The label of the MCP server making the request.
 	ServerLabel string `json:"server_label" api:"required"`
 	// The type of the item. Always `mcp_approval_request`.
-	Type constant.McpApprovalRequest `json:"type" api:"required"`
+	Type constant.McpApprovalRequest `json:"type" default:"mcp_approval_request"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -10916,7 +10916,7 @@ type ResponseInputItemMcpApprovalResponse struct {
 	// Whether the request was approved.
 	Approve bool `json:"approve" api:"required"`
 	// The type of the item. Always `mcp_approval_response`.
-	Type constant.McpApprovalResponse `json:"type" api:"required"`
+	Type constant.McpApprovalResponse `json:"type" default:"mcp_approval_response"`
 	// The unique ID of the approval response
 	ID string `json:"id" api:"nullable"`
 	// Optional reason for the decision.
@@ -10950,7 +10950,7 @@ type ResponseInputItemMcpCall struct {
 	// The label of the MCP server running the tool.
 	ServerLabel string `json:"server_label" api:"required"`
 	// The type of the item. Always `mcp_call`.
-	Type constant.McpCall `json:"type" api:"required"`
+	Type constant.McpCall `json:"type" default:"mcp_call"`
 	// Unique identifier for the MCP tool call approval request. Include this value in
 	// a subsequent `mcp_approval_response` input to approve or reject the
 	// corresponding tool call.
@@ -12242,7 +12242,7 @@ type ResponseInputItemComputerCallOutputParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "computer_call_output".
-	Type constant.ComputerCallOutput `json:"type" api:"required"`
+	Type constant.ComputerCallOutput `json:"type" default:"computer_call_output"`
 	paramObj
 }
 
@@ -12301,7 +12301,7 @@ type ResponseInputItemFunctionCallOutputParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "function_call_output".
-	Type constant.FunctionCallOutput `json:"type" api:"required"`
+	Type constant.FunctionCallOutput `json:"type" default:"function_call_output"`
 	paramObj
 }
 
@@ -12363,7 +12363,7 @@ type ResponseInputItemToolSearchCallParam struct {
 	// The item type. Always `tool_search_call`.
 	//
 	// This field can be elided, and will marshal its zero value as "tool_search_call".
-	Type constant.ToolSearchCall `json:"type" api:"required"`
+	Type constant.ToolSearchCall `json:"type" default:"tool_search_call"`
 	paramObj
 }
 
@@ -12400,7 +12400,7 @@ type ResponseInputItemImageGenerationCallParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "image_generation_call".
-	Type constant.ImageGenerationCall `json:"type" api:"required"`
+	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
 	paramObj
 }
 
@@ -12435,7 +12435,7 @@ type ResponseInputItemLocalShellCallParam struct {
 	// The type of the local shell call. Always `local_shell_call`.
 	//
 	// This field can be elided, and will marshal its zero value as "local_shell_call".
-	Type constant.LocalShellCall `json:"type" api:"required"`
+	Type constant.LocalShellCall `json:"type" default:"local_shell_call"`
 	paramObj
 }
 
@@ -12470,7 +12470,7 @@ type ResponseInputItemLocalShellCallActionParam struct {
 	// The type of the local shell action. Always `exec`.
 	//
 	// This field can be elided, and will marshal its zero value as "exec".
-	Type constant.Exec `json:"type" api:"required"`
+	Type constant.Exec `json:"type" default:"exec"`
 	paramObj
 }
 
@@ -12498,7 +12498,7 @@ type ResponseInputItemLocalShellCallOutputParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "local_shell_call_output".
-	Type constant.LocalShellCallOutput `json:"type" api:"required"`
+	Type constant.LocalShellCallOutput `json:"type" default:"local_shell_call_output"`
 	paramObj
 }
 
@@ -12537,7 +12537,7 @@ type ResponseInputItemShellCallParam struct {
 	// The type of the item. Always `shell_call`.
 	//
 	// This field can be elided, and will marshal its zero value as "shell_call".
-	Type constant.ShellCall `json:"type" api:"required"`
+	Type constant.ShellCall `json:"type" default:"shell_call"`
 	paramObj
 }
 
@@ -12659,7 +12659,7 @@ type ResponseInputItemShellCallOutputParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "shell_call_output".
-	Type constant.ShellCallOutput `json:"type" api:"required"`
+	Type constant.ShellCallOutput `json:"type" default:"shell_call_output"`
 	paramObj
 }
 
@@ -12697,7 +12697,7 @@ type ResponseInputItemApplyPatchCallParam struct {
 	// The type of the item. Always `apply_patch_call`.
 	//
 	// This field can be elided, and will marshal its zero value as "apply_patch_call".
-	Type constant.ApplyPatchCall `json:"type" api:"required"`
+	Type constant.ApplyPatchCall `json:"type" default:"apply_patch_call"`
 	paramObj
 }
 
@@ -12797,7 +12797,7 @@ type ResponseInputItemApplyPatchCallOperationCreateFileParam struct {
 	// The operation type. Always `create_file`.
 	//
 	// This field can be elided, and will marshal its zero value as "create_file".
-	Type constant.CreateFile `json:"type" api:"required"`
+	Type constant.CreateFile `json:"type" default:"create_file"`
 	paramObj
 }
 
@@ -12818,7 +12818,7 @@ type ResponseInputItemApplyPatchCallOperationDeleteFileParam struct {
 	// The operation type. Always `delete_file`.
 	//
 	// This field can be elided, and will marshal its zero value as "delete_file".
-	Type constant.DeleteFile `json:"type" api:"required"`
+	Type constant.DeleteFile `json:"type" default:"delete_file"`
 	paramObj
 }
 
@@ -12841,7 +12841,7 @@ type ResponseInputItemApplyPatchCallOperationUpdateFileParam struct {
 	// The operation type. Always `update_file`.
 	//
 	// This field can be elided, and will marshal its zero value as "update_file".
-	Type constant.UpdateFile `json:"type" api:"required"`
+	Type constant.UpdateFile `json:"type" default:"update_file"`
 	paramObj
 }
 
@@ -12873,7 +12873,7 @@ type ResponseInputItemApplyPatchCallOutputParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "apply_patch_call_output".
-	Type constant.ApplyPatchCallOutput `json:"type" api:"required"`
+	Type constant.ApplyPatchCallOutput `json:"type" default:"apply_patch_call_output"`
 	paramObj
 }
 
@@ -12906,7 +12906,7 @@ type ResponseInputItemMcpListToolsParam struct {
 	// The type of the item. Always `mcp_list_tools`.
 	//
 	// This field can be elided, and will marshal its zero value as "mcp_list_tools".
-	Type constant.McpListTools `json:"type" api:"required"`
+	Type constant.McpListTools `json:"type" default:"mcp_list_tools"`
 	paramObj
 }
 
@@ -12957,7 +12957,7 @@ type ResponseInputItemMcpApprovalRequestParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "mcp_approval_request".
-	Type constant.McpApprovalRequest `json:"type" api:"required"`
+	Type constant.McpApprovalRequest `json:"type" default:"mcp_approval_request"`
 	paramObj
 }
 
@@ -12985,7 +12985,7 @@ type ResponseInputItemMcpApprovalResponseParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "mcp_approval_response".
-	Type constant.McpApprovalResponse `json:"type" api:"required"`
+	Type constant.McpApprovalResponse `json:"type" default:"mcp_approval_response"`
 	paramObj
 }
 
@@ -13025,7 +13025,7 @@ type ResponseInputItemMcpCallParam struct {
 	// The type of the item. Always `mcp_call`.
 	//
 	// This field can be elided, and will marshal its zero value as "mcp_call".
-	Type constant.McpCall `json:"type" api:"required"`
+	Type constant.McpCall `json:"type" default:"mcp_call"`
 	paramObj
 }
 
@@ -13085,7 +13085,7 @@ type ResponseInputMessageItem struct {
 	// Any of "user", "system", "developer".
 	Role ResponseInputMessageItemRole `json:"role" api:"required"`
 	// The type of the message input. Always set to `message`.
-	Type constant.Message `json:"type" api:"required"`
+	Type constant.Message `json:"type" default:"message"`
 	// The status of item. One of `in_progress`, `completed`, or `incomplete`.
 	// Populated when items are returned via API.
 	//
@@ -13133,7 +13133,7 @@ type ResponseInputText struct {
 	// The text input to the model.
 	Text string `json:"text" api:"required"`
 	// The type of the input item. Always `input_text`.
-	Type constant.InputText `json:"type" api:"required"`
+	Type constant.InputText `json:"type" default:"input_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -13169,7 +13169,7 @@ type ResponseInputTextParam struct {
 	// The type of the input item. Always `input_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_text".
-	Type constant.InputText `json:"type" api:"required"`
+	Type constant.InputText `json:"type" default:"input_text"`
 	paramObj
 }
 
@@ -13186,7 +13186,7 @@ type ResponseInputTextContent struct {
 	// The text input to the model.
 	Text string `json:"text" api:"required"`
 	// The type of the input item. Always `input_text`.
-	Type constant.InputText `json:"type" api:"required"`
+	Type constant.InputText `json:"type" default:"input_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -13221,7 +13221,7 @@ type ResponseInputTextContentParam struct {
 	// The type of the input item. Always `input_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_text".
-	Type constant.InputText `json:"type" api:"required"`
+	Type constant.InputText `json:"type" default:"input_text"`
 	paramObj
 }
 
@@ -13778,7 +13778,7 @@ type ResponseItemImageGenerationCall struct {
 	// Any of "in_progress", "completed", "generating", "failed".
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
-	Type constant.ImageGenerationCall `json:"type" api:"required"`
+	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -13809,7 +13809,7 @@ type ResponseItemLocalShellCall struct {
 	// Any of "in_progress", "completed", "incomplete".
 	Status string `json:"status" api:"required"`
 	// The type of the local shell call. Always `local_shell_call`.
-	Type constant.LocalShellCall `json:"type" api:"required"`
+	Type constant.LocalShellCall `json:"type" default:"local_shell_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -13835,7 +13835,7 @@ type ResponseItemLocalShellCallAction struct {
 	// Environment variables to set for the command.
 	Env map[string]string `json:"env" api:"required"`
 	// The type of the local shell action. Always `exec`.
-	Type constant.Exec `json:"type" api:"required"`
+	Type constant.Exec `json:"type" default:"exec"`
 	// Optional timeout in milliseconds for the command.
 	TimeoutMs int64 `json:"timeout_ms" api:"nullable"`
 	// Optional user to run the command as.
@@ -13868,7 +13868,7 @@ type ResponseItemLocalShellCallOutput struct {
 	// A JSON string of the output of the local shell tool call.
 	Output string `json:"output" api:"required"`
 	// The type of the local shell tool call output. Always `local_shell_call_output`.
-	Type constant.LocalShellCallOutput `json:"type" api:"required"`
+	Type constant.LocalShellCallOutput `json:"type" default:"local_shell_call_output"`
 	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
 	//
 	// Any of "in_progress", "completed", "incomplete".
@@ -13899,7 +13899,7 @@ type ResponseItemMcpListTools struct {
 	// The tools available on the server.
 	Tools []ResponseItemMcpListToolsTool `json:"tools" api:"required"`
 	// The type of the item. Always `mcp_list_tools`.
-	Type constant.McpListTools `json:"type" api:"required"`
+	Type constant.McpListTools `json:"type" default:"mcp_list_tools"`
 	// Error message if the server could not list tools.
 	Error string `json:"error" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -13958,7 +13958,7 @@ type ResponseItemMcpApprovalRequest struct {
 	// The label of the MCP server making the request.
 	ServerLabel string `json:"server_label" api:"required"`
 	// The type of the item. Always `mcp_approval_request`.
-	Type constant.McpApprovalRequest `json:"type" api:"required"`
+	Type constant.McpApprovalRequest `json:"type" default:"mcp_approval_request"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -13986,7 +13986,7 @@ type ResponseItemMcpApprovalResponse struct {
 	// Whether the request was approved.
 	Approve bool `json:"approve" api:"required"`
 	// The type of the item. Always `mcp_approval_response`.
-	Type constant.McpApprovalResponse `json:"type" api:"required"`
+	Type constant.McpApprovalResponse `json:"type" default:"mcp_approval_response"`
 	// Optional reason for the decision.
 	Reason string `json:"reason" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -14018,7 +14018,7 @@ type ResponseItemMcpCall struct {
 	// The label of the MCP server running the tool.
 	ServerLabel string `json:"server_label" api:"required"`
 	// The type of the item. Always `mcp_call`.
-	Type constant.McpCall `json:"type" api:"required"`
+	Type constant.McpCall `json:"type" default:"mcp_call"`
 	// Unique identifier for the MCP tool call approval request. Include this value in
 	// a subsequent `mcp_approval_response` input to approve or reject the
 	// corresponding tool call.
@@ -14057,7 +14057,7 @@ func (r *ResponseItemMcpCall) UnmarshalJSON(data []byte) error {
 // Represents the use of a local environment to perform shell actions.
 type ResponseLocalEnvironment struct {
 	// The environment type. Always `local`.
-	Type constant.Local `json:"type" api:"required"`
+	Type constant.Local `json:"type" default:"local"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -14085,7 +14085,7 @@ type ResponseMcpCallArgumentsDeltaEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.mcp_call_arguments.delta'.
-	Type constant.ResponseMcpCallArgumentsDelta `json:"type" api:"required"`
+	Type constant.ResponseMcpCallArgumentsDelta `json:"type" default:"response.mcp_call_arguments.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delta          respjson.Field
@@ -14115,7 +14115,7 @@ type ResponseMcpCallArgumentsDoneEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.mcp_call_arguments.done'.
-	Type constant.ResponseMcpCallArgumentsDone `json:"type" api:"required"`
+	Type constant.ResponseMcpCallArgumentsDone `json:"type" default:"response.mcp_call_arguments.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Arguments      respjson.Field
@@ -14143,7 +14143,7 @@ type ResponseMcpCallCompletedEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.mcp_call.completed'.
-	Type constant.ResponseMcpCallCompleted `json:"type" api:"required"`
+	Type constant.ResponseMcpCallCompleted `json:"type" default:"response.mcp_call.completed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -14170,7 +14170,7 @@ type ResponseMcpCallFailedEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.mcp_call.failed'.
-	Type constant.ResponseMcpCallFailed `json:"type" api:"required"`
+	Type constant.ResponseMcpCallFailed `json:"type" default:"response.mcp_call.failed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -14197,7 +14197,7 @@ type ResponseMcpCallInProgressEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.mcp_call.in_progress'.
-	Type constant.ResponseMcpCallInProgress `json:"type" api:"required"`
+	Type constant.ResponseMcpCallInProgress `json:"type" default:"response.mcp_call.in_progress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -14224,7 +14224,7 @@ type ResponseMcpListToolsCompletedEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.mcp_list_tools.completed'.
-	Type constant.ResponseMcpListToolsCompleted `json:"type" api:"required"`
+	Type constant.ResponseMcpListToolsCompleted `json:"type" default:"response.mcp_list_tools.completed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -14251,7 +14251,7 @@ type ResponseMcpListToolsFailedEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.mcp_list_tools.failed'.
-	Type constant.ResponseMcpListToolsFailed `json:"type" api:"required"`
+	Type constant.ResponseMcpListToolsFailed `json:"type" default:"response.mcp_list_tools.failed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -14279,7 +14279,7 @@ type ResponseMcpListToolsInProgressEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.mcp_list_tools.in_progress'.
-	Type constant.ResponseMcpListToolsInProgress `json:"type" api:"required"`
+	Type constant.ResponseMcpListToolsInProgress `json:"type" default:"response.mcp_list_tools.in_progress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -14810,7 +14810,7 @@ type ResponseOutputItemImageGenerationCall struct {
 	// Any of "in_progress", "completed", "generating", "failed".
 	Status string `json:"status" api:"required"`
 	// The type of the image generation call. Always `image_generation_call`.
-	Type constant.ImageGenerationCall `json:"type" api:"required"`
+	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -14841,7 +14841,7 @@ type ResponseOutputItemLocalShellCall struct {
 	// Any of "in_progress", "completed", "incomplete".
 	Status string `json:"status" api:"required"`
 	// The type of the local shell call. Always `local_shell_call`.
-	Type constant.LocalShellCall `json:"type" api:"required"`
+	Type constant.LocalShellCall `json:"type" default:"local_shell_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -14867,7 +14867,7 @@ type ResponseOutputItemLocalShellCallAction struct {
 	// Environment variables to set for the command.
 	Env map[string]string `json:"env" api:"required"`
 	// The type of the local shell action. Always `exec`.
-	Type constant.Exec `json:"type" api:"required"`
+	Type constant.Exec `json:"type" default:"exec"`
 	// Optional timeout in milliseconds for the command.
 	TimeoutMs int64 `json:"timeout_ms" api:"nullable"`
 	// Optional user to run the command as.
@@ -14904,7 +14904,7 @@ type ResponseOutputItemMcpCall struct {
 	// The label of the MCP server running the tool.
 	ServerLabel string `json:"server_label" api:"required"`
 	// The type of the item. Always `mcp_call`.
-	Type constant.McpCall `json:"type" api:"required"`
+	Type constant.McpCall `json:"type" default:"mcp_call"`
 	// Unique identifier for the MCP tool call approval request. Include this value in
 	// a subsequent `mcp_approval_response` input to approve or reject the
 	// corresponding tool call.
@@ -14949,7 +14949,7 @@ type ResponseOutputItemMcpListTools struct {
 	// The tools available on the server.
 	Tools []ResponseOutputItemMcpListToolsTool `json:"tools" api:"required"`
 	// The type of the item. Always `mcp_list_tools`.
-	Type constant.McpListTools `json:"type" api:"required"`
+	Type constant.McpListTools `json:"type" default:"mcp_list_tools"`
 	// Error message if the server could not list tools.
 	Error string `json:"error" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -15008,7 +15008,7 @@ type ResponseOutputItemMcpApprovalRequest struct {
 	// The label of the MCP server making the request.
 	ServerLabel string `json:"server_label" api:"required"`
 	// The type of the item. Always `mcp_approval_request`.
-	Type constant.McpApprovalRequest `json:"type" api:"required"`
+	Type constant.McpApprovalRequest `json:"type" default:"mcp_approval_request"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -15036,7 +15036,7 @@ type ResponseOutputItemAddedEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.output_item.added`.
-	Type constant.ResponseOutputItemAdded `json:"type" api:"required"`
+	Type constant.ResponseOutputItemAdded `json:"type" default:"response.output_item.added"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Item           respjson.Field
@@ -15063,7 +15063,7 @@ type ResponseOutputItemDoneEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.output_item.done`.
-	Type constant.ResponseOutputItemDone `json:"type" api:"required"`
+	Type constant.ResponseOutputItemDone `json:"type" default:"response.output_item.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Item           respjson.Field
@@ -15088,14 +15088,14 @@ type ResponseOutputMessage struct {
 	// The content of the output message.
 	Content []ResponseOutputMessageContentUnion `json:"content" api:"required"`
 	// The role of the output message. Always `assistant`.
-	Role constant.Assistant `json:"role" api:"required"`
+	Role constant.Assistant `json:"role" default:"assistant"`
 	// The status of the message input. One of `in_progress`, `completed`, or
 	// `incomplete`. Populated when input items are returned via API.
 	//
 	// Any of "in_progress", "completed", "incomplete".
 	Status ResponseOutputMessageStatus `json:"status" api:"required"`
 	// The type of the output message. Always `message`.
-	Type constant.Message `json:"type" api:"required"`
+	Type constant.Message `json:"type" default:"message"`
 	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
 	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
 	// sending follow-up requests, preserve and resend phase on all assistant messages
@@ -15248,11 +15248,11 @@ type ResponseOutputMessageParam struct {
 	// The role of the output message. Always `assistant`.
 	//
 	// This field can be elided, and will marshal its zero value as "assistant".
-	Role constant.Assistant `json:"role" api:"required"`
+	Role constant.Assistant `json:"role" default:"assistant"`
 	// The type of the output message. Always `message`.
 	//
 	// This field can be elided, and will marshal its zero value as "message".
-	Type constant.Message `json:"type" api:"required"`
+	Type constant.Message `json:"type" default:"message"`
 	paramObj
 }
 
@@ -15344,7 +15344,7 @@ type ResponseOutputRefusal struct {
 	// The refusal explanation from the model.
 	Refusal string `json:"refusal" api:"required"`
 	// The type of the refusal. Always `refusal`.
-	Type constant.Refusal `json:"type" api:"required"`
+	Type constant.Refusal `json:"type" default:"refusal"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Refusal     respjson.Field
@@ -15380,7 +15380,7 @@ type ResponseOutputRefusalParam struct {
 	// The type of the refusal. Always `refusal`.
 	//
 	// This field can be elided, and will marshal its zero value as "refusal".
-	Type constant.Refusal `json:"type" api:"required"`
+	Type constant.Refusal `json:"type" default:"refusal"`
 	paramObj
 }
 
@@ -15399,7 +15399,7 @@ type ResponseOutputText struct {
 	// The text output from the model.
 	Text string `json:"text" api:"required"`
 	// The type of the output text. Always `output_text`.
-	Type     constant.OutputText         `json:"type" api:"required"`
+	Type     constant.OutputText         `json:"type" default:"output_text"`
 	Logprobs []ResponseOutputTextLogprob `json:"logprobs"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -15539,7 +15539,7 @@ type ResponseOutputTextAnnotationFileCitation struct {
 	// The index of the file in the list of files.
 	Index int64 `json:"index" api:"required"`
 	// The type of the file citation. Always `file_citation`.
-	Type constant.FileCitation `json:"type" api:"required"`
+	Type constant.FileCitation `json:"type" default:"file_citation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		FileID      respjson.Field
@@ -15566,7 +15566,7 @@ type ResponseOutputTextAnnotationURLCitation struct {
 	// The title of the web resource.
 	Title string `json:"title" api:"required"`
 	// The type of the URL citation. Always `url_citation`.
-	Type constant.URLCitation `json:"type" api:"required"`
+	Type constant.URLCitation `json:"type" default:"url_citation"`
 	// The URL of the web resource.
 	URL string `json:"url" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -15600,7 +15600,7 @@ type ResponseOutputTextAnnotationContainerFileCitation struct {
 	// The index of the first character of the container file citation in the message.
 	StartIndex int64 `json:"start_index" api:"required"`
 	// The type of the container file citation. Always `container_file_citation`.
-	Type constant.ContainerFileCitation `json:"type" api:"required"`
+	Type constant.ContainerFileCitation `json:"type" default:"container_file_citation"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContainerID respjson.Field
@@ -15627,7 +15627,7 @@ type ResponseOutputTextAnnotationFilePath struct {
 	// The index of the file in the list of files.
 	Index int64 `json:"index" api:"required"`
 	// The type of the file path. Always `file_path`.
-	Type constant.FilePath `json:"type" api:"required"`
+	Type constant.FilePath `json:"type" default:"file_path"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		FileID      respjson.Field
@@ -15700,7 +15700,7 @@ type ResponseOutputTextParam struct {
 	// The type of the output text. Always `output_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "output_text".
-	Type constant.OutputText `json:"type" api:"required"`
+	Type constant.OutputText `json:"type" default:"output_text"`
 	paramObj
 }
 
@@ -15856,7 +15856,7 @@ type ResponseOutputTextAnnotationFileCitationParam struct {
 	// The type of the file citation. Always `file_citation`.
 	//
 	// This field can be elided, and will marshal its zero value as "file_citation".
-	Type constant.FileCitation `json:"type" api:"required"`
+	Type constant.FileCitation `json:"type" default:"file_citation"`
 	paramObj
 }
 
@@ -15883,7 +15883,7 @@ type ResponseOutputTextAnnotationURLCitationParam struct {
 	// The type of the URL citation. Always `url_citation`.
 	//
 	// This field can be elided, and will marshal its zero value as "url_citation".
-	Type constant.URLCitation `json:"type" api:"required"`
+	Type constant.URLCitation `json:"type" default:"url_citation"`
 	paramObj
 }
 
@@ -15914,7 +15914,7 @@ type ResponseOutputTextAnnotationContainerFileCitationParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "container_file_citation".
-	Type constant.ContainerFileCitation `json:"type" api:"required"`
+	Type constant.ContainerFileCitation `json:"type" default:"container_file_citation"`
 	paramObj
 }
 
@@ -15937,7 +15937,7 @@ type ResponseOutputTextAnnotationFilePathParam struct {
 	// The type of the file path. Always `file_path`.
 	//
 	// This field can be elided, and will marshal its zero value as "file_path".
-	Type constant.FilePath `json:"type" api:"required"`
+	Type constant.FilePath `json:"type" default:"file_path"`
 	paramObj
 }
 
@@ -16001,7 +16001,7 @@ type ResponseOutputTextAnnotationAddedEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.output_text.annotation.added'.
-	Type constant.ResponseOutputTextAnnotationAdded `json:"type" api:"required"`
+	Type constant.ResponseOutputTextAnnotationAdded `json:"type" default:"response.output_text.annotation.added"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Annotation      respjson.Field
@@ -16255,7 +16255,7 @@ type ResponseQueuedEvent struct {
 	// The sequence number for this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.queued'.
-	Type constant.ResponseQueued `json:"type" api:"required"`
+	Type constant.ResponseQueued `json:"type" default:"response.queued"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Response       respjson.Field
@@ -16282,7 +16282,7 @@ type ResponseReasoningItem struct {
 	// Reasoning summary content.
 	Summary []ResponseReasoningItemSummary `json:"summary" api:"required"`
 	// The type of the object. Always `reasoning`.
-	Type constant.Reasoning `json:"type" api:"required"`
+	Type constant.Reasoning `json:"type" default:"reasoning"`
 	// Reasoning text content.
 	Content []ResponseReasoningItemContent `json:"content"`
 	// The encrypted content of the reasoning item - populated when a response is
@@ -16328,7 +16328,7 @@ type ResponseReasoningItemSummary struct {
 	// A summary of the reasoning output from the model so far.
 	Text string `json:"text" api:"required"`
 	// The type of the object. Always `summary_text`.
-	Type constant.SummaryText `json:"type" api:"required"`
+	Type constant.SummaryText `json:"type" default:"summary_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -16349,7 +16349,7 @@ type ResponseReasoningItemContent struct {
 	// The reasoning text from the model.
 	Text string `json:"text" api:"required"`
 	// The type of the reasoning text. Always `reasoning_text`.
-	Type constant.ReasoningText `json:"type" api:"required"`
+	Type constant.ReasoningText `json:"type" default:"reasoning_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -16399,7 +16399,7 @@ type ResponseReasoningItemParam struct {
 	// The type of the object. Always `reasoning`.
 	//
 	// This field can be elided, and will marshal its zero value as "reasoning".
-	Type constant.Reasoning `json:"type" api:"required"`
+	Type constant.Reasoning `json:"type" default:"reasoning"`
 	paramObj
 }
 
@@ -16420,7 +16420,7 @@ type ResponseReasoningItemSummaryParam struct {
 	// The type of the object. Always `summary_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "summary_text".
-	Type constant.SummaryText `json:"type" api:"required"`
+	Type constant.SummaryText `json:"type" default:"summary_text"`
 	paramObj
 }
 
@@ -16441,7 +16441,7 @@ type ResponseReasoningItemContentParam struct {
 	// The type of the reasoning text. Always `reasoning_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "reasoning_text".
-	Type constant.ReasoningText `json:"type" api:"required"`
+	Type constant.ReasoningText `json:"type" default:"reasoning_text"`
 	paramObj
 }
 
@@ -16466,7 +16466,7 @@ type ResponseReasoningSummaryPartAddedEvent struct {
 	// The index of the summary part within the reasoning summary.
 	SummaryIndex int64 `json:"summary_index" api:"required"`
 	// The type of the event. Always `response.reasoning_summary_part.added`.
-	Type constant.ResponseReasoningSummaryPartAdded `json:"type" api:"required"`
+	Type constant.ResponseReasoningSummaryPartAdded `json:"type" default:"response.reasoning_summary_part.added"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -16491,7 +16491,7 @@ type ResponseReasoningSummaryPartAddedEventPart struct {
 	// The text of the summary part.
 	Text string `json:"text" api:"required"`
 	// The type of the summary part. Always `summary_text`.
-	Type constant.SummaryText `json:"type" api:"required"`
+	Type constant.SummaryText `json:"type" default:"summary_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -16520,7 +16520,7 @@ type ResponseReasoningSummaryPartDoneEvent struct {
 	// The index of the summary part within the reasoning summary.
 	SummaryIndex int64 `json:"summary_index" api:"required"`
 	// The type of the event. Always `response.reasoning_summary_part.done`.
-	Type constant.ResponseReasoningSummaryPartDone `json:"type" api:"required"`
+	Type constant.ResponseReasoningSummaryPartDone `json:"type" default:"response.reasoning_summary_part.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -16545,7 +16545,7 @@ type ResponseReasoningSummaryPartDoneEventPart struct {
 	// The text of the summary part.
 	Text string `json:"text" api:"required"`
 	// The type of the summary part. Always `summary_text`.
-	Type constant.SummaryText `json:"type" api:"required"`
+	Type constant.SummaryText `json:"type" default:"summary_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -16574,7 +16574,7 @@ type ResponseReasoningSummaryTextDeltaEvent struct {
 	// The index of the summary part within the reasoning summary.
 	SummaryIndex int64 `json:"summary_index" api:"required"`
 	// The type of the event. Always `response.reasoning_summary_text.delta`.
-	Type constant.ResponseReasoningSummaryTextDelta `json:"type" api:"required"`
+	Type constant.ResponseReasoningSummaryTextDelta `json:"type" default:"response.reasoning_summary_text.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delta          respjson.Field
@@ -16607,7 +16607,7 @@ type ResponseReasoningSummaryTextDoneEvent struct {
 	// The full text of the completed reasoning summary.
 	Text string `json:"text" api:"required"`
 	// The type of the event. Always `response.reasoning_summary_text.done`.
-	Type constant.ResponseReasoningSummaryTextDone `json:"type" api:"required"`
+	Type constant.ResponseReasoningSummaryTextDone `json:"type" default:"response.reasoning_summary_text.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -16640,7 +16640,7 @@ type ResponseReasoningTextDeltaEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.reasoning_text.delta`.
-	Type constant.ResponseReasoningTextDelta `json:"type" api:"required"`
+	Type constant.ResponseReasoningTextDelta `json:"type" default:"response.reasoning_text.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex   respjson.Field
@@ -16673,7 +16673,7 @@ type ResponseReasoningTextDoneEvent struct {
 	// The full text of the completed reasoning content.
 	Text string `json:"text" api:"required"`
 	// The type of the event. Always `response.reasoning_text.done`.
-	Type constant.ResponseReasoningTextDone `json:"type" api:"required"`
+	Type constant.ResponseReasoningTextDone `json:"type" default:"response.reasoning_text.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex   respjson.Field
@@ -16706,7 +16706,7 @@ type ResponseRefusalDeltaEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.refusal.delta`.
-	Type constant.ResponseRefusalDelta `json:"type" api:"required"`
+	Type constant.ResponseRefusalDelta `json:"type" default:"response.refusal.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex   respjson.Field
@@ -16739,7 +16739,7 @@ type ResponseRefusalDoneEvent struct {
 	// The sequence number of this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.refusal.done`.
-	Type constant.ResponseRefusalDone `json:"type" api:"required"`
+	Type constant.ResponseRefusalDone `json:"type" default:"response.refusal.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex   respjson.Field
@@ -17583,7 +17583,7 @@ type ResponseTextDeltaEvent struct {
 	// The sequence number for this event.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.output_text.delta`.
-	Type constant.ResponseOutputTextDelta `json:"type" api:"required"`
+	Type constant.ResponseOutputTextDelta `json:"type" default:"response.output_text.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex   respjson.Field
@@ -17665,7 +17665,7 @@ type ResponseTextDoneEvent struct {
 	// The text content that is finalized.
 	Text string `json:"text" api:"required"`
 	// The type of the event. Always `response.output_text.done`.
-	Type constant.ResponseOutputTextDone `json:"type" api:"required"`
+	Type constant.ResponseOutputTextDone `json:"type" default:"response.output_text.done"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ContentIndex   respjson.Field
@@ -17748,7 +17748,7 @@ type ResponseToolSearchCall struct {
 	// Any of "in_progress", "completed", "incomplete".
 	Status ResponseToolSearchCallStatus `json:"status" api:"required"`
 	// The type of the item. Always `tool_search_call`.
-	Type constant.ToolSearchCall `json:"type" api:"required"`
+	Type constant.ToolSearchCall `json:"type" default:"tool_search_call"`
 	// The identifier of the actor that created the item.
 	CreatedBy string `json:"created_by"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -17806,7 +17806,7 @@ type ResponseToolSearchOutputItem struct {
 	// The loaded tool definitions returned by tool search.
 	Tools []ToolUnion `json:"tools" api:"required"`
 	// The type of the item. Always `tool_search_output`.
-	Type constant.ToolSearchOutput `json:"type" api:"required"`
+	Type constant.ToolSearchOutput `json:"type" default:"tool_search_output"`
 	// The identifier of the actor that created the item.
 	CreatedBy string `json:"created_by"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -17852,7 +17852,7 @@ type ResponseToolSearchOutputItemParamResp struct {
 	// The loaded tool definitions returned by the tool search output.
 	Tools []ToolUnion `json:"tools" api:"required"`
 	// The item type. Always `tool_search_output`.
-	Type constant.ToolSearchOutput `json:"type" api:"required"`
+	Type constant.ToolSearchOutput `json:"type" default:"tool_search_output"`
 	// The unique ID of this tool search output.
 	ID string `json:"id" api:"nullable"`
 	// The unique ID of the tool search call generated by the model.
@@ -17931,7 +17931,7 @@ type ResponseToolSearchOutputItemParam struct {
 	//
 	// This field can be elided, and will marshal its zero value as
 	// "tool_search_output".
-	Type constant.ToolSearchOutput `json:"type" api:"required"`
+	Type constant.ToolSearchOutput `json:"type" default:"tool_search_output"`
 	paramObj
 }
 
@@ -18020,7 +18020,7 @@ type ResponseWebSearchCallCompletedEvent struct {
 	// The sequence number of the web search call being processed.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.web_search_call.completed`.
-	Type constant.ResponseWebSearchCallCompleted `json:"type" api:"required"`
+	Type constant.ResponseWebSearchCallCompleted `json:"type" default:"response.web_search_call.completed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -18047,7 +18047,7 @@ type ResponseWebSearchCallInProgressEvent struct {
 	// The sequence number of the web search call being processed.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.web_search_call.in_progress`.
-	Type constant.ResponseWebSearchCallInProgress `json:"type" api:"required"`
+	Type constant.ResponseWebSearchCallInProgress `json:"type" default:"response.web_search_call.in_progress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -18074,7 +18074,7 @@ type ResponseWebSearchCallSearchingEvent struct {
 	// The sequence number of the web search call being processed.
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always `response.web_search_call.searching`.
-	Type constant.ResponseWebSearchCallSearching `json:"type" api:"required"`
+	Type constant.ResponseWebSearchCallSearching `json:"type" default:"response.web_search_call.searching"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID         respjson.Field
@@ -18096,7 +18096,7 @@ type SkillReference struct {
 	// The ID of the referenced skill.
 	SkillID string `json:"skill_id" api:"required"`
 	// References a skill created with the /v1/skills endpoint.
-	Type constant.SkillReference `json:"type" api:"required"`
+	Type constant.SkillReference `json:"type" default:"skill_reference"`
 	// Optional skill version. Use a positive integer or 'latest'. Omit for default.
 	Version string `json:"version"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -18133,7 +18133,7 @@ type SkillReferenceParam struct {
 	// References a skill created with the /v1/skills endpoint.
 	//
 	// This field can be elided, and will marshal its zero value as "skill_reference".
-	Type constant.SkillReference `json:"type" api:"required"`
+	Type constant.SkillReference `json:"type" default:"skill_reference"`
 	paramObj
 }
 
@@ -18492,7 +18492,7 @@ type ToolMcp struct {
 	// A label for this MCP server, used to identify it in tool calls.
 	ServerLabel string `json:"server_label" api:"required"`
 	// The type of the MCP tool. Always `mcp`.
-	Type constant.Mcp `json:"type" api:"required"`
+	Type constant.Mcp `json:"type" default:"mcp"`
 	// List of allowed tool names or a filter object.
 	AllowedTools ToolMcpAllowedToolsUnion `json:"allowed_tools" api:"nullable"`
 	// An OAuth access token that can be used with a remote MCP server, either with a
@@ -18743,7 +18743,7 @@ type ToolCodeInterpreter struct {
 	// optional `memory_limit` setting.
 	Container ToolCodeInterpreterContainerUnion `json:"container" api:"required"`
 	// The type of the code interpreter tool. Always `code_interpreter`.
-	Type constant.CodeInterpreter `json:"type" api:"required"`
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Container   respjson.Field
@@ -18812,7 +18812,7 @@ func (r *ToolCodeInterpreterContainerUnion) UnmarshalJSON(data []byte) error {
 // the files to run the code on.
 type ToolCodeInterpreterContainerCodeInterpreterContainerAuto struct {
 	// Always `auto`.
-	Type constant.Auto `json:"type" api:"required"`
+	Type constant.Auto `json:"type" default:"auto"`
 	// An optional list of uploaded files to make available to your code.
 	FileIDs []string `json:"file_ids"`
 	// The memory limit for the code interpreter container.
@@ -18916,7 +18916,7 @@ func (r *ToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) 
 // A tool that generates images using the GPT image models.
 type ToolImageGeneration struct {
 	// The type of the image generation tool. Always `image_generation`.
-	Type constant.ImageGeneration `json:"type" api:"required"`
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
 	// Whether to generate a new image or edit an existing image. Default: `auto`.
 	//
 	// Any of "generate", "edit", "auto".
@@ -19012,7 +19012,7 @@ func (r *ToolImageGenerationInputImageMask) UnmarshalJSON(data []byte) error {
 // A tool that allows the model to execute shell commands in a local environment.
 type ToolLocalShell struct {
 	// The type of the local shell tool. Always `local_shell`.
-	Type constant.LocalShell `json:"type" api:"required"`
+	Type constant.LocalShell `json:"type" default:"local_shell"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -19844,7 +19844,7 @@ type ToolMcpParam struct {
 	// The type of the MCP tool. Always `mcp`.
 	//
 	// This field can be elided, and will marshal its zero value as "mcp".
-	Type constant.Mcp `json:"type" api:"required"`
+	Type constant.Mcp `json:"type" default:"mcp"`
 	paramObj
 }
 
@@ -20003,7 +20003,7 @@ type ToolCodeInterpreterParam struct {
 	// The type of the code interpreter tool. Always `code_interpreter`.
 	//
 	// This field can be elided, and will marshal its zero value as "code_interpreter".
-	Type constant.CodeInterpreter `json:"type" api:"required"`
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
 	paramObj
 }
 
@@ -20056,7 +20056,7 @@ type ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam struct {
 	// Always `auto`.
 	//
 	// This field can be elided, and will marshal its zero value as "auto".
-	Type constant.Auto `json:"type" api:"required"`
+	Type constant.Auto `json:"type" default:"auto"`
 	paramObj
 }
 
@@ -20185,7 +20185,7 @@ type ToolImageGenerationParam struct {
 	// The type of the image generation tool. Always `image_generation`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_generation".
-	Type constant.ImageGeneration `json:"type" api:"required"`
+	Type constant.ImageGeneration `json:"type" default:"image_generation"`
 	paramObj
 }
 
@@ -20250,7 +20250,7 @@ func NewToolLocalShellParam() ToolLocalShellParam {
 // This struct has a constant value, construct it with [NewToolLocalShellParam].
 type ToolLocalShellParam struct {
 	// The type of the local shell tool. Always `local_shell`.
-	Type constant.LocalShell `json:"type" api:"required"`
+	Type constant.LocalShell `json:"type" default:"local_shell"`
 	paramObj
 }
 
@@ -20288,7 +20288,7 @@ type ToolChoiceAllowed struct {
 	// ```
 	Tools []map[string]any `json:"tools" api:"required"`
 	// Allowed tool configuration type. Always `allowed_tools`.
-	Type constant.AllowedTools `json:"type" api:"required"`
+	Type constant.AllowedTools `json:"type" default:"allowed_tools"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Mode        respjson.Field
@@ -20357,7 +20357,7 @@ type ToolChoiceAllowedParam struct {
 	// Allowed tool configuration type. Always `allowed_tools`.
 	//
 	// This field can be elided, and will marshal its zero value as "allowed_tools".
-	Type constant.AllowedTools `json:"type" api:"required"`
+	Type constant.AllowedTools `json:"type" default:"allowed_tools"`
 	paramObj
 }
 
@@ -20372,7 +20372,7 @@ func (r *ToolChoiceAllowedParam) UnmarshalJSON(data []byte) error {
 // Forces the model to call the apply_patch tool when executing a tool call.
 type ToolChoiceApplyPatch struct {
 	// The tool to call. Always `apply_patch`.
-	Type constant.ApplyPatch `json:"type" api:"required"`
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -20408,7 +20408,7 @@ func NewToolChoiceApplyPatchParam() ToolChoiceApplyPatchParam {
 // [NewToolChoiceApplyPatchParam].
 type ToolChoiceApplyPatchParam struct {
 	// The tool to call. Always `apply_patch`.
-	Type constant.ApplyPatch `json:"type" api:"required"`
+	Type constant.ApplyPatch `json:"type" default:"apply_patch"`
 	paramObj
 }
 
@@ -20425,7 +20425,7 @@ type ToolChoiceCustom struct {
 	// The name of the custom tool to call.
 	Name string `json:"name" api:"required"`
 	// For custom tool calling, the type is always `custom`.
-	Type constant.Custom `json:"type" api:"required"`
+	Type constant.Custom `json:"type" default:"custom"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Name        respjson.Field
@@ -20459,7 +20459,7 @@ type ToolChoiceCustomParam struct {
 	// For custom tool calling, the type is always `custom`.
 	//
 	// This field can be elided, and will marshal its zero value as "custom".
-	Type constant.Custom `json:"type" api:"required"`
+	Type constant.Custom `json:"type" default:"custom"`
 	paramObj
 }
 
@@ -20476,7 +20476,7 @@ type ToolChoiceFunction struct {
 	// The name of the function to call.
 	Name string `json:"name" api:"required"`
 	// For function calling, the type is always `function`.
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Name        respjson.Field
@@ -20510,7 +20510,7 @@ type ToolChoiceFunctionParam struct {
 	// For function calling, the type is always `function`.
 	//
 	// This field can be elided, and will marshal its zero value as "function".
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	paramObj
 }
 
@@ -20528,7 +20528,7 @@ type ToolChoiceMcp struct {
 	// The label of the MCP server to use.
 	ServerLabel string `json:"server_label" api:"required"`
 	// For MCP tools, the type is always `mcp`.
-	Type constant.Mcp `json:"type" api:"required"`
+	Type constant.Mcp `json:"type" default:"mcp"`
 	// The name of the tool to call on the server.
 	Name string `json:"name" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -20568,7 +20568,7 @@ type ToolChoiceMcpParam struct {
 	// For MCP tools, the type is always `mcp`.
 	//
 	// This field can be elided, and will marshal its zero value as "mcp".
-	Type constant.Mcp `json:"type" api:"required"`
+	Type constant.Mcp `json:"type" default:"mcp"`
 	paramObj
 }
 
@@ -20599,7 +20599,7 @@ const (
 // Forces the model to call the shell tool when a tool call is required.
 type ToolChoiceShell struct {
 	// The tool to call. Always `shell`.
-	Type constant.Shell `json:"type" api:"required"`
+	Type constant.Shell `json:"type" default:"shell"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -20634,7 +20634,7 @@ func NewToolChoiceShellParam() ToolChoiceShellParam {
 // This struct has a constant value, construct it with [NewToolChoiceShellParam].
 type ToolChoiceShellParam struct {
 	// The tool to call. Always `shell`.
-	Type constant.Shell `json:"type" api:"required"`
+	Type constant.Shell `json:"type" default:"shell"`
 	paramObj
 }
 
@@ -20750,7 +20750,7 @@ func (r *ToolChoiceTypesParam) UnmarshalJSON(data []byte) error {
 // Hosted or BYOT tool search configuration for deferred tools.
 type ToolSearchTool struct {
 	// The type of the tool. Always `tool_search`.
-	Type constant.ToolSearch `json:"type" api:"required"`
+	Type constant.ToolSearch `json:"type" default:"tool_search"`
 	// Description shown to the model for a client-executed tool search tool.
 	Description string `json:"description" api:"nullable"`
 	// Whether tool search is executed by the server or by the client.
@@ -20808,7 +20808,7 @@ type ToolSearchToolParam struct {
 	// The type of the tool. Always `tool_search`.
 	//
 	// This field can be elided, and will marshal its zero value as "tool_search".
-	Type constant.ToolSearch `json:"type" api:"required"`
+	Type constant.ToolSearch `json:"type" default:"tool_search"`
 	paramObj
 }
 
@@ -20886,7 +20886,7 @@ const (
 // The user's location.
 type WebSearchPreviewToolUserLocation struct {
 	// The type of location approximation. Always `approximate`.
-	Type constant.Approximate `json:"type" api:"required"`
+	Type constant.Approximate `json:"type" default:"approximate"`
 	// Free text input for the city of the user, e.g. `San Francisco`.
 	City string `json:"city" api:"nullable"`
 	// The two-letter [ISO country code](https://en.wikipedia.org/wiki/ISO_3166-1) of
@@ -20963,7 +20963,7 @@ type WebSearchPreviewToolUserLocationParam struct {
 	// The type of location approximation. Always `approximate`.
 	//
 	// This field can be elided, and will marshal its zero value as "approximate".
-	Type constant.Approximate `json:"type" api:"required"`
+	Type constant.Approximate `json:"type" default:"approximate"`
 	paramObj
 }
 

@@ -177,7 +177,7 @@ type VectorStoreFile struct {
 	// are no errors.
 	LastError VectorStoreFileLastError `json:"last_error" api:"required"`
 	// The object type, which is always `vector_store.file`.
-	Object constant.VectorStoreFile `json:"object" api:"required"`
+	Object constant.VectorStoreFile `json:"object" default:"vector_store.file"`
 	// The status of the vector store file, which can be either `in_progress`,
 	// `completed`, `cancelled`, or `failed`. The status `completed` indicates that the
 	// vector store file is ready for use.
@@ -305,7 +305,7 @@ func (r *VectorStoreFileAttributeUnion) UnmarshalJSON(data []byte) error {
 type VectorStoreFileDeleted struct {
 	ID      string                          `json:"id" api:"required"`
 	Deleted bool                            `json:"deleted" api:"required"`
-	Object  constant.VectorStoreFileDeleted `json:"object" api:"required"`
+	Object  constant.VectorStoreFileDeleted `json:"object" default:"vector_store.file.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field

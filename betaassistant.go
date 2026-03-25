@@ -155,7 +155,7 @@ type Assistant struct {
 	// The name of the assistant. The maximum length is 256 characters.
 	Name string `json:"name" api:"required"`
 	// The object type, which is always `assistant`.
-	Object constant.Assistant `json:"object" api:"required"`
+	Object constant.Assistant `json:"object" default:"assistant"`
 	// A list of tool enabled on the assistant. There can be a maximum of 128 tools per
 	// assistant. Tools can be of types `code_interpreter`, `file_search`, or
 	// `function`.
@@ -286,7 +286,7 @@ func (r *AssistantToolResourcesFileSearch) UnmarshalJSON(data []byte) error {
 type AssistantDeleted struct {
 	ID      string                    `json:"id" api:"required"`
 	Deleted bool                      `json:"deleted" api:"required"`
-	Object  constant.AssistantDeleted `json:"object" api:"required"`
+	Object  constant.AssistantDeleted `json:"object" default:"assistant.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -814,7 +814,7 @@ type AssistantStreamEventThreadCreated struct {
 	// Represents a thread that contains
 	// [messages](https://platform.openai.com/docs/api-reference/messages).
 	Data  Thread                 `json:"data" api:"required"`
-	Event constant.ThreadCreated `json:"event" api:"required"`
+	Event constant.ThreadCreated `json:"event" default:"thread.created"`
 	// Whether to enable input audio transcription.
 	Enabled bool `json:"enabled"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -839,7 +839,7 @@ type AssistantStreamEventThreadRunCreated struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                       `json:"data" api:"required"`
-	Event constant.ThreadRunCreated `json:"event" api:"required"`
+	Event constant.ThreadRunCreated `json:"event" default:"thread.run.created"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -861,7 +861,7 @@ type AssistantStreamEventThreadRunQueued struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                      `json:"data" api:"required"`
-	Event constant.ThreadRunQueued `json:"event" api:"required"`
+	Event constant.ThreadRunQueued `json:"event" default:"thread.run.queued"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -883,7 +883,7 @@ type AssistantStreamEventThreadRunInProgress struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                          `json:"data" api:"required"`
-	Event constant.ThreadRunInProgress `json:"event" api:"required"`
+	Event constant.ThreadRunInProgress `json:"event" default:"thread.run.in_progress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -905,7 +905,7 @@ type AssistantStreamEventThreadRunRequiresAction struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                              `json:"data" api:"required"`
-	Event constant.ThreadRunRequiresAction `json:"event" api:"required"`
+	Event constant.ThreadRunRequiresAction `json:"event" default:"thread.run.requires_action"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -927,7 +927,7 @@ type AssistantStreamEventThreadRunCompleted struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                         `json:"data" api:"required"`
-	Event constant.ThreadRunCompleted `json:"event" api:"required"`
+	Event constant.ThreadRunCompleted `json:"event" default:"thread.run.completed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -949,7 +949,7 @@ type AssistantStreamEventThreadRunIncomplete struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                          `json:"data" api:"required"`
-	Event constant.ThreadRunIncomplete `json:"event" api:"required"`
+	Event constant.ThreadRunIncomplete `json:"event" default:"thread.run.incomplete"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -971,7 +971,7 @@ type AssistantStreamEventThreadRunFailed struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                      `json:"data" api:"required"`
-	Event constant.ThreadRunFailed `json:"event" api:"required"`
+	Event constant.ThreadRunFailed `json:"event" default:"thread.run.failed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -993,7 +993,7 @@ type AssistantStreamEventThreadRunCancelling struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                          `json:"data" api:"required"`
-	Event constant.ThreadRunCancelling `json:"event" api:"required"`
+	Event constant.ThreadRunCancelling `json:"event" default:"thread.run.cancelling"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1015,7 +1015,7 @@ type AssistantStreamEventThreadRunCancelled struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                         `json:"data" api:"required"`
-	Event constant.ThreadRunCancelled `json:"event" api:"required"`
+	Event constant.ThreadRunCancelled `json:"event" default:"thread.run.cancelled"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1037,7 +1037,7 @@ type AssistantStreamEventThreadRunExpired struct {
 	// Represents an execution run on a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Run                       `json:"data" api:"required"`
-	Event constant.ThreadRunExpired `json:"event" api:"required"`
+	Event constant.ThreadRunExpired `json:"event" default:"thread.run.expired"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1059,7 +1059,7 @@ func (r *AssistantStreamEventThreadRunExpired) UnmarshalJSON(data []byte) error 
 type AssistantStreamEventThreadRunStepCreated struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                       `json:"data" api:"required"`
-	Event constant.ThreadRunStepCreated `json:"event" api:"required"`
+	Event constant.ThreadRunStepCreated `json:"event" default:"thread.run.step.created"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1081,7 +1081,7 @@ func (r *AssistantStreamEventThreadRunStepCreated) UnmarshalJSON(data []byte) er
 type AssistantStreamEventThreadRunStepInProgress struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                          `json:"data" api:"required"`
-	Event constant.ThreadRunStepInProgress `json:"event" api:"required"`
+	Event constant.ThreadRunStepInProgress `json:"event" default:"thread.run.step.in_progress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1104,7 +1104,7 @@ type AssistantStreamEventThreadRunStepDelta struct {
 	// Represents a run step delta i.e. any changed fields on a run step during
 	// streaming.
 	Data  RunStepDeltaEvent           `json:"data" api:"required"`
-	Event constant.ThreadRunStepDelta `json:"event" api:"required"`
+	Event constant.ThreadRunStepDelta `json:"event" default:"thread.run.step.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1126,7 +1126,7 @@ func (r *AssistantStreamEventThreadRunStepDelta) UnmarshalJSON(data []byte) erro
 type AssistantStreamEventThreadRunStepCompleted struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                         `json:"data" api:"required"`
-	Event constant.ThreadRunStepCompleted `json:"event" api:"required"`
+	Event constant.ThreadRunStepCompleted `json:"event" default:"thread.run.step.completed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1148,7 +1148,7 @@ func (r *AssistantStreamEventThreadRunStepCompleted) UnmarshalJSON(data []byte) 
 type AssistantStreamEventThreadRunStepFailed struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                      `json:"data" api:"required"`
-	Event constant.ThreadRunStepFailed `json:"event" api:"required"`
+	Event constant.ThreadRunStepFailed `json:"event" default:"thread.run.step.failed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1170,7 +1170,7 @@ func (r *AssistantStreamEventThreadRunStepFailed) UnmarshalJSON(data []byte) err
 type AssistantStreamEventThreadRunStepCancelled struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                         `json:"data" api:"required"`
-	Event constant.ThreadRunStepCancelled `json:"event" api:"required"`
+	Event constant.ThreadRunStepCancelled `json:"event" default:"thread.run.step.cancelled"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1192,7 +1192,7 @@ func (r *AssistantStreamEventThreadRunStepCancelled) UnmarshalJSON(data []byte) 
 type AssistantStreamEventThreadRunStepExpired struct {
 	// Represents a step in execution of a run.
 	Data  RunStep                       `json:"data" api:"required"`
-	Event constant.ThreadRunStepExpired `json:"event" api:"required"`
+	Event constant.ThreadRunStepExpired `json:"event" default:"thread.run.step.expired"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1215,7 +1215,7 @@ type AssistantStreamEventThreadMessageCreated struct {
 	// Represents a message within a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Message                       `json:"data" api:"required"`
-	Event constant.ThreadMessageCreated `json:"event" api:"required"`
+	Event constant.ThreadMessageCreated `json:"event" default:"thread.message.created"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1238,7 +1238,7 @@ type AssistantStreamEventThreadMessageInProgress struct {
 	// Represents a message within a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Message                          `json:"data" api:"required"`
-	Event constant.ThreadMessageInProgress `json:"event" api:"required"`
+	Event constant.ThreadMessageInProgress `json:"event" default:"thread.message.in_progress"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1261,7 +1261,7 @@ type AssistantStreamEventThreadMessageDelta struct {
 	// Represents a message delta i.e. any changed fields on a message during
 	// streaming.
 	Data  MessageDeltaEvent           `json:"data" api:"required"`
-	Event constant.ThreadMessageDelta `json:"event" api:"required"`
+	Event constant.ThreadMessageDelta `json:"event" default:"thread.message.delta"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1284,7 +1284,7 @@ type AssistantStreamEventThreadMessageCompleted struct {
 	// Represents a message within a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Message                         `json:"data" api:"required"`
-	Event constant.ThreadMessageCompleted `json:"event" api:"required"`
+	Event constant.ThreadMessageCompleted `json:"event" default:"thread.message.completed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1307,7 +1307,7 @@ type AssistantStreamEventThreadMessageIncomplete struct {
 	// Represents a message within a
 	// [thread](https://platform.openai.com/docs/api-reference/threads).
 	Data  Message                          `json:"data" api:"required"`
-	Event constant.ThreadMessageIncomplete `json:"event" api:"required"`
+	Event constant.ThreadMessageIncomplete `json:"event" default:"thread.message.incomplete"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1328,7 +1328,7 @@ func (r *AssistantStreamEventThreadMessageIncomplete) UnmarshalJSON(data []byte)
 // This can happen due to an internal server error or a timeout.
 type AssistantStreamEventErrorEvent struct {
 	Data  shared.ErrorObject `json:"data" api:"required"`
-	Event constant.Error     `json:"event" api:"required"`
+	Event constant.Error     `json:"event" default:"error"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1500,7 +1500,7 @@ func init() {
 
 type CodeInterpreterTool struct {
 	// The type of tool being defined: `code_interpreter`
-	Type constant.CodeInterpreter `json:"type" api:"required"`
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -1534,7 +1534,7 @@ func NewCodeInterpreterToolParam() CodeInterpreterToolParam {
 // [NewCodeInterpreterToolParam].
 type CodeInterpreterToolParam struct {
 	// The type of tool being defined: `code_interpreter`
-	Type constant.CodeInterpreter `json:"type" api:"required"`
+	Type constant.CodeInterpreter `json:"type" default:"code_interpreter"`
 	paramObj
 }
 
@@ -1548,7 +1548,7 @@ func (r *CodeInterpreterToolParam) UnmarshalJSON(data []byte) error {
 
 type FileSearchTool struct {
 	// The type of tool being defined: `file_search`
-	Type constant.FileSearch `json:"type" api:"required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	// Overrides for the file search tool.
 	FileSearch FileSearchToolFileSearch `json:"file_search"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -1645,7 +1645,7 @@ type FileSearchToolParam struct {
 	// The type of tool being defined: `file_search`
 	//
 	// This field can be elided, and will marshal its zero value as "file_search".
-	Type constant.FileSearch `json:"type" api:"required"`
+	Type constant.FileSearch `json:"type" default:"file_search"`
 	paramObj
 }
 
@@ -1723,7 +1723,7 @@ func init() {
 type FunctionTool struct {
 	Function shared.FunctionDefinition `json:"function" api:"required"`
 	// The type of tool being defined: `function`
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Function    respjson.Field
@@ -1754,7 +1754,7 @@ type FunctionToolParam struct {
 	// The type of tool being defined: `function`
 	//
 	// This field can be elided, and will marshal its zero value as "function".
-	Type constant.Function `json:"type" api:"required"`
+	Type constant.Function `json:"type" default:"function"`
 	paramObj
 }
 
@@ -2001,7 +2001,7 @@ func NewBetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategy
 // [NewBetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto].
 type BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyAuto struct {
 	// Always `auto`.
-	Type constant.Auto `json:"type" api:"required"`
+	Type constant.Auto `json:"type" default:"auto"`
 	paramObj
 }
 
@@ -2019,7 +2019,7 @@ type BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategySta
 	// Always `static`.
 	//
 	// This field can be elided, and will marshal its zero value as "static".
-	Type constant.Static `json:"type" api:"required"`
+	Type constant.Static `json:"type" default:"static"`
 	paramObj
 }
 

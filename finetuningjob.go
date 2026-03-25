@@ -182,7 +182,7 @@ type FineTuningJob struct {
 	// The base model that is being fine-tuned.
 	Model string `json:"model" api:"required"`
 	// The object type, which is always "fine_tuning.job".
-	Object constant.FineTuningJob `json:"object" api:"required"`
+	Object constant.FineTuningJob `json:"object" default:"fine_tuning.job"`
 	// The organization that owns the fine-tuning job.
 	OrganizationID string `json:"organization_id" api:"required"`
 	// The compiled results file ID(s) for the fine-tuning job. You can retrieve the
@@ -473,7 +473,7 @@ type FineTuningJobEvent struct {
 	// The message of the event.
 	Message string `json:"message" api:"required"`
 	// The object type, which is always "fine_tuning.job.event".
-	Object constant.FineTuningJobEvent `json:"object" api:"required"`
+	Object constant.FineTuningJobEvent `json:"object" default:"fine_tuning.job.event"`
 	// The data associated with the event.
 	Data any `json:"data"`
 	// The type of event.
@@ -554,7 +554,7 @@ func (r *FineTuningJobWandbIntegration) UnmarshalJSON(data []byte) error {
 
 type FineTuningJobWandbIntegrationObject struct {
 	// The type of the integration being enabled for the fine-tuning job
-	Type constant.Wandb `json:"type" api:"required"`
+	Type constant.Wandb `json:"type" default:"wandb"`
 	// The settings for your integration with Weights and Biases. This payload
 	// specifies the project that metrics will be sent to. Optionally, you can set an
 	// explicit display name for your run, add tags to your run, and set a default
@@ -772,7 +772,7 @@ type FineTuningJobNewParamsIntegration struct {
 	// is supported.
 	//
 	// This field can be elided, and will marshal its zero value as "wandb".
-	Type constant.Wandb `json:"type" api:"required"`
+	Type constant.Wandb `json:"type" default:"wandb"`
 	paramObj
 }
 

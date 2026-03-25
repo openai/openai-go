@@ -122,7 +122,7 @@ type Upload struct {
 	// The name of the file to be uploaded.
 	Filename string `json:"filename" api:"required"`
 	// The object type, which is always "upload".
-	Object constant.Upload `json:"object" api:"required"`
+	Object constant.Upload `json:"object" default:"upload"`
 	// The intended purpose of the file.
 	// [Please refer here](https://platform.openai.com/docs/api-reference/files/object#files/object-purpose)
 	// for acceptable values.
@@ -208,7 +208,7 @@ type UploadNewParamsExpiresAfter struct {
 	// `created_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "created_at".
-	Anchor constant.CreatedAt `json:"anchor" api:"required"`
+	Anchor constant.CreatedAt `json:"anchor" default:"created_at"`
 	paramObj
 }
 

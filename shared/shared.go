@@ -511,7 +511,7 @@ func (r CustomToolInputFormatUnion) ToParam() CustomToolInputFormatUnionParam {
 // Unconstrained free-form text.
 type CustomToolInputFormatText struct {
 	// Unconstrained text format. Always `text`.
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -537,7 +537,7 @@ type CustomToolInputFormatGrammar struct {
 	// Any of "lark", "regex".
 	Syntax string `json:"syntax" api:"required"`
 	// Grammar format. Always `grammar`.
-	Type constant.Grammar `json:"type" api:"required"`
+	Type constant.Grammar `json:"type" default:"grammar"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Definition  respjson.Field
@@ -634,7 +634,7 @@ func NewCustomToolInputFormatTextParam() CustomToolInputFormatTextParam {
 // [NewCustomToolInputFormatTextParam].
 type CustomToolInputFormatTextParam struct {
 	// Unconstrained text format. Always `text`.
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	paramObj
 }
 
@@ -659,7 +659,7 @@ type CustomToolInputFormatGrammarParam struct {
 	// Grammar format. Always `grammar`.
 	//
 	// This field can be elided, and will marshal its zero value as "grammar".
-	Type constant.Grammar `json:"type" api:"required"`
+	Type constant.Grammar `json:"type" default:"grammar"`
 	paramObj
 }
 
@@ -955,7 +955,7 @@ const (
 // will not generate JSON without a system or user message instructing it to do so.
 type ResponseFormatJSONObject struct {
 	// The type of response format being defined. Always `json_object`.
-	Type constant.JSONObject `json:"type" api:"required"`
+	Type constant.JSONObject `json:"type" default:"json_object"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -996,7 +996,7 @@ func NewResponseFormatJSONObjectParam() ResponseFormatJSONObjectParam {
 // [NewResponseFormatJSONObjectParam].
 type ResponseFormatJSONObjectParam struct {
 	// The type of response format being defined. Always `json_object`.
-	Type constant.JSONObject `json:"type" api:"required"`
+	Type constant.JSONObject `json:"type" default:"json_object"`
 	paramObj
 }
 
@@ -1015,7 +1015,7 @@ type ResponseFormatJSONSchema struct {
 	// Structured Outputs configuration options, including a JSON Schema.
 	JSONSchema ResponseFormatJSONSchemaJSONSchema `json:"json_schema" api:"required"`
 	// The type of response format being defined. Always `json_schema`.
-	Type constant.JSONSchema `json:"type" api:"required"`
+	Type constant.JSONSchema `json:"type" default:"json_schema"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		JSONSchema  respjson.Field
@@ -1086,7 +1086,7 @@ type ResponseFormatJSONSchemaParam struct {
 	// The type of response format being defined. Always `json_schema`.
 	//
 	// This field can be elided, and will marshal its zero value as "json_schema".
-	Type constant.JSONSchema `json:"type" api:"required"`
+	Type constant.JSONSchema `json:"type" default:"json_schema"`
 	paramObj
 }
 
@@ -1131,7 +1131,7 @@ func (r *ResponseFormatJSONSchemaJSONSchemaParam) UnmarshalJSON(data []byte) err
 // Default response format. Used to generate text responses.
 type ResponseFormatText struct {
 	// The type of response format being defined. Always `text`.
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -1169,7 +1169,7 @@ func NewResponseFormatTextParam() ResponseFormatTextParam {
 // [NewResponseFormatTextParam].
 type ResponseFormatTextParam struct {
 	// The type of response format being defined. Always `text`.
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	paramObj
 }
 

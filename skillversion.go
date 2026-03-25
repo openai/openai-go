@@ -119,7 +119,7 @@ func (r *SkillVersionService) Delete(ctx context.Context, skillID string, versio
 type DeletedSkillVersion struct {
 	ID      string                       `json:"id" api:"required"`
 	Deleted bool                         `json:"deleted" api:"required"`
-	Object  constant.SkillVersionDeleted `json:"object" api:"required"`
+	Object  constant.SkillVersionDeleted `json:"object" default:"skill.version.deleted"`
 	// The deleted skill version.
 	Version string `json:"version" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -149,7 +149,7 @@ type SkillVersion struct {
 	// Name of the skill version.
 	Name string `json:"name" api:"required"`
 	// The object type, which is `skill.version`.
-	Object constant.SkillVersion `json:"object" api:"required"`
+	Object constant.SkillVersion `json:"object" default:"skill.version"`
 	// Identifier of the skill for this version.
 	SkillID string `json:"skill_id" api:"required"`
 	// Version number for this skill.
@@ -184,7 +184,7 @@ type SkillVersionList struct {
 	// The ID of the last item in the list.
 	LastID string `json:"last_id" api:"required"`
 	// The type of object returned, must be `list`.
-	Object constant.List `json:"object" api:"required"`
+	Object constant.List `json:"object" default:"list"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field

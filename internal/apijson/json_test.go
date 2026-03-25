@@ -614,3 +614,20 @@ func TestEncode(t *testing.T) {
 		})
 	}
 }
+
+type StructWithDefault struct {
+	Type string `json:"type" default:"foo"`
+}
+
+func TestDefault(t *testing.T) {
+	value := StructWithDefault{}
+	expected := `{"type":"foo"}`
+
+	raw, err := Marshal(value)
+	if err != nil {
+		t.Fatalf("serialization of %v failed with error %v", value, err)
+	}
+	if string(raw) != expected {
+		t.Fatalf("expected %+#v to serialize to %s but got %s", value, expected, string(raw))
+	}
+}

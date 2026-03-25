@@ -82,7 +82,7 @@ type FineTuningJobCheckpoint struct {
 	// Metrics at the step number during the fine-tuning job.
 	Metrics FineTuningJobCheckpointMetrics `json:"metrics" api:"required"`
 	// The object type, which is always "fine_tuning.job.checkpoint".
-	Object constant.FineTuningJobCheckpoint `json:"object" api:"required"`
+	Object constant.FineTuningJobCheckpoint `json:"object" default:"fine_tuning.job.checkpoint"`
 	// The step number that the checkpoint was created at.
 	StepNumber int64 `json:"step_number" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].

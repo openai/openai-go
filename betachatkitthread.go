@@ -129,7 +129,7 @@ type ChatSession struct {
 	// Convenience copy of the per-minute request limit.
 	MaxRequestsPer1Minute int64 `json:"max_requests_per_1_minute" api:"required"`
 	// Type discriminator that is always `chatkit.session`.
-	Object constant.ChatKitSession `json:"object" api:"required"`
+	Object constant.ChatKitSession `json:"object" default:"chatkit.session"`
 	// Resolved rate limit values.
 	RateLimits ChatSessionRateLimits `json:"rate_limits" api:"required"`
 	// Current lifecycle state of the session.
@@ -292,7 +292,7 @@ type ChatSessionExpiresAfterParam struct {
 	// Base timestamp used to calculate expiration. Currently fixed to `created_at`.
 	//
 	// This field can be elided, and will marshal its zero value as "created_at".
-	Anchor constant.CreatedAt `json:"anchor" api:"required"`
+	Anchor constant.CreatedAt `json:"anchor" default:"created_at"`
 	paramObj
 }
 
@@ -507,7 +507,7 @@ type ChatKitResponseOutputText struct {
 	// Assistant generated text.
 	Text string `json:"text" api:"required"`
 	// Type discriminator that is always `output_text`.
-	Type constant.OutputText `json:"type" api:"required"`
+	Type constant.OutputText `json:"type" default:"output_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Annotations respjson.Field
@@ -620,7 +620,7 @@ type ChatKitResponseOutputTextAnnotationFile struct {
 	// File attachment referenced by the annotation.
 	Source ChatKitResponseOutputTextAnnotationFileSource `json:"source" api:"required"`
 	// Type discriminator that is always `file` for this annotation.
-	Type constant.File `json:"type" api:"required"`
+	Type constant.File `json:"type" default:"file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Source      respjson.Field
@@ -641,7 +641,7 @@ type ChatKitResponseOutputTextAnnotationFileSource struct {
 	// Filename referenced by the annotation.
 	Filename string `json:"filename" api:"required"`
 	// Type discriminator that is always `file`.
-	Type constant.File `json:"type" api:"required"`
+	Type constant.File `json:"type" default:"file"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Filename    respjson.Field
@@ -662,7 +662,7 @@ type ChatKitResponseOutputTextAnnotationURL struct {
 	// URL referenced by the annotation.
 	Source ChatKitResponseOutputTextAnnotationURLSource `json:"source" api:"required"`
 	// Type discriminator that is always `url` for this annotation.
-	Type constant.URL `json:"type" api:"required"`
+	Type constant.URL `json:"type" default:"url"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Source      respjson.Field
@@ -681,7 +681,7 @@ func (r *ChatKitResponseOutputTextAnnotationURL) UnmarshalJSON(data []byte) erro
 // URL referenced by the annotation.
 type ChatKitResponseOutputTextAnnotationURLSource struct {
 	// Type discriminator that is always `url`.
-	Type constant.URL `json:"type" api:"required"`
+	Type constant.URL `json:"type" default:"url"`
 	// URL referenced by the annotation.
 	URL string `json:"url" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -706,7 +706,7 @@ type ChatKitThread struct {
 	// Unix timestamp (in seconds) for when the thread was created.
 	CreatedAt int64 `json:"created_at" api:"required"`
 	// Type discriminator that is always `chatkit.thread`.
-	Object constant.ChatKitThread `json:"object" api:"required"`
+	Object constant.ChatKitThread `json:"object" default:"chatkit.thread"`
 	// Current status for the thread. Defaults to `active` for newly created threads.
 	Status ChatKitThreadStatusUnion `json:"status" api:"required"`
 	// Optional human-readable title for the thread. Defaults to null when no title has
@@ -808,7 +808,7 @@ func (r *ChatKitThreadStatusUnion) UnmarshalJSON(data []byte) error {
 // Indicates that a thread is active.
 type ChatKitThreadStatusActive struct {
 	// Status discriminator that is always `active`.
-	Type constant.Active `json:"type" api:"required"`
+	Type constant.Active `json:"type" default:"active"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -828,7 +828,7 @@ type ChatKitThreadStatusLocked struct {
 	// Reason that the thread was locked. Defaults to null when no reason is recorded.
 	Reason string `json:"reason" api:"required"`
 	// Status discriminator that is always `locked`.
-	Type constant.Locked `json:"type" api:"required"`
+	Type constant.Locked `json:"type" default:"locked"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Reason      respjson.Field
@@ -849,7 +849,7 @@ type ChatKitThreadStatusClosed struct {
 	// Reason that the thread was closed. Defaults to null when no reason is recorded.
 	Reason string `json:"reason" api:"required"`
 	// Status discriminator that is always `closed`.
-	Type constant.Closed `json:"type" api:"required"`
+	Type constant.Closed `json:"type" default:"closed"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Reason      respjson.Field
@@ -874,11 +874,11 @@ type ChatKitThreadAssistantMessageItem struct {
 	// Unix timestamp (in seconds) for when the item was created.
 	CreatedAt int64 `json:"created_at" api:"required"`
 	// Type discriminator that is always `chatkit.thread_item`.
-	Object constant.ChatKitThreadItem `json:"object" api:"required"`
+	Object constant.ChatKitThreadItem `json:"object" default:"chatkit.thread_item"`
 	// Identifier of the parent thread.
 	ThreadID string `json:"thread_id" api:"required"`
 	// Type discriminator that is always `chatkit.assistant_message`.
-	Type constant.ChatKitAssistantMessage `json:"type" api:"required"`
+	Type constant.ChatKitAssistantMessage `json:"type" default:"chatkit.assistant_message"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -909,7 +909,7 @@ type ChatKitThreadItemList struct {
 	// The ID of the last item in the list.
 	LastID string `json:"last_id" api:"required"`
 	// The type of object returned, must be `list`.
-	Object constant.List `json:"object" api:"required"`
+	Object constant.List `json:"object" default:"list"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Data        respjson.Field
@@ -1118,7 +1118,7 @@ type ChatKitThreadItemListDataChatKitClientToolCall struct {
 	// Tool name that was invoked.
 	Name string `json:"name" api:"required"`
 	// Type discriminator that is always `chatkit.thread_item`.
-	Object constant.ChatKitThreadItem `json:"object" api:"required"`
+	Object constant.ChatKitThreadItem `json:"object" default:"chatkit.thread_item"`
 	// JSON-encoded output captured from the tool. Defaults to null while execution is
 	// in progress.
 	Output string `json:"output" api:"required"`
@@ -1129,7 +1129,7 @@ type ChatKitThreadItemListDataChatKitClientToolCall struct {
 	// Identifier of the parent thread.
 	ThreadID string `json:"thread_id" api:"required"`
 	// Type discriminator that is always `chatkit.client_tool_call`.
-	Type constant.ChatKitClientToolCall `json:"type" api:"required"`
+	Type constant.ChatKitClientToolCall `json:"type" default:"chatkit.client_tool_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1162,7 +1162,7 @@ type ChatKitThreadItemListDataChatKitTask struct {
 	// Optional heading for the task. Defaults to null when not provided.
 	Heading string `json:"heading" api:"required"`
 	// Type discriminator that is always `chatkit.thread_item`.
-	Object constant.ChatKitThreadItem `json:"object" api:"required"`
+	Object constant.ChatKitThreadItem `json:"object" default:"chatkit.thread_item"`
 	// Optional summary that describes the task. Defaults to null when omitted.
 	Summary string `json:"summary" api:"required"`
 	// Subtype for the task.
@@ -1172,7 +1172,7 @@ type ChatKitThreadItemListDataChatKitTask struct {
 	// Identifier of the parent thread.
 	ThreadID string `json:"thread_id" api:"required"`
 	// Type discriminator that is always `chatkit.task`.
-	Type constant.ChatKitTask `json:"type" api:"required"`
+	Type constant.ChatKitTask `json:"type" default:"chatkit.task"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1201,13 +1201,13 @@ type ChatKitThreadItemListDataChatKitTaskGroup struct {
 	// Unix timestamp (in seconds) for when the item was created.
 	CreatedAt int64 `json:"created_at" api:"required"`
 	// Type discriminator that is always `chatkit.thread_item`.
-	Object constant.ChatKitThreadItem `json:"object" api:"required"`
+	Object constant.ChatKitThreadItem `json:"object" default:"chatkit.thread_item"`
 	// Tasks included in the group.
 	Tasks []ChatKitThreadItemListDataChatKitTaskGroupTask `json:"tasks" api:"required"`
 	// Identifier of the parent thread.
 	ThreadID string `json:"thread_id" api:"required"`
 	// Type discriminator that is always `chatkit.task_group`.
-	Type constant.ChatKitTaskGroup `json:"type" api:"required"`
+	Type constant.ChatKitTaskGroup `json:"type" default:"chatkit.task_group"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -1266,10 +1266,10 @@ type ChatKitThreadUserMessageItem struct {
 	// Inference overrides applied to the message. Defaults to null when unset.
 	InferenceOptions ChatKitThreadUserMessageItemInferenceOptions `json:"inference_options" api:"required"`
 	// Type discriminator that is always `chatkit.thread_item`.
-	Object constant.ChatKitThreadItem `json:"object" api:"required"`
+	Object constant.ChatKitThreadItem `json:"object" default:"chatkit.thread_item"`
 	// Identifier of the parent thread.
 	ThreadID string                      `json:"thread_id" api:"required"`
-	Type     constant.ChatKitUserMessage `json:"type" api:"required"`
+	Type     constant.ChatKitUserMessage `json:"type" default:"chatkit.user_message"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID               respjson.Field
@@ -1360,7 +1360,7 @@ type ChatKitThreadUserMessageItemContentInputText struct {
 	// Plain-text content supplied by the user.
 	Text string `json:"text" api:"required"`
 	// Type discriminator that is always `input_text`.
-	Type constant.InputText `json:"type" api:"required"`
+	Type constant.InputText `json:"type" default:"input_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -1381,7 +1381,7 @@ type ChatKitThreadUserMessageItemContentQuotedText struct {
 	// Quoted text content.
 	Text string `json:"text" api:"required"`
 	// Type discriminator that is always `quoted_text`.
-	Type constant.QuotedText `json:"type" api:"required"`
+	Type constant.QuotedText `json:"type" default:"quoted_text"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -1444,11 +1444,11 @@ type ChatKitWidgetItem struct {
 	// Unix timestamp (in seconds) for when the item was created.
 	CreatedAt int64 `json:"created_at" api:"required"`
 	// Type discriminator that is always `chatkit.thread_item`.
-	Object constant.ChatKitThreadItem `json:"object" api:"required"`
+	Object constant.ChatKitThreadItem `json:"object" default:"chatkit.thread_item"`
 	// Identifier of the parent thread.
 	ThreadID string `json:"thread_id" api:"required"`
 	// Type discriminator that is always `chatkit.widget`.
-	Type constant.ChatKitWidget `json:"type" api:"required"`
+	Type constant.ChatKitWidget `json:"type" default:"chatkit.widget"`
 	// Serialized widget payload rendered in the UI.
 	Widget string `json:"widget" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -1477,7 +1477,7 @@ type BetaChatKitThreadDeleteResponse struct {
 	// Indicates that the thread has been deleted.
 	Deleted bool `json:"deleted" api:"required"`
 	// Type discriminator that is always `chatkit.thread.deleted`.
-	Object constant.ChatKitThreadDeleted `json:"object" api:"required"`
+	Object constant.ChatKitThreadDeleted `json:"object" default:"chatkit.thread.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field

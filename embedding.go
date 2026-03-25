@@ -51,7 +51,7 @@ type CreateEmbeddingResponse struct {
 	// The name of the model used to generate the embedding.
 	Model string `json:"model" api:"required"`
 	// The object type, which is always "list".
-	Object constant.List `json:"object" api:"required"`
+	Object constant.List `json:"object" default:"list"`
 	// The usage information for the request.
 	Usage CreateEmbeddingResponseUsage `json:"usage" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -101,7 +101,7 @@ type Embedding struct {
 	// The index of the embedding in the list of embeddings.
 	Index int64 `json:"index" api:"required"`
 	// The object type, which is always "embedding".
-	Object constant.Embedding `json:"object" api:"required"`
+	Object constant.Embedding `json:"object" default:"embedding"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Embedding   respjson.Field

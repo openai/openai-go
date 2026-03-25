@@ -151,7 +151,7 @@ type ImageEditCompletedEvent struct {
 	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
 	Size ImageEditCompletedEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_edit.completed`.
-	Type constant.ImageEditCompleted `json:"type" api:"required"`
+	Type constant.ImageEditCompleted `json:"type" default:"image_edit.completed"`
 	// For the GPT image models only, the token usage information for the image
 	// generation.
 	Usage ImageEditCompletedEventUsage `json:"usage" api:"required"`
@@ -288,7 +288,7 @@ type ImageEditPartialImageEvent struct {
 	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
 	Size ImageEditPartialImageEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_edit.partial_image`.
-	Type constant.ImageEditPartialImage `json:"type" api:"required"`
+	Type constant.ImageEditPartialImage `json:"type" default:"image_edit.partial_image"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		B64JSON           respjson.Field
@@ -449,7 +449,7 @@ type ImageGenCompletedEvent struct {
 	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
 	Size ImageGenCompletedEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_generation.completed`.
-	Type constant.ImageGenerationCompleted `json:"type" api:"required"`
+	Type constant.ImageGenerationCompleted `json:"type" default:"image_generation.completed"`
 	// For the GPT image models only, the token usage information for the image
 	// generation.
 	Usage ImageGenCompletedEventUsage `json:"usage" api:"required"`
@@ -586,7 +586,7 @@ type ImageGenPartialImageEvent struct {
 	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
 	Size ImageGenPartialImageEventSize `json:"size" api:"required"`
 	// The type of the event. Always `image_generation.partial_image`.
-	Type constant.ImageGenerationPartialImage `json:"type" api:"required"`
+	Type constant.ImageGenerationPartialImage `json:"type" default:"image_generation.partial_image"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		B64JSON           respjson.Field

@@ -286,7 +286,7 @@ type ModerationImageURLInputParam struct {
 	// Always `image_url`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_url".
-	Type constant.ImageURL `json:"type" api:"required"`
+	Type constant.ImageURL `json:"type" default:"image_url"`
 	paramObj
 }
 
@@ -404,7 +404,7 @@ type ModerationTextInputParam struct {
 	// Always `text`.
 	//
 	// This field can be elided, and will marshal its zero value as "text".
-	Type constant.Text `json:"type" api:"required"`
+	Type constant.Text `json:"type" default:"text"`
 	paramObj
 }
 
