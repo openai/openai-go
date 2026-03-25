@@ -585,13 +585,12 @@ type ConversationItemUnionAction struct {
 	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
 	Pattern string `json:"pattern"`
 	// This field is from variant [responses.ResponseComputerToolCallActionUnion].
-	Button string `json:"button"`
-	X      int64  `json:"x"`
-	Y      int64  `json:"y"`
+	Button string   `json:"button"`
+	X      int64    `json:"x"`
+	Y      int64    `json:"y"`
+	Keys   []string `json:"keys"`
 	// This field is from variant [responses.ResponseComputerToolCallActionUnion].
 	Path []responses.ResponseComputerToolCallActionDragPath `json:"path"`
-	// This field is from variant [responses.ResponseComputerToolCallActionUnion].
-	Keys []string `json:"keys"`
 	// This field is from variant [responses.ResponseComputerToolCallActionUnion].
 	ScrollX int64 `json:"scroll_x"`
 	// This field is from variant [responses.ResponseComputerToolCallActionUnion].
@@ -621,8 +620,8 @@ type ConversationItemUnionAction struct {
 		Button           respjson.Field
 		X                respjson.Field
 		Y                respjson.Field
-		Path             respjson.Field
 		Keys             respjson.Field
+		Path             respjson.Field
 		ScrollX          respjson.Field
 		ScrollY          respjson.Field
 		Text             respjson.Field
