@@ -1,5 +1,37 @@
 # Changelog
 
+## 3.30.0 (2026-03-25)
+
+Full Changelog: [v3.29.0...v3.30.0](https://github.com/openai/openai-go/compare/v3.29.0...v3.30.0)
+
+### Features
+
+* **api:** add keys field to computer action types ([7abb3c4](https://github.com/openai/openai-go/commit/7abb3c4b4d1fb3d2757dd70c5a201de4190f298a))
+
+
+### Bug Fixes
+
+* **api:** align SDK response types with expanded item schemas ([324c584](https://github.com/openai/openai-go/commit/324c584ec31315ec18c169918e524741e74d395a))
+* **types:** generate shared enum types that are not referenced by other schemas ([e2f2920](https://github.com/openai/openai-go/commit/e2f2920f510348ea8b7e26e6b2460f802d34998c))
+* **types:** make Type required, correct enum in ResponseInputMessageItem ([8c2c7a5](https://github.com/openai/openai-go/commit/8c2c7a59329e95da117ffdde7b36f43e1fbdbacb))
+
+
+### Chores
+
+* **ci:** skip lint on metadata-only changes ([40cf884](https://github.com/openai/openai-go/commit/40cf884295e1631dc637f6e3e1316e8665e5e694))
+* **client:** fix multipart serialisation of Default() fields ([06c04ae](https://github.com/openai/openai-go/commit/06c04aeca47e7348de94573eefbfaf2e110c4573))
+* **internal:** support default value struct tag ([f1afb2a](https://github.com/openai/openai-go/commit/f1afb2ab20307c50da7ec421ac5cd3e5a9c33fe3))
+* **internal:** update gitignore ([bde0a0d](https://github.com/openai/openai-go/commit/bde0a0d3e4a8b63e2ce28fae207f9546abac0722))
+* **tests:** bump steady to v0.19.4 ([a0561c3](https://github.com/openai/openai-go/commit/a0561c3014b5d5fbeee9d7de58dad3f9be9e2d9f))
+* **tests:** bump steady to v0.19.5 ([56c5c36](https://github.com/openai/openai-go/commit/56c5c3631cb1dec68b8cb68c1e03d62e69fe3a70))
+* **tests:** bump steady to v0.19.6 ([44ebe37](https://github.com/openai/openai-go/commit/44ebe3744e70460f2cacd94ccf21957e30d697a1))
+* **tests:** bump steady to v0.19.7 ([1b04072](https://github.com/openai/openai-go/commit/1b04072ef94542b2a0007e4088ef09d4f5387dcf))
+
+
+### Refactors
+
+* **tests:** switch from prism to steady ([2185358](https://github.com/openai/openai-go/commit/21853589203e202637f9ebc7f7be5d4c73f2a471))
+
 ## 3.29.0 (2026-03-17)
 
 Full Changelog: [v3.28.0...v3.29.0](https://github.com/openai/openai-go/compare/v3.28.0...v3.29.0)
