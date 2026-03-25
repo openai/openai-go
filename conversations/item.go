@@ -121,8 +121,9 @@ func (r *ItemService) Delete(ctx context.Context, conversationID string, itemID 
 // [ConversationItemImageGenerationCall], [responses.ResponseComputerToolCall],
 // [responses.ResponseComputerToolCallOutputItem],
 // [responses.ResponseToolSearchCall], [responses.ResponseToolSearchOutputItem],
-// [responses.ResponseReasoningItem], [responses.ResponseCodeInterpreterToolCall],
-// [ConversationItemLocalShellCall], [ConversationItemLocalShellCallOutput],
+// [responses.ResponseReasoningItem], [responses.ResponseCompactionItem],
+// [responses.ResponseCodeInterpreterToolCall], [ConversationItemLocalShellCall],
+// [ConversationItemLocalShellCallOutput],
 // [responses.ResponseFunctionShellToolCall],
 // [responses.ResponseFunctionShellToolCallOutput],
 // [responses.ResponseApplyPatchToolCall],
@@ -145,10 +146,10 @@ type ConversationItemUnion struct {
 	// Any of "message", "function_call", "function_call_output", "file_search_call",
 	// "web_search_call", "image_generation_call", "computer_call",
 	// "computer_call_output", "tool_search_call", "tool_search_output", "reasoning",
-	// "code_interpreter_call", "local_shell_call", "local_shell_call_output",
-	// "shell_call", "shell_call_output", "apply_patch_call",
-	// "apply_patch_call_output", "mcp_list_tools", "mcp_approval_request",
-	// "mcp_approval_response", "mcp_call", "custom_tool_call",
+	// "compaction", "code_interpreter_call", "local_shell_call",
+	// "local_shell_call_output", "shell_call", "shell_call_output",
+	// "apply_patch_call", "apply_patch_call_output", "mcp_list_tools",
+	// "mcp_approval_request", "mcp_approval_response", "mcp_call", "custom_tool_call",
 	// "custom_tool_call_output".
 	Type string `json:"type"`
 	// This field is a union of [string], [any], [string], [string]
@@ -156,6 +157,7 @@ type ConversationItemUnion struct {
 	CallID    string                         `json:"call_id"`
 	Name      string                         `json:"name"`
 	Namespace string                         `json:"namespace"`
+	CreatedBy string                         `json:"created_by"`
 	// This field is a union of
 	// [responses.ResponseFunctionToolCallOutputItemOutputUnion],
 	// [responses.ResponseComputerToolCallOutputScreenshot], [string],
@@ -180,14 +182,12 @@ type ConversationItemUnion struct {
 	// This field is from variant [responses.ResponseComputerToolCallOutputItem].
 	AcknowledgedSafetyChecks []responses.ResponseComputerToolCallOutputItemAcknowledgedSafetyCheck `json:"acknowledged_safety_checks"`
 	Execution                string                                                                `json:"execution"`
-	CreatedBy                string                                                                `json:"created_by"`
 	// This field is a union of [[]responses.ToolUnion],
 	// [[]ConversationItemMcpListToolsTool]
 	Tools ConversationItemUnionTools `json:"tools"`
 	// This field is from variant [responses.ResponseReasoningItem].
-	Summary []responses.ResponseReasoningItemSummary `json:"summary"`
-	// This field is from variant [responses.ResponseReasoningItem].
-	EncryptedContent string `json:"encrypted_content"`
+	Summary          []responses.ResponseReasoningItemSummary `json:"summary"`
+	EncryptedContent string                                   `json:"encrypted_content"`
 	// This field is from variant [responses.ResponseCodeInterpreterToolCall].
 	Code string `json:"code"`
 	// This field is from variant [responses.ResponseCodeInterpreterToolCall].
@@ -219,6 +219,7 @@ type ConversationItemUnion struct {
 		CallID                   respjson.Field
 		Name                     respjson.Field
 		Namespace                respjson.Field
+		CreatedBy                respjson.Field
 		Output                   respjson.Field
 		Queries                  respjson.Field
 		Results                  respjson.Field
@@ -228,7 +229,6 @@ type ConversationItemUnion struct {
 		Actions                  respjson.Field
 		AcknowledgedSafetyChecks respjson.Field
 		Execution                respjson.Field
-		CreatedBy                respjson.Field
 		Tools                    respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
@@ -277,6 +277,7 @@ func (ConversationItemMcpCall) ImplConversationItemUnion()              {}
 //	case responses.ResponseToolSearchCall:
 //	case responses.ResponseToolSearchOutputItem:
 //	case responses.ResponseReasoningItem:
+//	case responses.ResponseCompactionItem:
 //	case responses.ResponseCodeInterpreterToolCall:
 //	case conversations.ConversationItemLocalShellCall:
 //	case conversations.ConversationItemLocalShellCallOutput:
@@ -317,6 +318,8 @@ func (u ConversationItemUnion) AsAny() anyConversationItem {
 		return u.AsToolSearchOutput()
 	case "reasoning":
 		return u.AsReasoning()
+	case "compaction":
+		return u.AsCompaction()
 	case "code_interpreter_call":
 		return u.AsCodeInterpreterCall()
 	case "local_shell_call":
@@ -398,6 +401,11 @@ func (u ConversationItemUnion) AsToolSearchOutput() (v responses.ResponseToolSea
 }
 
 func (u ConversationItemUnion) AsReasoning() (v responses.ResponseReasoningItem) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConversationItemUnion) AsCompaction() (v responses.ResponseCompactionItem) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
