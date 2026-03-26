@@ -27,14 +27,14 @@ jobs:
       (github.event_name == 'push' || github.event.pull_request.head.repo.fork) &&
       (github.event_name != 'push' || github.event.head_commit.message != 'codegen metadata')
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Get GitHub OIDC Token
         if: |-
           github.repository == 'stainless-sdks/openai-go' &&
           !startsWith(github.ref, 'refs/heads/stl/')
         id: github-oidc
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           script: core.setOutput('github_token', await core.getIDToken());
 
@@ -54,10 +54,10 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: ./go.mod
 
@@ -72,10 +72,10 @@ jobs:
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: ./go.mod
 
