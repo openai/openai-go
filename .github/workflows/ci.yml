@@ -24,8 +24,7 @@ jobs:
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     if: |-
       github.repository == 'stainless-sdks/openai-go' &&
-      (github.event_name == 'push' || github.event.pull_request.head.repo.fork) &&
-      (github.event_name != 'push' || github.event.head_commit.message != 'codegen metadata')
+      (github.event_name == 'push' || github.event.pull_request.head.repo.fork) && (github.event_name != 'push' || github.event.head_commit.message != 'codegen metadata')
     steps:
       - uses: actions/checkout@v6
 
