@@ -183,6 +183,18 @@ func (e *encoder) newPrimitiveTypeEncoder(t reflect.Type) encoderFunc {
 func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 	itemEncoder := e.typeEncoder(t.Elem())
 	keyFn := e.arrayKeyEncoder()
+	if e.arrayFmt == "comma" {
+		return func(key string, v reflect.Value, writer *multipart.Writer) error {
+			if v.Len() == 0 {
+				return nil
+			}
+			elements := make([]string, v.Len())
+			for i := 0; i < v.Len(); i++ {
+				elements[i] = fmt.Sprint(v.Index(i).Interface())
+			}
+			return writer.WriteField(key, strings.Join(elements, ","))
+		}
+	}
 	return func(key string, v reflect.Value, writer *multipart.Writer) error {
 		if keyFn == nil {
 			return fmt.Errorf("apiform: unsupported array format")

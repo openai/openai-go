@@ -384,7 +384,9 @@ func (r *VectorStoreFileContentResponse) UnmarshalJSON(data []byte) error {
 type VectorStoreFileNewParams struct {
 	// A [File](https://platform.openai.com/docs/api-reference/files) ID that the
 	// vector store should use. Useful for tools like `file_search` that can access
-	// files.
+	// files. For multi-file ingestion, we recommend
+	// [`file_batches`](https://platform.openai.com/docs/api-reference/vector-stores-file-batches/createBatch)
+	// to minimize per-vector-store write requests.
 	FileID string `json:"file_id" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and

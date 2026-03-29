@@ -1,5 +1,31 @@
 # Changelog
 
+## 3.31.0 (2026-03-29)
+
+Full Changelog: [v3.30.0...v3.31.0](https://github.com/openai/openai-go/compare/v3.30.0...v3.31.0)
+
+### Features
+
+* **internal:** support comma format in multipart form encoding ([905b473](https://github.com/openai/openai-go/commit/905b473d7bfb14ffd1db7c7b48efc1fdb84d1750))
+
+
+### Bug Fixes
+
+* prevent duplicate ? in query params ([cbb2c75](https://github.com/openai/openai-go/commit/cbb2c754223558d6fd19f34642a0aa89adba42e7))
+* **types:** remove web_search_call.results from ResponseIncludable ([180597f](https://github.com/openai/openai-go/commit/180597fddba09d631a2fdc786116b3ad4f2e5418))
+
+
+### Chores
+
+* **ci:** support opting out of skipping builds on metadata-only commits ([12e3a5a](https://github.com/openai/openai-go/commit/12e3a5afdbacd2fad57640ba5486226898d6df71))
+* remove unnecessary error check for url parsing ([cfe9c41](https://github.com/openai/openai-go/commit/cfe9c411d11b6f097d6e0563767bf231abb9975a))
+* update docs for api:"required" ([2d16ebc](https://github.com/openai/openai-go/commit/2d16ebc57c3eca70c5bcb421ee8592549722e7f4))
+
+
+### Documentation
+
+* **api:** add multi-file ingestion guidance to vectorstorefile/filebatch params ([dbba33f](https://github.com/openai/openai-go/commit/dbba33f751ffa7e7a36678c4305a3e7630a4494f))
+
 ## 3.30.0 (2026-03-25)
 
 Full Changelog: [v3.29.0...v3.30.0](https://github.com/openai/openai-go/compare/v3.29.0...v3.30.0)
