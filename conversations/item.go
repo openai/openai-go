@@ -152,6 +152,8 @@ type ConversationItemUnion struct {
 	// "mcp_approval_request", "mcp_approval_response", "mcp_call", "custom_tool_call",
 	// "custom_tool_call_output".
 	Type string `json:"type"`
+	// This field is from variant [Message].
+	Phase MessagePhase `json:"phase"`
 	// This field is a union of [string], [any], [string], [string]
 	Arguments ConversationItemUnionArguments `json:"arguments"`
 	CallID    string                         `json:"call_id"`
@@ -215,6 +217,7 @@ type ConversationItemUnion struct {
 		Role                     respjson.Field
 		Status                   respjson.Field
 		Type                     respjson.Field
+		Phase                    respjson.Field
 		Arguments                respjson.Field
 		CallID                   respjson.Field
 		Name                     respjson.Field
