@@ -4,7 +4,6 @@ package realtime
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -99,7 +98,7 @@ func (r CallAcceptParams) MarshalJSON() (data []byte, err error) {
 	return shimjson.Marshal(r.RealtimeSessionCreateRequest)
 }
 func (r *CallAcceptParams) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &r.RealtimeSessionCreateRequest)
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type CallReferParams struct {
