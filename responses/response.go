@@ -8983,6 +8983,7 @@ type ResponseIncludable string
 
 const (
 	ResponseIncludableFileSearchCallResults            ResponseIncludable = "file_search_call.results"
+	ResponseIncludableWebSearchCallResults             ResponseIncludable = "web_search_call.results"
 	ResponseIncludableWebSearchCallActionSources       ResponseIncludable = "web_search_call.action.sources"
 	ResponseIncludableMessageInputImageImageURL        ResponseIncludable = "message.input_image.image_url"
 	ResponseIncludableComputerCallOutputOutputImageURL ResponseIncludable = "computer_call_output.output.image_url"
