@@ -122,7 +122,13 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 		}
 		params := q.Encode()
 		if params != "" {
-			u = u + "?" + params
+			parsed, _ := url.Parse(u)
+			if parsed.RawQuery != "" {
+				parsed.RawQuery = parsed.RawQuery + "&" + params
+				u = parsed.String()
+			} else {
+				u = u + "?" + params
+			}
 		}
 	}
 	if body, ok := body.([]byte); ok {

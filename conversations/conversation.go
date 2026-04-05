@@ -200,6 +200,13 @@ type Message struct {
 	Status MessageStatus `json:"status" api:"required"`
 	// The type of the message. Always set to `message`.
 	Type constant.Message `json:"type" default:"message"`
+	// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+	// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
+	// sending follow-up requests, preserve and resend phase on all assistant messages
+	// — dropping it can degrade performance. Not used for user messages.
+	//
+	// Any of "commentary", "final_answer".
+	Phase MessagePhase `json:"phase" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -207,6 +214,7 @@ type Message struct {
 		Role        respjson.Field
 		Status      respjson.Field
 		Type        respjson.Field
+		Phase       respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -409,6 +417,17 @@ const (
 	MessageStatusInProgress MessageStatus = "in_progress"
 	MessageStatusCompleted  MessageStatus = "completed"
 	MessageStatusIncomplete MessageStatus = "incomplete"
+)
+
+// Labels an `assistant` message as intermediate commentary (`commentary`) or the
+// final answer (`final_answer`). For models like `gpt-5.3-codex` and beyond, when
+// sending follow-up requests, preserve and resend phase on all assistant messages
+// — dropping it can degrade performance. Not used for user messages.
+type MessagePhase string
+
+const (
+	MessagePhaseCommentary  MessagePhase = "commentary"
+	MessagePhaseFinalAnswer MessagePhase = "final_answer"
 )
 
 // A summary text from the model.
