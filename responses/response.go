@@ -3205,6 +3205,8 @@ type Response struct {
 	CreatedAt float64 `json:"created_at" api:"required"`
 	// An error object returned when the model fails to generate a Response.
 	Error ResponseError `json:"error" api:"required"`
+	// Extra Param
+	ExtraParam string `json:"extra_param"`
 	// Details about why the response is incomplete.
 	IncompleteDetails ResponseIncompleteDetails `json:"incomplete_details" api:"required"`
 	// A system (or developer) message inserted into the model's context.
