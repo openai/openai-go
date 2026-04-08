@@ -100,14 +100,14 @@ func (r *AudioSpeechNewParams) UnmarshalJSON(data []byte) error {
 type AudioSpeechNewParamsVoiceUnion struct {
 	OfString param.Opt[string] `json:",omitzero,inline"`
 	// Check if union is this variant with
-	// !param.IsOmitted(union.OfAudioSpeechNewsVoiceString)
-	OfAudioSpeechNewsVoiceString param.Opt[string]            `json:",omitzero,inline"`
-	OfAudioSpeechNewsVoiceID     *AudioSpeechNewParamsVoiceID `json:",omitzero,inline"`
+	// !param.IsOmitted(union.OfAudioSpeechNewsVoiceString2)
+	OfAudioSpeechNewsVoiceString2 param.Opt[string]            `json:",omitzero,inline"`
+	OfAudioSpeechNewsVoiceID      *AudioSpeechNewParamsVoiceID `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u AudioSpeechNewParamsVoiceUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfAudioSpeechNewsVoiceString, u.OfAudioSpeechNewsVoiceID)
+	return param.MarshalUnion(u, u.OfString, u.OfAudioSpeechNewsVoiceString2, u.OfAudioSpeechNewsVoiceID)
 }
 func (u *AudioSpeechNewParamsVoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -116,27 +116,27 @@ func (u *AudioSpeechNewParamsVoiceUnion) UnmarshalJSON(data []byte) error {
 func (u *AudioSpeechNewParamsVoiceUnion) asAny() any {
 	if !param.IsOmitted(u.OfString) {
 		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfAudioSpeechNewsVoiceString) {
-		return &u.OfAudioSpeechNewsVoiceString
+	} else if !param.IsOmitted(u.OfAudioSpeechNewsVoiceString2) {
+		return &u.OfAudioSpeechNewsVoiceString2
 	} else if !param.IsOmitted(u.OfAudioSpeechNewsVoiceID) {
 		return u.OfAudioSpeechNewsVoiceID
 	}
 	return nil
 }
 
-type AudioSpeechNewParamsVoiceString string
+type AudioSpeechNewParamsVoiceString2 string
 
 const (
-	AudioSpeechNewParamsVoiceStringAlloy   AudioSpeechNewParamsVoiceString = "alloy"
-	AudioSpeechNewParamsVoiceStringAsh     AudioSpeechNewParamsVoiceString = "ash"
-	AudioSpeechNewParamsVoiceStringBallad  AudioSpeechNewParamsVoiceString = "ballad"
-	AudioSpeechNewParamsVoiceStringCoral   AudioSpeechNewParamsVoiceString = "coral"
-	AudioSpeechNewParamsVoiceStringEcho    AudioSpeechNewParamsVoiceString = "echo"
-	AudioSpeechNewParamsVoiceStringSage    AudioSpeechNewParamsVoiceString = "sage"
-	AudioSpeechNewParamsVoiceStringShimmer AudioSpeechNewParamsVoiceString = "shimmer"
-	AudioSpeechNewParamsVoiceStringVerse   AudioSpeechNewParamsVoiceString = "verse"
-	AudioSpeechNewParamsVoiceStringMarin   AudioSpeechNewParamsVoiceString = "marin"
-	AudioSpeechNewParamsVoiceStringCedar   AudioSpeechNewParamsVoiceString = "cedar"
+	AudioSpeechNewParamsVoiceString2Alloy   AudioSpeechNewParamsVoiceString2 = "alloy"
+	AudioSpeechNewParamsVoiceString2Ash     AudioSpeechNewParamsVoiceString2 = "ash"
+	AudioSpeechNewParamsVoiceString2Ballad  AudioSpeechNewParamsVoiceString2 = "ballad"
+	AudioSpeechNewParamsVoiceString2Coral   AudioSpeechNewParamsVoiceString2 = "coral"
+	AudioSpeechNewParamsVoiceString2Echo    AudioSpeechNewParamsVoiceString2 = "echo"
+	AudioSpeechNewParamsVoiceString2Sage    AudioSpeechNewParamsVoiceString2 = "sage"
+	AudioSpeechNewParamsVoiceString2Shimmer AudioSpeechNewParamsVoiceString2 = "shimmer"
+	AudioSpeechNewParamsVoiceString2Verse   AudioSpeechNewParamsVoiceString2 = "verse"
+	AudioSpeechNewParamsVoiceString2Marin   AudioSpeechNewParamsVoiceString2 = "marin"
+	AudioSpeechNewParamsVoiceString2Cedar   AudioSpeechNewParamsVoiceString2 = "cedar"
 )
 
 // Custom voice reference.
