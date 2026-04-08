@@ -9,8 +9,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/openai/openai-go/v3/auth"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/tidwall/sjson"
 )
@@ -294,6 +296,39 @@ func WithProject(value string) RequestOption {
 func WithWebhookSecret(value string) requestconfig.PreRequestOptionFunc {
 	return requestconfig.PreRequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		r.WebhookSecret = value
+		return nil
+	})
+}
+
+// WithWorkloadIdentity returns a RequestOption that configures workload identity authentication.
+// This enables the client to authenticate using short-lived tokens from cloud providers
+// (Kubernetes, Azure, GCP) instead of long-lived API keys.
+func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
+	var wia *auth.WorkloadIdentityAuth
+	var initOnce sync.Once
+	var initErr error
+
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.APIKey = ""
+
+		r.Middlewares = append(r.Middlewares, func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
+			initOnce.Do(func() {
+				wia, initErr = auth.NewWorkloadIdentityAuth(config)
+			})
+
+			if initErr != nil {
+				return nil, initErr
+			}
+
+			var httpDoer auth.HTTPDoer
+			if r.CustomHTTPDoer != nil {
+				httpDoer = r.CustomHTTPDoer
+			} else {
+				httpDoer = r.HTTPClient
+			}
+
+			return auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
+		})
 		return nil
 	})
 }
