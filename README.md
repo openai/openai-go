@@ -953,6 +953,104 @@ You may also replace the default `http.Client` with
 accepted (this overwrites any previous client) and receives requests after any
 middleware has been applied.
 
+## Workload Identity Authentication
+
+For cloud workloads (Kubernetes, Azure, Google Cloud Platform), you can use workload identity authentication instead of API keys. This provides short-lived tokens that are automatically refreshed.
+
+### Kubernetes
+
+```go
+import (
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/auth"
+	"github.com/openai/openai-go/v3/option"
+)
+
+client := openai.NewClient(
+	option.WithWorkloadIdentity(auth.WorkloadIdentity{
+		ClientID:           "your-client-id",
+		IdentityProviderID: "idp-123",
+		ServiceAccountID:   "sa-456",
+		Provider:           auth.K8sServiceAccountTokenProvider(""),
+	}),
+)
+```
+
+### Azure Managed Identity
+
+```go
+client := openai.NewClient(
+	option.WithWorkloadIdentity(auth.WorkloadIdentity{
+		ClientID:           "your-client-id",
+		IdentityProviderID: "idp-123",
+		ServiceAccountID:   "sa-456",
+		Provider:           auth.AzureManagedIdentityTokenProvider(nil),
+	}),
+)
+```
+
+### Google Cloud Compute Engine
+
+```go
+client := openai.NewClient(
+	option.WithWorkloadIdentity(auth.WorkloadIdentity{
+		ClientID:           "your-client-id",
+		IdentityProviderID: "idp-123",
+		ServiceAccountID:   "sa-456",
+		Provider:           auth.GCPIDTokenProvider(nil),
+	}),
+)
+```
+
+### Custom Subject Token Provider
+
+You can implement your own subject token provider:
+
+```go
+import (
+	"context"
+
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/auth"
+	"github.com/openai/openai-go/v3/option"
+)
+
+type customTokenProvider struct{}
+
+func (p *customTokenProvider) TokenType() auth.SubjectTokenType {
+	return auth.SubjectTokenTypeJWT
+}
+
+func (p *customTokenProvider) GetToken(ctx context.Context, httpClient auth.HTTPDoer) (string, error) {
+	return "your-token", nil
+}
+
+client := openai.NewClient(
+	option.WithWorkloadIdentity(auth.WorkloadIdentity{
+		ClientID:           "your-client-id",
+		IdentityProviderID: "idp-123",
+		ServiceAccountID:   "sa-456",
+		Provider:           &customTokenProvider{},
+	}),
+)
+```
+
+### Customizing Refresh Buffer
+
+By default, tokens are refreshed 20 minutes (1200 seconds) before expiry. You can customize this:
+
+```go
+client := openai.NewClient(
+	option.WithWorkloadIdentity(auth.WorkloadIdentity{
+		ClientID:             "your-client-id",
+		IdentityProviderID:   "idp-123",
+		ServiceAccountID:     "sa-456",
+		Provider:             auth.K8sServiceAccountTokenProvider(""),
+		RefreshBufferSeconds: 600,
+	}),
+)
+```
+
 ## Microsoft Azure OpenAI
 
 To use this library with [Azure OpenAI]https://learn.microsoft.com/azure/ai-services/openai/overview),
