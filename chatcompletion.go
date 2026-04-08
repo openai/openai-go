@@ -578,14 +578,14 @@ const (
 type ChatCompletionAudioParamVoiceUnion struct {
 	OfString param.Opt[string] `json:",omitzero,inline"`
 	// Check if union is this variant with
-	// !param.IsOmitted(union.OfChatCompletionAudioVoiceString)
-	OfChatCompletionAudioVoiceString param.Opt[string]                `json:",omitzero,inline"`
-	OfChatCompletionAudioVoiceID     *ChatCompletionAudioParamVoiceID `json:",omitzero,inline"`
+	// !param.IsOmitted(union.OfChatCompletionAudioVoiceString2)
+	OfChatCompletionAudioVoiceString2 param.Opt[string]                `json:",omitzero,inline"`
+	OfChatCompletionAudioVoiceID      *ChatCompletionAudioParamVoiceID `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ChatCompletionAudioParamVoiceUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfChatCompletionAudioVoiceString, u.OfChatCompletionAudioVoiceID)
+	return param.MarshalUnion(u, u.OfString, u.OfChatCompletionAudioVoiceString2, u.OfChatCompletionAudioVoiceID)
 }
 func (u *ChatCompletionAudioParamVoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -594,27 +594,27 @@ func (u *ChatCompletionAudioParamVoiceUnion) UnmarshalJSON(data []byte) error {
 func (u *ChatCompletionAudioParamVoiceUnion) asAny() any {
 	if !param.IsOmitted(u.OfString) {
 		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfChatCompletionAudioVoiceString) {
-		return &u.OfChatCompletionAudioVoiceString
+	} else if !param.IsOmitted(u.OfChatCompletionAudioVoiceString2) {
+		return &u.OfChatCompletionAudioVoiceString2
 	} else if !param.IsOmitted(u.OfChatCompletionAudioVoiceID) {
 		return u.OfChatCompletionAudioVoiceID
 	}
 	return nil
 }
 
-type ChatCompletionAudioParamVoiceString string
+type ChatCompletionAudioParamVoiceString2 string
 
 const (
-	ChatCompletionAudioParamVoiceStringAlloy   ChatCompletionAudioParamVoiceString = "alloy"
-	ChatCompletionAudioParamVoiceStringAsh     ChatCompletionAudioParamVoiceString = "ash"
-	ChatCompletionAudioParamVoiceStringBallad  ChatCompletionAudioParamVoiceString = "ballad"
-	ChatCompletionAudioParamVoiceStringCoral   ChatCompletionAudioParamVoiceString = "coral"
-	ChatCompletionAudioParamVoiceStringEcho    ChatCompletionAudioParamVoiceString = "echo"
-	ChatCompletionAudioParamVoiceStringSage    ChatCompletionAudioParamVoiceString = "sage"
-	ChatCompletionAudioParamVoiceStringShimmer ChatCompletionAudioParamVoiceString = "shimmer"
-	ChatCompletionAudioParamVoiceStringVerse   ChatCompletionAudioParamVoiceString = "verse"
-	ChatCompletionAudioParamVoiceStringMarin   ChatCompletionAudioParamVoiceString = "marin"
-	ChatCompletionAudioParamVoiceStringCedar   ChatCompletionAudioParamVoiceString = "cedar"
+	ChatCompletionAudioParamVoiceString2Alloy   ChatCompletionAudioParamVoiceString2 = "alloy"
+	ChatCompletionAudioParamVoiceString2Ash     ChatCompletionAudioParamVoiceString2 = "ash"
+	ChatCompletionAudioParamVoiceString2Ballad  ChatCompletionAudioParamVoiceString2 = "ballad"
+	ChatCompletionAudioParamVoiceString2Coral   ChatCompletionAudioParamVoiceString2 = "coral"
+	ChatCompletionAudioParamVoiceString2Echo    ChatCompletionAudioParamVoiceString2 = "echo"
+	ChatCompletionAudioParamVoiceString2Sage    ChatCompletionAudioParamVoiceString2 = "sage"
+	ChatCompletionAudioParamVoiceString2Shimmer ChatCompletionAudioParamVoiceString2 = "shimmer"
+	ChatCompletionAudioParamVoiceString2Verse   ChatCompletionAudioParamVoiceString2 = "verse"
+	ChatCompletionAudioParamVoiceString2Marin   ChatCompletionAudioParamVoiceString2 = "marin"
+	ChatCompletionAudioParamVoiceString2Cedar   ChatCompletionAudioParamVoiceString2 = "cedar"
 )
 
 // Custom voice reference.
