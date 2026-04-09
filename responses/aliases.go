@@ -448,6 +448,15 @@ type FunctionParameters = shared.FunctionParameters
 // This is an alias to an internal type.
 type Metadata = shared.Metadata
 
+// This is an alias to an internal type.
+type OAuthErrorCode = shared.OAuthErrorCode
+
+// Equals "invalid_grant"
+const OAuthErrorCodeInvalidGrant = shared.OAuthErrorCodeInvalidGrant
+
+// Equals "invalid_subject_token"
+const OAuthErrorCodeInvalidSubjectToken = shared.OAuthErrorCodeInvalidSubjectToken
+
 // **gpt-5 and o-series models only**
 //
 // Configuration options for

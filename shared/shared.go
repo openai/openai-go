@@ -783,6 +783,13 @@ type FunctionParameters map[string]any
 
 type Metadata map[string]string
 
+type OAuthErrorCode string
+
+const (
+	OAuthErrorCodeInvalidGrant        OAuthErrorCode = "invalid_grant"
+	OAuthErrorCodeInvalidSubjectToken OAuthErrorCode = "invalid_subject_token"
+)
+
 // **gpt-5 and o-series models only**
 //
 // Configuration options for

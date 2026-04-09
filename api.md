@@ -7,6 +7,7 @@
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#FunctionDefinitionParam">FunctionDefinitionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#FunctionParameters">FunctionParameters</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#Metadata">Metadata</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#OAuthErrorCode">OAuthErrorCode</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ReasoningParam">ReasoningParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ReasoningEffort">ReasoningEffort</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared">shared</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/shared#ResponseFormatJSONObjectParam">ResponseFormatJSONObjectParam</a>
