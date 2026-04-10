@@ -39,7 +39,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Audio: openai.ChatCompletionAudioParam{
 			Format: openai.ChatCompletionAudioParamFormatWAV,
 			Voice: openai.ChatCompletionAudioParamVoiceUnion{
-				OfString: openai.String("string"),
+				OfChatCompletionAudioVoiceString2: openai.String("alloy"),
 			},
 		},
 		FrequencyPenalty: openai.Float(-2),

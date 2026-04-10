@@ -71,14 +71,14 @@ func TestClientSecretNewWithOptionalParams(t *testing.T) {
 						},
 						Speed: openai.Float(0.25),
 						Voice: realtime.RealtimeAudioConfigOutputVoiceUnionParam{
-							OfString: openai.String("string"),
+							OfRealtimeAudioConfigOutputVoiceString2: openai.String("alloy"),
 						},
 					},
 				},
 				Include:      []string{"item.input_audio_transcription.logprobs"},
 				Instructions: openai.String("instructions"),
 				MaxOutputTokens: realtime.RealtimeSessionCreateRequestMaxOutputTokensUnionParam{
-					OfInt: openai.Int(0),
+					OfInf: constant.ValueOf[constant.Inf](),
 				},
 				Model:            realtime.RealtimeSessionCreateRequestModelGPTRealtime,
 				OutputModalities: []string{"text"},
