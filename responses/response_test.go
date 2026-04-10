@@ -41,7 +41,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			OfString: openai.String("string"),
 		},
 		Instructions:    openai.String("instructions"),
-		MaxOutputTokens: openai.Int(0),
+		MaxOutputTokens: openai.Int(16),
 		MaxToolCalls:    openai.Int(0),
 		Metadata: shared.Metadata{
 			"foo": "string",
