@@ -244,14 +244,14 @@ func (r *RealtimeAudioConfigOutputParam) UnmarshalJSON(data []byte) error {
 type RealtimeAudioConfigOutputVoiceUnionParam struct {
 	OfString param.Opt[string] `json:",omitzero,inline"`
 	// Check if union is this variant with
-	// !param.IsOmitted(union.OfRealtimeAudioConfigOutputVoiceString)
-	OfRealtimeAudioConfigOutputVoiceString param.Opt[string]                      `json:",omitzero,inline"`
-	OfRealtimeAudioConfigOutputVoiceID     *RealtimeAudioConfigOutputVoiceIDParam `json:",omitzero,inline"`
+	// !param.IsOmitted(union.OfRealtimeAudioConfigOutputVoiceString2)
+	OfRealtimeAudioConfigOutputVoiceString2 param.Opt[string]                      `json:",omitzero,inline"`
+	OfRealtimeAudioConfigOutputVoiceID      *RealtimeAudioConfigOutputVoiceIDParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u RealtimeAudioConfigOutputVoiceUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfRealtimeAudioConfigOutputVoiceString, u.OfRealtimeAudioConfigOutputVoiceID)
+	return param.MarshalUnion(u, u.OfString, u.OfRealtimeAudioConfigOutputVoiceString2, u.OfRealtimeAudioConfigOutputVoiceID)
 }
 func (u *RealtimeAudioConfigOutputVoiceUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -260,27 +260,27 @@ func (u *RealtimeAudioConfigOutputVoiceUnionParam) UnmarshalJSON(data []byte) er
 func (u *RealtimeAudioConfigOutputVoiceUnionParam) asAny() any {
 	if !param.IsOmitted(u.OfString) {
 		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfRealtimeAudioConfigOutputVoiceString) {
-		return &u.OfRealtimeAudioConfigOutputVoiceString
+	} else if !param.IsOmitted(u.OfRealtimeAudioConfigOutputVoiceString2) {
+		return &u.OfRealtimeAudioConfigOutputVoiceString2
 	} else if !param.IsOmitted(u.OfRealtimeAudioConfigOutputVoiceID) {
 		return u.OfRealtimeAudioConfigOutputVoiceID
 	}
 	return nil
 }
 
-type RealtimeAudioConfigOutputVoiceString string
+type RealtimeAudioConfigOutputVoiceString2 string
 
 const (
-	RealtimeAudioConfigOutputVoiceStringAlloy   RealtimeAudioConfigOutputVoiceString = "alloy"
-	RealtimeAudioConfigOutputVoiceStringAsh     RealtimeAudioConfigOutputVoiceString = "ash"
-	RealtimeAudioConfigOutputVoiceStringBallad  RealtimeAudioConfigOutputVoiceString = "ballad"
-	RealtimeAudioConfigOutputVoiceStringCoral   RealtimeAudioConfigOutputVoiceString = "coral"
-	RealtimeAudioConfigOutputVoiceStringEcho    RealtimeAudioConfigOutputVoiceString = "echo"
-	RealtimeAudioConfigOutputVoiceStringSage    RealtimeAudioConfigOutputVoiceString = "sage"
-	RealtimeAudioConfigOutputVoiceStringShimmer RealtimeAudioConfigOutputVoiceString = "shimmer"
-	RealtimeAudioConfigOutputVoiceStringVerse   RealtimeAudioConfigOutputVoiceString = "verse"
-	RealtimeAudioConfigOutputVoiceStringMarin   RealtimeAudioConfigOutputVoiceString = "marin"
-	RealtimeAudioConfigOutputVoiceStringCedar   RealtimeAudioConfigOutputVoiceString = "cedar"
+	RealtimeAudioConfigOutputVoiceString2Alloy   RealtimeAudioConfigOutputVoiceString2 = "alloy"
+	RealtimeAudioConfigOutputVoiceString2Ash     RealtimeAudioConfigOutputVoiceString2 = "ash"
+	RealtimeAudioConfigOutputVoiceString2Ballad  RealtimeAudioConfigOutputVoiceString2 = "ballad"
+	RealtimeAudioConfigOutputVoiceString2Coral   RealtimeAudioConfigOutputVoiceString2 = "coral"
+	RealtimeAudioConfigOutputVoiceString2Echo    RealtimeAudioConfigOutputVoiceString2 = "echo"
+	RealtimeAudioConfigOutputVoiceString2Sage    RealtimeAudioConfigOutputVoiceString2 = "sage"
+	RealtimeAudioConfigOutputVoiceString2Shimmer RealtimeAudioConfigOutputVoiceString2 = "shimmer"
+	RealtimeAudioConfigOutputVoiceString2Verse   RealtimeAudioConfigOutputVoiceString2 = "verse"
+	RealtimeAudioConfigOutputVoiceString2Marin   RealtimeAudioConfigOutputVoiceString2 = "marin"
+	RealtimeAudioConfigOutputVoiceString2Cedar   RealtimeAudioConfigOutputVoiceString2 = "cedar"
 )
 
 // Custom voice reference.
