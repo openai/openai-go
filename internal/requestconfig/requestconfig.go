@@ -550,7 +550,10 @@ func (cfg *RequestConfig) Execute() (err error) {
 		case *[]byte:
 			*dst = contents
 		default:
-			return fmt.Errorf("expected destination type of 'string' or '[]byte' for responses with content-type '%s' that is not 'application/json'", contentType)
+			err = json.NewDecoder(bytes.NewReader(contents)).Decode(cfg.ResponseBodyInto)
+			if err != nil {
+				return fmt.Errorf("error parsing response json: %w, status: %d, response: %s", err, res.StatusCode, string(contents))
+			}
 		}
 		return nil
 	}
@@ -562,7 +565,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	default:
 		err = json.NewDecoder(bytes.NewReader(contents)).Decode(cfg.ResponseBodyInto)
 		if err != nil {
-			return fmt.Errorf("error parsing response json: %w", err)
+			return fmt.Errorf("error parsing response json: %w, status: %d, response: %s", err, res.StatusCode, string(contents))
 		}
 	}
 
