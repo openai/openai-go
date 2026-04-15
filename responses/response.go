@@ -22029,6 +22029,10 @@ type ResponseCompactParams struct {
 	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
 	// Text, image, or file inputs to the model, used to generate a response
 	Input ResponseCompactParamsInputUnion `json:"input,omitzero"`
+	// How long to retain a prompt cache entry created by this request.
+	//
+	// Any of "in_memory", "24h".
+	PromptCacheRetention ResponseCompactParamsPromptCacheRetention `json:"prompt_cache_retention,omitzero"`
 	paramObj
 }
 
@@ -22166,3 +22170,11 @@ func (u *ResponseCompactParamsInputUnion) asAny() any {
 	}
 	return nil
 }
+
+// How long to retain a prompt cache entry created by this request.
+type ResponseCompactParamsPromptCacheRetention string
+
+const (
+	ResponseCompactParamsPromptCacheRetentionInMemory ResponseCompactParamsPromptCacheRetention = "in_memory"
+	ResponseCompactParamsPromptCacheRetention24h      ResponseCompactParamsPromptCacheRetention = "24h"
+)
