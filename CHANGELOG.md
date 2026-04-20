@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.32.1 (2026-04-20)
+
+Full Changelog: [v3.32.0...v3.32.1](https://github.com/openai/openai-go/compare/v3.32.0...v3.32.1)
+
+### Chores
+
+* **tests:** bump steady to v0.22.1 ([ef28f59](https://github.com/openai/openai-go/commit/ef28f59c84a30ffd0d2342bc8d09bea5803c89a6))
+
 ## 3.32.0 (2026-04-16)
 
 Full Changelog: [v3.31.0...v3.32.0](https://github.com/openai/openai-go/compare/v3.31.0...v3.32.0)
