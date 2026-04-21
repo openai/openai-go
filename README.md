@@ -189,6 +189,8 @@ if stream.Err() != nil {
 <details>
 <summary>Tool calling</summary>
 
+> See the [full streaming tool-calling example](./examples/chat-completion-streaming-tool-calling/main.go)
+
 ```go
 ctx := context.Background()
 
