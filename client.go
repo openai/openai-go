@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"strings"
 
 	"github.com/openai/openai-go/v3/conversations"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
@@ -76,6 +77,14 @@ func DefaultClientOptions() []option.RequestOption {
 	}
 	if o, ok := os.LookupEnv("OPENAI_WEBHOOK_SECRET"); ok {
 		defaults = append(defaults, option.WithWebhookSecret(o))
+	}
+	if o, ok := os.LookupEnv("OPENAI_CUSTOM_HEADERS"); ok {
+		for _, line := range strings.Split(o, "\n") {
+			colon := strings.Index(line, ":")
+			if colon >= 0 {
+				defaults = append(defaults, option.WithHeader(strings.TrimSpace(line[:colon]), strings.TrimSpace(line[colon+1:])))
+			}
+		}
 	}
 	return defaults
 }
