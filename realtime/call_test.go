@@ -27,6 +27,7 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Realtime.Calls.Accept(
 		context.TODO(),
@@ -129,6 +130,7 @@ func TestCallHangup(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Realtime.Calls.Hangup(context.TODO(), "call_id")
 	if err != nil {
@@ -151,6 +153,7 @@ func TestCallRefer(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Realtime.Calls.Refer(
 		context.TODO(),
@@ -179,6 +182,7 @@ func TestCallRejectWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Realtime.Calls.Reject(
 		context.TODO(),

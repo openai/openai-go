@@ -47,7 +47,8 @@ func NewAudioTranscriptionService(opts ...option.RequestOption) (r AudioTranscri
 // Returns a transcription object in `json`, `diarized_json`, or `verbose_json`
 // format, or a stream of transcript events.
 func (r *AudioTranscriptionService) New(ctx context.Context, body AudioTranscriptionNewParams, opts ...option.RequestOption) (res *AudioTranscriptionNewResponseUnion, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "audio/transcriptions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
@@ -62,7 +63,8 @@ func (r *AudioTranscriptionService) NewStreaming(ctx context.Context, body Audio
 		raw *http.Response
 		err error
 	)
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	body.SetExtraFields(map[string]any{
 		"stream": "true",
 	})

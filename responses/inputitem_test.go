@@ -25,6 +25,7 @@ func TestInputItemListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.InputItems.List(
 		context.TODO(),

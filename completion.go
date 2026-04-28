@@ -43,7 +43,8 @@ func NewCompletionService(opts ...option.RequestOption) (r CompletionService) {
 // Returns a completion object, or a sequence of completion objects if the request
 // is streamed.
 func (r *CompletionService) New(ctx context.Context, body CompletionNewParams, opts ...option.RequestOption) (res *Completion, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "completions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
@@ -58,7 +59,8 @@ func (r *CompletionService) NewStreaming(ctx context.Context, body CompletionNew
 		raw *http.Response
 		err error
 	)
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append(opts, option.WithJSONSet("stream", true))
 	path := "completions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)

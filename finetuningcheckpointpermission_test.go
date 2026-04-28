@@ -24,6 +24,7 @@ func TestFineTuningCheckpointPermissionNew(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Checkpoints.Permissions.New(
 		context.TODO(),
@@ -52,6 +53,7 @@ func TestFineTuningCheckpointPermissionGetWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Checkpoints.Permissions.Get(
 		context.TODO(),
@@ -83,6 +85,7 @@ func TestFineTuningCheckpointPermissionListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Checkpoints.Permissions.List(
 		context.TODO(),
@@ -114,6 +117,7 @@ func TestFineTuningCheckpointPermissionDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Checkpoints.Permissions.Delete(
 		context.TODO(),

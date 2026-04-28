@@ -26,6 +26,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
 		Background: openai.Bool(true),
@@ -117,6 +118,7 @@ func TestResponseGetWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.Get(
 		context.TODO(),
@@ -147,6 +149,7 @@ func TestResponseDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Responses.Delete(context.TODO(), "resp_677efb5139a88190b512bc3fef8e535d")
 	if err != nil {
@@ -169,6 +172,7 @@ func TestResponseCancel(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.Cancel(context.TODO(), "resp_677efb5139a88190b512bc3fef8e535d")
 	if err != nil {
@@ -191,6 +195,7 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.Compact(context.TODO(), responses.ResponseCompactParams{
 		Model: responses.ResponseCompactParamsModelGPT5_4,

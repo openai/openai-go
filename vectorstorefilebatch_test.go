@@ -24,6 +24,7 @@ func TestVectorStoreFileBatchNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.FileBatches.New(
 		context.TODO(),
@@ -71,6 +72,7 @@ func TestVectorStoreFileBatchGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.FileBatches.Get(
 		context.TODO(),
@@ -97,6 +99,7 @@ func TestVectorStoreFileBatchCancel(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.FileBatches.Cancel(
 		context.TODO(),
@@ -123,6 +126,7 @@ func TestVectorStoreFileBatchListFilesWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.FileBatches.ListFiles(
 		context.TODO(),

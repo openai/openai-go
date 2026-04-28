@@ -63,7 +63,8 @@ func NewUploadService(opts ...option.RequestOption) (r UploadService) {
 //
 // Returns the Upload object with status `pending`.
 func (r *UploadService) New(ctx context.Context, body UploadNewParams, opts ...option.RequestOption) (res *Upload, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "uploads"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
@@ -73,7 +74,8 @@ func (r *UploadService) New(ctx context.Context, body UploadNewParams, opts ...o
 //
 // Returns the Upload object with status `cancelled`.
 func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...option.RequestOption) (res *Upload, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if uploadID == "" {
 		err = errors.New("missing required upload_id parameter")
 		return nil, err
@@ -99,7 +101,8 @@ func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...opt
 // including an additional `file` property containing the created usable File
 // object.
 func (r *UploadService) Complete(ctx context.Context, uploadID string, body UploadCompleteParams, opts ...option.RequestOption) (res *Upload, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if uploadID == "" {
 		err = errors.New("missing required upload_id parameter")
 		return nil, err

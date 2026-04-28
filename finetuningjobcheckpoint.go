@@ -44,7 +44,8 @@ func NewFineTuningJobCheckpointService(opts ...option.RequestOption) (r FineTuni
 // List checkpoints for a fine-tuning job.
 func (r *FineTuningJobCheckpointService) List(ctx context.Context, fineTuningJobID string, query FineTuningJobCheckpointListParams, opts ...option.RequestOption) (res *pagination.CursorPage[FineTuningJobCheckpoint], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if fineTuningJobID == "" {
 		err = errors.New("missing required fine_tuning_job_id parameter")

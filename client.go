@@ -49,6 +49,7 @@ type Client struct {
 	Batches BatchService
 	// Use Uploads to upload large files in multiple parts.
 	Uploads   UploadService
+	Admin     AdminService
 	Responses responses.ResponseService
 	Realtime  realtime.RealtimeService
 	// Manage conversations and conversation items.
@@ -58,9 +59,9 @@ type Client struct {
 	Videos        VideoService
 }
 
-// DefaultClientOptions read from the environment (OPENAI_API_KEY, OPENAI_ORG_ID,
-// OPENAI_PROJECT_ID, OPENAI_WEBHOOK_SECRET, OPENAI_BASE_URL). This should be used
-// to initialize new clients.
+// DefaultClientOptions read from the environment (OPENAI_API_KEY,
+// OPENAI_ADMIN_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_WEBHOOK_SECRET,
+// OPENAI_BASE_URL). This should be used to initialize new clients.
 func DefaultClientOptions() []option.RequestOption {
 	defaults := []option.RequestOption{option.WithHTTPClient(defaultHTTPClient()), option.WithEnvironmentProduction()}
 	if o, ok := os.LookupEnv("OPENAI_BASE_URL"); ok {
@@ -68,6 +69,9 @@ func DefaultClientOptions() []option.RequestOption {
 	}
 	if o, ok := os.LookupEnv("OPENAI_API_KEY"); ok {
 		defaults = append(defaults, option.WithAPIKey(o))
+	}
+	if o, ok := os.LookupEnv("OPENAI_ADMIN_KEY"); ok {
+		defaults = append(defaults, option.WithAdminAPIKey(o))
 	}
 	if o, ok := os.LookupEnv("OPENAI_ORG_ID"); ok {
 		defaults = append(defaults, option.WithOrganization(o))
@@ -90,7 +94,7 @@ func DefaultClientOptions() []option.RequestOption {
 }
 
 // NewClient generates a new client with the default option read from the
-// environment (OPENAI_API_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID,
+// environment (OPENAI_API_KEY, OPENAI_ADMIN_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID,
 // OPENAI_WEBHOOK_SECRET, OPENAI_BASE_URL). The option passed in as arguments are
 // applied after these default arguments, and all option will be passed down to the
 // services and requests that this client makes.
@@ -114,6 +118,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Beta = NewBetaService(opts...)
 	r.Batches = NewBatchService(opts...)
 	r.Uploads = NewUploadService(opts...)
+	r.Admin = NewAdminService(opts...)
 	r.Responses = responses.NewResponseService(opts...)
 	r.Realtime = realtime.NewRealtimeService(opts...)
 	r.Conversations = conversations.NewConversationService(opts...)

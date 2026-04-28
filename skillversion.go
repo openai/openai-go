@@ -47,7 +47,8 @@ func NewSkillVersionService(opts ...option.RequestOption) (r SkillVersionService
 
 // Create a new immutable skill version.
 func (r *SkillVersionService) New(ctx context.Context, skillID string, body SkillVersionNewParams, opts ...option.RequestOption) (res *SkillVersion, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if skillID == "" {
 		err = errors.New("missing required skill_id parameter")
 		return nil, err
@@ -59,7 +60,8 @@ func (r *SkillVersionService) New(ctx context.Context, skillID string, body Skil
 
 // Get a specific skill version.
 func (r *SkillVersionService) Get(ctx context.Context, skillID string, version string, opts ...option.RequestOption) (res *SkillVersion, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if skillID == "" {
 		err = errors.New("missing required skill_id parameter")
 		return nil, err
@@ -76,7 +78,8 @@ func (r *SkillVersionService) Get(ctx context.Context, skillID string, version s
 // List skill versions for a skill.
 func (r *SkillVersionService) List(ctx context.Context, skillID string, query SkillVersionListParams, opts ...option.RequestOption) (res *pagination.CursorPage[SkillVersion], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if skillID == "" {
 		err = errors.New("missing required skill_id parameter")
@@ -102,7 +105,8 @@ func (r *SkillVersionService) ListAutoPaging(ctx context.Context, skillID string
 
 // Delete a skill version.
 func (r *SkillVersionService) Delete(ctx context.Context, skillID string, version string, opts ...option.RequestOption) (res *DeletedSkillVersion, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if skillID == "" {
 		err = errors.New("missing required skill_id parameter")
 		return nil, err

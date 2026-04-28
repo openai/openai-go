@@ -34,7 +34,8 @@ func NewSkillContentService(opts ...option.RequestOption) (r SkillContentService
 
 // Download a skill zip bundle by its ID.
 func (r *SkillContentService) Get(ctx context.Context, skillID string, opts ...option.RequestOption) (res *http.Response, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)
 	if skillID == "" {
 		err = errors.New("missing required skill_id parameter")

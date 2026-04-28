@@ -42,7 +42,8 @@ func NewBetaChatKitThreadService(opts ...option.RequestOption) (r BetaChatKitThr
 
 // Retrieve a ChatKit thread by its identifier.
 func (r *BetaChatKitThreadService) Get(ctx context.Context, threadID string, opts ...option.RequestOption) (res *ChatKitThread, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -56,7 +57,8 @@ func (r *BetaChatKitThreadService) Get(ctx context.Context, threadID string, opt
 // List ChatKit threads with optional pagination and user filters.
 func (r *BetaChatKitThreadService) List(ctx context.Context, query BetaChatKitThreadListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[ChatKitThread], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1"), option.WithResponseInto(&raw)}, opts...)
 	path := "chatkit/threads"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -78,7 +80,8 @@ func (r *BetaChatKitThreadService) ListAutoPaging(ctx context.Context, query Bet
 
 // Delete a ChatKit thread along with its items and stored attachments.
 func (r *BetaChatKitThreadService) Delete(ctx context.Context, threadID string, opts ...option.RequestOption) (res *BetaChatKitThreadDeleteResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1")}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")
@@ -92,7 +95,8 @@ func (r *BetaChatKitThreadService) Delete(ctx context.Context, threadID string, 
 // List items that belong to a ChatKit thread.
 func (r *BetaChatKitThreadService) ListItems(ctx context.Context, threadID string, query BetaChatKitThreadListItemsParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[ChatKitThreadItemListDataUnion], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("OpenAI-Beta", "chatkit_beta=v1"), option.WithResponseInto(&raw)}, opts...)
 	if threadID == "" {
 		err = errors.New("missing required thread_id parameter")

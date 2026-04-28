@@ -25,6 +25,7 @@ func TestContainerNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Containers.New(context.TODO(), openai.ContainerNewParams{
 		Name: "name",
@@ -64,6 +65,7 @@ func TestContainerGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Containers.Get(context.TODO(), "container_id")
 	if err != nil {
@@ -86,6 +88,7 @@ func TestContainerListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Containers.List(context.TODO(), openai.ContainerListParams{
 		After: openai.String("after"),
@@ -113,6 +116,7 @@ func TestContainerDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Containers.Delete(context.TODO(), "container_id")
 	if err != nil {

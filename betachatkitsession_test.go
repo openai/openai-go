@@ -24,6 +24,7 @@ func TestBetaChatKitSessionNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.ChatKit.Sessions.New(context.TODO(), openai.BetaChatKitSessionNewParams{
 		User: "x",
@@ -80,6 +81,7 @@ func TestBetaChatKitSessionCancel(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.ChatKit.Sessions.Cancel(context.TODO(), "cksess_123")
 	if err != nil {

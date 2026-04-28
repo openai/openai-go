@@ -42,7 +42,8 @@ func NewInputItemService(opts ...option.RequestOption) (r InputItemService) {
 // Returns a list of input items for a given response.
 func (r *InputItemService) List(ctx context.Context, responseID string, query InputItemListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ResponseItemUnion], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if responseID == "" {
 		err = errors.New("missing required response_id parameter")

@@ -24,6 +24,7 @@ func TestFineTuningAlphaGraderRunWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Alpha.Graders.Run(context.TODO(), openai.FineTuningAlphaGraderRunParams{
 		Grader: openai.FineTuningAlphaGraderRunParamsGraderUnion{
@@ -57,6 +58,7 @@ func TestFineTuningAlphaGraderValidateWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.FineTuning.Alpha.Graders.Validate(context.TODO(), openai.FineTuningAlphaGraderValidateParams{
 		Grader: openai.FineTuningAlphaGraderValidateParamsGraderUnion{

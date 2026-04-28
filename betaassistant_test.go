@@ -26,6 +26,7 @@ func TestBetaAssistantNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Assistants.New(context.TODO(), openai.BetaAssistantNewParams{
 		Model:        shared.ChatModelGPT4o,
@@ -82,6 +83,7 @@ func TestBetaAssistantGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Assistants.Get(context.TODO(), "assistant_id")
 	if err != nil {
@@ -104,6 +106,7 @@ func TestBetaAssistantUpdateWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Assistants.Update(
 		context.TODO(),
@@ -155,6 +158,7 @@ func TestBetaAssistantListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Assistants.List(context.TODO(), openai.BetaAssistantListParams{
 		After:  openai.String("after"),
@@ -182,6 +186,7 @@ func TestBetaAssistantDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Assistants.Delete(context.TODO(), "assistant_id")
 	if err != nil {

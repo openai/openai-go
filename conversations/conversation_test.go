@@ -27,6 +27,7 @@ func TestConversationNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Conversations.New(context.TODO(), conversations.ConversationNewParams{
 		Items: []responses.ResponseInputItemUnionParam{{
@@ -63,6 +64,7 @@ func TestConversationGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Conversations.Get(context.TODO(), "conv_123")
 	if err != nil {
@@ -85,6 +87,7 @@ func TestConversationUpdate(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Conversations.Update(
 		context.TODO(),
@@ -115,6 +118,7 @@ func TestConversationDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Conversations.Delete(context.TODO(), "conv_123")
 	if err != nil {

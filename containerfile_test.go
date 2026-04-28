@@ -26,6 +26,7 @@ func TestContainerFileNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Containers.Files.New(
 		context.TODO(),
@@ -55,6 +56,7 @@ func TestContainerFileGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Containers.Files.Get(
 		context.TODO(),
@@ -81,6 +83,7 @@ func TestContainerFileListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Containers.Files.List(
 		context.TODO(),
@@ -111,6 +114,7 @@ func TestContainerFileDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	err := client.Containers.Files.Delete(
 		context.TODO(),
