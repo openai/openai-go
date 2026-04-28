@@ -1,5 +1,31 @@
 # Changelog
 
+## 3.33.0 (2026-04-28)
+
+Full Changelog: [v3.32.0...v3.33.0](https://github.com/openai/openai-go/compare/v3.32.0...v3.33.0)
+
+### Features
+
+* **go:** add default http client with timeout ([25dd39a](https://github.com/openai/openai-go/commit/25dd39aec0ca97f51be1fd32accd5b10ff441365))
+* support setting headers via env ([b4eaa78](https://github.com/openai/openai-go/commit/b4eaa78969c6c908ab81ec4e6c15fa9803e7de17))
+
+
+### Bug Fixes
+
+* **types:** change PromptCacheRetention enum in-memory to in_memory ([15e7432](https://github.com/openai/openai-go/commit/15e7432bd0a3fd4891be46f5d124ebc44301b611))
+
+
+### Chores
+
+* **internal:** more robust bootstrap script ([eb0cbcf](https://github.com/openai/openai-go/commit/eb0cbcf152867ad154c827dcf2c3c91adb773af9))
+* **tests:** bump steady to v0.22.1 ([ef28f59](https://github.com/openai/openai-go/commit/ef28f59c84a30ffd0d2342bc8d09bea5803c89a6))
+
+
+### Documentation
+
+* **api:** add rate limit and vector store guidance to file upload ([6c8c7fa](https://github.com/openai/openai-go/commit/6c8c7faa70bd73a673744107c3487ec2a7362dca))
+* **api:** update rate limit documentation in file upload method ([54fde2c](https://github.com/openai/openai-go/commit/54fde2c59e0f3b05741a93ec38cbe96495977848))
+
 ## 3.32.0 (2026-04-16)
 
 Full Changelog: [v3.31.0...v3.32.0](https://github.com/openai/openai-go/compare/v3.31.0...v3.32.0)
