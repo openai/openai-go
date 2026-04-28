@@ -52,7 +52,8 @@ func NewClientSecretService(opts ...option.RequestOption) (r ClientSecretService
 // Returns the created client secret and the effective session object. The client
 // secret is a string that looks like `ek_1234`.
 func (r *ClientSecretService) New(ctx context.Context, body ClientSecretNewParams, opts ...option.RequestOption) (res *ClientSecretNewResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "realtime/client_secrets"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err

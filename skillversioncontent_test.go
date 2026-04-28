@@ -25,6 +25,7 @@ func TestSkillVersionContentGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	resp, err := client.Skills.Versions.Content.Get(
 		context.TODO(),

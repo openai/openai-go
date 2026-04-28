@@ -656,6 +656,10 @@ Methods:
 
 - <code title="post /uploads/{upload_id}/parts">client.Uploads.Parts.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#UploadPartService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, uploadID <a href="https://pkg.go.dev/builtin#string">string</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#UploadPartNewParams">UploadPartNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#UploadPart">UploadPart</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+# Admin
+
+## Organization
+
 # [Responses](responses/api.md)
 
 # [Realtime](realtime/api.md)

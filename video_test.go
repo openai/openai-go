@@ -28,6 +28,7 @@ func TestVideoNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.New(context.TODO(), openai.VideoNewParams{
 		Prompt: "x",
@@ -58,6 +59,7 @@ func TestVideoGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.Get(context.TODO(), "video_123")
 	if err != nil {
@@ -80,6 +82,7 @@ func TestVideoListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.List(context.TODO(), openai.VideoListParams{
 		After: openai.String("after"),
@@ -106,6 +109,7 @@ func TestVideoDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.Delete(context.TODO(), "video_123")
 	if err != nil {
@@ -128,6 +132,7 @@ func TestVideoNewCharacter(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.NewCharacter(context.TODO(), openai.VideoNewCharacterParams{
 		Name:  "x",
@@ -152,6 +157,7 @@ func TestVideoDownloadContentWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	resp, err := client.Videos.DownloadContent(
 		context.TODO(),
@@ -193,6 +199,7 @@ func TestVideoEdit(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.Edit(context.TODO(), openai.VideoEditParams{
 		Prompt: "x",
@@ -220,6 +227,7 @@ func TestVideoExtend(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.Extend(context.TODO(), openai.VideoExtendParams{
 		Prompt:  "x",
@@ -248,6 +256,7 @@ func TestVideoGetCharacter(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.GetCharacter(context.TODO(), "char_123")
 	if err != nil {
@@ -270,6 +279,7 @@ func TestVideoRemix(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Videos.Remix(
 		context.TODO(),

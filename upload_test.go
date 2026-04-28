@@ -24,6 +24,7 @@ func TestUploadNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Uploads.New(context.TODO(), openai.UploadNewParams{
 		Bytes:    0,
@@ -54,6 +55,7 @@ func TestUploadCancel(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Uploads.Cancel(context.TODO(), "upload_abc123")
 	if err != nil {
@@ -76,6 +78,7 @@ func TestUploadCompleteWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Uploads.Complete(
 		context.TODO(),

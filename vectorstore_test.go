@@ -25,6 +25,7 @@ func TestVectorStoreNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.New(context.TODO(), openai.VectorStoreNewParams{
 		ChunkingStrategy: openai.FileChunkingStrategyParamUnion{
@@ -60,6 +61,7 @@ func TestVectorStoreGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.Get(context.TODO(), "vector_store_id")
 	if err != nil {
@@ -82,6 +84,7 @@ func TestVectorStoreUpdateWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.Update(
 		context.TODO(),
@@ -116,6 +119,7 @@ func TestVectorStoreListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.List(context.TODO(), openai.VectorStoreListParams{
 		After:  openai.String("after"),
@@ -143,6 +147,7 @@ func TestVectorStoreDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.Delete(context.TODO(), "vector_store_id")
 	if err != nil {
@@ -165,6 +170,7 @@ func TestVectorStoreSearchWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.Search(
 		context.TODO(),

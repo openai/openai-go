@@ -25,6 +25,7 @@ func TestBatchNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Batches.New(context.TODO(), openai.BatchNewParams{
 		CompletionWindow: openai.BatchNewParamsCompletionWindow24h,
@@ -57,6 +58,7 @@ func TestBatchGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Batches.Get(context.TODO(), "batch_id")
 	if err != nil {
@@ -79,6 +81,7 @@ func TestBatchListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Batches.List(context.TODO(), openai.BatchListParams{
 		After: openai.String("after"),
@@ -104,6 +107,7 @@ func TestBatchCancel(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Batches.Cancel(context.TODO(), "batch_id")
 	if err != nil {

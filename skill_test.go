@@ -26,6 +26,7 @@ func TestSkillNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Skills.New(context.TODO(), openai.SkillNewParams{
 		Files: openai.SkillNewParamsFilesUnion{
@@ -52,6 +53,7 @@ func TestSkillGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Skills.Get(context.TODO(), "skill_123")
 	if err != nil {
@@ -74,6 +76,7 @@ func TestSkillUpdate(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Skills.Update(
 		context.TODO(),
@@ -102,6 +105,7 @@ func TestSkillListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Skills.List(context.TODO(), openai.SkillListParams{
 		After: openai.String("after"),
@@ -128,6 +132,7 @@ func TestSkillDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Skills.Delete(context.TODO(), "skill_123")
 	if err != nil {

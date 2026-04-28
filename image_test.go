@@ -26,6 +26,7 @@ func TestImageNewVariationWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Images.NewVariation(context.TODO(), openai.ImageNewVariationParams{
 		Image:          io.Reader(bytes.NewBuffer([]byte("Example data"))),
@@ -55,6 +56,7 @@ func TestImageEditWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Images.Edit(context.TODO(), openai.ImageEditParams{
 		Image: openai.ImageEditParamsImageUnion{
@@ -94,6 +96,7 @@ func TestImageGenerateWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Images.Generate(context.TODO(), openai.ImageGenerateParams{
 		Prompt:            "A cute baby sea otter",

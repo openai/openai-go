@@ -26,6 +26,7 @@ func TestBetaThreadNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.New(context.TODO(), openai.BetaThreadNewParams{
 		Messages: []openai.BetaThreadNewParamsMessage{{
@@ -84,6 +85,7 @@ func TestBetaThreadGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Get(context.TODO(), "thread_id")
 	if err != nil {
@@ -106,6 +108,7 @@ func TestBetaThreadUpdateWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Update(
 		context.TODO(),
@@ -144,6 +147,7 @@ func TestBetaThreadDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Delete(context.TODO(), "thread_id")
 	if err != nil {
@@ -166,6 +170,7 @@ func TestBetaThreadNewAndRunWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.NewAndRun(context.TODO(), openai.BetaThreadNewAndRunParams{
 		AssistantID:         "assistant_id",

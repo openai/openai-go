@@ -24,6 +24,7 @@ func TestModerationNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Moderations.New(context.TODO(), openai.ModerationNewParams{
 		Input: openai.ModerationNewParamsInputUnion{
