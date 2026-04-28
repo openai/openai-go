@@ -80,8 +80,18 @@ func (s *eventStreamDecoder) Next() bool {
 	for s.scn.Scan() {
 		txt := s.scn.Bytes()
 
-		// Dispatch event on an empty line
+		// Dispatch event on an empty line.
+		// Per the HTML5 SSE spec, events with empty data should be
+		// silently discarded (fire nothing). This handles keep-alive
+		// comments from providers (e.g. ": PROCESSING\n\n") that
+		// produce empty-data events.
 		if len(txt) == 0 {
+			if data.Len() == 0 {
+				// No data lines in this event block — reset and continue
+				event = ""
+				data.Reset()
+				continue
+			}
 			s.evt = Event{
 				Type: event,
 				Data: data.Bytes(),
