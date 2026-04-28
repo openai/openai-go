@@ -53,7 +53,8 @@ func NewUploadPartService(opts ...option.RequestOption) (r UploadPartService) {
 // order of the Parts when you
 // [complete the Upload](https://platform.openai.com/docs/api-reference/uploads/complete).
 func (r *UploadPartService) New(ctx context.Context, uploadID string, body UploadPartNewParams, opts ...option.RequestOption) (res *UploadPart, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if uploadID == "" {
 		err = errors.New("missing required upload_id parameter")
 		return nil, err

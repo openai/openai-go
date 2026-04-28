@@ -24,6 +24,7 @@ func TestCompletionNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Completions.New(context.TODO(), openai.CompletionNewParams{
 		Model: openai.CompletionNewParamsModelGPT3_5TurboInstruct,

@@ -43,7 +43,8 @@ func NewChatCompletionMessageService(opts ...option.RequestOption) (r ChatComple
 // been created with the `store` parameter set to `true` will be returned.
 func (r *ChatCompletionMessageService) List(ctx context.Context, completionID string, query ChatCompletionMessageListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ChatCompletionStoreMessage], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if completionID == "" {
 		err = errors.New("missing required completion_id parameter")

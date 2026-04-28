@@ -28,6 +28,7 @@ func TestFileNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Files.New(context.TODO(), openai.FileNewParams{
 		File:    io.Reader(bytes.NewBuffer([]byte("Example data"))),
@@ -56,6 +57,7 @@ func TestFileGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Files.Get(context.TODO(), "file_id")
 	if err != nil {
@@ -78,6 +80,7 @@ func TestFileListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Files.List(context.TODO(), openai.FileListParams{
 		After:   openai.String("after"),
@@ -105,6 +108,7 @@ func TestFileDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Files.Delete(context.TODO(), "file_id")
 	if err != nil {
@@ -126,6 +130,7 @@ func TestFileContent(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	resp, err := client.Files.Content(context.TODO(), "file_id")
 	if err != nil {

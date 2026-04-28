@@ -23,6 +23,7 @@ func TestManualPagination(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	page, err := client.FineTuning.Jobs.List(context.TODO(), openai.FineTuningJobListParams{
 		Limit: openai.Int(20),

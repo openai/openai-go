@@ -25,6 +25,7 @@ func TestBetaThreadMessageNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Messages.New(
 		context.TODO(),
@@ -65,6 +66,7 @@ func TestBetaThreadMessageGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Messages.Get(
 		context.TODO(),
@@ -91,6 +93,7 @@ func TestBetaThreadMessageUpdateWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Messages.Update(
 		context.TODO(),
@@ -122,6 +125,7 @@ func TestBetaThreadMessageListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Messages.List(
 		context.TODO(),
@@ -154,6 +158,7 @@ func TestBetaThreadMessageDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Messages.Delete(
 		context.TODO(),

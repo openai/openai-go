@@ -24,6 +24,7 @@ func TestBetaThreadRunStepGetWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Runs.Steps.Get(
 		context.TODO(),
@@ -54,6 +55,7 @@ func TestBetaThreadRunStepListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Runs.Steps.List(
 		context.TODO(),

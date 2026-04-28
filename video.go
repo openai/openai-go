@@ -45,7 +45,8 @@ func NewVideoService(opts ...option.RequestOption) (r VideoService) {
 
 // Create a new video generation job from a prompt and optional reference assets.
 func (r *VideoService) New(ctx context.Context, body VideoNewParams, opts ...option.RequestOption) (res *Video, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "videos"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
@@ -53,7 +54,8 @@ func (r *VideoService) New(ctx context.Context, body VideoNewParams, opts ...opt
 
 // Fetch the latest metadata for a generated video.
 func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.RequestOption) (res *Video, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if videoID == "" {
 		err = errors.New("missing required video_id parameter")
 		return nil, err
@@ -66,7 +68,8 @@ func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.R
 // List recently generated videos for the current project.
 func (r *VideoService) List(ctx context.Context, query VideoListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[Video], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "videos"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -88,7 +91,8 @@ func (r *VideoService) ListAutoPaging(ctx context.Context, query VideoListParams
 
 // Permanently delete a completed or failed video and its stored assets.
 func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...option.RequestOption) (res *VideoDeleteResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if videoID == "" {
 		err = errors.New("missing required video_id parameter")
 		return nil, err
@@ -100,7 +104,8 @@ func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...optio
 
 // Create a character from an uploaded video.
 func (r *VideoService) NewCharacter(ctx context.Context, body VideoNewCharacterParams, opts ...option.RequestOption) (res *VideoNewCharacterResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "videos/characters"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
@@ -110,7 +115,8 @@ func (r *VideoService) NewCharacter(ctx context.Context, body VideoNewCharacterP
 //
 // Streams the rendered video content for the specified video job.
 func (r *VideoService) DownloadContent(ctx context.Context, videoID string, query VideoDownloadContentParams, opts ...option.RequestOption) (res *http.Response, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/binary")}, opts...)
 	if videoID == "" {
 		err = errors.New("missing required video_id parameter")
@@ -124,7 +130,8 @@ func (r *VideoService) DownloadContent(ctx context.Context, videoID string, quer
 // Create a new video generation job by editing a source video or existing
 // generated video.
 func (r *VideoService) Edit(ctx context.Context, body VideoEditParams, opts ...option.RequestOption) (res *Video, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "videos/edits"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
@@ -132,7 +139,8 @@ func (r *VideoService) Edit(ctx context.Context, body VideoEditParams, opts ...o
 
 // Create an extension of a completed video.
 func (r *VideoService) Extend(ctx context.Context, body VideoExtendParams, opts ...option.RequestOption) (res *Video, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "videos/extensions"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
@@ -140,7 +148,8 @@ func (r *VideoService) Extend(ctx context.Context, body VideoExtendParams, opts 
 
 // Fetch a character.
 func (r *VideoService) GetCharacter(ctx context.Context, characterID string, opts ...option.RequestOption) (res *VideoGetCharacterResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if characterID == "" {
 		err = errors.New("missing required character_id parameter")
 		return nil, err
@@ -152,7 +161,8 @@ func (r *VideoService) GetCharacter(ctx context.Context, characterID string, opt
 
 // Create a remix of a completed video using a refreshed prompt.
 func (r *VideoService) Remix(ctx context.Context, videoID string, body VideoRemixParams, opts ...option.RequestOption) (res *Video, err error) {
-	opts = slices.Concat(r.Options, opts)
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if videoID == "" {
 		err = errors.New("missing required video_id parameter")
 		return nil, err

@@ -24,6 +24,7 @@ func TestVectorStoreFileNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.Files.New(
 		context.TODO(),
@@ -60,6 +61,7 @@ func TestVectorStoreFileGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.Files.Get(
 		context.TODO(),
@@ -86,6 +88,7 @@ func TestVectorStoreFileUpdate(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.Files.Update(
 		context.TODO(),
@@ -119,6 +122,7 @@ func TestVectorStoreFileListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.Files.List(
 		context.TODO(),
@@ -151,6 +155,7 @@ func TestVectorStoreFileDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.Files.Delete(
 		context.TODO(),
@@ -177,6 +182,7 @@ func TestVectorStoreFileContent(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.VectorStores.Files.Content(
 		context.TODO(),

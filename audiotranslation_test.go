@@ -26,6 +26,7 @@ func TestAudioTranslationNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Audio.Translations.New(context.TODO(), openai.AudioTranslationNewParams{
 		File:           io.Reader(bytes.NewBuffer([]byte("Example data"))),

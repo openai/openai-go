@@ -26,6 +26,7 @@ func TestUploadPartNew(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Uploads.Parts.New(
 		context.TODO(),

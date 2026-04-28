@@ -24,6 +24,7 @@ func TestBetaChatKitThreadGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.ChatKit.Threads.Get(context.TODO(), "cthr_123")
 	if err != nil {
@@ -46,6 +47,7 @@ func TestBetaChatKitThreadListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.ChatKit.Threads.List(context.TODO(), openai.BetaChatKitThreadListParams{
 		After:  openai.String("after"),
@@ -74,6 +76,7 @@ func TestBetaChatKitThreadDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.ChatKit.Threads.Delete(context.TODO(), "cthr_123")
 	if err != nil {
@@ -96,6 +99,7 @@ func TestBetaChatKitThreadListItemsWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.ChatKit.Threads.ListItems(
 		context.TODO(),

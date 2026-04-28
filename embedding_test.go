@@ -24,6 +24,7 @@ func TestEmbeddingNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Embeddings.New(context.TODO(), openai.EmbeddingNewParams{
 		Input: openai.EmbeddingNewParamsInputUnion{

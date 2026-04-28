@@ -26,6 +26,7 @@ func TestSkillVersionNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Skills.Versions.New(
 		context.TODO(),
@@ -57,6 +58,7 @@ func TestSkillVersionGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Skills.Versions.Get(
 		context.TODO(),
@@ -83,6 +85,7 @@ func TestSkillVersionListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Skills.Versions.List(
 		context.TODO(),
@@ -113,6 +116,7 @@ func TestSkillVersionDelete(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Skills.Versions.Delete(
 		context.TODO(),

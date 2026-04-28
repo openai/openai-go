@@ -26,6 +26,7 @@ func TestBetaThreadRunNewWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Runs.New(
 		context.TODO(),
@@ -95,6 +96,7 @@ func TestBetaThreadRunGet(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Runs.Get(
 		context.TODO(),
@@ -121,6 +123,7 @@ func TestBetaThreadRunUpdateWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Runs.Update(
 		context.TODO(),
@@ -152,6 +155,7 @@ func TestBetaThreadRunListWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Runs.List(
 		context.TODO(),
@@ -183,6 +187,7 @@ func TestBetaThreadRunCancel(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Runs.Cancel(
 		context.TODO(),
@@ -209,6 +214,7 @@ func TestBetaThreadRunSubmitToolOutputsWithOptionalParams(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Threads.Runs.SubmitToolOutputs(
 		context.TODO(),
