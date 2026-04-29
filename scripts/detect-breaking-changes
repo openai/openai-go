@@ -37,6 +37,7 @@ TEST_PATHS=(
 	batch_test.go
 	upload_test.go
 	uploadpart_test.go
+	adminorganizationauditlog_test.go
 	responses/response_test.go
 	responses/inputitem_test.go
 	responses/inputtoken_test.go

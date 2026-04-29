@@ -660,6 +660,16 @@ Methods:
 
 ## Organization
 
+### AuditLogs
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationAuditLogListResponse">AdminOrganizationAuditLogListResponse</a>
+
+Methods:
+
+- <code title="get /organization/audit_logs">client.Admin.Organization.AuditLogs.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationAuditLogService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationAuditLogListParams">AdminOrganizationAuditLogListParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/packages/pagination#ConversationCursorPage">ConversationCursorPage</a>[<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationAuditLogListResponse">AdminOrganizationAuditLogListResponse</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 # [Responses](responses/api.md)
 
 # [Realtime](realtime/api.md)

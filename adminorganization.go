@@ -14,6 +14,8 @@ import (
 // the [NewAdminOrganizationService] method instead.
 type AdminOrganizationService struct {
 	Options []option.RequestOption
+	// List user actions and configuration changes within this organization.
+	AuditLogs AdminOrganizationAuditLogService
 }
 
 // NewAdminOrganizationService generates a new service that applies the given
@@ -22,5 +24,6 @@ type AdminOrganizationService struct {
 func NewAdminOrganizationService(opts ...option.RequestOption) (r AdminOrganizationService) {
 	r = AdminOrganizationService{}
 	r.Options = opts
+	r.AuditLogs = NewAdminOrganizationAuditLogService(opts...)
 	return
 }
