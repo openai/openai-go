@@ -785,7 +785,7 @@ type ImageURLDelta struct {
 	Detail ImageURLDeltaDetail `json:"detail"`
 	// The URL of the image, must be a supported image types: jpeg, jpg, png, gif,
 	// webp.
-	URL string `json:"url"`
+	URL string `json:"url" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Detail      respjson.Field
@@ -846,13 +846,13 @@ type Message struct {
 	// A list of files attached to the message, and the tools they were added to.
 	Attachments []MessageAttachment `json:"attachments" api:"required"`
 	// The Unix timestamp (in seconds) for when the message was completed.
-	CompletedAt int64 `json:"completed_at" api:"required"`
+	CompletedAt int64 `json:"completed_at" api:"required" format:"unixtime"`
 	// The content of the message in array of text and/or images.
 	Content []MessageContentUnion `json:"content" api:"required"`
 	// The Unix timestamp (in seconds) for when the message was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the message was marked as incomplete.
-	IncompleteAt int64 `json:"incomplete_at" api:"required"`
+	IncompleteAt int64 `json:"incomplete_at" api:"required" format:"unixtime"`
 	// On an incomplete message, details about why the message is incomplete.
 	IncompleteDetails MessageIncompleteDetails `json:"incomplete_details" api:"required"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful

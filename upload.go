@@ -119,9 +119,9 @@ type Upload struct {
 	// The intended number of bytes to be uploaded.
 	Bytes int64 `json:"bytes" api:"required"`
 	// The Unix timestamp (in seconds) for when the Upload was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the Upload will expire.
-	ExpiresAt int64 `json:"expires_at" api:"required"`
+	ExpiresAt int64 `json:"expires_at" api:"required" format:"unixtime"`
 	// The name of the file to be uploaded.
 	Filename string `json:"filename" api:"required"`
 	// The object type, which is always "upload".

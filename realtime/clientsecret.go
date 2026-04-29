@@ -63,7 +63,7 @@ func (r *ClientSecretService) New(ctx context.Context, body ClientSecretNewParam
 type RealtimeSessionClientSecret struct {
 	// Timestamp for when the token expires. Currently, all tokens expire after one
 	// minute.
-	ExpiresAt int64 `json:"expires_at" api:"required"`
+	ExpiresAt int64 `json:"expires_at" api:"required" format:"unixtime"`
 	// Ephemeral key usable in client environments to authenticate connections to the
 	// Realtime API. Use this in client-side environments rather than a standard API
 	// token, which should only be used server-side.
@@ -723,7 +723,7 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 	ServerDescription string `json:"server_description"`
 	// The URL for the MCP server. One of `server_url` or `connector_id` must be
 	// provided.
-	ServerURL string `json:"server_url"`
+	ServerURL string `json:"server_url" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ServerLabel       respjson.Field
@@ -1033,7 +1033,7 @@ type RealtimeTranscriptionSessionCreateResponse struct {
 	// Configuration for input audio for the session.
 	Audio RealtimeTranscriptionSessionCreateResponseAudio `json:"audio"`
 	// Expiration timestamp for the session, in seconds since epoch.
-	ExpiresAt int64 `json:"expires_at"`
+	ExpiresAt int64 `json:"expires_at" format:"unixtime"`
 	// Additional fields to include in server outputs.
 	//
 	//   - `item.input_audio_transcription.logprobs`: Include logprobs for input audio
@@ -1166,7 +1166,7 @@ func (r *RealtimeTranscriptionSessionTurnDetection) UnmarshalJSON(data []byte) e
 // Response from creating a session and client secret for the Realtime API.
 type ClientSecretNewResponse struct {
 	// Expiration timestamp for the client secret, in seconds since epoch.
-	ExpiresAt int64 `json:"expires_at" api:"required"`
+	ExpiresAt int64 `json:"expires_at" api:"required" format:"unixtime"`
 	// The session configuration for either a realtime or transcription session.
 	Session ClientSecretNewResponseSessionUnion `json:"session" api:"required"`
 	// The generated client secret value.

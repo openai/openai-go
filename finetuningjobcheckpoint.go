@@ -75,7 +75,7 @@ type FineTuningJobCheckpoint struct {
 	// The checkpoint identifier, which can be referenced in the API endpoints.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the checkpoint was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The name of the fine-tuned checkpoint model that is created.
 	FineTunedModelCheckpoint string `json:"fine_tuned_model_checkpoint" api:"required"`
 	// The name of the fine-tuning job that this checkpoint was created from.
