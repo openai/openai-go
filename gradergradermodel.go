@@ -121,7 +121,7 @@ func (r *GraderInputOutputText) UnmarshalJSON(data []byte) error {
 // An image input block used within EvalItem content arrays.
 type GraderInputInputImage struct {
 	// The URL of the image input.
-	ImageURL string `json:"image_url" api:"required"`
+	ImageURL string `json:"image_url" api:"required" format:"uri"`
 	// The type of the image input. Always `input_image`.
 	Type constant.InputImage `json:"type" default:"input_image"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`, or
@@ -257,7 +257,7 @@ func (r *GraderInputOutputTextParam) UnmarshalJSON(data []byte) error {
 // The properties ImageURL, Type are required.
 type GraderInputInputImageParam struct {
 	// The URL of the image input.
-	ImageURL string `json:"image_url" api:"required"`
+	ImageURL string `json:"image_url" api:"required" format:"uri"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`, or
 	// `auto`. Defaults to `auto`.
 	Detail param.Opt[string] `json:"detail,omitzero"`
@@ -449,7 +449,7 @@ func (r *LabelModelGraderInputContentOutputText) UnmarshalJSON(data []byte) erro
 // An image input block used within EvalItem content arrays.
 type LabelModelGraderInputContentInputImage struct {
 	// The URL of the image input.
-	ImageURL string `json:"image_url" api:"required"`
+	ImageURL string `json:"image_url" api:"required" format:"uri"`
 	// The type of the image input. Always `input_image`.
 	Type constant.InputImage `json:"type" default:"input_image"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`, or
@@ -656,7 +656,7 @@ func (r *LabelModelGraderInputContentOutputTextParam) UnmarshalJSON(data []byte)
 // The properties ImageURL, Type are required.
 type LabelModelGraderInputContentInputImageParam struct {
 	// The URL of the image input.
-	ImageURL string `json:"image_url" api:"required"`
+	ImageURL string `json:"image_url" api:"required" format:"uri"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`, or
 	// `auto`. Defaults to `auto`.
 	Detail param.Opt[string] `json:"detail,omitzero"`
@@ -1270,7 +1270,7 @@ func (r *ScoreModelGraderInputContentOutputText) UnmarshalJSON(data []byte) erro
 // An image input block used within EvalItem content arrays.
 type ScoreModelGraderInputContentInputImage struct {
 	// The URL of the image input.
-	ImageURL string `json:"image_url" api:"required"`
+	ImageURL string `json:"image_url" api:"required" format:"uri"`
 	// The type of the image input. Always `input_image`.
 	Type constant.InputImage `json:"type" default:"input_image"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`, or
@@ -1522,7 +1522,7 @@ func (r *ScoreModelGraderInputContentOutputTextParam) UnmarshalJSON(data []byte)
 // The properties ImageURL, Type are required.
 type ScoreModelGraderInputContentInputImageParam struct {
 	// The URL of the image input.
-	ImageURL string `json:"image_url" api:"required"`
+	ImageURL string `json:"image_url" api:"required" format:"uri"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`, or
 	// `auto`. Defaults to `auto`.
 	Detail param.Opt[string] `json:"detail,omitzero"`

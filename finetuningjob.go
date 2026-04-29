@@ -173,7 +173,7 @@ type FineTuningJob struct {
 	// The object identifier, which can be referenced in the API endpoints.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the fine-tuning job was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// For fine-tuning jobs that have `failed`, this will contain more information on
 	// the cause of the failure.
 	Error FineTuningJobError `json:"error" api:"required"`
@@ -182,7 +182,7 @@ type FineTuningJob struct {
 	FineTunedModel string `json:"fine_tuned_model" api:"required"`
 	// The Unix timestamp (in seconds) for when the fine-tuning job was finished. The
 	// value will be null if the fine-tuning job is still running.
-	FinishedAt int64 `json:"finished_at" api:"required"`
+	FinishedAt int64 `json:"finished_at" api:"required" format:"unixtime"`
 	// The hyperparameters used for the fine-tuning job. This value will only be
 	// returned when running `supervised` jobs.
 	Hyperparameters FineTuningJobHyperparameters `json:"hyperparameters" api:"required"`
@@ -216,7 +216,7 @@ type FineTuningJob struct {
 	ValidationFile string `json:"validation_file" api:"required"`
 	// The Unix timestamp (in seconds) for when the fine-tuning job is estimated to
 	// finish. The value will be null if the fine-tuning job is not running.
-	EstimatedFinish int64 `json:"estimated_finish" api:"nullable"`
+	EstimatedFinish int64 `json:"estimated_finish" api:"nullable" format:"unixtime"`
 	// A list of integrations to enable for this fine-tuning job.
 	Integrations []FineTuningJobWandbIntegrationObject `json:"integrations" api:"nullable"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
@@ -472,7 +472,7 @@ type FineTuningJobEvent struct {
 	// The object identifier.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the fine-tuning job was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The log level of the event.
 	//
 	// Any of "info", "warn", "error".

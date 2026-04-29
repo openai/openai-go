@@ -178,7 +178,7 @@ type VectorStoreFile struct {
 	// The identifier, which can be referenced in API endpoints.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the vector store file was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The last error associated with this vector store file. Will be `null` if there
 	// are no errors.
 	LastError VectorStoreFileLastError `json:"last_error" api:"required"`

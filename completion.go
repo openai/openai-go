@@ -75,7 +75,7 @@ type Completion struct {
 	// The list of completion choices the model generated for the input prompt.
 	Choices []CompletionChoice `json:"choices" api:"required"`
 	// The Unix timestamp (in seconds) of when the completion was created.
-	Created int64 `json:"created" api:"required"`
+	Created int64 `json:"created" api:"required" format:"unixtime"`
 	// The model used for completion.
 	Model string `json:"model" api:"required"`
 	// The object type, which is always "text_completion"

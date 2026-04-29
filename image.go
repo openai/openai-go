@@ -116,7 +116,7 @@ type Image struct {
 	// When using `dall-e-2` or `dall-e-3`, the URL of the generated image if
 	// `response_format` is set to `url` (default value). Unsupported for the GPT image
 	// models.
-	URL string `json:"url"`
+	URL string `json:"url" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		B64JSON       respjson.Field
@@ -142,7 +142,7 @@ type ImageEditCompletedEvent struct {
 	// Any of "transparent", "opaque", "auto".
 	Background ImageEditCompletedEventBackground `json:"background" api:"required"`
 	// The Unix timestamp when the event was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The output format for the edited image.
 	//
 	// Any of "png", "webp", "jpeg".
@@ -277,7 +277,7 @@ type ImageEditPartialImageEvent struct {
 	// Any of "transparent", "opaque", "auto".
 	Background ImageEditPartialImageEventBackground `json:"background" api:"required"`
 	// The Unix timestamp when the event was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The output format for the requested edited image.
 	//
 	// Any of "png", "webp", "jpeg".
@@ -440,7 +440,7 @@ type ImageGenCompletedEvent struct {
 	// Any of "transparent", "opaque", "auto".
 	Background ImageGenCompletedEventBackground `json:"background" api:"required"`
 	// The Unix timestamp when the event was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The output format for the generated image.
 	//
 	// Any of "png", "webp", "jpeg".
@@ -575,7 +575,7 @@ type ImageGenPartialImageEvent struct {
 	// Any of "transparent", "opaque", "auto".
 	Background ImageGenPartialImageEventBackground `json:"background" api:"required"`
 	// The Unix timestamp when the event was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The output format for the requested image.
 	//
 	// Any of "png", "webp", "jpeg".
@@ -742,7 +742,7 @@ const (
 // The response from the image generation endpoint.
 type ImagesResponse struct {
 	// The Unix timestamp (in seconds) of when the image was created.
-	Created int64 `json:"created" api:"required"`
+	Created int64 `json:"created" api:"required" format:"unixtime"`
 	// The background parameter used for the image generation. Either `transparent` or
 	// `opaque`.
 	//

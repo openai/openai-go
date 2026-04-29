@@ -3208,7 +3208,7 @@ type Response struct {
 	// Unique identifier for this Response.
 	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) of when this Response was created.
-	CreatedAt float64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// An error object returned when the model fails to generate a Response.
 	Error ResponseError `json:"error" api:"required"`
 	// Details about why the response is incomplete.
@@ -3284,7 +3284,7 @@ type Response struct {
 	Background bool `json:"background" api:"nullable"`
 	// Unix timestamp (in seconds) of when this Response was completed. Only present
 	// when the status is `completed`.
-	CompletedAt float64 `json:"completed_at" api:"nullable"`
+	CompletedAt int64 `json:"completed_at" api:"nullable" format:"unixtime"`
 	// The conversation that this response belonged to. Input items and output items
 	// from this response were automatically added to this conversation.
 	Conversation ResponseConversation `json:"conversation" api:"nullable"`
@@ -5626,7 +5626,7 @@ type ResponseComputerToolCallOutputScreenshot struct {
 	// The identifier of an uploaded file that contains the screenshot.
 	FileID string `json:"file_id"`
 	// The URL of the screenshot image.
-	ImageURL string `json:"image_url"`
+	ImageURL string `json:"image_url" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -5660,7 +5660,7 @@ type ResponseComputerToolCallOutputScreenshotParam struct {
 	// The identifier of an uploaded file that contains the screenshot.
 	FileID param.Opt[string] `json:"file_id,omitzero"`
 	// The URL of the screenshot image.
-	ImageURL param.Opt[string] `json:"image_url,omitzero"`
+	ImageURL param.Opt[string] `json:"image_url,omitzero" format:"uri"`
 	// Specifies the event type. For a computer screenshot, this property is always set
 	// to `computer_screenshot`.
 	//
@@ -8546,7 +8546,7 @@ type ResponseFunctionWebSearchActionSearchSource struct {
 	// The type of source. Always `url`.
 	Type constant.URL `json:"type" default:"url"`
 	// The URL of the source.
-	URL string `json:"url" api:"required"`
+	URL string `json:"url" api:"required" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -8768,7 +8768,7 @@ func (r *ResponseFunctionWebSearchActionSearchParam) UnmarshalJSON(data []byte) 
 // The properties Type, URL are required.
 type ResponseFunctionWebSearchActionSearchSourceParam struct {
 	// The URL of the source.
-	URL string `json:"url" api:"required"`
+	URL string `json:"url" api:"required" format:"uri"`
 	// The type of source. Always `url`.
 	//
 	// This field can be elided, and will marshal its zero value as "url".
@@ -18911,7 +18911,7 @@ type ToolMcp struct {
 	ServerDescription string `json:"server_description"`
 	// The URL for the MCP server. One of `server_url` or `connector_id` must be
 	// provided.
-	ServerURL string `json:"server_url"`
+	ServerURL string `json:"server_url" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ServerLabel       respjson.Field
@@ -20194,7 +20194,7 @@ type ToolMcpParam struct {
 	ServerDescription param.Opt[string] `json:"server_description,omitzero"`
 	// The URL for the MCP server. One of `server_url` or `connector_id` must be
 	// provided.
-	ServerURL param.Opt[string] `json:"server_url,omitzero"`
+	ServerURL param.Opt[string] `json:"server_url,omitzero" format:"uri"`
 	// List of allowed tool names or a filter object.
 	AllowedTools ToolMcpAllowedToolsUnionParam `json:"allowed_tools,omitzero"`
 	// Optional HTTP headers to send to the MCP server. Use for authentication or other

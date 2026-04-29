@@ -45,7 +45,7 @@ type BatchCancelledWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request was cancelled.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data BatchCancelledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.cancelled`.
@@ -102,7 +102,7 @@ type BatchCompletedWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request was completed.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data BatchCompletedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.completed`.
@@ -159,7 +159,7 @@ type BatchExpiredWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request expired.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data BatchExpiredWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.expired`.
@@ -216,7 +216,7 @@ type BatchFailedWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the batch API request failed.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data BatchFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `batch.failed`.
@@ -273,7 +273,7 @@ type EvalRunCanceledWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the eval run was canceled.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data EvalRunCanceledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `eval.run.canceled`.
@@ -330,7 +330,7 @@ type EvalRunFailedWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the eval run failed.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data EvalRunFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `eval.run.failed`.
@@ -387,7 +387,7 @@ type EvalRunSucceededWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the eval run succeeded.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data EvalRunSucceededWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `eval.run.succeeded`.
@@ -444,7 +444,7 @@ type FineTuningJobCancelledWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the fine-tuning job was cancelled.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data FineTuningJobCancelledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `fine_tuning.job.cancelled`.
@@ -501,7 +501,7 @@ type FineTuningJobFailedWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the fine-tuning job failed.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data FineTuningJobFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `fine_tuning.job.failed`.
@@ -558,7 +558,7 @@ type FineTuningJobSucceededWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the fine-tuning job succeeded.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data FineTuningJobSucceededWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `fine_tuning.job.succeeded`.
@@ -615,7 +615,7 @@ type RealtimeCallIncomingWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was completed.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data RealtimeCallIncomingWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `realtime.call.incoming`.
@@ -696,7 +696,7 @@ type ResponseCancelledWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was cancelled.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data ResponseCancelledWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.cancelled`.
@@ -753,7 +753,7 @@ type ResponseCompletedWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was completed.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data ResponseCompletedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.completed`.
@@ -810,7 +810,7 @@ type ResponseFailedWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response failed.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data ResponseFailedWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.failed`.
@@ -867,7 +867,7 @@ type ResponseIncompleteWebhookEvent struct {
 	// The unique ID of the event.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the model response was interrupted.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Event data payload.
 	Data ResponseIncompleteWebhookEventData `json:"data" api:"required"`
 	// The type of the event. Always `response.incomplete`.

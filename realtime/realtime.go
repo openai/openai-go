@@ -1221,7 +1221,7 @@ type RealtimeToolsConfigUnionMcpParam struct {
 	ServerDescription param.Opt[string] `json:"server_description,omitzero"`
 	// The URL for the MCP server. One of `server_url` or `connector_id` must be
 	// provided.
-	ServerURL param.Opt[string] `json:"server_url,omitzero"`
+	ServerURL param.Opt[string] `json:"server_url,omitzero" format:"uri"`
 	// List of allowed tool names or a filter object.
 	AllowedTools RealtimeToolsConfigUnionMcpAllowedToolsParam `json:"allowed_tools,omitzero"`
 	// Optional HTTP headers to send to the MCP server. Use for authentication or other
