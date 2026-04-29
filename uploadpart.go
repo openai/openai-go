@@ -69,7 +69,7 @@ type UploadPart struct {
 	// The upload Part unique identifier, which can be referenced in API endpoints.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the Part was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The object type, which is always `upload.part`.
 	Object constant.UploadPart `json:"object" default:"upload.part"`
 	// The ID of the Upload object that this Part was added to.

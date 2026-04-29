@@ -172,7 +172,7 @@ type FileObject struct {
 	// The size of the file, in bytes.
 	Bytes int64 `json:"bytes" api:"required"`
 	// The Unix timestamp (in seconds) for when the file was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The name of the file.
 	Filename string `json:"filename" api:"required"`
 	// The object type, which is always `file`.
@@ -192,7 +192,7 @@ type FileObject struct {
 	// Deprecated: deprecated
 	Status FileObjectStatus `json:"status" api:"required"`
 	// The Unix timestamp (in seconds) for when the file will expire.
-	ExpiresAt int64 `json:"expires_at"`
+	ExpiresAt int64 `json:"expires_at" format:"unixtime"`
 	// Deprecated. For details on why a fine-tuning training file failed validation,
 	// see the `error` field on `fine_tuning.job`.
 	//

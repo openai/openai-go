@@ -154,7 +154,7 @@ type FineTuningCheckpointPermissionNewResponse struct {
 	// The permission identifier, which can be referenced in the API endpoints.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the permission was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The object type, which is always "checkpoint.permission".
 	Object constant.CheckpointPermission `json:"object" default:"checkpoint.permission"`
 	// The project identifier that the permission is for.
@@ -206,7 +206,7 @@ type FineTuningCheckpointPermissionGetResponseData struct {
 	// The permission identifier, which can be referenced in the API endpoints.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the permission was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The object type, which is always "checkpoint.permission".
 	Object constant.CheckpointPermission `json:"object" default:"checkpoint.permission"`
 	// The project identifier that the permission is for.
@@ -234,7 +234,7 @@ type FineTuningCheckpointPermissionListResponse struct {
 	// The permission identifier, which can be referenced in the API endpoints.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the permission was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The object type, which is always "checkpoint.permission".
 	Object constant.CheckpointPermission `json:"object" default:"checkpoint.permission"`
 	// The project identifier that the permission is for.

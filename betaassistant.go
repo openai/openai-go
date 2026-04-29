@@ -138,7 +138,7 @@ type Assistant struct {
 	// The identifier, which can be referenced in API endpoints.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) for when the assistant was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The description of the assistant. The maximum length is 512 characters.
 	Description string `json:"description" api:"required"`
 	// The system instructions that the assistant uses. The maximum length is 256,000

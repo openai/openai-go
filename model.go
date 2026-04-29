@@ -97,7 +97,7 @@ type Model struct {
 	// The model identifier, which can be referenced in the API endpoints.
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) when the model was created.
-	Created int64 `json:"created" api:"required"`
+	Created int64 `json:"created" api:"required" format:"unixtime"`
 	// The object type, which is always "model".
 	Object constant.Model `json:"object" default:"model"`
 	// The organization that owns the model.

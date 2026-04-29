@@ -105,7 +105,7 @@ type ContainerNewResponse struct {
 	// Unique identifier for the container.
 	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the container was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Name of the container.
 	Name string `json:"name" api:"required"`
 	// The type of this object.
@@ -117,7 +117,7 @@ type ContainerNewResponse struct {
 	// before the container expires.
 	ExpiresAfter ContainerNewResponseExpiresAfter `json:"expires_after"`
 	// Unix timestamp (in seconds) when the container was last active.
-	LastActiveAt int64 `json:"last_active_at"`
+	LastActiveAt int64 `json:"last_active_at" format:"unixtime"`
 	// The memory limit configured for the container.
 	//
 	// Any of "1g", "4g", "16g", "64g".
@@ -208,7 +208,7 @@ type ContainerGetResponse struct {
 	// Unique identifier for the container.
 	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the container was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Name of the container.
 	Name string `json:"name" api:"required"`
 	// The type of this object.
@@ -220,7 +220,7 @@ type ContainerGetResponse struct {
 	// before the container expires.
 	ExpiresAfter ContainerGetResponseExpiresAfter `json:"expires_after"`
 	// Unix timestamp (in seconds) when the container was last active.
-	LastActiveAt int64 `json:"last_active_at"`
+	LastActiveAt int64 `json:"last_active_at" format:"unixtime"`
 	// The memory limit configured for the container.
 	//
 	// Any of "1g", "4g", "16g", "64g".
@@ -311,7 +311,7 @@ type ContainerListResponse struct {
 	// Unique identifier for the container.
 	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the container was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Name of the container.
 	Name string `json:"name" api:"required"`
 	// The type of this object.
@@ -323,7 +323,7 @@ type ContainerListResponse struct {
 	// before the container expires.
 	ExpiresAfter ContainerListResponseExpiresAfter `json:"expires_after"`
 	// Unix timestamp (in seconds) when the container was last active.
-	LastActiveAt int64 `json:"last_active_at"`
+	LastActiveAt int64 `json:"last_active_at" format:"unixtime"`
 	// The memory limit configured for the container.
 	//
 	// Any of "1g", "4g", "16g", "64g".

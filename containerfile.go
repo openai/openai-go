@@ -132,7 +132,7 @@ type ContainerFileNewResponse struct {
 	// The container this file belongs to.
 	ContainerID string `json:"container_id" api:"required"`
 	// Unix timestamp (in seconds) when the file was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The type of this object (`container.file`).
 	Object constant.ContainerFile `json:"object" default:"container.file"`
 	// Path of the file in the container.
@@ -167,7 +167,7 @@ type ContainerFileGetResponse struct {
 	// The container this file belongs to.
 	ContainerID string `json:"container_id" api:"required"`
 	// Unix timestamp (in seconds) when the file was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The type of this object (`container.file`).
 	Object constant.ContainerFile `json:"object" default:"container.file"`
 	// Path of the file in the container.
@@ -202,7 +202,7 @@ type ContainerFileListResponse struct {
 	// The container this file belongs to.
 	ContainerID string `json:"container_id" api:"required"`
 	// Unix timestamp (in seconds) when the file was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The type of this object (`container.file`).
 	Object constant.ContainerFile `json:"object" default:"container.file"`
 	// Path of the file in the container.

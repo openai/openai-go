@@ -108,7 +108,7 @@ type Batch struct {
 	// The time frame within which the batch should be processed.
 	CompletionWindow string `json:"completion_window" api:"required"`
 	// The Unix timestamp (in seconds) for when the batch was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The OpenAI API endpoint used by the batch.
 	Endpoint string `json:"endpoint" api:"required"`
 	// The ID of the input file for the batch.
@@ -121,24 +121,24 @@ type Batch struct {
 	// "expired", "cancelling", "cancelled".
 	Status BatchStatus `json:"status" api:"required"`
 	// The Unix timestamp (in seconds) for when the batch was cancelled.
-	CancelledAt int64 `json:"cancelled_at"`
+	CancelledAt int64 `json:"cancelled_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch started cancelling.
-	CancellingAt int64 `json:"cancelling_at"`
+	CancellingAt int64 `json:"cancelling_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch was completed.
-	CompletedAt int64 `json:"completed_at"`
+	CompletedAt int64 `json:"completed_at" format:"unixtime"`
 	// The ID of the file containing the outputs of requests with errors.
 	ErrorFileID string      `json:"error_file_id"`
 	Errors      BatchErrors `json:"errors"`
 	// The Unix timestamp (in seconds) for when the batch expired.
-	ExpiredAt int64 `json:"expired_at"`
+	ExpiredAt int64 `json:"expired_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch will expire.
-	ExpiresAt int64 `json:"expires_at"`
+	ExpiresAt int64 `json:"expires_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch failed.
-	FailedAt int64 `json:"failed_at"`
+	FailedAt int64 `json:"failed_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch started finalizing.
-	FinalizingAt int64 `json:"finalizing_at"`
+	FinalizingAt int64 `json:"finalizing_at" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the batch started processing.
-	InProgressAt int64 `json:"in_progress_at"`
+	InProgressAt int64 `json:"in_progress_at" format:"unixtime"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard.

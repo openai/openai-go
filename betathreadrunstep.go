@@ -763,16 +763,16 @@ type RunStep struct {
 	// associated with the run step.
 	AssistantID string `json:"assistant_id" api:"required"`
 	// The Unix timestamp (in seconds) for when the run step was cancelled.
-	CancelledAt int64 `json:"cancelled_at" api:"required"`
+	CancelledAt int64 `json:"cancelled_at" api:"required" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the run step completed.
-	CompletedAt int64 `json:"completed_at" api:"required"`
+	CompletedAt int64 `json:"completed_at" api:"required" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the run step was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the run step expired. A step is
 	// considered expired if the parent run is expired.
-	ExpiredAt int64 `json:"expired_at" api:"required"`
+	ExpiredAt int64 `json:"expired_at" api:"required" format:"unixtime"`
 	// The Unix timestamp (in seconds) for when the run step failed.
-	FailedAt int64 `json:"failed_at" api:"required"`
+	FailedAt int64 `json:"failed_at" api:"required" format:"unixtime"`
 	// The last error associated with this run step. Will be `null` if there are no
 	// errors.
 	LastError RunStepLastError `json:"last_error" api:"required"`
