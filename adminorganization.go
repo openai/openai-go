@@ -15,7 +15,15 @@ import (
 type AdminOrganizationService struct {
 	Options []option.RequestOption
 	// List user actions and configuration changes within this organization.
-	AuditLogs AdminOrganizationAuditLogService
+	AuditLogs    AdminOrganizationAuditLogService
+	AdminAPIKeys AdminOrganizationAdminAPIKeyService
+	Usage        AdminOrganizationUsageService
+	Invites      AdminOrganizationInviteService
+	Users        AdminOrganizationUserService
+	Groups       AdminOrganizationGroupService
+	Roles        AdminOrganizationRoleService
+	Certificates AdminOrganizationCertificateService
+	Projects     AdminOrganizationProjectService
 }
 
 // NewAdminOrganizationService generates a new service that applies the given
@@ -25,5 +33,13 @@ func NewAdminOrganizationService(opts ...option.RequestOption) (r AdminOrganizat
 	r = AdminOrganizationService{}
 	r.Options = opts
 	r.AuditLogs = NewAdminOrganizationAuditLogService(opts...)
+	r.AdminAPIKeys = NewAdminOrganizationAdminAPIKeyService(opts...)
+	r.Usage = NewAdminOrganizationUsageService(opts...)
+	r.Invites = NewAdminOrganizationInviteService(opts...)
+	r.Users = NewAdminOrganizationUserService(opts...)
+	r.Groups = NewAdminOrganizationGroupService(opts...)
+	r.Roles = NewAdminOrganizationRoleService(opts...)
+	r.Certificates = NewAdminOrganizationCertificateService(opts...)
+	r.Projects = NewAdminOrganizationProjectService(opts...)
 	return
 }
