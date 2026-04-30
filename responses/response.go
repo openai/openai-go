@@ -3208,7 +3208,7 @@ type Response struct {
 	// Unique identifier for this Response.
 	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) of when this Response was created.
-	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	CreatedAt float64 `json:"created_at" api:"required" format:"unixtime"`
 	// An error object returned when the model fails to generate a Response.
 	Error ResponseError `json:"error" api:"required"`
 	// Details about why the response is incomplete.
@@ -3284,7 +3284,7 @@ type Response struct {
 	Background bool `json:"background" api:"nullable"`
 	// Unix timestamp (in seconds) of when this Response was completed. Only present
 	// when the status is `completed`.
-	CompletedAt int64 `json:"completed_at" api:"nullable" format:"unixtime"`
+	CompletedAt float64 `json:"completed_at" api:"nullable" format:"unixtime"`
 	// The conversation that this response belonged to. Input items and output items
 	// from this response were automatically added to this conversation.
 	Conversation ResponseConversation `json:"conversation" api:"nullable"`
