@@ -222,15 +222,17 @@ type RequestConfig struct {
 	BaseURL        *url.URL
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
-	DefaultBaseURL *url.URL
-	CustomHTTPDoer HTTPDoer
-	HTTPClient     *http.Client
-	Middlewares    []middleware
-	APIKey         string
-	AdminAPIKey    string
-	Organization   string
-	Project        string
-	WebhookSecret  string
+	DefaultBaseURL     *url.URL
+	CustomHTTPDoer     HTTPDoer
+	HTTPClient         *http.Client
+	Middlewares        []middleware
+	APIKey             string
+	AdminAPIKey        string
+	Organization       string
+	Project            string
+	WebhookSecret      string
+	authHeaderOverride bool
+	authPreference     authCredentialPreference
 	// Configure which security scheme(s) should be enabled for this request
 	Security Security
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
@@ -600,21 +602,56 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		return nil
 	}
 	new := &RequestConfig{
-		MaxRetries:     cfg.MaxRetries,
-		RequestTimeout: cfg.RequestTimeout,
-		Context:        ctx,
-		Request:        req,
-		BaseURL:        cfg.BaseURL,
-		HTTPClient:     cfg.HTTPClient,
-		Middlewares:    cfg.Middlewares,
-		APIKey:         cfg.APIKey,
-		AdminAPIKey:    cfg.AdminAPIKey,
-		Organization:   cfg.Organization,
-		Project:        cfg.Project,
-		WebhookSecret:  cfg.WebhookSecret,
+		MaxRetries:         cfg.MaxRetries,
+		RequestTimeout:     cfg.RequestTimeout,
+		Context:            ctx,
+		Request:            req,
+		BaseURL:            cfg.BaseURL,
+		HTTPClient:         cfg.HTTPClient,
+		Middlewares:        cfg.Middlewares,
+		APIKey:             cfg.APIKey,
+		AdminAPIKey:        cfg.AdminAPIKey,
+		Organization:       cfg.Organization,
+		Project:            cfg.Project,
+		WebhookSecret:      cfg.WebhookSecret,
+		authHeaderOverride: cfg.authHeaderOverride,
+		authPreference:     cfg.authPreference,
 	}
 
 	return new
+}
+
+func (cfg *RequestConfig) SetHeader(key, value string) {
+	cfg.Request.Header.Set(key, value)
+	if strings.EqualFold(key, "Authorization") {
+		cfg.authHeaderOverride = true
+	}
+}
+
+func (cfg *RequestConfig) AddHeader(key, value string) {
+	cfg.Request.Header.Add(key, value)
+	if strings.EqualFold(key, "Authorization") {
+		cfg.authHeaderOverride = true
+	}
+}
+
+func (cfg *RequestConfig) DelHeader(key string) {
+	cfg.Request.Header.Del(key)
+	if strings.EqualFold(key, "Authorization") {
+		cfg.authHeaderOverride = true
+	}
+}
+
+func (cfg *RequestConfig) SetAPIKey(value string) {
+	cfg.APIKey = value
+	cfg.authHeaderOverride = false
+	cfg.authPreference = authCredentialPreferenceBearer
+}
+
+func (cfg *RequestConfig) SetAdminAPIKey(value string) {
+	cfg.AdminAPIKey = value
+	cfg.authHeaderOverride = false
+	cfg.authPreference = authCredentialPreferenceAdmin
 }
 
 func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
@@ -665,6 +702,14 @@ type Security struct {
 	AdminAPIKeyAuth bool
 }
 
+type authCredentialPreference int
+
+const (
+	authCredentialPreferenceNone authCredentialPreference = iota
+	authCredentialPreferenceBearer
+	authCredentialPreferenceAdmin
+)
+
 func WithSecurity(security Security) RequestOption {
 	return RequestOptionFunc(func(r *RequestConfig) error {
 		r.Security = security
@@ -697,11 +742,26 @@ func WithAdminAPIKeyAuthSecurity() RequestOption {
 }
 
 func ApplySecurity(r RequestConfig) {
-	if r.Security.BearerAuth && r.APIKey != "" && r.Request.Header.Get("Authorization") == "" {
-		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
+	if r.authHeaderOverride {
+		return
 	}
 
-	if r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" && r.Request.Header.Get("Authorization") == "" {
+	if r.authPreference == authCredentialPreferenceBearer && r.Security.BearerAuth && r.APIKey != "" {
+		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
+		return
+	}
+
+	if r.authPreference == authCredentialPreferenceAdmin && r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
 		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.AdminAPIKey))
+		return
+	}
+
+	if r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
+		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.AdminAPIKey))
+		return
+	}
+
+	if r.Security.BearerAuth && r.APIKey != "" {
+		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
 	}
 }

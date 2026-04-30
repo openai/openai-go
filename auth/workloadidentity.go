@@ -22,7 +22,6 @@ const (
 	TokenExchangeURL       = "https://auth.openai.com/oauth/token"
 )
 
-
 type WorkloadIdentityAuth struct {
 	config WorkloadIdentity
 

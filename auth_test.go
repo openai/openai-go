@@ -476,3 +476,145 @@ func TestWorkloadIdentity401RetrySkipsNonReplayableBody(t *testing.T) {
 		t.Errorf("API call count = %d, want 1", apiCallCount)
 	}
 }
+
+func TestFineTuningCheckpointPermissionDeleteUsesAdminAPIKey(t *testing.T) {
+	var capturedAuthHeader string
+
+	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+		option.WithHTTPClient(&http.Client{
+			Transport: &closureTransport{
+				fn: func(req *http.Request) (*http.Response, error) {
+					capturedAuthHeader = req.Header.Get("Authorization")
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(strings.NewReader(`{"id":"perm_123","object":"checkpoint.permission","deleted":true}`)),
+						Header:     http.Header{"Content-Type": []string{"application/json"}},
+					}, nil
+				},
+			},
+		}),
+	)
+
+	_, err := client.FineTuning.Checkpoints.Permissions.Delete(context.Background(), "ft-checkpoint", "perm_123")
+	if err != nil {
+		t.Fatalf("Delete() error = %v", err)
+	}
+
+	if capturedAuthHeader != "Bearer My Admin API Key" {
+		t.Errorf("Authorization header = %q, want %q", capturedAuthHeader, "Bearer My Admin API Key")
+	}
+}
+
+func TestDefaultSecurityPrefersAdminAPIKey(t *testing.T) {
+	var capturedAuthHeader string
+
+	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+		option.WithHTTPClient(&http.Client{
+			Transport: &closureTransport{
+				fn: func(req *http.Request) (*http.Response, error) {
+					capturedAuthHeader = req.Header.Get("Authorization")
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+						Header:     http.Header{"Content-Type": []string{"application/json"}},
+					}, nil
+				},
+			},
+		}),
+	)
+
+	var res map[string]any
+	err := client.Execute(context.Background(), http.MethodGet, "/admin", nil, &res)
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	if capturedAuthHeader != "Bearer My Admin API Key" {
+		t.Errorf("Authorization header = %q, want %q", capturedAuthHeader, "Bearer My Admin API Key")
+	}
+}
+
+func TestExecuteRequestAPIKeyOverridesClientAdminAPIKey(t *testing.T) {
+	var capturedAuthHeader string
+
+	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+		option.WithHTTPClient(&http.Client{
+			Transport: &closureTransport{
+				fn: func(req *http.Request) (*http.Response, error) {
+					capturedAuthHeader = req.Header.Get("Authorization")
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+						Header:     http.Header{"Content-Type": []string{"application/json"}},
+					}, nil
+				},
+			},
+		}),
+	)
+
+	var res map[string]any
+	err := client.Execute(
+		context.Background(),
+		http.MethodGet,
+		"/custom",
+		nil,
+		&res,
+		option.WithAPIKey("My Request API Key"),
+	)
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	if capturedAuthHeader != "Bearer My Request API Key" {
+		t.Errorf("Authorization header = %q, want %q", capturedAuthHeader, "Bearer My Request API Key")
+	}
+}
+
+func TestRequestAPIKeyOverridesClientAuthorizationHeader(t *testing.T) {
+	var capturedAuthHeader string
+
+	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
+		option.WithHeader("Authorization", "Bearer Stale API Key"),
+		option.WithHTTPClient(&http.Client{
+			Transport: &closureTransport{
+				fn: func(req *http.Request) (*http.Response, error) {
+					capturedAuthHeader = req.Header.Get("Authorization")
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(strings.NewReader(`{"id":"chatcmpl-123","object":"chat.completion","created":1234567890,"model":"gpt-4","choices":[{"index":0,"message":{"role":"assistant","content":"test"},"finish_reason":"stop"}]}`)),
+						Header:     http.Header{"Content-Type": []string{"application/json"}},
+					}, nil
+				},
+			},
+		}),
+	)
+
+	_, err := client.Chat.Completions.New(
+		context.Background(),
+		openai.ChatCompletionNewParams{
+			Messages: []openai.ChatCompletionMessageParamUnion{{
+				OfUser: &openai.ChatCompletionUserMessageParam{
+					Content: openai.ChatCompletionUserMessageParamContentUnion{
+						OfString: openai.String("test"),
+					},
+				},
+			}},
+			Model: shared.ChatModelGPT4o,
+		},
+		option.WithAPIKey("My Request API Key"),
+	)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	if capturedAuthHeader != "Bearer My Request API Key" {
+		t.Errorf("Authorization header = %q, want %q", capturedAuthHeader, "Bearer My Request API Key")
+	}
+}
