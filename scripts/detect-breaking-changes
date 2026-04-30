@@ -38,6 +38,26 @@ TEST_PATHS=(
 	upload_test.go
 	uploadpart_test.go
 	adminorganizationauditlog_test.go
+	adminorganizationadminapikey_test.go
+	adminorganizationusage_test.go
+	adminorganizationinvite_test.go
+	adminorganizationuser_test.go
+	adminorganizationuserrole_test.go
+	adminorganizationgroup_test.go
+	adminorganizationgroupuser_test.go
+	adminorganizationgrouprole_test.go
+	adminorganizationrole_test.go
+	adminorganizationcertificate_test.go
+	adminorganizationproject_test.go
+	adminorganizationprojectuser_test.go
+	adminorganizationprojectuserrole_test.go
+	adminorganizationprojectserviceaccount_test.go
+	adminorganizationprojectapikey_test.go
+	adminorganizationprojectratelimit_test.go
+	adminorganizationprojectgroup_test.go
+	adminorganizationprojectgrouprole_test.go
+	adminorganizationprojectrole_test.go
+	adminorganizationprojectcertificate_test.go
 	responses/response_test.go
 	responses/inputitem_test.go
 	responses/inputtoken_test.go
