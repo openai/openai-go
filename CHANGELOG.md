@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.34.0 (2026-05-01)
+
+Full Changelog: [v3.33.0...v3.34.0](https://github.com/openai/openai-go/compare/v3.33.0...v3.34.0)
+
+### Features
+
+* **api:** add group_type, external_key_id, user fields to admin organization models ([460f400](https://github.com/openai/openai-go/commit/460f400cc195d603631a13d6ce867d7bf9ca7fb3))
+* **api:** add support for Admin API Keys per endpoint ([51a0561](https://github.com/openai/openai-go/commit/51a0561845cb7f567e28074cddbe8bf1936f553a))
+* **api:** admin API updates ([a0ad21e](https://github.com/openai/openai-go/commit/a0ad21e5584562bc7c9c951a6872479bd1aa7773))
+* **api:** manual updates ([b60b3bc](https://github.com/openai/openai-go/commit/b60b3bcbc0bb9f11cd74d1b1cfba116ab1893465))
+* **api:** manual updates ([f4e0c1a](https://github.com/openai/openai-go/commit/f4e0c1a9f98d838d494b71b4d32e6f7fc5ffab2d))
+
+
+### Bug Fixes
+
+* **auth:** prefer admin keys for admin requests ([d128349](https://github.com/openai/openai-go/commit/d1283491698c89bf53acc945db02c5094741021d))
+* **types:** add format annotations to ChatKit timestamp and URL fields ([0b7d7d0](https://github.com/openai/openai-go/commit/0b7d7d036b4588877bb3f2fc1d46a56f23150468))
+* **types:** add format annotations to timestamp and URL fields across resources ([0ff11a7](https://github.com/openai/openai-go/commit/0ff11a7f0c9eff426e1e408b0b70bc101e01fca8))
+* **types:** change timestamp fields to float64 in Response ([d714e3c](https://github.com/openai/openai-go/commit/d714e3c84592cd2630b45e8f634ede88b19a4bb5))
+
 ## 3.33.0 (2026-04-28)
 
 Full Changelog: [v3.32.0...v3.33.0](https://github.com/openai/openai-go/compare/v3.32.0...v3.33.0)
