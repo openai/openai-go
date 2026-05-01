@@ -53,7 +53,7 @@ func (r *AdminOrganizationGroupUserService) New(ctx context.Context, groupID str
 }
 
 // Lists the users assigned to a group.
-func (r *AdminOrganizationGroupUserService) List(ctx context.Context, groupID string, query AdminOrganizationGroupUserListParams, opts ...option.RequestOption) (res *pagination.CursorPage[OrganizationUser], err error) {
+func (r *AdminOrganizationGroupUserService) List(ctx context.Context, groupID string, query AdminOrganizationGroupUserListParams, opts ...option.RequestOption) (res *pagination.NextCursorPage[OrganizationGroupUser], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -76,8 +76,8 @@ func (r *AdminOrganizationGroupUserService) List(ctx context.Context, groupID st
 }
 
 // Lists the users assigned to a group.
-func (r *AdminOrganizationGroupUserService) ListAutoPaging(ctx context.Context, groupID string, query AdminOrganizationGroupUserListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[OrganizationUser] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, groupID, query, opts...))
+func (r *AdminOrganizationGroupUserService) ListAutoPaging(ctx context.Context, groupID string, query AdminOrganizationGroupUserListParams, opts ...option.RequestOption) *pagination.NextCursorPageAutoPager[OrganizationGroupUser] {
+	return pagination.NewNextCursorPageAutoPager(r.List(ctx, groupID, query, opts...))
 }
 
 // Removes a user from a group.
@@ -95,6 +95,30 @@ func (r *AdminOrganizationGroupUserService) Delete(ctx context.Context, groupID 
 	path := fmt.Sprintf("organization/groups/%s/users/%s", groupID, userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
+}
+
+// Represents an individual user returned when inspecting group membership.
+type OrganizationGroupUser struct {
+	// The identifier, which can be referenced in API endpoints
+	ID string `json:"id" api:"required"`
+	// The email address of the user.
+	Email string `json:"email" api:"required"`
+	// The name of the user.
+	Name string `json:"name" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Email       respjson.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r OrganizationGroupUser) RawJSON() string { return r.JSON.raw }
+func (r *OrganizationGroupUser) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // Confirmation payload returned after adding a user to a group.

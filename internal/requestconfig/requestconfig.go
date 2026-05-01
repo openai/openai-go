@@ -741,6 +741,15 @@ func WithAdminAPIKeyAuthSecurity() RequestOption {
 	})
 }
 
+// WithBearerAuthPreference() should only be used when a request supports multiple
+// auth schemes and has no endpoint-specific security preference.
+func WithBearerAuthPreference() RequestOption {
+	return RequestOptionFunc(func(r *RequestConfig) error {
+		r.authPreference = authCredentialPreferenceBearer
+		return nil
+	})
+}
+
 func ApplySecurity(r RequestConfig) {
 	if r.authHeaderOverride {
 		return

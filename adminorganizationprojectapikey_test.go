@@ -29,7 +29,7 @@ func TestAdminOrganizationProjectAPIKeyGet(t *testing.T) {
 	_, err := client.Admin.Organization.Projects.APIKeys.Get(
 		context.TODO(),
 		"project_id",
-		"key_id",
+		"api_key_id",
 	)
 	if err != nil {
 		var apierr *openai.Error
@@ -86,7 +86,7 @@ func TestAdminOrganizationProjectAPIKeyDelete(t *testing.T) {
 	_, err := client.Admin.Organization.Projects.APIKeys.Delete(
 		context.TODO(),
 		"project_id",
-		"key_id",
+		"api_key_id",
 	)
 	if err != nil {
 		var apierr *openai.Error

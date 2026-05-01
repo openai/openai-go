@@ -171,7 +171,7 @@ type AdminOrganizationUserUpdateParams struct {
 	// `owner` or `reader`
 	//
 	// Any of "owner", "reader".
-	Role AdminOrganizationUserUpdateParamsRole `json:"role,omitzero" api:"required"`
+	Role AdminOrganizationUserUpdateParamsRole `json:"role,omitzero"`
 	paramObj
 }
 

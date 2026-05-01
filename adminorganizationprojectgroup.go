@@ -55,7 +55,7 @@ func (r *AdminOrganizationProjectGroupService) New(ctx context.Context, projectI
 }
 
 // Lists the groups that have access to a project.
-func (r *AdminOrganizationProjectGroupService) List(ctx context.Context, projectID string, query AdminOrganizationProjectGroupListParams, opts ...option.RequestOption) (res *pagination.CursorPage[ProjectGroup], err error) {
+func (r *AdminOrganizationProjectGroupService) List(ctx context.Context, projectID string, query AdminOrganizationProjectGroupListParams, opts ...option.RequestOption) (res *pagination.NextCursorPage[ProjectGroup], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -78,8 +78,8 @@ func (r *AdminOrganizationProjectGroupService) List(ctx context.Context, project
 }
 
 // Lists the groups that have access to a project.
-func (r *AdminOrganizationProjectGroupService) ListAutoPaging(ctx context.Context, projectID string, query AdminOrganizationProjectGroupListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[ProjectGroup] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, projectID, query, opts...))
+func (r *AdminOrganizationProjectGroupService) ListAutoPaging(ctx context.Context, projectID string, query AdminOrganizationProjectGroupListParams, opts ...option.RequestOption) *pagination.NextCursorPageAutoPager[ProjectGroup] {
+	return pagination.NewNextCursorPageAutoPager(r.List(ctx, projectID, query, opts...))
 }
 
 // Revokes a group's access to a project.

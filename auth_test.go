@@ -507,11 +507,42 @@ func TestFineTuningCheckpointPermissionDeleteUsesAdminAPIKey(t *testing.T) {
 	}
 }
 
-func TestDefaultSecurityPrefersAdminAPIKey(t *testing.T) {
+func TestExecuteDefaultsToAPIKeyWhenBothKeysConfigured(t *testing.T) {
 	var capturedAuthHeader string
 
 	client := openai.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+		option.WithHTTPClient(&http.Client{
+			Transport: &closureTransport{
+				fn: func(req *http.Request) (*http.Response, error) {
+					capturedAuthHeader = req.Header.Get("Authorization")
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+						Header:     http.Header{"Content-Type": []string{"application/json"}},
+					}, nil
+				},
+			},
+		}),
+	)
+
+	var res map[string]any
+	err := client.Execute(context.Background(), http.MethodGet, "/admin", nil, &res)
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	if capturedAuthHeader != "Bearer My API Key" {
+		t.Errorf("Authorization header = %q, want %q", capturedAuthHeader, "Bearer My API Key")
+	}
+}
+
+func TestExecuteDefaultsToAdminAPIKeyWhenOnlyAdminAPIKeyConfigured(t *testing.T) {
+	var capturedAuthHeader string
+
+	client := openai.NewClient(
+		option.WithAPIKey(""),
 		option.WithAdminAPIKey("My Admin API Key"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
@@ -573,6 +604,43 @@ func TestExecuteRequestAPIKeyOverridesClientAdminAPIKey(t *testing.T) {
 
 	if capturedAuthHeader != "Bearer My Request API Key" {
 		t.Errorf("Authorization header = %q, want %q", capturedAuthHeader, "Bearer My Request API Key")
+	}
+}
+
+func TestExecuteRequestAdminAPIKeyOverridesClientAPIKey(t *testing.T) {
+	var capturedAuthHeader string
+
+	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
+		option.WithHTTPClient(&http.Client{
+			Transport: &closureTransport{
+				fn: func(req *http.Request) (*http.Response, error) {
+					capturedAuthHeader = req.Header.Get("Authorization")
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+						Header:     http.Header{"Content-Type": []string{"application/json"}},
+					}, nil
+				},
+			},
+		}),
+	)
+
+	var res map[string]any
+	err := client.Execute(
+		context.Background(),
+		http.MethodGet,
+		"/admin",
+		nil,
+		&res,
+		option.WithAdminAPIKey("My Request Admin API Key"),
+	)
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+
+	if capturedAuthHeader != "Bearer My Request Admin API Key" {
+		t.Errorf("Authorization header = %q, want %q", capturedAuthHeader, "Bearer My Request Admin API Key")
 	}
 }
 

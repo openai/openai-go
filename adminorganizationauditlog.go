@@ -66,8 +66,6 @@ func (r *AdminOrganizationAuditLogService) ListAutoPaging(ctx context.Context, q
 type AdminOrganizationAuditLogListResponse struct {
 	// The ID of this log.
 	ID string `json:"id" api:"required"`
-	// The actor who performed the audit logged action.
-	Actor AdminOrganizationAuditLogListResponseActor `json:"actor" api:"required"`
 	// The Unix timestamp (in seconds) of the event.
 	EffectiveAt int64 `json:"effective_at" api:"required" format:"unixtime"`
 	// The event type.
@@ -89,6 +87,8 @@ type AdminOrganizationAuditLogListResponse struct {
 	// "scim.disabled", "service_account.created", "service_account.updated",
 	// "service_account.deleted", "user.added", "user.updated", "user.deleted".
 	Type AdminOrganizationAuditLogListResponseType `json:"type" api:"required"`
+	// The actor who performed the audit logged action.
+	Actor AdminOrganizationAuditLogListResponseActor `json:"actor" api:"nullable"`
 	// The details for events with this `type`.
 	APIKeyCreated AdminOrganizationAuditLogListResponseAPIKeyCreated `json:"api_key.created"`
 	// The details for events with this `type`.
@@ -191,9 +191,9 @@ type AdminOrganizationAuditLogListResponse struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID                           respjson.Field
-		Actor                        respjson.Field
 		EffectiveAt                  respjson.Field
 		Type                         respjson.Field
+		Actor                        respjson.Field
 		APIKeyCreated                respjson.Field
 		APIKeyDeleted                respjson.Field
 		APIKeyUpdated                respjson.Field
@@ -252,6 +252,63 @@ func (r AdminOrganizationAuditLogListResponse) RawJSON() string { return r.JSON.
 func (r *AdminOrganizationAuditLogListResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+// The event type.
+type AdminOrganizationAuditLogListResponseType string
+
+const (
+	AdminOrganizationAuditLogListResponseTypeAPIKeyCreated                AdminOrganizationAuditLogListResponseType = "api_key.created"
+	AdminOrganizationAuditLogListResponseTypeAPIKeyUpdated                AdminOrganizationAuditLogListResponseType = "api_key.updated"
+	AdminOrganizationAuditLogListResponseTypeAPIKeyDeleted                AdminOrganizationAuditLogListResponseType = "api_key.deleted"
+	AdminOrganizationAuditLogListResponseTypeCertificateCreated           AdminOrganizationAuditLogListResponseType = "certificate.created"
+	AdminOrganizationAuditLogListResponseTypeCertificateUpdated           AdminOrganizationAuditLogListResponseType = "certificate.updated"
+	AdminOrganizationAuditLogListResponseTypeCertificateDeleted           AdminOrganizationAuditLogListResponseType = "certificate.deleted"
+	AdminOrganizationAuditLogListResponseTypeCertificatesActivated        AdminOrganizationAuditLogListResponseType = "certificates.activated"
+	AdminOrganizationAuditLogListResponseTypeCertificatesDeactivated      AdminOrganizationAuditLogListResponseType = "certificates.deactivated"
+	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionCreated  AdminOrganizationAuditLogListResponseType = "checkpoint.permission.created"
+	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionDeleted  AdminOrganizationAuditLogListResponseType = "checkpoint.permission.deleted"
+	AdminOrganizationAuditLogListResponseTypeExternalKeyRegistered        AdminOrganizationAuditLogListResponseType = "external_key.registered"
+	AdminOrganizationAuditLogListResponseTypeExternalKeyRemoved           AdminOrganizationAuditLogListResponseType = "external_key.removed"
+	AdminOrganizationAuditLogListResponseTypeGroupCreated                 AdminOrganizationAuditLogListResponseType = "group.created"
+	AdminOrganizationAuditLogListResponseTypeGroupUpdated                 AdminOrganizationAuditLogListResponseType = "group.updated"
+	AdminOrganizationAuditLogListResponseTypeGroupDeleted                 AdminOrganizationAuditLogListResponseType = "group.deleted"
+	AdminOrganizationAuditLogListResponseTypeInviteSent                   AdminOrganizationAuditLogListResponseType = "invite.sent"
+	AdminOrganizationAuditLogListResponseTypeInviteAccepted               AdminOrganizationAuditLogListResponseType = "invite.accepted"
+	AdminOrganizationAuditLogListResponseTypeInviteDeleted                AdminOrganizationAuditLogListResponseType = "invite.deleted"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistCreated           AdminOrganizationAuditLogListResponseType = "ip_allowlist.created"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistUpdated           AdminOrganizationAuditLogListResponseType = "ip_allowlist.updated"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistDeleted           AdminOrganizationAuditLogListResponseType = "ip_allowlist.deleted"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigActivated   AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.activated"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigDeactivated AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.deactivated"
+	AdminOrganizationAuditLogListResponseTypeLoginSucceeded               AdminOrganizationAuditLogListResponseType = "login.succeeded"
+	AdminOrganizationAuditLogListResponseTypeLoginFailed                  AdminOrganizationAuditLogListResponseType = "login.failed"
+	AdminOrganizationAuditLogListResponseTypeLogoutSucceeded              AdminOrganizationAuditLogListResponseType = "logout.succeeded"
+	AdminOrganizationAuditLogListResponseTypeLogoutFailed                 AdminOrganizationAuditLogListResponseType = "logout.failed"
+	AdminOrganizationAuditLogListResponseTypeOrganizationUpdated          AdminOrganizationAuditLogListResponseType = "organization.updated"
+	AdminOrganizationAuditLogListResponseTypeProjectCreated               AdminOrganizationAuditLogListResponseType = "project.created"
+	AdminOrganizationAuditLogListResponseTypeProjectUpdated               AdminOrganizationAuditLogListResponseType = "project.updated"
+	AdminOrganizationAuditLogListResponseTypeProjectArchived              AdminOrganizationAuditLogListResponseType = "project.archived"
+	AdminOrganizationAuditLogListResponseTypeProjectDeleted               AdminOrganizationAuditLogListResponseType = "project.deleted"
+	AdminOrganizationAuditLogListResponseTypeRateLimitUpdated             AdminOrganizationAuditLogListResponseType = "rate_limit.updated"
+	AdminOrganizationAuditLogListResponseTypeRateLimitDeleted             AdminOrganizationAuditLogListResponseType = "rate_limit.deleted"
+	AdminOrganizationAuditLogListResponseTypeResourceDeleted              AdminOrganizationAuditLogListResponseType = "resource.deleted"
+	AdminOrganizationAuditLogListResponseTypeTunnelCreated                AdminOrganizationAuditLogListResponseType = "tunnel.created"
+	AdminOrganizationAuditLogListResponseTypeTunnelUpdated                AdminOrganizationAuditLogListResponseType = "tunnel.updated"
+	AdminOrganizationAuditLogListResponseTypeTunnelDeleted                AdminOrganizationAuditLogListResponseType = "tunnel.deleted"
+	AdminOrganizationAuditLogListResponseTypeRoleCreated                  AdminOrganizationAuditLogListResponseType = "role.created"
+	AdminOrganizationAuditLogListResponseTypeRoleUpdated                  AdminOrganizationAuditLogListResponseType = "role.updated"
+	AdminOrganizationAuditLogListResponseTypeRoleDeleted                  AdminOrganizationAuditLogListResponseType = "role.deleted"
+	AdminOrganizationAuditLogListResponseTypeRoleAssignmentCreated        AdminOrganizationAuditLogListResponseType = "role.assignment.created"
+	AdminOrganizationAuditLogListResponseTypeRoleAssignmentDeleted        AdminOrganizationAuditLogListResponseType = "role.assignment.deleted"
+	AdminOrganizationAuditLogListResponseTypeScimEnabled                  AdminOrganizationAuditLogListResponseType = "scim.enabled"
+	AdminOrganizationAuditLogListResponseTypeScimDisabled                 AdminOrganizationAuditLogListResponseType = "scim.disabled"
+	AdminOrganizationAuditLogListResponseTypeServiceAccountCreated        AdminOrganizationAuditLogListResponseType = "service_account.created"
+	AdminOrganizationAuditLogListResponseTypeServiceAccountUpdated        AdminOrganizationAuditLogListResponseType = "service_account.updated"
+	AdminOrganizationAuditLogListResponseTypeServiceAccountDeleted        AdminOrganizationAuditLogListResponseType = "service_account.deleted"
+	AdminOrganizationAuditLogListResponseTypeUserAdded                    AdminOrganizationAuditLogListResponseType = "user.added"
+	AdminOrganizationAuditLogListResponseTypeUserUpdated                  AdminOrganizationAuditLogListResponseType = "user.updated"
+	AdminOrganizationAuditLogListResponseTypeUserDeleted                  AdminOrganizationAuditLogListResponseType = "user.deleted"
+)
 
 // The actor who performed the audit logged action.
 type AdminOrganizationAuditLogListResponseActor struct {
@@ -390,63 +447,6 @@ func (r AdminOrganizationAuditLogListResponseActorSessionUser) RawJSON() string 
 func (r *AdminOrganizationAuditLogListResponseActorSessionUser) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-// The event type.
-type AdminOrganizationAuditLogListResponseType string
-
-const (
-	AdminOrganizationAuditLogListResponseTypeAPIKeyCreated                AdminOrganizationAuditLogListResponseType = "api_key.created"
-	AdminOrganizationAuditLogListResponseTypeAPIKeyUpdated                AdminOrganizationAuditLogListResponseType = "api_key.updated"
-	AdminOrganizationAuditLogListResponseTypeAPIKeyDeleted                AdminOrganizationAuditLogListResponseType = "api_key.deleted"
-	AdminOrganizationAuditLogListResponseTypeCertificateCreated           AdminOrganizationAuditLogListResponseType = "certificate.created"
-	AdminOrganizationAuditLogListResponseTypeCertificateUpdated           AdminOrganizationAuditLogListResponseType = "certificate.updated"
-	AdminOrganizationAuditLogListResponseTypeCertificateDeleted           AdminOrganizationAuditLogListResponseType = "certificate.deleted"
-	AdminOrganizationAuditLogListResponseTypeCertificatesActivated        AdminOrganizationAuditLogListResponseType = "certificates.activated"
-	AdminOrganizationAuditLogListResponseTypeCertificatesDeactivated      AdminOrganizationAuditLogListResponseType = "certificates.deactivated"
-	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionCreated  AdminOrganizationAuditLogListResponseType = "checkpoint.permission.created"
-	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionDeleted  AdminOrganizationAuditLogListResponseType = "checkpoint.permission.deleted"
-	AdminOrganizationAuditLogListResponseTypeExternalKeyRegistered        AdminOrganizationAuditLogListResponseType = "external_key.registered"
-	AdminOrganizationAuditLogListResponseTypeExternalKeyRemoved           AdminOrganizationAuditLogListResponseType = "external_key.removed"
-	AdminOrganizationAuditLogListResponseTypeGroupCreated                 AdminOrganizationAuditLogListResponseType = "group.created"
-	AdminOrganizationAuditLogListResponseTypeGroupUpdated                 AdminOrganizationAuditLogListResponseType = "group.updated"
-	AdminOrganizationAuditLogListResponseTypeGroupDeleted                 AdminOrganizationAuditLogListResponseType = "group.deleted"
-	AdminOrganizationAuditLogListResponseTypeInviteSent                   AdminOrganizationAuditLogListResponseType = "invite.sent"
-	AdminOrganizationAuditLogListResponseTypeInviteAccepted               AdminOrganizationAuditLogListResponseType = "invite.accepted"
-	AdminOrganizationAuditLogListResponseTypeInviteDeleted                AdminOrganizationAuditLogListResponseType = "invite.deleted"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistCreated           AdminOrganizationAuditLogListResponseType = "ip_allowlist.created"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistUpdated           AdminOrganizationAuditLogListResponseType = "ip_allowlist.updated"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistDeleted           AdminOrganizationAuditLogListResponseType = "ip_allowlist.deleted"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigActivated   AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.activated"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigDeactivated AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.deactivated"
-	AdminOrganizationAuditLogListResponseTypeLoginSucceeded               AdminOrganizationAuditLogListResponseType = "login.succeeded"
-	AdminOrganizationAuditLogListResponseTypeLoginFailed                  AdminOrganizationAuditLogListResponseType = "login.failed"
-	AdminOrganizationAuditLogListResponseTypeLogoutSucceeded              AdminOrganizationAuditLogListResponseType = "logout.succeeded"
-	AdminOrganizationAuditLogListResponseTypeLogoutFailed                 AdminOrganizationAuditLogListResponseType = "logout.failed"
-	AdminOrganizationAuditLogListResponseTypeOrganizationUpdated          AdminOrganizationAuditLogListResponseType = "organization.updated"
-	AdminOrganizationAuditLogListResponseTypeProjectCreated               AdminOrganizationAuditLogListResponseType = "project.created"
-	AdminOrganizationAuditLogListResponseTypeProjectUpdated               AdminOrganizationAuditLogListResponseType = "project.updated"
-	AdminOrganizationAuditLogListResponseTypeProjectArchived              AdminOrganizationAuditLogListResponseType = "project.archived"
-	AdminOrganizationAuditLogListResponseTypeProjectDeleted               AdminOrganizationAuditLogListResponseType = "project.deleted"
-	AdminOrganizationAuditLogListResponseTypeRateLimitUpdated             AdminOrganizationAuditLogListResponseType = "rate_limit.updated"
-	AdminOrganizationAuditLogListResponseTypeRateLimitDeleted             AdminOrganizationAuditLogListResponseType = "rate_limit.deleted"
-	AdminOrganizationAuditLogListResponseTypeResourceDeleted              AdminOrganizationAuditLogListResponseType = "resource.deleted"
-	AdminOrganizationAuditLogListResponseTypeTunnelCreated                AdminOrganizationAuditLogListResponseType = "tunnel.created"
-	AdminOrganizationAuditLogListResponseTypeTunnelUpdated                AdminOrganizationAuditLogListResponseType = "tunnel.updated"
-	AdminOrganizationAuditLogListResponseTypeTunnelDeleted                AdminOrganizationAuditLogListResponseType = "tunnel.deleted"
-	AdminOrganizationAuditLogListResponseTypeRoleCreated                  AdminOrganizationAuditLogListResponseType = "role.created"
-	AdminOrganizationAuditLogListResponseTypeRoleUpdated                  AdminOrganizationAuditLogListResponseType = "role.updated"
-	AdminOrganizationAuditLogListResponseTypeRoleDeleted                  AdminOrganizationAuditLogListResponseType = "role.deleted"
-	AdminOrganizationAuditLogListResponseTypeRoleAssignmentCreated        AdminOrganizationAuditLogListResponseType = "role.assignment.created"
-	AdminOrganizationAuditLogListResponseTypeRoleAssignmentDeleted        AdminOrganizationAuditLogListResponseType = "role.assignment.deleted"
-	AdminOrganizationAuditLogListResponseTypeScimEnabled                  AdminOrganizationAuditLogListResponseType = "scim.enabled"
-	AdminOrganizationAuditLogListResponseTypeScimDisabled                 AdminOrganizationAuditLogListResponseType = "scim.disabled"
-	AdminOrganizationAuditLogListResponseTypeServiceAccountCreated        AdminOrganizationAuditLogListResponseType = "service_account.created"
-	AdminOrganizationAuditLogListResponseTypeServiceAccountUpdated        AdminOrganizationAuditLogListResponseType = "service_account.updated"
-	AdminOrganizationAuditLogListResponseTypeServiceAccountDeleted        AdminOrganizationAuditLogListResponseType = "service_account.deleted"
-	AdminOrganizationAuditLogListResponseTypeUserAdded                    AdminOrganizationAuditLogListResponseType = "user.added"
-	AdminOrganizationAuditLogListResponseTypeUserUpdated                  AdminOrganizationAuditLogListResponseType = "user.updated"
-	AdminOrganizationAuditLogListResponseTypeUserDeleted                  AdminOrganizationAuditLogListResponseType = "user.deleted"
-)
 
 // The details for events with this `type`.
 type AdminOrganizationAuditLogListResponseAPIKeyCreated struct {
