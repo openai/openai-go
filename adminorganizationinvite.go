@@ -107,10 +107,10 @@ type Invite struct {
 	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The email address of the individual to whom the invite was sent
 	Email string `json:"email" api:"required"`
-	// The Unix timestamp (in seconds) of when the invite expires.
-	ExpiresAt int64 `json:"expires_at" api:"required" format:"unixtime"`
 	// The object type, which is always `organization.invite`
 	Object constant.OrganizationInvite `json:"object" default:"organization.invite"`
+	// The projects that were granted membership upon acceptance of the invite.
+	Projects []InviteProject `json:"projects" api:"required"`
 	// `owner` or `reader`
 	//
 	// Any of "owner", "reader".
@@ -121,19 +121,19 @@ type Invite struct {
 	Status InviteStatus `json:"status" api:"required"`
 	// The Unix timestamp (in seconds) of when the invite was accepted.
 	AcceptedAt int64 `json:"accepted_at" api:"nullable" format:"unixtime"`
-	// The projects that were granted membership upon acceptance of the invite.
-	Projects []InviteProject `json:"projects"`
+	// The Unix timestamp (in seconds) of when the invite expires.
+	ExpiresAt int64 `json:"expires_at" api:"nullable" format:"unixtime"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
 		CreatedAt   respjson.Field
 		Email       respjson.Field
-		ExpiresAt   respjson.Field
 		Object      respjson.Field
+		Projects    respjson.Field
 		Role        respjson.Field
 		Status      respjson.Field
 		AcceptedAt  respjson.Field
-		Projects    respjson.Field
+		ExpiresAt   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -142,6 +142,28 @@ type Invite struct {
 // Returns the unmodified JSON received from the API
 func (r Invite) RawJSON() string { return r.JSON.raw }
 func (r *Invite) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type InviteProject struct {
+	// Project's public ID
+	ID string `json:"id" api:"required"`
+	// Project membership role
+	//
+	// Any of "member", "owner".
+	Role string `json:"role" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Role        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r InviteProject) RawJSON() string { return r.JSON.raw }
+func (r *InviteProject) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -161,28 +183,6 @@ const (
 	InviteStatusExpired  InviteStatus = "expired"
 	InviteStatusPending  InviteStatus = "pending"
 )
-
-type InviteProject struct {
-	// Project's public ID
-	ID string `json:"id"`
-	// Project membership role
-	//
-	// Any of "member", "owner".
-	Role string `json:"role"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		Role        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r InviteProject) RawJSON() string { return r.JSON.raw }
-func (r *InviteProject) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
 
 type AdminOrganizationInviteDeleteResponse struct {
 	ID      string `json:"id" api:"required"`

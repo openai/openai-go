@@ -108,6 +108,8 @@ type Group struct {
 	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the group was created.
 	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The type of the group.
+	GroupType string `json:"group_type" api:"required"`
 	// Whether the group is managed through SCIM and controlled by your identity
 	// provider.
 	IsScimManaged bool `json:"is_scim_managed" api:"required"`
@@ -117,6 +119,7 @@ type Group struct {
 	JSON struct {
 		ID            respjson.Field
 		CreatedAt     respjson.Field
+		GroupType     respjson.Field
 		IsScimManaged respjson.Field
 		Name          respjson.Field
 		ExtraFields   map[string]respjson.Field
