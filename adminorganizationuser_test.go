@@ -53,7 +53,10 @@ func TestAdminOrganizationUserUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"user_id",
 		openai.AdminOrganizationUserUpdateParams{
-			Role: openai.AdminOrganizationUserUpdateParamsRoleOwner,
+			DeveloperPersona: openai.String("developer_persona"),
+			Role:             openai.String("role"),
+			RoleID:           openai.String("role_id"),
+			TechnicalLevel:   openai.String("technical_level"),
 		},
 	)
 	if err != nil {

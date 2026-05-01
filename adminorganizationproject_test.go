@@ -27,8 +27,9 @@ func TestAdminOrganizationProjectNewWithOptionalParams(t *testing.T) {
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Admin.Organization.Projects.New(context.TODO(), openai.AdminOrganizationProjectNewParams{
-		Name:      "name",
-		Geography: openai.AdminOrganizationProjectNewParamsGeographyUs,
+		Name:          "name",
+		ExternalKeyID: openai.String("external_key_id"),
+		Geography:     openai.String("geography"),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -62,7 +63,7 @@ func TestAdminOrganizationProjectGet(t *testing.T) {
 	}
 }
 
-func TestAdminOrganizationProjectUpdate(t *testing.T) {
+func TestAdminOrganizationProjectUpdateWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -79,7 +80,9 @@ func TestAdminOrganizationProjectUpdate(t *testing.T) {
 		context.TODO(),
 		"project_id",
 		openai.AdminOrganizationProjectUpdateParams{
-			Name: "name",
+			ExternalKeyID: openai.String("external_key_id"),
+			Geography:     openai.String("geography"),
+			Name:          openai.String("name"),
 		},
 	)
 	if err != nil {

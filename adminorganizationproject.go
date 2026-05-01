@@ -133,26 +133,27 @@ type Project struct {
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the project was created.
 	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
-	// The name of the project. This appears in reporting.
-	Name string `json:"name" api:"required"`
 	// The object type, which is always `organization.project`
 	Object constant.OrganizationProject `json:"object" default:"organization.project"`
-	// `active` or `archived`
-	//
-	// Any of "active", "archived".
-	Status ProjectStatus `json:"status" api:"required"`
 	// The Unix timestamp (in seconds) of when the project was archived or `null`.
 	ArchivedAt int64 `json:"archived_at" api:"nullable" format:"unixtime"`
+	// The external key associated with the project.
+	ExternalKeyID string `json:"external_key_id" api:"nullable"`
+	// The name of the project. This appears in reporting.
+	Name string `json:"name" api:"nullable"`
+	// `active` or `archived`
+	Status string `json:"status" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		CreatedAt   respjson.Field
-		Name        respjson.Field
-		Object      respjson.Field
-		Status      respjson.Field
-		ArchivedAt  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID            respjson.Field
+		CreatedAt     respjson.Field
+		Object        respjson.Field
+		ArchivedAt    respjson.Field
+		ExternalKeyID respjson.Field
+		Name          respjson.Field
+		Status        respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -162,24 +163,16 @@ func (r *Project) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// `active` or `archived`
-type ProjectStatus string
-
-const (
-	ProjectStatusActive   ProjectStatus = "active"
-	ProjectStatusArchived ProjectStatus = "archived"
-)
-
 type AdminOrganizationProjectNewParams struct {
 	// The friendly name of the project, this name appears in reports.
 	Name string `json:"name" api:"required"`
+	// External key ID to associate with the project.
+	ExternalKeyID param.Opt[string] `json:"external_key_id,omitzero"`
 	// Create the project with the specified data residency region. Your organization
 	// must have access to Data residency functionality in order to use. See
 	// [data residency controls](https://platform.openai.com/docs/guides/your-data#data-residency-controls)
 	// to review the functionality and limitations of setting this field.
-	//
-	// Any of "US", "EU", "JP", "IN", "KR", "CA", "AU", "SG".
-	Geography AdminOrganizationProjectNewParamsGeography `json:"geography,omitzero"`
+	Geography param.Opt[string] `json:"geography,omitzero"`
 	paramObj
 }
 
@@ -191,26 +184,13 @@ func (r *AdminOrganizationProjectNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Create the project with the specified data residency region. Your organization
-// must have access to Data residency functionality in order to use. See
-// [data residency controls](https://platform.openai.com/docs/guides/your-data#data-residency-controls)
-// to review the functionality and limitations of setting this field.
-type AdminOrganizationProjectNewParamsGeography string
-
-const (
-	AdminOrganizationProjectNewParamsGeographyUs AdminOrganizationProjectNewParamsGeography = "US"
-	AdminOrganizationProjectNewParamsGeographyEu AdminOrganizationProjectNewParamsGeography = "EU"
-	AdminOrganizationProjectNewParamsGeographyJp AdminOrganizationProjectNewParamsGeography = "JP"
-	AdminOrganizationProjectNewParamsGeographyIn AdminOrganizationProjectNewParamsGeography = "IN"
-	AdminOrganizationProjectNewParamsGeographyKr AdminOrganizationProjectNewParamsGeography = "KR"
-	AdminOrganizationProjectNewParamsGeographyCa AdminOrganizationProjectNewParamsGeography = "CA"
-	AdminOrganizationProjectNewParamsGeographyAu AdminOrganizationProjectNewParamsGeography = "AU"
-	AdminOrganizationProjectNewParamsGeographySg AdminOrganizationProjectNewParamsGeography = "SG"
-)
-
 type AdminOrganizationProjectUpdateParams struct {
+	// External key ID to associate with the project.
+	ExternalKeyID param.Opt[string] `json:"external_key_id,omitzero"`
+	// Geography for the project.
+	Geography param.Opt[string] `json:"geography,omitzero"`
 	// The updated name of the project, this name appears in reports.
-	Name string `json:"name" api:"required"`
+	Name param.Opt[string] `json:"name,omitzero"`
 	paramObj
 }
 

@@ -107,6 +107,8 @@ type ProjectGroup struct {
 	GroupID string `json:"group_id" api:"required"`
 	// Display name of the group.
 	GroupName string `json:"group_name" api:"required"`
+	// The type of the group.
+	GroupType string `json:"group_type" api:"required"`
 	// Always `project.group`.
 	Object constant.ProjectGroup `json:"object" default:"project.group"`
 	// Identifier of the project.
@@ -116,6 +118,7 @@ type ProjectGroup struct {
 		CreatedAt   respjson.Field
 		GroupID     respjson.Field
 		GroupName   respjson.Field
+		GroupType   respjson.Field
 		Object      respjson.Field
 		ProjectID   respjson.Field
 		ExtraFields map[string]respjson.Field
