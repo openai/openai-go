@@ -104,27 +104,24 @@ type AdminAPIKey struct {
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the API key was created
 	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
-	// The Unix timestamp (in seconds) of when the API key was last used
-	LastUsedAt int64 `json:"last_used_at" api:"required" format:"unixtime"`
-	// The name of the API key
-	Name string `json:"name" api:"required"`
 	// The object type, which is always `organization.admin_api_key`
 	Object constant.OrganizationAdminAPIKey `json:"object" default:"organization.admin_api_key"`
 	Owner  AdminAPIKeyOwner                 `json:"owner" api:"required"`
 	// The redacted value of the API key
 	RedactedValue string `json:"redacted_value" api:"required"`
-	// The value of the API key. Only shown on create.
-	Value string `json:"value"`
+	// The Unix timestamp (in seconds) of when the API key was last used
+	LastUsedAt int64 `json:"last_used_at" api:"nullable" format:"unixtime"`
+	// The name of the API key
+	Name string `json:"name" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID            respjson.Field
 		CreatedAt     respjson.Field
-		LastUsedAt    respjson.Field
-		Name          respjson.Field
 		Object        respjson.Field
 		Owner         respjson.Field
 		RedactedValue respjson.Field
-		Value         respjson.Field
+		LastUsedAt    respjson.Field
+		Name          respjson.Field
 		ExtraFields   map[string]respjson.Field
 		raw           string
 	} `json:"-"`

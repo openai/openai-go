@@ -13,7 +13,7 @@ import (
 	"github.com/openai/openai-go/v3/option"
 )
 
-func TestAdminOrganizationProjectUserNew(t *testing.T) {
+func TestAdminOrganizationProjectUserNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -30,8 +30,9 @@ func TestAdminOrganizationProjectUserNew(t *testing.T) {
 		context.TODO(),
 		"project_id",
 		openai.AdminOrganizationProjectUserNewParams{
-			Role:   openai.AdminOrganizationProjectUserNewParamsRoleOwner,
-			UserID: "user_id",
+			Role:   "role",
+			Email:  openai.String("email"),
+			UserID: openai.String("user_id"),
 		},
 	)
 	if err != nil {
@@ -70,7 +71,7 @@ func TestAdminOrganizationProjectUserGet(t *testing.T) {
 	}
 }
 
-func TestAdminOrganizationProjectUserUpdate(t *testing.T) {
+func TestAdminOrganizationProjectUserUpdateWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -88,7 +89,7 @@ func TestAdminOrganizationProjectUserUpdate(t *testing.T) {
 		"project_id",
 		"user_id",
 		openai.AdminOrganizationProjectUserUpdateParams{
-			Role: openai.AdminOrganizationProjectUserUpdateParamsRoleOwner,
+			Role: openai.String("role"),
 		},
 	)
 	if err != nil {

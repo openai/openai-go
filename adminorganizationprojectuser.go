@@ -143,24 +143,22 @@ type ProjectUser struct {
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the project was added.
 	AddedAt int64 `json:"added_at" api:"required" format:"unixtime"`
-	// The email address of the user
-	Email string `json:"email" api:"required"`
-	// The name of the user
-	Name string `json:"name" api:"required"`
 	// The object type, which is always `organization.project.user`
 	Object constant.OrganizationProjectUser `json:"object" default:"organization.project.user"`
 	// `owner` or `member`
-	//
-	// Any of "owner", "member".
-	Role ProjectUserRole `json:"role" api:"required"`
+	Role string `json:"role" api:"required"`
+	// The email address of the user
+	Email string `json:"email" api:"nullable"`
+	// The name of the user
+	Name string `json:"name" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
 		AddedAt     respjson.Field
-		Email       respjson.Field
-		Name        respjson.Field
 		Object      respjson.Field
 		Role        respjson.Field
+		Email       respjson.Field
+		Name        respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -171,14 +169,6 @@ func (r ProjectUser) RawJSON() string { return r.JSON.raw }
 func (r *ProjectUser) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-// `owner` or `member`
-type ProjectUserRole string
-
-const (
-	ProjectUserRoleOwner  ProjectUserRole = "owner"
-	ProjectUserRoleMember ProjectUserRole = "member"
-)
 
 type AdminOrganizationProjectUserDeleteResponse struct {
 	ID      string                                  `json:"id" api:"required"`
@@ -202,11 +192,11 @@ func (r *AdminOrganizationProjectUserDeleteResponse) UnmarshalJSON(data []byte) 
 
 type AdminOrganizationProjectUserNewParams struct {
 	// `owner` or `member`
-	//
-	// Any of "owner", "member".
-	Role AdminOrganizationProjectUserNewParamsRole `json:"role,omitzero" api:"required"`
+	Role string `json:"role" api:"required"`
+	// Email of the user to add.
+	Email param.Opt[string] `json:"email,omitzero"`
 	// The ID of the user.
-	UserID string `json:"user_id" api:"required"`
+	UserID param.Opt[string] `json:"user_id,omitzero"`
 	paramObj
 }
 
@@ -218,19 +208,9 @@ func (r *AdminOrganizationProjectUserNewParams) UnmarshalJSON(data []byte) error
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// `owner` or `member`
-type AdminOrganizationProjectUserNewParamsRole string
-
-const (
-	AdminOrganizationProjectUserNewParamsRoleOwner  AdminOrganizationProjectUserNewParamsRole = "owner"
-	AdminOrganizationProjectUserNewParamsRoleMember AdminOrganizationProjectUserNewParamsRole = "member"
-)
-
 type AdminOrganizationProjectUserUpdateParams struct {
 	// `owner` or `member`
-	//
-	// Any of "owner", "member".
-	Role AdminOrganizationProjectUserUpdateParamsRole `json:"role,omitzero" api:"required"`
+	Role param.Opt[string] `json:"role,omitzero"`
 	paramObj
 }
 
@@ -241,14 +221,6 @@ func (r AdminOrganizationProjectUserUpdateParams) MarshalJSON() (data []byte, er
 func (r *AdminOrganizationProjectUserUpdateParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-// `owner` or `member`
-type AdminOrganizationProjectUserUpdateParamsRole string
-
-const (
-	AdminOrganizationProjectUserUpdateParamsRoleOwner  AdminOrganizationProjectUserUpdateParamsRole = "owner"
-	AdminOrganizationProjectUserUpdateParamsRoleMember AdminOrganizationProjectUserUpdateParamsRole = "member"
-)
 
 type AdminOrganizationProjectUserListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place

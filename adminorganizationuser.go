@@ -110,26 +110,54 @@ type OrganizationUser struct {
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the user was added.
 	AddedAt int64 `json:"added_at" api:"required" format:"unixtime"`
-	// The email address of the user
-	Email string `json:"email" api:"required"`
-	// The name of the user
-	Name string `json:"name" api:"required"`
 	// The object type, which is always `organization.user`
 	Object constant.OrganizationUser `json:"object" default:"organization.user"`
+	// The Unix timestamp (in seconds) of the user's last API key usage.
+	APIKeyLastUsedAt int64 `json:"api_key_last_used_at" api:"nullable" format:"unixtime"`
+	// The Unix timestamp (in seconds) of when the user was created.
+	Created int64 `json:"created" format:"unixtime"`
+	// The developer persona metadata for the user.
+	DeveloperPersona string `json:"developer_persona" api:"nullable"`
+	// The email address of the user
+	Email string `json:"email" api:"nullable"`
+	// Whether this is the organization's default user.
+	IsDefault bool `json:"is_default"`
+	// Whether the user is an authorized purchaser for Scale Tier.
+	IsScaleTierAuthorizedPurchaser bool `json:"is_scale_tier_authorized_purchaser" api:"nullable"`
+	// Whether the user is managed through SCIM.
+	IsScimManaged bool `json:"is_scim_managed"`
+	// Whether the user is a service account.
+	IsServiceAccount bool `json:"is_service_account"`
+	// The name of the user
+	Name string `json:"name" api:"nullable"`
+	// Projects associated with the user, if included.
+	Projects OrganizationUserProjects `json:"projects" api:"nullable"`
 	// `owner` or `reader`
-	//
-	// Any of "owner", "reader".
-	Role OrganizationUserRole `json:"role" api:"required"`
+	Role string `json:"role" api:"nullable"`
+	// The technical level metadata for the user.
+	TechnicalLevel string `json:"technical_level" api:"nullable"`
+	// Nested user details.
+	User OrganizationUserUser `json:"user"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		AddedAt     respjson.Field
-		Email       respjson.Field
-		Name        respjson.Field
-		Object      respjson.Field
-		Role        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID                             respjson.Field
+		AddedAt                        respjson.Field
+		Object                         respjson.Field
+		APIKeyLastUsedAt               respjson.Field
+		Created                        respjson.Field
+		DeveloperPersona               respjson.Field
+		Email                          respjson.Field
+		IsDefault                      respjson.Field
+		IsScaleTierAuthorizedPurchaser respjson.Field
+		IsScimManaged                  respjson.Field
+		IsServiceAccount               respjson.Field
+		Name                           respjson.Field
+		Projects                       respjson.Field
+		Role                           respjson.Field
+		TechnicalLevel                 respjson.Field
+		User                           respjson.Field
+		ExtraFields                    map[string]respjson.Field
+		raw                            string
 	} `json:"-"`
 }
 
@@ -139,13 +167,75 @@ func (r *OrganizationUser) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// `owner` or `reader`
-type OrganizationUserRole string
+// Projects associated with the user, if included.
+type OrganizationUserProjects struct {
+	Data   []OrganizationUserProjectsData `json:"data" api:"required"`
+	Object constant.List                  `json:"object" default:"list"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
 
-const (
-	OrganizationUserRoleOwner  OrganizationUserRole = "owner"
-	OrganizationUserRoleReader OrganizationUserRole = "reader"
-)
+// Returns the unmodified JSON received from the API
+func (r OrganizationUserProjects) RawJSON() string { return r.JSON.raw }
+func (r *OrganizationUserProjects) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type OrganizationUserProjectsData struct {
+	ID   string `json:"id" api:"nullable"`
+	Name string `json:"name" api:"nullable"`
+	Role string `json:"role" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Name        respjson.Field
+		Role        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r OrganizationUserProjectsData) RawJSON() string { return r.JSON.raw }
+func (r *OrganizationUserProjectsData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Nested user details.
+type OrganizationUserUser struct {
+	ID       string        `json:"id" api:"required"`
+	Object   constant.User `json:"object" default:"user"`
+	Banned   bool          `json:"banned" api:"nullable"`
+	BannedAt int64         `json:"banned_at" api:"nullable" format:"unixtime"`
+	Email    string        `json:"email" api:"nullable"`
+	Enabled  bool          `json:"enabled" api:"nullable"`
+	Name     string        `json:"name" api:"nullable"`
+	Picture  string        `json:"picture" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Object      respjson.Field
+		Banned      respjson.Field
+		BannedAt    respjson.Field
+		Email       respjson.Field
+		Enabled     respjson.Field
+		Name        respjson.Field
+		Picture     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r OrganizationUserUser) RawJSON() string { return r.JSON.raw }
+func (r *OrganizationUserUser) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type AdminOrganizationUserDeleteResponse struct {
 	ID      string                           `json:"id" api:"required"`
@@ -168,10 +258,14 @@ func (r *AdminOrganizationUserDeleteResponse) UnmarshalJSON(data []byte) error {
 }
 
 type AdminOrganizationUserUpdateParams struct {
+	// Developer persona metadata.
+	DeveloperPersona param.Opt[string] `json:"developer_persona,omitzero"`
 	// `owner` or `reader`
-	//
-	// Any of "owner", "reader".
-	Role AdminOrganizationUserUpdateParamsRole `json:"role,omitzero"`
+	Role param.Opt[string] `json:"role,omitzero"`
+	// Role ID to assign to the user.
+	RoleID param.Opt[string] `json:"role_id,omitzero"`
+	// Technical level metadata.
+	TechnicalLevel param.Opt[string] `json:"technical_level,omitzero"`
 	paramObj
 }
 
@@ -182,14 +276,6 @@ func (r AdminOrganizationUserUpdateParams) MarshalJSON() (data []byte, err error
 func (r *AdminOrganizationUserUpdateParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-// `owner` or `reader`
-type AdminOrganizationUserUpdateParamsRole string
-
-const (
-	AdminOrganizationUserUpdateParamsRoleOwner  AdminOrganizationUserUpdateParamsRole = "owner"
-	AdminOrganizationUserUpdateParamsRoleReader AdminOrganizationUserUpdateParamsRole = "reader"
-)
 
 type AdminOrganizationUserListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place
