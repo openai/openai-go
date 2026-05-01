@@ -70,7 +70,7 @@ func (r *AdminOrganizationProjectRoleService) Update(ctx context.Context, projec
 }
 
 // Lists the roles configured for a project.
-func (r *AdminOrganizationProjectRoleService) List(ctx context.Context, projectID string, query AdminOrganizationProjectRoleListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Role], err error) {
+func (r *AdminOrganizationProjectRoleService) List(ctx context.Context, projectID string, query AdminOrganizationProjectRoleListParams, opts ...option.RequestOption) (res *pagination.NextCursorPage[Role], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -93,8 +93,8 @@ func (r *AdminOrganizationProjectRoleService) List(ctx context.Context, projectI
 }
 
 // Lists the roles configured for a project.
-func (r *AdminOrganizationProjectRoleService) ListAutoPaging(ctx context.Context, projectID string, query AdminOrganizationProjectRoleListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[Role] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, projectID, query, opts...))
+func (r *AdminOrganizationProjectRoleService) ListAutoPaging(ctx context.Context, projectID string, query AdminOrganizationProjectRoleListParams, opts ...option.RequestOption) *pagination.NextCursorPageAutoPager[Role] {
+	return pagination.NewNextCursorPageAutoPager(r.List(ctx, projectID, query, opts...))
 }
 
 // Deletes a custom role from a project.

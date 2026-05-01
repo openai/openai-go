@@ -40,18 +40,18 @@ func NewAdminOrganizationProjectAPIKeyService(opts ...option.RequestOption) (r A
 }
 
 // Retrieves an API key in the project.
-func (r *AdminOrganizationProjectAPIKeyService) Get(ctx context.Context, projectID string, keyID string, opts ...option.RequestOption) (res *ProjectAPIKey, err error) {
+func (r *AdminOrganizationProjectAPIKeyService) Get(ctx context.Context, projectID string, apiKeyID string, opts ...option.RequestOption) (res *ProjectAPIKey, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if projectID == "" {
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	if keyID == "" {
-		err = errors.New("missing required key_id parameter")
+	if apiKeyID == "" {
+		err = errors.New("missing required api_key_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/api_keys/%s", projectID, keyID)
+	path := fmt.Sprintf("organization/projects/%s/api_keys/%s", projectID, apiKeyID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -88,18 +88,18 @@ func (r *AdminOrganizationProjectAPIKeyService) ListAutoPaging(ctx context.Conte
 //
 // Returns confirmation of the key deletion, or an error if the key belonged to a
 // service account.
-func (r *AdminOrganizationProjectAPIKeyService) Delete(ctx context.Context, projectID string, keyID string, opts ...option.RequestOption) (res *AdminOrganizationProjectAPIKeyDeleteResponse, err error) {
+func (r *AdminOrganizationProjectAPIKeyService) Delete(ctx context.Context, projectID string, apiKeyID string, opts ...option.RequestOption) (res *AdminOrganizationProjectAPIKeyDeleteResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if projectID == "" {
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	if keyID == "" {
-		err = errors.New("missing required key_id parameter")
+	if apiKeyID == "" {
+		err = errors.New("missing required api_key_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/api_keys/%s", projectID, keyID)
+	path := fmt.Sprintf("organization/projects/%s/api_keys/%s", projectID, apiKeyID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -140,14 +140,14 @@ func (r *ProjectAPIKey) UnmarshalJSON(data []byte) error {
 }
 
 type ProjectAPIKeyOwner struct {
-	// Represents an individual service account in a project.
-	ServiceAccount ProjectServiceAccount `json:"service_account"`
+	// The service account that owns a project API key.
+	ServiceAccount ProjectAPIKeyOwnerServiceAccount `json:"service_account"`
 	// `user` or `service_account`
 	//
 	// Any of "user", "service_account".
 	Type string `json:"type"`
-	// Represents an individual user in a project.
-	User ProjectUser `json:"user"`
+	// The user that owns a project API key.
+	User ProjectAPIKeyOwnerUser `json:"user"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ServiceAccount respjson.Field
@@ -161,6 +161,63 @@ type ProjectAPIKeyOwner struct {
 // Returns the unmodified JSON received from the API
 func (r ProjectAPIKeyOwner) RawJSON() string { return r.JSON.raw }
 func (r *ProjectAPIKeyOwner) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The service account that owns a project API key.
+type ProjectAPIKeyOwnerServiceAccount struct {
+	// The identifier, which can be referenced in API endpoints
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp (in seconds) of when the service account was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The name of the service account.
+	Name string `json:"name" api:"required"`
+	// The service account's project role.
+	Role string `json:"role" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Name        respjson.Field
+		Role        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProjectAPIKeyOwnerServiceAccount) RawJSON() string { return r.JSON.raw }
+func (r *ProjectAPIKeyOwnerServiceAccount) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The user that owns a project API key.
+type ProjectAPIKeyOwnerUser struct {
+	// The identifier, which can be referenced in API endpoints
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp (in seconds) of when the user was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The email address of the user.
+	Email string `json:"email" api:"required"`
+	// The name of the user.
+	Name string `json:"name" api:"required"`
+	// The user's project role.
+	Role string `json:"role" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Email       respjson.Field
+		Name        respjson.Field
+		Role        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ProjectAPIKeyOwnerUser) RawJSON() string { return r.JSON.raw }
+func (r *ProjectAPIKeyOwnerUser) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

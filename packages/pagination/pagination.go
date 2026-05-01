@@ -327,3 +327,109 @@ func (r *ConversationCursorPageAutoPager[T]) Err() error {
 func (r *ConversationCursorPageAutoPager[T]) Index() int {
 	return r.run
 }
+
+type NextCursorPage[T any] struct {
+	Data    []T    `json:"data"`
+	HasMore bool   `json:"has_more"`
+	Next    string `json:"next" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		HasMore     respjson.Field
+		Next        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+	cfg *requestconfig.RequestConfig
+	res *http.Response
+}
+
+// Returns the unmodified JSON received from the API
+func (r NextCursorPage[T]) RawJSON() string { return r.JSON.raw }
+func (r *NextCursorPage[T]) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// GetNextPage returns the next page as defined by this pagination style. When
+// there is no next page, this function will return a 'nil' for the page value, but
+// will not return an error
+func (r *NextCursorPage[T]) GetNextPage() (res *NextCursorPage[T], err error) {
+	if len(r.Data) == 0 {
+		return nil, nil
+	}
+
+	if r.JSON.HasMore.Valid() && r.HasMore == false {
+		return nil, nil
+	}
+	next := r.Next
+	if len(next) == 0 {
+		return nil, nil
+	}
+	cfg := r.cfg.Clone(r.cfg.Context)
+	err = cfg.Apply(option.WithQuery("after", next))
+	if err != nil {
+		return nil, err
+	}
+	var raw *http.Response
+	cfg.ResponseInto = &raw
+	cfg.ResponseBodyInto = &res
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+func (r *NextCursorPage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res *http.Response) {
+	if r == nil {
+		r = &NextCursorPage[T]{}
+	}
+	r.cfg = cfg
+	r.res = res
+}
+
+type NextCursorPageAutoPager[T any] struct {
+	page *NextCursorPage[T]
+	cur  T
+	idx  int
+	run  int
+	err  error
+	paramObj
+}
+
+func NewNextCursorPageAutoPager[T any](page *NextCursorPage[T], err error) *NextCursorPageAutoPager[T] {
+	return &NextCursorPageAutoPager[T]{
+		page: page,
+		err:  err,
+	}
+}
+
+func (r *NextCursorPageAutoPager[T]) Next() bool {
+	if r.page == nil || len(r.page.Data) == 0 {
+		return false
+	}
+	if r.idx >= len(r.page.Data) {
+		r.idx = 0
+		r.page, r.err = r.page.GetNextPage()
+		if r.err != nil || r.page == nil || len(r.page.Data) == 0 {
+			return false
+		}
+	}
+	r.cur = r.page.Data[r.idx]
+	r.run += 1
+	r.idx += 1
+	return true
+}
+
+func (r *NextCursorPageAutoPager[T]) Current() T {
+	return r.cur
+}
+
+func (r *NextCursorPageAutoPager[T]) Err() error {
+	return r.err
+}
+
+func (r *NextCursorPageAutoPager[T]) Index() int {
+	return r.run
+}

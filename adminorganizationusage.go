@@ -143,13 +143,13 @@ func (r *AdminOrganizationUsageAudioSpeechesResponse) UnmarshalJSON(data []byte)
 type AdminOrganizationUsageAudioSpeechesResponseData struct {
 	EndTime   int64                                                        `json:"end_time" api:"required"`
 	Object    constant.Bucket                                              `json:"object" default:"bucket"`
-	Result    []AdminOrganizationUsageAudioSpeechesResponseDataResultUnion `json:"result" api:"required"`
+	Results   []AdminOrganizationUsageAudioSpeechesResponseDataResultUnion `json:"results" api:"required"`
 	StartTime int64                                                        `json:"start_time" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndTime     respjson.Field
 		Object      respjson.Field
-		Result      respjson.Field
+		Results     respjson.Field
 		StartTime   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -692,16 +692,16 @@ func (r *AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageV
 // The aggregated code interpreter sessions usage details of the specific time
 // bucket.
 type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult struct {
-	Object constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// The number of code interpreter sessions.
-	NumSessions int64 `json:"num_sessions"`
+	NumSessions int64                                                   `json:"num_sessions" api:"required"`
+	Object      constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
 		NumSessions respjson.Field
+		Object      respjson.Field
 		ProjectID   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -798,13 +798,13 @@ func (r *AdminOrganizationUsageAudioTranscriptionsResponse) UnmarshalJSON(data [
 type AdminOrganizationUsageAudioTranscriptionsResponseData struct {
 	EndTime   int64                                                              `json:"end_time" api:"required"`
 	Object    constant.Bucket                                                    `json:"object" default:"bucket"`
-	Result    []AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion `json:"result" api:"required"`
+	Results   []AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion `json:"results" api:"required"`
 	StartTime int64                                                              `json:"start_time" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndTime     respjson.Field
 		Object      respjson.Field
-		Result      respjson.Field
+		Results     respjson.Field
 		StartTime   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -1348,16 +1348,16 @@ func (r *AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganization
 // The aggregated code interpreter sessions usage details of the specific time
 // bucket.
 type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult struct {
-	Object constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// The number of code interpreter sessions.
-	NumSessions int64 `json:"num_sessions"`
+	NumSessions int64                                                   `json:"num_sessions" api:"required"`
+	Object      constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
 		NumSessions respjson.Field
+		Object      respjson.Field
 		ProjectID   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -1454,13 +1454,13 @@ func (r *AdminOrganizationUsageCodeInterpreterSessionsResponse) UnmarshalJSON(da
 type AdminOrganizationUsageCodeInterpreterSessionsResponseData struct {
 	EndTime   int64                                                                  `json:"end_time" api:"required"`
 	Object    constant.Bucket                                                        `json:"object" default:"bucket"`
-	Result    []AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion `json:"result" api:"required"`
+	Results   []AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion `json:"results" api:"required"`
 	StartTime int64                                                                  `json:"start_time" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndTime     respjson.Field
 		Object      respjson.Field
-		Result      respjson.Field
+		Results     respjson.Field
 		StartTime   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -2007,16 +2007,16 @@ func (r *AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganiza
 // The aggregated code interpreter sessions usage details of the specific time
 // bucket.
 type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult struct {
-	Object constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// The number of code interpreter sessions.
-	NumSessions int64 `json:"num_sessions"`
+	NumSessions int64                                                   `json:"num_sessions" api:"required"`
+	Object      constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
 		NumSessions respjson.Field
+		Object      respjson.Field
 		ProjectID   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -2113,13 +2113,13 @@ func (r *AdminOrganizationUsageCompletionsResponse) UnmarshalJSON(data []byte) e
 type AdminOrganizationUsageCompletionsResponseData struct {
 	EndTime   int64                                                      `json:"end_time" api:"required"`
 	Object    constant.Bucket                                            `json:"object" default:"bucket"`
-	Result    []AdminOrganizationUsageCompletionsResponseDataResultUnion `json:"result" api:"required"`
+	Results   []AdminOrganizationUsageCompletionsResponseDataResultUnion `json:"results" api:"required"`
 	StartTime int64                                                      `json:"start_time" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndTime     respjson.Field
 		Object      respjson.Field
-		Result      respjson.Field
+		Results     respjson.Field
 		StartTime   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -2660,16 +2660,16 @@ func (r *AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageVec
 // The aggregated code interpreter sessions usage details of the specific time
 // bucket.
 type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult struct {
-	Object constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// The number of code interpreter sessions.
-	NumSessions int64 `json:"num_sessions"`
+	NumSessions int64                                                   `json:"num_sessions" api:"required"`
+	Object      constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
 		NumSessions respjson.Field
+		Object      respjson.Field
 		ProjectID   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -2766,13 +2766,13 @@ func (r *AdminOrganizationUsageCostsResponse) UnmarshalJSON(data []byte) error {
 type AdminOrganizationUsageCostsResponseData struct {
 	EndTime   int64                                                `json:"end_time" api:"required"`
 	Object    constant.Bucket                                      `json:"object" default:"bucket"`
-	Result    []AdminOrganizationUsageCostsResponseDataResultUnion `json:"result" api:"required"`
+	Results   []AdminOrganizationUsageCostsResponseDataResultUnion `json:"results" api:"required"`
 	StartTime int64                                                `json:"start_time" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndTime     respjson.Field
 		Object      respjson.Field
-		Result      respjson.Field
+		Results     respjson.Field
 		StartTime   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -3312,16 +3312,16 @@ func (r *AdminOrganizationUsageCostsResponseDataResultOrganizationUsageVectorSto
 // The aggregated code interpreter sessions usage details of the specific time
 // bucket.
 type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult struct {
-	Object constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// The number of code interpreter sessions.
-	NumSessions int64 `json:"num_sessions"`
+	NumSessions int64                                                   `json:"num_sessions" api:"required"`
+	Object      constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
 		NumSessions respjson.Field
+		Object      respjson.Field
 		ProjectID   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -3418,13 +3418,13 @@ func (r *AdminOrganizationUsageEmbeddingsResponse) UnmarshalJSON(data []byte) er
 type AdminOrganizationUsageEmbeddingsResponseData struct {
 	EndTime   int64                                                     `json:"end_time" api:"required"`
 	Object    constant.Bucket                                           `json:"object" default:"bucket"`
-	Result    []AdminOrganizationUsageEmbeddingsResponseDataResultUnion `json:"result" api:"required"`
+	Results   []AdminOrganizationUsageEmbeddingsResponseDataResultUnion `json:"results" api:"required"`
 	StartTime int64                                                     `json:"start_time" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndTime     respjson.Field
 		Object      respjson.Field
-		Result      respjson.Field
+		Results     respjson.Field
 		StartTime   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -3965,16 +3965,16 @@ func (r *AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageVect
 // The aggregated code interpreter sessions usage details of the specific time
 // bucket.
 type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult struct {
-	Object constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// The number of code interpreter sessions.
-	NumSessions int64 `json:"num_sessions"`
+	NumSessions int64                                                   `json:"num_sessions" api:"required"`
+	Object      constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
 		NumSessions respjson.Field
+		Object      respjson.Field
 		ProjectID   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -4071,13 +4071,13 @@ func (r *AdminOrganizationUsageImagesResponse) UnmarshalJSON(data []byte) error 
 type AdminOrganizationUsageImagesResponseData struct {
 	EndTime   int64                                                 `json:"end_time" api:"required"`
 	Object    constant.Bucket                                       `json:"object" default:"bucket"`
-	Result    []AdminOrganizationUsageImagesResponseDataResultUnion `json:"result" api:"required"`
+	Results   []AdminOrganizationUsageImagesResponseDataResultUnion `json:"results" api:"required"`
 	StartTime int64                                                 `json:"start_time" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndTime     respjson.Field
 		Object      respjson.Field
-		Result      respjson.Field
+		Results     respjson.Field
 		StartTime   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -4617,16 +4617,16 @@ func (r *AdminOrganizationUsageImagesResponseDataResultOrganizationUsageVectorSt
 // The aggregated code interpreter sessions usage details of the specific time
 // bucket.
 type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult struct {
-	Object constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// The number of code interpreter sessions.
-	NumSessions int64 `json:"num_sessions"`
+	NumSessions int64                                                   `json:"num_sessions" api:"required"`
+	Object      constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
 		NumSessions respjson.Field
+		Object      respjson.Field
 		ProjectID   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -4723,13 +4723,13 @@ func (r *AdminOrganizationUsageModerationsResponse) UnmarshalJSON(data []byte) e
 type AdminOrganizationUsageModerationsResponseData struct {
 	EndTime   int64                                                      `json:"end_time" api:"required"`
 	Object    constant.Bucket                                            `json:"object" default:"bucket"`
-	Result    []AdminOrganizationUsageModerationsResponseDataResultUnion `json:"result" api:"required"`
+	Results   []AdminOrganizationUsageModerationsResponseDataResultUnion `json:"results" api:"required"`
 	StartTime int64                                                      `json:"start_time" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndTime     respjson.Field
 		Object      respjson.Field
-		Result      respjson.Field
+		Results     respjson.Field
 		StartTime   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -5270,16 +5270,16 @@ func (r *AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageVec
 // The aggregated code interpreter sessions usage details of the specific time
 // bucket.
 type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult struct {
-	Object constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// The number of code interpreter sessions.
-	NumSessions int64 `json:"num_sessions"`
+	NumSessions int64                                                   `json:"num_sessions" api:"required"`
+	Object      constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
 		NumSessions respjson.Field
+		Object      respjson.Field
 		ProjectID   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -5376,13 +5376,13 @@ func (r *AdminOrganizationUsageVectorStoresResponse) UnmarshalJSON(data []byte) 
 type AdminOrganizationUsageVectorStoresResponseData struct {
 	EndTime   int64                                                       `json:"end_time" api:"required"`
 	Object    constant.Bucket                                             `json:"object" default:"bucket"`
-	Result    []AdminOrganizationUsageVectorStoresResponseDataResultUnion `json:"result" api:"required"`
+	Results   []AdminOrganizationUsageVectorStoresResponseDataResultUnion `json:"results" api:"required"`
 	StartTime int64                                                       `json:"start_time" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndTime     respjson.Field
 		Object      respjson.Field
-		Result      respjson.Field
+		Results     respjson.Field
 		StartTime   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -5925,16 +5925,16 @@ func (r *AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageVe
 // The aggregated code interpreter sessions usage details of the specific time
 // bucket.
 type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCodeInterpreterSessionsResult struct {
-	Object constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// The number of code interpreter sessions.
-	NumSessions int64 `json:"num_sessions"`
+	NumSessions int64                                                   `json:"num_sessions" api:"required"`
+	Object      constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// usage result.
 	ProjectID string `json:"project_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
 		NumSessions respjson.Field
+		Object      respjson.Field
 		ProjectID   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string

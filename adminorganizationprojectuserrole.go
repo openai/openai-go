@@ -57,7 +57,7 @@ func (r *AdminOrganizationProjectUserRoleService) New(ctx context.Context, proje
 }
 
 // Lists the project roles assigned to a user within a project.
-func (r *AdminOrganizationProjectUserRoleService) List(ctx context.Context, projectID string, userID string, query AdminOrganizationProjectUserRoleListParams, opts ...option.RequestOption) (res *pagination.CursorPage[AdminOrganizationProjectUserRoleListResponse], err error) {
+func (r *AdminOrganizationProjectUserRoleService) List(ctx context.Context, projectID string, userID string, query AdminOrganizationProjectUserRoleListParams, opts ...option.RequestOption) (res *pagination.NextCursorPage[AdminOrganizationProjectUserRoleListResponse], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -84,8 +84,8 @@ func (r *AdminOrganizationProjectUserRoleService) List(ctx context.Context, proj
 }
 
 // Lists the project roles assigned to a user within a project.
-func (r *AdminOrganizationProjectUserRoleService) ListAutoPaging(ctx context.Context, projectID string, userID string, query AdminOrganizationProjectUserRoleListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[AdminOrganizationProjectUserRoleListResponse] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, projectID, userID, query, opts...))
+func (r *AdminOrganizationProjectUserRoleService) ListAutoPaging(ctx context.Context, projectID string, userID string, query AdminOrganizationProjectUserRoleListParams, opts ...option.RequestOption) *pagination.NextCursorPageAutoPager[AdminOrganizationProjectUserRoleListResponse] {
+	return pagination.NewNextCursorPageAutoPager(r.List(ctx, projectID, userID, query, opts...))
 }
 
 // Unassigns a project role from a user within a project.

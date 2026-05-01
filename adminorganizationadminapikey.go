@@ -17,6 +17,7 @@ import (
 	"github.com/openai/openai-go/v3/packages/pagination"
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // AdminOrganizationAdminAPIKeyService contains methods and other services that
@@ -39,7 +40,7 @@ func NewAdminOrganizationAdminAPIKeyService(opts ...option.RequestOption) (r Adm
 }
 
 // Create an organization admin API key
-func (r *AdminOrganizationAdminAPIKeyService) New(ctx context.Context, body AdminOrganizationAdminAPIKeyNewParams, opts ...option.RequestOption) (res *AdminAPIKey, err error) {
+func (r *AdminOrganizationAdminAPIKeyService) New(ctx context.Context, body AdminOrganizationAdminAPIKeyNewParams, opts ...option.RequestOption) (res *AdminOrganizationAdminAPIKeyNewResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "organization/admin_api_keys"
@@ -108,8 +109,8 @@ type AdminAPIKey struct {
 	// The name of the API key
 	Name string `json:"name" api:"required"`
 	// The object type, which is always `organization.admin_api_key`
-	Object string           `json:"object" api:"required"`
-	Owner  AdminAPIKeyOwner `json:"owner" api:"required"`
+	Object constant.OrganizationAdminAPIKey `json:"object" default:"organization.admin_api_key"`
+	Owner  AdminAPIKeyOwner                 `json:"owner" api:"required"`
 	// The redacted value of the API key
 	RedactedValue string `json:"redacted_value" api:"required"`
 	// The value of the API key. Only shown on create.
@@ -167,10 +168,29 @@ func (r *AdminAPIKeyOwner) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Represents an individual Admin API key in an org.
+type AdminOrganizationAdminAPIKeyNewResponse struct {
+	// The value of the API key. Only shown on create.
+	Value string `json:"value" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+	AdminAPIKey
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAdminAPIKeyNewResponse) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationAdminAPIKeyNewResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type AdminOrganizationAdminAPIKeyDeleteResponse struct {
-	ID      string `json:"id"`
-	Deleted bool   `json:"deleted"`
-	Object  string `json:"object"`
+	ID      string                                  `json:"id" api:"required"`
+	Deleted bool                                    `json:"deleted" api:"required"`
+	Object  constant.OrganizationAdminAPIKeyDeleted `json:"object" default:"organization.admin_api_key.deleted"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field

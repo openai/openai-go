@@ -57,7 +57,7 @@ func (r *AdminOrganizationProjectGroupRoleService) New(ctx context.Context, proj
 }
 
 // Lists the project roles assigned to a group within a project.
-func (r *AdminOrganizationProjectGroupRoleService) List(ctx context.Context, projectID string, groupID string, query AdminOrganizationProjectGroupRoleListParams, opts ...option.RequestOption) (res *pagination.CursorPage[AdminOrganizationProjectGroupRoleListResponse], err error) {
+func (r *AdminOrganizationProjectGroupRoleService) List(ctx context.Context, projectID string, groupID string, query AdminOrganizationProjectGroupRoleListParams, opts ...option.RequestOption) (res *pagination.NextCursorPage[AdminOrganizationProjectGroupRoleListResponse], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -84,8 +84,8 @@ func (r *AdminOrganizationProjectGroupRoleService) List(ctx context.Context, pro
 }
 
 // Lists the project roles assigned to a group within a project.
-func (r *AdminOrganizationProjectGroupRoleService) ListAutoPaging(ctx context.Context, projectID string, groupID string, query AdminOrganizationProjectGroupRoleListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[AdminOrganizationProjectGroupRoleListResponse] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, projectID, groupID, query, opts...))
+func (r *AdminOrganizationProjectGroupRoleService) ListAutoPaging(ctx context.Context, projectID string, groupID string, query AdminOrganizationProjectGroupRoleListParams, opts ...option.RequestOption) *pagination.NextCursorPageAutoPager[AdminOrganizationProjectGroupRoleListResponse] {
+	return pagination.NewNextCursorPageAutoPager(r.List(ctx, projectID, groupID, query, opts...))
 }
 
 // Unassigns a project role from a group within a project.

@@ -36,7 +36,7 @@ func TestAdminOrganizationUserGet(t *testing.T) {
 	}
 }
 
-func TestAdminOrganizationUserUpdate(t *testing.T) {
+func TestAdminOrganizationUserUpdateWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
