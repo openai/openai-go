@@ -103,12 +103,12 @@ func (r *AdminOrganizationInviteService) Delete(ctx context.Context, inviteID st
 type Invite struct {
 	// The identifier, which can be referenced in API endpoints
 	ID string `json:"id" api:"required"`
+	// The Unix timestamp (in seconds) of when the invite was sent.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The email address of the individual to whom the invite was sent
 	Email string `json:"email" api:"required"`
 	// The Unix timestamp (in seconds) of when the invite expires.
 	ExpiresAt int64 `json:"expires_at" api:"required" format:"unixtime"`
-	// The Unix timestamp (in seconds) of when the invite was sent.
-	InvitedAt int64 `json:"invited_at" api:"required" format:"unixtime"`
 	// The object type, which is always `organization.invite`
 	Object constant.OrganizationInvite `json:"object" default:"organization.invite"`
 	// `owner` or `reader`
@@ -120,15 +120,15 @@ type Invite struct {
 	// Any of "accepted", "expired", "pending".
 	Status InviteStatus `json:"status" api:"required"`
 	// The Unix timestamp (in seconds) of when the invite was accepted.
-	AcceptedAt int64 `json:"accepted_at" format:"unixtime"`
+	AcceptedAt int64 `json:"accepted_at" api:"nullable" format:"unixtime"`
 	// The projects that were granted membership upon acceptance of the invite.
 	Projects []InviteProject `json:"projects"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
+		CreatedAt   respjson.Field
 		Email       respjson.Field
 		ExpiresAt   respjson.Field
-		InvitedAt   respjson.Field
 		Object      respjson.Field
 		Role        respjson.Field
 		Status      respjson.Field

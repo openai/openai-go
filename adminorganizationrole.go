@@ -62,7 +62,7 @@ func (r *AdminOrganizationRoleService) Update(ctx context.Context, roleID string
 }
 
 // Lists the roles configured for the organization.
-func (r *AdminOrganizationRoleService) List(ctx context.Context, query AdminOrganizationRoleListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Role], err error) {
+func (r *AdminOrganizationRoleService) List(ctx context.Context, query AdminOrganizationRoleListParams, opts ...option.RequestOption) (res *pagination.NextCursorPage[Role], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -81,8 +81,8 @@ func (r *AdminOrganizationRoleService) List(ctx context.Context, query AdminOrga
 }
 
 // Lists the roles configured for the organization.
-func (r *AdminOrganizationRoleService) ListAutoPaging(ctx context.Context, query AdminOrganizationRoleListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[Role] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
+func (r *AdminOrganizationRoleService) ListAutoPaging(ctx context.Context, query AdminOrganizationRoleListParams, opts ...option.RequestOption) *pagination.NextCursorPageAutoPager[Role] {
+	return pagination.NewNextCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
 // Deletes a custom role from the organization.

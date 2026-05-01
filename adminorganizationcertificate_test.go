@@ -27,8 +27,8 @@ func TestAdminOrganizationCertificateNewWithOptionalParams(t *testing.T) {
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Admin.Organization.Certificates.New(context.TODO(), openai.AdminOrganizationCertificateNewParams{
-		Content: "content",
-		Name:    openai.String("name"),
+		Certificate: "certificate",
+		Name:        openai.String("name"),
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -68,7 +68,7 @@ func TestAdminOrganizationCertificateGetWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestAdminOrganizationCertificateUpdate(t *testing.T) {
+func TestAdminOrganizationCertificateUpdateWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -85,7 +85,7 @@ func TestAdminOrganizationCertificateUpdate(t *testing.T) {
 		context.TODO(),
 		"certificate_id",
 		openai.AdminOrganizationCertificateUpdateParams{
-			Name: "name",
+			Name: openai.String("name"),
 		},
 	)
 	if err != nil {

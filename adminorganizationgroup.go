@@ -66,7 +66,7 @@ func (r *AdminOrganizationGroupService) Update(ctx context.Context, groupID stri
 }
 
 // Lists all groups in the organization.
-func (r *AdminOrganizationGroupService) List(ctx context.Context, query AdminOrganizationGroupListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Group], err error) {
+func (r *AdminOrganizationGroupService) List(ctx context.Context, query AdminOrganizationGroupListParams, opts ...option.RequestOption) (res *pagination.NextCursorPage[Group], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -85,8 +85,8 @@ func (r *AdminOrganizationGroupService) List(ctx context.Context, query AdminOrg
 }
 
 // Lists all groups in the organization.
-func (r *AdminOrganizationGroupService) ListAutoPaging(ctx context.Context, query AdminOrganizationGroupListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[Group] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
+func (r *AdminOrganizationGroupService) ListAutoPaging(ctx context.Context, query AdminOrganizationGroupListParams, opts ...option.RequestOption) *pagination.NextCursorPageAutoPager[Group] {
+	return pagination.NewNextCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
 // Deletes a group from the organization.

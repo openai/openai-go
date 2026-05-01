@@ -16,6 +16,8 @@ import (
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/pagination"
 	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
 )
 
 // AdminOrganizationProjectCertificateService contains methods and other services
@@ -39,7 +41,7 @@ func NewAdminOrganizationProjectCertificateService(opts ...option.RequestOption)
 }
 
 // List certificates for this project.
-func (r *AdminOrganizationProjectCertificateService) List(ctx context.Context, projectID string, query AdminOrganizationProjectCertificateListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[Certificate], err error) {
+func (r *AdminOrganizationProjectCertificateService) List(ctx context.Context, projectID string, query AdminOrganizationProjectCertificateListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[AdminOrganizationProjectCertificateListResponse], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -62,14 +64,14 @@ func (r *AdminOrganizationProjectCertificateService) List(ctx context.Context, p
 }
 
 // List certificates for this project.
-func (r *AdminOrganizationProjectCertificateService) ListAutoPaging(ctx context.Context, projectID string, query AdminOrganizationProjectCertificateListParams, opts ...option.RequestOption) *pagination.ConversationCursorPageAutoPager[Certificate] {
+func (r *AdminOrganizationProjectCertificateService) ListAutoPaging(ctx context.Context, projectID string, query AdminOrganizationProjectCertificateListParams, opts ...option.RequestOption) *pagination.ConversationCursorPageAutoPager[AdminOrganizationProjectCertificateListResponse] {
 	return pagination.NewConversationCursorPageAutoPager(r.List(ctx, projectID, query, opts...))
 }
 
 // Activate certificates at the project level.
 //
 // You can atomically and idempotently activate up to 10 certificates at a time.
-func (r *AdminOrganizationProjectCertificateService) Activate(ctx context.Context, projectID string, body AdminOrganizationProjectCertificateActivateParams, opts ...option.RequestOption) (res *pagination.Page[Certificate], err error) {
+func (r *AdminOrganizationProjectCertificateService) Activate(ctx context.Context, projectID string, body AdminOrganizationProjectCertificateActivateParams, opts ...option.RequestOption) (res *pagination.Page[AdminOrganizationProjectCertificateActivateResponse], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -94,13 +96,13 @@ func (r *AdminOrganizationProjectCertificateService) Activate(ctx context.Contex
 // Activate certificates at the project level.
 //
 // You can atomically and idempotently activate up to 10 certificates at a time.
-func (r *AdminOrganizationProjectCertificateService) ActivateAutoPaging(ctx context.Context, projectID string, body AdminOrganizationProjectCertificateActivateParams, opts ...option.RequestOption) *pagination.PageAutoPager[Certificate] {
+func (r *AdminOrganizationProjectCertificateService) ActivateAutoPaging(ctx context.Context, projectID string, body AdminOrganizationProjectCertificateActivateParams, opts ...option.RequestOption) *pagination.PageAutoPager[AdminOrganizationProjectCertificateActivateResponse] {
 	return pagination.NewPageAutoPager(r.Activate(ctx, projectID, body, opts...))
 }
 
 // Deactivate certificates at the project level. You can atomically and
 // idempotently deactivate up to 10 certificates at a time.
-func (r *AdminOrganizationProjectCertificateService) Deactivate(ctx context.Context, projectID string, body AdminOrganizationProjectCertificateDeactivateParams, opts ...option.RequestOption) (res *pagination.Page[Certificate], err error) {
+func (r *AdminOrganizationProjectCertificateService) Deactivate(ctx context.Context, projectID string, body AdminOrganizationProjectCertificateDeactivateParams, opts ...option.RequestOption) (res *pagination.Page[AdminOrganizationProjectCertificateDeactivateResponse], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -124,8 +126,170 @@ func (r *AdminOrganizationProjectCertificateService) Deactivate(ctx context.Cont
 
 // Deactivate certificates at the project level. You can atomically and
 // idempotently deactivate up to 10 certificates at a time.
-func (r *AdminOrganizationProjectCertificateService) DeactivateAutoPaging(ctx context.Context, projectID string, body AdminOrganizationProjectCertificateDeactivateParams, opts ...option.RequestOption) *pagination.PageAutoPager[Certificate] {
+func (r *AdminOrganizationProjectCertificateService) DeactivateAutoPaging(ctx context.Context, projectID string, body AdminOrganizationProjectCertificateDeactivateParams, opts ...option.RequestOption) *pagination.PageAutoPager[AdminOrganizationProjectCertificateDeactivateResponse] {
 	return pagination.NewPageAutoPager(r.Deactivate(ctx, projectID, body, opts...))
+}
+
+// Represents an individual certificate configured at the project level.
+type AdminOrganizationProjectCertificateListResponse struct {
+	// The identifier, which can be referenced in API endpoints
+	ID string `json:"id" api:"required"`
+	// Whether the certificate is currently active at the project level.
+	Active             bool                                                              `json:"active" api:"required"`
+	CertificateDetails AdminOrganizationProjectCertificateListResponseCertificateDetails `json:"certificate_details" api:"required"`
+	// The Unix timestamp (in seconds) of when the certificate was uploaded.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The name of the certificate.
+	Name string `json:"name" api:"required"`
+	// The object type, which is always `organization.project.certificate`.
+	Object constant.OrganizationProjectCertificate `json:"object" default:"organization.project.certificate"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		Active             respjson.Field
+		CertificateDetails respjson.Field
+		CreatedAt          respjson.Field
+		Name               respjson.Field
+		Object             respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationProjectCertificateListResponse) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationProjectCertificateListResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AdminOrganizationProjectCertificateListResponseCertificateDetails struct {
+	// The Unix timestamp (in seconds) of when the certificate expires.
+	ExpiresAt int64 `json:"expires_at" format:"unixtime"`
+	// The Unix timestamp (in seconds) of when the certificate becomes valid.
+	ValidAt int64 `json:"valid_at" format:"unixtime"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ExpiresAt   respjson.Field
+		ValidAt     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationProjectCertificateListResponseCertificateDetails) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationProjectCertificateListResponseCertificateDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Represents an individual certificate configured at the project level.
+type AdminOrganizationProjectCertificateActivateResponse struct {
+	// The identifier, which can be referenced in API endpoints
+	ID string `json:"id" api:"required"`
+	// Whether the certificate is currently active at the project level.
+	Active             bool                                                                  `json:"active" api:"required"`
+	CertificateDetails AdminOrganizationProjectCertificateActivateResponseCertificateDetails `json:"certificate_details" api:"required"`
+	// The Unix timestamp (in seconds) of when the certificate was uploaded.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The name of the certificate.
+	Name string `json:"name" api:"required"`
+	// The object type, which is always `organization.project.certificate`.
+	Object constant.OrganizationProjectCertificate `json:"object" default:"organization.project.certificate"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		Active             respjson.Field
+		CertificateDetails respjson.Field
+		CreatedAt          respjson.Field
+		Name               respjson.Field
+		Object             respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationProjectCertificateActivateResponse) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationProjectCertificateActivateResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AdminOrganizationProjectCertificateActivateResponseCertificateDetails struct {
+	// The Unix timestamp (in seconds) of when the certificate expires.
+	ExpiresAt int64 `json:"expires_at" format:"unixtime"`
+	// The Unix timestamp (in seconds) of when the certificate becomes valid.
+	ValidAt int64 `json:"valid_at" format:"unixtime"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ExpiresAt   respjson.Field
+		ValidAt     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationProjectCertificateActivateResponseCertificateDetails) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationProjectCertificateActivateResponseCertificateDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Represents an individual certificate configured at the project level.
+type AdminOrganizationProjectCertificateDeactivateResponse struct {
+	// The identifier, which can be referenced in API endpoints
+	ID string `json:"id" api:"required"`
+	// Whether the certificate is currently active at the project level.
+	Active             bool                                                                    `json:"active" api:"required"`
+	CertificateDetails AdminOrganizationProjectCertificateDeactivateResponseCertificateDetails `json:"certificate_details" api:"required"`
+	// The Unix timestamp (in seconds) of when the certificate was uploaded.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The name of the certificate.
+	Name string `json:"name" api:"required"`
+	// The object type, which is always `organization.project.certificate`.
+	Object constant.OrganizationProjectCertificate `json:"object" default:"organization.project.certificate"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		Active             respjson.Field
+		CertificateDetails respjson.Field
+		CreatedAt          respjson.Field
+		Name               respjson.Field
+		Object             respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationProjectCertificateDeactivateResponse) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationProjectCertificateDeactivateResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AdminOrganizationProjectCertificateDeactivateResponseCertificateDetails struct {
+	// The Unix timestamp (in seconds) of when the certificate expires.
+	ExpiresAt int64 `json:"expires_at" format:"unixtime"`
+	// The Unix timestamp (in seconds) of when the certificate becomes valid.
+	ValidAt int64 `json:"valid_at" format:"unixtime"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ExpiresAt   respjson.Field
+		ValidAt     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationProjectCertificateDeactivateResponseCertificateDetails) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationProjectCertificateDeactivateResponseCertificateDetails) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type AdminOrganizationProjectCertificateListParams struct {

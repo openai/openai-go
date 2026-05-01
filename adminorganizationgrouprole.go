@@ -53,7 +53,7 @@ func (r *AdminOrganizationGroupRoleService) New(ctx context.Context, groupID str
 }
 
 // Lists the organization roles assigned to a group within the organization.
-func (r *AdminOrganizationGroupRoleService) List(ctx context.Context, groupID string, query AdminOrganizationGroupRoleListParams, opts ...option.RequestOption) (res *pagination.CursorPage[AdminOrganizationGroupRoleListResponse], err error) {
+func (r *AdminOrganizationGroupRoleService) List(ctx context.Context, groupID string, query AdminOrganizationGroupRoleListParams, opts ...option.RequestOption) (res *pagination.NextCursorPage[AdminOrganizationGroupRoleListResponse], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -76,8 +76,8 @@ func (r *AdminOrganizationGroupRoleService) List(ctx context.Context, groupID st
 }
 
 // Lists the organization roles assigned to a group within the organization.
-func (r *AdminOrganizationGroupRoleService) ListAutoPaging(ctx context.Context, groupID string, query AdminOrganizationGroupRoleListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[AdminOrganizationGroupRoleListResponse] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, groupID, query, opts...))
+func (r *AdminOrganizationGroupRoleService) ListAutoPaging(ctx context.Context, groupID string, query AdminOrganizationGroupRoleListParams, opts ...option.RequestOption) *pagination.NextCursorPageAutoPager[AdminOrganizationGroupRoleListResponse] {
+	return pagination.NewNextCursorPageAutoPager(r.List(ctx, groupID, query, opts...))
 }
 
 // Unassigns an organization role from a group within the organization.
