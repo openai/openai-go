@@ -1033,6 +1033,8 @@ type ChatCompletionContentPartFileFileParam struct {
 	FileData param.Opt[string] `json:"file_data,omitzero"`
 	// The ID of an uploaded file to use as input.
 	FileID param.Opt[string] `json:"file_id,omitzero"`
+	// The URL of the file to use as input.
+	FileURL param.Opt[string] `json:"file_url,omitzero"`
 	// The name of the file, used when passing the file to the model as a string.
 	Filename param.Opt[string] `json:"filename,omitzero"`
 	paramObj
