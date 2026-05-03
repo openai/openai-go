@@ -4,8 +4,10 @@ package openai_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/openai/openai-go/v3"
@@ -13,6 +15,25 @@ import (
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/shared"
 )
+
+func TestFileContentPartSupportsFileURL(t *testing.T) {
+	part := openai.FileContentPart(openai.ChatCompletionContentPartFileFileParam{
+		FileURL: openai.String("https://example.com/document.pdf"),
+	})
+
+	raw, err := json.Marshal(part)
+	if err != nil {
+		t.Fatalf("marshal should succeed: %v", err)
+	}
+
+	serialized := string(raw)
+	if !strings.Contains(serialized, "\"type\":\"file\"") {
+		t.Fatalf("serialized content part should contain file type, got: %s", serialized)
+	}
+	if !strings.Contains(serialized, "\"file_url\":\"https://example.com/document.pdf\"") {
+		t.Fatalf("serialized content part should contain file_url, got: %s", serialized)
+	}
+}
 
 func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
