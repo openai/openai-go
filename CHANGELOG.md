@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.34.1 (2026-05-04)
+
+Full Changelog: [v3.34.0...v3.34.1](https://github.com/openai/openai-go/compare/v3.34.0...v3.34.1)
+
+### Bug Fixes
+
+* **types:** add format tags for URI and timestamp fields across models ([a6c2198](https://github.com/openai/openai-go/commit/a6c219806da98fa140b837a1063d3ee7f5f51e8d))
+
 ## 3.34.0 (2026-05-01)
 
 Full Changelog: [v3.33.0...v3.34.0](https://github.com/openai/openai-go/compare/v3.33.0...v3.34.0)

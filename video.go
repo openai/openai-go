@@ -187,7 +187,7 @@ func (r *VideoService) Remix(ctx context.Context, videoID string, body VideoRemi
 type ImageInputReferenceParam struct {
 	FileID param.Opt[string] `json:"file_id,omitzero"`
 	// A fully qualified URL or base64-encoded data URL.
-	ImageURL param.Opt[string] `json:"image_url,omitzero"`
+	ImageURL param.Opt[string] `json:"image_url,omitzero" format:"uri"`
 	paramObj
 }
 
@@ -204,13 +204,13 @@ type Video struct {
 	// Unique identifier for the video job.
 	ID string `json:"id" api:"required"`
 	// Unix timestamp (seconds) for when the job completed, if finished.
-	CompletedAt int64 `json:"completed_at" api:"required"`
+	CompletedAt int64 `json:"completed_at" api:"required" format:"unixtime"`
 	// Unix timestamp (seconds) for when the job was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Error payload that explains why generation failed, if applicable.
 	Error VideoCreateError `json:"error" api:"required"`
 	// Unix timestamp (seconds) for when the downloadable assets expire, if set.
-	ExpiresAt int64 `json:"expires_at" api:"required"`
+	ExpiresAt int64 `json:"expires_at" api:"required" format:"unixtime"`
 	// The video generation model that produced the job.
 	Model VideoModel `json:"model" api:"required"`
 	// The object type, which is always `video`.
@@ -344,7 +344,7 @@ type VideoNewCharacterResponse struct {
 	// Identifier for the character creation cameo.
 	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the character was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Display name for the character.
 	Name string `json:"name" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -367,7 +367,7 @@ type VideoGetCharacterResponse struct {
 	// Identifier for the character creation cameo.
 	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the character was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Display name for the character.
 	Name string `json:"name" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
