@@ -218,7 +218,7 @@ type CompactedResponse struct {
 	// The unique identifier for the compacted response.
 	ID string `json:"id" api:"required"`
 	// Unix timestamp (in seconds) when the compacted conversation was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The object type. Always `response.compaction`.
 	Object constant.ResponseCompaction `json:"object" default:"response.compaction"`
 	// The compacted list of output items. This is a list of all user messages,
@@ -4263,7 +4263,7 @@ type ResponseCodeInterpreterToolCallOutputImage struct {
 	// The type of the output. Always `image`.
 	Type constant.Image `json:"type" default:"image"`
 	// The URL of the image output from the code interpreter.
-	URL string `json:"url" api:"required"`
+	URL string `json:"url" api:"required" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -4410,7 +4410,7 @@ func (r *ResponseCodeInterpreterToolCallOutputLogsParam) UnmarshalJSON(data []by
 // The properties Type, URL are required.
 type ResponseCodeInterpreterToolCallOutputImageParam struct {
 	// The URL of the image output from the code interpreter.
-	URL string `json:"url" api:"required"`
+	URL string `json:"url" api:"required" format:"uri"`
 	// The type of the output. Always `image`.
 	//
 	// This field can be elided, and will marshal its zero value as "image".
@@ -9369,7 +9369,7 @@ type ResponseInputFile struct {
 	// The ID of the file to be sent to the model.
 	FileID string `json:"file_id" api:"nullable"`
 	// The URL of the file to be sent to the model.
-	FileURL string `json:"file_url"`
+	FileURL string `json:"file_url" format:"uri"`
 	// The name of the file to be sent to the model.
 	Filename string `json:"filename"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -9421,7 +9421,7 @@ type ResponseInputFileParam struct {
 	// The content of the file to be sent to the model.
 	FileData param.Opt[string] `json:"file_data,omitzero"`
 	// The URL of the file to be sent to the model.
-	FileURL param.Opt[string] `json:"file_url,omitzero"`
+	FileURL param.Opt[string] `json:"file_url,omitzero" format:"uri"`
 	// The name of the file to be sent to the model.
 	Filename param.Opt[string] `json:"filename,omitzero"`
 	// The detail level of the file to be sent to the model. Use `low` for the default
@@ -9460,7 +9460,7 @@ type ResponseInputFileContent struct {
 	// The ID of the file to be sent to the model.
 	FileID string `json:"file_id" api:"nullable"`
 	// The URL of the file to be sent to the model.
-	FileURL string `json:"file_url" api:"nullable"`
+	FileURL string `json:"file_url" api:"nullable" format:"uri"`
 	// The name of the file to be sent to the model.
 	Filename string `json:"filename" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -9511,7 +9511,7 @@ type ResponseInputFileContentParam struct {
 	// The ID of the file to be sent to the model.
 	FileID param.Opt[string] `json:"file_id,omitzero"`
 	// The URL of the file to be sent to the model.
-	FileURL param.Opt[string] `json:"file_url,omitzero"`
+	FileURL param.Opt[string] `json:"file_url,omitzero" format:"uri"`
 	// The name of the file to be sent to the model.
 	Filename param.Opt[string] `json:"filename,omitzero"`
 	// The detail level of the file to be sent to the model. Use `low` for the default
@@ -9549,7 +9549,7 @@ type ResponseInputImage struct {
 	FileID string `json:"file_id" api:"nullable"`
 	// The URL of the image to be sent to the model. A fully qualified URL or base64
 	// encoded image in a data URL.
-	ImageURL string `json:"image_url" api:"nullable"`
+	ImageURL string `json:"image_url" api:"nullable" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Detail      respjson.Field
@@ -9603,7 +9603,7 @@ type ResponseInputImageParam struct {
 	FileID param.Opt[string] `json:"file_id,omitzero"`
 	// The URL of the image to be sent to the model. A fully qualified URL or base64
 	// encoded image in a data URL.
-	ImageURL param.Opt[string] `json:"image_url,omitzero"`
+	ImageURL param.Opt[string] `json:"image_url,omitzero" format:"uri"`
 	// The type of the input item. Always `input_image`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_image".
@@ -9633,7 +9633,7 @@ type ResponseInputImageContent struct {
 	FileID string `json:"file_id" api:"nullable"`
 	// The URL of the image to be sent to the model. A fully qualified URL or base64
 	// encoded image in a data URL.
-	ImageURL string `json:"image_url" api:"nullable"`
+	ImageURL string `json:"image_url" api:"nullable" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type        respjson.Field
@@ -9681,7 +9681,7 @@ type ResponseInputImageContentParam struct {
 	FileID param.Opt[string] `json:"file_id,omitzero"`
 	// The URL of the image to be sent to the model. A fully qualified URL or base64
 	// encoded image in a data URL.
-	ImageURL param.Opt[string] `json:"image_url,omitzero"`
+	ImageURL param.Opt[string] `json:"image_url,omitzero" format:"uri"`
 	// The detail level of the image to be sent to the model. One of `high`, `low`,
 	// `auto`, or `original`. Defaults to `auto`.
 	//
@@ -15931,7 +15931,7 @@ type ResponseOutputTextAnnotationURLCitation struct {
 	// The type of the URL citation. Always `url_citation`.
 	Type constant.URLCitation `json:"type" default:"url_citation"`
 	// The URL of the web resource.
-	URL string `json:"url" api:"required"`
+	URL string `json:"url" api:"required" format:"uri"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		EndIndex    respjson.Field
@@ -16242,7 +16242,7 @@ type ResponseOutputTextAnnotationURLCitationParam struct {
 	// The title of the web resource.
 	Title string `json:"title" api:"required"`
 	// The URL of the web resource.
-	URL string `json:"url" api:"required"`
+	URL string `json:"url" api:"required" format:"uri"`
 	// The type of the URL citation. Always `url_citation`.
 	//
 	// This field can be elided, and will marshal its zero value as "url_citation".
