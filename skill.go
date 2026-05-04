@@ -143,7 +143,7 @@ type Skill struct {
 	// Unique identifier for the skill.
 	ID string `json:"id" api:"required"`
 	// Unix timestamp (seconds) for when the skill was created.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Default version for the skill.
 	DefaultVersion string `json:"default_version" api:"required"`
 	// Description of the skill.
