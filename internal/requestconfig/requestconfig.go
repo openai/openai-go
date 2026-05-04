@@ -508,10 +508,15 @@ func (cfg *RequestConfig) Execute() (err error) {
 		// utilities can conveniently dump the response without issue.
 		res.Body = io.NopCloser(bytes.NewBuffer(contents))
 
-		// Load the contents into the error format if it is provided.
+		// Load the contents into the error format.
+		// Some providers return OpenAI-style {"error": {...}}, while others return
+		// top-level {"code": "...", "message": "..."}.
 		aerr := apierror.Error{Request: cfg.Request, Response: res, StatusCode: res.StatusCode}
-		unwrapped := gjson.GetBytes(contents, "error").Raw
-		err = aerr.UnmarshalJSON([]byte(unwrapped))
+		payload := contents
+		if unwrapped := gjson.GetBytes(contents, "error"); unwrapped.Exists() && unwrapped.Type == gjson.JSON {
+			payload = []byte(unwrapped.Raw)
+		}
+		err = aerr.UnmarshalJSON(payload)
 		if err != nil {
 			return err
 		}
