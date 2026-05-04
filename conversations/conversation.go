@@ -102,7 +102,7 @@ type ComputerScreenshotContent struct {
 	// The identifier of an uploaded file that contains the screenshot.
 	FileID string `json:"file_id" api:"required"`
 	// The URL of the screenshot image.
-	ImageURL string `json:"image_url" api:"required"`
+	ImageURL string `json:"image_url" api:"required" format:"uri"`
 	// Specifies the event type. For a computer screenshot, this property is always set
 	// to `computer_screenshot`.
 	Type constant.ComputerScreenshot `json:"type" default:"computer_screenshot"`
@@ -139,7 +139,7 @@ type Conversation struct {
 	ID string `json:"id" api:"required"`
 	// The time at which the conversation was created, measured in seconds since the
 	// Unix epoch.
-	CreatedAt int64 `json:"created_at" api:"required"`
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Set of 16 key-value pairs that can be attached to an object. This can be useful
 	// for storing additional information about the object in a structured format, and
 	// querying for objects via API or the dashboard. Keys are strings with a maximum
