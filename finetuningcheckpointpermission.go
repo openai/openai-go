@@ -54,7 +54,7 @@ func (r *FineTuningCheckpointPermissionService) New(ctx context.Context, fineTun
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
+	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", pathSegment(fineTunedModelCheckpoint))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodPost, path, body, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (r *FineTuningCheckpointPermissionService) Get(ctx context.Context, fineTun
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
+	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", pathSegment(fineTunedModelCheckpoint))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
@@ -107,7 +107,7 @@ func (r *FineTuningCheckpointPermissionService) List(ctx context.Context, fineTu
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
+	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", pathSegment(fineTunedModelCheckpoint))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func (r *FineTuningCheckpointPermissionService) Delete(ctx context.Context, fine
 		err = errors.New("missing required permission_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions/%s", fineTunedModelCheckpoint, permissionID)
+	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions/%s", pathSegment(fineTunedModelCheckpoint), pathSegment(permissionID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

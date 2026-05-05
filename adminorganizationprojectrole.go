@@ -47,7 +47,7 @@ func (r *AdminOrganizationProjectRoleService) New(ctx context.Context, projectID
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("projects/%s/roles", projectID)
+	path := fmt.Sprintf("projects/%s/roles", pathSegment(projectID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -64,7 +64,7 @@ func (r *AdminOrganizationProjectRoleService) Update(ctx context.Context, projec
 		err = errors.New("missing required role_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("projects/%s/roles/%s", projectID, roleID)
+	path := fmt.Sprintf("projects/%s/roles/%s", pathSegment(projectID), pathSegment(roleID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -79,7 +79,7 @@ func (r *AdminOrganizationProjectRoleService) List(ctx context.Context, projectI
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("projects/%s/roles", projectID)
+	path := fmt.Sprintf("projects/%s/roles", pathSegment(projectID))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (r *AdminOrganizationProjectRoleService) Delete(ctx context.Context, projec
 		err = errors.New("missing required role_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("projects/%s/roles/%s", projectID, roleID)
+	path := fmt.Sprintf("projects/%s/roles/%s", pathSegment(projectID), pathSegment(roleID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

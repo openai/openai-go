@@ -51,7 +51,7 @@ func (r *AdminOrganizationProjectAPIKeyService) Get(ctx context.Context, project
 		err = errors.New("missing required api_key_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/api_keys/%s", projectID, apiKeyID)
+	path := fmt.Sprintf("organization/projects/%s/api_keys/%s", pathSegment(projectID), pathSegment(apiKeyID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -66,7 +66,7 @@ func (r *AdminOrganizationProjectAPIKeyService) List(ctx context.Context, projec
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/api_keys", projectID)
+	path := fmt.Sprintf("organization/projects/%s/api_keys", pathSegment(projectID))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func (r *AdminOrganizationProjectAPIKeyService) Delete(ctx context.Context, proj
 		err = errors.New("missing required api_key_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/api_keys/%s", projectID, apiKeyID)
+	path := fmt.Sprintf("organization/projects/%s/api_keys/%s", pathSegment(projectID), pathSegment(apiKeyID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

@@ -45,7 +45,7 @@ func (r *SkillVersionContentService) Get(ctx context.Context, skillID string, ve
 		err = errors.New("missing required version parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("skills/%s/versions/%s/content", skillID, version)
+	path := fmt.Sprintf("skills/%s/versions/%s/content", pathSegment(skillID), pathSegment(version))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }

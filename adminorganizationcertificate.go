@@ -61,7 +61,7 @@ func (r *AdminOrganizationCertificateService) Get(ctx context.Context, certifica
 		err = errors.New("missing required certificate_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/certificates/%s", certificateID)
+	path := fmt.Sprintf("organization/certificates/%s", pathSegment(certificateID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
@@ -74,7 +74,7 @@ func (r *AdminOrganizationCertificateService) Update(ctx context.Context, certif
 		err = errors.New("missing required certificate_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/certificates/%s", certificateID)
+	path := fmt.Sprintf("organization/certificates/%s", pathSegment(certificateID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -113,7 +113,7 @@ func (r *AdminOrganizationCertificateService) Delete(ctx context.Context, certif
 		err = errors.New("missing required certificate_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/certificates/%s", certificateID)
+	path := fmt.Sprintf("organization/certificates/%s", pathSegment(certificateID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

@@ -50,7 +50,7 @@ func (r *ChatCompletionMessageService) List(ctx context.Context, completionID st
 		err = errors.New("missing required completion_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("chat/completions/%s/messages", completionID)
+	path := fmt.Sprintf("chat/completions/%s/messages", pathSegment(completionID))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err

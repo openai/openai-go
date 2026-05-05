@@ -50,7 +50,7 @@ func (r *AdminOrganizationProjectUserService) New(ctx context.Context, projectID
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/users", projectID)
+	path := fmt.Sprintf("organization/projects/%s/users", pathSegment(projectID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -67,7 +67,7 @@ func (r *AdminOrganizationProjectUserService) Get(ctx context.Context, projectID
 		err = errors.New("missing required user_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/users/%s", projectID, userID)
+	path := fmt.Sprintf("organization/projects/%s/users/%s", pathSegment(projectID), pathSegment(userID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -84,7 +84,7 @@ func (r *AdminOrganizationProjectUserService) Update(ctx context.Context, projec
 		err = errors.New("missing required user_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/users/%s", projectID, userID)
+	path := fmt.Sprintf("organization/projects/%s/users/%s", pathSegment(projectID), pathSegment(userID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -99,7 +99,7 @@ func (r *AdminOrganizationProjectUserService) List(ctx context.Context, projectI
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/users", projectID)
+	path := fmt.Sprintf("organization/projects/%s/users", pathSegment(projectID))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -132,7 +132,7 @@ func (r *AdminOrganizationProjectUserService) Delete(ctx context.Context, projec
 		err = errors.New("missing required user_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/users/%s", projectID, userID)
+	path := fmt.Sprintf("organization/projects/%s/users/%s", pathSegment(projectID), pathSegment(userID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

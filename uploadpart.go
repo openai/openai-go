@@ -59,7 +59,7 @@ func (r *UploadPartService) New(ctx context.Context, uploadID string, body Uploa
 		err = errors.New("missing required upload_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("uploads/%s/parts", uploadID)
+	path := fmt.Sprintf("uploads/%s/parts", pathSegment(uploadID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }

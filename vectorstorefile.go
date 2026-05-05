@@ -51,7 +51,7 @@ func (r *VectorStoreFileService) New(ctx context.Context, vectorStoreID string, 
 		err = errors.New("missing required vector_store_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/files", vectorStoreID)
+	path := fmt.Sprintf("vector_stores/%s/files", pathSegment(vectorStoreID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -108,7 +108,7 @@ func (r *VectorStoreFileService) Get(ctx context.Context, vectorStoreID string, 
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/files/%s", vectorStoreID, fileID)
+	path := fmt.Sprintf("vector_stores/%s/files/%s", pathSegment(vectorStoreID), pathSegment(fileID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -126,7 +126,7 @@ func (r *VectorStoreFileService) Update(ctx context.Context, vectorStoreID strin
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/files/%s", vectorStoreID, fileID)
+	path := fmt.Sprintf("vector_stores/%s/files/%s", pathSegment(vectorStoreID), pathSegment(fileID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -141,7 +141,7 @@ func (r *VectorStoreFileService) List(ctx context.Context, vectorStoreID string,
 		err = errors.New("missing required vector_store_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/files", vectorStoreID)
+	path := fmt.Sprintf("vector_stores/%s/files", pathSegment(vectorStoreID))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -175,7 +175,7 @@ func (r *VectorStoreFileService) Delete(ctx context.Context, vectorStoreID strin
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/files/%s", vectorStoreID, fileID)
+	path := fmt.Sprintf("vector_stores/%s/files/%s", pathSegment(vectorStoreID), pathSegment(fileID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -194,7 +194,7 @@ func (r *VectorStoreFileService) Content(ctx context.Context, vectorStoreID stri
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/files/%s/content", vectorStoreID, fileID)
+	path := fmt.Sprintf("vector_stores/%s/files/%s/content", pathSegment(vectorStoreID), pathSegment(fileID))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, nil, &res, opts...)
 	if err != nil {
 		return nil, err

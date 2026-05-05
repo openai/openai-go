@@ -55,7 +55,7 @@ func (r *BetaChatKitSessionService) Cancel(ctx context.Context, sessionID string
 		err = errors.New("missing required session_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("chatkit/sessions/%s/cancel", sessionID)
+	path := fmt.Sprintf("chatkit/sessions/%s/cancel", pathSegment(sessionID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }

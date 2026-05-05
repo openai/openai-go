@@ -80,7 +80,7 @@ func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...opt
 		err = errors.New("missing required upload_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("uploads/%s/cancel", uploadID)
+	path := fmt.Sprintf("uploads/%s/cancel", pathSegment(uploadID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }
@@ -107,7 +107,7 @@ func (r *UploadService) Complete(ctx context.Context, uploadID string, body Uplo
 		err = errors.New("missing required upload_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("uploads/%s/complete", uploadID)
+	path := fmt.Sprintf("uploads/%s/complete", pathSegment(uploadID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }

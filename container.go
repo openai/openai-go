@@ -58,7 +58,7 @@ func (r *ContainerService) Get(ctx context.Context, containerID string, opts ...
 		err = errors.New("missing required container_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("containers/%s", containerID)
+	path := fmt.Sprintf("containers/%s", pathSegment(containerID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -96,7 +96,7 @@ func (r *ContainerService) Delete(ctx context.Context, containerID string, opts 
 		err = errors.New("missing required container_id parameter")
 		return err
 	}
-	path := fmt.Sprintf("containers/%s", containerID)
+	path := fmt.Sprintf("containers/%s", pathSegment(containerID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
 	return err
 }

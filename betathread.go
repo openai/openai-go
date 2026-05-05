@@ -76,7 +76,7 @@ func (r *BetaThreadService) Get(ctx context.Context, threadID string, opts ...op
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s", threadID)
+	path := fmt.Sprintf("threads/%s", pathSegment(threadID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -92,7 +92,7 @@ func (r *BetaThreadService) Update(ctx context.Context, threadID string, body Be
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s", threadID)
+	path := fmt.Sprintf("threads/%s", pathSegment(threadID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -108,7 +108,7 @@ func (r *BetaThreadService) Delete(ctx context.Context, threadID string, opts ..
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s", threadID)
+	path := fmt.Sprintf("threads/%s", pathSegment(threadID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

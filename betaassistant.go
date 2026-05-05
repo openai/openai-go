@@ -66,7 +66,7 @@ func (r *BetaAssistantService) Get(ctx context.Context, assistantID string, opts
 		err = errors.New("missing required assistant_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("assistants/%s", assistantID)
+	path := fmt.Sprintf("assistants/%s", pathSegment(assistantID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -82,7 +82,7 @@ func (r *BetaAssistantService) Update(ctx context.Context, assistantID string, b
 		err = errors.New("missing required assistant_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("assistants/%s", assistantID)
+	path := fmt.Sprintf("assistants/%s", pathSegment(assistantID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -126,7 +126,7 @@ func (r *BetaAssistantService) Delete(ctx context.Context, assistantID string, o
 		err = errors.New("missing required assistant_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("assistants/%s", assistantID)
+	path := fmt.Sprintf("assistants/%s", pathSegment(assistantID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

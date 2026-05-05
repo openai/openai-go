@@ -56,7 +56,7 @@ func (r *ContainerFileService) New(ctx context.Context, containerID string, body
 		err = errors.New("missing required container_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("containers/%s/files", containerID)
+	path := fmt.Sprintf("containers/%s/files", pathSegment(containerID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -73,7 +73,7 @@ func (r *ContainerFileService) Get(ctx context.Context, containerID string, file
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("containers/%s/files/%s", containerID, fileID)
+	path := fmt.Sprintf("containers/%s/files/%s", pathSegment(containerID), pathSegment(fileID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -88,7 +88,7 @@ func (r *ContainerFileService) List(ctx context.Context, containerID string, que
 		err = errors.New("missing required container_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("containers/%s/files", containerID)
+	path := fmt.Sprintf("containers/%s/files", pathSegment(containerID))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func (r *ContainerFileService) Delete(ctx context.Context, containerID string, f
 		err = errors.New("missing required file_id parameter")
 		return err
 	}
-	path := fmt.Sprintf("containers/%s/files/%s", containerID, fileID)
+	path := fmt.Sprintf("containers/%s/files/%s", pathSegment(containerID), pathSegment(fileID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
 	return err
 }

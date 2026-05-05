@@ -49,7 +49,7 @@ func (r *AdminOrganizationProjectGroupService) New(ctx context.Context, projectI
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/groups", projectID)
+	path := fmt.Sprintf("organization/projects/%s/groups", pathSegment(projectID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -64,7 +64,7 @@ func (r *AdminOrganizationProjectGroupService) List(ctx context.Context, project
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/groups", projectID)
+	path := fmt.Sprintf("organization/projects/%s/groups", pathSegment(projectID))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func (r *AdminOrganizationProjectGroupService) Delete(ctx context.Context, proje
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/groups/%s", projectID, groupID)
+	path := fmt.Sprintf("organization/projects/%s/groups/%s", pathSegment(projectID), pathSegment(groupID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

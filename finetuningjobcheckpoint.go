@@ -51,7 +51,7 @@ func (r *FineTuningJobCheckpointService) List(ctx context.Context, fineTuningJob
 		err = errors.New("missing required fine_tuning_job_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("fine_tuning/jobs/%s/checkpoints", fineTuningJobID)
+	path := fmt.Sprintf("fine_tuning/jobs/%s/checkpoints", pathSegment(fineTuningJobID))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err

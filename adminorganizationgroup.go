@@ -60,7 +60,7 @@ func (r *AdminOrganizationGroupService) Update(ctx context.Context, groupID stri
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s", groupID)
+	path := fmt.Sprintf("organization/groups/%s", pathSegment(groupID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -97,7 +97,7 @@ func (r *AdminOrganizationGroupService) Delete(ctx context.Context, groupID stri
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s", groupID)
+	path := fmt.Sprintf("organization/groups/%s", pathSegment(groupID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

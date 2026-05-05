@@ -56,7 +56,7 @@ func (r *AdminOrganizationRoleService) Update(ctx context.Context, roleID string
 		err = errors.New("missing required role_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/roles/%s", roleID)
+	path := fmt.Sprintf("organization/roles/%s", pathSegment(roleID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -93,7 +93,7 @@ func (r *AdminOrganizationRoleService) Delete(ctx context.Context, roleID string
 		err = errors.New("missing required role_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/roles/%s", roleID)
+	path := fmt.Sprintf("organization/roles/%s", pathSegment(roleID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

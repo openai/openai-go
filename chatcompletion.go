@@ -119,7 +119,7 @@ func (r *ChatCompletionService) Get(ctx context.Context, completionID string, op
 		err = errors.New("missing required completion_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("chat/completions/%s", completionID)
+	path := fmt.Sprintf("chat/completions/%s", pathSegment(completionID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -134,7 +134,7 @@ func (r *ChatCompletionService) Update(ctx context.Context, completionID string,
 		err = errors.New("missing required completion_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("chat/completions/%s", completionID)
+	path := fmt.Sprintf("chat/completions/%s", pathSegment(completionID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -174,7 +174,7 @@ func (r *ChatCompletionService) Delete(ctx context.Context, completionID string,
 		err = errors.New("missing required completion_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("chat/completions/%s", completionID)
+	path := fmt.Sprintf("chat/completions/%s", pathSegment(completionID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

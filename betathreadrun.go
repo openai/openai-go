@@ -61,7 +61,7 @@ func (r *BetaThreadRunService) New(ctx context.Context, threadID string, params 
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs", threadID)
+	path := fmt.Sprintf("threads/%s/runs", pathSegment(threadID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return res, err
 }
@@ -82,7 +82,7 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 		err = errors.New("missing required thread_id parameter")
 		return ssestream.NewStream[AssistantStreamEventUnion](nil, err)
 	}
-	path := fmt.Sprintf("threads/%s/runs", threadID)
+	path := fmt.Sprintf("threads/%s/runs", pathSegment(threadID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &raw, opts...)
 	return ssestream.NewStreamWithSynthesizeEventData[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
@@ -102,7 +102,7 @@ func (r *BetaThreadRunService) Get(ctx context.Context, threadID string, runID s
 		err = errors.New("missing required run_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s", threadID, runID)
+	path := fmt.Sprintf("threads/%s/runs/%s", pathSegment(threadID), pathSegment(runID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -122,7 +122,7 @@ func (r *BetaThreadRunService) Update(ctx context.Context, threadID string, runI
 		err = errors.New("missing required run_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s", threadID, runID)
+	path := fmt.Sprintf("threads/%s/runs/%s", pathSegment(threadID), pathSegment(runID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -139,7 +139,7 @@ func (r *BetaThreadRunService) List(ctx context.Context, threadID string, query 
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs", threadID)
+	path := fmt.Sprintf("threads/%s/runs", pathSegment(threadID))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (r *BetaThreadRunService) Cancel(ctx context.Context, threadID string, runI
 		err = errors.New("missing required run_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s/cancel", threadID, runID)
+	path := fmt.Sprintf("threads/%s/runs/%s/cancel", pathSegment(threadID), pathSegment(runID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }
@@ -197,7 +197,7 @@ func (r *BetaThreadRunService) SubmitToolOutputs(ctx context.Context, threadID s
 		err = errors.New("missing required run_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", threadID, runID)
+	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", pathSegment(threadID), pathSegment(runID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -225,7 +225,7 @@ func (r *BetaThreadRunService) SubmitToolOutputsStreaming(ctx context.Context, t
 		err = errors.New("missing required run_id parameter")
 		return ssestream.NewStream[AssistantStreamEventUnion](nil, err)
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", threadID, runID)
+	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", pathSegment(threadID), pathSegment(runID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStreamWithSynthesizeEventData[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
 }

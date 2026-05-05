@@ -47,7 +47,7 @@ func (r *AdminOrganizationGroupRoleService) New(ctx context.Context, groupID str
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s/roles", groupID)
+	path := fmt.Sprintf("organization/groups/%s/roles", pathSegment(groupID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -62,7 +62,7 @@ func (r *AdminOrganizationGroupRoleService) List(ctx context.Context, groupID st
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s/roles", groupID)
+	path := fmt.Sprintf("organization/groups/%s/roles", pathSegment(groupID))
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (r *AdminOrganizationGroupRoleService) Delete(ctx context.Context, groupID 
 		err = errors.New("missing required role_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s/roles/%s", groupID, roleID)
+	path := fmt.Sprintf("organization/groups/%s/roles/%s", pathSegment(groupID), pathSegment(roleID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
