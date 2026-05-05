@@ -19304,8 +19304,18 @@ type ToolImageGeneration struct {
 	//
 	// Any of "generate", "edit", "auto".
 	Action string `json:"action"`
-	// Background type for the generated image. One of `transparent`, `opaque`, or
-	// `auto`. Default: `auto`.
+	// Allows to set transparency for the background of the generated image(s). This
+	// parameter is only supported for GPT image models that support transparent
+	// backgrounds. Must be one of `transparent`, `opaque`, or `auto` (default value).
+	// When `auto` is used, the model will automatically determine the best background
+	// for the image.
+	//
+	// `gpt-image-2` and `gpt-image-2-2026-04-21` do not support transparent
+	// backgrounds. Requests with `background` set to `transparent` will return an
+	// error for these models; use `opaque` or `auto` instead.
+	//
+	// If `transparent`, the output format needs to support transparency, so it should
+	// be set to either `png` (default value) or `webp`.
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background"`
@@ -19340,10 +19350,17 @@ type ToolImageGeneration struct {
 	//
 	// Any of "low", "medium", "high", "auto".
 	Quality string `json:"quality"`
-	// The size of the generated image. One of `1024x1024`, `1024x1536`, `1536x1024`,
-	// or `auto`. Default: `auto`.
-	//
-	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
+	// The size of the generated images. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
+	// strings, for example `1536x864`. Width and height must both be divisible by 16
+	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
+	// `2560x1440` are experimental, and the maximum supported resolution is
+	// `3840x2160`. The requested size must also satisfy the model's current pixel and
+	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
+	// supported by the GPT image models; `auto` is supported for models that allow
+	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
+	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
+	// `1024x1792`.
 	Size string `json:"size"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -19757,8 +19774,8 @@ func (u ToolUnionParam) GetQuality() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ToolUnionParam) GetSize() *string {
-	if vt := u.OfImageGeneration; vt != nil {
-		return &vt.Size
+	if vt := u.OfImageGeneration; vt != nil && vt.Size.Valid() {
+		return &vt.Size.Value
 	}
 	return nil
 }
@@ -20525,6 +20542,18 @@ type ToolImageGenerationParam struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
+	// The size of the generated images. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
+	// strings, for example `1536x864`. Width and height must both be divisible by 16
+	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
+	// `2560x1440` are experimental, and the maximum supported resolution is
+	// `3840x2160`. The requested size must also satisfy the model's current pixel and
+	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
+	// supported by the GPT image models; `auto` is supported for models that allow
+	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
+	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
+	// `1024x1792`.
+	Size param.Opt[string] `json:"size,omitzero"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. This parameter is only supported
 	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
@@ -20536,8 +20565,18 @@ type ToolImageGenerationParam struct {
 	//
 	// Any of "generate", "edit", "auto".
 	Action string `json:"action,omitzero"`
-	// Background type for the generated image. One of `transparent`, `opaque`, or
-	// `auto`. Default: `auto`.
+	// Allows to set transparency for the background of the generated image(s). This
+	// parameter is only supported for GPT image models that support transparent
+	// backgrounds. Must be one of `transparent`, `opaque`, or `auto` (default value).
+	// When `auto` is used, the model will automatically determine the best background
+	// for the image.
+	//
+	// `gpt-image-2` and `gpt-image-2-2026-04-21` do not support transparent
+	// backgrounds. Requests with `background` set to `transparent` will return an
+	// error for these models; use `opaque` or `auto` instead.
+	//
+	// If `transparent`, the output format needs to support transparency, so it should
+	// be set to either `png` (default value) or `webp`.
 	//
 	// Any of "transparent", "opaque", "auto".
 	Background string `json:"background,omitzero"`
@@ -20560,11 +20599,6 @@ type ToolImageGenerationParam struct {
 	//
 	// Any of "low", "medium", "high", "auto".
 	Quality string `json:"quality,omitzero"`
-	// The size of the generated image. One of `1024x1024`, `1024x1536`, `1536x1024`,
-	// or `auto`. Default: `auto`.
-	//
-	// Any of "1024x1024", "1024x1536", "1536x1024", "auto".
-	Size string `json:"size,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_generation".
@@ -20598,9 +20632,6 @@ func init() {
 	)
 	apijson.RegisterFieldValidator[ToolImageGenerationParam](
 		"quality", "low", "medium", "high", "auto",
-	)
-	apijson.RegisterFieldValidator[ToolImageGenerationParam](
-		"size", "1024x1024", "1024x1536", "1536x1024", "auto",
 	)
 }
 
