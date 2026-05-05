@@ -23,7 +23,6 @@ type RealtimeService struct {
 	Options       []option.RequestOption
 	ClientSecrets ClientSecretService
 	Calls         CallService
-	Translations  TranslationService
 }
 
 // NewRealtimeService generates a new service that applies the given options to
@@ -34,7 +33,6 @@ func NewRealtimeService(opts ...option.RequestOption) (r RealtimeService) {
 	r.Options = opts
 	r.ClientSecrets = NewClientSecretService(opts...)
 	r.Calls = NewCallService(opts...)
-	r.Translations = NewTranslationService(opts...)
 	return
 }
 
