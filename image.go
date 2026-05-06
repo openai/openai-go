@@ -989,18 +989,6 @@ type ImageEditParams struct {
 	// Note that the final image may be sent before the full number of partial images
 	// are generated if the full image is generated more quickly.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// The size of the generated images. For `gpt-image-2` and
-	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
-	// strings, for example `1536x864`. Width and height must both be divisible by 16
-	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
-	// `2560x1440` are experimental, and the maximum supported resolution is
-	// `3840x2160`. The requested size must also satisfy the model's current pixel and
-	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
-	// supported by the GPT image models; `auto` is supported for models that allow
-	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
-	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
-	// `1024x1792`.
-	Size param.Opt[string] `json:"size,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
@@ -1050,6 +1038,18 @@ type ImageEditParams struct {
 	//
 	// Any of "url", "b64_json".
 	ResponseFormat ImageEditParamsResponseFormat `json:"response_format,omitzero"`
+	// The size of the generated images. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
+	// strings, for example `1536x864`. Width and height must both be divisible by 16
+	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
+	// `2560x1440` are experimental, and the maximum supported resolution is
+	// `3840x2160`. The requested size must also satisfy the model's current pixel and
+	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
+	// supported by the GPT image models; `auto` is supported for models that allow
+	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
+	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
+	// `1024x1792`.
+	Size ImageEditParamsSize `json:"size,omitzero"`
 	// An additional image whose fully transparent areas (e.g. where alpha is zero)
 	// indicate where `image` should be edited. If there are multiple images provided,
 	// the mask will be applied on the first image. Must be a valid PNG file, less than
@@ -1166,6 +1166,28 @@ const (
 	ImageEditParamsResponseFormatB64JSON ImageEditParamsResponseFormat = "b64_json"
 )
 
+// The size of the generated images. For `gpt-image-2` and
+// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
+// strings, for example `1536x864`. Width and height must both be divisible by 16
+// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
+// `2560x1440` are experimental, and the maximum supported resolution is
+// `3840x2160`. The requested size must also satisfy the model's current pixel and
+// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
+// supported by the GPT image models; `auto` is supported for models that allow
+// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
+// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
+// `1024x1792`.
+type ImageEditParamsSize string
+
+const (
+	ImageEditParamsSize256x256   ImageEditParamsSize = "256x256"
+	ImageEditParamsSize512x512   ImageEditParamsSize = "512x512"
+	ImageEditParamsSize1024x1024 ImageEditParamsSize = "1024x1024"
+	ImageEditParamsSize1536x1024 ImageEditParamsSize = "1536x1024"
+	ImageEditParamsSize1024x1536 ImageEditParamsSize = "1024x1536"
+	ImageEditParamsSizeAuto      ImageEditParamsSize = "auto"
+)
+
 type ImageGenerateParams struct {
 	// A text description of the desired image(s). The maximum length is 32000
 	// characters for the GPT image models, 1000 characters for `dall-e-2` and 4000
@@ -1185,18 +1207,6 @@ type ImageGenerateParams struct {
 	// Note that the final image may be sent before the full number of partial images
 	// are generated if the full image is generated more quickly.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// The size of the generated images. For `gpt-image-2` and
-	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
-	// strings, for example `1536x864`. Width and height must both be divisible by 16
-	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
-	// `2560x1440` are experimental, and the maximum supported resolution is
-	// `3840x2160`. The requested size must also satisfy the model's current pixel and
-	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
-	// supported by the GPT image models; `auto` is supported for models that allow
-	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
-	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
-	// `1024x1792`.
-	Size param.Opt[string] `json:"size,omitzero"`
 	// A unique identifier representing your end-user, which can help OpenAI to monitor
 	// and detect abuse.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#end-user-ids).
@@ -1249,6 +1259,18 @@ type ImageGenerateParams struct {
 	//
 	// Any of "url", "b64_json".
 	ResponseFormat ImageGenerateParamsResponseFormat `json:"response_format,omitzero"`
+	// The size of the generated images. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
+	// strings, for example `1536x864`. Width and height must both be divisible by 16
+	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
+	// `2560x1440` are experimental, and the maximum supported resolution is
+	// `3840x2160`. The requested size must also satisfy the model's current pixel and
+	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
+	// supported by the GPT image models; `auto` is supported for models that allow
+	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
+	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
+	// `1024x1792`.
+	Size ImageGenerateParamsSize `json:"size,omitzero"`
 	// The style of the generated images. This parameter is only supported for
 	// `dall-e-3`. Must be one of `vivid` or `natural`. Vivid causes the model to lean
 	// towards generating hyper-real and dramatic images. Natural causes the model to
@@ -1334,6 +1356,30 @@ type ImageGenerateParamsResponseFormat string
 const (
 	ImageGenerateParamsResponseFormatURL     ImageGenerateParamsResponseFormat = "url"
 	ImageGenerateParamsResponseFormatB64JSON ImageGenerateParamsResponseFormat = "b64_json"
+)
+
+// The size of the generated images. For `gpt-image-2` and
+// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
+// strings, for example `1536x864`. Width and height must both be divisible by 16
+// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
+// `2560x1440` are experimental, and the maximum supported resolution is
+// `3840x2160`. The requested size must also satisfy the model's current pixel and
+// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
+// supported by the GPT image models; `auto` is supported for models that allow
+// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
+// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
+// `1024x1792`.
+type ImageGenerateParamsSize string
+
+const (
+	ImageGenerateParamsSizeAuto      ImageGenerateParamsSize = "auto"
+	ImageGenerateParamsSize1024x1024 ImageGenerateParamsSize = "1024x1024"
+	ImageGenerateParamsSize1536x1024 ImageGenerateParamsSize = "1536x1024"
+	ImageGenerateParamsSize1024x1536 ImageGenerateParamsSize = "1024x1536"
+	ImageGenerateParamsSize256x256   ImageGenerateParamsSize = "256x256"
+	ImageGenerateParamsSize512x512   ImageGenerateParamsSize = "512x512"
+	ImageGenerateParamsSize1792x1024 ImageGenerateParamsSize = "1792x1024"
+	ImageGenerateParamsSize1024x1792 ImageGenerateParamsSize = "1024x1792"
 )
 
 // The style of the generated images. This parameter is only supported for

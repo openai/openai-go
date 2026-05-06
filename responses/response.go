@@ -19758,8 +19758,8 @@ func (u ToolUnionParam) GetQuality() *string {
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ToolUnionParam) GetSize() *string {
-	if vt := u.OfImageGeneration; vt != nil && vt.Size.Valid() {
-		return &vt.Size.Value
+	if vt := u.OfImageGeneration; vt != nil {
+		return &vt.Size
 	}
 	return nil
 }
@@ -20526,18 +20526,6 @@ type ToolImageGenerationParam struct {
 	// Number of partial images to generate in streaming mode, from 0 (default value)
 	// to 3.
 	PartialImages param.Opt[int64] `json:"partial_images,omitzero"`
-	// The size of the generated images. For `gpt-image-2` and
-	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
-	// strings, for example `1536x864`. Width and height must both be divisible by 16
-	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
-	// `2560x1440` are experimental, and the maximum supported resolution is
-	// `3840x2160`. The requested size must also satisfy the model's current pixel and
-	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
-	// supported by the GPT image models; `auto` is supported for models that allow
-	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
-	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
-	// `1024x1792`.
-	Size param.Opt[string] `json:"size,omitzero"`
 	// Control how much effort the model will exert to match the style and features,
 	// especially facial features, of input images. This parameter is only supported
 	// for `gpt-image-1` and `gpt-image-1.5` and later models, unsupported for
@@ -20583,6 +20571,18 @@ type ToolImageGenerationParam struct {
 	//
 	// Any of "low", "medium", "high", "auto".
 	Quality string `json:"quality,omitzero"`
+	// The size of the generated images. For `gpt-image-2` and
+	// `gpt-image-2-2026-04-21`, arbitrary resolutions are supported as `WIDTHxHEIGHT`
+	// strings, for example `1536x864`. Width and height must both be divisible by 16
+	// and the requested aspect ratio must be between 1:3 and 3:1. Resolutions above
+	// `2560x1440` are experimental, and the maximum supported resolution is
+	// `3840x2160`. The requested size must also satisfy the model's current pixel and
+	// edge limits. The standard sizes `1024x1024`, `1536x1024`, and `1024x1536` are
+	// supported by the GPT image models; `auto` is supported for models that allow
+	// automatic sizing. For `dall-e-2`, use one of `256x256`, `512x512`, or
+	// `1024x1024`. For `dall-e-3`, use one of `1024x1024`, `1792x1024`, or
+	// `1024x1792`.
+	Size string `json:"size,omitzero"`
 	// The type of the image generation tool. Always `image_generation`.
 	//
 	// This field can be elided, and will marshal its zero value as "image_generation".
