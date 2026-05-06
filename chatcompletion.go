@@ -2601,8 +2601,7 @@ type ChatCompletionTokenLogprob struct {
 	// unlikely.
 	Logprob float64 `json:"logprob" api:"required"`
 	// List of the most likely tokens and their log probability, at this token
-	// position. In rare cases, there may be fewer than the number of requested
-	// `top_logprobs` returned.
+	// position. The number of entries may be fewer than the requested `top_logprobs`.
 	TopLogprobs []ChatCompletionTokenLogprobTopLogprob `json:"top_logprobs" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -3022,8 +3021,9 @@ type ChatCompletionNewParams struct {
 	// focused and deterministic. We generally recommend altering this or `top_p` but
 	// not both.
 	Temperature param.Opt[float64] `json:"temperature,omitzero"`
-	// An integer between 0 and 20 specifying the number of most likely tokens to
-	// return at each token position, each with an associated log probability.
+	// An integer between 0 and 20 specifying the maximum number of most likely tokens
+	// to return at each token position, each with an associated log probability. In
+	// some cases, the number of returned tokens may be fewer than requested.
 	// `logprobs` must be set to `true` if this parameter is used.
 	TopLogprobs param.Opt[int64] `json:"top_logprobs,omitzero"`
 	// An alternative to sampling with temperature, called nucleus sampling, where the
