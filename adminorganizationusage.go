@@ -238,6 +238,9 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult].
 	LineItem string `json:"line_item"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult].
+	Quantity float64 `json:"quantity"`
 	JSON     struct {
 		InputTokens       respjson.Field
 		NumModelRequests  respjson.Field
@@ -261,6 +264,7 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 		NumSessions       respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
+		Quantity          respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -730,6 +734,9 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResul
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// costs result.
 	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the quantity of the grouped costs
+	// result.
+	Quantity float64 `json:"quantity" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object      respjson.Field
@@ -737,6 +744,7 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResul
 		APIKeyID    respjson.Field
 		LineItem    respjson.Field
 		ProjectID   respjson.Field
+		Quantity    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -893,6 +901,9 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult].
 	LineItem string `json:"line_item"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult].
+	Quantity float64 `json:"quantity"`
 	JSON     struct {
 		InputTokens       respjson.Field
 		NumModelRequests  respjson.Field
@@ -916,6 +927,7 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 		NumSessions       respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
+		Quantity          respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -1386,6 +1398,9 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCost
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// costs result.
 	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the quantity of the grouped costs
+	// result.
+	Quantity float64 `json:"quantity" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object      respjson.Field
@@ -1393,6 +1408,7 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCost
 		APIKeyID    respjson.Field
 		LineItem    respjson.Field
 		ProjectID   respjson.Field
+		Quantity    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -1552,6 +1568,9 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult].
 	LineItem string `json:"line_item"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult].
+	Quantity float64 `json:"quantity"`
 	JSON     struct {
 		InputTokens       respjson.Field
 		NumModelRequests  respjson.Field
@@ -1575,6 +1594,7 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 		NumSessions       respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
+		Quantity          respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -2045,6 +2065,9 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// costs result.
 	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the quantity of the grouped costs
+	// result.
+	Quantity float64 `json:"quantity" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object      respjson.Field
@@ -2052,6 +2075,7 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 		APIKeyID    respjson.Field
 		LineItem    respjson.Field
 		ProjectID   respjson.Field
+		Quantity    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2208,6 +2232,9 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult].
 	LineItem string `json:"line_item"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult].
+	Quantity float64 `json:"quantity"`
 	JSON     struct {
 		InputTokens       respjson.Field
 		NumModelRequests  respjson.Field
@@ -2231,6 +2258,7 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 		NumSessions       respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
+		Quantity          respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -2698,6 +2726,9 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult 
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// costs result.
 	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the quantity of the grouped costs
+	// result.
+	Quantity float64 `json:"quantity" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object      respjson.Field
@@ -2705,6 +2736,7 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult 
 		APIKeyID    respjson.Field
 		LineItem    respjson.Field
 		ProjectID   respjson.Field
+		Quantity    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -2861,6 +2893,9 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult].
 	LineItem string `json:"line_item"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult].
+	Quantity float64 `json:"quantity"`
 	JSON     struct {
 		InputTokens       respjson.Field
 		NumModelRequests  respjson.Field
@@ -2884,6 +2919,7 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 		NumSessions       respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
+		Quantity          respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -3350,6 +3386,9 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult struct
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// costs result.
 	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the quantity of the grouped costs
+	// result.
+	Quantity float64 `json:"quantity" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object      respjson.Field
@@ -3357,6 +3396,7 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult struct
 		APIKeyID    respjson.Field
 		LineItem    respjson.Field
 		ProjectID   respjson.Field
+		Quantity    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -3513,6 +3553,9 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult].
 	LineItem string `json:"line_item"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult].
+	Quantity float64 `json:"quantity"`
 	JSON     struct {
 		InputTokens       respjson.Field
 		NumModelRequests  respjson.Field
@@ -3536,6 +3579,7 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 		NumSessions       respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
+		Quantity          respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -4003,6 +4047,9 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult s
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// costs result.
 	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the quantity of the grouped costs
+	// result.
+	Quantity float64 `json:"quantity" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object      respjson.Field
@@ -4010,6 +4057,7 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult s
 		APIKeyID    respjson.Field
 		LineItem    respjson.Field
 		ProjectID   respjson.Field
+		Quantity    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4166,6 +4214,9 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult].
 	LineItem string `json:"line_item"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult].
+	Quantity float64 `json:"quantity"`
 	JSON     struct {
 		InputTokens       respjson.Field
 		NumModelRequests  respjson.Field
@@ -4189,6 +4240,7 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 		NumSessions       respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
+		Quantity          respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -4655,6 +4707,9 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult struc
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// costs result.
 	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the quantity of the grouped costs
+	// result.
+	Quantity float64 `json:"quantity" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object      respjson.Field
@@ -4662,6 +4717,7 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult struc
 		APIKeyID    respjson.Field
 		LineItem    respjson.Field
 		ProjectID   respjson.Field
+		Quantity    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -4818,6 +4874,9 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult].
 	LineItem string `json:"line_item"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult].
+	Quantity float64 `json:"quantity"`
 	JSON     struct {
 		InputTokens       respjson.Field
 		NumModelRequests  respjson.Field
@@ -4841,6 +4900,7 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 		NumSessions       respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
+		Quantity          respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -5308,6 +5368,9 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult 
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// costs result.
 	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the quantity of the grouped costs
+	// result.
+	Quantity float64 `json:"quantity" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object      respjson.Field
@@ -5315,6 +5378,7 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult 
 		APIKeyID    respjson.Field
 		LineItem    respjson.Field
 		ProjectID   respjson.Field
+		Quantity    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -5471,6 +5535,9 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult].
 	LineItem string `json:"line_item"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult].
+	Quantity float64 `json:"quantity"`
 	JSON     struct {
 		InputTokens       respjson.Field
 		NumModelRequests  respjson.Field
@@ -5494,6 +5561,7 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 		NumSessions       respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
+		Quantity          respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -5963,6 +6031,9 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult
 	// When `group_by=project_id`, this field provides the project ID of the grouped
 	// costs result.
 	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the quantity of the grouped costs
+	// result.
+	Quantity float64 `json:"quantity" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object      respjson.Field
@@ -5970,6 +6041,7 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult
 		APIKeyID    respjson.Field
 		LineItem    respjson.Field
 		ProjectID   respjson.Field
+		Quantity    respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
