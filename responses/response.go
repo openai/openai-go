@@ -3360,8 +3360,9 @@ type Response struct {
 	// - [Text inputs and outputs](https://platform.openai.com/docs/guides/text)
 	// - [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
 	Text ResponseTextConfig `json:"text"`
-	// An integer between 0 and 20 specifying the number of most likely tokens to
-	// return at each token position, each with an associated log probability.
+	// An integer between 0 and 20 specifying the maximum number of most likely tokens
+	// to return at each token position, each with an associated log probability. In
+	// some cases, the number of returned tokens may be fewer than requested.
 	TopLogprobs int64 `json:"top_logprobs" api:"nullable"`
 	// The truncation strategy to use for the model response.
 	//
@@ -17978,7 +17979,7 @@ type ResponseTextDeltaEventLogprob struct {
 	Token string `json:"token" api:"required"`
 	// The log probability of this token.
 	Logprob float64 `json:"logprob" api:"required"`
-	// The log probability of the top 20 most likely tokens.
+	// The log probabilities of up to 20 of the most likely tokens.
 	TopLogprobs []ResponseTextDeltaEventLogprobTopLogprob `json:"top_logprobs"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -18060,7 +18061,7 @@ type ResponseTextDoneEventLogprob struct {
 	Token string `json:"token" api:"required"`
 	// The log probability of this token.
 	Logprob float64 `json:"logprob" api:"required"`
-	// The log probability of the top 20 most likely tokens.
+	// The log probabilities of up to 20 of the most likely tokens.
 	TopLogprobs []ResponseTextDoneEventLogprobTopLogprob `json:"top_logprobs"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -21600,8 +21601,9 @@ type ResponseNewParams struct {
 	// focused and deterministic. We generally recommend altering this or `top_p` but
 	// not both.
 	Temperature param.Opt[float64] `json:"temperature,omitzero"`
-	// An integer between 0 and 20 specifying the number of most likely tokens to
-	// return at each token position, each with an associated log probability.
+	// An integer between 0 and 20 specifying the maximum number of most likely tokens
+	// to return at each token position, each with an associated log probability. In
+	// some cases, the number of returned tokens may be fewer than requested.
 	TopLogprobs param.Opt[int64] `json:"top_logprobs,omitzero"`
 	// An alternative to sampling with temperature, called nucleus sampling, where the
 	// model considers the results of the tokens with top_p probability mass. So 0.1
