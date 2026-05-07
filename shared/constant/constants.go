@@ -295,7 +295,13 @@ type Scroll string                                           // Always "scroll"
 type Search string                                           // Always "search"
 type SemanticVad string                                      // Always "semantic_vad"
 type ServerVad string                                        // Always "server_vad"
+type SessionClose string                                     // Always "session.close"
+type SessionClosed string                                    // Always "session.closed"
 type SessionCreated string                                   // Always "session.created"
+type SessionInputAudioBufferAppend string                    // Always "session.input_audio_buffer.append"
+type SessionInputTranscriptDelta string                      // Always "session.input_transcript.delta"
+type SessionOutputAudioDelta string                          // Always "session.output_audio.delta"
+type SessionOutputTranscriptDelta string                     // Always "session.output_transcript.delta"
 type SessionUpdate string                                    // Always "session.update"
 type SessionUpdated string                                   // Always "session.updated"
 type Shell string                                            // Always "shell"
@@ -358,6 +364,7 @@ type TranscriptTextSegment string                            // Always "transcri
 type Transcription string                                    // Always "transcription"
 type TranscriptionSessionUpdate string                       // Always "transcription_session.update"
 type TranscriptionSessionUpdated string                      // Always "transcription_session.updated"
+type Translation string                                      // Always "translation"
 type Type string                                             // Always "type"
 type UpdateFile string                                       // Always "update_file"
 type Upload string                                           // Always "upload"
@@ -829,16 +836,30 @@ func (c ResponseWebSearchCallInProgress) Default() ResponseWebSearchCallInProgre
 func (c ResponseWebSearchCallSearching) Default() ResponseWebSearchCallSearching {
 	return "response.web_search_call.searching"
 }
-func (c RetentionRatio) Default() RetentionRatio                 { return "retention_ratio" }
-func (c Role) Default() Role                                     { return "role" }
-func (c RoleDeleted) Default() RoleDeleted                       { return "role.deleted" }
-func (c ScoreModel) Default() ScoreModel                         { return "score_model" }
-func (c Screenshot) Default() Screenshot                         { return "screenshot" }
-func (c Scroll) Default() Scroll                                 { return "scroll" }
-func (c Search) Default() Search                                 { return "search" }
-func (c SemanticVad) Default() SemanticVad                       { return "semantic_vad" }
-func (c ServerVad) Default() ServerVad                           { return "server_vad" }
-func (c SessionCreated) Default() SessionCreated                 { return "session.created" }
+func (c RetentionRatio) Default() RetentionRatio { return "retention_ratio" }
+func (c Role) Default() Role                     { return "role" }
+func (c RoleDeleted) Default() RoleDeleted       { return "role.deleted" }
+func (c ScoreModel) Default() ScoreModel         { return "score_model" }
+func (c Screenshot) Default() Screenshot         { return "screenshot" }
+func (c Scroll) Default() Scroll                 { return "scroll" }
+func (c Search) Default() Search                 { return "search" }
+func (c SemanticVad) Default() SemanticVad       { return "semantic_vad" }
+func (c ServerVad) Default() ServerVad           { return "server_vad" }
+func (c SessionClose) Default() SessionClose     { return "session.close" }
+func (c SessionClosed) Default() SessionClosed   { return "session.closed" }
+func (c SessionCreated) Default() SessionCreated { return "session.created" }
+func (c SessionInputAudioBufferAppend) Default() SessionInputAudioBufferAppend {
+	return "session.input_audio_buffer.append"
+}
+func (c SessionInputTranscriptDelta) Default() SessionInputTranscriptDelta {
+	return "session.input_transcript.delta"
+}
+func (c SessionOutputAudioDelta) Default() SessionOutputAudioDelta {
+	return "session.output_audio.delta"
+}
+func (c SessionOutputTranscriptDelta) Default() SessionOutputTranscriptDelta {
+	return "session.output_transcript.delta"
+}
 func (c SessionUpdate) Default() SessionUpdate                   { return "session.update" }
 func (c SessionUpdated) Default() SessionUpdated                 { return "session.updated" }
 func (c Shell) Default() Shell                                   { return "shell" }
@@ -913,6 +934,7 @@ func (c TranscriptionSessionUpdate) Default() TranscriptionSessionUpdate {
 func (c TranscriptionSessionUpdated) Default() TranscriptionSessionUpdated {
 	return "transcription_session.updated"
 }
+func (c Translation) Default() Translation               { return "translation" }
 func (c Type) Default() Type                             { return "type" }
 func (c UpdateFile) Default() UpdateFile                 { return "update_file" }
 func (c Upload) Default() Upload                         { return "upload" }
@@ -1239,7 +1261,13 @@ func (c Scroll) MarshalJSON() ([]byte, error)                             { retu
 func (c Search) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c SemanticVad) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c ServerVad) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c SessionClose) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c SessionClosed) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c SessionCreated) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c SessionInputAudioBufferAppend) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c SessionInputTranscriptDelta) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c SessionOutputAudioDelta) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c SessionOutputTranscriptDelta) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c SessionUpdate) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c SessionUpdated) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c Shell) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
@@ -1302,6 +1330,7 @@ func (c TranscriptTextSegment) MarshalJSON() ([]byte, error)              { retu
 func (c Transcription) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c TranscriptionSessionUpdate) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c TranscriptionSessionUpdated) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c Translation) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c Type) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c UpdateFile) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Upload) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
