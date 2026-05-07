@@ -220,6 +220,7 @@ type QuotedText string                                       // Always "quoted_t
 type RateLimitsUpdated string                                // Always "rate_limits.updated"
 type Realtime string                                         // Always "realtime"
 type RealtimeCallIncoming string                             // Always "realtime.call.incoming"
+type RealtimeSession string                                  // Always "realtime.session"
 type Reasoning string                                        // Always "reasoning"
 type ReasoningText string                                    // Always "reasoning_text"
 type Refusal string                                          // Always "refusal"
@@ -684,6 +685,7 @@ func (c QuotedText) Default() QuotedText                     { return "quoted_te
 func (c RateLimitsUpdated) Default() RateLimitsUpdated       { return "rate_limits.updated" }
 func (c Realtime) Default() Realtime                         { return "realtime" }
 func (c RealtimeCallIncoming) Default() RealtimeCallIncoming { return "realtime.call.incoming" }
+func (c RealtimeSession) Default() RealtimeSession           { return "realtime.session" }
 func (c Reasoning) Default() Reasoning                       { return "reasoning" }
 func (c ReasoningText) Default() ReasoningText               { return "reasoning_text" }
 func (c Refusal) Default() Refusal                           { return "refusal" }
@@ -1182,6 +1184,7 @@ func (c QuotedText) MarshalJSON() ([]byte, error)                            { r
 func (c RateLimitsUpdated) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c Realtime) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c RealtimeCallIncoming) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c RealtimeSession) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 func (c Reasoning) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c ReasoningText) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Refusal) MarshalJSON() ([]byte, error)                               { return marshalString(c) }

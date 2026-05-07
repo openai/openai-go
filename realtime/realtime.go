@@ -37,23 +37,31 @@ func NewRealtimeService(opts ...option.RequestOption) (r RealtimeService) {
 }
 
 type AudioTranscription struct {
+	// Controls how long the model waits before emitting transcription text. Higher
+	// values can improve transcription accuracy at the cost of latency. Only supported
+	// with `gpt-realtime-whisper` in GA Realtime sessions.
+	//
+	// Any of "minimal", "low", "medium", "high", "xhigh".
+	Delay AudioTranscriptionDelay `json:"delay"`
 	// The language of the input audio. Supplying the input language in
 	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) (e.g. `en`)
 	// format will improve accuracy and latency.
 	Language string `json:"language"`
 	// The model to use for transcription. Current options are `whisper-1`,
 	// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
-	// `gpt-4o-transcribe`, and `gpt-4o-transcribe-diarize`. Use
-	// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
+	// `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`.
+	// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 	Model AudioTranscriptionModel `json:"model"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. For `whisper-1`, the
 	// [prompt is a list of keywords](https://platform.openai.com/docs/guides/speech-to-text#prompting).
 	// For `gpt-4o-transcribe` models (excluding `gpt-4o-transcribe-diarize`), the
 	// prompt is a free text string, for example "expect words related to technology".
+	// Prompt is not supported with `gpt-realtime-whisper` in GA Realtime sessions.
 	Prompt string `json:"prompt"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Delay       respjson.Field
 		Language    respjson.Field
 		Model       respjson.Field
 		Prompt      respjson.Field
@@ -77,10 +85,23 @@ func (r AudioTranscription) ToParam() AudioTranscriptionParam {
 	return param.Override[AudioTranscriptionParam](json.RawMessage(r.RawJSON()))
 }
 
+// Controls how long the model waits before emitting transcription text. Higher
+// values can improve transcription accuracy at the cost of latency. Only supported
+// with `gpt-realtime-whisper` in GA Realtime sessions.
+type AudioTranscriptionDelay string
+
+const (
+	AudioTranscriptionDelayMinimal AudioTranscriptionDelay = "minimal"
+	AudioTranscriptionDelayLow     AudioTranscriptionDelay = "low"
+	AudioTranscriptionDelayMedium  AudioTranscriptionDelay = "medium"
+	AudioTranscriptionDelayHigh    AudioTranscriptionDelay = "high"
+	AudioTranscriptionDelayXhigh   AudioTranscriptionDelay = "xhigh"
+)
+
 // The model to use for transcription. Current options are `whisper-1`,
 // `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
-// `gpt-4o-transcribe`, and `gpt-4o-transcribe-diarize`. Use
-// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
+// `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`.
+// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 type AudioTranscriptionModel string
 
 const (
@@ -89,6 +110,7 @@ const (
 	AudioTranscriptionModelGPT4oMiniTranscribe2025_12_15 AudioTranscriptionModel = "gpt-4o-mini-transcribe-2025-12-15"
 	AudioTranscriptionModelGPT4oTranscribe               AudioTranscriptionModel = "gpt-4o-transcribe"
 	AudioTranscriptionModelGPT4oTranscribeDiarize        AudioTranscriptionModel = "gpt-4o-transcribe-diarize"
+	AudioTranscriptionModelGPTRealtimeWhisper            AudioTranscriptionModel = "gpt-realtime-whisper"
 )
 
 type AudioTranscriptionParam struct {
@@ -101,11 +123,18 @@ type AudioTranscriptionParam struct {
 	// [prompt is a list of keywords](https://platform.openai.com/docs/guides/speech-to-text#prompting).
 	// For `gpt-4o-transcribe` models (excluding `gpt-4o-transcribe-diarize`), the
 	// prompt is a free text string, for example "expect words related to technology".
+	// Prompt is not supported with `gpt-realtime-whisper` in GA Realtime sessions.
 	Prompt param.Opt[string] `json:"prompt,omitzero"`
+	// Controls how long the model waits before emitting transcription text. Higher
+	// values can improve transcription accuracy at the cost of latency. Only supported
+	// with `gpt-realtime-whisper` in GA Realtime sessions.
+	//
+	// Any of "minimal", "low", "medium", "high", "xhigh".
+	Delay AudioTranscriptionDelay `json:"delay,omitzero"`
 	// The model to use for transcription. Current options are `whisper-1`,
 	// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
-	// `gpt-4o-transcribe`, and `gpt-4o-transcribe-diarize`. Use
-	// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
+	// `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`.
+	// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 	Model AudioTranscriptionModel `json:"model,omitzero"`
 	paramObj
 }
@@ -157,6 +186,9 @@ type RealtimeAudioConfigInputParam struct {
 	// trails off with "uhhm", the model will score a low probability of turn end and
 	// wait longer for the user to continue speaking. This can be useful for more
 	// natural conversations, but may have a higher latency.
+	//
+	// For `gpt-realtime-whisper` transcription sessions, turn detection must be set to
+	// `null`; VAD is not supported.
 	TurnDetection RealtimeAudioInputTurnDetectionUnionParam `json:"turn_detection,omitzero"`
 	// The format of the input audio.
 	Format RealtimeAudioFormatsUnionParam `json:"format,omitzero"`
@@ -851,6 +883,66 @@ func (r *RealtimeFunctionToolParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Configuration for reasoning-capable Realtime models such as `gpt-realtime-2`.
+type RealtimeReasoning struct {
+	// Constrains effort on reasoning for reasoning-capable Realtime models such as
+	// `gpt-realtime-2`.
+	//
+	// Any of "minimal", "low", "medium", "high", "xhigh".
+	Effort RealtimeReasoningEffort `json:"effort"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Effort      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r RealtimeReasoning) RawJSON() string { return r.JSON.raw }
+func (r *RealtimeReasoning) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this RealtimeReasoning to a RealtimeReasoningParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// RealtimeReasoningParam.Overrides()
+func (r RealtimeReasoning) ToParam() RealtimeReasoningParam {
+	return param.Override[RealtimeReasoningParam](json.RawMessage(r.RawJSON()))
+}
+
+// Configuration for reasoning-capable Realtime models such as `gpt-realtime-2`.
+type RealtimeReasoningParam struct {
+	// Constrains effort on reasoning for reasoning-capable Realtime models such as
+	// `gpt-realtime-2`.
+	//
+	// Any of "minimal", "low", "medium", "high", "xhigh".
+	Effort RealtimeReasoningEffort `json:"effort,omitzero"`
+	paramObj
+}
+
+func (r RealtimeReasoningParam) MarshalJSON() (data []byte, err error) {
+	type shadow RealtimeReasoningParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *RealtimeReasoningParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Constrains effort on reasoning for reasoning-capable Realtime models such as
+// `gpt-realtime-2`.
+type RealtimeReasoningEffort string
+
+const (
+	RealtimeReasoningEffortMinimal RealtimeReasoningEffort = "minimal"
+	RealtimeReasoningEffortLow     RealtimeReasoningEffort = "low"
+	RealtimeReasoningEffortMedium  RealtimeReasoningEffort = "medium"
+	RealtimeReasoningEffortHigh    RealtimeReasoningEffort = "high"
+	RealtimeReasoningEffortXhigh   RealtimeReasoningEffort = "xhigh"
+)
+
 // Realtime session object configuration.
 //
 // The property Type is required.
@@ -867,6 +959,9 @@ type RealtimeSessionCreateRequestParam struct {
 	// is not set and are visible in the `session.created` event at the start of the
 	// session.
 	Instructions param.Opt[string] `json:"instructions,omitzero"`
+	// Whether the model may call multiple tools in parallel. Only supported by
+	// reasoning Realtime models such as `gpt-realtime-2`.
+	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
 	// Reference to a prompt template and its variables.
 	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
 	Prompt responses.ResponsePromptParam `json:"prompt,omitzero"`
@@ -900,6 +995,8 @@ type RealtimeSessionCreateRequestParam struct {
 	//
 	// Any of "text", "audio".
 	OutputModalities []string `json:"output_modalities,omitzero"`
+	// Configuration for reasoning-capable Realtime models such as `gpt-realtime-2`.
+	Reasoning RealtimeReasoningParam `json:"reasoning,omitzero"`
 	// How the model chooses tools. Provide one of the string modes or force a specific
 	// function/MCP tool.
 	ToolChoice RealtimeToolChoiceConfigUnionParam `json:"tool_choice,omitzero"`
@@ -971,6 +1068,7 @@ type RealtimeSessionCreateRequestModel = string
 const (
 	RealtimeSessionCreateRequestModelGPTRealtime                        RealtimeSessionCreateRequestModel = "gpt-realtime"
 	RealtimeSessionCreateRequestModelGPTRealtime1_5                     RealtimeSessionCreateRequestModel = "gpt-realtime-1.5"
+	RealtimeSessionCreateRequestModelGPTRealtime2                       RealtimeSessionCreateRequestModel = "gpt-realtime-2"
 	RealtimeSessionCreateRequestModelGPTRealtime2025_08_28              RealtimeSessionCreateRequestModel = "gpt-realtime-2025-08-28"
 	RealtimeSessionCreateRequestModelGPT4oRealtimePreview               RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview"
 	RealtimeSessionCreateRequestModelGPT4oRealtimePreview2024_10_01     RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview-2024-10-01"
@@ -1490,6 +1588,9 @@ type RealtimeTranscriptionSessionAudioInputParam struct {
 	// trails off with "uhhm", the model will score a low probability of turn end and
 	// wait longer for the user to continue speaking. This can be useful for more
 	// natural conversations, but may have a higher latency.
+	//
+	// For `gpt-realtime-whisper` transcription sessions, turn detection must be set to
+	// `null`; VAD is not supported.
 	TurnDetection RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam `json:"turn_detection,omitzero"`
 	// The PCM audio format. Only a 24kHz sample rate is supported.
 	Format RealtimeAudioFormatsUnionParam `json:"format,omitzero"`

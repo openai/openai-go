@@ -46,6 +46,7 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 							Type: realtime.NoiseReductionTypeNearField,
 						},
 						Transcription: realtime.AudioTranscriptionParam{
+							Delay:    realtime.AudioTranscriptionDelayMinimal,
 							Language: openai.String("language"),
 							Model:    realtime.AudioTranscriptionModelWhisper1,
 							Prompt:   openai.String("prompt"),
@@ -79,8 +80,9 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 				MaxOutputTokens: realtime.RealtimeSessionCreateRequestMaxOutputTokensUnionParam{
 					OfInf: constant.ValueOf[constant.Inf](),
 				},
-				Model:            realtime.RealtimeSessionCreateRequestModelGPTRealtime,
-				OutputModalities: []string{"text"},
+				Model:             realtime.RealtimeSessionCreateRequestModelGPTRealtime,
+				OutputModalities:  []string{"text"},
+				ParallelToolCalls: openai.Bool(true),
 				Prompt: responses.ResponsePromptParam{
 					ID: "id",
 					Variables: map[string]responses.ResponsePromptVariableUnionParam{
@@ -89,6 +91,9 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 						},
 					},
 					Version: openai.String("version"),
+				},
+				Reasoning: realtime.RealtimeReasoningParam{
+					Effort: realtime.RealtimeReasoningEffortMinimal,
 				},
 				ToolChoice: realtime.RealtimeToolChoiceConfigUnionParam{
 					OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
