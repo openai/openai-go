@@ -1,5 +1,33 @@
 # Changelog
 
+## 3.35.0 (2026-05-07)
+
+Full Changelog: [v3.34.0...v3.35.0](https://github.com/openai/openai-go/compare/v3.34.0...v3.35.0)
+
+### Features
+
+* **api:** add quantity field to admin organization usage costs results ([899b6de](https://github.com/openai/openai-go/commit/899b6dec70bd180a98497150b892285261882625))
+* **api:** launch realtime translate + update image 2 ([1fbf3a6](https://github.com/openai/openai-go/commit/1fbf3a68e418f84993db1c291255c467e47dbe37))
+* **api:** manual updates ([cd9047f](https://github.com/openai/openai-go/commit/cd9047f7416cedba79c7479d96acce3f59ac2c86))
+* **api:** realtime 2 ([5b51410](https://github.com/openai/openai-go/commit/5b514101d40d0b9f36194bab0c7e49a7f6098c03))
+
+
+### Bug Fixes
+
+* **api:** fix imagegen `size` enum regression ([995778e](https://github.com/openai/openai-go/commit/995778eac4b36433a7d116f9a09999f34e78b91f))
+* **types:** add format tags for URI and timestamp fields across models ([a6c2198](https://github.com/openai/openai-go/commit/a6c219806da98fa140b837a1063d3ee7f5f51e8d))
+
+
+### Chores
+
+* **internal:** regenerate SDK with no functional changes ([71c80ef](https://github.com/openai/openai-go/commit/71c80ef9e4407d6714f9d0013bc9579dfab1a223))
+* redact api-key headers in debug logs ([ff51a02](https://github.com/openai/openai-go/commit/ff51a02d264f06535bac6000865b8ad27e4e8a72))
+
+
+### Documentation
+
+* **api:** document web_search_call.results output data option ([6c2d8ef](https://github.com/openai/openai-go/commit/6c2d8eff506aae6b4fea17fdca94748bd4b2cd3e))
+
 ## 3.34.0 (2026-05-01)
 
 Full Changelog: [v3.33.0...v3.34.0](https://github.com/openai/openai-go/compare/v3.33.0...v3.34.0)
