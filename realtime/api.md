@@ -10,6 +10,8 @@ Params Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeAudioFormatsUnionParam">RealtimeAudioFormatsUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeAudioInputTurnDetectionUnionParam">RealtimeAudioInputTurnDetectionUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeFunctionToolParam">RealtimeFunctionToolParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeReasoningParam">RealtimeReasoningParam</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeReasoningEffort">RealtimeReasoningEffort</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeSessionCreateRequestParam">RealtimeSessionCreateRequestParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeToolChoiceConfigUnionParam">RealtimeToolChoiceConfigUnionParam</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeToolsConfigParam">RealtimeToolsConfigParam</a>
@@ -28,6 +30,8 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#NoiseReductionType">NoiseReductionType</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeAudioFormatsUnion">RealtimeAudioFormatsUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeFunctionTool">RealtimeFunctionTool</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeReasoning">RealtimeReasoning</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeReasoningEffort">RealtimeReasoningEffort</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationUnion">RealtimeTruncationUnion</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTruncationRetentionRatio">RealtimeTruncationRetentionRatio</a>
 
@@ -35,7 +39,6 @@ Response Types:
 
 Response Types:
 
-- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeSessionClientSecret">RealtimeSessionClientSecret</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeSessionCreateResponse">RealtimeSessionCreateResponse</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranscriptionSessionCreateResponse">RealtimeTranscriptionSessionCreateResponse</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime">realtime</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/realtime#RealtimeTranscriptionSessionTurnDetection">RealtimeTranscriptionSessionTurnDetection</a>
