@@ -22075,6 +22075,10 @@ type ResponseCompactParams struct {
 	//
 	// Any of "in_memory", "24h".
 	PromptCacheRetention ResponseCompactParamsPromptCacheRetention `json:"prompt_cache_retention,omitzero"`
+	// The service tier to use for this request.
+	//
+	// Any of "auto", "default", "flex", "priority".
+	ServiceTier ResponseCompactParamsServiceTier `json:"service_tier,omitzero"`
 	paramObj
 }
 
@@ -22219,4 +22223,14 @@ type ResponseCompactParamsPromptCacheRetention string
 const (
 	ResponseCompactParamsPromptCacheRetentionInMemory ResponseCompactParamsPromptCacheRetention = "in_memory"
 	ResponseCompactParamsPromptCacheRetention24h      ResponseCompactParamsPromptCacheRetention = "24h"
+)
+
+// The service tier to use for this request.
+type ResponseCompactParamsServiceTier string
+
+const (
+	ResponseCompactParamsServiceTierAuto     ResponseCompactParamsServiceTier = "auto"
+	ResponseCompactParamsServiceTierDefault  ResponseCompactParamsServiceTier = "default"
+	ResponseCompactParamsServiceTierFlex     ResponseCompactParamsServiceTier = "flex"
+	ResponseCompactParamsServiceTierPriority ResponseCompactParamsServiceTier = "priority"
 )

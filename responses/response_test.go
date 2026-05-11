@@ -206,6 +206,7 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 		PreviousResponseID:   openai.String("resp_123"),
 		PromptCacheKey:       openai.String("prompt_cache_key"),
 		PromptCacheRetention: responses.ResponseCompactParamsPromptCacheRetentionInMemory,
+		ServiceTier:          responses.ResponseCompactParamsServiceTierAuto,
 	})
 	if err != nil {
 		var apierr *openai.Error
