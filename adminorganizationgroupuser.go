@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -47,7 +46,7 @@ func (r *AdminOrganizationGroupUserService) New(ctx context.Context, groupID str
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s/users", groupID)
+	path := requestconfig.FormatPath("organization/groups/%s/users", groupID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -62,7 +61,7 @@ func (r *AdminOrganizationGroupUserService) List(ctx context.Context, groupID st
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s/users", groupID)
+	path := requestconfig.FormatPath("organization/groups/%s/users", groupID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -92,7 +91,7 @@ func (r *AdminOrganizationGroupUserService) Delete(ctx context.Context, groupID 
 		err = errors.New("missing required user_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s/users/%s", groupID, userID)
+	path := requestconfig.FormatPath("organization/groups/%s/users/%s", groupID, userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

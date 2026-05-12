@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -51,7 +50,7 @@ func (r *AdminOrganizationProjectGroupRoleService) New(ctx context.Context, proj
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("projects/%s/groups/%s/roles", projectID, groupID)
+	path := requestconfig.FormatPath("projects/%s/groups/%s/roles", projectID, groupID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -70,7 +69,7 @@ func (r *AdminOrganizationProjectGroupRoleService) List(ctx context.Context, pro
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("projects/%s/groups/%s/roles", projectID, groupID)
+	path := requestconfig.FormatPath("projects/%s/groups/%s/roles", projectID, groupID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -104,7 +103,7 @@ func (r *AdminOrganizationProjectGroupRoleService) Delete(ctx context.Context, p
 		err = errors.New("missing required role_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("projects/%s/groups/%s/roles/%s", projectID, groupID, roleID)
+	path := requestconfig.FormatPath("projects/%s/groups/%s/roles/%s", projectID, groupID, roleID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

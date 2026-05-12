@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -72,7 +71,7 @@ func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.R
 		err = errors.New("missing required video_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("videos/%s", videoID)
+	path := requestconfig.FormatPath("videos/%s", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -109,7 +108,7 @@ func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...optio
 		err = errors.New("missing required video_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("videos/%s", videoID)
+	path := requestconfig.FormatPath("videos/%s", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -134,7 +133,7 @@ func (r *VideoService) DownloadContent(ctx context.Context, videoID string, quer
 		err = errors.New("missing required video_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("videos/%s/content", videoID)
+	path := requestconfig.FormatPath("videos/%s/content", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
@@ -166,7 +165,7 @@ func (r *VideoService) GetCharacter(ctx context.Context, characterID string, opt
 		err = errors.New("missing required character_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("videos/characters/%s", characterID)
+	path := requestconfig.FormatPath("videos/characters/%s", characterID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -179,7 +178,7 @@ func (r *VideoService) Remix(ctx context.Context, videoID string, body VideoRemi
 		err = errors.New("missing required video_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("videos/%s/remix", videoID)
+	path := requestconfig.FormatPath("videos/%s/remix", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }

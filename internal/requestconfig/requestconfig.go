@@ -31,6 +31,25 @@ func getDefaultHeaders() map[string]string {
 	}
 }
 
+func encodePathParam(value string) string {
+	switch value {
+	case ".":
+		return "%2E"
+	case "..":
+		return "%2E%2E"
+	}
+	return url.PathEscape(value)
+}
+
+// FormatPath escapes path parameters and inserts them into a request path.
+func FormatPath(format string, params ...string) string {
+	args := make([]any, len(params))
+	for i, param := range params {
+		args[i] = encodePathParam(param)
+	}
+	return fmt.Sprintf(format, args...)
+}
+
 func getNormalizedOS() string {
 	switch runtime.GOOS {
 	case "ios":
