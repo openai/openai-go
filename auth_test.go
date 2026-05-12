@@ -44,7 +44,6 @@ func (m *mockSubjectTokenProvider) GetCallCount() int {
 
 func testWorkloadIdentity(provider auth.SubjectTokenProvider) auth.WorkloadIdentity {
 	return auth.WorkloadIdentity{
-		ClientID:           "test-client-id",
 		IdentityProviderID: "test-idp-id",
 		ServiceAccountID:   "test-sa-id",
 		Provider:           provider,
