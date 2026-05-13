@@ -968,7 +968,6 @@ import (
 
 client := openai.NewClient(
 	option.WithWorkloadIdentity(auth.WorkloadIdentity{
-		ClientID:           "your-client-id",
 		IdentityProviderID: "idp-123",
 		ServiceAccountID:   "sa-456",
 		Provider:           auth.K8sServiceAccountTokenProvider(""),
@@ -981,7 +980,6 @@ client := openai.NewClient(
 ```go
 client := openai.NewClient(
 	option.WithWorkloadIdentity(auth.WorkloadIdentity{
-		ClientID:           "your-client-id",
 		IdentityProviderID: "idp-123",
 		ServiceAccountID:   "sa-456",
 		Provider:           auth.AzureManagedIdentityTokenProvider(nil),
@@ -994,7 +992,6 @@ client := openai.NewClient(
 ```go
 client := openai.NewClient(
 	option.WithWorkloadIdentity(auth.WorkloadIdentity{
-		ClientID:           "your-client-id",
 		IdentityProviderID: "idp-123",
 		ServiceAccountID:   "sa-456",
 		Provider:           auth.GCPIDTokenProvider(nil),
@@ -1027,7 +1024,6 @@ func (p *customTokenProvider) GetToken(ctx context.Context, httpClient auth.HTTP
 
 client := openai.NewClient(
 	option.WithWorkloadIdentity(auth.WorkloadIdentity{
-		ClientID:           "your-client-id",
 		IdentityProviderID: "idp-123",
 		ServiceAccountID:   "sa-456",
 		Provider:           &customTokenProvider{},
@@ -1042,7 +1038,6 @@ By default, tokens are refreshed 20 minutes (1200 seconds) before expiry. You ca
 ```go
 client := openai.NewClient(
 	option.WithWorkloadIdentity(auth.WorkloadIdentity{
-		ClientID:             "your-client-id",
 		IdentityProviderID:   "idp-123",
 		ServiceAccountID:     "sa-456",
 		Provider:             auth.K8sServiceAccountTokenProvider(""),
