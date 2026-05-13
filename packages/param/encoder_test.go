@@ -1,10 +1,13 @@
 package param_test
 
 import (
+	"bytes"
 	"encoding/json"
+	"reflect"
 	"testing"
 	"time"
 
+	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 	"github.com/openai/openai-go/v3/packages/param"
 )
 
@@ -373,5 +376,178 @@ func TestNullStructUnion(t *testing.T) {
 	}
 	if string(b) != "null" {
 		t.Fatalf("expected null, received %s", string(b))
+	}
+}
+
+//
+// Compaction optimization
+//
+
+type NonCompactedDoubleParent struct {
+	Prop   string             `json:"prop"`
+	Parent NonCompactedParent `json:"parent"`
+
+	param.APIObject
+}
+
+type NonCompactedParent struct {
+	BadChild NonCompacted `json:"bad_child"`
+
+	param.APIObject
+}
+
+type NonCompacted struct {
+	Raw string
+
+	param.APIObject
+}
+
+func (a NonCompactedDoubleParent) MarshalJSON() ([]byte, error) {
+	type shadow NonCompactedDoubleParent
+	return param.MarshalObject(a, (*shadow)(&a))
+}
+
+func (a NonCompactedParent) MarshalJSON() ([]byte, error) {
+	type shadow NonCompactedParent
+	return param.MarshalObject(a, (*shadow)(&a))
+}
+
+func (a NonCompacted) MarshalJSON() ([]byte, error) {
+	if a.Raw == "" {
+		a.Raw = nonCompactedRaw
+	}
+	return []byte(a.Raw), nil
+}
+
+var nonCompactedRaw string = ` { "foo": "bar" } `
+
+func TestAppendCompactBroken(t *testing.T) {
+	tests := map[string]struct {
+		value json.Marshaler
+	}{
+		"red/illegal-json": {
+			NonCompacted{Raw: `{ "broken": "json" `},
+		},
+		"red/nested-with-illegal-json": {
+			NonCompactedParent{BadChild: NonCompacted{
+				Raw: `{ "broken": "json" `,
+			}},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			v, err := json.Marshal(test.value)
+			if err == nil {
+				t.Fatal("expected error got", v)
+			}
+		})
+	}
+}
+
+// TestAppendCompact validates an optimization for internal SDK types to
+// avoid O(keys^2) iteration over each JSON object.
+//
+// It's possible to intentionally trigger this behavior as both a user and
+// SDK developer. However, the edge case is quite pathological and requires
+// calling [json.Marshaler.MarshalJSON] rather than [json.Marshal].
+func TestAppendCompact(t *testing.T) {
+
+	tests := map[string]struct {
+		value    json.Marshaler
+		expected string
+	}{
+		//
+		// Non-compacted cases
+		//
+		// Note this is how to exploit the compacter to fail, you must call [json.Marshaler.MarshalJSON] rather than [json.Marshal].
+		// The type must also embed [param.APIObject] and return non-compacted JSON.
+		//
+
+		"no-compact/fails-compaction": {
+			NonCompacted{Raw: nonCompactedRaw},
+			nonCompactedRaw,
+		},
+		"no-compact/nested-with-bad-child": {
+			NonCompactedParent{BadChild: NonCompacted{
+				Raw: nonCompactedRaw,
+			}},
+			`{"bad_child":` + nonCompactedRaw + `}`,
+		},
+		"no-compact/double-nested-with-bad-child": {
+			NonCompactedDoubleParent{Prop: "1", Parent: NonCompactedParent{BadChild: NonCompacted{
+				Raw: nonCompactedRaw,
+			}}},
+			`{"prop":"1","parent":{"bad_child":` + nonCompactedRaw + `}}`,
+		},
+
+		//
+		// Compacted cases
+		//
+
+		"override/spaces-within": {
+			param.Override[NonCompactedDoubleParent](json.RawMessage(`{"com": "pact"}`)),
+			`{"com":"pact"}`,
+		},
+		"override/spaces-after": {
+			param.Override[NonCompactedDoubleParent](json.RawMessage(`{"com":"pact"}  `)),
+			`{"com":"pact"}`,
+		},
+		"override/spaces-before": {
+			param.Override[NonCompactedDoubleParent](json.RawMessage(`  {"com":"pact"}`)),
+			`{"com":"pact"}`,
+		},
+		"override/spaces-around": {
+			param.Override[NonCompactedDoubleParent](json.RawMessage(` { "com": "pact"   }`)),
+			`{"com":"pact"}`,
+		},
+		"override/override-with-nested": {
+			param.Override[NonCompactedDoubleParent](NonCompactedParent{}),
+			`{"bad_child":{"foo":"bar"}}`,
+		},
+		"override/override-with-non-compacted": {
+			param.Override[NonCompactedDoubleParent](NonCompacted{}),
+			`{"foo":"bar"}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name+"/marshal-json", func(t *testing.T) {
+			b, err := test.value.MarshalJSON()
+			if err != nil {
+				t.Fatalf("didn't expect error %v, expected %s", err, test.expected)
+			}
+			if string(b) != test.expected {
+				t.Fatalf("expected %s (%s), received %s", test.expected, reflect.TypeOf(test.value), string(b))
+			}
+		})
+
+		t.Run(name+"/json-marshal", func(t *testing.T) {
+			b, err := json.Marshal(test.value)
+			if err != nil {
+				t.Fatalf("didn't expect error %v, expected %s", err, test.expected)
+			}
+
+			// expected output of JSON Marshal should always be compacted
+			var compactedExpected bytes.Buffer
+			err = json.Compact(&compactedExpected, []byte(test.expected))
+			if err != nil {
+				t.Fatalf("didn't expect error %v, expected %s", err, test.expected)
+			}
+
+			if string(b) != compactedExpected.String() {
+				t.Fatalf("expected %s (%s), received %s", test.expected, reflect.TypeOf(test.value), string(b))
+			}
+		})
+
+		t.Run(name+"/shimjson-marshal", func(t *testing.T) {
+			b, err := shimjson.Marshal(test.value)
+			if err != nil {
+				t.Fatalf("didn't expect error %v, expected %s", err, test.expected)
+			}
+			if string(b) != test.expected {
+				t.Logf("expected %s (%s), received %s", test.expected, reflect.TypeOf(test.value), string(b))
+			}
+		})
 	}
 }

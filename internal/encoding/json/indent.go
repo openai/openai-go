@@ -4,7 +4,9 @@
 
 package json
 
-import "bytes"
+import (
+	"bytes"
+)
 
 // HTMLEscape appends to dst the JSON-encoded src with <, >, &, U+2028 and U+2029
 // characters inside string literals changed to \u003c, \u003e, \u0026, \u2028, \u2029
@@ -41,12 +43,21 @@ func appendHTMLEscape(dst, src []byte) []byte {
 func Compact(dst *bytes.Buffer, src []byte) error {
 	dst.Grow(len(src))
 	b := dst.AvailableBuffer()
-	b, err := appendCompact(b, src, false)
+	b, err := appendCompact(b, src, encOpts{})
 	dst.Write(b)
 	return err
 }
 
-func appendCompact(dst, src []byte, escape bool) ([]byte, error) {
+func appendCompact(dst, src []byte, opts encOpts) ([]byte, error) {
+	// EDIT(begin): optimize for skipCompaction
+	if opts.skipCompaction {
+		dst = append(dst, src...)
+		return dst, nil
+	}
+
+	escape := opts.escapeHTML
+	// EDIT(end)
+
 	origLen := len(dst)
 	scan := newScanner()
 	defer freeScanner(scan)
