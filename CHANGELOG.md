@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.36.0 (2026-05-13)
+
+Full Changelog: [v3.35.0...v3.36.0](https://github.com/openai/openai-go/compare/v3.35.0...v3.36.0)
+
+### Features
+
+* **api:** add service_tier parameter to response compact method ([bacd2c0](https://github.com/openai/openai-go/commit/bacd2c0bcf980e8d424d67446fb4d9c4ea897d24))
+
+
+### Bug Fixes
+
+* **go:** avoid panic when http.DefaultTransport is wrapped ([95a0250](https://github.com/openai/openai-go/commit/95a0250a9c770674f8deacb3a3fc1175e6808967))
+
 ## 3.35.0 (2026-05-07)
 
 Full Changelog: [v3.34.0...v3.35.0](https://github.com/openai/openai-go/compare/v3.34.0...v3.35.0)
