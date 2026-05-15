@@ -9718,7 +9718,7 @@ func (r *ResponseInputImageContentParam) UnmarshalJSON(data []byte) error {
 // [ResponseInputItemMcpListTools], [ResponseInputItemMcpApprovalRequest],
 // [ResponseInputItemMcpApprovalResponse], [ResponseInputItemMcpCall],
 // [ResponseCustomToolCallOutput], [ResponseCustomToolCall],
-// [ResponseInputItemItemReference].
+// [ResponseInputItemCompactionTrigger], [ResponseInputItemItemReference].
 //
 // Use the [ResponseInputItemUnion.AsAny] method to switch on the variant.
 //
@@ -9737,7 +9737,8 @@ type ResponseInputItemUnion struct {
 	// "local_shell_call", "local_shell_call_output", "shell_call",
 	// "shell_call_output", "apply_patch_call", "apply_patch_call_output",
 	// "mcp_list_tools", "mcp_approval_request", "mcp_approval_response", "mcp_call",
-	// "custom_tool_call_output", "custom_tool_call", "item_reference".
+	// "custom_tool_call_output", "custom_tool_call", "compaction_trigger",
+	// "item_reference".
 	Type   string `json:"type"`
 	Status string `json:"status"`
 	ID     string `json:"id"`
@@ -9866,6 +9867,7 @@ func (ResponseInputItemMcpApprovalResponse) implResponseInputItemUnion()  {}
 func (ResponseInputItemMcpCall) implResponseInputItemUnion()              {}
 func (ResponseCustomToolCallOutput) implResponseInputItemUnion()          {}
 func (ResponseCustomToolCall) implResponseInputItemUnion()                {}
+func (ResponseInputItemCompactionTrigger) implResponseInputItemUnion()    {}
 func (ResponseInputItemItemReference) implResponseInputItemUnion()        {}
 
 // Use the following switch statement to find the correct variant
@@ -9898,6 +9900,7 @@ func (ResponseInputItemItemReference) implResponseInputItemUnion()        {}
 //	case responses.ResponseInputItemMcpCall:
 //	case responses.ResponseCustomToolCallOutput:
 //	case responses.ResponseCustomToolCall:
+//	case responses.ResponseInputItemCompactionTrigger:
 //	case responses.ResponseInputItemItemReference:
 //	default:
 //	  fmt.Errorf("no variant present")
@@ -9954,6 +9957,8 @@ func (u ResponseInputItemUnion) AsAny() anyResponseInputItem {
 		return u.AsCustomToolCallOutput()
 	case "custom_tool_call":
 		return u.AsCustomToolCall()
+	case "compaction_trigger":
+		return u.AsCompactionTrigger()
 	case "item_reference":
 		return u.AsItemReference()
 	}
@@ -10091,6 +10096,11 @@ func (u ResponseInputItemUnion) AsCustomToolCallOutput() (v ResponseCustomToolCa
 }
 
 func (u ResponseInputItemUnion) AsCustomToolCall() (v ResponseCustomToolCall) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseInputItemUnion) AsCompactionTrigger() (v ResponseInputItemCompactionTrigger) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -11198,6 +11208,24 @@ func (r *ResponseInputItemMcpCall) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Compacts the current context. Must be the final input item.
+type ResponseInputItemCompactionTrigger struct {
+	// The type of the item. Always `compaction_trigger`.
+	Type constant.CompactionTrigger `json:"type" default:"compaction_trigger"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseInputItemCompactionTrigger) RawJSON() string { return r.JSON.raw }
+func (r *ResponseInputItemCompactionTrigger) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // An internal identifier for an item to reference.
 type ResponseInputItemItemReference struct {
 	// The ID of the item to reference.
@@ -11452,6 +11480,7 @@ type ResponseInputItemUnionParam struct {
 	OfMcpCall              *ResponseInputItemMcpCallParam              `json:",omitzero,inline"`
 	OfCustomToolCallOutput *ResponseCustomToolCallOutputParam          `json:",omitzero,inline"`
 	OfCustomToolCall       *ResponseCustomToolCallParam                `json:",omitzero,inline"`
+	OfCompactionTrigger    *ResponseInputItemCompactionTriggerParam    `json:",omitzero,inline"`
 	OfItemReference        *ResponseInputItemItemReferenceParam        `json:",omitzero,inline"`
 	paramUnion
 }
@@ -11484,6 +11513,7 @@ func (u ResponseInputItemUnionParam) MarshalJSON() ([]byte, error) {
 		u.OfMcpCall,
 		u.OfCustomToolCallOutput,
 		u.OfCustomToolCall,
+		u.OfCompactionTrigger,
 		u.OfItemReference)
 }
 func (u *ResponseInputItemUnionParam) UnmarshalJSON(data []byte) error {
@@ -11545,6 +11575,8 @@ func (u *ResponseInputItemUnionParam) asAny() any {
 		return u.OfCustomToolCallOutput
 	} else if !param.IsOmitted(u.OfCustomToolCall) {
 		return u.OfCustomToolCall
+	} else if !param.IsOmitted(u.OfCompactionTrigger) {
+		return u.OfCompactionTrigger
 	} else if !param.IsOmitted(u.OfItemReference) {
 		return u.OfItemReference
 	}
@@ -11756,6 +11788,8 @@ func (u ResponseInputItemUnionParam) GetType() *string {
 	} else if vt := u.OfCustomToolCallOutput; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfCustomToolCall; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfCompactionTrigger; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfItemReference; vt != nil {
 		return (*string)(&vt.Type)
@@ -12383,6 +12417,7 @@ func init() {
 		apijson.Discriminator[ResponseInputItemMcpCallParam]("mcp_call"),
 		apijson.Discriminator[ResponseCustomToolCallOutputParam]("custom_tool_call_output"),
 		apijson.Discriminator[ResponseCustomToolCallParam]("custom_tool_call"),
+		apijson.Discriminator[ResponseInputItemCompactionTriggerParam]("compaction_trigger"),
 		apijson.Discriminator[ResponseInputItemItemReferenceParam]("item_reference"),
 	)
 }
@@ -13253,6 +13288,30 @@ func init() {
 	apijson.RegisterFieldValidator[ResponseInputItemMcpCallParam](
 		"status", "in_progress", "completed", "incomplete", "calling", "failed",
 	)
+}
+
+func NewResponseInputItemCompactionTriggerParam() ResponseInputItemCompactionTriggerParam {
+	return ResponseInputItemCompactionTriggerParam{
+		Type: "compaction_trigger",
+	}
+}
+
+// Compacts the current context. Must be the final input item.
+//
+// This struct has a constant value, construct it with
+// [NewResponseInputItemCompactionTriggerParam].
+type ResponseInputItemCompactionTriggerParam struct {
+	// The type of the item. Always `compaction_trigger`.
+	Type constant.CompactionTrigger `json:"type" default:"compaction_trigger"`
+	paramObj
+}
+
+func (r ResponseInputItemCompactionTriggerParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseInputItemCompactionTriggerParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputItemCompactionTriggerParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // An internal identifier for an item to reference.

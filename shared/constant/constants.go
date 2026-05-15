@@ -56,6 +56,7 @@ type Closed string                                           // Always "closed"
 type CodeInterpreter string                                  // Always "code_interpreter"
 type CodeInterpreterCall string                              // Always "code_interpreter_call"
 type Compaction string                                       // Always "compaction"
+type CompactionTrigger string                                // Always "compaction_trigger"
 type Computer string                                         // Always "computer"
 type ComputerCallOutput string                               // Always "computer_call_output"
 type ComputerScreenshot string                               // Always "computer_screenshot"
@@ -198,9 +199,11 @@ type OrganizationUsageAudioTranscriptionsResult string       // Always "organiza
 type OrganizationUsageCodeInterpreterSessionsResult string   // Always "organization.usage.code_interpreter_sessions.result"
 type OrganizationUsageCompletionsResult string               // Always "organization.usage.completions.result"
 type OrganizationUsageEmbeddingsResult string                // Always "organization.usage.embeddings.result"
+type OrganizationUsageFileSearchesResult string              // Always "organization.usage.file_searches.result"
 type OrganizationUsageImagesResult string                    // Always "organization.usage.images.result"
 type OrganizationUsageModerationsResult string               // Always "organization.usage.moderations.result"
 type OrganizationUsageVectorStoresResult string              // Always "organization.usage.vector_stores.result"
+type OrganizationUsageWebSearchesResult string               // Always "organization.usage.web_searches.result"
 type OrganizationUser string                                 // Always "organization.user"
 type OrganizationUserDeleted string                          // Always "organization.user.deleted"
 type Other string                                            // Always "other"
@@ -427,6 +430,7 @@ func (c Closed) Default() Closed                                 { return "close
 func (c CodeInterpreter) Default() CodeInterpreter               { return "code_interpreter" }
 func (c CodeInterpreterCall) Default() CodeInterpreterCall       { return "code_interpreter_call" }
 func (c Compaction) Default() Compaction                         { return "compaction" }
+func (c CompactionTrigger) Default() CompactionTrigger           { return "compaction_trigger" }
 func (c Computer) Default() Computer                             { return "computer" }
 func (c ComputerCallOutput) Default() ComputerCallOutput         { return "computer_call_output" }
 func (c ComputerScreenshot) Default() ComputerScreenshot         { return "computer_screenshot" }
@@ -649,6 +653,9 @@ func (c OrganizationUsageCompletionsResult) Default() OrganizationUsageCompletio
 func (c OrganizationUsageEmbeddingsResult) Default() OrganizationUsageEmbeddingsResult {
 	return "organization.usage.embeddings.result"
 }
+func (c OrganizationUsageFileSearchesResult) Default() OrganizationUsageFileSearchesResult {
+	return "organization.usage.file_searches.result"
+}
 func (c OrganizationUsageImagesResult) Default() OrganizationUsageImagesResult {
 	return "organization.usage.images.result"
 }
@@ -657,6 +664,9 @@ func (c OrganizationUsageModerationsResult) Default() OrganizationUsageModeratio
 }
 func (c OrganizationUsageVectorStoresResult) Default() OrganizationUsageVectorStoresResult {
 	return "organization.usage.vector_stores.result"
+}
+func (c OrganizationUsageWebSearchesResult) Default() OrganizationUsageWebSearchesResult {
+	return "organization.usage.web_searches.result"
 }
 func (c OrganizationUser) Default() OrganizationUser { return "organization.user" }
 func (c OrganizationUserDeleted) Default() OrganizationUserDeleted {
@@ -1000,6 +1010,7 @@ func (c Closed) MarshalJSON() ([]byte, error)                  { return marshalS
 func (c CodeInterpreter) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c CodeInterpreterCall) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c Compaction) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c CompactionTrigger) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c Computer) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c ComputerCallOutput) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c ComputerScreenshot) MarshalJSON() ([]byte, error)      { return marshalString(c) }
@@ -1162,9 +1173,11 @@ func (c OrganizationUsageCodeInterpreterSessionsResult) MarshalJSON() ([]byte, e
 }
 func (c OrganizationUsageCompletionsResult) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c OrganizationUsageEmbeddingsResult) MarshalJSON() ([]byte, error)     { return marshalString(c) }
+func (c OrganizationUsageFileSearchesResult) MarshalJSON() ([]byte, error)   { return marshalString(c) }
 func (c OrganizationUsageImagesResult) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c OrganizationUsageModerationsResult) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c OrganizationUsageVectorStoresResult) MarshalJSON() ([]byte, error)   { return marshalString(c) }
+func (c OrganizationUsageWebSearchesResult) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c OrganizationUser) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c OrganizationUserDeleted) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c Other) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
