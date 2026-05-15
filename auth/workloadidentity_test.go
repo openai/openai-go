@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
@@ -66,6 +67,103 @@ func mockOAuthServer(responseBody string, statusCode int) *http.Client {
 				}, nil
 			},
 		},
+	}
+}
+
+func TestWorkloadIdentityClientIDOptional(t *testing.T) {
+	provider := &mockProvider{
+		token:     "test-subject-token",
+		tokenType: auth.SubjectTokenTypeJWT,
+	}
+
+	var requestBody map[string]any
+	httpClient := &http.Client{
+		Transport: &closureTransport{
+			fn: func(req *http.Request) (*http.Response, error) {
+				body, err := io.ReadAll(req.Body)
+				if err != nil {
+					t.Fatalf("failed reading request body: %v", err)
+					return nil, err
+				}
+				if err := json.Unmarshal(body, &requestBody); err != nil {
+					t.Fatalf("failed decoding request body: %v", err)
+					return nil, err
+				}
+
+				return &http.Response{
+					StatusCode: 200,
+					Body:       io.NopCloser(strings.NewReader(`{"access_token": "exchanged-token-123", "expires_in": 3600}`)),
+					Header:     make(http.Header),
+				}, nil
+			},
+		},
+	}
+
+	config := auth.WorkloadIdentity{IdentityProviderID: "idp-id", ServiceAccountID: "sa-id", Provider: provider}
+	wa, err := auth.NewWorkloadIdentityAuth(config)
+	if err != nil {
+		t.Fatalf("NewWorkloadIdentityAuth() error = %v", err)
+	}
+
+	_, err = wa.GetToken(context.Background(), httpClient)
+	if err != nil {
+		t.Fatalf("GetToken() error = %v", err)
+	}
+
+	if _, ok := requestBody["client_id"]; ok {
+		t.Errorf("request body contains client_id = %v, want omitted", requestBody["client_id"])
+	}
+
+	if requestBody["identity_provider_id"] != "idp-id" {
+		t.Errorf("identity_provider_id = %v, want idp-id", requestBody["identity_provider_id"])
+	}
+	if requestBody["service_account_id"] != "sa-id" {
+		t.Errorf("service_account_id = %v, want sa-id", requestBody["service_account_id"])
+	}
+}
+
+func TestWorkloadIdentityClientIDIncludedWhenConfigured(t *testing.T) {
+	provider := &mockProvider{
+		token:     "test-subject-token",
+		tokenType: auth.SubjectTokenTypeJWT,
+	}
+
+	var requestBody map[string]any
+	httpClient := &http.Client{
+		Transport: &closureTransport{
+			fn: func(req *http.Request) (*http.Response, error) {
+				body, err := io.ReadAll(req.Body)
+				if err != nil {
+					t.Fatalf("failed reading request body: %v", err)
+					return nil, err
+				}
+				if err := json.Unmarshal(body, &requestBody); err != nil {
+					t.Fatalf("failed decoding request body: %v", err)
+					return nil, err
+				}
+
+				return &http.Response{
+					StatusCode: 200,
+					Body:       io.NopCloser(strings.NewReader(`{"access_token": "exchanged-token-123", "expires_in": 3600}`)),
+					Header:     make(http.Header),
+				}, nil
+			},
+		},
+	}
+
+	config := auth.WorkloadIdentity{ClientID: "client-id", IdentityProviderID: "idp-id", ServiceAccountID: "sa-id", Provider: provider}
+	wa, err := auth.NewWorkloadIdentityAuth(config)
+	if err != nil {
+		t.Fatalf("NewWorkloadIdentityAuth() error = %v", err)
+	}
+
+	_, err = wa.GetToken(context.Background(), httpClient)
+	if err != nil {
+		t.Fatalf("GetToken() error = %v", err)
+	}
+
+	if requestBody["client_id"] != "client-id" {
+		t.Errorf("client_id = %v, want client-id", requestBody["client_id"])
 	}
 }
 

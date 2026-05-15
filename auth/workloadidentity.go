@@ -46,7 +46,7 @@ type tokenRefreshState struct {
 
 type tokenExchangeRequest struct {
 	GrantType          string `json:"grant_type"`
-	ClientID           string `json:"client_id"`
+	ClientID           string `json:"client_id,omitempty"`
 	SubjectToken       string `json:"subject_token"`
 	SubjectTokenType   string `json:"subject_token_type"`
 	IdentityProviderID string `json:"identity_provider_id"`
@@ -54,9 +54,6 @@ type tokenExchangeRequest struct {
 }
 
 func NewWorkloadIdentityAuth(config WorkloadIdentity) (*WorkloadIdentityAuth, error) {
-	if config.ClientID == "" {
-		return nil, fmt.Errorf("WorkloadIdentity: ClientID is required")
-	}
 	if config.IdentityProviderID == "" {
 		return nil, fmt.Errorf("WorkloadIdentity: IdentityProviderID is required")
 	}
