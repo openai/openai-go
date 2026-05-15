@@ -172,6 +172,8 @@ func (r *AdminOrganizationUsageAudioSpeechesResponseData) UnmarshalJSON(data []b
 // [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageAudioTranscriptionsResult],
 // [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageVectorStoresResult],
 // [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult],
+// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageFileSearchesResult],
+// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageWebSearchesResult],
 // [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult].
 //
 // Use the [AdminOrganizationUsageAudioSpeechesResponseDataResultUnion.AsAny]
@@ -187,7 +189,8 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 	// "organization.usage.audio_transcriptions.result",
 	// "organization.usage.vector_stores.result",
 	// "organization.usage.code_interpreter_sessions.result",
-	// "organization.costs.result".
+	// "organization.usage.file_searches.result",
+	// "organization.usage.web_searches.result", "organization.costs.result".
 	Object string `json:"object"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCompletionsResult].
@@ -232,6 +235,13 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult].
 	NumSessions int64 `json:"num_sessions"`
+	NumRequests int64 `json:"num_requests"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageFileSearchesResult].
+	VectorStoreID string `json:"vector_store_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageWebSearchesResult].
+	ContextLevel string `json:"context_level"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult].
 	Amount AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResultAmount `json:"amount"`
@@ -262,6 +272,9 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 		Seconds           respjson.Field
 		UsageBytes        respjson.Field
 		NumSessions       respjson.Field
+		NumRequests       respjson.Field
+		VectorStoreID     respjson.Field
+		ContextLevel      respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
 		Quantity          respjson.Field
@@ -293,6 +306,10 @@ func (AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageVect
 }
 func (AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) implAdminOrganizationUsageAudioSpeechesResponseDataResultUnion() {
 }
+func (AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageFileSearchesResult) implAdminOrganizationUsageAudioSpeechesResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageWebSearchesResult) implAdminOrganizationUsageAudioSpeechesResponseDataResultUnion() {
+}
 func (AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult) implAdminOrganizationUsageAudioSpeechesResponseDataResultUnion() {
 }
 
@@ -307,6 +324,8 @@ func (AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResu
 //	case openai.AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageAudioTranscriptionsResult:
 //	case openai.AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageVectorStoresResult:
 //	case openai.AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult:
+//	case openai.AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageFileSearchesResult:
+//	case openai.AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageWebSearchesResult:
 //	case openai.AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult:
 //	default:
 //	  fmt.Errorf("no variant present")
@@ -329,6 +348,10 @@ func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsAny() anyA
 		return u.AsOrganizationUsageVectorStoresResult()
 	case "organization.usage.code_interpreter_sessions.result":
 		return u.AsOrganizationUsageCodeInterpreterSessionsResult()
+	case "organization.usage.file_searches.result":
+		return u.AsOrganizationUsageFileSearchesResult()
+	case "organization.usage.web_searches.result":
+		return u.AsOrganizationUsageWebSearchesResult()
 	case "organization.costs.result":
 		return u.AsOrganizationCostsResult()
 	}
@@ -371,6 +394,16 @@ func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizati
 }
 
 func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageFileSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageAudioSpeechesResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageWebSearchesResult) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -720,6 +753,89 @@ func (r *AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageC
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The aggregated file search calls usage details of the specific time bucket.
+type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageFileSearchesResult struct {
+	// The count of file search calls.
+	NumRequests int64                                        `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageFileSearchesResult `json:"object" default:"organization.usage.file_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// When `group_by=vector_store_id`, this field provides the vector store ID of the
+	// grouped usage result.
+	VectorStoreID string `json:"vector_store_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests   respjson.Field
+		Object        respjson.Field
+		APIKeyID      respjson.Field
+		ProjectID     respjson.Field
+		UserID        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageFileSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageFileSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated web search calls usage details of the specific time bucket.
+type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageWebSearchesResult struct {
+	// The count of model requests.
+	NumModelRequests int64 `json:"num_model_requests" api:"required"`
+	// The count of web search calls.
+	NumRequests int64                                       `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageWebSearchesResult `json:"object" default:"organization.usage.web_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=context_level`, this field provides the search context size of
+	// the grouped usage result.
+	ContextLevel string `json:"context_level" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		NumRequests      respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		ContextLevel     respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageWebSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationUsageWebSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The aggregated costs details of the specific time bucket.
 type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult struct {
 	Object constant.OrganizationCostsResult `json:"object" default:"organization.costs.result"`
@@ -835,6 +951,8 @@ func (r *AdminOrganizationUsageAudioTranscriptionsResponseData) UnmarshalJSON(da
 // [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageAudioTranscriptionsResult],
 // [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageVectorStoresResult],
 // [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult],
+// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageFileSearchesResult],
+// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageWebSearchesResult],
 // [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult].
 //
 // Use the [AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion.AsAny]
@@ -850,7 +968,8 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 	// "organization.usage.audio_transcriptions.result",
 	// "organization.usage.vector_stores.result",
 	// "organization.usage.code_interpreter_sessions.result",
-	// "organization.costs.result".
+	// "organization.usage.file_searches.result",
+	// "organization.usage.web_searches.result", "organization.costs.result".
 	Object string `json:"object"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCompletionsResult].
@@ -895,6 +1014,13 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult].
 	NumSessions int64 `json:"num_sessions"`
+	NumRequests int64 `json:"num_requests"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageFileSearchesResult].
+	VectorStoreID string `json:"vector_store_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageWebSearchesResult].
+	ContextLevel string `json:"context_level"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult].
 	Amount AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResultAmount `json:"amount"`
@@ -925,6 +1051,9 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 		Seconds           respjson.Field
 		UsageBytes        respjson.Field
 		NumSessions       respjson.Field
+		NumRequests       respjson.Field
+		VectorStoreID     respjson.Field
+		ContextLevel      respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
 		Quantity          respjson.Field
@@ -957,6 +1086,10 @@ func (AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsa
 }
 func (AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) implAdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion() {
 }
+func (AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageFileSearchesResult) implAdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageWebSearchesResult) implAdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion() {
+}
 func (AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult) implAdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion() {
 }
 
@@ -971,6 +1104,8 @@ func (AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCos
 //	case openai.AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageAudioTranscriptionsResult:
 //	case openai.AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageVectorStoresResult:
 //	case openai.AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult:
+//	case openai.AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageFileSearchesResult:
+//	case openai.AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageWebSearchesResult:
 //	case openai.AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult:
 //	default:
 //	  fmt.Errorf("no variant present")
@@ -993,6 +1128,10 @@ func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsAny(
 		return u.AsOrganizationUsageVectorStoresResult()
 	case "organization.usage.code_interpreter_sessions.result":
 		return u.AsOrganizationUsageCodeInterpreterSessionsResult()
+	case "organization.usage.file_searches.result":
+		return u.AsOrganizationUsageFileSearchesResult()
+	case "organization.usage.web_searches.result":
+		return u.AsOrganizationUsageWebSearchesResult()
 	case "organization.costs.result":
 		return u.AsOrganizationCostsResult()
 	}
@@ -1035,6 +1174,16 @@ func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrga
 }
 
 func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageFileSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageWebSearchesResult) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -1384,6 +1533,89 @@ func (r *AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganization
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The aggregated file search calls usage details of the specific time bucket.
+type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageFileSearchesResult struct {
+	// The count of file search calls.
+	NumRequests int64                                        `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageFileSearchesResult `json:"object" default:"organization.usage.file_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// When `group_by=vector_store_id`, this field provides the vector store ID of the
+	// grouped usage result.
+	VectorStoreID string `json:"vector_store_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests   respjson.Field
+		Object        respjson.Field
+		APIKeyID      respjson.Field
+		ProjectID     respjson.Field
+		UserID        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageFileSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageFileSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated web search calls usage details of the specific time bucket.
+type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageWebSearchesResult struct {
+	// The count of model requests.
+	NumModelRequests int64 `json:"num_model_requests" api:"required"`
+	// The count of web search calls.
+	NumRequests int64                                       `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageWebSearchesResult `json:"object" default:"organization.usage.web_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=context_level`, this field provides the search context size of
+	// the grouped usage result.
+	ContextLevel string `json:"context_level" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		NumRequests      respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		ContextLevel     respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageWebSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationUsageWebSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The aggregated costs details of the specific time bucket.
 type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult struct {
 	Object constant.OrganizationCostsResult `json:"object" default:"organization.costs.result"`
@@ -1501,6 +1733,8 @@ func (r *AdminOrganizationUsageCodeInterpreterSessionsResponseData) UnmarshalJSO
 // [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageAudioTranscriptionsResult],
 // [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageVectorStoresResult],
 // [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult],
+// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageFileSearchesResult],
+// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageWebSearchesResult],
 // [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult].
 //
 // Use the
@@ -1517,7 +1751,8 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 	// "organization.usage.audio_transcriptions.result",
 	// "organization.usage.vector_stores.result",
 	// "organization.usage.code_interpreter_sessions.result",
-	// "organization.costs.result".
+	// "organization.usage.file_searches.result",
+	// "organization.usage.web_searches.result", "organization.costs.result".
 	Object string `json:"object"`
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCompletionsResult].
@@ -1562,6 +1797,13 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult].
 	NumSessions int64 `json:"num_sessions"`
+	NumRequests int64 `json:"num_requests"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageFileSearchesResult].
+	VectorStoreID string `json:"vector_store_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageWebSearchesResult].
+	ContextLevel string `json:"context_level"`
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult].
 	Amount AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResultAmount `json:"amount"`
@@ -1592,6 +1834,9 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 		Seconds           respjson.Field
 		UsageBytes        respjson.Field
 		NumSessions       respjson.Field
+		NumRequests       respjson.Field
+		VectorStoreID     respjson.Field
+		ContextLevel      respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
 		Quantity          respjson.Field
@@ -1624,6 +1869,10 @@ func (AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizatio
 }
 func (AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) implAdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion() {
 }
+func (AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageFileSearchesResult) implAdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageWebSearchesResult) implAdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion() {
+}
 func (AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult) implAdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion() {
 }
 
@@ -1638,6 +1887,8 @@ func (AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizatio
 //	case openai.AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageAudioTranscriptionsResult:
 //	case openai.AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageVectorStoresResult:
 //	case openai.AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult:
+//	case openai.AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageFileSearchesResult:
+//	case openai.AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageWebSearchesResult:
 //	case openai.AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult:
 //	default:
 //	  fmt.Errorf("no variant present")
@@ -1660,6 +1911,10 @@ func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) As
 		return u.AsOrganizationUsageVectorStoresResult()
 	case "organization.usage.code_interpreter_sessions.result":
 		return u.AsOrganizationUsageCodeInterpreterSessionsResult()
+	case "organization.usage.file_searches.result":
+		return u.AsOrganizationUsageFileSearchesResult()
+	case "organization.usage.web_searches.result":
+		return u.AsOrganizationUsageWebSearchesResult()
 	case "organization.costs.result":
 		return u.AsOrganizationCostsResult()
 	}
@@ -1702,6 +1957,16 @@ func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) As
 }
 
 func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageFileSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageWebSearchesResult) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -2051,6 +2316,89 @@ func (r *AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganiza
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The aggregated file search calls usage details of the specific time bucket.
+type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageFileSearchesResult struct {
+	// The count of file search calls.
+	NumRequests int64                                        `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageFileSearchesResult `json:"object" default:"organization.usage.file_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// When `group_by=vector_store_id`, this field provides the vector store ID of the
+	// grouped usage result.
+	VectorStoreID string `json:"vector_store_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests   respjson.Field
+		Object        respjson.Field
+		APIKeyID      respjson.Field
+		ProjectID     respjson.Field
+		UserID        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageFileSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageFileSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated web search calls usage details of the specific time bucket.
+type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageWebSearchesResult struct {
+	// The count of model requests.
+	NumModelRequests int64 `json:"num_model_requests" api:"required"`
+	// The count of web search calls.
+	NumRequests int64                                       `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageWebSearchesResult `json:"object" default:"organization.usage.web_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=context_level`, this field provides the search context size of
+	// the grouped usage result.
+	ContextLevel string `json:"context_level" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		NumRequests      respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		ContextLevel     respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageWebSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationUsageWebSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The aggregated costs details of the specific time bucket.
 type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult struct {
 	Object constant.OrganizationCostsResult `json:"object" default:"organization.costs.result"`
@@ -2166,6 +2514,8 @@ func (r *AdminOrganizationUsageCompletionsResponseData) UnmarshalJSON(data []byt
 // [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageAudioTranscriptionsResult],
 // [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageVectorStoresResult],
 // [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult],
+// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageFileSearchesResult],
+// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageWebSearchesResult],
 // [AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult].
 //
 // Use the [AdminOrganizationUsageCompletionsResponseDataResultUnion.AsAny] method
@@ -2181,7 +2531,8 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 	// "organization.usage.audio_transcriptions.result",
 	// "organization.usage.vector_stores.result",
 	// "organization.usage.code_interpreter_sessions.result",
-	// "organization.costs.result".
+	// "organization.usage.file_searches.result",
+	// "organization.usage.web_searches.result", "organization.costs.result".
 	Object string `json:"object"`
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCompletionsResult].
@@ -2226,6 +2577,13 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult].
 	NumSessions int64 `json:"num_sessions"`
+	NumRequests int64 `json:"num_requests"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageFileSearchesResult].
+	VectorStoreID string `json:"vector_store_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageWebSearchesResult].
+	ContextLevel string `json:"context_level"`
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult].
 	Amount AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResultAmount `json:"amount"`
@@ -2256,6 +2614,9 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 		Seconds           respjson.Field
 		UsageBytes        respjson.Field
 		NumSessions       respjson.Field
+		NumRequests       respjson.Field
+		VectorStoreID     respjson.Field
+		ContextLevel      respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
 		Quantity          respjson.Field
@@ -2287,6 +2648,10 @@ func (AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageVector
 }
 func (AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) implAdminOrganizationUsageCompletionsResponseDataResultUnion() {
 }
+func (AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageFileSearchesResult) implAdminOrganizationUsageCompletionsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageWebSearchesResult) implAdminOrganizationUsageCompletionsResponseDataResultUnion() {
+}
 func (AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult) implAdminOrganizationUsageCompletionsResponseDataResultUnion() {
 }
 
@@ -2301,6 +2666,8 @@ func (AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult
 //	case openai.AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageAudioTranscriptionsResult:
 //	case openai.AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageVectorStoresResult:
 //	case openai.AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult:
+//	case openai.AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageFileSearchesResult:
+//	case openai.AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageWebSearchesResult:
 //	case openai.AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult:
 //	default:
 //	  fmt.Errorf("no variant present")
@@ -2323,6 +2690,10 @@ func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsAny() anyAdm
 		return u.AsOrganizationUsageVectorStoresResult()
 	case "organization.usage.code_interpreter_sessions.result":
 		return u.AsOrganizationUsageCodeInterpreterSessionsResult()
+	case "organization.usage.file_searches.result":
+		return u.AsOrganizationUsageFileSearchesResult()
+	case "organization.usage.web_searches.result":
+		return u.AsOrganizationUsageWebSearchesResult()
 	case "organization.costs.result":
 		return u.AsOrganizationCostsResult()
 	}
@@ -2365,6 +2736,16 @@ func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganization
 }
 
 func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageFileSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageCompletionsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageWebSearchesResult) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -2712,6 +3093,89 @@ func (r *AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageCod
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The aggregated file search calls usage details of the specific time bucket.
+type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageFileSearchesResult struct {
+	// The count of file search calls.
+	NumRequests int64                                        `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageFileSearchesResult `json:"object" default:"organization.usage.file_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// When `group_by=vector_store_id`, this field provides the vector store ID of the
+	// grouped usage result.
+	VectorStoreID string `json:"vector_store_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests   respjson.Field
+		Object        respjson.Field
+		APIKeyID      respjson.Field
+		ProjectID     respjson.Field
+		UserID        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageFileSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageFileSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated web search calls usage details of the specific time bucket.
+type AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageWebSearchesResult struct {
+	// The count of model requests.
+	NumModelRequests int64 `json:"num_model_requests" api:"required"`
+	// The count of web search calls.
+	NumRequests int64                                       `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageWebSearchesResult `json:"object" default:"organization.usage.web_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=context_level`, this field provides the search context size of
+	// the grouped usage result.
+	ContextLevel string `json:"context_level" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		NumRequests      respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		ContextLevel     respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageWebSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageCompletionsResponseDataResultOrganizationUsageWebSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The aggregated costs details of the specific time bucket.
 type AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult struct {
 	Object constant.OrganizationCostsResult `json:"object" default:"organization.costs.result"`
@@ -2827,6 +3291,8 @@ func (r *AdminOrganizationUsageCostsResponseData) UnmarshalJSON(data []byte) err
 // [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageAudioTranscriptionsResult],
 // [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageVectorStoresResult],
 // [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult],
+// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageFileSearchesResult],
+// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageWebSearchesResult],
 // [AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult].
 //
 // Use the [AdminOrganizationUsageCostsResponseDataResultUnion.AsAny] method to
@@ -2842,7 +3308,8 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 	// "organization.usage.audio_transcriptions.result",
 	// "organization.usage.vector_stores.result",
 	// "organization.usage.code_interpreter_sessions.result",
-	// "organization.costs.result".
+	// "organization.usage.file_searches.result",
+	// "organization.usage.web_searches.result", "organization.costs.result".
 	Object string `json:"object"`
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCompletionsResult].
@@ -2887,6 +3354,13 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult].
 	NumSessions int64 `json:"num_sessions"`
+	NumRequests int64 `json:"num_requests"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageFileSearchesResult].
+	VectorStoreID string `json:"vector_store_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationUsageWebSearchesResult].
+	ContextLevel string `json:"context_level"`
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult].
 	Amount AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResultAmount `json:"amount"`
@@ -2917,6 +3391,9 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 		Seconds           respjson.Field
 		UsageBytes        respjson.Field
 		NumSessions       respjson.Field
+		NumRequests       respjson.Field
+		VectorStoreID     respjson.Field
+		ContextLevel      respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
 		Quantity          respjson.Field
@@ -2947,6 +3424,10 @@ func (AdminOrganizationUsageCostsResponseDataResultOrganizationUsageVectorStores
 }
 func (AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) implAdminOrganizationUsageCostsResponseDataResultUnion() {
 }
+func (AdminOrganizationUsageCostsResponseDataResultOrganizationUsageFileSearchesResult) implAdminOrganizationUsageCostsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageCostsResponseDataResultOrganizationUsageWebSearchesResult) implAdminOrganizationUsageCostsResponseDataResultUnion() {
+}
 func (AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult) implAdminOrganizationUsageCostsResponseDataResultUnion() {
 }
 
@@ -2961,6 +3442,8 @@ func (AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult) impl
 //	case openai.AdminOrganizationUsageCostsResponseDataResultOrganizationUsageAudioTranscriptionsResult:
 //	case openai.AdminOrganizationUsageCostsResponseDataResultOrganizationUsageVectorStoresResult:
 //	case openai.AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult:
+//	case openai.AdminOrganizationUsageCostsResponseDataResultOrganizationUsageFileSearchesResult:
+//	case openai.AdminOrganizationUsageCostsResponseDataResultOrganizationUsageWebSearchesResult:
 //	case openai.AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult:
 //	default:
 //	  fmt.Errorf("no variant present")
@@ -2983,6 +3466,10 @@ func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsAny() anyAdminOrga
 		return u.AsOrganizationUsageVectorStoresResult()
 	case "organization.usage.code_interpreter_sessions.result":
 		return u.AsOrganizationUsageCodeInterpreterSessionsResult()
+	case "organization.usage.file_searches.result":
+		return u.AsOrganizationUsageFileSearchesResult()
+	case "organization.usage.web_searches.result":
+		return u.AsOrganizationUsageWebSearchesResult()
 	case "organization.costs.result":
 		return u.AsOrganizationCostsResult()
 	}
@@ -3025,6 +3512,16 @@ func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageV
 }
 
 func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageFileSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageCostsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageCostsResponseDataResultOrganizationUsageWebSearchesResult) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -3372,6 +3869,89 @@ func (r *AdminOrganizationUsageCostsResponseDataResultOrganizationUsageCodeInter
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The aggregated file search calls usage details of the specific time bucket.
+type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageFileSearchesResult struct {
+	// The count of file search calls.
+	NumRequests int64                                        `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageFileSearchesResult `json:"object" default:"organization.usage.file_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// When `group_by=vector_store_id`, this field provides the vector store ID of the
+	// grouped usage result.
+	VectorStoreID string `json:"vector_store_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests   respjson.Field
+		Object        respjson.Field
+		APIKeyID      respjson.Field
+		ProjectID     respjson.Field
+		UserID        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageCostsResponseDataResultOrganizationUsageFileSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageCostsResponseDataResultOrganizationUsageFileSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated web search calls usage details of the specific time bucket.
+type AdminOrganizationUsageCostsResponseDataResultOrganizationUsageWebSearchesResult struct {
+	// The count of model requests.
+	NumModelRequests int64 `json:"num_model_requests" api:"required"`
+	// The count of web search calls.
+	NumRequests int64                                       `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageWebSearchesResult `json:"object" default:"organization.usage.web_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=context_level`, this field provides the search context size of
+	// the grouped usage result.
+	ContextLevel string `json:"context_level" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		NumRequests      respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		ContextLevel     respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageCostsResponseDataResultOrganizationUsageWebSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageCostsResponseDataResultOrganizationUsageWebSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The aggregated costs details of the specific time bucket.
 type AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult struct {
 	Object constant.OrganizationCostsResult `json:"object" default:"organization.costs.result"`
@@ -3487,6 +4067,8 @@ func (r *AdminOrganizationUsageEmbeddingsResponseData) UnmarshalJSON(data []byte
 // [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageAudioTranscriptionsResult],
 // [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageVectorStoresResult],
 // [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult],
+// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageFileSearchesResult],
+// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageWebSearchesResult],
 // [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult].
 //
 // Use the [AdminOrganizationUsageEmbeddingsResponseDataResultUnion.AsAny] method
@@ -3502,7 +4084,8 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 	// "organization.usage.audio_transcriptions.result",
 	// "organization.usage.vector_stores.result",
 	// "organization.usage.code_interpreter_sessions.result",
-	// "organization.costs.result".
+	// "organization.usage.file_searches.result",
+	// "organization.usage.web_searches.result", "organization.costs.result".
 	Object string `json:"object"`
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCompletionsResult].
@@ -3547,6 +4130,13 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult].
 	NumSessions int64 `json:"num_sessions"`
+	NumRequests int64 `json:"num_requests"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageFileSearchesResult].
+	VectorStoreID string `json:"vector_store_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageWebSearchesResult].
+	ContextLevel string `json:"context_level"`
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult].
 	Amount AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResultAmount `json:"amount"`
@@ -3577,6 +4167,9 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 		Seconds           respjson.Field
 		UsageBytes        respjson.Field
 		NumSessions       respjson.Field
+		NumRequests       respjson.Field
+		VectorStoreID     respjson.Field
+		ContextLevel      respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
 		Quantity          respjson.Field
@@ -3608,6 +4201,10 @@ func (AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageVectorS
 }
 func (AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) implAdminOrganizationUsageEmbeddingsResponseDataResultUnion() {
 }
+func (AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageFileSearchesResult) implAdminOrganizationUsageEmbeddingsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageWebSearchesResult) implAdminOrganizationUsageEmbeddingsResponseDataResultUnion() {
+}
 func (AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult) implAdminOrganizationUsageEmbeddingsResponseDataResultUnion() {
 }
 
@@ -3622,6 +4219,8 @@ func (AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult)
 //	case openai.AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageAudioTranscriptionsResult:
 //	case openai.AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageVectorStoresResult:
 //	case openai.AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult:
+//	case openai.AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageFileSearchesResult:
+//	case openai.AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageWebSearchesResult:
 //	case openai.AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult:
 //	default:
 //	  fmt.Errorf("no variant present")
@@ -3644,6 +4243,10 @@ func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsAny() anyAdmi
 		return u.AsOrganizationUsageVectorStoresResult()
 	case "organization.usage.code_interpreter_sessions.result":
 		return u.AsOrganizationUsageCodeInterpreterSessionsResult()
+	case "organization.usage.file_searches.result":
+		return u.AsOrganizationUsageFileSearchesResult()
+	case "organization.usage.web_searches.result":
+		return u.AsOrganizationUsageWebSearchesResult()
 	case "organization.costs.result":
 		return u.AsOrganizationCostsResult()
 	}
@@ -3686,6 +4289,16 @@ func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationU
 }
 
 func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageFileSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageEmbeddingsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageWebSearchesResult) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -4033,6 +4646,89 @@ func (r *AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageCode
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The aggregated file search calls usage details of the specific time bucket.
+type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageFileSearchesResult struct {
+	// The count of file search calls.
+	NumRequests int64                                        `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageFileSearchesResult `json:"object" default:"organization.usage.file_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// When `group_by=vector_store_id`, this field provides the vector store ID of the
+	// grouped usage result.
+	VectorStoreID string `json:"vector_store_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests   respjson.Field
+		Object        respjson.Field
+		APIKeyID      respjson.Field
+		ProjectID     respjson.Field
+		UserID        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageFileSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageFileSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated web search calls usage details of the specific time bucket.
+type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageWebSearchesResult struct {
+	// The count of model requests.
+	NumModelRequests int64 `json:"num_model_requests" api:"required"`
+	// The count of web search calls.
+	NumRequests int64                                       `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageWebSearchesResult `json:"object" default:"organization.usage.web_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=context_level`, this field provides the search context size of
+	// the grouped usage result.
+	ContextLevel string `json:"context_level" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		NumRequests      respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		ContextLevel     respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageWebSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationUsageWebSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The aggregated costs details of the specific time bucket.
 type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult struct {
 	Object constant.OrganizationCostsResult `json:"object" default:"organization.costs.result"`
@@ -4148,6 +4844,8 @@ func (r *AdminOrganizationUsageImagesResponseData) UnmarshalJSON(data []byte) er
 // [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageAudioTranscriptionsResult],
 // [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageVectorStoresResult],
 // [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult],
+// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageFileSearchesResult],
+// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageWebSearchesResult],
 // [AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult].
 //
 // Use the [AdminOrganizationUsageImagesResponseDataResultUnion.AsAny] method to
@@ -4163,7 +4861,8 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 	// "organization.usage.audio_transcriptions.result",
 	// "organization.usage.vector_stores.result",
 	// "organization.usage.code_interpreter_sessions.result",
-	// "organization.costs.result".
+	// "organization.usage.file_searches.result",
+	// "organization.usage.web_searches.result", "organization.costs.result".
 	Object string `json:"object"`
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCompletionsResult].
@@ -4208,6 +4907,13 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult].
 	NumSessions int64 `json:"num_sessions"`
+	NumRequests int64 `json:"num_requests"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageFileSearchesResult].
+	VectorStoreID string `json:"vector_store_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationUsageWebSearchesResult].
+	ContextLevel string `json:"context_level"`
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult].
 	Amount AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResultAmount `json:"amount"`
@@ -4238,6 +4944,9 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 		Seconds           respjson.Field
 		UsageBytes        respjson.Field
 		NumSessions       respjson.Field
+		NumRequests       respjson.Field
+		VectorStoreID     respjson.Field
+		ContextLevel      respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
 		Quantity          respjson.Field
@@ -4268,6 +4977,10 @@ func (AdminOrganizationUsageImagesResponseDataResultOrganizationUsageVectorStore
 }
 func (AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) implAdminOrganizationUsageImagesResponseDataResultUnion() {
 }
+func (AdminOrganizationUsageImagesResponseDataResultOrganizationUsageFileSearchesResult) implAdminOrganizationUsageImagesResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageImagesResponseDataResultOrganizationUsageWebSearchesResult) implAdminOrganizationUsageImagesResponseDataResultUnion() {
+}
 func (AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult) implAdminOrganizationUsageImagesResponseDataResultUnion() {
 }
 
@@ -4282,6 +4995,8 @@ func (AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult) imp
 //	case openai.AdminOrganizationUsageImagesResponseDataResultOrganizationUsageAudioTranscriptionsResult:
 //	case openai.AdminOrganizationUsageImagesResponseDataResultOrganizationUsageVectorStoresResult:
 //	case openai.AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult:
+//	case openai.AdminOrganizationUsageImagesResponseDataResultOrganizationUsageFileSearchesResult:
+//	case openai.AdminOrganizationUsageImagesResponseDataResultOrganizationUsageWebSearchesResult:
 //	case openai.AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult:
 //	default:
 //	  fmt.Errorf("no variant present")
@@ -4304,6 +5019,10 @@ func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsAny() anyAdminOrg
 		return u.AsOrganizationUsageVectorStoresResult()
 	case "organization.usage.code_interpreter_sessions.result":
 		return u.AsOrganizationUsageCodeInterpreterSessionsResult()
+	case "organization.usage.file_searches.result":
+		return u.AsOrganizationUsageFileSearchesResult()
+	case "organization.usage.web_searches.result":
+		return u.AsOrganizationUsageWebSearchesResult()
 	case "organization.costs.result":
 		return u.AsOrganizationCostsResult()
 	}
@@ -4346,6 +5065,16 @@ func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsage
 }
 
 func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageFileSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageImagesResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageImagesResponseDataResultOrganizationUsageWebSearchesResult) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -4693,6 +5422,89 @@ func (r *AdminOrganizationUsageImagesResponseDataResultOrganizationUsageCodeInte
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The aggregated file search calls usage details of the specific time bucket.
+type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageFileSearchesResult struct {
+	// The count of file search calls.
+	NumRequests int64                                        `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageFileSearchesResult `json:"object" default:"organization.usage.file_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// When `group_by=vector_store_id`, this field provides the vector store ID of the
+	// grouped usage result.
+	VectorStoreID string `json:"vector_store_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests   respjson.Field
+		Object        respjson.Field
+		APIKeyID      respjson.Field
+		ProjectID     respjson.Field
+		UserID        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageImagesResponseDataResultOrganizationUsageFileSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageImagesResponseDataResultOrganizationUsageFileSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated web search calls usage details of the specific time bucket.
+type AdminOrganizationUsageImagesResponseDataResultOrganizationUsageWebSearchesResult struct {
+	// The count of model requests.
+	NumModelRequests int64 `json:"num_model_requests" api:"required"`
+	// The count of web search calls.
+	NumRequests int64                                       `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageWebSearchesResult `json:"object" default:"organization.usage.web_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=context_level`, this field provides the search context size of
+	// the grouped usage result.
+	ContextLevel string `json:"context_level" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		NumRequests      respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		ContextLevel     respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageImagesResponseDataResultOrganizationUsageWebSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageImagesResponseDataResultOrganizationUsageWebSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The aggregated costs details of the specific time bucket.
 type AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult struct {
 	Object constant.OrganizationCostsResult `json:"object" default:"organization.costs.result"`
@@ -4808,6 +5620,8 @@ func (r *AdminOrganizationUsageModerationsResponseData) UnmarshalJSON(data []byt
 // [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageAudioTranscriptionsResult],
 // [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageVectorStoresResult],
 // [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult],
+// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageFileSearchesResult],
+// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageWebSearchesResult],
 // [AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult].
 //
 // Use the [AdminOrganizationUsageModerationsResponseDataResultUnion.AsAny] method
@@ -4823,7 +5637,8 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 	// "organization.usage.audio_transcriptions.result",
 	// "organization.usage.vector_stores.result",
 	// "organization.usage.code_interpreter_sessions.result",
-	// "organization.costs.result".
+	// "organization.usage.file_searches.result",
+	// "organization.usage.web_searches.result", "organization.costs.result".
 	Object string `json:"object"`
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCompletionsResult].
@@ -4868,6 +5683,13 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult].
 	NumSessions int64 `json:"num_sessions"`
+	NumRequests int64 `json:"num_requests"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageFileSearchesResult].
+	VectorStoreID string `json:"vector_store_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageWebSearchesResult].
+	ContextLevel string `json:"context_level"`
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult].
 	Amount AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResultAmount `json:"amount"`
@@ -4898,6 +5720,9 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 		Seconds           respjson.Field
 		UsageBytes        respjson.Field
 		NumSessions       respjson.Field
+		NumRequests       respjson.Field
+		VectorStoreID     respjson.Field
+		ContextLevel      respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
 		Quantity          respjson.Field
@@ -4929,6 +5754,10 @@ func (AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageVector
 }
 func (AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) implAdminOrganizationUsageModerationsResponseDataResultUnion() {
 }
+func (AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageFileSearchesResult) implAdminOrganizationUsageModerationsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageWebSearchesResult) implAdminOrganizationUsageModerationsResponseDataResultUnion() {
+}
 func (AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult) implAdminOrganizationUsageModerationsResponseDataResultUnion() {
 }
 
@@ -4943,6 +5772,8 @@ func (AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult
 //	case openai.AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageAudioTranscriptionsResult:
 //	case openai.AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageVectorStoresResult:
 //	case openai.AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult:
+//	case openai.AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageFileSearchesResult:
+//	case openai.AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageWebSearchesResult:
 //	case openai.AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult:
 //	default:
 //	  fmt.Errorf("no variant present")
@@ -4965,6 +5796,10 @@ func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsAny() anyAdm
 		return u.AsOrganizationUsageVectorStoresResult()
 	case "organization.usage.code_interpreter_sessions.result":
 		return u.AsOrganizationUsageCodeInterpreterSessionsResult()
+	case "organization.usage.file_searches.result":
+		return u.AsOrganizationUsageFileSearchesResult()
+	case "organization.usage.web_searches.result":
+		return u.AsOrganizationUsageWebSearchesResult()
 	case "organization.costs.result":
 		return u.AsOrganizationCostsResult()
 	}
@@ -5007,6 +5842,16 @@ func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganization
 }
 
 func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageFileSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageModerationsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageWebSearchesResult) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -5354,6 +6199,89 @@ func (r *AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageCod
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The aggregated file search calls usage details of the specific time bucket.
+type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageFileSearchesResult struct {
+	// The count of file search calls.
+	NumRequests int64                                        `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageFileSearchesResult `json:"object" default:"organization.usage.file_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// When `group_by=vector_store_id`, this field provides the vector store ID of the
+	// grouped usage result.
+	VectorStoreID string `json:"vector_store_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests   respjson.Field
+		Object        respjson.Field
+		APIKeyID      respjson.Field
+		ProjectID     respjson.Field
+		UserID        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageFileSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageFileSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated web search calls usage details of the specific time bucket.
+type AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageWebSearchesResult struct {
+	// The count of model requests.
+	NumModelRequests int64 `json:"num_model_requests" api:"required"`
+	// The count of web search calls.
+	NumRequests int64                                       `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageWebSearchesResult `json:"object" default:"organization.usage.web_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=context_level`, this field provides the search context size of
+	// the grouped usage result.
+	ContextLevel string `json:"context_level" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		NumRequests      respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		ContextLevel     respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageWebSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageModerationsResponseDataResultOrganizationUsageWebSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The aggregated costs details of the specific time bucket.
 type AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult struct {
 	Object constant.OrganizationCostsResult `json:"object" default:"organization.costs.result"`
@@ -5469,6 +6397,8 @@ func (r *AdminOrganizationUsageVectorStoresResponseData) UnmarshalJSON(data []by
 // [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageAudioTranscriptionsResult],
 // [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageVectorStoresResult],
 // [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCodeInterpreterSessionsResult],
+// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageFileSearchesResult],
+// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageWebSearchesResult],
 // [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult].
 //
 // Use the [AdminOrganizationUsageVectorStoresResponseDataResultUnion.AsAny] method
@@ -5484,7 +6414,8 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 	// "organization.usage.audio_transcriptions.result",
 	// "organization.usage.vector_stores.result",
 	// "organization.usage.code_interpreter_sessions.result",
-	// "organization.costs.result".
+	// "organization.usage.file_searches.result",
+	// "organization.usage.web_searches.result", "organization.costs.result".
 	Object string `json:"object"`
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCompletionsResult].
@@ -5529,6 +6460,13 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCodeInterpreterSessionsResult].
 	NumSessions int64 `json:"num_sessions"`
+	NumRequests int64 `json:"num_requests"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageFileSearchesResult].
+	VectorStoreID string `json:"vector_store_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageWebSearchesResult].
+	ContextLevel string `json:"context_level"`
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult].
 	Amount AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResultAmount `json:"amount"`
@@ -5559,6 +6497,9 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 		Seconds           respjson.Field
 		UsageBytes        respjson.Field
 		NumSessions       respjson.Field
+		NumRequests       respjson.Field
+		VectorStoreID     respjson.Field
+		ContextLevel      respjson.Field
 		Amount            respjson.Field
 		LineItem          respjson.Field
 		Quantity          respjson.Field
@@ -5590,6 +6531,10 @@ func (AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageVecto
 }
 func (AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) implAdminOrganizationUsageVectorStoresResponseDataResultUnion() {
 }
+func (AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageFileSearchesResult) implAdminOrganizationUsageVectorStoresResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageWebSearchesResult) implAdminOrganizationUsageVectorStoresResponseDataResultUnion() {
+}
 func (AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult) implAdminOrganizationUsageVectorStoresResponseDataResultUnion() {
 }
 
@@ -5604,6 +6549,8 @@ func (AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResul
 //	case openai.AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageAudioTranscriptionsResult:
 //	case openai.AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageVectorStoresResult:
 //	case openai.AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCodeInterpreterSessionsResult:
+//	case openai.AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageFileSearchesResult:
+//	case openai.AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageWebSearchesResult:
 //	case openai.AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult:
 //	default:
 //	  fmt.Errorf("no variant present")
@@ -5626,6 +6573,10 @@ func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsAny() anyAd
 		return u.AsOrganizationUsageVectorStoresResult()
 	case "organization.usage.code_interpreter_sessions.result":
 		return u.AsOrganizationUsageCodeInterpreterSessionsResult()
+	case "organization.usage.file_searches.result":
+		return u.AsOrganizationUsageFileSearchesResult()
+	case "organization.usage.web_searches.result":
+		return u.AsOrganizationUsageWebSearchesResult()
 	case "organization.costs.result":
 		return u.AsOrganizationCostsResult()
 	}
@@ -5668,6 +6619,16 @@ func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizatio
 }
 
 func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageFileSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageVectorStoresResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageWebSearchesResult) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -6014,6 +6975,89 @@ func (r AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCod
 	return r.JSON.raw
 }
 func (r *AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated file search calls usage details of the specific time bucket.
+type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageFileSearchesResult struct {
+	// The count of file search calls.
+	NumRequests int64                                        `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageFileSearchesResult `json:"object" default:"organization.usage.file_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// When `group_by=vector_store_id`, this field provides the vector store ID of the
+	// grouped usage result.
+	VectorStoreID string `json:"vector_store_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests   respjson.Field
+		Object        respjson.Field
+		APIKeyID      respjson.Field
+		ProjectID     respjson.Field
+		UserID        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageFileSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageFileSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated web search calls usage details of the specific time bucket.
+type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageWebSearchesResult struct {
+	// The count of model requests.
+	NumModelRequests int64 `json:"num_model_requests" api:"required"`
+	// The count of web search calls.
+	NumRequests int64                                       `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageWebSearchesResult `json:"object" default:"organization.usage.web_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=context_level`, this field provides the search context size of
+	// the grouped usage result.
+	ContextLevel string `json:"context_level" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		NumRequests      respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		ContextLevel     respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageWebSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageVectorStoresResponseDataResultOrganizationUsageWebSearchesResult) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
