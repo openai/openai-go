@@ -91,6 +91,15 @@ func (r *AdminOrganizationUsageService) Embeddings(ctx context.Context, query Ad
 	return res, err
 }
 
+// Get file search calls usage details for the organization.
+func (r *AdminOrganizationUsageService) FileSearchCalls(ctx context.Context, query AdminOrganizationUsageFileSearchCallsParams, opts ...option.RequestOption) (res *AdminOrganizationUsageFileSearchCallsResponse, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	path := "organization/usage/file_search_calls"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	return res, err
+}
+
 // Get images usage details for the organization.
 func (r *AdminOrganizationUsageService) Images(ctx context.Context, query AdminOrganizationUsageImagesParams, opts ...option.RequestOption) (res *AdminOrganizationUsageImagesResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
@@ -114,6 +123,15 @@ func (r *AdminOrganizationUsageService) VectorStores(ctx context.Context, query 
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	path := "organization/usage/vector_stores"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	return res, err
+}
+
+// Get web search calls usage details for the organization.
+func (r *AdminOrganizationUsageService) WebSearchCalls(ctx context.Context, query AdminOrganizationUsageWebSearchCallsParams, opts ...option.RequestOption) (res *AdminOrganizationUsageWebSearchCallsResponse, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	path := "organization/usage/web_search_calls"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
@@ -4790,6 +4808,785 @@ func (r *AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResu
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type AdminOrganizationUsageFileSearchCallsResponse struct {
+	Data     []AdminOrganizationUsageFileSearchCallsResponseData `json:"data" api:"required"`
+	HasMore  bool                                                `json:"has_more" api:"required"`
+	NextPage string                                              `json:"next_page" api:"required"`
+	Object   constant.Page                                       `json:"object" default:"page"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		HasMore     respjson.Field
+		NextPage    respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponse) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationUsageFileSearchCallsResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AdminOrganizationUsageFileSearchCallsResponseData struct {
+	EndTime   int64                                                          `json:"end_time" api:"required"`
+	Object    constant.Bucket                                                `json:"object" default:"bucket"`
+	Results   []AdminOrganizationUsageFileSearchCallsResponseDataResultUnion `json:"results" api:"required"`
+	StartTime int64                                                          `json:"start_time" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EndTime     respjson.Field
+		Object      respjson.Field
+		Results     respjson.Field
+		StartTime   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseData) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationUsageFileSearchCallsResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AdminOrganizationUsageFileSearchCallsResponseDataResultUnion contains all
+// possible properties and values from
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult],
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult],
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageModerationsResult],
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageImagesResult],
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult],
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult],
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageVectorStoresResult],
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult],
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageFileSearchesResult],
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageWebSearchesResult],
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult].
+//
+// Use the [AdminOrganizationUsageFileSearchCallsResponseDataResultUnion.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
+	InputTokens      int64 `json:"input_tokens"`
+	NumModelRequests int64 `json:"num_model_requests"`
+	// Any of "organization.usage.completions.result",
+	// "organization.usage.embeddings.result", "organization.usage.moderations.result",
+	// "organization.usage.images.result", "organization.usage.audio_speeches.result",
+	// "organization.usage.audio_transcriptions.result",
+	// "organization.usage.vector_stores.result",
+	// "organization.usage.code_interpreter_sessions.result",
+	// "organization.usage.file_searches.result",
+	// "organization.usage.web_searches.result", "organization.costs.result".
+	Object string `json:"object"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTokens int64  `json:"output_tokens"`
+	APIKeyID     string `json:"api_key_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	Batch bool `json:"batch"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputAudioTokens int64 `json:"input_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64  `json:"input_cached_tokens"`
+	Model             string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64  `json:"output_audio_tokens"`
+	ProjectID         string `json:"project_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	ServiceTier string `json:"service_tier"`
+	UserID      string `json:"user_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageImagesResult].
+	Images int64 `json:"images"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageImagesResult].
+	Size string `json:"size"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageImagesResult].
+	Source string `json:"source"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult].
+	Characters int64 `json:"characters"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult].
+	Seconds int64 `json:"seconds"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageVectorStoresResult].
+	UsageBytes int64 `json:"usage_bytes"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult].
+	NumSessions int64 `json:"num_sessions"`
+	NumRequests int64 `json:"num_requests"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageFileSearchesResult].
+	VectorStoreID string `json:"vector_store_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageWebSearchesResult].
+	ContextLevel string `json:"context_level"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult].
+	Amount AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResultAmount `json:"amount"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult].
+	LineItem string `json:"line_item"`
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult].
+	Quantity float64 `json:"quantity"`
+	JSON     struct {
+		InputTokens       respjson.Field
+		NumModelRequests  respjson.Field
+		Object            respjson.Field
+		OutputTokens      respjson.Field
+		APIKeyID          respjson.Field
+		Batch             respjson.Field
+		InputAudioTokens  respjson.Field
+		InputCachedTokens respjson.Field
+		Model             respjson.Field
+		OutputAudioTokens respjson.Field
+		ProjectID         respjson.Field
+		ServiceTier       respjson.Field
+		UserID            respjson.Field
+		Images            respjson.Field
+		Size              respjson.Field
+		Source            respjson.Field
+		Characters        respjson.Field
+		Seconds           respjson.Field
+		UsageBytes        respjson.Field
+		NumSessions       respjson.Field
+		NumRequests       respjson.Field
+		VectorStoreID     respjson.Field
+		ContextLevel      respjson.Field
+		Amount            respjson.Field
+		LineItem          respjson.Field
+		Quantity          respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// anyAdminOrganizationUsageFileSearchCallsResponseDataResult is implemented by
+// each variant of [AdminOrganizationUsageFileSearchCallsResponseDataResultUnion]
+// to add type safety for the return type of
+// [AdminOrganizationUsageFileSearchCallsResponseDataResultUnion.AsAny]
+type anyAdminOrganizationUsageFileSearchCallsResponseDataResult interface {
+	implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion()
+}
+
+func (AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult) implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult) implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageModerationsResult) implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageImagesResult) implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult) implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult) implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageVectorStoresResult) implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageFileSearchesResult) implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageWebSearchesResult) implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult) implAdminOrganizationUsageFileSearchCallsResponseDataResultUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := AdminOrganizationUsageFileSearchCallsResponseDataResultUnion.AsAny().(type) {
+//	case openai.AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult:
+//	case openai.AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult:
+//	case openai.AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageModerationsResult:
+//	case openai.AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageImagesResult:
+//	case openai.AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult:
+//	case openai.AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult:
+//	case openai.AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageVectorStoresResult:
+//	case openai.AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult:
+//	case openai.AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageFileSearchesResult:
+//	case openai.AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageWebSearchesResult:
+//	case openai.AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsAny() anyAdminOrganizationUsageFileSearchCallsResponseDataResult {
+	switch u.Object {
+	case "organization.usage.completions.result":
+		return u.AsOrganizationUsageCompletionsResult()
+	case "organization.usage.embeddings.result":
+		return u.AsOrganizationUsageEmbeddingsResult()
+	case "organization.usage.moderations.result":
+		return u.AsOrganizationUsageModerationsResult()
+	case "organization.usage.images.result":
+		return u.AsOrganizationUsageImagesResult()
+	case "organization.usage.audio_speeches.result":
+		return u.AsOrganizationUsageAudioSpeechesResult()
+	case "organization.usage.audio_transcriptions.result":
+		return u.AsOrganizationUsageAudioTranscriptionsResult()
+	case "organization.usage.vector_stores.result":
+		return u.AsOrganizationUsageVectorStoresResult()
+	case "organization.usage.code_interpreter_sessions.result":
+		return u.AsOrganizationUsageCodeInterpreterSessionsResult()
+	case "organization.usage.file_searches.result":
+		return u.AsOrganizationUsageFileSearchesResult()
+	case "organization.usage.web_searches.result":
+		return u.AsOrganizationUsageWebSearchesResult()
+	case "organization.costs.result":
+		return u.AsOrganizationCostsResult()
+	}
+	return nil
+}
+
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageModerationsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageImagesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageVectorStoresResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageFileSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageWebSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated completions usage details of the specific time bucket.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult struct {
+	// The aggregated number of text input tokens used, including cached tokens. For
+	// customers subscribe to scale tier, this includes scale tier tokens.
+	InputTokens int64 `json:"input_tokens" api:"required"`
+	// The count of requests made to the model.
+	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
+	// The aggregated number of text output tokens used. For customers subscribe to
+	// scale tier, this includes scale tier tokens.
+	OutputTokens int64 `json:"output_tokens" api:"required"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=batch`, this field tells whether the grouped usage result is
+	// batch or not.
+	Batch bool `json:"batch" api:"nullable"`
+	// The aggregated number of audio input tokens used, including cached tokens.
+	InputAudioTokens int64 `json:"input_audio_tokens"`
+	// The aggregated number of text input tokens that has been cached from previous
+	// requests. For customers subscribe to scale tier, this includes scale tier
+	// tokens.
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// The aggregated number of audio output tokens used.
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=service_tier`, this field provides the service tier of the
+	// grouped usage result.
+	ServiceTier string `json:"service_tier" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens       respjson.Field
+		NumModelRequests  respjson.Field
+		Object            respjson.Field
+		OutputTokens      respjson.Field
+		APIKeyID          respjson.Field
+		Batch             respjson.Field
+		InputAudioTokens  respjson.Field
+		InputCachedTokens respjson.Field
+		Model             respjson.Field
+		OutputAudioTokens respjson.Field
+		ProjectID         respjson.Field
+		ServiceTier       respjson.Field
+		UserID            respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCompletionsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated embeddings usage details of the specific time bucket.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult struct {
+	// The aggregated number of input tokens used.
+	InputTokens int64 `json:"input_tokens" api:"required"`
+	// The count of requests made to the model.
+	NumModelRequests int64                                      `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageEmbeddingsResult `json:"object" default:"organization.usage.embeddings.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens      respjson.Field
+		NumModelRequests respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated moderations usage details of the specific time bucket.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageModerationsResult struct {
+	// The aggregated number of input tokens used.
+	InputTokens int64 `json:"input_tokens" api:"required"`
+	// The count of requests made to the model.
+	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageModerationsResult `json:"object" default:"organization.usage.moderations.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens      respjson.Field
+		NumModelRequests respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageModerationsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageModerationsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated images usage details of the specific time bucket.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageImagesResult struct {
+	// The number of images processed.
+	Images int64 `json:"images" api:"required"`
+	// The count of requests made to the model.
+	NumModelRequests int64                                  `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageImagesResult `json:"object" default:"organization.usage.images.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=size`, this field provides the image size of the grouped usage
+	// result.
+	Size string `json:"size" api:"nullable"`
+	// When `group_by=source`, this field provides the source of the grouped usage
+	// result, possible values are `image.generation`, `image.edit`, `image.variation`.
+	Source string `json:"source" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Images           respjson.Field
+		NumModelRequests respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		Size             respjson.Field
+		Source           respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageImagesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageImagesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated audio speeches usage details of the specific time bucket.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult struct {
+	// The number of characters processed.
+	Characters int64 `json:"characters" api:"required"`
+	// The count of requests made to the model.
+	NumModelRequests int64                                         `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageAudioSpeechesResult `json:"object" default:"organization.usage.audio_speeches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Characters       respjson.Field
+		NumModelRequests respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated audio transcriptions usage details of the specific time bucket.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult struct {
+	// The count of requests made to the model.
+	NumModelRequests int64                                               `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageAudioTranscriptionsResult `json:"object" default:"organization.usage.audio_transcriptions.result"`
+	// The number of seconds processed.
+	Seconds int64 `json:"seconds" api:"required"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		Object           respjson.Field
+		Seconds          respjson.Field
+		APIKeyID         respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated vector stores usage details of the specific time bucket.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageVectorStoresResult struct {
+	Object constant.OrganizationUsageVectorStoresResult `json:"object" default:"organization.usage.vector_stores.result"`
+	// The vector stores usage in bytes.
+	UsageBytes int64 `json:"usage_bytes" api:"required"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Object      respjson.Field
+		UsageBytes  respjson.Field
+		ProjectID   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageVectorStoresResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageVectorStoresResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated code interpreter sessions usage details of the specific time
+// bucket.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult struct {
+	// The number of code interpreter sessions.
+	NumSessions int64                                                   `json:"num_sessions" api:"required"`
+	Object      constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumSessions respjson.Field
+		Object      respjson.Field
+		ProjectID   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated file search calls usage details of the specific time bucket.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageFileSearchesResult struct {
+	// The count of file search calls.
+	NumRequests int64                                        `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageFileSearchesResult `json:"object" default:"organization.usage.file_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// When `group_by=vector_store_id`, this field provides the vector store ID of the
+	// grouped usage result.
+	VectorStoreID string `json:"vector_store_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests   respjson.Field
+		Object        respjson.Field
+		APIKeyID      respjson.Field
+		ProjectID     respjson.Field
+		UserID        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageFileSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageFileSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated web search calls usage details of the specific time bucket.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageWebSearchesResult struct {
+	// The count of model requests.
+	NumModelRequests int64 `json:"num_model_requests" api:"required"`
+	// The count of web search calls.
+	NumRequests int64                                       `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageWebSearchesResult `json:"object" default:"organization.usage.web_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=context_level`, this field provides the search context size of
+	// the grouped usage result.
+	ContextLevel string `json:"context_level" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		NumRequests      respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		ContextLevel     respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageWebSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationUsageWebSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated costs details of the specific time bucket.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult struct {
+	Object constant.OrganizationCostsResult `json:"object" default:"organization.costs.result"`
+	// The monetary value in its associated currency.
+	Amount AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResultAmount `json:"amount"`
+	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
+	// costs result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the line item of the grouped
+	// costs result.
+	LineItem string `json:"line_item" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// costs result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the quantity of the grouped costs
+	// result.
+	Quantity float64 `json:"quantity" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Object      respjson.Field
+		Amount      respjson.Field
+		APIKeyID    respjson.Field
+		LineItem    respjson.Field
+		ProjectID   respjson.Field
+		Quantity    respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The monetary value in its associated currency.
+type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResultAmount struct {
+	// Lowercase ISO-4217 currency e.g. "usd"
+	Currency string `json:"currency"`
+	// The numeric value of the cost.
+	Value float64 `json:"value"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Currency    respjson.Field
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResultAmount) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResultAmount) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type AdminOrganizationUsageImagesResponse struct {
 	Data     []AdminOrganizationUsageImagesResponseData `json:"data" api:"required"`
 	HasMore  bool                                       `json:"has_more" api:"required"`
@@ -7122,6 +7919,785 @@ func (r *AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsRe
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type AdminOrganizationUsageWebSearchCallsResponse struct {
+	Data     []AdminOrganizationUsageWebSearchCallsResponseData `json:"data" api:"required"`
+	HasMore  bool                                               `json:"has_more" api:"required"`
+	NextPage string                                             `json:"next_page" api:"required"`
+	Object   constant.Page                                      `json:"object" default:"page"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		HasMore     respjson.Field
+		NextPage    respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponse) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationUsageWebSearchCallsResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AdminOrganizationUsageWebSearchCallsResponseData struct {
+	EndTime   int64                                                         `json:"end_time" api:"required"`
+	Object    constant.Bucket                                               `json:"object" default:"bucket"`
+	Results   []AdminOrganizationUsageWebSearchCallsResponseDataResultUnion `json:"results" api:"required"`
+	StartTime int64                                                         `json:"start_time" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EndTime     respjson.Field
+		Object      respjson.Field
+		Results     respjson.Field
+		StartTime   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseData) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationUsageWebSearchCallsResponseData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// AdminOrganizationUsageWebSearchCallsResponseDataResultUnion contains all
+// possible properties and values from
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult],
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult],
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageModerationsResult],
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageImagesResult],
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult],
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult],
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageVectorStoresResult],
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult],
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageFileSearchesResult],
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageWebSearchesResult],
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult].
+//
+// Use the [AdminOrganizationUsageWebSearchCallsResponseDataResultUnion.AsAny]
+// method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
+	InputTokens      int64 `json:"input_tokens"`
+	NumModelRequests int64 `json:"num_model_requests"`
+	// Any of "organization.usage.completions.result",
+	// "organization.usage.embeddings.result", "organization.usage.moderations.result",
+	// "organization.usage.images.result", "organization.usage.audio_speeches.result",
+	// "organization.usage.audio_transcriptions.result",
+	// "organization.usage.vector_stores.result",
+	// "organization.usage.code_interpreter_sessions.result",
+	// "organization.usage.file_searches.result",
+	// "organization.usage.web_searches.result", "organization.costs.result".
+	Object string `json:"object"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputTokens int64  `json:"output_tokens"`
+	APIKeyID     string `json:"api_key_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	Batch bool `json:"batch"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputAudioTokens int64 `json:"input_audio_tokens"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	InputCachedTokens int64  `json:"input_cached_tokens"`
+	Model             string `json:"model"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	OutputAudioTokens int64  `json:"output_audio_tokens"`
+	ProjectID         string `json:"project_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult].
+	ServiceTier string `json:"service_tier"`
+	UserID      string `json:"user_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageImagesResult].
+	Images int64 `json:"images"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageImagesResult].
+	Size string `json:"size"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageImagesResult].
+	Source string `json:"source"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult].
+	Characters int64 `json:"characters"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult].
+	Seconds int64 `json:"seconds"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageVectorStoresResult].
+	UsageBytes int64 `json:"usage_bytes"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult].
+	NumSessions int64 `json:"num_sessions"`
+	NumRequests int64 `json:"num_requests"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageFileSearchesResult].
+	VectorStoreID string `json:"vector_store_id"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageWebSearchesResult].
+	ContextLevel string `json:"context_level"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult].
+	Amount AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResultAmount `json:"amount"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult].
+	LineItem string `json:"line_item"`
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult].
+	Quantity float64 `json:"quantity"`
+	JSON     struct {
+		InputTokens       respjson.Field
+		NumModelRequests  respjson.Field
+		Object            respjson.Field
+		OutputTokens      respjson.Field
+		APIKeyID          respjson.Field
+		Batch             respjson.Field
+		InputAudioTokens  respjson.Field
+		InputCachedTokens respjson.Field
+		Model             respjson.Field
+		OutputAudioTokens respjson.Field
+		ProjectID         respjson.Field
+		ServiceTier       respjson.Field
+		UserID            respjson.Field
+		Images            respjson.Field
+		Size              respjson.Field
+		Source            respjson.Field
+		Characters        respjson.Field
+		Seconds           respjson.Field
+		UsageBytes        respjson.Field
+		NumSessions       respjson.Field
+		NumRequests       respjson.Field
+		VectorStoreID     respjson.Field
+		ContextLevel      respjson.Field
+		Amount            respjson.Field
+		LineItem          respjson.Field
+		Quantity          respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// anyAdminOrganizationUsageWebSearchCallsResponseDataResult is implemented by each
+// variant of [AdminOrganizationUsageWebSearchCallsResponseDataResultUnion] to add
+// type safety for the return type of
+// [AdminOrganizationUsageWebSearchCallsResponseDataResultUnion.AsAny]
+type anyAdminOrganizationUsageWebSearchCallsResponseDataResult interface {
+	implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion()
+}
+
+func (AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult) implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult) implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageModerationsResult) implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageImagesResult) implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult) implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult) implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageVectorStoresResult) implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageFileSearchesResult) implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageWebSearchesResult) implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion() {
+}
+func (AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult) implAdminOrganizationUsageWebSearchCallsResponseDataResultUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := AdminOrganizationUsageWebSearchCallsResponseDataResultUnion.AsAny().(type) {
+//	case openai.AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult:
+//	case openai.AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult:
+//	case openai.AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageModerationsResult:
+//	case openai.AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageImagesResult:
+//	case openai.AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult:
+//	case openai.AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult:
+//	case openai.AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageVectorStoresResult:
+//	case openai.AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult:
+//	case openai.AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageFileSearchesResult:
+//	case openai.AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageWebSearchesResult:
+//	case openai.AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsAny() anyAdminOrganizationUsageWebSearchCallsResponseDataResult {
+	switch u.Object {
+	case "organization.usage.completions.result":
+		return u.AsOrganizationUsageCompletionsResult()
+	case "organization.usage.embeddings.result":
+		return u.AsOrganizationUsageEmbeddingsResult()
+	case "organization.usage.moderations.result":
+		return u.AsOrganizationUsageModerationsResult()
+	case "organization.usage.images.result":
+		return u.AsOrganizationUsageImagesResult()
+	case "organization.usage.audio_speeches.result":
+		return u.AsOrganizationUsageAudioSpeechesResult()
+	case "organization.usage.audio_transcriptions.result":
+		return u.AsOrganizationUsageAudioTranscriptionsResult()
+	case "organization.usage.vector_stores.result":
+		return u.AsOrganizationUsageVectorStoresResult()
+	case "organization.usage.code_interpreter_sessions.result":
+		return u.AsOrganizationUsageCodeInterpreterSessionsResult()
+	case "organization.usage.file_searches.result":
+		return u.AsOrganizationUsageFileSearchesResult()
+	case "organization.usage.web_searches.result":
+		return u.AsOrganizationUsageWebSearchesResult()
+	case "organization.costs.result":
+		return u.AsOrganizationCostsResult()
+	}
+	return nil
+}
+
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageCompletionsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageEmbeddingsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageModerationsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageModerationsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageImagesResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageImagesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageAudioSpeechesResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageAudioTranscriptionsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageVectorStoresResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageVectorStoresResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageCodeInterpreterSessionsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageFileSearchesResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageFileSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationUsageWebSearchesResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageWebSearchesResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) AsOrganizationCostsResult() (v AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated completions usage details of the specific time bucket.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult struct {
+	// The aggregated number of text input tokens used, including cached tokens. For
+	// customers subscribe to scale tier, this includes scale tier tokens.
+	InputTokens int64 `json:"input_tokens" api:"required"`
+	// The count of requests made to the model.
+	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageCompletionsResult `json:"object" default:"organization.usage.completions.result"`
+	// The aggregated number of text output tokens used. For customers subscribe to
+	// scale tier, this includes scale tier tokens.
+	OutputTokens int64 `json:"output_tokens" api:"required"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=batch`, this field tells whether the grouped usage result is
+	// batch or not.
+	Batch bool `json:"batch" api:"nullable"`
+	// The aggregated number of audio input tokens used, including cached tokens.
+	InputAudioTokens int64 `json:"input_audio_tokens"`
+	// The aggregated number of text input tokens that has been cached from previous
+	// requests. For customers subscribe to scale tier, this includes scale tier
+	// tokens.
+	InputCachedTokens int64 `json:"input_cached_tokens"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// The aggregated number of audio output tokens used.
+	OutputAudioTokens int64 `json:"output_audio_tokens"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=service_tier`, this field provides the service tier of the
+	// grouped usage result.
+	ServiceTier string `json:"service_tier" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens       respjson.Field
+		NumModelRequests  respjson.Field
+		Object            respjson.Field
+		OutputTokens      respjson.Field
+		APIKeyID          respjson.Field
+		Batch             respjson.Field
+		InputAudioTokens  respjson.Field
+		InputCachedTokens respjson.Field
+		Model             respjson.Field
+		OutputAudioTokens respjson.Field
+		ProjectID         respjson.Field
+		ServiceTier       respjson.Field
+		UserID            respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCompletionsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated embeddings usage details of the specific time bucket.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult struct {
+	// The aggregated number of input tokens used.
+	InputTokens int64 `json:"input_tokens" api:"required"`
+	// The count of requests made to the model.
+	NumModelRequests int64                                      `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageEmbeddingsResult `json:"object" default:"organization.usage.embeddings.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens      respjson.Field
+		NumModelRequests respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageEmbeddingsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated moderations usage details of the specific time bucket.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageModerationsResult struct {
+	// The aggregated number of input tokens used.
+	InputTokens int64 `json:"input_tokens" api:"required"`
+	// The count of requests made to the model.
+	NumModelRequests int64                                       `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageModerationsResult `json:"object" default:"organization.usage.moderations.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		InputTokens      respjson.Field
+		NumModelRequests respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageModerationsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageModerationsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated images usage details of the specific time bucket.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageImagesResult struct {
+	// The number of images processed.
+	Images int64 `json:"images" api:"required"`
+	// The count of requests made to the model.
+	NumModelRequests int64                                  `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageImagesResult `json:"object" default:"organization.usage.images.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=size`, this field provides the image size of the grouped usage
+	// result.
+	Size string `json:"size" api:"nullable"`
+	// When `group_by=source`, this field provides the source of the grouped usage
+	// result, possible values are `image.generation`, `image.edit`, `image.variation`.
+	Source string `json:"source" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Images           respjson.Field
+		NumModelRequests respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		Size             respjson.Field
+		Source           respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageImagesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageImagesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated audio speeches usage details of the specific time bucket.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult struct {
+	// The number of characters processed.
+	Characters int64 `json:"characters" api:"required"`
+	// The count of requests made to the model.
+	NumModelRequests int64                                         `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageAudioSpeechesResult `json:"object" default:"organization.usage.audio_speeches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Characters       respjson.Field
+		NumModelRequests respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioSpeechesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated audio transcriptions usage details of the specific time bucket.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult struct {
+	// The count of requests made to the model.
+	NumModelRequests int64                                               `json:"num_model_requests" api:"required"`
+	Object           constant.OrganizationUsageAudioTranscriptionsResult `json:"object" default:"organization.usage.audio_transcriptions.result"`
+	// The number of seconds processed.
+	Seconds int64 `json:"seconds" api:"required"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		Object           respjson.Field
+		Seconds          respjson.Field
+		APIKeyID         respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageAudioTranscriptionsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated vector stores usage details of the specific time bucket.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageVectorStoresResult struct {
+	Object constant.OrganizationUsageVectorStoresResult `json:"object" default:"organization.usage.vector_stores.result"`
+	// The vector stores usage in bytes.
+	UsageBytes int64 `json:"usage_bytes" api:"required"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Object      respjson.Field
+		UsageBytes  respjson.Field
+		ProjectID   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageVectorStoresResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageVectorStoresResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated code interpreter sessions usage details of the specific time
+// bucket.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult struct {
+	// The number of code interpreter sessions.
+	NumSessions int64                                                   `json:"num_sessions" api:"required"`
+	Object      constant.OrganizationUsageCodeInterpreterSessionsResult `json:"object" default:"organization.usage.code_interpreter_sessions.result"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumSessions respjson.Field
+		Object      respjson.Field
+		ProjectID   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageCodeInterpreterSessionsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated file search calls usage details of the specific time bucket.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageFileSearchesResult struct {
+	// The count of file search calls.
+	NumRequests int64                                        `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageFileSearchesResult `json:"object" default:"organization.usage.file_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// When `group_by=vector_store_id`, this field provides the vector store ID of the
+	// grouped usage result.
+	VectorStoreID string `json:"vector_store_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumRequests   respjson.Field
+		Object        respjson.Field
+		APIKeyID      respjson.Field
+		ProjectID     respjson.Field
+		UserID        respjson.Field
+		VectorStoreID respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageFileSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageFileSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated web search calls usage details of the specific time bucket.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageWebSearchesResult struct {
+	// The count of model requests.
+	NumModelRequests int64 `json:"num_model_requests" api:"required"`
+	// The count of web search calls.
+	NumRequests int64                                       `json:"num_requests" api:"required"`
+	Object      constant.OrganizationUsageWebSearchesResult `json:"object" default:"organization.usage.web_searches.result"`
+	// When `group_by=api_key_id`, this field provides the API key ID of the grouped
+	// usage result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=context_level`, this field provides the search context size of
+	// the grouped usage result.
+	ContextLevel string `json:"context_level" api:"nullable"`
+	// When `group_by=model`, this field provides the model name of the grouped usage
+	// result.
+	Model string `json:"model" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// usage result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=user_id`, this field provides the user ID of the grouped usage
+	// result.
+	UserID string `json:"user_id" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		NumModelRequests respjson.Field
+		NumRequests      respjson.Field
+		Object           respjson.Field
+		APIKeyID         respjson.Field
+		ContextLevel     respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		UserID           respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageWebSearchesResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationUsageWebSearchesResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The aggregated costs details of the specific time bucket.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult struct {
+	Object constant.OrganizationCostsResult `json:"object" default:"organization.costs.result"`
+	// The monetary value in its associated currency.
+	Amount AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResultAmount `json:"amount"`
+	// When `group_by=api_key_id`, this field provides the API Key ID of the grouped
+	// costs result.
+	APIKeyID string `json:"api_key_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the line item of the grouped
+	// costs result.
+	LineItem string `json:"line_item" api:"nullable"`
+	// When `group_by=project_id`, this field provides the project ID of the grouped
+	// costs result.
+	ProjectID string `json:"project_id" api:"nullable"`
+	// When `group_by=line_item`, this field provides the quantity of the grouped costs
+	// result.
+	Quantity float64 `json:"quantity" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Object      respjson.Field
+		Amount      respjson.Field
+		APIKeyID    respjson.Field
+		LineItem    respjson.Field
+		ProjectID   respjson.Field
+		Quantity    respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The monetary value in its associated currency.
+type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResultAmount struct {
+	// Lowercase ISO-4217 currency e.g. "usd"
+	Currency string `json:"currency"`
+	// The numeric value of the cost.
+	Value float64 `json:"value"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Currency    respjson.Field
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResultAmount) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResultAmount) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type AdminOrganizationUsageAudioSpeechesParams struct {
 	// Start time (Unix seconds) of the query time range, inclusive.
 	StartTime int64 `query:"start_time" api:"required" json:"-"`
@@ -7435,6 +9011,61 @@ const (
 	AdminOrganizationUsageEmbeddingsParamsBucketWidth1d AdminOrganizationUsageEmbeddingsParamsBucketWidth = "1d"
 )
 
+type AdminOrganizationUsageFileSearchCallsParams struct {
+	// Start time (Unix seconds) of the query time range, inclusive.
+	StartTime int64 `query:"start_time" api:"required" json:"-"`
+	// End time (Unix seconds) of the query time range, exclusive.
+	EndTime param.Opt[int64] `query:"end_time,omitzero" json:"-"`
+	// Specifies the number of buckets to return.
+	//
+	// - `bucket_width=1d`: default: 7, max: 31
+	// - `bucket_width=1h`: default: 24, max: 168
+	// - `bucket_width=1m`: default: 60, max: 1440
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// A cursor for use in pagination. Corresponding to the `next_page` field from the
+	// previous response.
+	Page param.Opt[string] `query:"page,omitzero" json:"-"`
+	// Return only usage for these API keys.
+	APIKeyIDs []string `query:"api_key_ids,omitzero" json:"-"`
+	// Width of each time bucket in response. Currently `1m`, `1h` and `1d` are
+	// supported, default to `1d`.
+	//
+	// Any of "1m", "1h", "1d".
+	BucketWidth AdminOrganizationUsageFileSearchCallsParamsBucketWidth `query:"bucket_width,omitzero" json:"-"`
+	// Group the usage data by the specified fields. Support fields include
+	// `project_id`, `user_id`, `api_key_id`, `vector_store_id` or any combination of
+	// them.
+	//
+	// Any of "project_id", "user_id", "api_key_id", "vector_store_id".
+	GroupBy []string `query:"group_by,omitzero" json:"-"`
+	// Return only usage for these projects.
+	ProjectIDs []string `query:"project_ids,omitzero" json:"-"`
+	// Return only usage for these users.
+	UserIDs []string `query:"user_ids,omitzero" json:"-"`
+	// Return only usage for these vector stores.
+	VectorStoreIDs []string `query:"vector_store_ids,omitzero" json:"-"`
+	paramObj
+}
+
+// URLQuery serializes [AdminOrganizationUsageFileSearchCallsParams]'s query
+// parameters as `url.Values`.
+func (r AdminOrganizationUsageFileSearchCallsParams) URLQuery() (v url.Values, err error) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+// Width of each time bucket in response. Currently `1m`, `1h` and `1d` are
+// supported, default to `1d`.
+type AdminOrganizationUsageFileSearchCallsParamsBucketWidth string
+
+const (
+	AdminOrganizationUsageFileSearchCallsParamsBucketWidth1m AdminOrganizationUsageFileSearchCallsParamsBucketWidth = "1m"
+	AdminOrganizationUsageFileSearchCallsParamsBucketWidth1h AdminOrganizationUsageFileSearchCallsParamsBucketWidth = "1h"
+	AdminOrganizationUsageFileSearchCallsParamsBucketWidth1d AdminOrganizationUsageFileSearchCallsParamsBucketWidth = "1d"
+)
+
 type AdminOrganizationUsageImagesParams struct {
 	// Start time (Unix seconds) of the query time range, inclusive.
 	StartTime int64 `query:"start_time" api:"required" json:"-"`
@@ -7600,4 +9231,63 @@ const (
 	AdminOrganizationUsageVectorStoresParamsBucketWidth1m AdminOrganizationUsageVectorStoresParamsBucketWidth = "1m"
 	AdminOrganizationUsageVectorStoresParamsBucketWidth1h AdminOrganizationUsageVectorStoresParamsBucketWidth = "1h"
 	AdminOrganizationUsageVectorStoresParamsBucketWidth1d AdminOrganizationUsageVectorStoresParamsBucketWidth = "1d"
+)
+
+type AdminOrganizationUsageWebSearchCallsParams struct {
+	// Start time (Unix seconds) of the query time range, inclusive.
+	StartTime int64 `query:"start_time" api:"required" json:"-"`
+	// End time (Unix seconds) of the query time range, exclusive.
+	EndTime param.Opt[int64] `query:"end_time,omitzero" json:"-"`
+	// Specifies the number of buckets to return.
+	//
+	// - `bucket_width=1d`: default: 7, max: 31
+	// - `bucket_width=1h`: default: 24, max: 168
+	// - `bucket_width=1m`: default: 60, max: 1440
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// A cursor for use in pagination. Corresponding to the `next_page` field from the
+	// previous response.
+	Page param.Opt[string] `query:"page,omitzero" json:"-"`
+	// Return only usage for these API keys.
+	APIKeyIDs []string `query:"api_key_ids,omitzero" json:"-"`
+	// Width of each time bucket in response. Currently `1m`, `1h` and `1d` are
+	// supported, default to `1d`.
+	//
+	// Any of "1m", "1h", "1d".
+	BucketWidth AdminOrganizationUsageWebSearchCallsParamsBucketWidth `query:"bucket_width,omitzero" json:"-"`
+	// Return only web search usage for these context levels.
+	//
+	// Any of "low", "medium", "high".
+	ContextLevels []string `query:"context_levels,omitzero" json:"-"`
+	// Group the usage data by the specified fields. Support fields include
+	// `project_id`, `user_id`, `api_key_id`, `model`, `context_level` or any
+	// combination of them.
+	//
+	// Any of "project_id", "user_id", "api_key_id", "model", "context_level".
+	GroupBy []string `query:"group_by,omitzero" json:"-"`
+	// Return only usage for these models.
+	Models []string `query:"models,omitzero" json:"-"`
+	// Return only usage for these projects.
+	ProjectIDs []string `query:"project_ids,omitzero" json:"-"`
+	// Return only usage for these users.
+	UserIDs []string `query:"user_ids,omitzero" json:"-"`
+	paramObj
+}
+
+// URLQuery serializes [AdminOrganizationUsageWebSearchCallsParams]'s query
+// parameters as `url.Values`.
+func (r AdminOrganizationUsageWebSearchCallsParams) URLQuery() (v url.Values, err error) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+// Width of each time bucket in response. Currently `1m`, `1h` and `1d` are
+// supported, default to `1d`.
+type AdminOrganizationUsageWebSearchCallsParamsBucketWidth string
+
+const (
+	AdminOrganizationUsageWebSearchCallsParamsBucketWidth1m AdminOrganizationUsageWebSearchCallsParamsBucketWidth = "1m"
+	AdminOrganizationUsageWebSearchCallsParamsBucketWidth1h AdminOrganizationUsageWebSearchCallsParamsBucketWidth = "1h"
+	AdminOrganizationUsageWebSearchCallsParamsBucketWidth1d AdminOrganizationUsageWebSearchCallsParamsBucketWidth = "1d"
 )
