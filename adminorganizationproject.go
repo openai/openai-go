@@ -26,14 +26,16 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewAdminOrganizationProjectService] method instead.
 type AdminOrganizationProjectService struct {
-	Options         []option.RequestOption
-	Users           AdminOrganizationProjectUserService
-	ServiceAccounts AdminOrganizationProjectServiceAccountService
-	APIKeys         AdminOrganizationProjectAPIKeyService
-	RateLimits      AdminOrganizationProjectRateLimitService
-	Groups          AdminOrganizationProjectGroupService
-	Roles           AdminOrganizationProjectRoleService
-	Certificates    AdminOrganizationProjectCertificateService
+	Options               []option.RequestOption
+	Users                 AdminOrganizationProjectUserService
+	ServiceAccounts       AdminOrganizationProjectServiceAccountService
+	APIKeys               AdminOrganizationProjectAPIKeyService
+	RateLimits            AdminOrganizationProjectRateLimitService
+	ModelPermissions      AdminOrganizationProjectModelPermissionService
+	HostedToolPermissions AdminOrganizationProjectHostedToolPermissionService
+	Groups                AdminOrganizationProjectGroupService
+	Roles                 AdminOrganizationProjectRoleService
+	Certificates          AdminOrganizationProjectCertificateService
 }
 
 // NewAdminOrganizationProjectService generates a new service that applies the
@@ -46,6 +48,8 @@ func NewAdminOrganizationProjectService(opts ...option.RequestOption) (r AdminOr
 	r.ServiceAccounts = NewAdminOrganizationProjectServiceAccountService(opts...)
 	r.APIKeys = NewAdminOrganizationProjectAPIKeyService(opts...)
 	r.RateLimits = NewAdminOrganizationProjectRateLimitService(opts...)
+	r.ModelPermissions = NewAdminOrganizationProjectModelPermissionService(opts...)
+	r.HostedToolPermissions = NewAdminOrganizationProjectHostedToolPermissionService(opts...)
 	r.Groups = NewAdminOrganizationProjectGroupService(opts...)
 	r.Roles = NewAdminOrganizationProjectRoleService(opts...)
 	r.Certificates = NewAdminOrganizationProjectCertificateService(opts...)

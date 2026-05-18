@@ -216,6 +216,8 @@ type OutputText string                                       // Always "output_t
 type Page string                                             // Always "page"
 type ProjectGroup string                                     // Always "project.group"
 type ProjectGroupDeleted string                              // Always "project.group.deleted"
+type ProjectModelPermissions string                          // Always "project.model_permissions"
+type ProjectModelPermissionsDeleted string                   // Always "project.model_permissions.deleted"
 type ProjectRateLimit string                                 // Always "project.rate_limit"
 type ProtocolError string                                    // Always "protocol_error"
 type Python string                                           // Always "python"
@@ -684,10 +686,16 @@ func (c OutputAudioBufferStarted) Default() OutputAudioBufferStarted {
 func (c OutputAudioBufferStopped) Default() OutputAudioBufferStopped {
 	return "output_audio_buffer.stopped"
 }
-func (c OutputText) Default() OutputText                     { return "output_text" }
-func (c Page) Default() Page                                 { return "page" }
-func (c ProjectGroup) Default() ProjectGroup                 { return "project.group" }
-func (c ProjectGroupDeleted) Default() ProjectGroupDeleted   { return "project.group.deleted" }
+func (c OutputText) Default() OutputText                   { return "output_text" }
+func (c Page) Default() Page                               { return "page" }
+func (c ProjectGroup) Default() ProjectGroup               { return "project.group" }
+func (c ProjectGroupDeleted) Default() ProjectGroupDeleted { return "project.group.deleted" }
+func (c ProjectModelPermissions) Default() ProjectModelPermissions {
+	return "project.model_permissions"
+}
+func (c ProjectModelPermissionsDeleted) Default() ProjectModelPermissionsDeleted {
+	return "project.model_permissions.deleted"
+}
 func (c ProjectRateLimit) Default() ProjectRateLimit         { return "project.rate_limit" }
 func (c ProtocolError) Default() ProtocolError               { return "protocol_error" }
 func (c Python) Default() Python                             { return "python" }
@@ -1190,6 +1198,8 @@ func (c OutputText) MarshalJSON() ([]byte, error)                            { r
 func (c Page) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
 func (c ProjectGroup) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c ProjectGroupDeleted) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c ProjectModelPermissions) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c ProjectModelPermissionsDeleted) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c ProjectRateLimit) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c ProtocolError) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Python) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
