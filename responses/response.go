@@ -8577,7 +8577,7 @@ func (r *ResponseFunctionWebSearchActionSearchSource) UnmarshalJSON(data []byte)
 
 // Action type "open_page" - Opens a specific URL from search results.
 type ResponseFunctionWebSearchActionOpenPage struct {
-	// The action type.
+	// The action type. Always `open_page`.
 	Type constant.OpenPage `json:"type" default:"open_page"`
 	// The URL opened by the model.
 	URL string `json:"url" api:"nullable" format:"uri"`
@@ -8803,7 +8803,7 @@ func (r *ResponseFunctionWebSearchActionSearchSourceParam) UnmarshalJSON(data []
 type ResponseFunctionWebSearchActionOpenPageParam struct {
 	// The URL opened by the model.
 	URL param.Opt[string] `json:"url,omitzero" format:"uri"`
-	// The action type.
+	// The action type. Always `open_page`.
 	//
 	// This field can be elided, and will marshal its zero value as "open_page".
 	Type constant.OpenPage `json:"type" default:"open_page"`
