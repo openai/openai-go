@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -98,7 +97,7 @@ func (r *ResponseService) Get(ctx context.Context, responseID string, query Resp
 		err = errors.New("missing required response_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("responses/%s", responseID)
+	path := requestconfig.FormatPath("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
@@ -116,7 +115,7 @@ func (r *ResponseService) GetStreaming(ctx context.Context, responseID string, q
 		err = errors.New("missing required response_id parameter")
 		return ssestream.NewStream[ResponseStreamEventUnion](nil, err)
 	}
-	path := fmt.Sprintf("responses/%s", responseID)
+	path := requestconfig.FormatPath("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &raw, opts...)
 	return ssestream.NewStream[ResponseStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
@@ -130,7 +129,7 @@ func (r *ResponseService) Delete(ctx context.Context, responseID string, opts ..
 		err = errors.New("missing required response_id parameter")
 		return err
 	}
-	path := fmt.Sprintf("responses/%s", responseID)
+	path := requestconfig.FormatPath("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
 	return err
 }
@@ -145,7 +144,7 @@ func (r *ResponseService) Cancel(ctx context.Context, responseID string, opts ..
 		err = errors.New("missing required response_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("responses/%s/cancel", responseID)
+	path := requestconfig.FormatPath("responses/%s/cancel", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }
