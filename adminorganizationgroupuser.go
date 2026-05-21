@@ -63,7 +63,7 @@ func (r *AdminOrganizationGroupUserService) Get(ctx context.Context, groupID str
 		err = errors.New("missing required user_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s/users/%s", groupID, userID)
+	path := requestconfig.FormatPath("organization/groups/%s/users/%s", groupID, userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }

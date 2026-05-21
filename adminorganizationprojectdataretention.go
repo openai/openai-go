@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"slices"
 
@@ -45,7 +44,7 @@ func (r *AdminOrganizationProjectDataRetentionService) Get(ctx context.Context, 
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/data_retention", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/data_retention", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -58,7 +57,7 @@ func (r *AdminOrganizationProjectDataRetentionService) Update(ctx context.Contex
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/data_retention", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/data_retention", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }

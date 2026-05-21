@@ -82,7 +82,7 @@ func (r *AdminOrganizationProjectServiceAccountService) Update(ctx context.Conte
 		err = errors.New("missing required service_account_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }

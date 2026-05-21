@@ -71,7 +71,7 @@ func (r *AdminOrganizationProjectUserRoleService) Get(ctx context.Context, proje
 		err = errors.New("missing required role_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("projects/%s/users/%s/roles/%s", projectID, userID, roleID)
+	path := requestconfig.FormatPath("projects/%s/users/%s/roles/%s", projectID, userID, roleID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
