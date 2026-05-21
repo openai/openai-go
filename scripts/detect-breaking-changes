@@ -47,6 +47,8 @@ TEST_PATHS=(
 	adminorganizationgroupuser_test.go
 	adminorganizationgrouprole_test.go
 	adminorganizationrole_test.go
+	adminorganizationdataretention_test.go
+	adminorganizationspendalert_test.go
 	adminorganizationcertificate_test.go
 	adminorganizationproject_test.go
 	adminorganizationprojectuser_test.go
@@ -59,6 +61,8 @@ TEST_PATHS=(
 	adminorganizationprojectgroup_test.go
 	adminorganizationprojectgrouprole_test.go
 	adminorganizationprojectrole_test.go
+	adminorganizationprojectdataretention_test.go
+	adminorganizationprojectspendalert_test.go
 	adminorganizationprojectcertificate_test.go
 	responses/response_test.go
 	responses/inputitem_test.go

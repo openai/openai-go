@@ -51,6 +51,23 @@ func (r *AdminOrganizationProjectRoleService) New(ctx context.Context, projectID
 	return res, err
 }
 
+// Retrieves a project role.
+func (r *AdminOrganizationProjectRoleService) Get(ctx context.Context, projectID string, roleID string, opts ...option.RequestOption) (res *Role, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if projectID == "" {
+		err = errors.New("missing required project_id parameter")
+		return nil, err
+	}
+	if roleID == "" {
+		err = errors.New("missing required role_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("projects/%s/roles/%s", projectID, roleID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
 // Updates an existing project role.
 func (r *AdminOrganizationProjectRoleService) Update(ctx context.Context, projectID string, roleID string, body AdminOrganizationProjectRoleUpdateParams, opts ...option.RequestOption) (res *Role, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}

@@ -35,6 +35,8 @@ type AdminOrganizationProjectService struct {
 	HostedToolPermissions AdminOrganizationProjectHostedToolPermissionService
 	Groups                AdminOrganizationProjectGroupService
 	Roles                 AdminOrganizationProjectRoleService
+	DataRetention         AdminOrganizationProjectDataRetentionService
+	SpendAlerts           AdminOrganizationProjectSpendAlertService
 	Certificates          AdminOrganizationProjectCertificateService
 }
 
@@ -52,6 +54,8 @@ func NewAdminOrganizationProjectService(opts ...option.RequestOption) (r AdminOr
 	r.HostedToolPermissions = NewAdminOrganizationProjectHostedToolPermissionService(opts...)
 	r.Groups = NewAdminOrganizationProjectGroupService(opts...)
 	r.Roles = NewAdminOrganizationProjectRoleService(opts...)
+	r.DataRetention = NewAdminOrganizationProjectDataRetentionService(opts...)
+	r.SpendAlerts = NewAdminOrganizationProjectSpendAlertService(opts...)
 	r.Certificates = NewAdminOrganizationProjectCertificateService(opts...)
 	return
 }
