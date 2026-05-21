@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -49,8 +48,25 @@ func (r *AdminOrganizationProjectGroupService) New(ctx context.Context, projectI
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/groups", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/groups", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
+// Retrieves a project's group.
+func (r *AdminOrganizationProjectGroupService) Get(ctx context.Context, projectID string, groupID string, query AdminOrganizationProjectGroupGetParams, opts ...option.RequestOption) (res *ProjectGroup, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if projectID == "" {
+		err = errors.New("missing required project_id parameter")
+		return nil, err
+	}
+	if groupID == "" {
+		err = errors.New("missing required group_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("organization/projects/%s/groups/%s", projectID, groupID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
 
@@ -64,7 +80,7 @@ func (r *AdminOrganizationProjectGroupService) List(ctx context.Context, project
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/groups", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/groups", projectID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -94,7 +110,7 @@ func (r *AdminOrganizationProjectGroupService) Delete(ctx context.Context, proje
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/groups/%s", projectID, groupID)
+	path := requestconfig.FormatPath("organization/projects/%s/groups/%s", projectID, groupID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -108,7 +124,9 @@ type ProjectGroup struct {
 	// Display name of the group.
 	GroupName string `json:"group_name" api:"required"`
 	// The type of the group.
-	GroupType string `json:"group_type" api:"required"`
+	//
+	// Any of "group", "tenant_group".
+	GroupType ProjectGroupGroupType `json:"group_type" api:"required"`
 	// Always `project.group`.
 	Object constant.ProjectGroup `json:"object" default:"project.group"`
 	// Identifier of the project.
@@ -131,6 +149,14 @@ func (r ProjectGroup) RawJSON() string { return r.JSON.raw }
 func (r *ProjectGroup) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+// The type of the group.
+type ProjectGroupGroupType string
+
+const (
+	ProjectGroupGroupTypeGroup       ProjectGroupGroupType = "group"
+	ProjectGroupGroupTypeTenantGroup ProjectGroupGroupType = "tenant_group"
+)
 
 // Confirmation payload returned after removing a group from a project.
 type AdminOrganizationProjectGroupDeleteResponse struct {
@@ -168,6 +194,31 @@ func (r AdminOrganizationProjectGroupNewParams) MarshalJSON() (data []byte, err 
 func (r *AdminOrganizationProjectGroupNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+type AdminOrganizationProjectGroupGetParams struct {
+	// The type of group to retrieve.
+	//
+	// Any of "group", "tenant_group".
+	GroupType AdminOrganizationProjectGroupGetParamsGroupType `query:"group_type,omitzero" json:"-"`
+	paramObj
+}
+
+// URLQuery serializes [AdminOrganizationProjectGroupGetParams]'s query parameters
+// as `url.Values`.
+func (r AdminOrganizationProjectGroupGetParams) URLQuery() (v url.Values, err error) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+// The type of group to retrieve.
+type AdminOrganizationProjectGroupGetParamsGroupType string
+
+const (
+	AdminOrganizationProjectGroupGetParamsGroupTypeGroup       AdminOrganizationProjectGroupGetParamsGroupType = "group"
+	AdminOrganizationProjectGroupGetParamsGroupTypeTenantGroup AdminOrganizationProjectGroupGetParamsGroupType = "tenant_group"
+)
 
 type AdminOrganizationProjectGroupListParams struct {
 	// Cursor for pagination. Provide the ID of the last group from the previous

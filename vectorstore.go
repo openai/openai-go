@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -64,7 +63,7 @@ func (r *VectorStoreService) Get(ctx context.Context, vectorStoreID string, opts
 		err = errors.New("missing required vector_store_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s", vectorStoreID)
+	path := requestconfig.FormatPath("vector_stores/%s", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -78,7 +77,7 @@ func (r *VectorStoreService) Update(ctx context.Context, vectorStoreID string, b
 		err = errors.New("missing required vector_store_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s", vectorStoreID)
+	path := requestconfig.FormatPath("vector_stores/%s", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -116,7 +115,7 @@ func (r *VectorStoreService) Delete(ctx context.Context, vectorStoreID string, o
 		err = errors.New("missing required vector_store_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s", vectorStoreID)
+	path := requestconfig.FormatPath("vector_stores/%s", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -132,7 +131,7 @@ func (r *VectorStoreService) Search(ctx context.Context, vectorStoreID string, b
 		err = errors.New("missing required vector_store_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/search", vectorStoreID)
+	path := requestconfig.FormatPath("vector_stores/%s/search", vectorStoreID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodPost, path, body, &res, opts...)
 	if err != nil {
 		return nil, err

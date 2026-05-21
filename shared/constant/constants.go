@@ -56,6 +56,7 @@ type Closed string                                           // Always "closed"
 type CodeInterpreter string                                  // Always "code_interpreter"
 type CodeInterpreterCall string                              // Always "code_interpreter_call"
 type Compaction string                                       // Always "compaction"
+type CompactionTrigger string                                // Always "compaction_trigger"
 type Computer string                                         // Always "computer"
 type ComputerCallOutput string                               // Always "computer_call_output"
 type ComputerScreenshot string                               // Always "computer_screenshot"
@@ -93,6 +94,7 @@ type Disabled string                                         // Always "disabled
 type DoubleClick string                                      // Always "double_click"
 type Drag string                                             // Always "drag"
 type Duration string                                         // Always "duration"
+type Email string                                            // Always "email"
 type Embedding string                                        // Always "embedding"
 type Error string                                            // Always "error"
 type EvalRunCanceled string                                  // Always "eval.run.canceled"
@@ -180,6 +182,7 @@ type OrganizationCertificate string                          // Always "organiza
 type OrganizationCertificateActivation string                // Always "organization.certificate.activation"
 type OrganizationCertificateDeactivation string              // Always "organization.certificate.deactivation"
 type OrganizationCostsResult string                          // Always "organization.costs.result"
+type OrganizationDataRetention string                        // Always "organization.data_retention"
 type OrganizationInvite string                               // Always "organization.invite"
 type OrganizationInviteDeleted string                        // Always "organization.invite.deleted"
 type OrganizationProject string                              // Always "organization.project"
@@ -193,14 +196,18 @@ type OrganizationProjectServiceAccountAPIKey string          // Always "organiza
 type OrganizationProjectServiceAccountDeleted string         // Always "organization.project.service_account.deleted"
 type OrganizationProjectUser string                          // Always "organization.project.user"
 type OrganizationProjectUserDeleted string                   // Always "organization.project.user.deleted"
+type OrganizationSpendAlert string                           // Always "organization.spend_alert"
+type OrganizationSpendAlertDeleted string                    // Always "organization.spend_alert.deleted"
 type OrganizationUsageAudioSpeechesResult string             // Always "organization.usage.audio_speeches.result"
 type OrganizationUsageAudioTranscriptionsResult string       // Always "organization.usage.audio_transcriptions.result"
 type OrganizationUsageCodeInterpreterSessionsResult string   // Always "organization.usage.code_interpreter_sessions.result"
 type OrganizationUsageCompletionsResult string               // Always "organization.usage.completions.result"
 type OrganizationUsageEmbeddingsResult string                // Always "organization.usage.embeddings.result"
+type OrganizationUsageFileSearchesResult string              // Always "organization.usage.file_searches.result"
 type OrganizationUsageImagesResult string                    // Always "organization.usage.images.result"
 type OrganizationUsageModerationsResult string               // Always "organization.usage.moderations.result"
 type OrganizationUsageVectorStoresResult string              // Always "organization.usage.vector_stores.result"
+type OrganizationUsageWebSearchesResult string               // Always "organization.usage.web_searches.result"
 type OrganizationUser string                                 // Always "organization.user"
 type OrganizationUserDeleted string                          // Always "organization.user.deleted"
 type Other string                                            // Always "other"
@@ -211,9 +218,14 @@ type OutputAudioBufferStarted string                         // Always "output_a
 type OutputAudioBufferStopped string                         // Always "output_audio_buffer.stopped"
 type OutputText string                                       // Always "output_text"
 type Page string                                             // Always "page"
+type ProjectDataRetention string                             // Always "project.data_retention"
 type ProjectGroup string                                     // Always "project.group"
 type ProjectGroupDeleted string                              // Always "project.group.deleted"
+type ProjectModelPermissions string                          // Always "project.model_permissions"
+type ProjectModelPermissionsDeleted string                   // Always "project.model_permissions.deleted"
 type ProjectRateLimit string                                 // Always "project.rate_limit"
+type ProjectSpendAlert string                                // Always "project.spend_alert"
+type ProjectSpendAlertDeleted string                         // Always "project.spend_alert.deleted"
 type ProtocolError string                                    // Always "protocol_error"
 type Python string                                           // Always "python"
 type QuotedText string                                       // Always "quoted_text"
@@ -427,6 +439,7 @@ func (c Closed) Default() Closed                                 { return "close
 func (c CodeInterpreter) Default() CodeInterpreter               { return "code_interpreter" }
 func (c CodeInterpreterCall) Default() CodeInterpreterCall       { return "code_interpreter_call" }
 func (c Compaction) Default() Compaction                         { return "compaction" }
+func (c CompactionTrigger) Default() CompactionTrigger           { return "compaction_trigger" }
 func (c Computer) Default() Computer                             { return "computer" }
 func (c ComputerCallOutput) Default() ComputerCallOutput         { return "computer_call_output" }
 func (c ComputerScreenshot) Default() ComputerScreenshot         { return "computer_screenshot" }
@@ -484,6 +497,7 @@ func (c Disabled) Default() Disabled                             { return "disab
 func (c DoubleClick) Default() DoubleClick                       { return "double_click" }
 func (c Drag) Default() Drag                                     { return "drag" }
 func (c Duration) Default() Duration                             { return "duration" }
+func (c Email) Default() Email                                   { return "email" }
 func (c Embedding) Default() Embedding                           { return "embedding" }
 func (c Error) Default() Error                                   { return "error" }
 func (c EvalRunCanceled) Default() EvalRunCanceled               { return "eval.run.canceled" }
@@ -599,6 +613,9 @@ func (c OrganizationCertificateDeactivation) Default() OrganizationCertificateDe
 func (c OrganizationCostsResult) Default() OrganizationCostsResult {
 	return "organization.costs.result"
 }
+func (c OrganizationDataRetention) Default() OrganizationDataRetention {
+	return "organization.data_retention"
+}
 func (c OrganizationInvite) Default() OrganizationInvite { return "organization.invite" }
 func (c OrganizationInviteDeleted) Default() OrganizationInviteDeleted {
 	return "organization.invite.deleted"
@@ -634,6 +651,10 @@ func (c OrganizationProjectUser) Default() OrganizationProjectUser {
 func (c OrganizationProjectUserDeleted) Default() OrganizationProjectUserDeleted {
 	return "organization.project.user.deleted"
 }
+func (c OrganizationSpendAlert) Default() OrganizationSpendAlert { return "organization.spend_alert" }
+func (c OrganizationSpendAlertDeleted) Default() OrganizationSpendAlertDeleted {
+	return "organization.spend_alert.deleted"
+}
 func (c OrganizationUsageAudioSpeechesResult) Default() OrganizationUsageAudioSpeechesResult {
 	return "organization.usage.audio_speeches.result"
 }
@@ -649,6 +670,9 @@ func (c OrganizationUsageCompletionsResult) Default() OrganizationUsageCompletio
 func (c OrganizationUsageEmbeddingsResult) Default() OrganizationUsageEmbeddingsResult {
 	return "organization.usage.embeddings.result"
 }
+func (c OrganizationUsageFileSearchesResult) Default() OrganizationUsageFileSearchesResult {
+	return "organization.usage.file_searches.result"
+}
 func (c OrganizationUsageImagesResult) Default() OrganizationUsageImagesResult {
 	return "organization.usage.images.result"
 }
@@ -657,6 +681,9 @@ func (c OrganizationUsageModerationsResult) Default() OrganizationUsageModeratio
 }
 func (c OrganizationUsageVectorStoresResult) Default() OrganizationUsageVectorStoresResult {
 	return "organization.usage.vector_stores.result"
+}
+func (c OrganizationUsageWebSearchesResult) Default() OrganizationUsageWebSearchesResult {
+	return "organization.usage.web_searches.result"
 }
 func (c OrganizationUser) Default() OrganizationUser { return "organization.user" }
 func (c OrganizationUserDeleted) Default() OrganizationUserDeleted {
@@ -676,9 +703,20 @@ func (c OutputAudioBufferStopped) Default() OutputAudioBufferStopped {
 }
 func (c OutputText) Default() OutputText                     { return "output_text" }
 func (c Page) Default() Page                                 { return "page" }
+func (c ProjectDataRetention) Default() ProjectDataRetention { return "project.data_retention" }
 func (c ProjectGroup) Default() ProjectGroup                 { return "project.group" }
 func (c ProjectGroupDeleted) Default() ProjectGroupDeleted   { return "project.group.deleted" }
-func (c ProjectRateLimit) Default() ProjectRateLimit         { return "project.rate_limit" }
+func (c ProjectModelPermissions) Default() ProjectModelPermissions {
+	return "project.model_permissions"
+}
+func (c ProjectModelPermissionsDeleted) Default() ProjectModelPermissionsDeleted {
+	return "project.model_permissions.deleted"
+}
+func (c ProjectRateLimit) Default() ProjectRateLimit   { return "project.rate_limit" }
+func (c ProjectSpendAlert) Default() ProjectSpendAlert { return "project.spend_alert" }
+func (c ProjectSpendAlertDeleted) Default() ProjectSpendAlertDeleted {
+	return "project.spend_alert.deleted"
+}
 func (c ProtocolError) Default() ProtocolError               { return "protocol_error" }
 func (c Python) Default() Python                             { return "python" }
 func (c QuotedText) Default() QuotedText                     { return "quoted_text" }
@@ -1000,6 +1038,7 @@ func (c Closed) MarshalJSON() ([]byte, error)                  { return marshalS
 func (c CodeInterpreter) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c CodeInterpreterCall) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c Compaction) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c CompactionTrigger) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c Computer) MarshalJSON() ([]byte, error)                { return marshalString(c) }
 func (c ComputerCallOutput) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c ComputerScreenshot) MarshalJSON() ([]byte, error)      { return marshalString(c) }
@@ -1045,6 +1084,7 @@ func (c Disabled) MarshalJSON() ([]byte, error)                            { ret
 func (c DoubleClick) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Drag) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Duration) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
+func (c Email) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Embedding) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
 func (c Error) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c EvalRunCanceled) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
@@ -1132,6 +1172,7 @@ func (c OrganizationCertificate) MarshalJSON() ([]byte, error)             { ret
 func (c OrganizationCertificateActivation) MarshalJSON() ([]byte, error)   { return marshalString(c) }
 func (c OrganizationCertificateDeactivation) MarshalJSON() ([]byte, error) { return marshalString(c) }
 func (c OrganizationCostsResult) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c OrganizationDataRetention) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c OrganizationInvite) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c OrganizationInviteDeleted) MarshalJSON() ([]byte, error)           { return marshalString(c) }
 func (c OrganizationProject) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
@@ -1153,6 +1194,8 @@ func (c OrganizationProjectServiceAccountDeleted) MarshalJSON() ([]byte, error) 
 }
 func (c OrganizationProjectUser) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c OrganizationProjectUserDeleted) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c OrganizationSpendAlert) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c OrganizationSpendAlertDeleted) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c OrganizationUsageAudioSpeechesResult) MarshalJSON() ([]byte, error) { return marshalString(c) }
 func (c OrganizationUsageAudioTranscriptionsResult) MarshalJSON() ([]byte, error) {
 	return marshalString(c)
@@ -1162,9 +1205,11 @@ func (c OrganizationUsageCodeInterpreterSessionsResult) MarshalJSON() ([]byte, e
 }
 func (c OrganizationUsageCompletionsResult) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c OrganizationUsageEmbeddingsResult) MarshalJSON() ([]byte, error)     { return marshalString(c) }
+func (c OrganizationUsageFileSearchesResult) MarshalJSON() ([]byte, error)   { return marshalString(c) }
 func (c OrganizationUsageImagesResult) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c OrganizationUsageModerationsResult) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c OrganizationUsageVectorStoresResult) MarshalJSON() ([]byte, error)   { return marshalString(c) }
+func (c OrganizationUsageWebSearchesResult) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c OrganizationUser) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
 func (c OrganizationUserDeleted) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c Other) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
@@ -1175,9 +1220,14 @@ func (c OutputAudioBufferStarted) MarshalJSON() ([]byte, error)              { r
 func (c OutputAudioBufferStopped) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c OutputText) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c Page) MarshalJSON() ([]byte, error)                                  { return marshalString(c) }
+func (c ProjectDataRetention) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c ProjectGroup) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c ProjectGroupDeleted) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c ProjectModelPermissions) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c ProjectModelPermissionsDeleted) MarshalJSON() ([]byte, error)        { return marshalString(c) }
 func (c ProjectRateLimit) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c ProjectSpendAlert) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c ProjectSpendAlertDeleted) MarshalJSON() ([]byte, error)              { return marshalString(c) }
 func (c ProtocolError) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Python) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c QuotedText) MarshalJSON() ([]byte, error)                            { return marshalString(c) }

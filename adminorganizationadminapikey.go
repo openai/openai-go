@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -56,7 +55,7 @@ func (r *AdminOrganizationAdminAPIKeyService) Get(ctx context.Context, keyID str
 		err = errors.New("missing required key_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/admin_api_keys/%s", keyID)
+	path := requestconfig.FormatPath("organization/admin_api_keys/%s", keyID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -93,7 +92,7 @@ func (r *AdminOrganizationAdminAPIKeyService) Delete(ctx context.Context, keyID 
 		err = errors.New("missing required key_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/admin_api_keys/%s", keyID)
+	path := requestconfig.FormatPath("organization/admin_api_keys/%s", keyID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

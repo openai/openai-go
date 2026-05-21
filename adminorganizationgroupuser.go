@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -47,8 +46,25 @@ func (r *AdminOrganizationGroupUserService) New(ctx context.Context, groupID str
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s/users", groupID)
+	path := requestconfig.FormatPath("organization/groups/%s/users", groupID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
+// Retrieves a user in a group.
+func (r *AdminOrganizationGroupUserService) Get(ctx context.Context, groupID string, userID string, opts ...option.RequestOption) (res *AdminOrganizationGroupUserGetResponse, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if groupID == "" {
+		err = errors.New("missing required group_id parameter")
+		return nil, err
+	}
+	if userID == "" {
+		err = errors.New("missing required user_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("organization/groups/%s/users/%s", groupID, userID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
 
@@ -62,7 +78,7 @@ func (r *AdminOrganizationGroupUserService) List(ctx context.Context, groupID st
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s/users", groupID)
+	path := requestconfig.FormatPath("organization/groups/%s/users", groupID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -92,7 +108,7 @@ func (r *AdminOrganizationGroupUserService) Delete(ctx context.Context, groupID 
 		err = errors.New("missing required user_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s/users/%s", groupID, userID)
+	path := requestconfig.FormatPath("organization/groups/%s/users/%s", groupID, userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -144,6 +160,49 @@ func (r AdminOrganizationGroupUserNewResponse) RawJSON() string { return r.JSON.
 func (r *AdminOrganizationGroupUserNewResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+// Details about a user returned from an organization group membership lookup.
+type AdminOrganizationGroupUserGetResponse struct {
+	// Identifier for the user.
+	ID string `json:"id" api:"required"`
+	// Email address of the user, or `null` for users without an email.
+	Email string `json:"email" api:"required"`
+	// Whether the user is a service account.
+	IsServiceAccount bool `json:"is_service_account" api:"required"`
+	// Display name of the user.
+	Name string `json:"name" api:"required"`
+	// URL of the user's profile picture, if available.
+	Picture string `json:"picture" api:"required"`
+	// The type of user.
+	//
+	// Any of "user", "tenant_user".
+	UserType AdminOrganizationGroupUserGetResponseUserType `json:"user_type" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID               respjson.Field
+		Email            respjson.Field
+		IsServiceAccount respjson.Field
+		Name             respjson.Field
+		Picture          respjson.Field
+		UserType         respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationGroupUserGetResponse) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationGroupUserGetResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The type of user.
+type AdminOrganizationGroupUserGetResponseUserType string
+
+const (
+	AdminOrganizationGroupUserGetResponseUserTypeUser       AdminOrganizationGroupUserGetResponseUserType = "user"
+	AdminOrganizationGroupUserGetResponseUserTypeTenantUser AdminOrganizationGroupUserGetResponseUserType = "tenant_user"
+)
 
 // Confirmation payload returned after removing a user from a group.
 type AdminOrganizationGroupUserDeleteResponse struct {

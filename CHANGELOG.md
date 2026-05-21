@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.37.0 (2026-05-21)
+
+Full Changelog: [v3.36.0...v3.37.0](https://github.com/openai/openai-go/compare/v3.36.0...v3.37.0)
+
+### Features
+
+* **api:** api update ([7f7416e](https://github.com/openai/openai-go/commit/7f7416ea4f6953a2861189dee6391515c3b995a9))
+* **api:** manual updates ([d646562](https://github.com/openai/openai-go/commit/d6465620413df87d971e7e37ae74bef4c70076b1))
+* **api:** update OpenAPI spec or Stainless config ([b34b78a](https://github.com/openai/openai-go/commit/b34b78a83433003a6168fffd175cc963ad719495))
+* **client:** optimize json encoder for internal types ([93adc6e](https://github.com/openai/openai-go/commit/93adc6e6247e8ce830152c3df0980a3154aa098a))
+
+
+### Bug Fixes
+
+* **go:** format generated admin paths ([1dd8f5e](https://github.com/openai/openai-go/commit/1dd8f5ec0adeeefef6a56068b5532ba5e3b3290e))
+* **go:** format generated project permission paths ([b751c37](https://github.com/openai/openai-go/commit/b751c37ce2d6348545d75451dfc253dd7dda0f4f))
+
+
+### Chores
+
+* **api:** docs updates ([08bc80e](https://github.com/openai/openai-go/commit/08bc80ea58a19ba0725942c1f3afbcfb043851a0))
+
 ## 3.36.0 (2026-05-13)
 
 Full Changelog: [v3.35.0...v3.36.0](https://github.com/openai/openai-go/compare/v3.35.0...v3.36.0)

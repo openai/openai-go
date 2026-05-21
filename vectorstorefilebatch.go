@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -49,7 +48,7 @@ func (r *VectorStoreFileBatchService) New(ctx context.Context, vectorStoreID str
 		err = errors.New("missing required vector_store_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/file_batches", vectorStoreID)
+	path := requestconfig.FormatPath("vector_stores/%s/file_batches", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -126,7 +125,7 @@ func (r *VectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID str
 		err = errors.New("missing required batch_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/file_batches/%s", vectorStoreID, batchID)
+	path := requestconfig.FormatPath("vector_stores/%s/file_batches/%s", vectorStoreID, batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -145,7 +144,7 @@ func (r *VectorStoreFileBatchService) Cancel(ctx context.Context, vectorStoreID 
 		err = errors.New("missing required batch_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/file_batches/%s/cancel", vectorStoreID, batchID)
+	path := requestconfig.FormatPath("vector_stores/%s/file_batches/%s/cancel", vectorStoreID, batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }
@@ -164,7 +163,7 @@ func (r *VectorStoreFileBatchService) ListFiles(ctx context.Context, vectorStore
 		err = errors.New("missing required batch_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("vector_stores/%s/file_batches/%s/files", vectorStoreID, batchID)
+	path := requestconfig.FormatPath("vector_stores/%s/file_batches/%s/files", vectorStoreID, batchID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
