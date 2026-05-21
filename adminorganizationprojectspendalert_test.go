@@ -13,7 +13,7 @@ import (
 	"github.com/openai/openai-go/v3/option"
 )
 
-func TestAdminOrganizationGroupNew(t *testing.T) {
+func TestAdminOrganizationProjectSpendAlertNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -26,59 +26,17 @@ func TestAdminOrganizationGroupNew(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Admin.Organization.Groups.New(context.TODO(), openai.AdminOrganizationGroupNewParams{
-		Name: "x",
-	})
-	if err != nil {
-		var apierr *openai.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestAdminOrganizationGroupGet(t *testing.T) {
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := openai.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-		option.WithAdminAPIKey("My Admin API Key"),
-	)
-	_, err := client.Admin.Organization.Groups.Get(context.TODO(), "group_id")
-	if err != nil {
-		var apierr *openai.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestAdminOrganizationGroupUpdate(t *testing.T) {
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := openai.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIKey("My API Key"),
-		option.WithAdminAPIKey("My Admin API Key"),
-	)
-	_, err := client.Admin.Organization.Groups.Update(
+	_, err := client.Admin.Organization.Projects.SpendAlerts.New(
 		context.TODO(),
-		"group_id",
-		openai.AdminOrganizationGroupUpdateParams{
-			Name: "x",
+		"project_id",
+		openai.AdminOrganizationProjectSpendAlertNewParams{
+			Currency: openai.AdminOrganizationProjectSpendAlertNewParamsCurrencyUsd,
+			Interval: openai.AdminOrganizationProjectSpendAlertNewParamsIntervalMonth,
+			NotificationChannel: openai.AdminOrganizationProjectSpendAlertNewParamsNotificationChannel{
+				Recipients:    []string{"string"},
+				SubjectPrefix: openai.String("subject_prefix"),
+			},
+			ThresholdAmount: 0,
 		},
 	)
 	if err != nil {
@@ -90,7 +48,7 @@ func TestAdminOrganizationGroupUpdate(t *testing.T) {
 	}
 }
 
-func TestAdminOrganizationGroupListWithOptionalParams(t *testing.T) {
+func TestAdminOrganizationProjectSpendAlertUpdateWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -103,11 +61,20 @@ func TestAdminOrganizationGroupListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Admin.Organization.Groups.List(context.TODO(), openai.AdminOrganizationGroupListParams{
-		After: openai.String("after"),
-		Limit: openai.Int(0),
-		Order: openai.AdminOrganizationGroupListParamsOrderAsc,
-	})
+	_, err := client.Admin.Organization.Projects.SpendAlerts.Update(
+		context.TODO(),
+		"project_id",
+		"alert_id",
+		openai.AdminOrganizationProjectSpendAlertUpdateParams{
+			Currency: openai.AdminOrganizationProjectSpendAlertUpdateParamsCurrencyUsd,
+			Interval: openai.AdminOrganizationProjectSpendAlertUpdateParamsIntervalMonth,
+			NotificationChannel: openai.AdminOrganizationProjectSpendAlertUpdateParamsNotificationChannel{
+				Recipients:    []string{"string"},
+				SubjectPrefix: openai.String("subject_prefix"),
+			},
+			ThresholdAmount: 0,
+		},
+	)
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {
@@ -117,7 +84,7 @@ func TestAdminOrganizationGroupListWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestAdminOrganizationGroupDelete(t *testing.T) {
+func TestAdminOrganizationProjectSpendAlertListWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -130,7 +97,43 @@ func TestAdminOrganizationGroupDelete(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Admin.Organization.Groups.Delete(context.TODO(), "group_id")
+	_, err := client.Admin.Organization.Projects.SpendAlerts.List(
+		context.TODO(),
+		"project_id",
+		openai.AdminOrganizationProjectSpendAlertListParams{
+			After:  openai.String("after"),
+			Before: openai.String("before"),
+			Limit:  openai.Int(0),
+			Order:  openai.AdminOrganizationProjectSpendAlertListParamsOrderAsc,
+		},
+	)
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestAdminOrganizationProjectSpendAlertDelete(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Admin.Organization.Projects.SpendAlerts.Delete(
+		context.TODO(),
+		"project_id",
+		"alert_id",
+	)
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {

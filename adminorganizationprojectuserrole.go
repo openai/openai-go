@@ -56,6 +56,27 @@ func (r *AdminOrganizationProjectUserRoleService) New(ctx context.Context, proje
 	return res, err
 }
 
+// Retrieves a project role assigned to a user.
+func (r *AdminOrganizationProjectUserRoleService) Get(ctx context.Context, projectID string, userID string, roleID string, opts ...option.RequestOption) (res *AdminOrganizationProjectUserRoleGetResponse, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if projectID == "" {
+		err = errors.New("missing required project_id parameter")
+		return nil, err
+	}
+	if userID == "" {
+		err = errors.New("missing required user_id parameter")
+		return nil, err
+	}
+	if roleID == "" {
+		err = errors.New("missing required role_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("projects/%s/users/%s/roles/%s", projectID, userID, roleID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
 // Lists the project roles assigned to a user within a project.
 func (r *AdminOrganizationProjectUserRoleService) List(ctx context.Context, projectID string, userID string, query AdminOrganizationProjectUserRoleListParams, opts ...option.RequestOption) (res *pagination.NextCursorPage[AdminOrganizationProjectUserRoleListResponse], err error) {
 	var raw *http.Response
@@ -135,9 +156,11 @@ func (r *AdminOrganizationProjectUserRoleNewResponse) UnmarshalJSON(data []byte)
 
 // Detailed information about a role assignment entry returned when listing
 // assignments.
-type AdminOrganizationProjectUserRoleListResponse struct {
+type AdminOrganizationProjectUserRoleGetResponse struct {
 	// Identifier for the role.
 	ID string `json:"id" api:"required"`
+	// Principals from which the role assignment is inherited, when available.
+	AssignmentSources []AdminOrganizationProjectUserRoleGetResponseAssignmentSource `json:"assignment_sources" api:"required"`
 	// When the role was created.
 	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// Identifier of the actor who created the role.
@@ -157,28 +180,121 @@ type AdminOrganizationProjectUserRoleListResponse struct {
 	// Resource type the role applies to.
 	ResourceType string `json:"resource_type" api:"required"`
 	// When the role was last updated.
-	UpdatedAt int64 `json:"updated_at" api:"required"`
+	UpdatedAt int64 `json:"updated_at" api:"required" format:"unixtime"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID               respjson.Field
-		CreatedAt        respjson.Field
-		CreatedBy        respjson.Field
-		CreatedByUserObj respjson.Field
-		Description      respjson.Field
-		Metadata         respjson.Field
-		Name             respjson.Field
-		Permissions      respjson.Field
-		PredefinedRole   respjson.Field
-		ResourceType     respjson.Field
-		UpdatedAt        respjson.Field
-		ExtraFields      map[string]respjson.Field
-		raw              string
+		ID                respjson.Field
+		AssignmentSources respjson.Field
+		CreatedAt         respjson.Field
+		CreatedBy         respjson.Field
+		CreatedByUserObj  respjson.Field
+		Description       respjson.Field
+		Metadata          respjson.Field
+		Name              respjson.Field
+		Permissions       respjson.Field
+		PredefinedRole    respjson.Field
+		ResourceType      respjson.Field
+		UpdatedAt         respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationProjectUserRoleGetResponse) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationProjectUserRoleGetResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AdminOrganizationProjectUserRoleGetResponseAssignmentSource struct {
+	PrincipalID   string `json:"principal_id" api:"required"`
+	PrincipalType string `json:"principal_type" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		PrincipalID   respjson.Field
+		PrincipalType respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationProjectUserRoleGetResponseAssignmentSource) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationProjectUserRoleGetResponseAssignmentSource) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Detailed information about a role assignment entry returned when listing
+// assignments.
+type AdminOrganizationProjectUserRoleListResponse struct {
+	// Identifier for the role.
+	ID string `json:"id" api:"required"`
+	// Principals from which the role assignment is inherited, when available.
+	AssignmentSources []AdminOrganizationProjectUserRoleListResponseAssignmentSource `json:"assignment_sources" api:"required"`
+	// When the role was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Identifier of the actor who created the role.
+	CreatedBy string `json:"created_by" api:"required"`
+	// User details for the actor that created the role, when available.
+	CreatedByUserObj map[string]any `json:"created_by_user_obj" api:"required"`
+	// Description of the role.
+	Description string `json:"description" api:"required"`
+	// Arbitrary metadata stored on the role.
+	Metadata map[string]any `json:"metadata" api:"required"`
+	// Name of the role.
+	Name string `json:"name" api:"required"`
+	// Permissions associated with the role.
+	Permissions []string `json:"permissions" api:"required"`
+	// Whether the role is predefined by OpenAI.
+	PredefinedRole bool `json:"predefined_role" api:"required"`
+	// Resource type the role applies to.
+	ResourceType string `json:"resource_type" api:"required"`
+	// When the role was last updated.
+	UpdatedAt int64 `json:"updated_at" api:"required" format:"unixtime"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                respjson.Field
+		AssignmentSources respjson.Field
+		CreatedAt         respjson.Field
+		CreatedBy         respjson.Field
+		CreatedByUserObj  respjson.Field
+		Description       respjson.Field
+		Metadata          respjson.Field
+		Name              respjson.Field
+		Permissions       respjson.Field
+		PredefinedRole    respjson.Field
+		ResourceType      respjson.Field
+		UpdatedAt         respjson.Field
+		ExtraFields       map[string]respjson.Field
+		raw               string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
 func (r AdminOrganizationProjectUserRoleListResponse) RawJSON() string { return r.JSON.raw }
 func (r *AdminOrganizationProjectUserRoleListResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type AdminOrganizationProjectUserRoleListResponseAssignmentSource struct {
+	PrincipalID   string `json:"principal_id" api:"required"`
+	PrincipalType string `json:"principal_type" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		PrincipalID   respjson.Field
+		PrincipalType respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationProjectUserRoleListResponseAssignmentSource) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationProjectUserRoleListResponseAssignmentSource) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
