@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"slices"
@@ -39,15 +40,19 @@ func (r *ResponseService) ConnectWebSocket(ctx context.Context, opts ...option.R
 		defer cancel()
 	}
 
-	conn, _, err := websocket.Dial(dialCtx, wsURL, &websocket.DialOptions{
+	conn, resp, err := websocket.Dial(dialCtx, wsURL, &websocket.DialOptions{
 		HTTPClient: websocketHTTPClient(cfg),
 		HTTPHeader: cfg.Request.Header.Clone(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, newWebSocketDialError(wsURL, resp, err)
 	}
 
-	return newWebSocketConn(conn), nil
+	var header http.Header
+	if resp != nil {
+		header = resp.Header
+	}
+	return newWebSocketConn(conn, header), nil
 }
 
 func responsesWebSocketURL(cfg *requestconfig.RequestConfig) (string, error) {
@@ -111,7 +116,8 @@ type wsMessage struct {
 
 // WebSocketConn is a WebSocket connection to the Responses API.
 type WebSocketConn struct {
-	conn *websocket.Conn
+	conn   *websocket.Conn
+	header http.Header
 
 	msgCh   chan wsMessage
 	writeMu sync.Mutex
@@ -124,10 +130,21 @@ type WebSocketConn struct {
 	closeErr  error
 }
 
-func newWebSocketConn(conn *websocket.Conn) *WebSocketConn {
+var (
+	// ErrWebSocketConnectionClosed is returned when a new stream is attempted on
+	// a Responses WebSocket connection the SDK already knows is closed.
+	ErrWebSocketConnectionClosed = errors.New("responses websocket: connection is closed")
+
+	// ErrWebSocketStreamActive is returned when a new stream is attempted while
+	// another response stream is still active on the same WebSocket connection.
+	ErrWebSocketStreamActive = errors.New("responses websocket: another response stream is already active on this connection")
+)
+
+func newWebSocketConn(conn *websocket.Conn, header http.Header) *WebSocketConn {
 	c := &WebSocketConn{
-		conn:  conn,
-		msgCh: make(chan wsMessage, 16),
+		conn:   conn,
+		header: header.Clone(),
+		msgCh:  make(chan wsMessage, 16),
 	}
 	go c.readPump()
 	return c
@@ -169,7 +186,7 @@ func (c *WebSocketConn) New(ctx context.Context, body ResponseNewParams) (*WebSo
 	if err != nil {
 		c.releaseStream()
 		c.markClosed()
-		return nil, err
+		return nil, &WebSocketTransportError{Op: "write", Err: err}
 	}
 
 	return &WebSocketStream{conn: c, ctx: ctx}, nil
@@ -180,10 +197,10 @@ func (c *WebSocketConn) acquireStream() error {
 	defer c.mu.Unlock()
 
 	if c.closed {
-		return errors.New("responses websocket: connection is closed")
+		return ErrWebSocketConnectionClosed
 	}
 	if c.inFlight {
-		return errors.New("responses websocket: another response stream is already active on this connection")
+		return ErrWebSocketStreamActive
 	}
 	c.inFlight = true
 	return nil
@@ -202,12 +219,6 @@ func (c *WebSocketConn) markClosed() {
 	c.mu.Unlock()
 }
 
-func (c *WebSocketConn) isClosed() bool {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.closed
-}
-
 // Close closes the WebSocket connection. It is safe to call multiple times.
 func (c *WebSocketConn) Close() error {
 	c.closeOnce.Do(func() {
@@ -221,12 +232,22 @@ func (c *WebSocketConn) Close() error {
 	return c.closeErr
 }
 
+// HandshakeHeader returns the HTTP response headers from the successful
+// WebSocket upgrade. The returned header is a copy and may be mutated by the
+// caller.
+func (c *WebSocketConn) HandshakeHeader() http.Header {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.header.Clone()
+}
+
 // WebSocketStream is a stream of Responses API events received over a WebSocket.
 type WebSocketStream struct {
 	conn *WebSocketConn
 	ctx  context.Context
 
 	cur ResponseStreamEventUnion
+	raw []byte
 	err error
 
 	done     bool
@@ -271,13 +292,14 @@ func (s *WebSocketStream) Next() bool {
 
 		var event ResponseStreamEventUnion
 		if err := json.Unmarshal(data, &event); err != nil {
-			s.err = fmt.Errorf("responses websocket: error decoding event: %w", err)
+			s.err = &WebSocketDecodeError{Data: append([]byte(nil), data...), Err: err}
 			s.done = true
 			s.release()
 			return false
 		}
 
 		s.cur = event
+		s.raw = append(s.raw[:0], data...)
 		if isTerminalResponseStreamEvent(event.Type) {
 			s.done = true
 			s.release()
@@ -304,10 +326,18 @@ func (s *WebSocketStream) nextMessage() (wsMessage, bool) {
 
 func (s *WebSocketStream) handleReadError(err error) {
 	status := websocket.CloseStatus(err)
-	if status == websocket.StatusNormalClosure || status == websocket.StatusGoingAway || status == websocket.StatusNoStatusRcvd || errors.Is(err, net.ErrClosed) || s.conn.isClosed() {
+	if errors.Is(err, net.ErrClosed) {
 		s.err = nil
+	} else if status != -1 {
+		var closeErr websocket.CloseError
+		_ = errors.As(err, &closeErr)
+		s.err = &WebSocketCloseError{
+			Status: status,
+			Reason: closeErr.Reason,
+			Err:    err,
+		}
 	} else {
-		s.err = err
+		s.err = &WebSocketTransportError{Op: "read", Err: err}
 	}
 	if status != -1 || errors.Is(err, net.ErrClosed) {
 		s.conn.markClosed()
@@ -328,6 +358,13 @@ func isTerminalResponseStreamEvent(eventType string) bool {
 // Current returns the current event.
 func (s *WebSocketStream) Current() ResponseStreamEventUnion {
 	return s.cur
+}
+
+// CurrentRaw returns the raw JSON payload for the current event. It can be used
+// to inspect fields that are not yet modeled by this SDK or to debug ordering
+// issues between event types.
+func (s *WebSocketStream) CurrentRaw() []byte {
+	return append([]byte(nil), s.raw...)
 }
 
 // Err returns the stream error, if any.
@@ -361,10 +398,15 @@ func (s *WebSocketStream) release() {
 // WebSocketError is returned by WebSocketStream.Err for documented Responses API
 // WebSocket error messages.
 type WebSocketError struct {
+	// Type is the top-level event type. It is usually "error".
+	Type    string
 	Status  int
 	Code    string
 	Message string
 	Param   string
+	Header  http.Header
+	// Raw is the complete JSON payload received from the server.
+	Raw []byte
 }
 
 func (e *WebSocketError) Error() string {
@@ -385,7 +427,8 @@ func (e *WebSocketError) Error() string {
 }
 
 func parseWebSocketError(data []byte) *WebSocketError {
-	if gjson.GetBytes(data, "type").String() != "error" {
+	eventType := gjson.GetBytes(data, "type").String()
+	if eventType != "error" {
 		return nil
 	}
 	errorObject := gjson.GetBytes(data, "error")
@@ -393,10 +436,194 @@ func parseWebSocketError(data []byte) *WebSocketError {
 		return nil
 	}
 
+	header := make(http.Header)
+	headersObject := gjson.GetBytes(data, "headers")
+	if headersObject.Exists() && headersObject.IsObject() {
+		headersObject.ForEach(func(key, value gjson.Result) bool {
+			if value.IsArray() {
+				value.ForEach(func(_, item gjson.Result) bool {
+					header.Add(key.String(), item.String())
+					return true
+				})
+				return true
+			}
+			header.Add(key.String(), value.String())
+			return true
+		})
+	}
+
+	status := int(gjson.GetBytes(data, "status").Int())
+	if status == 0 {
+		status = int(gjson.GetBytes(data, "status_code").Int())
+	}
+
 	return &WebSocketError{
-		Status:  int(gjson.GetBytes(data, "status").Int()),
+		Type:    eventType,
+		Status:  status,
 		Code:    errorObject.Get("code").String(),
 		Message: errorObject.Get("message").String(),
 		Param:   errorObject.Get("param").String(),
+		Header:  header.Clone(),
+		Raw:     append([]byte(nil), data...),
 	}
+}
+
+// WebSocketDialError is returned by ConnectWebSocket when the WebSocket
+// handshake fails. When the server returned an HTTP response, StatusCode,
+// Header, and Body contain the handshake response details.
+type WebSocketDialError struct {
+	URL        string
+	StatusCode int
+	Header     http.Header
+	Body       string
+	Err        error
+}
+
+func newWebSocketDialError(url string, resp *http.Response, err error) error {
+	dialErr := &WebSocketDialError{URL: url, Err: err}
+	if resp != nil {
+		dialErr.StatusCode = resp.StatusCode
+		dialErr.Header = resp.Header.Clone()
+		if resp.Body != nil {
+			body, readErr := io.ReadAll(resp.Body)
+			_ = resp.Body.Close()
+			if readErr == nil {
+				dialErr.Body = string(body)
+			}
+		}
+	}
+	return dialErr
+}
+
+func (e *WebSocketDialError) Error() string {
+	msg := "responses websocket: dial failed"
+	if e.StatusCode != 0 {
+		msg += fmt.Sprintf(": status %d", e.StatusCode)
+	}
+	if e.URL != "" {
+		msg += fmt.Sprintf(": %s", e.URL)
+	}
+	if e.Body != "" {
+		msg += fmt.Sprintf(": %s", e.Body)
+	}
+	if e.Err != nil {
+		msg += fmt.Sprintf(": %v", e.Err)
+	}
+	return msg
+}
+
+func (e *WebSocketDialError) Unwrap() error {
+	return e.Err
+}
+
+// WebSocketCloseError is returned by WebSocketStream.Err when the server closes
+// the connection unexpectedly. It exposes the WebSocket close status and reason
+// separately from the underlying error string.
+type WebSocketCloseError struct {
+	Status websocket.StatusCode
+	Reason string
+	Err    error
+}
+
+func (e *WebSocketCloseError) Error() string {
+	msg := fmt.Sprintf("responses websocket: closed unexpectedly: status %d", e.Status)
+	if e.Reason != "" {
+		msg += fmt.Sprintf(": %s", e.Reason)
+	}
+	if e.Err != nil {
+		msg += fmt.Sprintf(": %v", e.Err)
+	}
+	return msg
+}
+
+func (e *WebSocketCloseError) Unwrap() error {
+	return e.Err
+}
+
+// WebSocketTransportError is returned by WebSocketStream.Err when the
+// underlying WebSocket transport fails outside the close-frame path.
+type WebSocketTransportError struct {
+	Op  string
+	Err error
+}
+
+func (e *WebSocketTransportError) Error() string {
+	if e.Err == nil {
+		return "responses websocket: transport error"
+	}
+	if e.Op == "" {
+		return fmt.Sprintf("responses websocket: transport error: %v", e.Err)
+	}
+	return fmt.Sprintf("responses websocket: transport %s error: %v", e.Op, e.Err)
+}
+
+func (e *WebSocketTransportError) Unwrap() error {
+	return e.Err
+}
+
+// WebSocketDecodeError is returned by WebSocketStream.Err when an event payload
+// cannot be decoded into a Responses API stream event. Data contains the raw
+// payload for debugging malformed or not-yet-modeled events.
+type WebSocketDecodeError struct {
+	Data []byte
+	Err  error
+}
+
+func (e *WebSocketDecodeError) Error() string {
+	if e.Err == nil {
+		return "responses websocket: error decoding event"
+	}
+	return fmt.Sprintf("responses websocket: error decoding event: %v: %s", e.Err, string(e.Data))
+}
+
+func (e *WebSocketDecodeError) Unwrap() error {
+	return e.Err
+}
+
+// IsWebSocketRetryableError reports whether err is generally retryable at the
+// WebSocket transport/API layer. Callers must still decide whether replaying a
+// streamed request is safe for their application, for example based on whether
+// any output has already been emitted.
+func IsWebSocketRetryableError(err error) bool {
+	if err == nil || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+	if errors.Is(err, ErrWebSocketStreamActive) {
+		return false
+	}
+	if errors.Is(err, ErrWebSocketConnectionClosed) || errors.Is(err, io.EOF) {
+		return true
+	}
+	var dialErr *WebSocketDialError
+	if errors.As(err, &dialErr) {
+		if dialErr.StatusCode == 0 {
+			return true
+		}
+		return dialErr.StatusCode == http.StatusRequestTimeout ||
+			dialErr.StatusCode == http.StatusConflict ||
+			dialErr.StatusCode == http.StatusTooManyRequests ||
+			dialErr.StatusCode >= http.StatusInternalServerError
+	}
+	var transportErr *WebSocketTransportError
+	if errors.As(err, &transportErr) {
+		return true
+	}
+	var closeErr *WebSocketCloseError
+	if errors.As(err, &closeErr) {
+		return closeErr.Status != websocket.StatusNormalClosure
+	}
+	var wsErr *WebSocketError
+	if errors.As(err, &wsErr) {
+		switch wsErr.Code {
+		case "rate_limit_exceeded", "server_error", "internal_server_error",
+			"service_unavailable", "timeout", "request_timeout",
+			"connection_limit_exceeded", "too_many_connections":
+			return true
+		}
+		return wsErr.Status == http.StatusRequestTimeout ||
+			wsErr.Status == http.StatusConflict ||
+			wsErr.Status == http.StatusTooManyRequests ||
+			wsErr.Status >= http.StatusInternalServerError
+	}
+	return false
 }
