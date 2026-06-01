@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.38.0 (2026-06-01)
+
+Full Changelog: [v3.37.0...v3.38.0](https://github.com/openai/openai-go/compare/v3.37.0...v3.38.0)
+
+### Features
+
+* **api:** manual updates ([d7dac81](https://github.com/openai/openai-go/commit/d7dac8192c292d882cb765d3379e10427930979e))
+* **api:** workload identity in audit logs, additional_tools item in responses, fix ActionSearch.query to be optional. ([4c3981c](https://github.com/openai/openai-go/commit/4c3981cfabc98ec1d67c2baf7c6a891ef6640f96))
+
 ## 3.37.0 (2026-05-21)
 
 Full Changelog: [v3.36.0...v3.37.0](https://github.com/openai/openai-go/compare/v3.36.0...v3.37.0)
