@@ -19,6 +19,7 @@ func ValueOf[T Constant[T]]() T {
 }
 
 type Active string                                           // Always "active"
+type AdditionalTools string                                  // Always "additional_tools"
 type AllowedTools string                                     // Always "allowed_tools"
 type Allowlist string                                        // Always "allowlist"
 type ApplicationZip string                                   // Always "application/zip"
@@ -400,6 +401,7 @@ type Wandb string                                            // Always "wandb"
 type WebSearchCall string                                    // Always "web_search_call"
 
 func (c Active) Default() Active                               { return "active" }
+func (c AdditionalTools) Default() AdditionalTools             { return "additional_tools" }
 func (c AllowedTools) Default() AllowedTools                   { return "allowed_tools" }
 func (c Allowlist) Default() Allowlist                         { return "allowlist" }
 func (c ApplicationZip) Default() ApplicationZip               { return "application/zip" }
@@ -1001,6 +1003,7 @@ func (c Wandb) Default() Wandb                 { return "wandb" }
 func (c WebSearchCall) Default() WebSearchCall { return "web_search_call" }
 
 func (c Active) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c AdditionalTools) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c AllowedTools) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c Allowlist) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ApplicationZip) MarshalJSON() ([]byte, error)          { return marshalString(c) }

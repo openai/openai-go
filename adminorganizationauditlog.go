@@ -82,10 +82,15 @@ type AdminOrganizationAuditLogListResponse struct {
 	// "logout.succeeded", "logout.failed", "organization.updated", "project.created",
 	// "project.updated", "project.archived", "project.deleted", "rate_limit.updated",
 	// "rate_limit.deleted", "resource.deleted", "tunnel.created", "tunnel.updated",
-	// "tunnel.deleted", "role.created", "role.updated", "role.deleted",
-	// "role.assignment.created", "role.assignment.deleted", "scim.enabled",
-	// "scim.disabled", "service_account.created", "service_account.updated",
-	// "service_account.deleted", "user.added", "user.updated", "user.deleted".
+	// "tunnel.deleted", "workload_identity_provider.created",
+	// "workload_identity_provider.updated", "workload_identity_provider.deleted",
+	// "workload_identity_provider_mapping.created",
+	// "workload_identity_provider_mapping.updated",
+	// "workload_identity_provider_mapping.deleted", "role.created", "role.updated",
+	// "role.deleted", "role.assignment.created", "role.assignment.deleted",
+	// "scim.enabled", "scim.disabled", "service_account.created",
+	// "service_account.updated", "service_account.deleted", "user.added",
+	// "user.updated", "user.deleted".
 	Type AdminOrganizationAuditLogListResponseType `json:"type" api:"required"`
 	// The actor who performed the audit logged action.
 	Actor AdminOrganizationAuditLogListResponseActor `json:"actor" api:"nullable"`
@@ -188,62 +193,80 @@ type AdminOrganizationAuditLogListResponse struct {
 	UserDeleted AdminOrganizationAuditLogListResponseUserDeleted `json:"user.deleted"`
 	// The details for events with this `type`.
 	UserUpdated AdminOrganizationAuditLogListResponseUserUpdated `json:"user.updated"`
+	// The details for events with this `type`.
+	WorkloadIdentityProviderMappingCreated AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingCreated `json:"workload_identity_provider_mapping.created"`
+	// The details for events with this `type`.
+	WorkloadIdentityProviderMappingDeleted AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingDeleted `json:"workload_identity_provider_mapping.deleted"`
+	// The details for events with this `type`.
+	WorkloadIdentityProviderMappingUpdated AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingUpdated `json:"workload_identity_provider_mapping.updated"`
+	// The details for events with this `type`.
+	WorkloadIdentityProviderCreated AdminOrganizationAuditLogListResponseWorkloadIdentityProviderCreated `json:"workload_identity_provider.created"`
+	// The details for events with this `type`.
+	WorkloadIdentityProviderDeleted AdminOrganizationAuditLogListResponseWorkloadIdentityProviderDeleted `json:"workload_identity_provider.deleted"`
+	// The details for events with this `type`.
+	WorkloadIdentityProviderUpdated AdminOrganizationAuditLogListResponseWorkloadIdentityProviderUpdated `json:"workload_identity_provider.updated"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID                           respjson.Field
-		EffectiveAt                  respjson.Field
-		Type                         respjson.Field
-		Actor                        respjson.Field
-		APIKeyCreated                respjson.Field
-		APIKeyDeleted                respjson.Field
-		APIKeyUpdated                respjson.Field
-		CertificateCreated           respjson.Field
-		CertificateDeleted           respjson.Field
-		CertificateUpdated           respjson.Field
-		CertificatesActivated        respjson.Field
-		CertificatesDeactivated      respjson.Field
-		CheckpointPermissionCreated  respjson.Field
-		CheckpointPermissionDeleted  respjson.Field
-		ExternalKeyRegistered        respjson.Field
-		ExternalKeyRemoved           respjson.Field
-		GroupCreated                 respjson.Field
-		GroupDeleted                 respjson.Field
-		GroupUpdated                 respjson.Field
-		InviteAccepted               respjson.Field
-		InviteDeleted                respjson.Field
-		InviteSent                   respjson.Field
-		IPAllowlistConfigActivated   respjson.Field
-		IPAllowlistConfigDeactivated respjson.Field
-		IPAllowlistCreated           respjson.Field
-		IPAllowlistDeleted           respjson.Field
-		IPAllowlistUpdated           respjson.Field
-		LoginFailed                  respjson.Field
-		LoginSucceeded               respjson.Field
-		LogoutFailed                 respjson.Field
-		LogoutSucceeded              respjson.Field
-		OrganizationUpdated          respjson.Field
-		Project                      respjson.Field
-		ProjectArchived              respjson.Field
-		ProjectCreated               respjson.Field
-		ProjectDeleted               respjson.Field
-		ProjectUpdated               respjson.Field
-		RateLimitDeleted             respjson.Field
-		RateLimitUpdated             respjson.Field
-		RoleAssignmentCreated        respjson.Field
-		RoleAssignmentDeleted        respjson.Field
-		RoleCreated                  respjson.Field
-		RoleDeleted                  respjson.Field
-		RoleUpdated                  respjson.Field
-		ScimDisabled                 respjson.Field
-		ScimEnabled                  respjson.Field
-		ServiceAccountCreated        respjson.Field
-		ServiceAccountDeleted        respjson.Field
-		ServiceAccountUpdated        respjson.Field
-		UserAdded                    respjson.Field
-		UserDeleted                  respjson.Field
-		UserUpdated                  respjson.Field
-		ExtraFields                  map[string]respjson.Field
-		raw                          string
+		ID                                     respjson.Field
+		EffectiveAt                            respjson.Field
+		Type                                   respjson.Field
+		Actor                                  respjson.Field
+		APIKeyCreated                          respjson.Field
+		APIKeyDeleted                          respjson.Field
+		APIKeyUpdated                          respjson.Field
+		CertificateCreated                     respjson.Field
+		CertificateDeleted                     respjson.Field
+		CertificateUpdated                     respjson.Field
+		CertificatesActivated                  respjson.Field
+		CertificatesDeactivated                respjson.Field
+		CheckpointPermissionCreated            respjson.Field
+		CheckpointPermissionDeleted            respjson.Field
+		ExternalKeyRegistered                  respjson.Field
+		ExternalKeyRemoved                     respjson.Field
+		GroupCreated                           respjson.Field
+		GroupDeleted                           respjson.Field
+		GroupUpdated                           respjson.Field
+		InviteAccepted                         respjson.Field
+		InviteDeleted                          respjson.Field
+		InviteSent                             respjson.Field
+		IPAllowlistConfigActivated             respjson.Field
+		IPAllowlistConfigDeactivated           respjson.Field
+		IPAllowlistCreated                     respjson.Field
+		IPAllowlistDeleted                     respjson.Field
+		IPAllowlistUpdated                     respjson.Field
+		LoginFailed                            respjson.Field
+		LoginSucceeded                         respjson.Field
+		LogoutFailed                           respjson.Field
+		LogoutSucceeded                        respjson.Field
+		OrganizationUpdated                    respjson.Field
+		Project                                respjson.Field
+		ProjectArchived                        respjson.Field
+		ProjectCreated                         respjson.Field
+		ProjectDeleted                         respjson.Field
+		ProjectUpdated                         respjson.Field
+		RateLimitDeleted                       respjson.Field
+		RateLimitUpdated                       respjson.Field
+		RoleAssignmentCreated                  respjson.Field
+		RoleAssignmentDeleted                  respjson.Field
+		RoleCreated                            respjson.Field
+		RoleDeleted                            respjson.Field
+		RoleUpdated                            respjson.Field
+		ScimDisabled                           respjson.Field
+		ScimEnabled                            respjson.Field
+		ServiceAccountCreated                  respjson.Field
+		ServiceAccountDeleted                  respjson.Field
+		ServiceAccountUpdated                  respjson.Field
+		UserAdded                              respjson.Field
+		UserDeleted                            respjson.Field
+		UserUpdated                            respjson.Field
+		WorkloadIdentityProviderMappingCreated respjson.Field
+		WorkloadIdentityProviderMappingDeleted respjson.Field
+		WorkloadIdentityProviderMappingUpdated respjson.Field
+		WorkloadIdentityProviderCreated        respjson.Field
+		WorkloadIdentityProviderDeleted        respjson.Field
+		WorkloadIdentityProviderUpdated        respjson.Field
+		ExtraFields                            map[string]respjson.Field
+		raw                                    string
 	} `json:"-"`
 }
 
@@ -257,57 +280,63 @@ func (r *AdminOrganizationAuditLogListResponse) UnmarshalJSON(data []byte) error
 type AdminOrganizationAuditLogListResponseType string
 
 const (
-	AdminOrganizationAuditLogListResponseTypeAPIKeyCreated                AdminOrganizationAuditLogListResponseType = "api_key.created"
-	AdminOrganizationAuditLogListResponseTypeAPIKeyUpdated                AdminOrganizationAuditLogListResponseType = "api_key.updated"
-	AdminOrganizationAuditLogListResponseTypeAPIKeyDeleted                AdminOrganizationAuditLogListResponseType = "api_key.deleted"
-	AdminOrganizationAuditLogListResponseTypeCertificateCreated           AdminOrganizationAuditLogListResponseType = "certificate.created"
-	AdminOrganizationAuditLogListResponseTypeCertificateUpdated           AdminOrganizationAuditLogListResponseType = "certificate.updated"
-	AdminOrganizationAuditLogListResponseTypeCertificateDeleted           AdminOrganizationAuditLogListResponseType = "certificate.deleted"
-	AdminOrganizationAuditLogListResponseTypeCertificatesActivated        AdminOrganizationAuditLogListResponseType = "certificates.activated"
-	AdminOrganizationAuditLogListResponseTypeCertificatesDeactivated      AdminOrganizationAuditLogListResponseType = "certificates.deactivated"
-	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionCreated  AdminOrganizationAuditLogListResponseType = "checkpoint.permission.created"
-	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionDeleted  AdminOrganizationAuditLogListResponseType = "checkpoint.permission.deleted"
-	AdminOrganizationAuditLogListResponseTypeExternalKeyRegistered        AdminOrganizationAuditLogListResponseType = "external_key.registered"
-	AdminOrganizationAuditLogListResponseTypeExternalKeyRemoved           AdminOrganizationAuditLogListResponseType = "external_key.removed"
-	AdminOrganizationAuditLogListResponseTypeGroupCreated                 AdminOrganizationAuditLogListResponseType = "group.created"
-	AdminOrganizationAuditLogListResponseTypeGroupUpdated                 AdminOrganizationAuditLogListResponseType = "group.updated"
-	AdminOrganizationAuditLogListResponseTypeGroupDeleted                 AdminOrganizationAuditLogListResponseType = "group.deleted"
-	AdminOrganizationAuditLogListResponseTypeInviteSent                   AdminOrganizationAuditLogListResponseType = "invite.sent"
-	AdminOrganizationAuditLogListResponseTypeInviteAccepted               AdminOrganizationAuditLogListResponseType = "invite.accepted"
-	AdminOrganizationAuditLogListResponseTypeInviteDeleted                AdminOrganizationAuditLogListResponseType = "invite.deleted"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistCreated           AdminOrganizationAuditLogListResponseType = "ip_allowlist.created"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistUpdated           AdminOrganizationAuditLogListResponseType = "ip_allowlist.updated"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistDeleted           AdminOrganizationAuditLogListResponseType = "ip_allowlist.deleted"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigActivated   AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.activated"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigDeactivated AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.deactivated"
-	AdminOrganizationAuditLogListResponseTypeLoginSucceeded               AdminOrganizationAuditLogListResponseType = "login.succeeded"
-	AdminOrganizationAuditLogListResponseTypeLoginFailed                  AdminOrganizationAuditLogListResponseType = "login.failed"
-	AdminOrganizationAuditLogListResponseTypeLogoutSucceeded              AdminOrganizationAuditLogListResponseType = "logout.succeeded"
-	AdminOrganizationAuditLogListResponseTypeLogoutFailed                 AdminOrganizationAuditLogListResponseType = "logout.failed"
-	AdminOrganizationAuditLogListResponseTypeOrganizationUpdated          AdminOrganizationAuditLogListResponseType = "organization.updated"
-	AdminOrganizationAuditLogListResponseTypeProjectCreated               AdminOrganizationAuditLogListResponseType = "project.created"
-	AdminOrganizationAuditLogListResponseTypeProjectUpdated               AdminOrganizationAuditLogListResponseType = "project.updated"
-	AdminOrganizationAuditLogListResponseTypeProjectArchived              AdminOrganizationAuditLogListResponseType = "project.archived"
-	AdminOrganizationAuditLogListResponseTypeProjectDeleted               AdminOrganizationAuditLogListResponseType = "project.deleted"
-	AdminOrganizationAuditLogListResponseTypeRateLimitUpdated             AdminOrganizationAuditLogListResponseType = "rate_limit.updated"
-	AdminOrganizationAuditLogListResponseTypeRateLimitDeleted             AdminOrganizationAuditLogListResponseType = "rate_limit.deleted"
-	AdminOrganizationAuditLogListResponseTypeResourceDeleted              AdminOrganizationAuditLogListResponseType = "resource.deleted"
-	AdminOrganizationAuditLogListResponseTypeTunnelCreated                AdminOrganizationAuditLogListResponseType = "tunnel.created"
-	AdminOrganizationAuditLogListResponseTypeTunnelUpdated                AdminOrganizationAuditLogListResponseType = "tunnel.updated"
-	AdminOrganizationAuditLogListResponseTypeTunnelDeleted                AdminOrganizationAuditLogListResponseType = "tunnel.deleted"
-	AdminOrganizationAuditLogListResponseTypeRoleCreated                  AdminOrganizationAuditLogListResponseType = "role.created"
-	AdminOrganizationAuditLogListResponseTypeRoleUpdated                  AdminOrganizationAuditLogListResponseType = "role.updated"
-	AdminOrganizationAuditLogListResponseTypeRoleDeleted                  AdminOrganizationAuditLogListResponseType = "role.deleted"
-	AdminOrganizationAuditLogListResponseTypeRoleAssignmentCreated        AdminOrganizationAuditLogListResponseType = "role.assignment.created"
-	AdminOrganizationAuditLogListResponseTypeRoleAssignmentDeleted        AdminOrganizationAuditLogListResponseType = "role.assignment.deleted"
-	AdminOrganizationAuditLogListResponseTypeScimEnabled                  AdminOrganizationAuditLogListResponseType = "scim.enabled"
-	AdminOrganizationAuditLogListResponseTypeScimDisabled                 AdminOrganizationAuditLogListResponseType = "scim.disabled"
-	AdminOrganizationAuditLogListResponseTypeServiceAccountCreated        AdminOrganizationAuditLogListResponseType = "service_account.created"
-	AdminOrganizationAuditLogListResponseTypeServiceAccountUpdated        AdminOrganizationAuditLogListResponseType = "service_account.updated"
-	AdminOrganizationAuditLogListResponseTypeServiceAccountDeleted        AdminOrganizationAuditLogListResponseType = "service_account.deleted"
-	AdminOrganizationAuditLogListResponseTypeUserAdded                    AdminOrganizationAuditLogListResponseType = "user.added"
-	AdminOrganizationAuditLogListResponseTypeUserUpdated                  AdminOrganizationAuditLogListResponseType = "user.updated"
-	AdminOrganizationAuditLogListResponseTypeUserDeleted                  AdminOrganizationAuditLogListResponseType = "user.deleted"
+	AdminOrganizationAuditLogListResponseTypeAPIKeyCreated                          AdminOrganizationAuditLogListResponseType = "api_key.created"
+	AdminOrganizationAuditLogListResponseTypeAPIKeyUpdated                          AdminOrganizationAuditLogListResponseType = "api_key.updated"
+	AdminOrganizationAuditLogListResponseTypeAPIKeyDeleted                          AdminOrganizationAuditLogListResponseType = "api_key.deleted"
+	AdminOrganizationAuditLogListResponseTypeCertificateCreated                     AdminOrganizationAuditLogListResponseType = "certificate.created"
+	AdminOrganizationAuditLogListResponseTypeCertificateUpdated                     AdminOrganizationAuditLogListResponseType = "certificate.updated"
+	AdminOrganizationAuditLogListResponseTypeCertificateDeleted                     AdminOrganizationAuditLogListResponseType = "certificate.deleted"
+	AdminOrganizationAuditLogListResponseTypeCertificatesActivated                  AdminOrganizationAuditLogListResponseType = "certificates.activated"
+	AdminOrganizationAuditLogListResponseTypeCertificatesDeactivated                AdminOrganizationAuditLogListResponseType = "certificates.deactivated"
+	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionCreated            AdminOrganizationAuditLogListResponseType = "checkpoint.permission.created"
+	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionDeleted            AdminOrganizationAuditLogListResponseType = "checkpoint.permission.deleted"
+	AdminOrganizationAuditLogListResponseTypeExternalKeyRegistered                  AdminOrganizationAuditLogListResponseType = "external_key.registered"
+	AdminOrganizationAuditLogListResponseTypeExternalKeyRemoved                     AdminOrganizationAuditLogListResponseType = "external_key.removed"
+	AdminOrganizationAuditLogListResponseTypeGroupCreated                           AdminOrganizationAuditLogListResponseType = "group.created"
+	AdminOrganizationAuditLogListResponseTypeGroupUpdated                           AdminOrganizationAuditLogListResponseType = "group.updated"
+	AdminOrganizationAuditLogListResponseTypeGroupDeleted                           AdminOrganizationAuditLogListResponseType = "group.deleted"
+	AdminOrganizationAuditLogListResponseTypeInviteSent                             AdminOrganizationAuditLogListResponseType = "invite.sent"
+	AdminOrganizationAuditLogListResponseTypeInviteAccepted                         AdminOrganizationAuditLogListResponseType = "invite.accepted"
+	AdminOrganizationAuditLogListResponseTypeInviteDeleted                          AdminOrganizationAuditLogListResponseType = "invite.deleted"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistCreated                     AdminOrganizationAuditLogListResponseType = "ip_allowlist.created"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistUpdated                     AdminOrganizationAuditLogListResponseType = "ip_allowlist.updated"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistDeleted                     AdminOrganizationAuditLogListResponseType = "ip_allowlist.deleted"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigActivated             AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.activated"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigDeactivated           AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.deactivated"
+	AdminOrganizationAuditLogListResponseTypeLoginSucceeded                         AdminOrganizationAuditLogListResponseType = "login.succeeded"
+	AdminOrganizationAuditLogListResponseTypeLoginFailed                            AdminOrganizationAuditLogListResponseType = "login.failed"
+	AdminOrganizationAuditLogListResponseTypeLogoutSucceeded                        AdminOrganizationAuditLogListResponseType = "logout.succeeded"
+	AdminOrganizationAuditLogListResponseTypeLogoutFailed                           AdminOrganizationAuditLogListResponseType = "logout.failed"
+	AdminOrganizationAuditLogListResponseTypeOrganizationUpdated                    AdminOrganizationAuditLogListResponseType = "organization.updated"
+	AdminOrganizationAuditLogListResponseTypeProjectCreated                         AdminOrganizationAuditLogListResponseType = "project.created"
+	AdminOrganizationAuditLogListResponseTypeProjectUpdated                         AdminOrganizationAuditLogListResponseType = "project.updated"
+	AdminOrganizationAuditLogListResponseTypeProjectArchived                        AdminOrganizationAuditLogListResponseType = "project.archived"
+	AdminOrganizationAuditLogListResponseTypeProjectDeleted                         AdminOrganizationAuditLogListResponseType = "project.deleted"
+	AdminOrganizationAuditLogListResponseTypeRateLimitUpdated                       AdminOrganizationAuditLogListResponseType = "rate_limit.updated"
+	AdminOrganizationAuditLogListResponseTypeRateLimitDeleted                       AdminOrganizationAuditLogListResponseType = "rate_limit.deleted"
+	AdminOrganizationAuditLogListResponseTypeResourceDeleted                        AdminOrganizationAuditLogListResponseType = "resource.deleted"
+	AdminOrganizationAuditLogListResponseTypeTunnelCreated                          AdminOrganizationAuditLogListResponseType = "tunnel.created"
+	AdminOrganizationAuditLogListResponseTypeTunnelUpdated                          AdminOrganizationAuditLogListResponseType = "tunnel.updated"
+	AdminOrganizationAuditLogListResponseTypeTunnelDeleted                          AdminOrganizationAuditLogListResponseType = "tunnel.deleted"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderCreated        AdminOrganizationAuditLogListResponseType = "workload_identity_provider.created"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderUpdated        AdminOrganizationAuditLogListResponseType = "workload_identity_provider.updated"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderDeleted        AdminOrganizationAuditLogListResponseType = "workload_identity_provider.deleted"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderMappingCreated AdminOrganizationAuditLogListResponseType = "workload_identity_provider_mapping.created"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderMappingUpdated AdminOrganizationAuditLogListResponseType = "workload_identity_provider_mapping.updated"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderMappingDeleted AdminOrganizationAuditLogListResponseType = "workload_identity_provider_mapping.deleted"
+	AdminOrganizationAuditLogListResponseTypeRoleCreated                            AdminOrganizationAuditLogListResponseType = "role.created"
+	AdminOrganizationAuditLogListResponseTypeRoleUpdated                            AdminOrganizationAuditLogListResponseType = "role.updated"
+	AdminOrganizationAuditLogListResponseTypeRoleDeleted                            AdminOrganizationAuditLogListResponseType = "role.deleted"
+	AdminOrganizationAuditLogListResponseTypeRoleAssignmentCreated                  AdminOrganizationAuditLogListResponseType = "role.assignment.created"
+	AdminOrganizationAuditLogListResponseTypeRoleAssignmentDeleted                  AdminOrganizationAuditLogListResponseType = "role.assignment.deleted"
+	AdminOrganizationAuditLogListResponseTypeScimEnabled                            AdminOrganizationAuditLogListResponseType = "scim.enabled"
+	AdminOrganizationAuditLogListResponseTypeScimDisabled                           AdminOrganizationAuditLogListResponseType = "scim.disabled"
+	AdminOrganizationAuditLogListResponseTypeServiceAccountCreated                  AdminOrganizationAuditLogListResponseType = "service_account.created"
+	AdminOrganizationAuditLogListResponseTypeServiceAccountUpdated                  AdminOrganizationAuditLogListResponseType = "service_account.updated"
+	AdminOrganizationAuditLogListResponseTypeServiceAccountDeleted                  AdminOrganizationAuditLogListResponseType = "service_account.deleted"
+	AdminOrganizationAuditLogListResponseTypeUserAdded                              AdminOrganizationAuditLogListResponseType = "user.added"
+	AdminOrganizationAuditLogListResponseTypeUserUpdated                            AdminOrganizationAuditLogListResponseType = "user.updated"
+	AdminOrganizationAuditLogListResponseTypeUserDeleted                            AdminOrganizationAuditLogListResponseType = "user.deleted"
 )
 
 // The actor who performed the audit logged action.
@@ -1864,6 +1893,156 @@ func (r *AdminOrganizationAuditLogListResponseUserUpdatedChangesRequested) Unmar
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The details for events with this `type`.
+type AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingCreated struct {
+	// The workload identity provider mapping ID.
+	ID string `json:"id"`
+	// The payload used to create the workload identity provider mapping.
+	Data any `json:"data"`
+	// The workload identity provider ID.
+	IdentityProviderID string `json:"identity_provider_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		Data               respjson.Field
+		IdentityProviderID respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingCreated) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingCreated) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The details for events with this `type`.
+type AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingDeleted struct {
+	// The workload identity provider mapping ID.
+	ID string `json:"id"`
+	// The workload identity provider ID.
+	IdentityProviderID string `json:"identity_provider_id"`
+	// The project ID.
+	ProjectID string `json:"project_id"`
+	// The mapped service account ID.
+	ServiceAccountID string `json:"service_account_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		IdentityProviderID respjson.Field
+		ProjectID          respjson.Field
+		ServiceAccountID   respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingDeleted) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingDeleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The details for events with this `type`.
+type AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingUpdated struct {
+	// The workload identity provider mapping ID.
+	ID string `json:"id"`
+	// The payload used to update the workload identity provider mapping.
+	ChangesRequested any `json:"changes_requested"`
+	// The workload identity provider ID.
+	IdentityProviderID string `json:"identity_provider_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID                 respjson.Field
+		ChangesRequested   respjson.Field
+		IdentityProviderID respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingUpdated) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationAuditLogListResponseWorkloadIdentityProviderMappingUpdated) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The details for events with this `type`.
+type AdminOrganizationAuditLogListResponseWorkloadIdentityProviderCreated struct {
+	// The workload identity provider ID.
+	ID string `json:"id"`
+	// The payload used to create the workload identity provider.
+	Data any `json:"data"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Data        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseWorkloadIdentityProviderCreated) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationAuditLogListResponseWorkloadIdentityProviderCreated) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The details for events with this `type`.
+type AdminOrganizationAuditLogListResponseWorkloadIdentityProviderDeleted struct {
+	// The workload identity provider ID.
+	ID string `json:"id"`
+	// The workload identity provider name.
+	Name string `json:"name"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseWorkloadIdentityProviderDeleted) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationAuditLogListResponseWorkloadIdentityProviderDeleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The details for events with this `type`.
+type AdminOrganizationAuditLogListResponseWorkloadIdentityProviderUpdated struct {
+	// The workload identity provider ID.
+	ID string `json:"id"`
+	// The payload used to update the workload identity provider.
+	ChangesRequested any `json:"changes_requested"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID               respjson.Field
+		ChangesRequested respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseWorkloadIdentityProviderUpdated) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationAuditLogListResponseWorkloadIdentityProviderUpdated) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type AdminOrganizationAuditLogListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place
 	// in the list. For instance, if you make a list request and receive 100 objects,
@@ -1901,10 +2080,15 @@ type AdminOrganizationAuditLogListParams struct {
 	// "logout.succeeded", "logout.failed", "organization.updated", "project.created",
 	// "project.updated", "project.archived", "project.deleted", "rate_limit.updated",
 	// "rate_limit.deleted", "resource.deleted", "tunnel.created", "tunnel.updated",
-	// "tunnel.deleted", "role.created", "role.updated", "role.deleted",
-	// "role.assignment.created", "role.assignment.deleted", "scim.enabled",
-	// "scim.disabled", "service_account.created", "service_account.updated",
-	// "service_account.deleted", "user.added", "user.updated", "user.deleted".
+	// "tunnel.deleted", "workload_identity_provider.created",
+	// "workload_identity_provider.updated", "workload_identity_provider.deleted",
+	// "workload_identity_provider_mapping.created",
+	// "workload_identity_provider_mapping.updated",
+	// "workload_identity_provider_mapping.deleted", "role.created", "role.updated",
+	// "role.deleted", "role.assignment.created", "role.assignment.deleted",
+	// "scim.enabled", "scim.disabled", "service_account.created",
+	// "service_account.updated", "service_account.deleted", "user.added",
+	// "user.updated", "user.deleted".
 	EventTypes []string `query:"event_types,omitzero" json:"-"`
 	// Return only events for these projects.
 	ProjectIDs []string `query:"project_ids,omitzero" json:"-"`
