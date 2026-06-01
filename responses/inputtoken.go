@@ -102,6 +102,10 @@ type InputTokenCountParams struct {
 	// An array of tools the model may call while generating a response. You can
 	// specify which tool to use by setting the `tool_choice` parameter.
 	Tools []ToolUnionParam `json:"tools,omitzero"`
+	// A model-owned style preset to apply to this request. Omit this parameter to use
+	// the model's default style. Supported values may expand over time. Values must be
+	// at most 64 characters.
+	Personality InputTokenCountParamsPersonality `json:"personality,omitzero"`
 	// **gpt-5 and o-series models only** Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 	Reasoning shared.ReasoningParam `json:"reasoning,omitzero"`
@@ -173,6 +177,16 @@ func (u *InputTokenCountParamsInputUnion) asAny() any {
 	}
 	return nil
 }
+
+// A model-owned style preset to apply to this request. Omit this parameter to use
+// the model's default style. Supported values may expand over time. Values must be
+// at most 64 characters.
+type InputTokenCountParamsPersonality string
+
+const (
+	InputTokenCountParamsPersonalityFriendly  InputTokenCountParamsPersonality = "friendly"
+	InputTokenCountParamsPersonalityPragmatic InputTokenCountParamsPersonality = "pragmatic"
+)
 
 // Configuration options for a text response from the model. Can be plain text or
 // structured JSON data. Learn more:

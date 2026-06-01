@@ -125,9 +125,9 @@ func (r *ItemService) Delete(ctx context.Context, conversationID string, itemID 
 // [ConversationItemImageGenerationCall], [responses.ResponseComputerToolCall],
 // [responses.ResponseComputerToolCallOutputItem],
 // [responses.ResponseToolSearchCall], [responses.ResponseToolSearchOutputItem],
-// [responses.ResponseReasoningItem], [responses.ResponseCompactionItem],
-// [responses.ResponseCodeInterpreterToolCall], [ConversationItemLocalShellCall],
-// [ConversationItemLocalShellCallOutput],
+// [ConversationItemAdditionalTools], [responses.ResponseReasoningItem],
+// [responses.ResponseCompactionItem], [responses.ResponseCodeInterpreterToolCall],
+// [ConversationItemLocalShellCall], [ConversationItemLocalShellCallOutput],
 // [responses.ResponseFunctionShellToolCall],
 // [responses.ResponseFunctionShellToolCallOutput],
 // [responses.ResponseApplyPatchToolCall],
@@ -144,17 +144,16 @@ type ConversationItemUnion struct {
 	// This field is a union of [[]MessageContentUnion],
 	// [[]responses.ResponseReasoningItemContent]
 	Content ConversationItemUnionContent `json:"content"`
-	// This field is from variant [Message].
-	Role   MessageRole `json:"role"`
-	Status string      `json:"status"`
+	Role    string                       `json:"role"`
+	Status  string                       `json:"status"`
 	// Any of "message", "function_call", "function_call_output", "file_search_call",
 	// "web_search_call", "image_generation_call", "computer_call",
-	// "computer_call_output", "tool_search_call", "tool_search_output", "reasoning",
-	// "compaction", "code_interpreter_call", "local_shell_call",
-	// "local_shell_call_output", "shell_call", "shell_call_output",
-	// "apply_patch_call", "apply_patch_call_output", "mcp_list_tools",
-	// "mcp_approval_request", "mcp_approval_response", "mcp_call", "custom_tool_call",
-	// "custom_tool_call_output".
+	// "computer_call_output", "tool_search_call", "tool_search_output",
+	// "additional_tools", "reasoning", "compaction", "code_interpreter_call",
+	// "local_shell_call", "local_shell_call_output", "shell_call",
+	// "shell_call_output", "apply_patch_call", "apply_patch_call_output",
+	// "mcp_list_tools", "mcp_approval_request", "mcp_approval_response", "mcp_call",
+	// "custom_tool_call", "custom_tool_call_output".
 	Type string `json:"type"`
 	// This field is from variant [Message].
 	Phase MessagePhase `json:"phase"`
@@ -188,7 +187,7 @@ type ConversationItemUnion struct {
 	// This field is from variant [responses.ResponseComputerToolCallOutputItem].
 	AcknowledgedSafetyChecks []responses.ResponseComputerToolCallOutputItemAcknowledgedSafetyCheck `json:"acknowledged_safety_checks"`
 	Execution                string                                                                `json:"execution"`
-	// This field is a union of [[]responses.ToolUnion],
+	// This field is a union of [[]responses.ToolUnion], [[]responses.ToolUnion],
 	// [[]ConversationItemMcpListToolsTool]
 	Tools ConversationItemUnionTools `json:"tools"`
 	// This field is from variant [responses.ResponseReasoningItem].
@@ -263,6 +262,7 @@ type anyConversationItem interface {
 
 func (Message) ImplConversationItemUnion()                              {}
 func (ConversationItemImageGenerationCall) ImplConversationItemUnion()  {}
+func (ConversationItemAdditionalTools) ImplConversationItemUnion()      {}
 func (ConversationItemLocalShellCall) ImplConversationItemUnion()       {}
 func (ConversationItemLocalShellCallOutput) ImplConversationItemUnion() {}
 func (ConversationItemMcpListTools) ImplConversationItemUnion()         {}
@@ -283,6 +283,7 @@ func (ConversationItemMcpCall) ImplConversationItemUnion()              {}
 //	case responses.ResponseComputerToolCallOutputItem:
 //	case responses.ResponseToolSearchCall:
 //	case responses.ResponseToolSearchOutputItem:
+//	case conversations.ConversationItemAdditionalTools:
 //	case responses.ResponseReasoningItem:
 //	case responses.ResponseCompactionItem:
 //	case responses.ResponseCodeInterpreterToolCall:
@@ -323,6 +324,8 @@ func (u ConversationItemUnion) AsAny() anyConversationItem {
 		return u.AsToolSearchCall()
 	case "tool_search_output":
 		return u.AsToolSearchOutput()
+	case "additional_tools":
+		return u.AsAdditionalTools()
 	case "reasoning":
 		return u.AsReasoning()
 	case "compaction":
@@ -403,6 +406,11 @@ func (u ConversationItemUnion) AsToolSearchCall() (v responses.ResponseToolSearc
 }
 
 func (u ConversationItemUnion) AsToolSearchOutput() (v responses.ResponseToolSearchOutputItem) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ConversationItemUnion) AsAdditionalTools() (v ConversationItemAdditionalTools) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -589,11 +597,11 @@ func (r *ConversationItemUnionOutput) UnmarshalJSON(data []byte) error {
 // For type safety it is recommended to directly use a variant of the
 // [ConversationItemUnion].
 type ConversationItemUnionAction struct {
-	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
-	Query string `json:"query"`
-	Type  string `json:"type"`
+	Type string `json:"type"`
 	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
 	Queries []string `json:"queries"`
+	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
+	Query string `json:"query"`
 	// This field is from variant [responses.ResponseFunctionWebSearchActionUnion].
 	Sources []responses.ResponseFunctionWebSearchActionSearchSource `json:"sources"`
 	URL     string                                                  `json:"url"`
@@ -626,9 +634,9 @@ type ConversationItemUnionAction struct {
 	// This field is from variant [responses.ResponseFunctionShellToolCallAction].
 	MaxOutputLength int64 `json:"max_output_length"`
 	JSON            struct {
-		Query            respjson.Field
 		Type             respjson.Field
 		Queries          respjson.Field
+		Query            respjson.Field
 		Sources          respjson.Field
 		URL              respjson.Field
 		Pattern          respjson.Field
@@ -708,6 +716,35 @@ type ConversationItemImageGenerationCall struct {
 // Returns the unmodified JSON received from the API
 func (r ConversationItemImageGenerationCall) RawJSON() string { return r.JSON.raw }
 func (r *ConversationItemImageGenerationCall) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ConversationItemAdditionalTools struct {
+	// The unique ID of the additional tools item.
+	ID string `json:"id" api:"required"`
+	// The role that provided the additional tools.
+	//
+	// Any of "unknown", "user", "assistant", "system", "critic", "discriminator",
+	// "developer", "tool".
+	Role string `json:"role" api:"required"`
+	// The additional tool definitions made available at this item.
+	Tools []responses.ToolUnion `json:"tools" api:"required"`
+	// The type of the item. Always `additional_tools`.
+	Type constant.AdditionalTools `json:"type" default:"additional_tools"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Role        respjson.Field
+		Tools       respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ConversationItemAdditionalTools) RawJSON() string { return r.JSON.raw }
+func (r *ConversationItemAdditionalTools) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
