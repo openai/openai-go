@@ -3297,6 +3297,9 @@ type Response struct {
 	// individual tool. Any further attempts to call a tool by the model will be
 	// ignored.
 	MaxToolCalls int64 `json:"max_tool_calls" api:"nullable"`
+	// Moderation results for the response input and output, if moderated completions
+	// were requested.
+	Moderation ResponseModeration `json:"moderation" api:"nullable"`
 	// The unique ID of the previous response to the model. Use this to create
 	// multi-turn conversations. Learn more about
 	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
@@ -3413,6 +3416,7 @@ type Response struct {
 		Conversation         respjson.Field
 		MaxOutputTokens      respjson.Field
 		MaxToolCalls         respjson.Field
+		Moderation           respjson.Field
 		PreviousResponseID   respjson.Field
 		Prompt               respjson.Field
 		PromptCacheKey       respjson.Field
@@ -3589,6 +3593,308 @@ type ResponseConversation struct {
 // Returns the unmodified JSON received from the API
 func (r ResponseConversation) RawJSON() string { return r.JSON.raw }
 func (r *ResponseConversation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Moderation results for the response input and output, if moderated completions
+// were requested.
+type ResponseModeration struct {
+	// Moderation for the response input.
+	Input ResponseModerationInputUnion `json:"input" api:"required"`
+	// Moderation for the response output.
+	Output ResponseModerationOutputUnion `json:"output" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Input       respjson.Field
+		Output      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseModeration) RawJSON() string { return r.JSON.raw }
+func (r *ResponseModeration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseModerationInputUnion contains all possible properties and values from
+// [ResponseModerationInputModerationResult], [ResponseModerationInputError].
+//
+// Use the [ResponseModerationInputUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponseModerationInputUnion struct {
+	// This field is from variant [ResponseModerationInputModerationResult].
+	Categories map[string]bool `json:"categories"`
+	// This field is from variant [ResponseModerationInputModerationResult].
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types"`
+	// This field is from variant [ResponseModerationInputModerationResult].
+	CategoryScores map[string]float64 `json:"category_scores"`
+	// This field is from variant [ResponseModerationInputModerationResult].
+	Flagged bool `json:"flagged"`
+	// This field is from variant [ResponseModerationInputModerationResult].
+	Model string `json:"model"`
+	// Any of "moderation_result", "error".
+	Type string `json:"type"`
+	// This field is from variant [ResponseModerationInputError].
+	Code string `json:"code"`
+	// This field is from variant [ResponseModerationInputError].
+	Message string `json:"message"`
+	JSON    struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		Code                      respjson.Field
+		Message                   respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// anyResponseModerationInput is implemented by each variant of
+// [ResponseModerationInputUnion] to add type safety for the return type of
+// [ResponseModerationInputUnion.AsAny]
+type anyResponseModerationInput interface {
+	implResponseModerationInputUnion()
+}
+
+func (ResponseModerationInputModerationResult) implResponseModerationInputUnion() {}
+func (ResponseModerationInputError) implResponseModerationInputUnion()            {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponseModerationInputUnion.AsAny().(type) {
+//	case responses.ResponseModerationInputModerationResult:
+//	case responses.ResponseModerationInputError:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponseModerationInputUnion) AsAny() anyResponseModerationInput {
+	switch u.Type {
+	case "moderation_result":
+		return u.AsModerationResult()
+	case "error":
+		return u.AsError()
+	}
+	return nil
+}
+
+func (u ResponseModerationInputUnion) AsModerationResult() (v ResponseModerationInputModerationResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseModerationInputUnion) AsError() (v ResponseModerationInputError) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseModerationInputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponseModerationInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A moderation result produced for the response input or output.
+type ResponseModerationInputModerationResult struct {
+	// A dictionary of moderation categories to booleans, True if the input is flagged
+	// under this category.
+	Categories map[string]bool `json:"categories" api:"required"`
+	// Which modalities of input are reflected by the score for each category.
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types" api:"required"`
+	// A dictionary of moderation categories to scores.
+	CategoryScores map[string]float64 `json:"category_scores" api:"required"`
+	// A boolean indicating whether the content was flagged by any category.
+	Flagged bool `json:"flagged" api:"required"`
+	// The moderation model that produced this result.
+	Model string `json:"model" api:"required"`
+	// The object type, which was always `moderation_result` for successful moderation
+	// results.
+	Type constant.ModerationResult `json:"type" default:"moderation_result"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		ExtraFields               map[string]respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseModerationInputModerationResult) RawJSON() string { return r.JSON.raw }
+func (r *ResponseModerationInputModerationResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An error produced while attempting moderation for the response input or output.
+type ResponseModerationInputError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// The error message.
+	Message string `json:"message" api:"required"`
+	// The object type, which was always `error` for moderation failures.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseModerationInputError) RawJSON() string { return r.JSON.raw }
+func (r *ResponseModerationInputError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseModerationOutputUnion contains all possible properties and values from
+// [ResponseModerationOutputModerationResult], [ResponseModerationOutputError].
+//
+// Use the [ResponseModerationOutputUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponseModerationOutputUnion struct {
+	// This field is from variant [ResponseModerationOutputModerationResult].
+	Categories map[string]bool `json:"categories"`
+	// This field is from variant [ResponseModerationOutputModerationResult].
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types"`
+	// This field is from variant [ResponseModerationOutputModerationResult].
+	CategoryScores map[string]float64 `json:"category_scores"`
+	// This field is from variant [ResponseModerationOutputModerationResult].
+	Flagged bool `json:"flagged"`
+	// This field is from variant [ResponseModerationOutputModerationResult].
+	Model string `json:"model"`
+	// Any of "moderation_result", "error".
+	Type string `json:"type"`
+	// This field is from variant [ResponseModerationOutputError].
+	Code string `json:"code"`
+	// This field is from variant [ResponseModerationOutputError].
+	Message string `json:"message"`
+	JSON    struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		Code                      respjson.Field
+		Message                   respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// anyResponseModerationOutput is implemented by each variant of
+// [ResponseModerationOutputUnion] to add type safety for the return type of
+// [ResponseModerationOutputUnion.AsAny]
+type anyResponseModerationOutput interface {
+	implResponseModerationOutputUnion()
+}
+
+func (ResponseModerationOutputModerationResult) implResponseModerationOutputUnion() {}
+func (ResponseModerationOutputError) implResponseModerationOutputUnion()            {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponseModerationOutputUnion.AsAny().(type) {
+//	case responses.ResponseModerationOutputModerationResult:
+//	case responses.ResponseModerationOutputError:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponseModerationOutputUnion) AsAny() anyResponseModerationOutput {
+	switch u.Type {
+	case "moderation_result":
+		return u.AsModerationResult()
+	case "error":
+		return u.AsError()
+	}
+	return nil
+}
+
+func (u ResponseModerationOutputUnion) AsModerationResult() (v ResponseModerationOutputModerationResult) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseModerationOutputUnion) AsError() (v ResponseModerationOutputError) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseModerationOutputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ResponseModerationOutputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A moderation result produced for the response input or output.
+type ResponseModerationOutputModerationResult struct {
+	// A dictionary of moderation categories to booleans, True if the input is flagged
+	// under this category.
+	Categories map[string]bool `json:"categories" api:"required"`
+	// Which modalities of input are reflected by the score for each category.
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types" api:"required"`
+	// A dictionary of moderation categories to scores.
+	CategoryScores map[string]float64 `json:"category_scores" api:"required"`
+	// A boolean indicating whether the content was flagged by any category.
+	Flagged bool `json:"flagged" api:"required"`
+	// The moderation model that produced this result.
+	Model string `json:"model" api:"required"`
+	// The object type, which was always `moderation_result` for successful moderation
+	// results.
+	Type constant.ModerationResult `json:"type" default:"moderation_result"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		ExtraFields               map[string]respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseModerationOutputModerationResult) RawJSON() string { return r.JSON.raw }
+func (r *ResponseModerationOutputModerationResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An error produced while attempting moderation for the response input or output.
+type ResponseModerationOutputError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// The error message.
+	Message string `json:"message" api:"required"`
+	// The object type, which was always `error` for moderation failures.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseModerationOutputError) RawJSON() string { return r.JSON.raw }
+func (r *ResponseModerationOutputError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -21918,6 +22224,8 @@ type ResponseNewParams struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata,omitzero"`
+	// Configuration for running moderation on the input and output of this response.
+	Moderation ResponseNewParamsModeration `json:"moderation,omitzero"`
 	// Reference to a prompt template and its variables.
 	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
 	Prompt ResponsePromptParam `json:"prompt,omitzero"`
@@ -22094,6 +22402,24 @@ func (u *ResponseNewParamsInputUnion) asAny() any {
 		return &u.OfInputItemList
 	}
 	return nil
+}
+
+// Configuration for running moderation on the input and output of this response.
+//
+// The property Model is required.
+type ResponseNewParamsModeration struct {
+	// The moderation model to use for moderated completions, e.g.
+	// 'omni-moderation-latest'.
+	Model string `json:"model" api:"required"`
+	paramObj
+}
+
+func (r ResponseNewParamsModeration) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseNewParamsModeration
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseNewParamsModeration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // The retention policy for the prompt cache. Set to `24h` to enable extended
