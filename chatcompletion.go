@@ -192,6 +192,9 @@ type ChatCompletion struct {
 	Model string `json:"model" api:"required"`
 	// The object type, which is always `chat.completion`.
 	Object constant.ChatCompletion `json:"object" default:"chat.completion"`
+	// Moderation results for the request input and generated output, if moderated
+	// completions were requested.
+	Moderation ChatCompletionModeration `json:"moderation" api:"nullable"`
 	// Specifies the processing type used for serving the request.
 	//
 	//   - If set to 'auto', then the request will be processed with the service tier
@@ -227,6 +230,7 @@ type ChatCompletion struct {
 		Created           respjson.Field
 		Model             respjson.Field
 		Object            respjson.Field
+		Moderation        respjson.Field
 		ServiceTier       respjson.Field
 		SystemFingerprint respjson.Field
 		Usage             respjson.Field
@@ -247,7 +251,8 @@ type ChatCompletionChoice struct {
 	// number of tokens specified in the request was reached, `content_filter` if
 	// content was omitted due to a flag from our content filters, `tool_calls` if the
 	// model called a tool, or `function_call` (deprecated) if the model called a
-	// function.
+	// function. Read the [Model Spec](https://model-spec.openai.com/2025-12-18.html)
+	// for more.
 	//
 	// Any of "stop", "length", "tool_calls", "content_filter", "function_call".
 	FinishReason string `json:"finish_reason" api:"required"`
@@ -292,6 +297,342 @@ type ChatCompletionChoiceLogprobs struct {
 // Returns the unmodified JSON received from the API
 func (r ChatCompletionChoiceLogprobs) RawJSON() string { return r.JSON.raw }
 func (r *ChatCompletionChoiceLogprobs) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Moderation results for the request input and generated output, if moderated
+// completions were requested.
+type ChatCompletionModeration struct {
+	// Moderation for the request input.
+	Input ChatCompletionModerationInputUnion `json:"input" api:"required"`
+	// Moderation for the generated output.
+	Output ChatCompletionModerationOutputUnion `json:"output" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Input       respjson.Field
+		Output      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModeration) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModeration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ChatCompletionModerationInputUnion contains all possible properties and values
+// from [ChatCompletionModerationInputModerationResults],
+// [ChatCompletionModerationInputError].
+//
+// Use the [ChatCompletionModerationInputUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ChatCompletionModerationInputUnion struct {
+	// This field is from variant [ChatCompletionModerationInputModerationResults].
+	Model string `json:"model"`
+	// This field is from variant [ChatCompletionModerationInputModerationResults].
+	Results []ChatCompletionModerationInputModerationResultsResult `json:"results"`
+	// Any of "moderation_results", "error".
+	Type string `json:"type"`
+	// This field is from variant [ChatCompletionModerationInputError].
+	Code string `json:"code"`
+	// This field is from variant [ChatCompletionModerationInputError].
+	Message string `json:"message"`
+	JSON    struct {
+		Model   respjson.Field
+		Results respjson.Field
+		Type    respjson.Field
+		Code    respjson.Field
+		Message respjson.Field
+		raw     string
+	} `json:"-"`
+}
+
+// anyChatCompletionModerationInput is implemented by each variant of
+// [ChatCompletionModerationInputUnion] to add type safety for the return type of
+// [ChatCompletionModerationInputUnion.AsAny]
+type anyChatCompletionModerationInput interface {
+	implChatCompletionModerationInputUnion()
+}
+
+func (ChatCompletionModerationInputModerationResults) implChatCompletionModerationInputUnion() {}
+func (ChatCompletionModerationInputError) implChatCompletionModerationInputUnion()             {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ChatCompletionModerationInputUnion.AsAny().(type) {
+//	case openai.ChatCompletionModerationInputModerationResults:
+//	case openai.ChatCompletionModerationInputError:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ChatCompletionModerationInputUnion) AsAny() anyChatCompletionModerationInput {
+	switch u.Type {
+	case "moderation_results":
+		return u.AsModerationResults()
+	case "error":
+		return u.AsError()
+	}
+	return nil
+}
+
+func (u ChatCompletionModerationInputUnion) AsModerationResults() (v ChatCompletionModerationInputModerationResults) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ChatCompletionModerationInputUnion) AsError() (v ChatCompletionModerationInputError) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ChatCompletionModerationInputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ChatCompletionModerationInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Successful moderation results for the request input or generated output.
+type ChatCompletionModerationInputModerationResults struct {
+	// The moderation model used to generate the results.
+	Model string `json:"model" api:"required"`
+	// A list of moderation results.
+	Results []ChatCompletionModerationInputModerationResultsResult `json:"results" api:"required"`
+	// The object type, which is always `moderation_results`.
+	Type constant.ModerationResults `json:"type" default:"moderation_results"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Results     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationInputModerationResults) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationInputModerationResults) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A moderation result produced for the response input or output.
+type ChatCompletionModerationInputModerationResultsResult struct {
+	// A dictionary of moderation categories to booleans, True if the input is flagged
+	// under this category.
+	Categories map[string]bool `json:"categories" api:"required"`
+	// Which modalities of input are reflected by the score for each category.
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types" api:"required"`
+	// A dictionary of moderation categories to scores.
+	CategoryScores map[string]float64 `json:"category_scores" api:"required"`
+	// A boolean indicating whether the content was flagged by any category.
+	Flagged bool `json:"flagged" api:"required"`
+	// The moderation model that produced this result.
+	Model string `json:"model" api:"required"`
+	// The object type, which was always `moderation_result` for successful moderation
+	// results.
+	Type constant.ModerationResult `json:"type" default:"moderation_result"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		ExtraFields               map[string]respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationInputModerationResultsResult) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationInputModerationResultsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An error produced while attempting moderation.
+type ChatCompletionModerationInputError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// The error message.
+	Message string `json:"message" api:"required"`
+	// The object type, which is always `error`.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationInputError) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationInputError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ChatCompletionModerationOutputUnion contains all possible properties and values
+// from [ChatCompletionModerationOutputModerationResults],
+// [ChatCompletionModerationOutputError].
+//
+// Use the [ChatCompletionModerationOutputUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ChatCompletionModerationOutputUnion struct {
+	// This field is from variant [ChatCompletionModerationOutputModerationResults].
+	Model string `json:"model"`
+	// This field is from variant [ChatCompletionModerationOutputModerationResults].
+	Results []ChatCompletionModerationOutputModerationResultsResult `json:"results"`
+	// Any of "moderation_results", "error".
+	Type string `json:"type"`
+	// This field is from variant [ChatCompletionModerationOutputError].
+	Code string `json:"code"`
+	// This field is from variant [ChatCompletionModerationOutputError].
+	Message string `json:"message"`
+	JSON    struct {
+		Model   respjson.Field
+		Results respjson.Field
+		Type    respjson.Field
+		Code    respjson.Field
+		Message respjson.Field
+		raw     string
+	} `json:"-"`
+}
+
+// anyChatCompletionModerationOutput is implemented by each variant of
+// [ChatCompletionModerationOutputUnion] to add type safety for the return type of
+// [ChatCompletionModerationOutputUnion.AsAny]
+type anyChatCompletionModerationOutput interface {
+	implChatCompletionModerationOutputUnion()
+}
+
+func (ChatCompletionModerationOutputModerationResults) implChatCompletionModerationOutputUnion() {}
+func (ChatCompletionModerationOutputError) implChatCompletionModerationOutputUnion()             {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ChatCompletionModerationOutputUnion.AsAny().(type) {
+//	case openai.ChatCompletionModerationOutputModerationResults:
+//	case openai.ChatCompletionModerationOutputError:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ChatCompletionModerationOutputUnion) AsAny() anyChatCompletionModerationOutput {
+	switch u.Type {
+	case "moderation_results":
+		return u.AsModerationResults()
+	case "error":
+		return u.AsError()
+	}
+	return nil
+}
+
+func (u ChatCompletionModerationOutputUnion) AsModerationResults() (v ChatCompletionModerationOutputModerationResults) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ChatCompletionModerationOutputUnion) AsError() (v ChatCompletionModerationOutputError) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ChatCompletionModerationOutputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ChatCompletionModerationOutputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Successful moderation results for the request input or generated output.
+type ChatCompletionModerationOutputModerationResults struct {
+	// The moderation model used to generate the results.
+	Model string `json:"model" api:"required"`
+	// A list of moderation results.
+	Results []ChatCompletionModerationOutputModerationResultsResult `json:"results" api:"required"`
+	// The object type, which is always `moderation_results`.
+	Type constant.ModerationResults `json:"type" default:"moderation_results"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Results     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationOutputModerationResults) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationOutputModerationResults) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A moderation result produced for the response input or output.
+type ChatCompletionModerationOutputModerationResultsResult struct {
+	// A dictionary of moderation categories to booleans, True if the input is flagged
+	// under this category.
+	Categories map[string]bool `json:"categories" api:"required"`
+	// Which modalities of input are reflected by the score for each category.
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types" api:"required"`
+	// A dictionary of moderation categories to scores.
+	CategoryScores map[string]float64 `json:"category_scores" api:"required"`
+	// A boolean indicating whether the content was flagged by any category.
+	Flagged bool `json:"flagged" api:"required"`
+	// The moderation model that produced this result.
+	Model string `json:"model" api:"required"`
+	// The object type, which was always `moderation_result` for successful moderation
+	// results.
+	Type constant.ModerationResult `json:"type" default:"moderation_result"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		ExtraFields               map[string]respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationOutputModerationResultsResult) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationOutputModerationResultsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An error produced while attempting moderation.
+type ChatCompletionModerationOutputError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// The error message.
+	Message string `json:"message" api:"required"`
+	// The object type, which is always `error`.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationOutputError) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationOutputError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -656,6 +997,9 @@ type ChatCompletionChunk struct {
 	Model string `json:"model" api:"required"`
 	// The object type, which is always `chat.completion.chunk`.
 	Object constant.ChatCompletionChunk `json:"object" default:"chat.completion.chunk"`
+	// Moderation results for the request input and generated output. Present on the
+	// moderation chunk when moderated completions are requested.
+	Moderation ChatCompletionChunkModeration `json:"moderation" api:"nullable"`
 	// Specifies the processing type used for serving the request.
 	//
 	//   - If set to 'auto', then the request will be processed with the service tier
@@ -696,6 +1040,7 @@ type ChatCompletionChunk struct {
 		Created           respjson.Field
 		Model             respjson.Field
 		Object            respjson.Field
+		Moderation        respjson.Field
 		ServiceTier       respjson.Field
 		SystemFingerprint respjson.Field
 		Usage             respjson.Field
@@ -871,6 +1216,352 @@ type ChatCompletionChunkChoiceLogprobs struct {
 // Returns the unmodified JSON received from the API
 func (r ChatCompletionChunkChoiceLogprobs) RawJSON() string { return r.JSON.raw }
 func (r *ChatCompletionChunkChoiceLogprobs) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Moderation results for the request input and generated output. Present on the
+// moderation chunk when moderated completions are requested.
+type ChatCompletionChunkModeration struct {
+	// Moderation for the request input.
+	Input ChatCompletionChunkModerationInputUnion `json:"input" api:"required"`
+	// Moderation for the generated output.
+	Output ChatCompletionChunkModerationOutputUnion `json:"output" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Input       respjson.Field
+		Output      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModeration) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionChunkModeration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ChatCompletionChunkModerationInputUnion contains all possible properties and
+// values from [ChatCompletionChunkModerationInputModerationResults],
+// [ChatCompletionChunkModerationInputError].
+//
+// Use the [ChatCompletionChunkModerationInputUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ChatCompletionChunkModerationInputUnion struct {
+	// This field is from variant
+	// [ChatCompletionChunkModerationInputModerationResults].
+	Model string `json:"model"`
+	// This field is from variant
+	// [ChatCompletionChunkModerationInputModerationResults].
+	Results []ChatCompletionChunkModerationInputModerationResultsResult `json:"results"`
+	// Any of "moderation_results", "error".
+	Type string `json:"type"`
+	// This field is from variant [ChatCompletionChunkModerationInputError].
+	Code string `json:"code"`
+	// This field is from variant [ChatCompletionChunkModerationInputError].
+	Message string `json:"message"`
+	JSON    struct {
+		Model   respjson.Field
+		Results respjson.Field
+		Type    respjson.Field
+		Code    respjson.Field
+		Message respjson.Field
+		raw     string
+	} `json:"-"`
+}
+
+// anyChatCompletionChunkModerationInput is implemented by each variant of
+// [ChatCompletionChunkModerationInputUnion] to add type safety for the return type
+// of [ChatCompletionChunkModerationInputUnion.AsAny]
+type anyChatCompletionChunkModerationInput interface {
+	implChatCompletionChunkModerationInputUnion()
+}
+
+func (ChatCompletionChunkModerationInputModerationResults) implChatCompletionChunkModerationInputUnion() {
+}
+func (ChatCompletionChunkModerationInputError) implChatCompletionChunkModerationInputUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ChatCompletionChunkModerationInputUnion.AsAny().(type) {
+//	case openai.ChatCompletionChunkModerationInputModerationResults:
+//	case openai.ChatCompletionChunkModerationInputError:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ChatCompletionChunkModerationInputUnion) AsAny() anyChatCompletionChunkModerationInput {
+	switch u.Type {
+	case "moderation_results":
+		return u.AsModerationResults()
+	case "error":
+		return u.AsError()
+	}
+	return nil
+}
+
+func (u ChatCompletionChunkModerationInputUnion) AsModerationResults() (v ChatCompletionChunkModerationInputModerationResults) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ChatCompletionChunkModerationInputUnion) AsError() (v ChatCompletionChunkModerationInputError) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ChatCompletionChunkModerationInputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ChatCompletionChunkModerationInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Successful moderation results for the request input or generated output.
+type ChatCompletionChunkModerationInputModerationResults struct {
+	// The moderation model used to generate the results.
+	Model string `json:"model" api:"required"`
+	// A list of moderation results.
+	Results []ChatCompletionChunkModerationInputModerationResultsResult `json:"results" api:"required"`
+	// The object type, which is always `moderation_results`.
+	Type constant.ModerationResults `json:"type" default:"moderation_results"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Results     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationInputModerationResults) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionChunkModerationInputModerationResults) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A moderation result produced for the response input or output.
+type ChatCompletionChunkModerationInputModerationResultsResult struct {
+	// A dictionary of moderation categories to booleans, True if the input is flagged
+	// under this category.
+	Categories map[string]bool `json:"categories" api:"required"`
+	// Which modalities of input are reflected by the score for each category.
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types" api:"required"`
+	// A dictionary of moderation categories to scores.
+	CategoryScores map[string]float64 `json:"category_scores" api:"required"`
+	// A boolean indicating whether the content was flagged by any category.
+	Flagged bool `json:"flagged" api:"required"`
+	// The moderation model that produced this result.
+	Model string `json:"model" api:"required"`
+	// The object type, which was always `moderation_result` for successful moderation
+	// results.
+	Type constant.ModerationResult `json:"type" default:"moderation_result"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		ExtraFields               map[string]respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationInputModerationResultsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ChatCompletionChunkModerationInputModerationResultsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An error produced while attempting moderation.
+type ChatCompletionChunkModerationInputError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// The error message.
+	Message string `json:"message" api:"required"`
+	// The object type, which is always `error`.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationInputError) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionChunkModerationInputError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ChatCompletionChunkModerationOutputUnion contains all possible properties and
+// values from [ChatCompletionChunkModerationOutputModerationResults],
+// [ChatCompletionChunkModerationOutputError].
+//
+// Use the [ChatCompletionChunkModerationOutputUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ChatCompletionChunkModerationOutputUnion struct {
+	// This field is from variant
+	// [ChatCompletionChunkModerationOutputModerationResults].
+	Model string `json:"model"`
+	// This field is from variant
+	// [ChatCompletionChunkModerationOutputModerationResults].
+	Results []ChatCompletionChunkModerationOutputModerationResultsResult `json:"results"`
+	// Any of "moderation_results", "error".
+	Type string `json:"type"`
+	// This field is from variant [ChatCompletionChunkModerationOutputError].
+	Code string `json:"code"`
+	// This field is from variant [ChatCompletionChunkModerationOutputError].
+	Message string `json:"message"`
+	JSON    struct {
+		Model   respjson.Field
+		Results respjson.Field
+		Type    respjson.Field
+		Code    respjson.Field
+		Message respjson.Field
+		raw     string
+	} `json:"-"`
+}
+
+// anyChatCompletionChunkModerationOutput is implemented by each variant of
+// [ChatCompletionChunkModerationOutputUnion] to add type safety for the return
+// type of [ChatCompletionChunkModerationOutputUnion.AsAny]
+type anyChatCompletionChunkModerationOutput interface {
+	implChatCompletionChunkModerationOutputUnion()
+}
+
+func (ChatCompletionChunkModerationOutputModerationResults) implChatCompletionChunkModerationOutputUnion() {
+}
+func (ChatCompletionChunkModerationOutputError) implChatCompletionChunkModerationOutputUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ChatCompletionChunkModerationOutputUnion.AsAny().(type) {
+//	case openai.ChatCompletionChunkModerationOutputModerationResults:
+//	case openai.ChatCompletionChunkModerationOutputError:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ChatCompletionChunkModerationOutputUnion) AsAny() anyChatCompletionChunkModerationOutput {
+	switch u.Type {
+	case "moderation_results":
+		return u.AsModerationResults()
+	case "error":
+		return u.AsError()
+	}
+	return nil
+}
+
+func (u ChatCompletionChunkModerationOutputUnion) AsModerationResults() (v ChatCompletionChunkModerationOutputModerationResults) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ChatCompletionChunkModerationOutputUnion) AsError() (v ChatCompletionChunkModerationOutputError) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ChatCompletionChunkModerationOutputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ChatCompletionChunkModerationOutputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Successful moderation results for the request input or generated output.
+type ChatCompletionChunkModerationOutputModerationResults struct {
+	// The moderation model used to generate the results.
+	Model string `json:"model" api:"required"`
+	// A list of moderation results.
+	Results []ChatCompletionChunkModerationOutputModerationResultsResult `json:"results" api:"required"`
+	// The object type, which is always `moderation_results`.
+	Type constant.ModerationResults `json:"type" default:"moderation_results"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Results     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationOutputModerationResults) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionChunkModerationOutputModerationResults) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A moderation result produced for the response input or output.
+type ChatCompletionChunkModerationOutputModerationResultsResult struct {
+	// A dictionary of moderation categories to booleans, True if the input is flagged
+	// under this category.
+	Categories map[string]bool `json:"categories" api:"required"`
+	// Which modalities of input are reflected by the score for each category.
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types" api:"required"`
+	// A dictionary of moderation categories to scores.
+	CategoryScores map[string]float64 `json:"category_scores" api:"required"`
+	// A boolean indicating whether the content was flagged by any category.
+	Flagged bool `json:"flagged" api:"required"`
+	// The moderation model that produced this result.
+	Model string `json:"model" api:"required"`
+	// The object type, which was always `moderation_result` for successful moderation
+	// results.
+	Type constant.ModerationResult `json:"type" default:"moderation_result"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		ExtraFields               map[string]respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationOutputModerationResultsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ChatCompletionChunkModerationOutputModerationResultsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An error produced while attempting moderation.
+type ChatCompletionChunkModerationOutputError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// The error message.
+	Message string `json:"message" api:"required"`
+	// The object type, which is always `error`.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationOutputError) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionChunkModerationOutputError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -3085,6 +3776,8 @@ type ChatCompletionNewParams struct {
 	//
 	// Any of "text", "audio".
 	Modalities []string `json:"modalities,omitzero"`
+	// Configuration for running moderation on the request input and generated output.
+	Moderation ChatCompletionNewParamsModeration `json:"moderation,omitzero"`
 	// The retention policy for the prompt cache. Set to `24h` to enable extended
 	// prompt caching, which keeps cached prefixes active for longer, up to a maximum
 	// of 24 hours.
@@ -3272,6 +3965,24 @@ func (r ChatCompletionNewParamsFunction) MarshalJSON() (data []byte, err error) 
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ChatCompletionNewParamsFunction) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Configuration for running moderation on the request input and generated output.
+//
+// The property Model is required.
+type ChatCompletionNewParamsModeration struct {
+	// The moderation model to use for moderated completions, e.g.
+	// 'omni-moderation-latest'.
+	Model string `json:"model" api:"required"`
+	paramObj
+}
+
+func (r ChatCompletionNewParamsModeration) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionNewParamsModeration
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionNewParamsModeration) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

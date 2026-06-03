@@ -63,7 +63,10 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
-		Modalities:        []string{"text"},
+		Modalities: []string{"text"},
+		Moderation: openai.ChatCompletionNewParamsModeration{
+			Model: "model",
+		},
 		N:                 openai.Int(1),
 		ParallelToolCalls: openai.Bool(true),
 		Prediction: openai.ChatCompletionPredictionContentParam{
