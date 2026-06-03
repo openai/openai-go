@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math"
 	"math/rand"
 	"mime"
 	"net/http"
@@ -402,7 +401,10 @@ func retryDelay(res *http.Response, retryCount int) time.Duration {
 	}
 
 	maxDelay := 8 * time.Second
-	delay := time.Duration(0.5 * float64(time.Second) * math.Pow(2, float64(retryCount)))
+	delay := 500 * time.Millisecond
+	for i := 0; i < retryCount && delay < maxDelay; i++ {
+		delay *= 2
+	}
 	if delay > maxDelay {
 		delay = maxDelay
 	}
