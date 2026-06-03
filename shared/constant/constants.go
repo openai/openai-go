@@ -173,6 +173,8 @@ type Member string                                           // Always "member"
 type Message string                                          // Always "message"
 type MessageCreation string                                  // Always "message_creation"
 type Model string                                            // Always "model"
+type ModerationResult string                                 // Always "moderation_result"
+type ModerationResults string                                // Always "moderation_results"
 type Move string                                             // Always "move"
 type Multi string                                            // Always "multi"
 type Namespace string                                        // Always "namespace"
@@ -595,6 +597,8 @@ func (c Member) Default() Member                                 { return "membe
 func (c Message) Default() Message                               { return "message" }
 func (c MessageCreation) Default() MessageCreation               { return "message_creation" }
 func (c Model) Default() Model                                   { return "model" }
+func (c ModerationResult) Default() ModerationResult             { return "moderation_result" }
+func (c ModerationResults) Default() ModerationResults           { return "moderation_results" }
 func (c Move) Default() Move                                     { return "move" }
 func (c Multi) Default() Multi                                   { return "multi" }
 func (c Namespace) Default() Namespace                           { return "namespace" }
@@ -1165,6 +1169,8 @@ func (c Member) MarshalJSON() ([]byte, error)                              { ret
 func (c Message) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c MessageCreation) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c Model) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
+func (c ModerationResult) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c ModerationResults) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
 func (c Move) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
 func (c Multi) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c Namespace) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
