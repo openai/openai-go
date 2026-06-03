@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.39.0 (2026-06-03)
+
+Full Changelog: [v3.38.0...v3.39.0](https://github.com/openai/openai-go/compare/v3.38.0...v3.39.0)
+
+### Features
+
+* **api:** responses.moderation and chat_completions.moderation ([7a2dac0](https://github.com/openai/openai-go/commit/7a2dac0ddf6b92dfcaa45b190dbe7f51368e199c))
+
 ## 3.38.0 (2026-06-01)
 
 Full Changelog: [v3.37.0...v3.38.0](https://github.com/openai/openai-go/compare/v3.37.0...v3.38.0)
