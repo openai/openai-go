@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"os"
 
@@ -19,6 +20,23 @@ func main() {
 	transcription, err := client.Audio.Transcriptions.New(ctx, openai.AudioTranscriptionNewParams{
 		Model: openai.AudioModelWhisper1,
 		File:  file,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	println(transcription.Text)
+
+	// Or if you have speech bytes, you have to wrap reader:
+	var speechBytes []byte // Assume this is filled with audio data
+
+	speechReader := openai.File(
+		bytes.NewReader(speechBytes), "speech.mp3", "audio/mp3",
+	)
+
+	transcription, err = client.Audio.Transcriptions.New(ctx, openai.AudioTranscriptionNewParams{
+		Model: openai.AudioModelWhisper1,
+		File:  speechReader,
 	})
 	if err != nil {
 		panic(err)
