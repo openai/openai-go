@@ -17741,6 +17741,36 @@ func (r *ResponseRefusalDoneEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Emitted when there is a partial shell command response.
+type ResponseShellCallCommandDeltaEvent struct {
+	// The command delta that is added.
+	Delta string `json:"delta" api:"required"`
+	// The ID of the output item that the command delta is added to.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that the command delta is added to.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of this event.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The type of the event. Always `response.shell_call_command.delta`.
+	Type constant.ResponseShellCallCommandDelta `json:"type" default:"response.shell_call_command.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseShellCallCommandDeltaEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseShellCallCommandDeltaEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The status of the response generation. One of `completed`, `failed`,
 // `in_progress`, `cancelled`, `queued`, or `incomplete`.
 type ResponseStatus string
@@ -17775,7 +17805,8 @@ const (
 // [ResponseReasoningSummaryTextDeltaEvent],
 // [ResponseReasoningSummaryTextDoneEvent], [ResponseReasoningTextDeltaEvent],
 // [ResponseReasoningTextDoneEvent], [ResponseRefusalDeltaEvent],
-// [ResponseRefusalDoneEvent], [ResponseTextDeltaEvent], [ResponseTextDoneEvent],
+// [ResponseRefusalDoneEvent], [ResponseShellCallCommandDeltaEvent],
+// [ResponseTextDeltaEvent], [ResponseTextDoneEvent],
 // [ResponseWebSearchCallCompletedEvent], [ResponseWebSearchCallInProgressEvent],
 // [ResponseWebSearchCallSearchingEvent], [ResponseImageGenCallCompletedEvent],
 // [ResponseImageGenCallGeneratingEvent], [ResponseImageGenCallInProgressEvent],
@@ -17810,7 +17841,8 @@ type ResponseStreamEventUnion struct {
 	// "response.reasoning_summary_part.done", "response.reasoning_summary_text.delta",
 	// "response.reasoning_summary_text.done", "response.reasoning_text.delta",
 	// "response.reasoning_text.done", "response.refusal.delta",
-	// "response.refusal.done", "response.output_text.delta",
+	// "response.refusal.done", "response.shell_call_command.delta",
+	// "response.output_text.delta",
 	// "response.output_text.done", "response.web_search_call.completed",
 	// "response.web_search_call.in_progress", "response.web_search_call.searching",
 	// "response.image_generation_call.completed",
@@ -17928,6 +17960,7 @@ func (ResponseReasoningTextDeltaEvent) implResponseStreamEventUnion()           
 func (ResponseReasoningTextDoneEvent) implResponseStreamEventUnion()               {}
 func (ResponseRefusalDeltaEvent) implResponseStreamEventUnion()                    {}
 func (ResponseRefusalDoneEvent) implResponseStreamEventUnion()                     {}
+func (ResponseShellCallCommandDeltaEvent) implResponseStreamEventUnion()           {}
 func (ResponseTextDeltaEvent) implResponseStreamEventUnion()                       {}
 func (ResponseTextDoneEvent) implResponseStreamEventUnion()                        {}
 func (ResponseWebSearchCallCompletedEvent) implResponseStreamEventUnion()          {}
@@ -17985,6 +18018,7 @@ func (ResponseCustomToolCallInputDoneEvent) implResponseStreamEventUnion()      
 //	case responses.ResponseReasoningTextDoneEvent:
 //	case responses.ResponseRefusalDeltaEvent:
 //	case responses.ResponseRefusalDoneEvent:
+//	case responses.ResponseShellCallCommandDeltaEvent:
 //	case responses.ResponseTextDeltaEvent:
 //	case responses.ResponseTextDoneEvent:
 //	case responses.ResponseWebSearchCallCompletedEvent:
@@ -18075,6 +18109,8 @@ func (u ResponseStreamEventUnion) AsAny() anyResponseStreamEvent {
 		return u.AsResponseRefusalDelta()
 	case "response.refusal.done":
 		return u.AsResponseRefusalDone()
+	case "response.shell_call_command.delta":
+		return u.AsResponseShellCallCommandDelta()
 	case "response.output_text.delta":
 		return u.AsResponseOutputTextDelta()
 	case "response.output_text.done":
@@ -18277,6 +18313,11 @@ func (u ResponseStreamEventUnion) AsResponseRefusalDelta() (v ResponseRefusalDel
 }
 
 func (u ResponseStreamEventUnion) AsResponseRefusalDone() (v ResponseRefusalDoneEvent) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseStreamEventUnion) AsResponseShellCallCommandDelta() (v ResponseShellCallCommandDeltaEvent) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }

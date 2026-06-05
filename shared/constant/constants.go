@@ -299,6 +299,7 @@ type ResponseReasoningTextDelta string                       // Always "response
 type ResponseReasoningTextDone string                        // Always "response.reasoning_text.done"
 type ResponseRefusalDelta string                             // Always "response.refusal.delta"
 type ResponseRefusalDone string                              // Always "response.refusal.done"
+type ResponseShellCallCommandDelta string                    // Always "response.shell_call_command.delta"
 type ResponseWebSearchCallCompleted string                   // Always "response.web_search_call.completed"
 type ResponseWebSearchCallInProgress string                  // Always "response.web_search_call.in_progress"
 type ResponseWebSearchCallSearching string                   // Always "response.web_search_call.searching"
@@ -873,6 +874,9 @@ func (c ResponseReasoningTextDone) Default() ResponseReasoningTextDone {
 }
 func (c ResponseRefusalDelta) Default() ResponseRefusalDelta { return "response.refusal.delta" }
 func (c ResponseRefusalDone) Default() ResponseRefusalDone   { return "response.refusal.done" }
+func (c ResponseShellCallCommandDelta) Default() ResponseShellCallCommandDelta {
+	return "response.shell_call_command.delta"
+}
 func (c ResponseWebSearchCallCompleted) Default() ResponseWebSearchCallCompleted {
 	return "response.web_search_call.completed"
 }
@@ -1311,6 +1315,7 @@ func (c ResponseReasoningTextDelta) MarshalJSON() ([]byte, error)         { retu
 func (c ResponseReasoningTextDone) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c ResponseRefusalDelta) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c ResponseRefusalDone) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c ResponseShellCallCommandDelta) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c ResponseWebSearchCallCompleted) MarshalJSON() ([]byte, error)     { return marshalString(c) }
 func (c ResponseWebSearchCallInProgress) MarshalJSON() ([]byte, error)    { return marshalString(c) }
 func (c ResponseWebSearchCallSearching) MarshalJSON() ([]byte, error)     { return marshalString(c) }
