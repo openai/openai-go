@@ -1,6 +1,20 @@
 package requestconfig
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
+
+func TestRetryDelayDoesNotOverflowForLargeRetryCount(t *testing.T) {
+	delay := retryDelay(nil, 100)
+
+	if delay <= 0 {
+		t.Fatalf("retryDelay() = %s, want positive duration", delay)
+	}
+	if delay > 8*time.Second {
+		t.Fatalf("retryDelay() = %s, want no more than 8s", delay)
+	}
+}
 
 func TestFormatPathEscapesPathParams(t *testing.T) {
 	tests := map[string]struct {
