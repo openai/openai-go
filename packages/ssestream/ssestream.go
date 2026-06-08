@@ -177,6 +177,9 @@ func (s *Stream[T]) Next() bool {
 		if s.done {
 			continue
 		}
+		if len(s.decoder.Event().Data) == 0 {
+			continue
+		}
 
 		if bytes.HasPrefix(s.decoder.Event().Data, []byte("[DONE]")) {
 			// In this case we don't break because we still want to iterate through the full stream.
