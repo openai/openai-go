@@ -9,6 +9,7 @@ jobs:
   detect_breaking_changes:
     runs-on: 'ubuntu-latest'
     name: detect-breaking-changes
+    environment: CI
     if: github.repository == 'openai/openai-go'
     steps:
       - name: Calculate fetch-depth

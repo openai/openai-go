@@ -18,6 +18,7 @@ jobs:
   build:
     timeout-minutes: 10
     name: build
+    environment: CI
     permissions:
       contents: read
       id-token: write
@@ -49,6 +50,7 @@ jobs:
   lint:
     timeout-minutes: 10
     name: lint
+    environment: CI
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
 
@@ -68,6 +70,7 @@ jobs:
   test:
     timeout-minutes: 10
     name: test
+    environment: CI
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
     steps:
