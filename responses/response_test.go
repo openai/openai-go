@@ -65,6 +65,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		PromptCacheKey:       openai.String("prompt-cache-key-1234"),
 		PromptCacheRetention: responses.ResponseNewParamsPromptCacheRetentionInMemory,
 		Reasoning: shared.ReasoningParam{
+			Context:         shared.ReasoningContextAuto,
 			Effort:          shared.ReasoningEffortNone,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
 			Summary:         shared.ReasoningSummaryAuto,

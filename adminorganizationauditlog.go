@@ -88,9 +88,9 @@ type AdminOrganizationAuditLogListResponse struct {
 	// "workload_identity_provider_mapping.updated",
 	// "workload_identity_provider_mapping.deleted", "role.created", "role.updated",
 	// "role.deleted", "role.assignment.created", "role.assignment.deleted",
-	// "scim.enabled", "scim.disabled", "service_account.created",
-	// "service_account.updated", "service_account.deleted", "user.added",
-	// "user.updated", "user.deleted".
+	// "role.bound_to_resource", "role.unbound_from_resource", "scim.enabled",
+	// "scim.disabled", "service_account.created", "service_account.updated",
+	// "service_account.deleted", "user.added", "user.updated", "user.deleted".
 	Type AdminOrganizationAuditLogListResponseType `json:"type" api:"required"`
 	// The actor who performed the audit logged action.
 	Actor AdminOrganizationAuditLogListResponseActor `json:"actor" api:"nullable"`
@@ -172,9 +172,13 @@ type AdminOrganizationAuditLogListResponse struct {
 	// The details for events with this `type`.
 	RoleAssignmentDeleted AdminOrganizationAuditLogListResponseRoleAssignmentDeleted `json:"role.assignment.deleted"`
 	// The details for events with this `type`.
+	RoleBoundToResource AdminOrganizationAuditLogListResponseRoleBoundToResource `json:"role.bound_to_resource"`
+	// The details for events with this `type`.
 	RoleCreated AdminOrganizationAuditLogListResponseRoleCreated `json:"role.created"`
 	// The details for events with this `type`.
 	RoleDeleted AdminOrganizationAuditLogListResponseRoleDeleted `json:"role.deleted"`
+	// The details for events with this `type`.
+	RoleUnboundFromResource AdminOrganizationAuditLogListResponseRoleUnboundFromResource `json:"role.unbound_from_resource"`
 	// The details for events with this `type`.
 	RoleUpdated AdminOrganizationAuditLogListResponseRoleUpdated `json:"role.updated"`
 	// The details for events with this `type`.
@@ -248,8 +252,10 @@ type AdminOrganizationAuditLogListResponse struct {
 		RateLimitUpdated                       respjson.Field
 		RoleAssignmentCreated                  respjson.Field
 		RoleAssignmentDeleted                  respjson.Field
+		RoleBoundToResource                    respjson.Field
 		RoleCreated                            respjson.Field
 		RoleDeleted                            respjson.Field
+		RoleUnboundFromResource                respjson.Field
 		RoleUpdated                            respjson.Field
 		ScimDisabled                           respjson.Field
 		ScimEnabled                            respjson.Field
@@ -329,6 +335,8 @@ const (
 	AdminOrganizationAuditLogListResponseTypeRoleDeleted                            AdminOrganizationAuditLogListResponseType = "role.deleted"
 	AdminOrganizationAuditLogListResponseTypeRoleAssignmentCreated                  AdminOrganizationAuditLogListResponseType = "role.assignment.created"
 	AdminOrganizationAuditLogListResponseTypeRoleAssignmentDeleted                  AdminOrganizationAuditLogListResponseType = "role.assignment.deleted"
+	AdminOrganizationAuditLogListResponseTypeRoleBoundToResource                    AdminOrganizationAuditLogListResponseType = "role.bound_to_resource"
+	AdminOrganizationAuditLogListResponseTypeRoleUnboundFromResource                AdminOrganizationAuditLogListResponseType = "role.unbound_from_resource"
 	AdminOrganizationAuditLogListResponseTypeScimEnabled                            AdminOrganizationAuditLogListResponseType = "scim.enabled"
 	AdminOrganizationAuditLogListResponseTypeScimDisabled                           AdminOrganizationAuditLogListResponseType = "scim.disabled"
 	AdminOrganizationAuditLogListResponseTypeServiceAccountCreated                  AdminOrganizationAuditLogListResponseType = "service_account.created"
@@ -1547,6 +1555,56 @@ func (r *AdminOrganizationAuditLogListResponseRoleAssignmentDeleted) UnmarshalJS
 }
 
 // The details for events with this `type`.
+type AdminOrganizationAuditLogListResponseRoleBoundToResource struct {
+	// The ID of the resource the role was bound to. ChatGPT workspace connector
+	// resources use `<workspace_id>__<connector_id>`.
+	ID string `json:"id"`
+	// The connector ID for a ChatGPT workspace connector resource.
+	ConnectorID string `json:"connector_id"`
+	// The connector display name for a ChatGPT workspace connector resource, or the
+	// connector ID when the display name could not be resolved.
+	ConnectorName string `json:"connector_name"`
+	// Whether the connector is enabled for the role.
+	Enabled bool `json:"enabled"`
+	// The permissions granted to the role for the resource.
+	Permissions []string `json:"permissions"`
+	// The ID of the resource the role was bound to.
+	ResourceID string `json:"resource_id"`
+	// The type of resource the role was bound to.
+	ResourceType string `json:"resource_type"`
+	// The ID of the role that was bound to the resource.
+	RoleID string `json:"role_id"`
+	// The connector role mutation path that produced the event.
+	//
+	// Any of "role_toggle", "role_connector_update", "role_delete",
+	// "workspace_permissions", "connector_publish".
+	Source string `json:"source"`
+	// The workspace ID for a ChatGPT workspace connector resource.
+	WorkspaceID string `json:"workspace_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID            respjson.Field
+		ConnectorID   respjson.Field
+		ConnectorName respjson.Field
+		Enabled       respjson.Field
+		Permissions   respjson.Field
+		ResourceID    respjson.Field
+		ResourceType  respjson.Field
+		RoleID        respjson.Field
+		Source        respjson.Field
+		WorkspaceID   respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseRoleBoundToResource) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationAuditLogListResponseRoleBoundToResource) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The details for events with this `type`.
 type AdminOrganizationAuditLogListResponseRoleCreated struct {
 	// The role ID.
 	ID string `json:"id"`
@@ -1591,6 +1649,58 @@ type AdminOrganizationAuditLogListResponseRoleDeleted struct {
 // Returns the unmodified JSON received from the API
 func (r AdminOrganizationAuditLogListResponseRoleDeleted) RawJSON() string { return r.JSON.raw }
 func (r *AdminOrganizationAuditLogListResponseRoleDeleted) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The details for events with this `type`.
+type AdminOrganizationAuditLogListResponseRoleUnboundFromResource struct {
+	// The ID of the resource the role was unbound from. ChatGPT workspace connector
+	// resources use `<workspace_id>__<connector_id>`.
+	ID string `json:"id"`
+	// The connector ID for a ChatGPT workspace connector resource.
+	ConnectorID string `json:"connector_id"`
+	// The connector display name for a ChatGPT workspace connector resource, or the
+	// connector ID when the display name could not be resolved.
+	ConnectorName string `json:"connector_name"`
+	// Whether the connector is enabled for the role.
+	Enabled bool `json:"enabled"`
+	// The permissions remaining for the role after the change.
+	Permissions []string `json:"permissions"`
+	// The ID of the resource the role was unbound from.
+	ResourceID string `json:"resource_id"`
+	// The type of resource the role was unbound from.
+	ResourceType string `json:"resource_type"`
+	// The ID of the role that was unbound from the resource.
+	RoleID string `json:"role_id"`
+	// The connector role mutation path that produced the event.
+	//
+	// Any of "role_toggle", "role_connector_update", "role_delete",
+	// "workspace_permissions", "connector_publish".
+	Source string `json:"source"`
+	// The workspace ID for a ChatGPT workspace connector resource.
+	WorkspaceID string `json:"workspace_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID            respjson.Field
+		ConnectorID   respjson.Field
+		ConnectorName respjson.Field
+		Enabled       respjson.Field
+		Permissions   respjson.Field
+		ResourceID    respjson.Field
+		ResourceType  respjson.Field
+		RoleID        respjson.Field
+		Source        respjson.Field
+		WorkspaceID   respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationAuditLogListResponseRoleUnboundFromResource) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *AdminOrganizationAuditLogListResponseRoleUnboundFromResource) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -2057,6 +2167,11 @@ type AdminOrganizationAuditLogListParams struct {
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// Return only tenant-scoped events associated with this organization. Required for
+	// tenant-scoped events such as `role.bound_to_resource` and
+	// `role.unbound_from_resource`. When `true`, all supplied event types must be
+	// tenant-scoped.
+	TenantOnly param.Opt[bool] `query:"tenant_only,omitzero" json:"-"`
 	// Return only events performed by users with these emails.
 	ActorEmails []string `query:"actor_emails,omitzero" json:"-"`
 	// Return only events performed by these actors. Can be a user ID, a service
@@ -2086,14 +2201,15 @@ type AdminOrganizationAuditLogListParams struct {
 	// "workload_identity_provider_mapping.updated",
 	// "workload_identity_provider_mapping.deleted", "role.created", "role.updated",
 	// "role.deleted", "role.assignment.created", "role.assignment.deleted",
-	// "scim.enabled", "scim.disabled", "service_account.created",
-	// "service_account.updated", "service_account.deleted", "user.added",
-	// "user.updated", "user.deleted".
+	// "role.bound_to_resource", "role.unbound_from_resource", "scim.enabled",
+	// "scim.disabled", "service_account.created", "service_account.updated",
+	// "service_account.deleted", "user.added", "user.updated", "user.deleted".
 	EventTypes []string `query:"event_types,omitzero" json:"-"`
 	// Return only events for these projects.
 	ProjectIDs []string `query:"project_ids,omitzero" json:"-"`
 	// Return only events performed on these targets. For example, a project ID
-	// updated.
+	// updated. For ChatGPT connector role events, use the workspace connector resource
+	// ID shown in `details.id`, such as `<workspace_id>__<connector_id>`.
 	ResourceIDs []string `query:"resource_ids,omitzero" json:"-"`
 	paramObj
 }
