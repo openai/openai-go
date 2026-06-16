@@ -463,7 +463,7 @@ const OAuthErrorCodeInvalidSubjectToken = shared.OAuthErrorCodeInvalidSubjectTok
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 //
 // This is an alias to an internal type.
-type ReasoningParam = shared.ReasoningParam
+type Reasoning = shared.Reasoning
 
 // Controls which reasoning items are rendered back to the model on later turns.
 // When returned on a response, this is the effective reasoning context mode used
@@ -517,6 +517,14 @@ const ReasoningSummaryConcise = shared.ReasoningSummaryConcise
 
 // Equals "detailed"
 const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
+
+// **gpt-5 and o-series models only**
+//
+// Configuration options for
+// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+//
+// This is an alias to an internal type.
+type ReasoningParam = shared.ReasoningParam
 
 // Constrains effort on reasoning for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
