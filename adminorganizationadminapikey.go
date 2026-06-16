@@ -103,6 +103,8 @@ type AdminAPIKey struct {
 	ID string `json:"id" api:"required"`
 	// The Unix timestamp (in seconds) of when the API key was created
 	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The Unix timestamp (in seconds) of when the API key expires
+	ExpiresAt int64 `json:"expires_at" api:"required" format:"unixtime"`
 	// The object type, which is always `organization.admin_api_key`
 	Object constant.OrganizationAdminAPIKey `json:"object" default:"organization.admin_api_key"`
 	Owner  AdminAPIKeyOwner                 `json:"owner" api:"required"`
@@ -116,6 +118,7 @@ type AdminAPIKey struct {
 	JSON struct {
 		ID            respjson.Field
 		CreatedAt     respjson.Field
+		ExpiresAt     respjson.Field
 		Object        respjson.Field
 		Owner         respjson.Field
 		RedactedValue respjson.Field
@@ -205,6 +208,9 @@ func (r *AdminOrganizationAdminAPIKeyDeleteResponse) UnmarshalJSON(data []byte) 
 
 type AdminOrganizationAdminAPIKeyNewParams struct {
 	Name string `json:"name" api:"required"`
+	// The number of seconds until the API key expires. Omit this field for a key that
+	// does not expire.
+	ExpiresInSeconds param.Opt[int64] `json:"expires_in_seconds,omitzero"`
 	paramObj
 }
 
