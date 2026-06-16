@@ -581,7 +581,7 @@ func (u *VideoEditParamsVideoUnion) asAny() any {
 	return nil
 }
 
-// Reference to the completed video to edit.
+// Reference to the completed video.
 //
 // The property ID is required.
 type VideoEditParamsVideoVideoReferenceInputParam struct {
