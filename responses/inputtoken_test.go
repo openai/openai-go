@@ -41,6 +41,7 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 		Personality:        responses.InputTokenCountParamsPersonalityFriendly,
 		PreviousResponseID: openai.String("resp_123"),
 		Reasoning: shared.ReasoningParam{
+			Context:         shared.ReasoningContextAuto,
 			Effort:          shared.ReasoningEffortNone,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
 			Summary:         shared.ReasoningSummaryAuto,
