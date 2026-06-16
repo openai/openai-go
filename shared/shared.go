@@ -794,6 +794,116 @@ const (
 //
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+type Reasoning struct {
+	// Controls which reasoning items are rendered back to the model on later turns.
+	// When returned on a response, this is the effective reasoning context mode used
+	// for the response.
+	//
+	// Any of "auto", "current_turn", "all_turns".
+	Context ReasoningContext `json:"context" api:"nullable"`
+	// Constrains effort on reasoning for
+	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
+	// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
+	// Reducing reasoning effort can result in faster responses and fewer tokens used
+	// on reasoning in a response.
+	//
+	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
+	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
+	//     calls are supported for all reasoning values in gpt-5.1.
+	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
+	//     support `none`.
+	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
+	//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
+	Effort ReasoningEffort `json:"effort" api:"nullable"`
+	// **Deprecated:** use `summary` instead.
+	//
+	// A summary of the reasoning performed by the model. This can be useful for
+	// debugging and understanding the model's reasoning process. One of `auto`,
+	// `concise`, or `detailed`.
+	//
+	// Any of "auto", "concise", "detailed".
+	//
+	// Deprecated: deprecated
+	GenerateSummary ReasoningGenerateSummary `json:"generate_summary" api:"nullable"`
+	// A summary of the reasoning performed by the model. This can be useful for
+	// debugging and understanding the model's reasoning process. One of `auto`,
+	// `concise`, or `detailed`.
+	//
+	// `concise` is supported for `computer-use-preview` models and all reasoning
+	// models after `gpt-5`.
+	//
+	// Any of "auto", "concise", "detailed".
+	Summary ReasoningSummary `json:"summary" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Context         respjson.Field
+		Effort          respjson.Field
+		GenerateSummary respjson.Field
+		Summary         respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r Reasoning) RawJSON() string { return r.JSON.raw }
+func (r *Reasoning) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this Reasoning to a ReasoningParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ReasoningParam.Overrides()
+func (r Reasoning) ToParam() ReasoningParam {
+	return param.Override[ReasoningParam](json.RawMessage(r.RawJSON()))
+}
+
+// Controls which reasoning items are rendered back to the model on later turns.
+// When returned on a response, this is the effective reasoning context mode used
+// for the response.
+type ReasoningContext string
+
+const (
+	ReasoningContextAuto        ReasoningContext = "auto"
+	ReasoningContextCurrentTurn ReasoningContext = "current_turn"
+	ReasoningContextAllTurns    ReasoningContext = "all_turns"
+)
+
+// **Deprecated:** use `summary` instead.
+//
+// A summary of the reasoning performed by the model. This can be useful for
+// debugging and understanding the model's reasoning process. One of `auto`,
+// `concise`, or `detailed`.
+type ReasoningGenerateSummary string
+
+const (
+	ReasoningGenerateSummaryAuto     ReasoningGenerateSummary = "auto"
+	ReasoningGenerateSummaryConcise  ReasoningGenerateSummary = "concise"
+	ReasoningGenerateSummaryDetailed ReasoningGenerateSummary = "detailed"
+)
+
+// A summary of the reasoning performed by the model. This can be useful for
+// debugging and understanding the model's reasoning process. One of `auto`,
+// `concise`, or `detailed`.
+//
+// `concise` is supported for `computer-use-preview` models and all reasoning
+// models after `gpt-5`.
+type ReasoningSummary string
+
+const (
+	ReasoningSummaryAuto     ReasoningSummary = "auto"
+	ReasoningSummaryConcise  ReasoningSummary = "concise"
+	ReasoningSummaryDetailed ReasoningSummary = "detailed"
+)
+
+// **gpt-5 and o-series models only**
+//
+// Configuration options for
+// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type ReasoningParam struct {
 	// Controls which reasoning items are rendered back to the model on later turns.
 	// When returned on a response, this is the effective reasoning context mode used
@@ -846,44 +956,6 @@ func (r ReasoningParam) MarshalJSON() (data []byte, err error) {
 func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-// Controls which reasoning items are rendered back to the model on later turns.
-// When returned on a response, this is the effective reasoning context mode used
-// for the response.
-type ReasoningContext string
-
-const (
-	ReasoningContextAuto        ReasoningContext = "auto"
-	ReasoningContextCurrentTurn ReasoningContext = "current_turn"
-	ReasoningContextAllTurns    ReasoningContext = "all_turns"
-)
-
-// **Deprecated:** use `summary` instead.
-//
-// A summary of the reasoning performed by the model. This can be useful for
-// debugging and understanding the model's reasoning process. One of `auto`,
-// `concise`, or `detailed`.
-type ReasoningGenerateSummary string
-
-const (
-	ReasoningGenerateSummaryAuto     ReasoningGenerateSummary = "auto"
-	ReasoningGenerateSummaryConcise  ReasoningGenerateSummary = "concise"
-	ReasoningGenerateSummaryDetailed ReasoningGenerateSummary = "detailed"
-)
-
-// A summary of the reasoning performed by the model. This can be useful for
-// debugging and understanding the model's reasoning process. One of `auto`,
-// `concise`, or `detailed`.
-//
-// `concise` is supported for `computer-use-preview` models and all reasoning
-// models after `gpt-5`.
-type ReasoningSummary string
-
-const (
-	ReasoningSummaryAuto     ReasoningSummary = "auto"
-	ReasoningSummaryConcise  ReasoningSummary = "concise"
-	ReasoningSummaryDetailed ReasoningSummary = "detailed"
-)
 
 // Constrains effort on reasoning for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently

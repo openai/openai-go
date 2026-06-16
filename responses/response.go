@@ -3327,8 +3327,11 @@ type Response struct {
 	//
 	// Any of "in_memory", "24h".
 	PromptCacheRetention ResponsePromptCacheRetention `json:"prompt_cache_retention" api:"nullable"`
-	// Reasoning configuration and metadata that were used for the response.
-	Reasoning ResponseReasoning `json:"reasoning" api:"nullable"`
+	// **gpt-5 and o-series models only**
+	//
+	// Configuration options for
+	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
+	Reasoning shared.Reasoning `json:"reasoning" api:"nullable"`
 	// A stable identifier used to help detect users of your application that may be
 	// violating OpenAI's usage policies. The IDs should be a string that uniquely
 	// identifies each user, with a maximum length of 64 characters. We recommend
@@ -3913,41 +3916,6 @@ const (
 	ResponsePromptCacheRetentionInMemory ResponsePromptCacheRetention = "in_memory"
 	ResponsePromptCacheRetention24h      ResponsePromptCacheRetention = "24h"
 )
-
-// Reasoning configuration and metadata that were used for the response.
-type ResponseReasoning struct {
-	// The effective reasoning context mode used for the response.
-	//
-	// Any of "current_turn", "all_turns".
-	Context string `json:"context" api:"required"`
-	// The reasoning effort that was requested for the model, if specified.
-	//
-	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
-	Effort string `json:"effort" api:"required"`
-	// A model-generated summary of its reasoning that was produced, if available.
-	//
-	// Any of "concise", "detailed", "auto".
-	Summary string `json:"summary" api:"required"`
-	// Deprecated. `summary` was used instead.
-	//
-	// Any of "concise", "detailed", "auto".
-	GenerateSummary string `json:"generate_summary" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Context         respjson.Field
-		Effort          respjson.Field
-		Summary         respjson.Field
-		GenerateSummary respjson.Field
-		ExtraFields     map[string]respjson.Field
-		raw             string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ResponseReasoning) RawJSON() string { return r.JSON.raw }
-func (r *ResponseReasoning) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
 
 // Specifies the processing type used for serving the request.
 //

@@ -48,6 +48,19 @@ func (r *AdminOrganizationSpendAlertService) New(ctx context.Context, body Admin
 	return res, err
 }
 
+// Retrieves an organization spend alert.
+func (r *AdminOrganizationSpendAlertService) Get(ctx context.Context, alertID string, opts ...option.RequestOption) (res *OrganizationSpendAlert, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if alertID == "" {
+		err = errors.New("missing required alert_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("organization/spend_alerts/%s", alertID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
 // Updates an organization spend alert.
 func (r *AdminOrganizationSpendAlertService) Update(ctx context.Context, alertID string, body AdminOrganizationSpendAlertUpdateParams, opts ...option.RequestOption) (res *OrganizationSpendAlert, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
