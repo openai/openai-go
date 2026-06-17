@@ -623,7 +623,9 @@ type RealtimeSessionCreateResponseToolUnion struct {
 	ServerDescription string `json:"server_description"`
 	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
 	ServerURL string `json:"server_url"`
-	JSON      struct {
+	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
+	TunnelID string `json:"tunnel_id"`
+	JSON     struct {
 		Description       respjson.Field
 		Name              respjson.Field
 		Parameters        respjson.Field
@@ -637,6 +639,7 @@ type RealtimeSessionCreateResponseToolUnion struct {
 		RequireApproval   respjson.Field
 		ServerDescription respjson.Field
 		ServerURL         respjson.Field
+		TunnelID          respjson.Field
 		raw               string
 	} `json:"-"`
 }
@@ -673,8 +676,8 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 	// OAuth authorization flow and provide the token here.
 	Authorization string `json:"authorization"`
 	// Identifier for service connectors, like those available in ChatGPT. One of
-	// `server_url` or `connector_id` must be provided. Learn more about service
-	// connectors
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
+	// service connectors
 	// [here](https://platform.openai.com/docs/guides/tools-remote-mcp#connectors).
 	//
 	// Currently supported `connector_id` values are:
@@ -701,9 +704,12 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 	RequireApproval RealtimeSessionCreateResponseToolMcpToolRequireApprovalUnion `json:"require_approval" api:"nullable"`
 	// Optional description of the MCP server, used to provide more context.
 	ServerDescription string `json:"server_description"`
-	// The URL for the MCP server. One of `server_url` or `connector_id` must be
-	// provided.
+	// The URL for the MCP server. One of `server_url`, `connector_id`, or `tunnel_id`
+	// must be provided.
 	ServerURL string `json:"server_url" format:"uri"`
+	// The Secure MCP Tunnel ID to use instead of a direct server URL. One of
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided.
+	TunnelID string `json:"tunnel_id"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ServerLabel       respjson.Field
@@ -716,6 +722,7 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 		RequireApproval   respjson.Field
 		ServerDescription respjson.Field
 		ServerURL         respjson.Field
+		TunnelID          respjson.Field
 		ExtraFields       map[string]respjson.Field
 		raw               string
 	} `json:"-"`
