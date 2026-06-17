@@ -1284,6 +1284,14 @@ func (u RealtimeToolsConfigUnionParam) GetServerURL() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeToolsConfigUnionParam) GetTunnelID() *string {
+	if vt := u.OfMcp; vt != nil && vt.TunnelID.Valid() {
+		return &vt.TunnelID.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u RealtimeToolsConfigUnionParam) GetType() *string {
 	if vt := u.OfFunction; vt != nil {
 		return (*string)(&vt.Type)
@@ -1317,9 +1325,12 @@ type RealtimeToolsConfigUnionMcpParam struct {
 	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
 	// Optional description of the MCP server, used to provide more context.
 	ServerDescription param.Opt[string] `json:"server_description,omitzero"`
-	// The URL for the MCP server. One of `server_url` or `connector_id` must be
-	// provided.
+	// The URL for the MCP server. One of `server_url`, `connector_id`, or `tunnel_id`
+	// must be provided.
 	ServerURL param.Opt[string] `json:"server_url,omitzero" format:"uri"`
+	// The Secure MCP Tunnel ID to use instead of a direct server URL. One of
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided.
+	TunnelID param.Opt[string] `json:"tunnel_id,omitzero"`
 	// List of allowed tool names or a filter object.
 	AllowedTools RealtimeToolsConfigUnionMcpAllowedToolsParam `json:"allowed_tools,omitzero"`
 	// Optional HTTP headers to send to the MCP server. Use for authentication or other
@@ -1328,8 +1339,8 @@ type RealtimeToolsConfigUnionMcpParam struct {
 	// Specify which of the MCP server's tools require approval.
 	RequireApproval RealtimeToolsConfigUnionMcpRequireApprovalParam `json:"require_approval,omitzero"`
 	// Identifier for service connectors, like those available in ChatGPT. One of
-	// `server_url` or `connector_id` must be provided. Learn more about service
-	// connectors
+	// `server_url`, `connector_id`, or `tunnel_id` must be provided. Learn more about
+	// service connectors
 	// [here](https://platform.openai.com/docs/guides/tools-remote-mcp#connectors).
 	//
 	// Currently supported `connector_id` values are:
