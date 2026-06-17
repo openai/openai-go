@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.41.0 (2026-06-17)
+
+Full Changelog: [v3.40.0...v3.41.0](https://github.com/openai/openai-go/compare/v3.40.0...v3.41.0)
+
+### Features
+
+* **api:** update OpenAPI spec or Stainless config ([868891f](https://github.com/openai/openai-go/commit/868891f7fd02f5f92fa86a8b7a0fcd7a8c950bb1))
+
 ## 3.40.0 (2026-06-16)
 
 Full Changelog: [v3.39.0...v3.40.0](https://github.com/openai/openai-go/compare/v3.39.0...v3.40.0)
