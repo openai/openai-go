@@ -38,7 +38,7 @@ func TestProviderFinalizerRejectsConflictingOpenAIOptions(t *testing.T) {
 			transportCalls := 0
 			client, err := NewClient(context.Background(), Config{
 				APIKey:  "bedrock-key",
-				BaseURL: "https://bedrock.example/v1",
+				BaseURL: "https://bedrock.example/openai/v1",
 			},
 				option.WithMaxRetries(0),
 				test.option,
@@ -100,7 +100,7 @@ func TestSkipAuthAllowsGatewayAuthorization(t *testing.T) {
 	var request *http.Request
 	client, err := NewClient(context.Background(), Config{
 		SkipAuth: true,
-		BaseURL:  "https://gateway.example/v1",
+		BaseURL:  "https://gateway.example/openai/v1",
 	}, option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		request = req
 		return successfulResponse(req), nil
@@ -185,7 +185,7 @@ func TestBearerProviderFailuresAreSafe(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			transportCalls := 0
 			client, err := NewClient(context.Background(), Config{
-				BaseURL:              "https://bedrock.example/v1",
+				BaseURL:              "https://bedrock.example/openai/v1",
 				BedrockTokenProvider: test.provider,
 			},
 				option.WithMaxRetries(0),
@@ -241,7 +241,7 @@ func TestCanonicalEndpointInfersSigningRegion(t *testing.T) {
 	clearAWSEnvironment(t)
 	var request *http.Request
 	client, err := NewClient(context.Background(), Config{
-		BaseURL:            "https://bedrock-mantle.eu-west-1.api.aws/v1",
+		BaseURL:            "https://bedrock-mantle.eu-west-1.api.aws/openai/v1",
 		AWSAccessKeyID:     "access-key",
 		AWSSecretAccessKey: "secret-key",
 	}, option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
@@ -276,7 +276,7 @@ func (f signerFunc) SignHTTP(
 }
 
 func TestSigV4MiddlewareRejectsUnsafeRequests(t *testing.T) {
-	baseURL, _ := url.Parse("https://bedrock-mantle.us-east-1.api.aws/v1/")
+	baseURL, _ := url.Parse("https://bedrock-mantle.us-east-1.api.aws/openai/v1/")
 	validCredentials := aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
 		return aws.Credentials{AccessKeyID: "access-key", SecretAccessKey: "secret-key"}, nil
 	})
@@ -298,7 +298,7 @@ func TestSigV4MiddlewareRejectsUnsafeRequests(t *testing.T) {
 		{
 			name: "custom authorization",
 			request: func() *http.Request {
-				req, _ := http.NewRequest(http.MethodGet, "https://bedrock-mantle.us-east-1.api.aws/v1/models", nil)
+				req, _ := http.NewRequest(http.MethodGet, "https://bedrock-mantle.us-east-1.api.aws/openai/v1/models", nil)
 				req.Header.Set("Authorization", "Bearer custom")
 				return req
 			},
@@ -308,7 +308,7 @@ func TestSigV4MiddlewareRejectsUnsafeRequests(t *testing.T) {
 		{
 			name: "endpoint region mismatch",
 			request: func() *http.Request {
-				req, _ := http.NewRequest(http.MethodGet, "https://bedrock-mantle.us-east-1.api.aws/v1/models", nil)
+				req, _ := http.NewRequest(http.MethodGet, "https://bedrock-mantle.us-east-1.api.aws/openai/v1/models", nil)
 				return req
 			},
 			config:  aws.Config{Region: "us-west-2", Credentials: validCredentials},
@@ -333,7 +333,7 @@ func TestSigV4MiddlewareRejectsUnsafeRequests(t *testing.T) {
 }
 
 func TestSigV4MiddlewareCredentialAndSignerFailures(t *testing.T) {
-	baseURL, _ := url.Parse("https://bedrock-mantle.us-east-1.api.aws/v1/")
+	baseURL, _ := url.Parse("https://bedrock-mantle.us-east-1.api.aws/openai/v1/")
 	cause := errors.New("internal failure")
 	tests := []struct {
 		name    string
@@ -370,7 +370,7 @@ func TestSigV4MiddlewareCredentialAndSignerFailures(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			req, _ := http.NewRequest(http.MethodPost, "https://bedrock-mantle.us-east-1.api.aws/v1/responses", strings.NewReader("body"))
+			req, _ := http.NewRequest(http.MethodPost, "https://bedrock-mantle.us-east-1.api.aws/openai/v1/responses", strings.NewReader("body"))
 			contentLength := req.ContentLength
 			_, err := sigV4Middleware(baseURL, test.config, test.signer, time.Now)(req, func(req *http.Request) (*http.Response, error) {
 				t.Fatal("transport must not be called")

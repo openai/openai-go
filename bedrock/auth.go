@@ -179,7 +179,9 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 		if region == "" {
 			return resolvedConfig{}, errors.New(missingRegionMessage)
 		}
-		resolved.baseURL, err = parseBaseURL(fmt.Sprintf("https://bedrock-mantle.%s.api.aws/v1/", region))
+		// /openai/v1 is the Bedrock OpenAI compatibility contract. The generic
+		// /v1 route is a different API surface and is not interchangeable.
+		resolved.baseURL, err = parseBaseURL(fmt.Sprintf("https://bedrock-mantle.%s.api.aws/openai/v1/", region))
 		if err != nil {
 			return resolvedConfig{}, err
 		}
