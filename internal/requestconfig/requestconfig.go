@@ -104,6 +104,62 @@ type RequestOption interface {
 type RequestOptionFunc func(*RequestConfig) error
 type PreRequestOptionFunc func(*RequestConfig) error
 
+// requestFinalizer is an internal extension point for provider integrations
+// that must inspect the fully configured request and install middleware after
+// all client- and method-level options have been applied.
+type requestFinalizer interface {
+	RequestOption
+	finalizeRequest(*RequestConfig) error
+}
+
+type requestFinalizerOption struct {
+	finalize func(*RequestConfig) error
+}
+
+func (o requestFinalizerOption) Apply(*RequestConfig) error {
+	return nil
+}
+
+func (o requestFinalizerOption) finalizeRequest(cfg *RequestConfig) error {
+	return o.finalize(cfg)
+}
+
+// WithRequestFinalizer registers an internal provider finalizer. Finalizers run
+// after every RequestOption has been applied and before request security is
+// selected. This keeps provider authentication closest to the wire, including
+// when callers add method-level middleware.
+//
+// This function is internal API and may change without notice.
+func WithRequestFinalizer(finalize func(*RequestConfig) error) RequestOption {
+	return requestFinalizerOption{finalize: finalize}
+}
+
+type environmentDefaultsDisabledOption struct{}
+
+func (environmentDefaultsDisabledOption) Apply(*RequestConfig) error {
+	return nil
+}
+
+// WithEnvironmentDefaultsDisabled marks a provider-owned client that must not
+// inherit ambient OPENAI_* configuration. The regular transport defaults still
+// apply.
+//
+// This function is internal API and may change without notice.
+func WithEnvironmentDefaultsDisabled() RequestOption {
+	return environmentDefaultsDisabledOption{}
+}
+
+// EnvironmentDefaultsDisabled reports whether opts contains the internal
+// provider marker returned by WithEnvironmentDefaultsDisabled.
+func EnvironmentDefaultsDisabled(opts ...RequestOption) bool {
+	for _, opt := range opts {
+		if _, ok := opt.(environmentDefaultsDisabledOption); ok {
+			return true
+		}
+	}
+	return false
+}
+
 func (s RequestOptionFunc) Apply(r *RequestConfig) error    { return s(r) }
 func (s PreRequestOptionFunc) Apply(r *RequestConfig) error { return s(r) }
 
@@ -204,6 +260,16 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 	err = cfg.Apply(opts...)
 	if err != nil {
 		return nil, err
+	}
+
+	// Provider finalizers intentionally run after every regular option so they
+	// can sign the final URL, headers, and serialized body on each attempt.
+	for _, opt := range opts {
+		if finalizer, ok := opt.(requestFinalizer); ok {
+			if err := finalizer.finalizeRequest(&cfg); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	// This must run after `cfg.Apply(...)` above so we know which specific security scheme to add

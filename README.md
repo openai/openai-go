@@ -1046,6 +1046,72 @@ client := openai.NewClient(
 )
 ```
 
+## Amazon Bedrock
+
+Use the `bedrock` package to call OpenAI models through Amazon Bedrock's
+OpenAI-compatible API. The standard AWS SDK credential chain is used by
+default, so existing environment credentials, `~/.aws/credentials`,
+`~/.aws/config`, SSO or assume-role profiles, and workload credentials work
+without custom signing code.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/openai/openai-go/v3/bedrock"
+)
+
+func main() {
+	client, err := bedrock.NewClient(context.Background(), bedrock.Config{
+		AWSRegion: "us-west-2",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_ = client
+}
+```
+
+The region is resolved from `AWSRegion`, `AWS_REGION`, `AWS_DEFAULT_REGION`,
+or the standard AWS config chain. The base URL is resolved from `BaseURL`,
+`AWS_BEDROCK_BASE_URL`, or
+`https://bedrock-mantle.{region}.api.aws/openai/v1`.
+
+To select a named profile:
+
+```go
+client, err := bedrock.NewClient(context.Background(), bedrock.Config{
+	AWSProfile: "production",
+})
+```
+
+You can also provide temporary static credentials or an AWS SDK v2
+`aws.CredentialsProvider` through `bedrock.Config`. Prefer roles, profiles, and
+other temporary credential sources over long-lived static credentials.
+
+Bedrock bearer credentials remain supported through `APIKey`,
+`BedrockTokenProvider`, or `AWS_BEARER_TOKEN_BEDROCK`:
+
+```go
+client, err := bedrock.NewClient(context.Background(), bedrock.Config{
+	AWSRegion: "us-west-2",
+	APIKey:    os.Getenv("BEDROCK_API_KEY"),
+})
+```
+
+Explicit bearer and AWS credential modes are mutually exclusive. AWS SigV4
+authentication signs the fully serialized request again on every retry using
+the `bedrock-mantle` service name. Request bodies must be replayable; response
+streaming is supported. Signed requests do not automatically follow redirects.
+Ambient `OPENAI_*` credentials, routing, and headers are not inherited by a
+Bedrock client.
+
+See [`examples/bedrock`](examples/bedrock) for a complete Responses API example.
+
 ## Microsoft Azure OpenAI
 
 To use this library with [Azure OpenAI]https://learn.microsoft.com/azure/ai-services/openai/overview),
