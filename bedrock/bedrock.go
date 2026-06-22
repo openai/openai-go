@@ -63,7 +63,7 @@ type Config struct {
 	AWSCredentialsProvider aws.CredentialsProvider
 
 	// BaseURL overrides AWS_BEDROCK_BASE_URL and the regional Mantle endpoint.
-	// The default is https://bedrock-mantle.{region}.api.aws/openai/v1.
+	// The default is https://bedrock-mantle.{region}.api.aws/v1.
 	BaseURL string
 
 	// SkipAuth disables Bedrock bearer and SigV4 authentication. Use this only

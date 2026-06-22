@@ -38,7 +38,7 @@ func TestProviderFinalizerRejectsConflictingOpenAIOptions(t *testing.T) {
 			transportCalls := 0
 			client, err := NewClient(context.Background(), Config{
 				APIKey:  "bedrock-key",
-				BaseURL: "https://bedrock.example/openai/v1",
+				BaseURL: "https://bedrock.example/v1",
 			},
 				option.WithMaxRetries(0),
 				test.option,
@@ -62,11 +62,45 @@ func TestProviderFinalizerRejectsConflictingOpenAIOptions(t *testing.T) {
 	}
 }
 
+type httpDoerFunc func(*http.Request) (*http.Response, error)
+
+func (f httpDoerFunc) Do(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func TestSigV4RejectsCustomHTTPDoer(t *testing.T) {
+	clearAWSEnvironment(t)
+	doerCalls := 0
+	client, err := NewClient(context.Background(), Config{
+		AWSRegion:          "us-east-1",
+		AWSAccessKeyID:     "access-key",
+		AWSSecretAccessKey: "secret-key",
+	},
+		option.WithMaxRetries(0),
+		option.WithHTTPClient(httpDoerFunc(func(req *http.Request) (*http.Response, error) {
+			doerCalls++
+			return successfulResponse(req), nil
+		})),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var response *http.Response
+	err = client.Get(context.Background(), "/models", nil, &response)
+	if err == nil || !strings.Contains(err.Error(), "custom HTTP doers cannot guarantee redirect safety") {
+		t.Fatalf("error = %v", err)
+	}
+	if doerCalls != 0 {
+		t.Fatalf("custom HTTP doer calls = %d", doerCalls)
+	}
+}
+
 func TestSkipAuthAllowsGatewayAuthorization(t *testing.T) {
 	var request *http.Request
 	client, err := NewClient(context.Background(), Config{
 		SkipAuth: true,
-		BaseURL:  "https://gateway.example/openai/v1",
+		BaseURL:  "https://gateway.example/v1",
 	}, option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		request = req
 		return successfulResponse(req), nil
@@ -118,7 +152,7 @@ func TestEnvironmentBearerRefreshesAndFailsSafelyWhenRemoved(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = client.Get(context.Background(), "/models", nil, &response)
-	if err == nil || !strings.Contains(err.Error(), "Failed to resolve a bearer credential") {
+	if err == nil || !strings.Contains(err.Error(), "failed to resolve a bearer credential") {
 		t.Fatalf("error = %v", err)
 	}
 }
@@ -136,7 +170,7 @@ func TestBearerProviderFailuresAreSafe(t *testing.T) {
 			provider: func(context.Context) (string, error) {
 				return "", cause
 			},
-			message: "Failed to resolve a bearer credential",
+			message: "failed to resolve a bearer credential",
 			cause:   cause,
 		},
 		{
@@ -151,7 +185,7 @@ func TestBearerProviderFailuresAreSafe(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			transportCalls := 0
 			client, err := NewClient(context.Background(), Config{
-				BaseURL:              "https://bedrock.example/openai/v1",
+				BaseURL:              "https://bedrock.example/v1",
 				BedrockTokenProvider: test.provider,
 			},
 				option.WithMaxRetries(0),
@@ -207,7 +241,7 @@ func TestCanonicalEndpointInfersSigningRegion(t *testing.T) {
 	clearAWSEnvironment(t)
 	var request *http.Request
 	client, err := NewClient(context.Background(), Config{
-		BaseURL:            "https://bedrock-mantle.eu-west-1.api.aws/openai/v1",
+		BaseURL:            "https://bedrock-mantle.eu-west-1.api.aws/v1",
 		AWSAccessKeyID:     "access-key",
 		AWSSecretAccessKey: "secret-key",
 	}, option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
@@ -242,7 +276,7 @@ func (f signerFunc) SignHTTP(
 }
 
 func TestSigV4MiddlewareRejectsUnsafeRequests(t *testing.T) {
-	baseURL, _ := url.Parse("https://bedrock-mantle.us-east-1.api.aws/openai/v1/")
+	baseURL, _ := url.Parse("https://bedrock-mantle.us-east-1.api.aws/v1/")
 	validCredentials := aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
 		return aws.Credentials{AccessKeyID: "access-key", SecretAccessKey: "secret-key"}, nil
 	})
@@ -264,7 +298,7 @@ func TestSigV4MiddlewareRejectsUnsafeRequests(t *testing.T) {
 		{
 			name: "custom authorization",
 			request: func() *http.Request {
-				req, _ := http.NewRequest(http.MethodGet, "https://bedrock-mantle.us-east-1.api.aws/openai/v1/models", nil)
+				req, _ := http.NewRequest(http.MethodGet, "https://bedrock-mantle.us-east-1.api.aws/v1/models", nil)
 				req.Header.Set("Authorization", "Bearer custom")
 				return req
 			},
@@ -274,7 +308,7 @@ func TestSigV4MiddlewareRejectsUnsafeRequests(t *testing.T) {
 		{
 			name: "endpoint region mismatch",
 			request: func() *http.Request {
-				req, _ := http.NewRequest(http.MethodGet, "https://bedrock-mantle.us-east-1.api.aws/openai/v1/models", nil)
+				req, _ := http.NewRequest(http.MethodGet, "https://bedrock-mantle.us-east-1.api.aws/v1/models", nil)
 				return req
 			},
 			config:  aws.Config{Region: "us-west-2", Credentials: validCredentials},
@@ -299,7 +333,7 @@ func TestSigV4MiddlewareRejectsUnsafeRequests(t *testing.T) {
 }
 
 func TestSigV4MiddlewareCredentialAndSignerFailures(t *testing.T) {
-	baseURL, _ := url.Parse("https://bedrock-mantle.us-east-1.api.aws/openai/v1/")
+	baseURL, _ := url.Parse("https://bedrock-mantle.us-east-1.api.aws/v1/")
 	cause := errors.New("internal failure")
 	tests := []struct {
 		name    string
@@ -331,12 +365,12 @@ func TestSigV4MiddlewareCredentialAndSignerFailures(t *testing.T) {
 			signer: signerFunc(func(context.Context, aws.Credentials, *http.Request, string, string, string, time.Time, ...func(*v4.SignerOptions)) error {
 				return cause
 			}),
-			message: "Failed to sign",
+			message: "failed to sign",
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			req, _ := http.NewRequest(http.MethodPost, "https://bedrock-mantle.us-east-1.api.aws/openai/v1/responses", strings.NewReader("body"))
+			req, _ := http.NewRequest(http.MethodPost, "https://bedrock-mantle.us-east-1.api.aws/v1/responses", strings.NewReader("body"))
 			contentLength := req.ContentLength
 			_, err := sigV4Middleware(baseURL, test.config, test.signer, time.Now)(req, func(req *http.Request) (*http.Response, error) {
 				t.Fatal("transport must not be called")
@@ -359,6 +393,7 @@ type testReadCloser struct {
 	reader   io.Reader
 	readErr  error
 	closeErr error
+	closed   bool
 }
 
 func (r *testReadCloser) Read(p []byte) (int, error) {
@@ -368,7 +403,10 @@ func (r *testReadCloser) Read(p []byte) (int, error) {
 	return r.reader.Read(p)
 }
 
-func (r *testReadCloser) Close() error { return r.closeErr }
+func (r *testReadCloser) Close() error {
+	r.closed = true
+	return r.closeErr
+}
 
 func TestMaterializeReplayableBodyFailuresAndReset(t *testing.T) {
 	readCause := errors.New("read failure")
@@ -392,6 +430,9 @@ func TestMaterializeReplayableBodyFailuresAndReset(t *testing.T) {
 			_, err := materializeReplayableBody(req)
 			if err == nil || !errors.Is(err, test.cause) {
 				t.Fatalf("error = %v", err)
+			}
+			if !test.body.(*testReadCloser).closed {
+				t.Fatal("request body was not closed")
 			}
 		})
 	}

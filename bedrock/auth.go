@@ -25,18 +25,22 @@ import (
 const (
 	bedrockService = "bedrock-mantle"
 
-	missingRegionMessage        = "Bedrock requires an AWS region. Pass `AWSRegion` in `bedrock.Config`, or set `AWS_REGION` or `AWS_DEFAULT_REGION`."
-	missingCredentialsMessage   = "Could not find credentials for Bedrock. Pass a bearer credential or AWS credentials in `bedrock.Config`, set `AWS_BEARER_TOKEN_BEDROCK`, or configure the default AWS credential chain."
-	credentialResolutionMessage = "Failed to resolve AWS credentials for Bedrock. Verify your AWS profile, environment variables, or runtime identity configuration and try again."
-	nonReplayableBodyMessage    = "Bedrock SigV4 authentication requires a replayable request body. Buffer the body before sending or use bearer authentication."
+	missingRegionMessage        = "bedrock: an AWS region is required; pass `AWSRegion` in `bedrock.Config`, or set `AWS_REGION` or `AWS_DEFAULT_REGION`"
+	missingCredentialsMessage   = "bedrock: credentials not found; pass a bearer credential or AWS credentials in `bedrock.Config`, set `AWS_BEARER_TOKEN_BEDROCK`, or configure the default AWS credential chain"
+	credentialResolutionMessage = "bedrock: failed to resolve AWS credentials; verify your AWS profile, environment variables, or runtime identity configuration and try again"
+	nonReplayableBodyMessage    = "bedrock: SigV4 authentication requires a replayable request body; buffer the body before sending or use bearer authentication"
 )
 
-var canonicalBedrockHost = regexp.MustCompile(`(?i)^bedrock-mantle\.([a-z0-9-]+)\.api\.aws$`)
+var (
+	canonicalBedrockHost = regexp.MustCompile(`(?i)^bedrock-mantle\.([a-z0-9-]+)\.api\.aws$`)
+	awsRegionPattern     = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)+$`)
+)
 
 type authMode int
 
 const (
-	authModeSkip authMode = iota
+	authModeUnset authMode = iota
+	authModeSkip
 	authModeBearer
 	authModeSigV4
 )
@@ -78,13 +82,19 @@ func newClientOptions(
 	opts = append(opts, userOpts...)
 	opts = append(opts, requestconfig.WithRequestFinalizer(func(rc *requestconfig.RequestConfig) error {
 		if rc.APIKey != "" || rc.AdminAPIKey != "" {
-			return errors.New("Bedrock provider authentication cannot be combined with an OpenAI API key. Configure authentication in `bedrock.Config`.")
+			return errors.New("bedrock: provider authentication cannot be combined with an OpenAI API key; configure authentication in `bedrock.Config`")
 		}
 		if !sameBaseURL(rc.BaseURL, resolved.baseURL) {
-			return errors.New("Bedrock provider routing cannot be overridden with `option.WithBaseURL`. Configure `BaseURL` in `bedrock.Config`.")
+			return errors.New("bedrock: provider routing cannot be overridden with `option.WithBaseURL`; configure `BaseURL` in `bedrock.Config`")
 		}
 
-		if resolved.mode == authModeSigV4 && rc.CustomHTTPDoer == nil && rc.HTTPClient != nil {
+		if resolved.mode == authModeSigV4 {
+			if rc.CustomHTTPDoer != nil {
+				return errors.New("bedrock: signed requests require an *http.Client; custom HTTP doers cannot guarantee redirect safety")
+			}
+			if rc.HTTPClient == nil {
+				return errors.New("bedrock: signed requests require a non-nil *http.Client")
+			}
 			client := *rc.HTTPClient
 			client.CheckRedirect = func(*http.Request, []*http.Request) error {
 				return http.ErrUseLastResponse
@@ -110,6 +120,9 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 	if err != nil {
 		return resolvedConfig{}, err
 	}
+	if err := validateAWSRegion(region); err != nil {
+		return resolvedConfig{}, err
+	}
 	baseURLValue, err := resolveOptionalConfigValue("BaseURL", cfg.BaseURL, "AWS_BEDROCK_BASE_URL")
 	if err != nil {
 		return resolvedConfig{}, err
@@ -122,6 +135,9 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 	if baseURL != nil {
 		region, err = reconcileEndpointRegion(baseURL, region)
 		if err != nil {
+			return resolvedConfig{}, err
+		}
+		if err := validateAWSRegion(region); err != nil {
 			return resolvedConfig{}, err
 		}
 	}
@@ -142,6 +158,9 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 		if region == "" {
 			return resolvedConfig{}, errors.New(missingRegionMessage)
 		}
+		if err := validateAWSRegion(region); err != nil {
+			return resolvedConfig{}, err
+		}
 		if baseURL != nil {
 			if _, err := reconcileEndpointRegion(baseURL, region); err != nil {
 				return resolvedConfig{}, err
@@ -152,13 +171,18 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 			return resolvedConfig{}, err
 		}
 		resolved.region = region
+	default:
+		return resolvedConfig{}, errors.New("bedrock: invalid authentication mode")
 	}
 
 	if resolved.baseURL == nil {
 		if region == "" {
 			return resolvedConfig{}, errors.New(missingRegionMessage)
 		}
-		resolved.baseURL, _ = url.Parse(fmt.Sprintf("https://bedrock-mantle.%s.api.aws/openai/v1/", region))
+		resolved.baseURL, err = parseBaseURL(fmt.Sprintf("https://bedrock-mantle.%s.api.aws/v1/", region))
+		if err != nil {
+			return resolvedConfig{}, err
+		}
 	}
 	resolved.baseURL = normalizeBaseURL(resolved.baseURL)
 
@@ -174,27 +198,27 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 
 func resolveAuthMode(cfg Config) (authMode, TokenProvider, bool, error) {
 	if cfg.APIKey != "" && strings.TrimSpace(cfg.APIKey) == "" {
-		return 0, nil, false, errors.New("The Bedrock bearer credential must not be empty.")
+		return authModeUnset, nil, false, errors.New("bedrock: bearer credential must not be empty")
 	}
 	if cfg.APIKey != "" && cfg.BedrockTokenProvider != nil {
-		return 0, nil, false, errors.New("The `APIKey` and `BedrockTokenProvider` options are mutually exclusive. Configure only one.")
+		return authModeUnset, nil, false, errors.New("bedrock: `APIKey` and `BedrockTokenProvider` are mutually exclusive; configure only one")
 	}
 
 	hasAccessKey := cfg.AWSAccessKeyID != ""
 	hasSecretKey := cfg.AWSSecretAccessKey != ""
 	hasSessionToken := cfg.AWSSessionToken != ""
 	if hasAccessKey != hasSecretKey || (hasSessionToken && !hasAccessKey) {
-		return 0, nil, false, errors.New("Static AWS credentials require both `AWSAccessKeyID` and `AWSSecretAccessKey`. An `AWSSessionToken` may only be used with both.")
+		return authModeUnset, nil, false, errors.New("bedrock: static AWS credentials require both `AWSAccessKeyID` and `AWSSecretAccessKey`; `AWSSessionToken` may only be used with both")
 	}
 	if hasAccessKey && (strings.TrimSpace(cfg.AWSAccessKeyID) == "" || strings.TrimSpace(cfg.AWSSecretAccessKey) == "") {
-		return 0, nil, false, errors.New("Static AWS credentials require non-empty `AWSAccessKeyID` and `AWSSecretAccessKey` values.")
+		return authModeUnset, nil, false, errors.New("bedrock: static AWS credentials require non-empty `AWSAccessKeyID` and `AWSSecretAccessKey` values")
 	}
 	if hasSessionToken && strings.TrimSpace(cfg.AWSSessionToken) == "" {
-		return 0, nil, false, errors.New("A static AWS `AWSSessionToken` must not be empty when provided.")
+		return authModeUnset, nil, false, errors.New("bedrock: static AWS `AWSSessionToken` must not be empty when provided")
 	}
 	profile := strings.TrimSpace(cfg.AWSProfile)
 	if cfg.AWSProfile != "" && profile == "" {
-		return 0, nil, false, errors.New("The Bedrock AWS `AWSProfile` must not be empty.")
+		return authModeUnset, nil, false, errors.New("bedrock: AWS `AWSProfile` must not be empty")
 	}
 
 	awsModes := 0
@@ -208,15 +232,15 @@ func resolveAuthMode(cfg Config) (authMode, TokenProvider, bool, error) {
 		awsModes++
 	}
 	if awsModes > 1 {
-		return 0, nil, false, errors.New("Bedrock authentication is ambiguous. Configure exactly one explicit AWS mode: static credentials, profile, or credentials provider.")
+		return authModeUnset, nil, false, errors.New("bedrock: authentication is ambiguous; configure exactly one explicit AWS mode: static credentials, profile, or credentials provider")
 	}
 
 	hasBearer := cfg.APIKey != "" || cfg.BedrockTokenProvider != nil
 	if hasBearer && awsModes != 0 {
-		return 0, nil, false, errors.New("Bearer and AWS credential authentication are mutually exclusive. Configure exactly one explicit mode: bearer credential, static AWS credentials, profile, or credentials provider.")
+		return authModeUnset, nil, false, errors.New("bedrock: bearer and AWS credential authentication are mutually exclusive; configure exactly one explicit mode: bearer credential, static AWS credentials, profile, or credentials provider")
 	}
 	if cfg.SkipAuth && (hasBearer || awsModes != 0) {
-		return 0, nil, false, errors.New("`SkipAuth` cannot be combined with explicit Bedrock authentication options.")
+		return authModeUnset, nil, false, errors.New("bedrock: `SkipAuth` cannot be combined with explicit authentication options")
 	}
 	if cfg.SkipAuth {
 		return authModeSkip, nil, false, nil
@@ -247,7 +271,7 @@ func resolveOptionalConfigValue(name string, explicit string, environment ...str
 	if explicit != "" {
 		value := strings.TrimSpace(explicit)
 		if value == "" {
-			return "", fmt.Errorf("the Bedrock `%s` option must not be empty", name)
+			return "", fmt.Errorf("bedrock: `%s` must not be empty", name)
 		}
 		return value, nil
 	}
@@ -259,16 +283,23 @@ func resolveOptionalConfigValue(name string, explicit string, environment ...str
 	return "", nil
 }
 
+func validateAWSRegion(region string) error {
+	if region != "" && !awsRegionPattern.MatchString(region) {
+		return fmt.Errorf("bedrock: invalid AWS region %q", region)
+	}
+	return nil
+}
+
 func parseBaseURL(value string) (*url.URL, error) {
 	if value == "" {
 		return nil, nil
 	}
 	parsed, err := url.Parse(value)
 	if err != nil || parsed.Scheme == "" || parsed.Host == "" || parsed.User != nil {
-		return nil, errors.New("the Bedrock `BaseURL` must be an absolute HTTP or HTTPS URL without user information")
+		return nil, errors.New("bedrock: `BaseURL` must be an absolute HTTP or HTTPS URL without user information")
 	}
 	if parsed.Scheme != "http" && parsed.Scheme != "https" {
-		return nil, errors.New("the Bedrock `BaseURL` must use HTTP or HTTPS")
+		return nil, errors.New("bedrock: `BaseURL` must use HTTP or HTTPS")
 	}
 	return normalizeBaseURL(parsed), nil
 }
@@ -293,7 +324,7 @@ func reconcileEndpointRegion(baseURL *url.URL, region string) (string, error) {
 	}
 	endpointRegion := strings.ToLower(match[1])
 	if region != "" && !strings.EqualFold(endpointRegion, region) {
-		return "", fmt.Errorf("the Bedrock endpoint region `%s` does not match the SigV4 region `%s`", endpointRegion, region)
+		return "", fmt.Errorf("bedrock: endpoint region %q does not match SigV4 region %q", endpointRegion, region)
 	}
 	if region == "" {
 		return endpointRegion, nil
@@ -358,15 +389,15 @@ func bearerMiddleware(baseURL *url.URL, provider TokenProvider) option.Middlewar
 			return nil, err
 		}
 		if req.Header.Get("Authorization") != "" {
-			return nil, errors.New("Bedrock provider authentication cannot be combined with a custom `Authorization` header.")
+			return nil, errors.New("bedrock: provider authentication cannot be combined with a custom `Authorization` header")
 		}
 
 		token, err := provider(req.Context())
 		if err != nil {
-			return nil, &safeError{message: "Failed to resolve a bearer credential for Bedrock.", cause: err}
+			return nil, &safeError{message: "bedrock: failed to resolve a bearer credential", cause: err}
 		}
 		if strings.TrimSpace(token) == "" {
-			return nil, errors.New("The Bedrock bearer credential provider must return a non-empty string.")
+			return nil, errors.New("bedrock: bearer credential provider must return a non-empty string")
 		}
 		req.Header.Set("Authorization", "Bearer "+token)
 		return next(req)
@@ -383,7 +414,7 @@ func sigV4Middleware(baseURL *url.URL, cfg aws.Config, signer httpSigner, now fu
 			return nil, err
 		}
 		if req.Header.Get("Authorization") != "" {
-			return nil, errors.New("Bedrock provider authentication cannot be combined with a custom `Authorization` header.")
+			return nil, errors.New("bedrock: provider authentication cannot be combined with a custom `Authorization` header")
 		}
 		if _, err := reconcileEndpointRegion(req.URL, cfg.Region); err != nil {
 			return nil, err
@@ -417,7 +448,7 @@ func sigV4Middleware(baseURL *url.URL, cfg aws.Config, signer httpSigner, now fu
 		signErr := signer.SignHTTP(req.Context(), credentials, req, encodedHash, bedrockService, cfg.Region, now().UTC())
 		req.ContentLength = contentLength
 		if signErr != nil {
-			return nil, &safeError{message: "Failed to sign the Bedrock request.", cause: signErr}
+			return nil, &safeError{message: "bedrock: failed to sign request", cause: signErr}
 		}
 		return next(req)
 	}
@@ -430,12 +461,13 @@ func materializeReplayableBody(req *http.Request) ([]byte, error) {
 	if req.GetBody == nil {
 		return nil, errors.New(nonReplayableBodyMessage)
 	}
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		return nil, &safeError{message: nonReplayableBodyMessage, cause: err}
+	body, readErr := io.ReadAll(req.Body)
+	closeErr := req.Body.Close()
+	if readErr != nil {
+		return nil, &safeError{message: nonReplayableBodyMessage, cause: readErr}
 	}
-	if err := req.Body.Close(); err != nil {
-		return nil, &safeError{message: nonReplayableBodyMessage, cause: err}
+	if closeErr != nil {
+		return nil, &safeError{message: nonReplayableBodyMessage, cause: closeErr}
 	}
 	body = bytes.Clone(body)
 	req.Body = io.NopCloser(bytes.NewReader(body))
@@ -448,7 +480,7 @@ func materializeReplayableBody(req *http.Request) ([]byte, error) {
 
 func validateProviderRequest(req *http.Request, baseURL *url.URL) error {
 	if req.URL == nil || !sameOrigin(req.URL, baseURL) {
-		return errors.New("Bedrock provider authentication cannot send credentials to an origin other than the configured provider URL.")
+		return errors.New("bedrock: provider authentication cannot send credentials to an origin other than the configured provider URL")
 	}
 	return nil
 }

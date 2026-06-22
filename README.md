@@ -1079,7 +1079,7 @@ func main() {
 The region is resolved from `AWSRegion`, `AWS_REGION`, `AWS_DEFAULT_REGION`,
 or the standard AWS config chain. The base URL is resolved from `BaseURL`,
 `AWS_BEDROCK_BASE_URL`, or
-`https://bedrock-mantle.{region}.api.aws/openai/v1`.
+`https://bedrock-mantle.{region}.api.aws/v1`.
 
 To select a named profile:
 

@@ -107,21 +107,15 @@ type PreRequestOptionFunc func(*RequestConfig) error
 // requestFinalizer is an internal extension point for provider integrations
 // that must inspect the fully configured request and install middleware after
 // all client- and method-level options have been applied.
-type requestFinalizer interface {
-	RequestOption
-	finalizeRequest(*RequestConfig) error
-}
+type requestFinalizer func(*RequestConfig) error
 
 type requestFinalizerOption struct {
 	finalize func(*RequestConfig) error
 }
 
-func (o requestFinalizerOption) Apply(*RequestConfig) error {
+func (o requestFinalizerOption) Apply(cfg *RequestConfig) error {
+	cfg.finalizers = append(cfg.finalizers, o.finalize)
 	return nil
-}
-
-func (o requestFinalizerOption) finalizeRequest(cfg *RequestConfig) error {
-	return o.finalize(cfg)
 }
 
 // WithRequestFinalizer registers an internal provider finalizer. Finalizers run
@@ -264,11 +258,9 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 
 	// Provider finalizers intentionally run after every regular option so they
 	// can sign the final URL, headers, and serialized body on each attempt.
-	for _, opt := range opts {
-		if finalizer, ok := opt.(requestFinalizer); ok {
-			if err := finalizer.finalizeRequest(&cfg); err != nil {
-				return nil, err
-			}
+	for _, finalizer := range cfg.finalizers {
+		if err := finalizer(&cfg); err != nil {
+			return nil, err
 		}
 	}
 
@@ -316,6 +308,7 @@ type RequestConfig struct {
 	Organization       string
 	Project            string
 	WebhookSecret      string
+	finalizers         []requestFinalizer
 	authHeaderOverride bool
 	authPreference     authCredentialPreference
 	// Configure which security scheme(s) should be enabled for this request
@@ -699,6 +692,7 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		Organization:       cfg.Organization,
 		Project:            cfg.Project,
 		WebhookSecret:      cfg.WebhookSecret,
+		finalizers:         append([]requestFinalizer(nil), cfg.finalizers...),
 		authHeaderOverride: cfg.authHeaderOverride,
 		authPreference:     cfg.authPreference,
 	}

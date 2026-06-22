@@ -116,7 +116,7 @@ region = eu-central-1
 	if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := request.URL.String(), "https://bedrock-mantle.eu-central-1.api.aws/openai/v1/models"; got != want {
+	if got, want := request.URL.String(), "https://bedrock-mantle.eu-central-1.api.aws/v1/models"; got != want {
 		t.Fatalf("request URL = %q, want %q", got, want)
 	}
 	authorization := request.Header.Get("Authorization")
@@ -199,7 +199,7 @@ func TestSigV4Fixture(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	baseURL, _ := url.Parse("https://bedrock-mantle.us-east-1.api.aws/openai/v1/")
+	baseURL, _ := url.Parse("https://bedrock-mantle.us-east-1.api.aws/v1/")
 	request, err := http.NewRequest(fixture.Request.Method, fixture.Request.URL, strings.NewReader(fixture.Request.Body))
 	if err != nil {
 		t.Fatal(err)
@@ -398,7 +398,7 @@ func TestAmbientOpenAIConfigurationIsNotInherited(t *testing.T) {
 	var request *http.Request
 	client, err := NewClient(context.Background(), Config{
 		APIKey:  "bedrock-key",
-		BaseURL: "https://bedrock.example/openai/v1",
+		BaseURL: "https://bedrock.example/v1",
 	}, option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		request = req
 		return successfulResponse(req), nil
@@ -426,7 +426,7 @@ func TestAmbientOpenAIConfigurationIsNotInherited(t *testing.T) {
 func TestRejectsCrossOriginBeforeBearerResolution(t *testing.T) {
 	var providerCalls, transportCalls int
 	client, err := NewClient(context.Background(), Config{
-		BaseURL: "https://bedrock.example/openai/v1",
+		BaseURL: "https://bedrock.example/v1",
 		BedrockTokenProvider: func(context.Context) (string, error) {
 			providerCalls++
 			return "token", nil
@@ -451,7 +451,7 @@ func TestRejectsCrossOriginBeforeBearerResolution(t *testing.T) {
 func TestRejectsCustomAuthorizationBeforeBearerResolution(t *testing.T) {
 	var providerCalls, transportCalls int
 	client, err := NewClient(context.Background(), Config{
-		BaseURL: "https://bedrock.example/openai/v1",
+		BaseURL: "https://bedrock.example/v1",
 		BedrockTokenProvider: func(context.Context) (string, error) {
 			providerCalls++
 			return "token", nil
@@ -548,16 +548,18 @@ func TestConfigValidation(t *testing.T) {
 		{"multiple AWS modes", Config{AWSAccessKeyID: "access", AWSSecretAccessKey: "secret", AWSProfile: "profile"}, "ambiguous"},
 		{"bearer and AWS", Config{APIKey: "bearer", AWSProfile: "profile"}, "mutually exclusive"},
 		{"bearer modes", Config{APIKey: "bearer", BedrockTokenProvider: func(context.Context) (string, error) { return "", nil }}, "mutually exclusive"},
-		{"skip auth and bearer", Config{SkipAuth: true, APIKey: "bearer", BaseURL: "https://bedrock.example/openai/v1"}, "cannot be combined"},
+		{"skip auth and bearer", Config{SkipAuth: true, APIKey: "bearer", BaseURL: "https://bedrock.example/v1"}, "cannot be combined"},
 		{"empty region", Config{APIKey: "bearer", AWSRegion: " "}, "must not be empty"},
 		{"empty base URL", Config{APIKey: "bearer", AWSRegion: "us-east-1", BaseURL: " "}, "must not be empty"},
-		{"relative base URL", Config{APIKey: "bearer", BaseURL: "/openai/v1"}, "absolute HTTP or HTTPS"},
-		{"unsupported base URL scheme", Config{APIKey: "bearer", BaseURL: "ftp://bedrock.example/openai/v1"}, "must use HTTP or HTTPS"},
-		{"missing bearer region", Config{APIKey: "bearer"}, "requires an AWS region"},
-		{"missing SigV4 region", Config{AWSAccessKeyID: "access", AWSSecretAccessKey: "secret"}, "requires an AWS region"},
+		{"relative base URL", Config{APIKey: "bearer", BaseURL: "/v1"}, "absolute HTTP or HTTPS"},
+		{"unsupported base URL scheme", Config{APIKey: "bearer", BaseURL: "ftp://bedrock.example/v1"}, "must use HTTP or HTTPS"},
+		{"invalid region", Config{APIKey: "bearer", AWSRegion: "us-east-1%"}, "invalid AWS region"},
+		{"invalid endpoint region", Config{APIKey: "bearer", BaseURL: "https://bedrock-mantle.us--east-1.api.aws/v1"}, "invalid AWS region"},
+		{"missing bearer region", Config{APIKey: "bearer"}, "AWS region is required"},
+		{"missing SigV4 region", Config{AWSAccessKeyID: "access", AWSSecretAccessKey: "secret"}, "AWS region is required"},
 		{
 			"endpoint region mismatch",
-			Config{AWSRegion: "us-west-2", AWSAccessKeyID: "access", AWSSecretAccessKey: "secret", BaseURL: "https://bedrock-mantle.us-east-1.api.aws/openai/v1"},
+			Config{AWSRegion: "us-west-2", AWSAccessKeyID: "access", AWSSecretAccessKey: "secret", BaseURL: "https://bedrock-mantle.us-east-1.api.aws/v1"},
 			"does not match",
 		},
 	}
