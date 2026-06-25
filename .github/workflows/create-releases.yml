@@ -11,14 +11,12 @@ jobs:
   release:
     name: release
     if: github.ref == 'refs/heads/main' && github.repository == 'openai/openai-go'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          persist-credentials: false
 
       - uses: stainless-api/trigger-release-please@bb6677c5a04578eec1ccfd9e1913b5b78ed64c61 # v1.4.0
         id: release
@@ -30,13 +28,11 @@ jobs:
     name: publish
     needs: release
     if: ${{ needs.release.outputs.releases_created == 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     environment: publish
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          persist-credentials: false
 
       - name: Generate godocs
         run: |
