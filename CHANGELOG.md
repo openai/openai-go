@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.41.1 (2026-06-25)
+
+Full Changelog: [v3.41.0...v3.41.1](https://github.com/openai/openai-go/compare/v3.41.0...v3.41.1)
+
+### Documentation
+
+* fix Azure API versioning link ([#649](https://github.com/openai/openai-go/issues/649)) ([a8bd01a](https://github.com/openai/openai-go/commit/a8bd01aa80ba28bb3b5944cdac24a1aadc18fdbe))
+
 ## 3.41.0 (2026-06-17)
 
 Full Changelog: [v3.40.0...v3.41.0](https://github.com/openai/openai-go/compare/v3.40.0...v3.41.0)
