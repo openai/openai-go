@@ -1,5 +1,7 @@
 # OpenAI Go API Library
 
+
+
 <!-- x-release-please-start-version -->
 
 <a href="https://pkg.go.dev/github.com/openai/openai-go/v3"><img src="https://pkg.go.dev/badge/github.com/openai/openai-go.svg" alt="Go Reference"></a>
