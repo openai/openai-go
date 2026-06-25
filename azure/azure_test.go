@@ -242,6 +242,52 @@ func TestWithEndpointPreservesEscapedPathParams(t *testing.T) {
 	}
 }
 
+func TestWithEndpointPreservesBaseURLPathPrefix(t *testing.T) {
+	var captured *http.Request
+	client := openai.NewClient(
+		WithEndpoint("https://my-resource.openai.azure.com/apim-suffix", "2024-10-21"),
+		WithAPIKey("sk-test"),
+		option.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				captured = req
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header: http.Header{
+						"Content-Type": []string{"application/json"},
+					},
+					Body: io.NopCloser(strings.NewReader(`{
+						"id": "chatcmpl_dummy",
+						"object": "chat.completion",
+						"created": 0,
+						"model": "deployment-name",
+						"choices": []
+					}`)),
+					Request: req,
+				}, nil
+			}),
+		}),
+	)
+
+	_, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
+		Model: openai.ChatModel("deployment-name"),
+		Messages: []openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage("Hello"),
+		},
+	})
+	if err != nil {
+		t.Fatalf("request failed: %s", err)
+	}
+	if captured == nil {
+		t.Fatal("request was not captured")
+	}
+
+	got := captured.URL.String()
+	want := "https://my-resource.openai.azure.com/apim-suffix/openai/deployments/deployment-name/chat/completions?api-version=2024-10-21"
+	if got != want {
+		t.Fatalf("url = %q, want %q", got, want)
+	}
+}
+
 func TestWithEndpointBaseURL(t *testing.T) {
 	tests := map[string]struct {
 		endpoint        string
