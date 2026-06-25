@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   detect_breaking_changes:
-    runs-on: 'ubuntu-24.04'
+    runs-on: 'ubuntu-latest'
     name: detect-breaking-changes
     if: github.repository == 'openai/openai-go'
     steps:
@@ -24,7 +24,6 @@ jobs:
         with:
           # Ensure we can check out the pull request base in the script below.
           fetch-depth: ${{ env.FETCH_DEPTH }}
-          persist-credentials: false
 
       - name: Setup go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
