@@ -1102,7 +1102,7 @@ type ChatCompletionChunkChoiceDelta struct {
 	// The role of the author of this message.
 	//
 	// Any of "developer", "system", "user", "assistant", "tool".
-	Role      string                                   `json:"role"`
+	Role      string                                   `json:"role,omitempty" api:"nullable"`
 	ToolCalls []ChatCompletionChunkChoiceDeltaToolCall `json:"tool_calls"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
