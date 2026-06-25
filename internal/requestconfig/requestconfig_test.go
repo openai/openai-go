@@ -1,6 +1,9 @@
 package requestconfig
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestFormatPathEscapesPathParams(t *testing.T) {
 	tests := map[string]struct {
@@ -46,5 +49,38 @@ func TestFormatPathEscapesPathParams(t *testing.T) {
 				t.Fatalf("FormatPath() = %q, want %q", got, test.want)
 			}
 		})
+	}
+}
+
+func TestRequestFinalizerComposesThroughApply(t *testing.T) {
+	finalized := false
+	wrapped := RequestOptionFunc(func(cfg *RequestConfig) error {
+		return WithRequestFinalizer(func(cfg *RequestConfig) error {
+			finalized = true
+			if got := cfg.Request.Header.Get("X-Late-Option"); got != "present" {
+				t.Fatalf("late option header = %q", got)
+			}
+			return nil
+		}).Apply(cfg)
+	})
+	lateOption := RequestOptionFunc(func(cfg *RequestConfig) error {
+		cfg.Request.Header.Set("X-Late-Option", "present")
+		return nil
+	})
+
+	_, err := NewRequestConfig(
+		context.Background(),
+		"GET",
+		"/models",
+		nil,
+		nil,
+		wrapped,
+		lateOption,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !finalized {
+		t.Fatal("request finalizer did not run")
 	}
 }
