@@ -8,6 +8,7 @@ import (
 	"net/http/httputil"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/httpdump"
 	"github.com/openai/openai-go/v3/packages/respjson"
 )
 
@@ -48,11 +49,17 @@ func (r *Error) DumpRequest(body bool) []byte {
 	if r.Request.GetBody != nil {
 		r.Request.Body, _ = r.Request.GetBody()
 	}
+	origHeaders := r.Request.Header
+	r.Request.Header = httpdump.RedactSensitiveHeaders(origHeaders)
+	defer func() { r.Request.Header = origHeaders }()
 	out, _ := httputil.DumpRequestOut(r.Request, body)
 	return out
 }
 
 func (r *Error) DumpResponse(body bool) []byte {
+	origHeaders := r.Response.Header
+	r.Response.Header = httpdump.RedactSensitiveHeaders(origHeaders)
+	defer func() { r.Response.Header = origHeaders }()
 	out, _ := httputil.DumpResponse(r.Response, body)
 	return out
 }
