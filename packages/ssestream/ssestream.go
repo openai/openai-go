@@ -80,8 +80,14 @@ func (s *eventStreamDecoder) Next() bool {
 	for s.scn.Scan() {
 		txt := s.scn.Bytes()
 
-		// Dispatch event on an empty line
+		// Per the SSE spec, dispatch an event on an empty line only if
+		// data or event type was set; otherwise reset and continue.
+		// This avoids dispatching empty events for comment-only blocks
+		// (e.g. ": ping\n\n" keep-alive messages).
 		if len(txt) == 0 {
+			if data.Len() == 0 && event == "" {
+				continue
+			}
 			s.evt = Event{
 				Type: event,
 				Data: data.Bytes(),
