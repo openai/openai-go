@@ -241,17 +241,18 @@ type RequestConfig struct {
 	BaseURL        *url.URL
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
-	DefaultBaseURL     *url.URL
-	CustomHTTPDoer     HTTPDoer
-	HTTPClient         *http.Client
-	Middlewares        []middleware
-	APIKey             string
-	AdminAPIKey        string
-	Organization       string
-	Project            string
-	WebhookSecret      string
-	authHeaderOverride bool
-	authPreference     authCredentialPreference
+	DefaultBaseURL           *url.URL
+	CustomHTTPDoer           HTTPDoer
+	HTTPClient               *http.Client
+	Middlewares              []middleware
+	APIKey                   string
+	AdminAPIKey              string
+	Organization             string
+	Project                  string
+	WebhookSecret            string
+	authHeaderOverride       bool
+	disableAutoAuthorization bool
+	authPreference           authCredentialPreference
 	// Configure which security scheme(s) should be enabled for this request
 	Security Security
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
@@ -621,20 +622,21 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		return nil
 	}
 	new := &RequestConfig{
-		MaxRetries:         cfg.MaxRetries,
-		RequestTimeout:     cfg.RequestTimeout,
-		Context:            ctx,
-		Request:            req,
-		BaseURL:            cfg.BaseURL,
-		HTTPClient:         cfg.HTTPClient,
-		Middlewares:        cfg.Middlewares,
-		APIKey:             cfg.APIKey,
-		AdminAPIKey:        cfg.AdminAPIKey,
-		Organization:       cfg.Organization,
-		Project:            cfg.Project,
-		WebhookSecret:      cfg.WebhookSecret,
-		authHeaderOverride: cfg.authHeaderOverride,
-		authPreference:     cfg.authPreference,
+		MaxRetries:               cfg.MaxRetries,
+		RequestTimeout:           cfg.RequestTimeout,
+		Context:                  ctx,
+		Request:                  req,
+		BaseURL:                  cfg.BaseURL,
+		HTTPClient:               cfg.HTTPClient,
+		Middlewares:              cfg.Middlewares,
+		APIKey:                   cfg.APIKey,
+		AdminAPIKey:              cfg.AdminAPIKey,
+		Organization:             cfg.Organization,
+		Project:                  cfg.Project,
+		WebhookSecret:            cfg.WebhookSecret,
+		authHeaderOverride:       cfg.authHeaderOverride,
+		disableAutoAuthorization: cfg.disableAutoAuthorization,
+		authPreference:           cfg.authPreference,
 	}
 
 	return new
@@ -664,12 +666,14 @@ func (cfg *RequestConfig) DelHeader(key string) {
 func (cfg *RequestConfig) SetAPIKey(value string) {
 	cfg.APIKey = value
 	cfg.authHeaderOverride = false
+	cfg.disableAutoAuthorization = false
 	cfg.authPreference = authCredentialPreferenceBearer
 }
 
 func (cfg *RequestConfig) SetAdminAPIKey(value string) {
 	cfg.AdminAPIKey = value
 	cfg.authHeaderOverride = false
+	cfg.disableAutoAuthorization = false
 	cfg.authPreference = authCredentialPreferenceAdmin
 }
 
@@ -769,8 +773,18 @@ func WithBearerAuthPreference() RequestOption {
 	})
 }
 
+// WithAutomaticAuthorizationDisabled prevents request security from injecting an
+// Authorization header. This should only be used for endpoints that authenticate
+// with non-Authorization headers or middleware-managed credentials.
+func WithAutomaticAuthorizationDisabled() RequestOption {
+	return RequestOptionFunc(func(r *RequestConfig) error {
+		r.disableAutoAuthorization = true
+		return nil
+	})
+}
+
 func ApplySecurity(r RequestConfig) {
-	if r.authHeaderOverride {
+	if r.authHeaderOverride || r.disableAutoAuthorization {
 		return
 	}
 

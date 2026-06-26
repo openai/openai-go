@@ -106,6 +106,44 @@ func TestAPIKeyAuthentication(t *testing.T) {
 	}
 }
 
+func TestAPIKeyAuthenticationSuppressesAutomaticAuthorization(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "normal-openai-key")
+	t.Setenv("OPENAI_ADMIN_KEY", "normal-admin-key")
+
+	var captured *http.Request
+	client := openai.NewClient(
+		WithEndpoint("https://my-resource.openai.azure.com", "2024-10-21"),
+		WithAPIKey("azure-api-key"),
+		option.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				captured = req
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header: http.Header{
+						"Content-Type": []string{"application/json"},
+					},
+					Body:    io.NopCloser(strings.NewReader(`{"ok":true}`)),
+					Request: req,
+				}, nil
+			}),
+		}),
+	)
+
+	var res map[string]any
+	if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err != nil {
+		t.Fatalf("request failed: %s", err)
+	}
+	if captured == nil {
+		t.Fatal("request was not captured")
+	}
+	if got := captured.Header.Get("Api-Key"); got != "azure-api-key" {
+		t.Fatalf("Api-Key header = %q, want %q", got, "azure-api-key")
+	}
+	if got := captured.Header.Get("Authorization"); got != "" {
+		t.Fatalf("Authorization header = %q, want empty", got)
+	}
+}
+
 func TestJSONRoutePathConstruction(t *testing.T) {
 	cases := []struct {
 		path     string
