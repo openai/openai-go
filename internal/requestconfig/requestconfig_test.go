@@ -48,3 +48,20 @@ func TestFormatPathEscapesPathParams(t *testing.T) {
 		})
 	}
 }
+
+func TestNormalizeOS(t *testing.T) {
+	tests := map[string]string{
+		"windows": "Windows",
+		"darwin":  "MacOS",
+		"linux":   "Linux",
+		"plan9":   "Other:plan9",
+	}
+
+	for input, want := range tests {
+		t.Run(input, func(t *testing.T) {
+			if got := normalizeOS(input); got != want {
+				t.Fatalf("normalizeOS(%q) = %q, want %q", input, got, want)
+			}
+		})
+	}
+}
