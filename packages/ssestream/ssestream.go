@@ -117,6 +117,15 @@ func (s *eventStreamDecoder) Next() bool {
 
 	if s.scn.Err() != nil {
 		s.err = s.scn.Err()
+		return false
+	}
+
+	if data.Len() > 0 || event != "" {
+		s.evt = Event{
+			Type: event,
+			Data: data.Bytes(),
+		}
+		return true
 	}
 
 	return false
