@@ -152,13 +152,13 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 // This function should be paired with a call to [WithEndpoint] to point to your Azure OpenAI instance.
 func WithAPIKey(apiKey string) option.RequestOption {
 	// NOTE: option.WithAPIKey() uses the Authorization header. Azure expects
-	// Api-Key instead, and we also need to suppress any automatically injected
-	// Authorization header from environment-derived client credentials.
+	// Api-Key instead. Deleting Authorization also prevents request security from
+	// automatically injecting environment-derived client credentials.
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
-		if err := requestconfig.WithAutomaticAuthorizationDisabled().Apply(rc); err != nil {
-			return err
-		}
-		return option.WithHeader("Api-Key", apiKey).Apply(rc)
+		return rc.Apply(
+			option.WithHeaderDel("Authorization"),
+			option.WithHeader("Api-Key", apiKey),
+		)
 	})
 }
 
