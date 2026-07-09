@@ -82,6 +82,10 @@ func (s *eventStreamDecoder) Next() bool {
 
 		// Dispatch event on an empty line
 		if len(txt) == 0 {
+			if data.Len() == 0 {
+				event = ""
+				continue
+			}
 			s.evt = Event{
 				Type: event,
 				Data: data.Bytes(),
@@ -175,9 +179,6 @@ func (s *Stream[T]) Next() bool {
 
 	for s.decoder.Next() {
 		if s.done {
-			continue
-		}
-		if len(s.decoder.Event().Data) == 0 {
 			continue
 		}
 
