@@ -916,6 +916,12 @@ func (r *ComputerActionClickParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ComputerActionClickParam](
+		"button", "left", "right", "wheel", "back", "forward",
+	)
+}
+
 // A double click action.
 //
 // The properties Keys, Type, X, Y are required.
@@ -1550,6 +1556,14 @@ func (u ContainerAutoNetworkPolicyUnionParam) GetType() *string {
 	return nil
 }
 
+func init() {
+	apijson.RegisterUnion[ContainerAutoNetworkPolicyUnionParam](
+		"type",
+		apijson.Discriminator[ContainerNetworkPolicyDisabledParam]("disabled"),
+		apijson.Discriminator[ContainerNetworkPolicyAllowlistParam]("allowlist"),
+	)
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -1623,6 +1637,14 @@ func (u ContainerAutoSkillUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	}
 	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ContainerAutoSkillUnionParam](
+		"type",
+		apijson.Discriminator[SkillReferenceParam]("skill_reference"),
+		apijson.Discriminator[InlineSkillParam]("inline"),
+	)
 }
 
 type ContainerNetworkPolicyAllowlist struct {
@@ -2330,6 +2352,12 @@ func (r *FileSearchToolRankingOptionsParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[FileSearchToolRankingOptionsParam](
+		"ranker", "auto", "default-2024-11-15",
+	)
+}
+
 // Weights that control how reciprocal rank fusion balances semantic embedding
 // matches versus sparse keyword matches when hybrid search is enabled.
 //
@@ -2617,6 +2645,15 @@ type functionShellToolEnvironmentUnionParamSkills struct{ any }
 //	    fmt.Errorf("not present")
 //	}
 func (u functionShellToolEnvironmentUnionParamSkills) AsAny() any { return u.any }
+
+func init() {
+	apijson.RegisterUnion[FunctionShellToolEnvironmentUnionParam](
+		"type",
+		apijson.Discriminator[ContainerAutoParam]("container_auto"),
+		apijson.Discriminator[LocalEnvironmentParam]("local"),
+		apijson.Discriminator[ContainerReferenceParam]("container_reference"),
+	)
+}
 
 // Defines a function in your own code the model can choose to call. Learn more
 // about
@@ -5019,6 +5056,14 @@ func (u ResponseCodeInterpreterToolCallOutputUnionParam) GetType() *string {
 	return nil
 }
 
+func init() {
+	apijson.RegisterUnion[ResponseCodeInterpreterToolCallOutputUnionParam](
+		"type",
+		apijson.Discriminator[ResponseCodeInterpreterToolCallOutputLogsParam]("logs"),
+		apijson.Discriminator[ResponseCodeInterpreterToolCallOutputImageParam]("image"),
+	)
+}
+
 // The logs output from the code interpreter.
 //
 // The properties Logs, Type are required.
@@ -5907,6 +5952,21 @@ func (u ResponseComputerToolCallActionUnionParam) GetKeys() []string {
 	return nil
 }
 
+func init() {
+	apijson.RegisterUnion[ResponseComputerToolCallActionUnionParam](
+		"type",
+		apijson.Discriminator[ResponseComputerToolCallActionClickParam]("click"),
+		apijson.Discriminator[ResponseComputerToolCallActionDoubleClickParam]("double_click"),
+		apijson.Discriminator[ResponseComputerToolCallActionDragParam]("drag"),
+		apijson.Discriminator[ResponseComputerToolCallActionKeypressParam]("keypress"),
+		apijson.Discriminator[ResponseComputerToolCallActionMoveParam]("move"),
+		apijson.Discriminator[ResponseComputerToolCallActionScreenshotParam]("screenshot"),
+		apijson.Discriminator[ResponseComputerToolCallActionScrollParam]("scroll"),
+		apijson.Discriminator[ResponseComputerToolCallActionTypeParam]("type"),
+		apijson.Discriminator[ResponseComputerToolCallActionWaitParam]("wait"),
+	)
+}
+
 // A click action.
 //
 // The properties Button, Type, X, Y are required.
@@ -5935,6 +5995,12 @@ func (r ResponseComputerToolCallActionClickParam) MarshalJSON() (data []byte, er
 }
 func (r *ResponseComputerToolCallActionClickParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseComputerToolCallActionClickParam](
+		"button", "left", "right", "wheel", "back", "forward",
+	)
 }
 
 // A double click action.
@@ -8203,6 +8269,15 @@ func (u ResponseFormatTextConfigUnionParam) GetType() *string {
 	return nil
 }
 
+func init() {
+	apijson.RegisterUnion[ResponseFormatTextConfigUnionParam](
+		"type",
+		apijson.Discriminator[shared.ResponseFormatTextParam]("text"),
+		apijson.Discriminator[ResponseFormatTextJSONSchemaConfigParam]("json_schema"),
+		apijson.Discriminator[shared.ResponseFormatJSONObjectParam]("json_object"),
+	)
+}
+
 // JSON Schema response format. Used to generate structured JSON responses. Learn
 // more about
 // [Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs).
@@ -8581,6 +8656,59 @@ func (u ResponseFunctionCallOutputItemUnionParam) GetFileID() *string {
 	return nil
 }
 
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u ResponseFunctionCallOutputItemUnionParam) GetPromptCacheBreakpoint() (res responseFunctionCallOutputItemUnionParamPromptCacheBreakpoint) {
+	if vt := u.OfInputText; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputImage; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputFile; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	}
+	return
+}
+
+// Can have the runtime types
+// [*ResponseInputTextContentPromptCacheBreakpointParam],
+// [*ResponseInputImageContentPromptCacheBreakpointParam],
+// [*ResponseInputFileContentPromptCacheBreakpointParam]
+type responseFunctionCallOutputItemUnionParamPromptCacheBreakpoint struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *responses.ResponseInputTextContentPromptCacheBreakpointParam:
+//	case *responses.ResponseInputImageContentPromptCacheBreakpointParam:
+//	case *responses.ResponseInputFileContentPromptCacheBreakpointParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u responseFunctionCallOutputItemUnionParamPromptCacheBreakpoint) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseFunctionCallOutputItemUnionParamPromptCacheBreakpoint) GetMode() *string {
+	switch vt := u.any.(type) {
+	case *ResponseInputTextContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	case *ResponseInputImageContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	case *ResponseInputFileContentPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseFunctionCallOutputItemUnionParam](
+		"type",
+		apijson.Discriminator[ResponseInputTextContentParam]("input_text"),
+		apijson.Discriminator[ResponseInputImageContentParam]("input_image"),
+		apijson.Discriminator[ResponseInputFileContentParam]("input_file"),
+	)
+}
+
 type ResponseFunctionCallOutputItemList []ResponseFunctionCallOutputItemUnion
 
 type ResponseFunctionCallOutputItemListParam []ResponseFunctionCallOutputItemUnionParam
@@ -8788,6 +8916,14 @@ func (u ResponseFunctionShellCallOutputContentOutcomeUnionParam) GetType() *stri
 		return (*string)(&vt.Type)
 	}
 	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseFunctionShellCallOutputContentOutcomeUnionParam](
+		"type",
+		apijson.Discriminator[ResponseFunctionShellCallOutputContentOutcomeTimeoutParam]("timeout"),
+		apijson.Discriminator[ResponseFunctionShellCallOutputContentOutcomeExitParam]("exit"),
+	)
 }
 
 func NewResponseFunctionShellCallOutputContentOutcomeTimeoutParam() ResponseFunctionShellCallOutputContentOutcomeTimeoutParam {
@@ -10357,6 +10493,15 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetURL() *string {
 	return nil
 }
 
+func init() {
+	apijson.RegisterUnion[ResponseFunctionWebSearchActionUnionParam](
+		"type",
+		apijson.Discriminator[ResponseFunctionWebSearchActionSearchParam]("search"),
+		apijson.Discriminator[ResponseFunctionWebSearchActionOpenPageParam]("open_page"),
+		apijson.Discriminator[ResponseFunctionWebSearchActionFindParam]("find_in_page"),
+	)
+}
+
 // Action type "search" - Performs a web search query.
 //
 // The property Type is required.
@@ -10737,6 +10882,12 @@ func (r ResponseInputAudioInputAudioParam) MarshalJSON() (data []byte, err error
 }
 func (r *ResponseInputAudioInputAudioParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputAudioInputAudioParam](
+		"format", "mp3", "wav",
+	)
 }
 
 // ResponseInputContentUnion contains all possible properties and values from
@@ -15204,6 +15355,18 @@ func (r *ResponseInputItemMessageParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"role", "user", "system", "developer",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemMessageParam](
+		"type", "message",
+	)
+}
+
 // The output of a computer tool call.
 //
 // The properties CallID, Output, Type are required.
@@ -15236,6 +15399,12 @@ func (r ResponseInputItemComputerCallOutputParam) MarshalJSON() (data []byte, er
 }
 func (r *ResponseInputItemComputerCallOutputParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemComputerCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
 }
 
 // A pending safety check for the computer call.
@@ -15291,6 +15460,12 @@ func (r ResponseInputItemFunctionCallOutputParam) MarshalJSON() (data []byte, er
 }
 func (r *ResponseInputItemFunctionCallOutputParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemFunctionCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
 }
 
 // Only one field can be non-zero.
@@ -15441,6 +15616,15 @@ func (r *ResponseInputItemToolSearchCallParam) UnmarshalJSON(data []byte) error 
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemToolSearchCallParam](
+		"execution", "server", "client",
+	)
+	apijson.RegisterFieldValidator[ResponseInputItemToolSearchCallParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
 // The properties Role, Tools, Type are required.
 type ResponseInputItemAdditionalToolsParam struct {
 	// A list of additional tools made available at this item.
@@ -15494,6 +15678,12 @@ func (r *ResponseInputItemImageGenerationCallParam) UnmarshalJSON(data []byte) e
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemImageGenerationCallParam](
+		"status", "in_progress", "completed", "generating", "failed",
+	)
+}
+
 // A tool call to run a command on the local shell.
 //
 // The properties ID, Action, CallID, Status, Type are required.
@@ -15521,6 +15711,12 @@ func (r ResponseInputItemLocalShellCallParam) MarshalJSON() (data []byte, err er
 }
 func (r *ResponseInputItemLocalShellCallParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemLocalShellCallParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
 }
 
 // Execute a shell command on the server.
@@ -15580,6 +15776,12 @@ func (r *ResponseInputItemLocalShellCallOutputParam) UnmarshalJSON(data []byte) 
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemLocalShellCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
 // A tool representing a request to execute one or more shell commands.
 //
 // The properties Action, CallID, Type are required.
@@ -15613,6 +15815,12 @@ func (r ResponseInputItemShellCallParam) MarshalJSON() (data []byte, err error) 
 }
 func (r *ResponseInputItemShellCallParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemShellCallParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
 }
 
 // The shell commands and limits that describe how to run the tool call.
@@ -15778,6 +15986,14 @@ func (u ResponseInputItemShellCallEnvironmentUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	}
 	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseInputItemShellCallEnvironmentUnionParam](
+		"type",
+		apijson.Discriminator[LocalEnvironmentParam]("local"),
+		apijson.Discriminator[ContainerReferenceParam]("container_reference"),
+	)
 }
 
 // The streamed output items emitted by a shell tool call.
@@ -15949,6 +16165,12 @@ func (r *ResponseInputItemApplyPatchCallParam) UnmarshalJSON(data []byte) error 
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemApplyPatchCallParam](
+		"status", "in_progress", "completed",
+	)
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -16009,6 +16231,15 @@ func (u ResponseInputItemApplyPatchCallOperationUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	}
 	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseInputItemApplyPatchCallOperationUnionParam](
+		"type",
+		apijson.Discriminator[ResponseInputItemApplyPatchCallOperationCreateFileParam]("create_file"),
+		apijson.Discriminator[ResponseInputItemApplyPatchCallOperationDeleteFileParam]("delete_file"),
+		apijson.Discriminator[ResponseInputItemApplyPatchCallOperationUpdateFileParam]("update_file"),
+	)
 }
 
 // Instruction for creating a new file via the apply_patch tool.
@@ -16448,6 +16679,12 @@ func (r *ResponseInputItemMcpCallParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemMcpCallParam](
+		"status", "in_progress", "completed", "incomplete", "calling", "failed",
+	)
+}
+
 func NewResponseInputItemCompactionTriggerParam() ResponseInputItemCompactionTriggerParam {
 	return ResponseInputItemCompactionTriggerParam{
 		Type: "compaction_trigger",
@@ -16491,6 +16728,12 @@ func (r ResponseInputItemItemReferenceParam) MarshalJSON() (data []byte, err err
 }
 func (r *ResponseInputItemItemReferenceParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemItemReferenceParam](
+		"type", "item_reference",
+	)
 }
 
 // The properties ID, CallID, Code, Fingerprint, Type are required.
@@ -19372,6 +19615,14 @@ func (u ResponseOutputMessageContentUnionParam) GetType() *string {
 	return nil
 }
 
+func init() {
+	apijson.RegisterUnion[ResponseOutputMessageContentUnionParam](
+		"type",
+		apijson.Discriminator[ResponseOutputTextParam]("output_text"),
+		apijson.Discriminator[ResponseOutputRefusalParam]("refusal"),
+	)
+}
+
 // A refusal from the model.
 type ResponseOutputRefusal struct {
 	// The refusal explanation from the model.
@@ -19864,6 +20115,16 @@ func (u ResponseOutputTextAnnotationUnionParam) GetStartIndex() *int64 {
 		return (*int64)(&vt.StartIndex)
 	}
 	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseOutputTextAnnotationUnionParam](
+		"type",
+		apijson.Discriminator[ResponseOutputTextAnnotationFileCitationParam]("file_citation"),
+		apijson.Discriminator[ResponseOutputTextAnnotationURLCitationParam]("url_citation"),
+		apijson.Discriminator[ResponseOutputTextAnnotationContainerFileCitationParam]("container_file_citation"),
+		apijson.Discriminator[ResponseOutputTextAnnotationFilePathParam]("file_path"),
+	)
 }
 
 // A citation to a file.
@@ -24078,6 +24339,12 @@ func (r *ToolMcpParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ToolMcpParam](
+		"connector_id", "connector_dropbox", "connector_gmail", "connector_googlecalendar", "connector_googledrive", "connector_microsoftteams", "connector_outlookcalendar", "connector_outlookemail", "connector_sharepoint",
+	)
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -24288,6 +24555,12 @@ func (r *ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam) Unmarsha
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ToolCodeInterpreterContainerCodeInterpreterContainerAutoParam](
+		"memory_limit", "1g", "4g", "16g", "64g",
+	)
+}
+
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -24448,6 +24721,27 @@ func (r ToolImageGenerationParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *ToolImageGenerationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"action", "generate", "edit", "auto",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"background", "transparent", "opaque", "auto",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"input_fidelity", "high", "low",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"moderation", "auto", "low",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"output_format", "png", "webp", "jpeg",
+	)
+	apijson.RegisterFieldValidator[ToolImageGenerationParam](
+		"quality", "low", "medium", "high", "auto",
+	)
 }
 
 // Optional mask for inpainting. Contains `image_url` (string, optional) and
@@ -25391,6 +25685,12 @@ func (r WebSearchToolUserLocationParam) MarshalJSON() (data []byte, err error) {
 }
 func (r *WebSearchToolUserLocationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[WebSearchToolUserLocationParam](
+		"type", "approximate",
+	)
 }
 
 type ResponseNewParams struct {
