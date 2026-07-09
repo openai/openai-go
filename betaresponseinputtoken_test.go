@@ -1,6 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-package responses_test
+package openai_test
 
 import (
 	"context"
@@ -11,11 +11,9 @@ import (
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/internal/testutil"
 	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/responses"
-	"github.com/openai/openai-go/v3/shared"
 )
 
-func TestInputTokenCountWithOptionalParams(t *testing.T) {
+func TestBetaResponseInputTokenCountWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -28,36 +26,36 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Responses.InputTokens.Count(context.TODO(), responses.InputTokenCountParams{
-		Conversation: responses.InputTokenCountParamsConversationUnion{
+	_, err := client.Beta.Responses.InputTokens.Count(context.TODO(), openai.BetaResponseInputTokenCountParams{
+		Conversation: openai.BetaResponseInputTokenCountParamsConversationUnion{
 			OfString: openai.String("string"),
 		},
-		Input: responses.InputTokenCountParamsInputUnion{
+		Input: openai.BetaResponseInputTokenCountParamsInputUnion{
 			OfString: openai.String("string"),
 		},
 		Instructions:       openai.String("instructions"),
 		Model:              openai.String("model"),
 		ParallelToolCalls:  openai.Bool(true),
-		Personality:        responses.InputTokenCountParamsPersonalityFriendly,
+		Personality:        openai.BetaResponseInputTokenCountParamsPersonalityFriendly,
 		PreviousResponseID: openai.String("resp_123"),
-		Reasoning: shared.ReasoningParam{
-			Context:         shared.ReasoningContextAuto,
-			Effort:          shared.ReasoningEffortNone,
-			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
-			Mode:            shared.ReasoningModeStandard,
-			Summary:         shared.ReasoningSummaryAuto,
+		Reasoning: openai.BetaResponseInputTokenCountParamsReasoning{
+			Context:         "auto",
+			Effort:          "none",
+			GenerateSummary: "auto",
+			Mode:            "standard",
+			Summary:         "auto",
 		},
-		Text: responses.InputTokenCountParamsText{
-			Format: responses.ResponseFormatTextConfigUnionParam{
-				OfText: &shared.ResponseFormatTextParam{},
+		Text: openai.BetaResponseInputTokenCountParamsText{
+			Format: openai.BetaResponseFormatTextConfigUnionParam{
+				OfText: &openai.BetaResponseFormatTextConfigTextParam{},
 			},
 			Verbosity: "low",
 		},
-		ToolChoice: responses.InputTokenCountParamsToolChoiceUnion{
-			OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
+		ToolChoice: openai.BetaResponseInputTokenCountParamsToolChoiceUnion{
+			OfToolChoiceMode: openai.Opt(openai.BetaToolChoiceOptionsNone),
 		},
-		Tools: []responses.ToolUnionParam{{
-			OfFunction: &responses.FunctionToolParam{
+		Tools: []openai.BetaToolUnionParam{{
+			OfFunction: &openai.BetaFunctionToolParam{
 				Name: "name",
 				Parameters: map[string]any{
 					"foo": "bar",
@@ -71,7 +69,8 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 				},
 			},
 		}},
-		Truncation: responses.InputTokenCountParamsTruncationAuto,
+		Truncation: openai.BetaResponseInputTokenCountParamsTruncationAuto,
+		Betas:      []string{"responses_multi_agent=v1"},
 	})
 	if err != nil {
 		var apierr *openai.Error

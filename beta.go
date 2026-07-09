@@ -13,8 +13,9 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewBetaService] method instead.
 type BetaService struct {
-	Options []option.RequestOption
-	ChatKit BetaChatKitService
+	Options   []option.RequestOption
+	Responses BetaResponseService
+	ChatKit   BetaChatKitService
 	// Build Assistants that can call models and use tools.
 	Assistants BetaAssistantService
 	// Build Assistants that can call models and use tools.
@@ -29,6 +30,7 @@ type BetaService struct {
 func NewBetaService(opts ...option.RequestOption) (r BetaService) {
 	r = BetaService{}
 	r.Options = opts
+	r.Responses = NewBetaResponseService(opts...)
 	r.ChatKit = NewBetaChatKitService(opts...)
 	r.Assistants = NewBetaAssistantService(opts...)
 	r.Threads = NewBetaThreadService(opts...)
