@@ -919,6 +919,75 @@ const (
 	ResponseIncompleteWebhookEventObjectEvent ResponseIncompleteWebhookEventObject = "event"
 )
 
+// Sent when a request associated with a safety identifier has been blocked.
+type SafetyIdentifierBlockedWebhookEvent struct {
+	// The unique ID of the event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp (in seconds) of when the request was blocked.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// Event data payload.
+	Data SafetyIdentifierBlockedWebhookEventData `json:"data" api:"required"`
+	// The type of the event. Always `safety_identifier.blocked`.
+	Type constant.SafetyIdentifierBlocked `json:"type" default:"safety_identifier.blocked"`
+	// The object of the event. Always `event`.
+	//
+	// Any of "event".
+	Object SafetyIdentifierBlockedWebhookEventObject `json:"object"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Type        respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyIdentifierBlockedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *SafetyIdentifierBlockedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Event data payload.
+type SafetyIdentifierBlockedWebhookEventData struct {
+	// The safety category that triggered the block, such as `bio` or `cyber`.
+	SafetyCategory string `json:"safety_category" api:"required"`
+	// The stable safety identifier associated with the blocked request.
+	SafetyIdentifier string `json:"safety_identifier" api:"required"`
+	// The model used for the blocked request, if available.
+	Model string `json:"model"`
+	// The project associated with the blocked request, if available.
+	ProjectID string `json:"project_id"`
+	// The OpenAI request ID for the blocked request, if available.
+	RequestID string `json:"request_id"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		SafetyCategory   respjson.Field
+		SafetyIdentifier respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		RequestID        respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyIdentifierBlockedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *SafetyIdentifierBlockedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The object of the event. Always `event`.
+type SafetyIdentifierBlockedWebhookEventObject string
+
+const (
+	SafetyIdentifierBlockedWebhookEventObjectEvent SafetyIdentifierBlockedWebhookEventObject = "event"
+)
+
 // UnwrapWebhookEventUnion contains all possible properties and values from
 // [BatchCancelledWebhookEvent], [BatchCompletedWebhookEvent],
 // [BatchExpiredWebhookEvent], [BatchFailedWebhookEvent],
@@ -927,7 +996,7 @@ const (
 // [FineTuningJobFailedWebhookEvent], [FineTuningJobSucceededWebhookEvent],
 // [RealtimeCallIncomingWebhookEvent], [ResponseCancelledWebhookEvent],
 // [ResponseCompletedWebhookEvent], [ResponseFailedWebhookEvent],
-// [ResponseIncompleteWebhookEvent].
+// [ResponseIncompleteWebhookEvent], [SafetyIdentifierBlockedWebhookEvent].
 //
 // Use the [UnwrapWebhookEventUnion.AsAny] method to switch on the variant.
 //
@@ -943,13 +1012,14 @@ type UnwrapWebhookEventUnion struct {
 	// [FineTuningJobSucceededWebhookEventData],
 	// [RealtimeCallIncomingWebhookEventData], [ResponseCancelledWebhookEventData],
 	// [ResponseCompletedWebhookEventData], [ResponseFailedWebhookEventData],
-	// [ResponseIncompleteWebhookEventData]
+	// [ResponseIncompleteWebhookEventData], [SafetyIdentifierBlockedWebhookEventData]
 	Data UnwrapWebhookEventUnionData `json:"data"`
 	// Any of "batch.cancelled", "batch.completed", "batch.expired", "batch.failed",
 	// "eval.run.canceled", "eval.run.failed", "eval.run.succeeded",
 	// "fine_tuning.job.cancelled", "fine_tuning.job.failed",
 	// "fine_tuning.job.succeeded", "realtime.call.incoming", "response.cancelled",
-	// "response.completed", "response.failed", "response.incomplete".
+	// "response.completed", "response.failed", "response.incomplete",
+	// "safety_identifier.blocked".
 	Type   string `json:"type"`
 	Object string `json:"object"`
 	JSON   struct {
@@ -969,21 +1039,22 @@ type anyUnwrapWebhookEvent interface {
 	implUnwrapWebhookEventUnion()
 }
 
-func (BatchCancelledWebhookEvent) implUnwrapWebhookEventUnion()         {}
-func (BatchCompletedWebhookEvent) implUnwrapWebhookEventUnion()         {}
-func (BatchExpiredWebhookEvent) implUnwrapWebhookEventUnion()           {}
-func (BatchFailedWebhookEvent) implUnwrapWebhookEventUnion()            {}
-func (EvalRunCanceledWebhookEvent) implUnwrapWebhookEventUnion()        {}
-func (EvalRunFailedWebhookEvent) implUnwrapWebhookEventUnion()          {}
-func (EvalRunSucceededWebhookEvent) implUnwrapWebhookEventUnion()       {}
-func (FineTuningJobCancelledWebhookEvent) implUnwrapWebhookEventUnion() {}
-func (FineTuningJobFailedWebhookEvent) implUnwrapWebhookEventUnion()    {}
-func (FineTuningJobSucceededWebhookEvent) implUnwrapWebhookEventUnion() {}
-func (RealtimeCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()   {}
-func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()      {}
-func (ResponseCompletedWebhookEvent) implUnwrapWebhookEventUnion()      {}
-func (ResponseFailedWebhookEvent) implUnwrapWebhookEventUnion()         {}
-func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (BatchCancelledWebhookEvent) implUnwrapWebhookEventUnion()          {}
+func (BatchCompletedWebhookEvent) implUnwrapWebhookEventUnion()          {}
+func (BatchExpiredWebhookEvent) implUnwrapWebhookEventUnion()            {}
+func (BatchFailedWebhookEvent) implUnwrapWebhookEventUnion()             {}
+func (EvalRunCanceledWebhookEvent) implUnwrapWebhookEventUnion()         {}
+func (EvalRunFailedWebhookEvent) implUnwrapWebhookEventUnion()           {}
+func (EvalRunSucceededWebhookEvent) implUnwrapWebhookEventUnion()        {}
+func (FineTuningJobCancelledWebhookEvent) implUnwrapWebhookEventUnion()  {}
+func (FineTuningJobFailedWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (FineTuningJobSucceededWebhookEvent) implUnwrapWebhookEventUnion()  {}
+func (RealtimeCallIncomingWebhookEvent) implUnwrapWebhookEventUnion()    {}
+func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()       {}
+func (ResponseCompletedWebhookEvent) implUnwrapWebhookEventUnion()       {}
+func (ResponseFailedWebhookEvent) implUnwrapWebhookEventUnion()          {}
+func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()      {}
+func (SafetyIdentifierBlockedWebhookEvent) implUnwrapWebhookEventUnion() {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -1003,6 +1074,7 @@ func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()     {}
 //	case webhooks.ResponseCompletedWebhookEvent:
 //	case webhooks.ResponseFailedWebhookEvent:
 //	case webhooks.ResponseIncompleteWebhookEvent:
+//	case webhooks.SafetyIdentifierBlockedWebhookEvent:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1038,6 +1110,8 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 		return u.AsResponseFailed()
 	case "response.incomplete":
 		return u.AsResponseIncomplete()
+	case "safety_identifier.blocked":
+		return u.AsSafetyIdentifierBlocked()
 	}
 	return nil
 }
@@ -1117,6 +1191,11 @@ func (u UnwrapWebhookEventUnion) AsResponseIncomplete() (v ResponseIncompleteWeb
 	return
 }
 
+func (u UnwrapWebhookEventUnion) AsSafetyIdentifierBlocked() (v SafetyIdentifierBlockedWebhookEvent) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
 // Returns the unmodified JSON received from the API
 func (u UnwrapWebhookEventUnion) RawJSON() string { return u.JSON.raw }
 
@@ -1136,11 +1215,26 @@ type UnwrapWebhookEventUnionData struct {
 	CallID string `json:"call_id"`
 	// This field is from variant [RealtimeCallIncomingWebhookEventData].
 	SipHeaders []RealtimeCallIncomingWebhookEventDataSipHeader `json:"sip_headers"`
-	JSON       struct {
-		ID         respjson.Field
-		CallID     respjson.Field
-		SipHeaders respjson.Field
-		raw        string
+	// This field is from variant [SafetyIdentifierBlockedWebhookEventData].
+	SafetyCategory string `json:"safety_category"`
+	// This field is from variant [SafetyIdentifierBlockedWebhookEventData].
+	SafetyIdentifier string `json:"safety_identifier"`
+	// This field is from variant [SafetyIdentifierBlockedWebhookEventData].
+	Model string `json:"model"`
+	// This field is from variant [SafetyIdentifierBlockedWebhookEventData].
+	ProjectID string `json:"project_id"`
+	// This field is from variant [SafetyIdentifierBlockedWebhookEventData].
+	RequestID string `json:"request_id"`
+	JSON      struct {
+		ID               respjson.Field
+		CallID           respjson.Field
+		SipHeaders       respjson.Field
+		SafetyCategory   respjson.Field
+		SafetyIdentifier respjson.Field
+		Model            respjson.Field
+		ProjectID        respjson.Field
+		RequestID        respjson.Field
+		raw              string
 	} `json:"-"`
 }
 

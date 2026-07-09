@@ -17,4 +17,5 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#ResponseCompletedWebhookEvent">ResponseCompletedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#ResponseFailedWebhookEvent">ResponseFailedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#ResponseIncompleteWebhookEvent">ResponseIncompleteWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#SafetyIdentifierBlockedWebhookEvent">SafetyIdentifierBlockedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks">webhooks</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3/webhooks#UnwrapWebhookEventUnion">UnwrapWebhookEventUnion</a>

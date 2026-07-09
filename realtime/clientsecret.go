@@ -530,6 +530,8 @@ const (
 	RealtimeSessionCreateResponseModelGPTRealtime                        RealtimeSessionCreateResponseModel = "gpt-realtime"
 	RealtimeSessionCreateResponseModelGPTRealtime1_5                     RealtimeSessionCreateResponseModel = "gpt-realtime-1.5"
 	RealtimeSessionCreateResponseModelGPTRealtime2                       RealtimeSessionCreateResponseModel = "gpt-realtime-2"
+	RealtimeSessionCreateResponseModelGPTRealtime2_1                     RealtimeSessionCreateResponseModel = "gpt-realtime-2.1"
+	RealtimeSessionCreateResponseModelGPTRealtime2_1Mini                 RealtimeSessionCreateResponseModel = "gpt-realtime-2.1-mini"
 	RealtimeSessionCreateResponseModelGPTRealtime2025_08_28              RealtimeSessionCreateResponseModel = "gpt-realtime-2025-08-28"
 	RealtimeSessionCreateResponseModelGPT4oRealtimePreview               RealtimeSessionCreateResponseModel = "gpt-4o-realtime-preview"
 	RealtimeSessionCreateResponseModelGPT4oRealtimePreview2024_10_01     RealtimeSessionCreateResponseModel = "gpt-4o-realtime-preview-2024-10-01"
@@ -608,6 +610,8 @@ type RealtimeSessionCreateResponseToolUnion struct {
 	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
 	ServerLabel string `json:"server_label"`
 	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
+	AllowedCallers []string `json:"allowed_callers"`
+	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
 	AllowedTools RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion `json:"allowed_tools"`
 	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
 	Authorization string `json:"authorization"`
@@ -631,6 +635,7 @@ type RealtimeSessionCreateResponseToolUnion struct {
 		Parameters        respjson.Field
 		Type              respjson.Field
 		ServerLabel       respjson.Field
+		AllowedCallers    respjson.Field
 		AllowedTools      respjson.Field
 		Authorization     respjson.Field
 		ConnectorID       respjson.Field
@@ -669,6 +674,10 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 	ServerLabel string `json:"server_label" api:"required"`
 	// The type of the MCP tool. Always `mcp`.
 	Type constant.Mcp `json:"type" default:"mcp"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
 	// List of allowed tool names or a filter object.
 	AllowedTools RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion `json:"allowed_tools" api:"nullable"`
 	// An OAuth access token that can be used with a remote MCP server, either with a
@@ -714,6 +723,7 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 	JSON struct {
 		ServerLabel       respjson.Field
 		Type              respjson.Field
+		AllowedCallers    respjson.Field
 		AllowedTools      respjson.Field
 		Authorization     respjson.Field
 		ConnectorID       respjson.Field

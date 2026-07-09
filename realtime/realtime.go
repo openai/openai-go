@@ -1069,6 +1069,8 @@ const (
 	RealtimeSessionCreateRequestModelGPTRealtime                        RealtimeSessionCreateRequestModel = "gpt-realtime"
 	RealtimeSessionCreateRequestModelGPTRealtime1_5                     RealtimeSessionCreateRequestModel = "gpt-realtime-1.5"
 	RealtimeSessionCreateRequestModelGPTRealtime2                       RealtimeSessionCreateRequestModel = "gpt-realtime-2"
+	RealtimeSessionCreateRequestModelGPTRealtime2_1                     RealtimeSessionCreateRequestModel = "gpt-realtime-2.1"
+	RealtimeSessionCreateRequestModelGPTRealtime2_1Mini                 RealtimeSessionCreateRequestModel = "gpt-realtime-2.1-mini"
 	RealtimeSessionCreateRequestModelGPTRealtime2025_08_28              RealtimeSessionCreateRequestModel = "gpt-realtime-2025-08-28"
 	RealtimeSessionCreateRequestModelGPT4oRealtimePreview               RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview"
 	RealtimeSessionCreateRequestModelGPT4oRealtimePreview2024_10_01     RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview-2024-10-01"
@@ -1220,6 +1222,14 @@ func (u RealtimeToolsConfigUnionParam) GetServerLabel() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeToolsConfigUnionParam) GetAllowedCallers() []string {
+	if vt := u.OfMcp; vt != nil {
+		return vt.AllowedCallers
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u RealtimeToolsConfigUnionParam) GetAllowedTools() *RealtimeToolsConfigUnionMcpAllowedToolsParam {
 	if vt := u.OfMcp; vt != nil {
 		return &vt.AllowedTools
@@ -1331,6 +1341,10 @@ type RealtimeToolsConfigUnionMcpParam struct {
 	// The Secure MCP Tunnel ID to use instead of a direct server URL. One of
 	// `server_url`, `connector_id`, or `tunnel_id` must be provided.
 	TunnelID param.Opt[string] `json:"tunnel_id,omitzero"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers,omitzero"`
 	// List of allowed tool names or a filter object.
 	AllowedTools RealtimeToolsConfigUnionMcpAllowedToolsParam `json:"allowed_tools,omitzero"`
 	// Optional HTTP headers to send to the MCP server. Use for authentication or other
