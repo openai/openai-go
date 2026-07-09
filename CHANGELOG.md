@@ -254,7 +254,7 @@ Full Changelog: [v3.27.0...v3.28.0](https://github.com/openai/openai-go/compare/
 
 ### ⚠ BREAKING CHANGES
 
-* **api:** The `voice` param and resource has changed from a `string` to a `string | {id: string}`. This is a breaking change for Go.
+* **api:** The `voice` parameter type has changed from a `string` to a `string | {id: string}`. This is a breaking change for Go.
 
 ## 3.27.0 (2026-03-13)
 
@@ -281,7 +281,7 @@ Full Changelog: [v3.25.0...v3.26.0](https://github.com/openai/openai-go/compare/
 
 ### Features
 
-* **api:** The GA ComputerTool now uses the ComputerTool class. The 'computer_use_preview' tool is moved to ComputerUsePreview ([347418b](https://github.com/openai/openai-go/commit/347418be8d4fa33881d9ac30f6c7132f2f545f2b))
+* **api:** The GA computer tool now uses the ComputerTool type. The `computer_use_preview` tool has moved to ComputerUsePreviewTool ([347418b](https://github.com/openai/openai-go/commit/347418be8d4fa33881d9ac30f6c7132f2f545f2b))
 
 ## 3.25.0 (2026-03-05)
 
