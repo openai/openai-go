@@ -1,0 +1,142 @@
+// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+
+package openai
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
+	"slices"
+
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/apiquery"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/pagination"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
+)
+
+// BetaResponseInputItemService contains methods and other services that help with
+// interacting with the openai API.
+//
+// Note, unlike clients, this service does not read variables from the environment
+// automatically. You should not instantiate this service directly, and instead use
+// the [NewBetaResponseInputItemService] method instead.
+type BetaResponseInputItemService struct {
+	Options []option.RequestOption
+}
+
+// NewBetaResponseInputItemService generates a new service that applies the given
+// options to each request. These options are applied after the parent client's
+// options (if there is one), and before any request-specific options.
+func NewBetaResponseInputItemService(opts ...option.RequestOption) (r BetaResponseInputItemService) {
+	r = BetaResponseInputItemService{}
+	r.Options = opts
+	return
+}
+
+// Returns a list of input items for a given response.
+func (r *BetaResponseInputItemService) List(ctx context.Context, responseID string, params BetaResponseInputItemListParams, opts ...option.RequestOption) (res *pagination.CursorPage[BetaResponseItemUnion], err error) {
+	var raw *http.Response
+	for _, v := range params.Betas {
+		opts = append(opts, option.WithHeaderAdd("openai-beta", fmt.Sprintf("%v", v)))
+	}
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
+	if responseID == "" {
+		err = errors.New("missing required response_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("responses/%s/input_items?beta=true", responseID)
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Returns a list of input items for a given response.
+func (r *BetaResponseInputItemService) ListAutoPaging(ctx context.Context, responseID string, params BetaResponseInputItemListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[BetaResponseItemUnion] {
+	return pagination.NewCursorPageAutoPager(r.List(ctx, responseID, params, opts...))
+}
+
+// A list of Response items.
+type BetaResponseItemList struct {
+	// A list of items used to generate this response.
+	Data []BetaResponseItemUnion `json:"data" api:"required"`
+	// The ID of the first item in the list.
+	FirstID string `json:"first_id" api:"required"`
+	// Whether there are more items available.
+	HasMore bool `json:"has_more" api:"required"`
+	// The ID of the last item in the list.
+	LastID string `json:"last_id" api:"required"`
+	// The type of object returned, must be `list`.
+	Object constant.List `json:"object" default:"list"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Data        respjson.Field
+		FirstID     respjson.Field
+		HasMore     respjson.Field
+		LastID      respjson.Field
+		Object      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseItemList) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponseItemList) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponseInputItemListParams struct {
+	// An item ID to list items after, used in pagination.
+	After param.Opt[string] `query:"after,omitzero" json:"-"`
+	// A limit on the number of objects to be returned. Limit can range between 1 and
+	// 100, and the default is 20.
+	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// Additional fields to include in the response. See the `include` parameter for
+	// Response creation above for more information.
+	Include []BetaResponseIncludable `query:"include,omitzero" json:"-"`
+	// The order to return the input items in. Default is `desc`.
+	//
+	// - `asc`: Return the input items in ascending order.
+	// - `desc`: Return the input items in descending order.
+	//
+	// Any of "asc", "desc".
+	Order BetaResponseInputItemListParamsOrder `query:"order,omitzero" json:"-"`
+	// Any of "responses_multi_agent=v1".
+	Betas []string `header:"openai-beta,omitzero" json:"-"`
+	paramObj
+}
+
+// URLQuery serializes [BetaResponseInputItemListParams]'s query parameters as
+// `url.Values`.
+func (r BetaResponseInputItemListParams) URLQuery() (v url.Values, err error) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+// The order to return the input items in. Default is `desc`.
+//
+// - `asc`: Return the input items in ascending order.
+// - `desc`: Return the input items in descending order.
+type BetaResponseInputItemListParamsOrder string
+
+const (
+	BetaResponseInputItemListParamsOrderAsc  BetaResponseInputItemListParamsOrder = "asc"
+	BetaResponseInputItemListParamsOrderDesc BetaResponseInputItemListParamsOrder = "desc"
+)

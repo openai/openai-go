@@ -1,6 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-package responses_test
+package openai_test
 
 import (
 	"context"
@@ -11,11 +11,9 @@ import (
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/internal/testutil"
 	"github.com/openai/openai-go/v3/option"
-	"github.com/openai/openai-go/v3/responses"
-	"github.com/openai/openai-go/v3/shared"
 )
 
-func TestResponseNewWithOptionalParams(t *testing.T) {
+func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -28,42 +26,46 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Responses.New(context.TODO(), responses.ResponseNewParams{
+	_, err := client.Beta.Responses.New(context.TODO(), openai.BetaResponseNewParams{
 		Background: openai.Bool(true),
-		ContextManagement: []responses.ResponseNewParamsContextManagement{{
+		ContextManagement: []openai.BetaResponseNewParamsContextManagement{{
 			Type:             "type",
 			CompactThreshold: openai.Int(1000),
 		}},
-		Conversation: responses.ResponseNewParamsConversationUnion{
+		Conversation: openai.BetaResponseNewParamsConversationUnion{
 			OfString: openai.String("string"),
 		},
-		Include: []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
-		Input: responses.ResponseNewParamsInputUnion{
+		Include: []openai.BetaResponseIncludable{openai.BetaResponseIncludableFileSearchCallResults},
+		Input: openai.BetaResponseNewParamsInputUnion{
 			OfString: openai.String("string"),
 		},
 		Instructions:    openai.String("instructions"),
 		MaxOutputTokens: openai.Int(16),
 		MaxToolCalls:    openai.Int(0),
-		Metadata: shared.Metadata{
+		Metadata: map[string]string{
 			"foo": "string",
 		},
-		Model: shared.ResponsesModel("gpt-5.1"),
-		Moderation: responses.ResponseNewParamsModeration{
+		Model: openai.BetaResponseNewParamsModelGPT5_1,
+		Moderation: openai.BetaResponseNewParamsModeration{
 			Model: "model",
-			Policy: responses.ResponseNewParamsModerationPolicy{
-				Input: responses.ResponseNewParamsModerationPolicyInput{
+			Policy: openai.BetaResponseNewParamsModerationPolicy{
+				Input: openai.BetaResponseNewParamsModerationPolicyInput{
 					Mode: "score",
 				},
-				Output: responses.ResponseNewParamsModerationPolicyOutput{
+				Output: openai.BetaResponseNewParamsModerationPolicyOutput{
 					Mode: "score",
 				},
 			},
 		},
+		MultiAgent: openai.BetaResponseNewParamsMultiAgent{
+			Enabled:                true,
+			MaxConcurrentSubagents: openai.Int(1),
+		},
 		ParallelToolCalls:  openai.Bool(true),
 		PreviousResponseID: openai.String("previous_response_id"),
-		Prompt: responses.ResponsePromptParam{
+		Prompt: openai.BetaResponsePromptParam{
 			ID: "id",
-			Variables: map[string]responses.ResponsePromptVariableUnionParam{
+			Variables: map[string]openai.BetaResponsePromptVariableUnionParam{
 				"foo": {
 					OfString: openai.String("string"),
 				},
@@ -71,36 +73,36 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			Version: openai.String("version"),
 		},
 		PromptCacheKey: openai.String("prompt-cache-key-1234"),
-		PromptCacheOptions: responses.ResponseNewParamsPromptCacheOptions{
+		PromptCacheOptions: openai.BetaResponseNewParamsPromptCacheOptions{
 			Mode: "implicit",
 			Ttl:  "30m",
 		},
-		PromptCacheRetention: responses.ResponseNewParamsPromptCacheRetentionInMemory,
-		Reasoning: shared.ReasoningParam{
-			Context:         shared.ReasoningContextAuto,
-			Effort:          shared.ReasoningEffortNone,
-			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
-			Mode:            shared.ReasoningModeStandard,
-			Summary:         shared.ReasoningSummaryAuto,
+		PromptCacheRetention: openai.BetaResponseNewParamsPromptCacheRetentionInMemory,
+		Reasoning: openai.BetaResponseNewParamsReasoning{
+			Context:         "auto",
+			Effort:          "none",
+			GenerateSummary: "auto",
+			Mode:            "standard",
+			Summary:         "auto",
 		},
 		SafetyIdentifier: openai.String("safety-identifier-1234"),
-		ServiceTier:      responses.ResponseNewParamsServiceTierAuto,
+		ServiceTier:      openai.BetaResponseNewParamsServiceTierAuto,
 		Store:            openai.Bool(true),
-		StreamOptions: responses.ResponseNewParamsStreamOptions{
+		StreamOptions: openai.BetaResponseNewParamsStreamOptions{
 			IncludeObfuscation: openai.Bool(true),
 		},
 		Temperature: openai.Float(1),
-		Text: responses.ResponseTextConfigParam{
-			Format: responses.ResponseFormatTextConfigUnionParam{
-				OfText: &shared.ResponseFormatTextParam{},
+		Text: openai.BetaResponseTextConfigParam{
+			Format: openai.BetaResponseFormatTextConfigUnionParam{
+				OfText: &openai.BetaResponseFormatTextConfigTextParam{},
 			},
-			Verbosity: responses.ResponseTextConfigVerbosityLow,
+			Verbosity: openai.BetaResponseTextConfigVerbosityLow,
 		},
-		ToolChoice: responses.ResponseNewParamsToolChoiceUnion{
-			OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
+		ToolChoice: openai.BetaResponseNewParamsToolChoiceUnion{
+			OfToolChoiceMode: openai.Opt(openai.BetaToolChoiceOptionsNone),
 		},
-		Tools: []responses.ToolUnionParam{{
-			OfFunction: &responses.FunctionToolParam{
+		Tools: []openai.BetaToolUnionParam{{
+			OfFunction: &openai.BetaFunctionToolParam{
 				Name: "name",
 				Parameters: map[string]any{
 					"foo": "bar",
@@ -116,8 +118,9 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		}},
 		TopLogprobs: openai.Int(0),
 		TopP:        openai.Float(1),
-		Truncation:  responses.ResponseNewParamsTruncationAuto,
+		Truncation:  openai.BetaResponseNewParamsTruncationAuto,
 		User:        openai.String("user-1234"),
+		Betas:       []string{"responses_multi_agent=v1"},
 	})
 	if err != nil {
 		var apierr *openai.Error
@@ -128,7 +131,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestResponseGetWithOptionalParams(t *testing.T) {
+func TestBetaResponseGetWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -141,13 +144,14 @@ func TestResponseGetWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Responses.Get(
+	_, err := client.Beta.Responses.Get(
 		context.TODO(),
 		"resp_677efb5139a88190b512bc3fef8e535d",
-		responses.ResponseGetParams{
-			Include:            []responses.ResponseIncludable{responses.ResponseIncludableFileSearchCallResults},
+		openai.BetaResponseGetParams{
+			Include:            []openai.BetaResponseIncludable{openai.BetaResponseIncludableFileSearchCallResults},
 			IncludeObfuscation: openai.Bool(true),
 			StartingAfter:      openai.Int(0),
+			Betas:              []string{"responses_multi_agent=v1"},
 		},
 	)
 	if err != nil {
@@ -159,7 +163,7 @@ func TestResponseGetWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestResponseDelete(t *testing.T) {
+func TestBetaResponseDeleteWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -172,7 +176,13 @@ func TestResponseDelete(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	err := client.Responses.Delete(context.TODO(), "resp_677efb5139a88190b512bc3fef8e535d")
+	err := client.Beta.Responses.Delete(
+		context.TODO(),
+		"resp_677efb5139a88190b512bc3fef8e535d",
+		openai.BetaResponseDeleteParams{
+			Betas: []string{"responses_multi_agent=v1"},
+		},
+	)
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {
@@ -182,7 +192,7 @@ func TestResponseDelete(t *testing.T) {
 	}
 }
 
-func TestResponseCancel(t *testing.T) {
+func TestBetaResponseCancelWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -195,7 +205,13 @@ func TestResponseCancel(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Responses.Cancel(context.TODO(), "resp_677efb5139a88190b512bc3fef8e535d")
+	_, err := client.Beta.Responses.Cancel(
+		context.TODO(),
+		"resp_677efb5139a88190b512bc3fef8e535d",
+		openai.BetaResponseCancelParams{
+			Betas: []string{"responses_multi_agent=v1"},
+		},
+	)
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {
@@ -205,7 +221,7 @@ func TestResponseCancel(t *testing.T) {
 	}
 }
 
-func TestResponseCompactWithOptionalParams(t *testing.T) {
+func TestBetaResponseCompactWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -218,20 +234,21 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Responses.Compact(context.TODO(), responses.ResponseCompactParams{
-		Model: responses.ResponseCompactParamsModelGPT5_6Sol,
-		Input: responses.ResponseCompactParamsInputUnion{
+	_, err := client.Beta.Responses.Compact(context.TODO(), openai.BetaResponseCompactParams{
+		Model: openai.BetaResponseCompactParamsModelGPT5_6Sol,
+		Input: openai.BetaResponseCompactParamsInputUnion{
 			OfString: openai.String("string"),
 		},
 		Instructions:       openai.String("instructions"),
 		PreviousResponseID: openai.String("resp_123"),
 		PromptCacheKey:     openai.String("prompt_cache_key"),
-		PromptCacheOptions: responses.ResponseCompactParamsPromptCacheOptions{
+		PromptCacheOptions: openai.BetaResponseCompactParamsPromptCacheOptions{
 			Mode: "implicit",
 			Ttl:  "30m",
 		},
-		PromptCacheRetention: responses.ResponseCompactParamsPromptCacheRetentionInMemory,
-		ServiceTier:          responses.ResponseCompactParamsServiceTierAuto,
+		PromptCacheRetention: openai.BetaResponseCompactParamsPromptCacheRetentionInMemory,
+		ServiceTier:          openai.BetaResponseCompactParamsServiceTierAuto,
+		Betas:                []string{"responses_multi_agent=v1"},
 	})
 	if err != nil {
 		var apierr *openai.Error
