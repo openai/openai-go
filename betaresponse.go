@@ -105,7 +105,7 @@ func (r *BetaResponseService) Get(ctx context.Context, responseID string, params
 		err = errors.New("missing required response_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("responses/%s?beta=true", responseID)
+	path := requestconfig.FormatPath("responses/%s?beta=true", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
 	return res, err
 }
@@ -126,7 +126,7 @@ func (r *BetaResponseService) GetStreaming(ctx context.Context, responseID strin
 		err = errors.New("missing required response_id parameter")
 		return ssestream.NewStream[BetaResponseStreamEventUnion](nil, err)
 	}
-	path := fmt.Sprintf("responses/%s?beta=true", responseID)
+	path := requestconfig.FormatPath("responses/%s?beta=true", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &raw, opts...)
 	return ssestream.NewStream[BetaResponseStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
@@ -143,7 +143,7 @@ func (r *BetaResponseService) Delete(ctx context.Context, responseID string, bod
 		err = errors.New("missing required response_id parameter")
 		return err
 	}
-	path := fmt.Sprintf("responses/%s?beta=true", responseID)
+	path := requestconfig.FormatPath("responses/%s?beta=true", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
 	return err
 }
@@ -161,7 +161,7 @@ func (r *BetaResponseService) Cancel(ctx context.Context, responseID string, bod
 		err = errors.New("missing required response_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("responses/%s/cancel?beta=true", responseID)
+	path := requestconfig.FormatPath("responses/%s/cancel?beta=true", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }

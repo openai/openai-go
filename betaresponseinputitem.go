@@ -52,7 +52,7 @@ func (r *BetaResponseInputItemService) List(ctx context.Context, responseID stri
 		err = errors.New("missing required response_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("responses/%s/input_items?beta=true", responseID)
+	path := requestconfig.FormatPath("responses/%s/input_items?beta=true", responseID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
 	if err != nil {
 		return nil, err

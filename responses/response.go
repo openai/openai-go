@@ -8581,7 +8581,6 @@ func (u ResponseFunctionCallOutputItemUnionParam) GetFileID() *string {
 	return nil
 }
 
-
 type ResponseFunctionCallOutputItemList []ResponseFunctionCallOutputItemUnion
 
 type ResponseFunctionCallOutputItemListParam []ResponseFunctionCallOutputItemUnionParam
@@ -10974,6 +10973,57 @@ func (u ResponseInputContentUnionParam) GetFileID() *string {
 	return nil
 }
 
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u ResponseInputContentUnionParam) GetPromptCacheBreakpoint() (res responseInputContentUnionParamPromptCacheBreakpoint) {
+	if vt := u.OfInputText; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputImage; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputFile; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	}
+	return
+}
+
+// Can have the runtime types [*ResponseInputTextPromptCacheBreakpointParam],
+// [*ResponseInputImagePromptCacheBreakpointParam],
+// [*ResponseInputFilePromptCacheBreakpointParam]
+type responseInputContentUnionParamPromptCacheBreakpoint struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *responses.ResponseInputTextPromptCacheBreakpointParam:
+//	case *responses.ResponseInputImagePromptCacheBreakpointParam:
+//	case *responses.ResponseInputFilePromptCacheBreakpointParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u responseInputContentUnionParamPromptCacheBreakpoint) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u responseInputContentUnionParamPromptCacheBreakpoint) GetMode() *string {
+	switch vt := u.any.(type) {
+	case *ResponseInputTextPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	case *ResponseInputImagePromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	case *ResponseInputFilePromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseInputContentUnionParam](
+		"type",
+		apijson.Discriminator[ResponseInputTextParam]("input_text"),
+		apijson.Discriminator[ResponseInputImageParam]("input_image"),
+		apijson.Discriminator[ResponseInputFileParam]("input_file"),
+	)
+}
 
 // A file input to the model.
 type ResponseInputFile struct {
@@ -15083,6 +15133,43 @@ type responseInputItemUnionParamTools struct{ any }
 //	}
 func (u responseInputItemUnionParamTools) AsAny() any { return u.any }
 
+func init() {
+	apijson.RegisterUnion[ResponseInputItemUnionParam](
+		"type",
+		apijson.Discriminator[EasyInputMessageParam]("message"),
+		apijson.Discriminator[ResponseInputItemMessageParam]("message"),
+		apijson.Discriminator[ResponseOutputMessageParam]("message"),
+		apijson.Discriminator[ResponseFileSearchToolCallParam]("file_search_call"),
+		apijson.Discriminator[ResponseComputerToolCallParam]("computer_call"),
+		apijson.Discriminator[ResponseInputItemComputerCallOutputParam]("computer_call_output"),
+		apijson.Discriminator[ResponseFunctionWebSearchParam]("web_search_call"),
+		apijson.Discriminator[ResponseFunctionToolCallParam]("function_call"),
+		apijson.Discriminator[ResponseInputItemFunctionCallOutputParam]("function_call_output"),
+		apijson.Discriminator[ResponseInputItemToolSearchCallParam]("tool_search_call"),
+		apijson.Discriminator[ResponseToolSearchOutputItemParam]("tool_search_output"),
+		apijson.Discriminator[ResponseInputItemAdditionalToolsParam]("additional_tools"),
+		apijson.Discriminator[ResponseReasoningItemParam]("reasoning"),
+		apijson.Discriminator[ResponseCompactionItemParam]("compaction"),
+		apijson.Discriminator[ResponseInputItemImageGenerationCallParam]("image_generation_call"),
+		apijson.Discriminator[ResponseCodeInterpreterToolCallParam]("code_interpreter_call"),
+		apijson.Discriminator[ResponseInputItemLocalShellCallParam]("local_shell_call"),
+		apijson.Discriminator[ResponseInputItemLocalShellCallOutputParam]("local_shell_call_output"),
+		apijson.Discriminator[ResponseInputItemShellCallParam]("shell_call"),
+		apijson.Discriminator[ResponseInputItemShellCallOutputParam]("shell_call_output"),
+		apijson.Discriminator[ResponseInputItemApplyPatchCallParam]("apply_patch_call"),
+		apijson.Discriminator[ResponseInputItemApplyPatchCallOutputParam]("apply_patch_call_output"),
+		apijson.Discriminator[ResponseInputItemMcpListToolsParam]("mcp_list_tools"),
+		apijson.Discriminator[ResponseInputItemMcpApprovalRequestParam]("mcp_approval_request"),
+		apijson.Discriminator[ResponseInputItemMcpApprovalResponseParam]("mcp_approval_response"),
+		apijson.Discriminator[ResponseInputItemMcpCallParam]("mcp_call"),
+		apijson.Discriminator[ResponseCustomToolCallOutputParam]("custom_tool_call_output"),
+		apijson.Discriminator[ResponseCustomToolCallParam]("custom_tool_call"),
+		apijson.Discriminator[ResponseInputItemCompactionTriggerParam]("compaction_trigger"),
+		apijson.Discriminator[ResponseInputItemItemReferenceParam]("item_reference"),
+		apijson.Discriminator[ResponseInputItemProgramParam]("program"),
+		apijson.Discriminator[ResponseInputItemProgramOutputParam]("program_output"),
+	)
+}
 
 // A message input to the model with a role indicating instruction following
 // hierarchy. Instructions given with the `developer` or `system` role take
@@ -15730,6 +15817,103 @@ func (r *ResponseInputItemShellCallOutputParam) UnmarshalJSON(data []byte) error
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemShellCallOutputParam](
+		"status", "in_progress", "completed", "incomplete",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseInputItemShellCallOutputCallerUnionParam struct {
+	OfDirect  *ResponseInputItemShellCallOutputCallerDirectParam  `json:",omitzero,inline"`
+	OfProgram *ResponseInputItemShellCallOutputCallerProgramParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseInputItemShellCallOutputCallerUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfDirect, u.OfProgram)
+}
+func (u *ResponseInputItemShellCallOutputCallerUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *ResponseInputItemShellCallOutputCallerUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfDirect) {
+		return u.OfDirect
+	} else if !param.IsOmitted(u.OfProgram) {
+		return u.OfProgram
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemShellCallOutputCallerUnionParam) GetCallerID() *string {
+	if vt := u.OfProgram; vt != nil {
+		return &vt.CallerID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemShellCallOutputCallerUnionParam) GetType() *string {
+	if vt := u.OfDirect; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfProgram; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseInputItemShellCallOutputCallerUnionParam](
+		"type",
+		apijson.Discriminator[ResponseInputItemShellCallOutputCallerDirectParam]("direct"),
+		apijson.Discriminator[ResponseInputItemShellCallOutputCallerProgramParam]("program"),
+	)
+}
+
+func NewResponseInputItemShellCallOutputCallerDirectParam() ResponseInputItemShellCallOutputCallerDirectParam {
+	return ResponseInputItemShellCallOutputCallerDirectParam{
+		Type: "direct",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponseInputItemShellCallOutputCallerDirectParam].
+type ResponseInputItemShellCallOutputCallerDirectParam struct {
+	// The caller type. Always `direct`.
+	Type constant.Direct `json:"type" default:"direct"`
+	paramObj
+}
+
+func (r ResponseInputItemShellCallOutputCallerDirectParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseInputItemShellCallOutputCallerDirectParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputItemShellCallOutputCallerDirectParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties CallerID, Type are required.
+type ResponseInputItemShellCallOutputCallerProgramParam struct {
+	// The call ID of the program item that produced this tool call.
+	CallerID string `json:"caller_id" api:"required"`
+	// The caller type. Always `program`.
+	//
+	// This field can be elided, and will marshal its zero value as "program".
+	Type constant.Program `json:"type" default:"program"`
+	paramObj
+}
+
+func (r ResponseInputItemShellCallOutputCallerProgramParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseInputItemShellCallOutputCallerProgramParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputItemShellCallOutputCallerProgramParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A tool call representing a request to create, delete, or update files using diff
 // patches.
@@ -16020,6 +16204,103 @@ func (r *ResponseInputItemApplyPatchCallOutputParam) UnmarshalJSON(data []byte) 
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemApplyPatchCallOutputParam](
+		"status", "completed", "failed",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type ResponseInputItemApplyPatchCallOutputCallerUnionParam struct {
+	OfDirect  *ResponseInputItemApplyPatchCallOutputCallerDirectParam  `json:",omitzero,inline"`
+	OfProgram *ResponseInputItemApplyPatchCallOutputCallerProgramParam `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u ResponseInputItemApplyPatchCallOutputCallerUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfDirect, u.OfProgram)
+}
+func (u *ResponseInputItemApplyPatchCallOutputCallerUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *ResponseInputItemApplyPatchCallOutputCallerUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfDirect) {
+		return u.OfDirect
+	} else if !param.IsOmitted(u.OfProgram) {
+		return u.OfProgram
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemApplyPatchCallOutputCallerUnionParam) GetCallerID() *string {
+	if vt := u.OfProgram; vt != nil {
+		return &vt.CallerID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemApplyPatchCallOutputCallerUnionParam) GetType() *string {
+	if vt := u.OfDirect; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfProgram; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[ResponseInputItemApplyPatchCallOutputCallerUnionParam](
+		"type",
+		apijson.Discriminator[ResponseInputItemApplyPatchCallOutputCallerDirectParam]("direct"),
+		apijson.Discriminator[ResponseInputItemApplyPatchCallOutputCallerProgramParam]("program"),
+	)
+}
+
+func NewResponseInputItemApplyPatchCallOutputCallerDirectParam() ResponseInputItemApplyPatchCallOutputCallerDirectParam {
+	return ResponseInputItemApplyPatchCallOutputCallerDirectParam{
+		Type: "direct",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewResponseInputItemApplyPatchCallOutputCallerDirectParam].
+type ResponseInputItemApplyPatchCallOutputCallerDirectParam struct {
+	// The caller type. Always `direct`.
+	Type constant.Direct `json:"type" default:"direct"`
+	paramObj
+}
+
+func (r ResponseInputItemApplyPatchCallOutputCallerDirectParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseInputItemApplyPatchCallOutputCallerDirectParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputItemApplyPatchCallOutputCallerDirectParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties CallerID, Type are required.
+type ResponseInputItemApplyPatchCallOutputCallerProgramParam struct {
+	// The call ID of the program item that produced this tool call.
+	CallerID string `json:"caller_id" api:"required"`
+	// The caller type. Always `program`.
+	//
+	// This field can be elided, and will marshal its zero value as "program".
+	Type constant.Program `json:"type" default:"program"`
+	paramObj
+}
+
+func (r ResponseInputItemApplyPatchCallOutputCallerProgramParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseInputItemApplyPatchCallOutputCallerProgramParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputItemApplyPatchCallOutputCallerProgramParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A list of tools available on an MCP server.
 //
@@ -16212,6 +16493,63 @@ func (r *ResponseInputItemItemReferenceParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// The properties ID, CallID, Code, Fingerprint, Type are required.
+type ResponseInputItemProgramParam struct {
+	// The unique ID of this program item.
+	ID string `json:"id" api:"required"`
+	// The stable call ID of the program item.
+	CallID string `json:"call_id" api:"required"`
+	// The JavaScript source executed by programmatic tool calling.
+	Code string `json:"code" api:"required"`
+	// Opaque program replay fingerprint that must be round-tripped.
+	Fingerprint string `json:"fingerprint" api:"required"`
+	// The item type. Always `program`.
+	//
+	// This field can be elided, and will marshal its zero value as "program".
+	Type constant.Program `json:"type" default:"program"`
+	paramObj
+}
+
+func (r ResponseInputItemProgramParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseInputItemProgramParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputItemProgramParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties ID, CallID, Result, Status, Type are required.
+type ResponseInputItemProgramOutputParam struct {
+	// The unique ID of this program output item.
+	ID string `json:"id" api:"required"`
+	// The call ID of the program item.
+	CallID string `json:"call_id" api:"required"`
+	// The result produced by the program item.
+	Result string `json:"result" api:"required"`
+	// The terminal status of the program output.
+	//
+	// Any of "completed", "incomplete".
+	Status string `json:"status,omitzero" api:"required"`
+	// The item type. Always `program_output`.
+	//
+	// This field can be elided, and will marshal its zero value as "program_output".
+	Type constant.ProgramOutput `json:"type" default:"program_output"`
+	paramObj
+}
+
+func (r ResponseInputItemProgramOutputParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseInputItemProgramOutputParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseInputItemProgramOutputParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ResponseInputItemProgramOutputParam](
+		"status", "completed", "incomplete",
+	)
+}
 
 type ResponseInputMessageContentList []ResponseInputContentUnion
 
@@ -23648,6 +23986,29 @@ func (u toolUnionParamUserLocation) GetType() *string {
 	return nil
 }
 
+func init() {
+	apijson.RegisterUnion[ToolUnionParam](
+		"type",
+		apijson.Discriminator[FunctionToolParam]("function"),
+		apijson.Discriminator[FileSearchToolParam]("file_search"),
+		apijson.Discriminator[ComputerToolParam]("computer"),
+		apijson.Discriminator[ComputerUsePreviewToolParam]("computer_use_preview"),
+		apijson.Discriminator[WebSearchToolParam]("web_search"),
+		apijson.Discriminator[WebSearchToolParam]("web_search_2025_08_26"),
+		apijson.Discriminator[ToolMcpParam]("mcp"),
+		apijson.Discriminator[ToolCodeInterpreterParam]("code_interpreter"),
+		apijson.Discriminator[ToolProgrammaticToolCallingParam]("programmatic_tool_calling"),
+		apijson.Discriminator[ToolImageGenerationParam]("image_generation"),
+		apijson.Discriminator[ToolLocalShellParam]("local_shell"),
+		apijson.Discriminator[FunctionShellToolParam]("shell"),
+		apijson.Discriminator[CustomToolParam]("custom"),
+		apijson.Discriminator[NamespaceToolParam]("namespace"),
+		apijson.Discriminator[ToolSearchToolParam]("tool_search"),
+		apijson.Discriminator[WebSearchPreviewToolParam]("web_search_preview"),
+		apijson.Discriminator[WebSearchPreviewToolParam]("web_search_preview_2025_03_11"),
+		apijson.Discriminator[ApplyPatchToolParam]("apply_patch"),
+	)
+}
 
 // Give the model access to additional tools via remote Model Context Protocol
 // (MCP) servers.
@@ -23978,6 +24339,35 @@ func (u ToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionPar
 	return nil
 }
 
+func init() {
+	apijson.RegisterUnion[ToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionParam](
+		"type",
+		apijson.Discriminator[ContainerNetworkPolicyDisabledParam]("disabled"),
+		apijson.Discriminator[ContainerNetworkPolicyAllowlistParam]("allowlist"),
+	)
+}
+
+func NewToolProgrammaticToolCallingParam() ToolProgrammaticToolCallingParam {
+	return ToolProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewToolProgrammaticToolCallingParam].
+type ToolProgrammaticToolCallingParam struct {
+	// The type of the tool. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r ToolProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow ToolProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ToolProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // A tool that generates images using the GPT image models.
 //
