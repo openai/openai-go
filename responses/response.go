@@ -20637,8 +20637,9 @@ type ResponseReasoningItem struct {
 	Type constant.Reasoning `json:"type" default:"reasoning"`
 	// Reasoning text content.
 	Content []ResponseReasoningItemContent `json:"content"`
-	// The encrypted content of the reasoning item - populated when a response is
-	// generated with `reasoning.encrypted_content` in the `include` parameter.
+	// The encrypted content of the reasoning item. This is populated by default for
+	// reasoning items returned by `POST /v1/responses` and WebSocket `response.create`
+	// requests.
 	EncryptedContent string `json:"encrypted_content" api:"nullable"`
 	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
 	// Populated when items are returned via API.
@@ -20738,8 +20739,9 @@ type ResponseReasoningItemParam struct {
 	ID string `json:"id" api:"required"`
 	// Reasoning summary content.
 	Summary []ResponseReasoningItemSummaryParam `json:"summary,omitzero" api:"required"`
-	// The encrypted content of the reasoning item - populated when a response is
-	// generated with `reasoning.encrypted_content` in the `include` parameter.
+	// The encrypted content of the reasoning item. This is populated by default for
+	// reasoning items returned by `POST /v1/responses` and WebSocket `response.create`
+	// requests.
 	EncryptedContent param.Opt[string] `json:"encrypted_content,omitzero"`
 	// Reasoning text content.
 	Content []ResponseReasoningItemContentParam `json:"content,omitzero"`
