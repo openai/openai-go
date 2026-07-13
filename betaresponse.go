@@ -25839,8 +25839,9 @@ type BetaResponseReasoningItem struct {
 	Agent BetaResponseReasoningItemAgent `json:"agent" api:"nullable"`
 	// Reasoning text content.
 	Content []BetaResponseReasoningItemContent `json:"content"`
-	// The encrypted content of the reasoning item - populated when a response is
-	// generated with `reasoning.encrypted_content` in the `include` parameter.
+	// The encrypted content of the reasoning item. This is populated by default for
+	// reasoning items returned by `POST /v1/responses` and WebSocket `response.create`
+	// requests.
 	EncryptedContent string `json:"encrypted_content" api:"nullable"`
 	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
 	// Populated when items are returned via API.
@@ -25958,8 +25959,9 @@ type BetaResponseReasoningItemParam struct {
 	ID string `json:"id" api:"required"`
 	// Reasoning summary content.
 	Summary []BetaResponseReasoningItemSummaryParam `json:"summary,omitzero" api:"required"`
-	// The encrypted content of the reasoning item - populated when a response is
-	// generated with `reasoning.encrypted_content` in the `include` parameter.
+	// The encrypted content of the reasoning item. This is populated by default for
+	// reasoning items returned by `POST /v1/responses` and WebSocket `response.create`
+	// requests.
 	EncryptedContent param.Opt[string] `json:"encrypted_content,omitzero"`
 	// The agent that produced this item.
 	Agent BetaResponseReasoningItemAgentParam `json:"agent,omitzero"`
