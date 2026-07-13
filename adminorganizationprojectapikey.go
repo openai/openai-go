@@ -117,19 +117,24 @@ type ProjectAPIKey struct {
 	// The object type, which is always `organization.project.api_key`
 	Object constant.OrganizationProjectAPIKey `json:"object" default:"organization.project.api_key"`
 	Owner  ProjectAPIKeyOwner                 `json:"owner" api:"required"`
+	// Whether the API key's owner currently has effective access to the project.
+	//
+	// Any of "active", "inactive".
+	OwnerProjectAccess ProjectAPIKeyOwnerProjectAccess `json:"owner_project_access" api:"required"`
 	// The redacted value of the API key
 	RedactedValue string `json:"redacted_value" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID            respjson.Field
-		CreatedAt     respjson.Field
-		LastUsedAt    respjson.Field
-		Name          respjson.Field
-		Object        respjson.Field
-		Owner         respjson.Field
-		RedactedValue respjson.Field
-		ExtraFields   map[string]respjson.Field
-		raw           string
+		ID                 respjson.Field
+		CreatedAt          respjson.Field
+		LastUsedAt         respjson.Field
+		Name               respjson.Field
+		Object             respjson.Field
+		Owner              respjson.Field
+		OwnerProjectAccess respjson.Field
+		RedactedValue      respjson.Field
+		ExtraFields        map[string]respjson.Field
+		raw                string
 	} `json:"-"`
 }
 
@@ -221,6 +226,14 @@ func (r *ProjectAPIKeyOwnerUser) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Whether the API key's owner currently has effective access to the project.
+type ProjectAPIKeyOwnerProjectAccess string
+
+const (
+	ProjectAPIKeyOwnerProjectAccessActive   ProjectAPIKeyOwnerProjectAccess = "active"
+	ProjectAPIKeyOwnerProjectAccessInactive ProjectAPIKeyOwnerProjectAccess = "inactive"
+)
+
 type AdminOrganizationProjectAPIKeyDeleteResponse struct {
 	ID      string                                    `json:"id" api:"required"`
 	Deleted bool                                      `json:"deleted" api:"required"`
@@ -250,6 +263,14 @@ type AdminOrganizationProjectAPIKeyListParams struct {
 	// A limit on the number of objects to be returned. Limit can range between 1 and
 	// 100, and the default is 20.
 	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
+	// Filter API keys by whether the owner currently has effective access to the
+	// project. Use `active` for owners with access, `inactive` for owners without
+	// access, or `any` for all enabled project API keys. If omitted, the endpoint
+	// applies its existing membership-based visibility rules, which may exclude some
+	// enabled keys.
+	//
+	// Any of "active", "inactive", "any".
+	OwnerProjectAccess AdminOrganizationProjectAPIKeyListParamsOwnerProjectAccess `query:"owner_project_access,omitzero" json:"-"`
 	paramObj
 }
 
@@ -261,3 +282,16 @@ func (r AdminOrganizationProjectAPIKeyListParams) URLQuery() (v url.Values, err 
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }
+
+// Filter API keys by whether the owner currently has effective access to the
+// project. Use `active` for owners with access, `inactive` for owners without
+// access, or `any` for all enabled project API keys. If omitted, the endpoint
+// applies its existing membership-based visibility rules, which may exclude some
+// enabled keys.
+type AdminOrganizationProjectAPIKeyListParamsOwnerProjectAccess string
+
+const (
+	AdminOrganizationProjectAPIKeyListParamsOwnerProjectAccessActive   AdminOrganizationProjectAPIKeyListParamsOwnerProjectAccess = "active"
+	AdminOrganizationProjectAPIKeyListParamsOwnerProjectAccessInactive AdminOrganizationProjectAPIKeyListParamsOwnerProjectAccess = "inactive"
+	AdminOrganizationProjectAPIKeyListParamsOwnerProjectAccessAny      AdminOrganizationProjectAPIKeyListParamsOwnerProjectAccess = "any"
+)
