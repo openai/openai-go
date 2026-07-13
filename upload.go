@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"slices"
 
@@ -80,7 +79,7 @@ func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...opt
 		err = errors.New("missing required upload_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("uploads/%s/cancel", uploadID)
+	path := requestconfig.FormatPath("uploads/%s/cancel", uploadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }
@@ -107,7 +106,7 @@ func (r *UploadService) Complete(ctx context.Context, uploadID string, body Uplo
 		err = errors.New("missing required upload_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("uploads/%s/complete", uploadID)
+	path := requestconfig.FormatPath("uploads/%s/complete", uploadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }

@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -61,7 +60,7 @@ func (r *BetaThreadRunService) New(ctx context.Context, threadID string, params 
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs", threadID)
+	path := requestconfig.FormatPath("threads/%s/runs", threadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return res, err
 }
@@ -82,7 +81,7 @@ func (r *BetaThreadRunService) NewStreaming(ctx context.Context, threadID string
 		err = errors.New("missing required thread_id parameter")
 		return ssestream.NewStream[AssistantStreamEventUnion](nil, err)
 	}
-	path := fmt.Sprintf("threads/%s/runs", threadID)
+	path := requestconfig.FormatPath("threads/%s/runs", threadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &raw, opts...)
 	return ssestream.NewStreamWithSynthesizeEventData[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
@@ -102,7 +101,7 @@ func (r *BetaThreadRunService) Get(ctx context.Context, threadID string, runID s
 		err = errors.New("missing required run_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s", threadID, runID)
+	path := requestconfig.FormatPath("threads/%s/runs/%s", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -122,7 +121,7 @@ func (r *BetaThreadRunService) Update(ctx context.Context, threadID string, runI
 		err = errors.New("missing required run_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s", threadID, runID)
+	path := requestconfig.FormatPath("threads/%s/runs/%s", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -139,7 +138,7 @@ func (r *BetaThreadRunService) List(ctx context.Context, threadID string, query 
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs", threadID)
+	path := requestconfig.FormatPath("threads/%s/runs", threadID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -174,7 +173,7 @@ func (r *BetaThreadRunService) Cancel(ctx context.Context, threadID string, runI
 		err = errors.New("missing required run_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s/cancel", threadID, runID)
+	path := requestconfig.FormatPath("threads/%s/runs/%s/cancel", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }
@@ -197,7 +196,7 @@ func (r *BetaThreadRunService) SubmitToolOutputs(ctx context.Context, threadID s
 		err = errors.New("missing required run_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", threadID, runID)
+	path := requestconfig.FormatPath("threads/%s/runs/%s/submit_tool_outputs", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -225,7 +224,7 @@ func (r *BetaThreadRunService) SubmitToolOutputsStreaming(ctx context.Context, t
 		err = errors.New("missing required run_id parameter")
 		return ssestream.NewStream[AssistantStreamEventUnion](nil, err)
 	}
-	path := fmt.Sprintf("threads/%s/runs/%s/submit_tool_outputs", threadID, runID)
+	path := requestconfig.FormatPath("threads/%s/runs/%s/submit_tool_outputs", threadID, runID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &raw, opts...)
 	return ssestream.NewStreamWithSynthesizeEventData[AssistantStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
@@ -636,21 +635,14 @@ type BetaThreadRunNewParams struct {
 	// model associated with the assistant. If not, the model associated with the
 	// assistant will be used.
 	Model shared.ChatModel `json:"model,omitzero"`
-	// Constrains effort on reasoning for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-	// Reducing reasoning effort can result in faster responses and fewer tokens used
-	// on reasoning in a response.
+	// Constrains effort on reasoning for reasoning models. Currently supported values
+	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response. Not all reasoning models support every value. See the
+	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// model-specific support.
 	//
-	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-	//     calls are supported for all reasoning values in gpt-5.1.
-	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-	//     support `none`.
-	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-	//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
-	//
-	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// Override the tools the assistant can use for this run. This is useful for
 	// modifying the behavior on a per-run basis.

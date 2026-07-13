@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -119,7 +118,7 @@ func (r *ChatCompletionService) Get(ctx context.Context, completionID string, op
 		err = errors.New("missing required completion_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("chat/completions/%s", completionID)
+	path := requestconfig.FormatPath("chat/completions/%s", completionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -134,7 +133,7 @@ func (r *ChatCompletionService) Update(ctx context.Context, completionID string,
 		err = errors.New("missing required completion_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("chat/completions/%s", completionID)
+	path := requestconfig.FormatPath("chat/completions/%s", completionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -174,7 +173,7 @@ func (r *ChatCompletionService) Delete(ctx context.Context, completionID string,
 		err = errors.New("missing required completion_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("chat/completions/%s", completionID)
+	path := requestconfig.FormatPath("chat/completions/%s", completionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -193,6 +192,9 @@ type ChatCompletion struct {
 	Model string `json:"model" api:"required"`
 	// The object type, which is always `chat.completion`.
 	Object constant.ChatCompletion `json:"object" default:"chat.completion"`
+	// Moderation results for the request input and generated output, if moderated
+	// completions were requested.
+	Moderation ChatCompletionModeration `json:"moderation" api:"nullable"`
 	// Specifies the processing type used for serving the request.
 	//
 	//   - If set to 'auto', then the request will be processed with the service tier
@@ -228,6 +230,7 @@ type ChatCompletion struct {
 		Created           respjson.Field
 		Model             respjson.Field
 		Object            respjson.Field
+		Moderation        respjson.Field
 		ServiceTier       respjson.Field
 		SystemFingerprint respjson.Field
 		Usage             respjson.Field
@@ -248,7 +251,8 @@ type ChatCompletionChoice struct {
 	// number of tokens specified in the request was reached, `content_filter` if
 	// content was omitted due to a flag from our content filters, `tool_calls` if the
 	// model called a tool, or `function_call` (deprecated) if the model called a
-	// function.
+	// function. Read the [Model Spec](https://model-spec.openai.com/2025-12-18.html)
+	// for more.
 	//
 	// Any of "stop", "length", "tool_calls", "content_filter", "function_call".
 	FinishReason string `json:"finish_reason" api:"required"`
@@ -293,6 +297,342 @@ type ChatCompletionChoiceLogprobs struct {
 // Returns the unmodified JSON received from the API
 func (r ChatCompletionChoiceLogprobs) RawJSON() string { return r.JSON.raw }
 func (r *ChatCompletionChoiceLogprobs) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Moderation results for the request input and generated output, if moderated
+// completions were requested.
+type ChatCompletionModeration struct {
+	// Moderation for the request input.
+	Input ChatCompletionModerationInputUnion `json:"input" api:"required"`
+	// Moderation for the generated output.
+	Output ChatCompletionModerationOutputUnion `json:"output" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Input       respjson.Field
+		Output      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModeration) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModeration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ChatCompletionModerationInputUnion contains all possible properties and values
+// from [ChatCompletionModerationInputModerationResults],
+// [ChatCompletionModerationInputError].
+//
+// Use the [ChatCompletionModerationInputUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ChatCompletionModerationInputUnion struct {
+	// This field is from variant [ChatCompletionModerationInputModerationResults].
+	Model string `json:"model"`
+	// This field is from variant [ChatCompletionModerationInputModerationResults].
+	Results []ChatCompletionModerationInputModerationResultsResult `json:"results"`
+	// Any of "moderation_results", "error".
+	Type string `json:"type"`
+	// This field is from variant [ChatCompletionModerationInputError].
+	Code string `json:"code"`
+	// This field is from variant [ChatCompletionModerationInputError].
+	Message string `json:"message"`
+	JSON    struct {
+		Model   respjson.Field
+		Results respjson.Field
+		Type    respjson.Field
+		Code    respjson.Field
+		Message respjson.Field
+		raw     string
+	} `json:"-"`
+}
+
+// anyChatCompletionModerationInput is implemented by each variant of
+// [ChatCompletionModerationInputUnion] to add type safety for the return type of
+// [ChatCompletionModerationInputUnion.AsAny]
+type anyChatCompletionModerationInput interface {
+	implChatCompletionModerationInputUnion()
+}
+
+func (ChatCompletionModerationInputModerationResults) implChatCompletionModerationInputUnion() {}
+func (ChatCompletionModerationInputError) implChatCompletionModerationInputUnion()             {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ChatCompletionModerationInputUnion.AsAny().(type) {
+//	case openai.ChatCompletionModerationInputModerationResults:
+//	case openai.ChatCompletionModerationInputError:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ChatCompletionModerationInputUnion) AsAny() anyChatCompletionModerationInput {
+	switch u.Type {
+	case "moderation_results":
+		return u.AsModerationResults()
+	case "error":
+		return u.AsError()
+	}
+	return nil
+}
+
+func (u ChatCompletionModerationInputUnion) AsModerationResults() (v ChatCompletionModerationInputModerationResults) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ChatCompletionModerationInputUnion) AsError() (v ChatCompletionModerationInputError) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ChatCompletionModerationInputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ChatCompletionModerationInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Successful moderation results for the request input or generated output.
+type ChatCompletionModerationInputModerationResults struct {
+	// The moderation model used to generate the results.
+	Model string `json:"model" api:"required"`
+	// A list of moderation results.
+	Results []ChatCompletionModerationInputModerationResultsResult `json:"results" api:"required"`
+	// The object type, which is always `moderation_results`.
+	Type constant.ModerationResults `json:"type" default:"moderation_results"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Results     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationInputModerationResults) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationInputModerationResults) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A moderation result produced for the response input or output.
+type ChatCompletionModerationInputModerationResultsResult struct {
+	// A dictionary of moderation categories to booleans, True if the input is flagged
+	// under this category.
+	Categories map[string]bool `json:"categories" api:"required"`
+	// Which modalities of input are reflected by the score for each category.
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types" api:"required"`
+	// A dictionary of moderation categories to scores.
+	CategoryScores map[string]float64 `json:"category_scores" api:"required"`
+	// A boolean indicating whether the content was flagged by any category.
+	Flagged bool `json:"flagged" api:"required"`
+	// The moderation model that produced this result.
+	Model string `json:"model" api:"required"`
+	// The object type, which was always `moderation_result` for successful moderation
+	// results.
+	Type constant.ModerationResult `json:"type" default:"moderation_result"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		ExtraFields               map[string]respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationInputModerationResultsResult) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationInputModerationResultsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An error produced while attempting moderation.
+type ChatCompletionModerationInputError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// The error message.
+	Message string `json:"message" api:"required"`
+	// The object type, which is always `error`.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationInputError) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationInputError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ChatCompletionModerationOutputUnion contains all possible properties and values
+// from [ChatCompletionModerationOutputModerationResults],
+// [ChatCompletionModerationOutputError].
+//
+// Use the [ChatCompletionModerationOutputUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ChatCompletionModerationOutputUnion struct {
+	// This field is from variant [ChatCompletionModerationOutputModerationResults].
+	Model string `json:"model"`
+	// This field is from variant [ChatCompletionModerationOutputModerationResults].
+	Results []ChatCompletionModerationOutputModerationResultsResult `json:"results"`
+	// Any of "moderation_results", "error".
+	Type string `json:"type"`
+	// This field is from variant [ChatCompletionModerationOutputError].
+	Code string `json:"code"`
+	// This field is from variant [ChatCompletionModerationOutputError].
+	Message string `json:"message"`
+	JSON    struct {
+		Model   respjson.Field
+		Results respjson.Field
+		Type    respjson.Field
+		Code    respjson.Field
+		Message respjson.Field
+		raw     string
+	} `json:"-"`
+}
+
+// anyChatCompletionModerationOutput is implemented by each variant of
+// [ChatCompletionModerationOutputUnion] to add type safety for the return type of
+// [ChatCompletionModerationOutputUnion.AsAny]
+type anyChatCompletionModerationOutput interface {
+	implChatCompletionModerationOutputUnion()
+}
+
+func (ChatCompletionModerationOutputModerationResults) implChatCompletionModerationOutputUnion() {}
+func (ChatCompletionModerationOutputError) implChatCompletionModerationOutputUnion()             {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ChatCompletionModerationOutputUnion.AsAny().(type) {
+//	case openai.ChatCompletionModerationOutputModerationResults:
+//	case openai.ChatCompletionModerationOutputError:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ChatCompletionModerationOutputUnion) AsAny() anyChatCompletionModerationOutput {
+	switch u.Type {
+	case "moderation_results":
+		return u.AsModerationResults()
+	case "error":
+		return u.AsError()
+	}
+	return nil
+}
+
+func (u ChatCompletionModerationOutputUnion) AsModerationResults() (v ChatCompletionModerationOutputModerationResults) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ChatCompletionModerationOutputUnion) AsError() (v ChatCompletionModerationOutputError) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ChatCompletionModerationOutputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ChatCompletionModerationOutputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Successful moderation results for the request input or generated output.
+type ChatCompletionModerationOutputModerationResults struct {
+	// The moderation model used to generate the results.
+	Model string `json:"model" api:"required"`
+	// A list of moderation results.
+	Results []ChatCompletionModerationOutputModerationResultsResult `json:"results" api:"required"`
+	// The object type, which is always `moderation_results`.
+	Type constant.ModerationResults `json:"type" default:"moderation_results"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Results     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationOutputModerationResults) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationOutputModerationResults) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A moderation result produced for the response input or output.
+type ChatCompletionModerationOutputModerationResultsResult struct {
+	// A dictionary of moderation categories to booleans, True if the input is flagged
+	// under this category.
+	Categories map[string]bool `json:"categories" api:"required"`
+	// Which modalities of input are reflected by the score for each category.
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types" api:"required"`
+	// A dictionary of moderation categories to scores.
+	CategoryScores map[string]float64 `json:"category_scores" api:"required"`
+	// A boolean indicating whether the content was flagged by any category.
+	Flagged bool `json:"flagged" api:"required"`
+	// The moderation model that produced this result.
+	Model string `json:"model" api:"required"`
+	// The object type, which was always `moderation_result` for successful moderation
+	// results.
+	Type constant.ModerationResult `json:"type" default:"moderation_result"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		ExtraFields               map[string]respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationOutputModerationResultsResult) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationOutputModerationResultsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An error produced while attempting moderation.
+type ChatCompletionModerationOutputError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// The error message.
+	Message string `json:"message" api:"required"`
+	// The object type, which is always `error`.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionModerationOutputError) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionModerationOutputError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -452,6 +792,14 @@ func (u *ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) asAn
 func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) GetText() *string {
 	if vt := u.OfText; vt != nil {
 		return &vt.Text
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion) GetPromptCacheBreakpoint() *ChatCompletionContentPartTextPromptCacheBreakpointParam {
+	if vt := u.OfText; vt != nil {
+		return &vt.PromptCacheBreakpoint
 	}
 	return nil
 }
@@ -657,6 +1005,9 @@ type ChatCompletionChunk struct {
 	Model string `json:"model" api:"required"`
 	// The object type, which is always `chat.completion.chunk`.
 	Object constant.ChatCompletionChunk `json:"object" default:"chat.completion.chunk"`
+	// Moderation results for the request input and generated output. Present on the
+	// moderation chunk when moderated completions are requested.
+	Moderation ChatCompletionChunkModeration `json:"moderation" api:"nullable"`
 	// Specifies the processing type used for serving the request.
 	//
 	//   - If set to 'auto', then the request will be processed with the service tier
@@ -697,6 +1048,7 @@ type ChatCompletionChunk struct {
 		Created           respjson.Field
 		Model             respjson.Field
 		Object            respjson.Field
+		Moderation        respjson.Field
 		ServiceTier       respjson.Field
 		SystemFingerprint respjson.Field
 		Usage             respjson.Field
@@ -875,6 +1227,352 @@ func (r *ChatCompletionChunkChoiceLogprobs) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Moderation results for the request input and generated output. Present on the
+// moderation chunk when moderated completions are requested.
+type ChatCompletionChunkModeration struct {
+	// Moderation for the request input.
+	Input ChatCompletionChunkModerationInputUnion `json:"input" api:"required"`
+	// Moderation for the generated output.
+	Output ChatCompletionChunkModerationOutputUnion `json:"output" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Input       respjson.Field
+		Output      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModeration) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionChunkModeration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ChatCompletionChunkModerationInputUnion contains all possible properties and
+// values from [ChatCompletionChunkModerationInputModerationResults],
+// [ChatCompletionChunkModerationInputError].
+//
+// Use the [ChatCompletionChunkModerationInputUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ChatCompletionChunkModerationInputUnion struct {
+	// This field is from variant
+	// [ChatCompletionChunkModerationInputModerationResults].
+	Model string `json:"model"`
+	// This field is from variant
+	// [ChatCompletionChunkModerationInputModerationResults].
+	Results []ChatCompletionChunkModerationInputModerationResultsResult `json:"results"`
+	// Any of "moderation_results", "error".
+	Type string `json:"type"`
+	// This field is from variant [ChatCompletionChunkModerationInputError].
+	Code string `json:"code"`
+	// This field is from variant [ChatCompletionChunkModerationInputError].
+	Message string `json:"message"`
+	JSON    struct {
+		Model   respjson.Field
+		Results respjson.Field
+		Type    respjson.Field
+		Code    respjson.Field
+		Message respjson.Field
+		raw     string
+	} `json:"-"`
+}
+
+// anyChatCompletionChunkModerationInput is implemented by each variant of
+// [ChatCompletionChunkModerationInputUnion] to add type safety for the return type
+// of [ChatCompletionChunkModerationInputUnion.AsAny]
+type anyChatCompletionChunkModerationInput interface {
+	implChatCompletionChunkModerationInputUnion()
+}
+
+func (ChatCompletionChunkModerationInputModerationResults) implChatCompletionChunkModerationInputUnion() {
+}
+func (ChatCompletionChunkModerationInputError) implChatCompletionChunkModerationInputUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ChatCompletionChunkModerationInputUnion.AsAny().(type) {
+//	case openai.ChatCompletionChunkModerationInputModerationResults:
+//	case openai.ChatCompletionChunkModerationInputError:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ChatCompletionChunkModerationInputUnion) AsAny() anyChatCompletionChunkModerationInput {
+	switch u.Type {
+	case "moderation_results":
+		return u.AsModerationResults()
+	case "error":
+		return u.AsError()
+	}
+	return nil
+}
+
+func (u ChatCompletionChunkModerationInputUnion) AsModerationResults() (v ChatCompletionChunkModerationInputModerationResults) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ChatCompletionChunkModerationInputUnion) AsError() (v ChatCompletionChunkModerationInputError) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ChatCompletionChunkModerationInputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ChatCompletionChunkModerationInputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Successful moderation results for the request input or generated output.
+type ChatCompletionChunkModerationInputModerationResults struct {
+	// The moderation model used to generate the results.
+	Model string `json:"model" api:"required"`
+	// A list of moderation results.
+	Results []ChatCompletionChunkModerationInputModerationResultsResult `json:"results" api:"required"`
+	// The object type, which is always `moderation_results`.
+	Type constant.ModerationResults `json:"type" default:"moderation_results"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Results     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationInputModerationResults) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionChunkModerationInputModerationResults) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A moderation result produced for the response input or output.
+type ChatCompletionChunkModerationInputModerationResultsResult struct {
+	// A dictionary of moderation categories to booleans, True if the input is flagged
+	// under this category.
+	Categories map[string]bool `json:"categories" api:"required"`
+	// Which modalities of input are reflected by the score for each category.
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types" api:"required"`
+	// A dictionary of moderation categories to scores.
+	CategoryScores map[string]float64 `json:"category_scores" api:"required"`
+	// A boolean indicating whether the content was flagged by any category.
+	Flagged bool `json:"flagged" api:"required"`
+	// The moderation model that produced this result.
+	Model string `json:"model" api:"required"`
+	// The object type, which was always `moderation_result` for successful moderation
+	// results.
+	Type constant.ModerationResult `json:"type" default:"moderation_result"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		ExtraFields               map[string]respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationInputModerationResultsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ChatCompletionChunkModerationInputModerationResultsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An error produced while attempting moderation.
+type ChatCompletionChunkModerationInputError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// The error message.
+	Message string `json:"message" api:"required"`
+	// The object type, which is always `error`.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationInputError) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionChunkModerationInputError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ChatCompletionChunkModerationOutputUnion contains all possible properties and
+// values from [ChatCompletionChunkModerationOutputModerationResults],
+// [ChatCompletionChunkModerationOutputError].
+//
+// Use the [ChatCompletionChunkModerationOutputUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ChatCompletionChunkModerationOutputUnion struct {
+	// This field is from variant
+	// [ChatCompletionChunkModerationOutputModerationResults].
+	Model string `json:"model"`
+	// This field is from variant
+	// [ChatCompletionChunkModerationOutputModerationResults].
+	Results []ChatCompletionChunkModerationOutputModerationResultsResult `json:"results"`
+	// Any of "moderation_results", "error".
+	Type string `json:"type"`
+	// This field is from variant [ChatCompletionChunkModerationOutputError].
+	Code string `json:"code"`
+	// This field is from variant [ChatCompletionChunkModerationOutputError].
+	Message string `json:"message"`
+	JSON    struct {
+		Model   respjson.Field
+		Results respjson.Field
+		Type    respjson.Field
+		Code    respjson.Field
+		Message respjson.Field
+		raw     string
+	} `json:"-"`
+}
+
+// anyChatCompletionChunkModerationOutput is implemented by each variant of
+// [ChatCompletionChunkModerationOutputUnion] to add type safety for the return
+// type of [ChatCompletionChunkModerationOutputUnion.AsAny]
+type anyChatCompletionChunkModerationOutput interface {
+	implChatCompletionChunkModerationOutputUnion()
+}
+
+func (ChatCompletionChunkModerationOutputModerationResults) implChatCompletionChunkModerationOutputUnion() {
+}
+func (ChatCompletionChunkModerationOutputError) implChatCompletionChunkModerationOutputUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ChatCompletionChunkModerationOutputUnion.AsAny().(type) {
+//	case openai.ChatCompletionChunkModerationOutputModerationResults:
+//	case openai.ChatCompletionChunkModerationOutputError:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ChatCompletionChunkModerationOutputUnion) AsAny() anyChatCompletionChunkModerationOutput {
+	switch u.Type {
+	case "moderation_results":
+		return u.AsModerationResults()
+	case "error":
+		return u.AsError()
+	}
+	return nil
+}
+
+func (u ChatCompletionChunkModerationOutputUnion) AsModerationResults() (v ChatCompletionChunkModerationOutputModerationResults) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ChatCompletionChunkModerationOutputUnion) AsError() (v ChatCompletionChunkModerationOutputError) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ChatCompletionChunkModerationOutputUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ChatCompletionChunkModerationOutputUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Successful moderation results for the request input or generated output.
+type ChatCompletionChunkModerationOutputModerationResults struct {
+	// The moderation model used to generate the results.
+	Model string `json:"model" api:"required"`
+	// A list of moderation results.
+	Results []ChatCompletionChunkModerationOutputModerationResultsResult `json:"results" api:"required"`
+	// The object type, which is always `moderation_results`.
+	Type constant.ModerationResults `json:"type" default:"moderation_results"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Model       respjson.Field
+		Results     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationOutputModerationResults) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionChunkModerationOutputModerationResults) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A moderation result produced for the response input or output.
+type ChatCompletionChunkModerationOutputModerationResultsResult struct {
+	// A dictionary of moderation categories to booleans, True if the input is flagged
+	// under this category.
+	Categories map[string]bool `json:"categories" api:"required"`
+	// Which modalities of input are reflected by the score for each category.
+	CategoryAppliedInputTypes map[string][]string `json:"category_applied_input_types" api:"required"`
+	// A dictionary of moderation categories to scores.
+	CategoryScores map[string]float64 `json:"category_scores" api:"required"`
+	// A boolean indicating whether the content was flagged by any category.
+	Flagged bool `json:"flagged" api:"required"`
+	// The moderation model that produced this result.
+	Model string `json:"model" api:"required"`
+	// The object type, which was always `moderation_result` for successful moderation
+	// results.
+	Type constant.ModerationResult `json:"type" default:"moderation_result"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Categories                respjson.Field
+		CategoryAppliedInputTypes respjson.Field
+		CategoryScores            respjson.Field
+		Flagged                   respjson.Field
+		Model                     respjson.Field
+		Type                      respjson.Field
+		ExtraFields               map[string]respjson.Field
+		raw                       string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationOutputModerationResultsResult) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ChatCompletionChunkModerationOutputModerationResultsResult) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An error produced while attempting moderation.
+type ChatCompletionChunkModerationOutputError struct {
+	// The error code.
+	Code string `json:"code" api:"required"`
+	// The error message.
+	Message string `json:"message" api:"required"`
+	// The object type, which is always `error`.
+	Type constant.Error `json:"type" default:"error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionChunkModerationOutputError) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionChunkModerationOutputError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Specifies the processing type used for serving the request.
 //
 //   - If set to 'auto', then the request will be processed with the service tier
@@ -1002,6 +1700,56 @@ func (u ChatCompletionContentPartUnionParam) GetType() *string {
 	return nil
 }
 
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u ChatCompletionContentPartUnionParam) GetPromptCacheBreakpoint() (res chatCompletionContentPartUnionParamPromptCacheBreakpoint) {
+	if vt := u.OfText; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	} else if vt := u.OfImageURL; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	} else if vt := u.OfInputAudio; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	} else if vt := u.OfFile; vt != nil {
+		res.any = &vt.PromptCacheBreakpoint
+	}
+	return
+}
+
+// Can have the runtime types
+// [*ChatCompletionContentPartTextPromptCacheBreakpointParam],
+// [*ChatCompletionContentPartImagePromptCacheBreakpointParam],
+// [*ChatCompletionContentPartInputAudioPromptCacheBreakpointParam],
+// [*ChatCompletionContentPartFilePromptCacheBreakpointParam]
+type chatCompletionContentPartUnionParamPromptCacheBreakpoint struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *openai.ChatCompletionContentPartTextPromptCacheBreakpointParam:
+//	case *openai.ChatCompletionContentPartImagePromptCacheBreakpointParam:
+//	case *openai.ChatCompletionContentPartInputAudioPromptCacheBreakpointParam:
+//	case *openai.ChatCompletionContentPartFilePromptCacheBreakpointParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u chatCompletionContentPartUnionParamPromptCacheBreakpoint) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u chatCompletionContentPartUnionParamPromptCacheBreakpoint) GetMode() *string {
+	switch vt := u.any.(type) {
+	case *ChatCompletionContentPartTextPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	case *ChatCompletionContentPartImagePromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	case *ChatCompletionContentPartInputAudioPromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	case *ChatCompletionContentPartFilePromptCacheBreakpointParam:
+		return (*string)(&vt.Mode)
+	}
+	return nil
+}
+
 func init() {
 	apijson.RegisterUnion[ChatCompletionContentPartUnionParam](
 		"type",
@@ -1018,6 +1766,10 @@ func init() {
 // The properties File, Type are required.
 type ChatCompletionContentPartFileParam struct {
 	File ChatCompletionContentPartFileFileParam `json:"file,omitzero" api:"required"`
+	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+	// token block.
+	PromptCacheBreakpoint ChatCompletionContentPartFilePromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the content part. Always `file`.
 	//
 	// This field can be elided, and will marshal its zero value as "file".
@@ -1052,17 +1804,48 @@ func (r *ChatCompletionContentPartFileFileParam) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, r)
 }
 
+func NewChatCompletionContentPartFilePromptCacheBreakpointParam() ChatCompletionContentPartFilePromptCacheBreakpointParam {
+	return ChatCompletionContentPartFilePromptCacheBreakpointParam{
+		Mode: "explicit",
+	}
+}
+
+// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+// token block.
+//
+// This struct has a constant value, construct it with
+// [NewChatCompletionContentPartFilePromptCacheBreakpointParam].
+type ChatCompletionContentPartFilePromptCacheBreakpointParam struct {
+	// The breakpoint mode. Always `explicit`.
+	Mode constant.Explicit `json:"mode" default:"explicit"`
+	paramObj
+}
+
+func (r ChatCompletionContentPartFilePromptCacheBreakpointParam) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionContentPartFilePromptCacheBreakpointParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionContentPartFilePromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Learn about [image inputs](https://platform.openai.com/docs/guides/vision).
 type ChatCompletionContentPartImage struct {
 	ImageURL ChatCompletionContentPartImageImageURL `json:"image_url" api:"required"`
 	// The type of the content part.
 	Type constant.ImageURL `json:"type" default:"image_url"`
+	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+	// token block.
+	PromptCacheBreakpoint ChatCompletionContentPartImagePromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ImageURL    respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ImageURL              respjson.Field
+		Type                  respjson.Field
+		PromptCacheBreakpoint respjson.Field
+		ExtraFields           map[string]respjson.Field
+		raw                   string
 	} `json:"-"`
 }
 
@@ -1105,11 +1888,35 @@ func (r *ChatCompletionContentPartImageImageURL) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+// token block.
+type ChatCompletionContentPartImagePromptCacheBreakpoint struct {
+	// The breakpoint mode. Always `explicit`.
+	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Mode        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionContentPartImagePromptCacheBreakpoint) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionContentPartImagePromptCacheBreakpoint) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Learn about [image inputs](https://platform.openai.com/docs/guides/vision).
 //
 // The properties ImageURL, Type are required.
 type ChatCompletionContentPartImageParam struct {
 	ImageURL ChatCompletionContentPartImageImageURLParam `json:"image_url,omitzero" api:"required"`
+	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+	// token block.
+	PromptCacheBreakpoint ChatCompletionContentPartImagePromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the content part.
 	//
 	// This field can be elided, and will marshal its zero value as "image_url".
@@ -1151,11 +1958,41 @@ func init() {
 	)
 }
 
+func NewChatCompletionContentPartImagePromptCacheBreakpointParam() ChatCompletionContentPartImagePromptCacheBreakpointParam {
+	return ChatCompletionContentPartImagePromptCacheBreakpointParam{
+		Mode: "explicit",
+	}
+}
+
+// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+// token block.
+//
+// This struct has a constant value, construct it with
+// [NewChatCompletionContentPartImagePromptCacheBreakpointParam].
+type ChatCompletionContentPartImagePromptCacheBreakpointParam struct {
+	// The breakpoint mode. Always `explicit`.
+	Mode constant.Explicit `json:"mode" default:"explicit"`
+	paramObj
+}
+
+func (r ChatCompletionContentPartImagePromptCacheBreakpointParam) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionContentPartImagePromptCacheBreakpointParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionContentPartImagePromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Learn about [audio inputs](https://platform.openai.com/docs/guides/audio).
 //
 // The properties InputAudio, Type are required.
 type ChatCompletionContentPartInputAudioParam struct {
 	InputAudio ChatCompletionContentPartInputAudioInputAudioParam `json:"input_audio,omitzero" api:"required"`
+	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+	// token block.
+	PromptCacheBreakpoint ChatCompletionContentPartInputAudioPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the content part. Always `input_audio`.
 	//
 	// This field can be elided, and will marshal its zero value as "input_audio".
@@ -1196,6 +2033,32 @@ func init() {
 	)
 }
 
+func NewChatCompletionContentPartInputAudioPromptCacheBreakpointParam() ChatCompletionContentPartInputAudioPromptCacheBreakpointParam {
+	return ChatCompletionContentPartInputAudioPromptCacheBreakpointParam{
+		Mode: "explicit",
+	}
+}
+
+// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+// token block.
+//
+// This struct has a constant value, construct it with
+// [NewChatCompletionContentPartInputAudioPromptCacheBreakpointParam].
+type ChatCompletionContentPartInputAudioPromptCacheBreakpointParam struct {
+	// The breakpoint mode. Always `explicit`.
+	Mode constant.Explicit `json:"mode" default:"explicit"`
+	paramObj
+}
+
+func (r ChatCompletionContentPartInputAudioPromptCacheBreakpointParam) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionContentPartInputAudioPromptCacheBreakpointParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionContentPartInputAudioPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The properties Refusal, Type are required.
 type ChatCompletionContentPartRefusalParam struct {
 	// The refusal message generated by the model.
@@ -1222,12 +2085,17 @@ type ChatCompletionContentPartText struct {
 	Text string `json:"text" api:"required"`
 	// The type of the content part.
 	Type constant.Text `json:"type" default:"text"`
+	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+	// token block.
+	PromptCacheBreakpoint ChatCompletionContentPartTextPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Text        respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Text                  respjson.Field
+		Type                  respjson.Field
+		PromptCacheBreakpoint respjson.Field
+		ExtraFields           map[string]respjson.Field
+		raw                   string
 	} `json:"-"`
 }
 
@@ -1247,6 +2115,26 @@ func (r ChatCompletionContentPartText) ToParam() ChatCompletionContentPartTextPa
 	return param.Override[ChatCompletionContentPartTextParam](json.RawMessage(r.RawJSON()))
 }
 
+// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+// token block.
+type ChatCompletionContentPartTextPromptCacheBreakpoint struct {
+	// The breakpoint mode. Always `explicit`.
+	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Mode        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ChatCompletionContentPartTextPromptCacheBreakpoint) RawJSON() string { return r.JSON.raw }
+func (r *ChatCompletionContentPartTextPromptCacheBreakpoint) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Learn about
 // [text inputs](https://platform.openai.com/docs/guides/text-generation).
 //
@@ -1254,6 +2142,10 @@ func (r ChatCompletionContentPartText) ToParam() ChatCompletionContentPartTextPa
 type ChatCompletionContentPartTextParam struct {
 	// The text content.
 	Text string `json:"text" api:"required"`
+	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+	// token block.
+	PromptCacheBreakpoint ChatCompletionContentPartTextPromptCacheBreakpointParam `json:"prompt_cache_breakpoint,omitzero"`
 	// The type of the content part.
 	//
 	// This field can be elided, and will marshal its zero value as "text".
@@ -1266,6 +2158,32 @@ func (r ChatCompletionContentPartTextParam) MarshalJSON() (data []byte, err erro
 	return param.MarshalObject(r, (*shadow)(&r))
 }
 func (r *ChatCompletionContentPartTextParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func NewChatCompletionContentPartTextPromptCacheBreakpointParam() ChatCompletionContentPartTextPromptCacheBreakpointParam {
+	return ChatCompletionContentPartTextPromptCacheBreakpointParam{
+		Mode: "explicit",
+	}
+}
+
+// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+// token block.
+//
+// This struct has a constant value, construct it with
+// [NewChatCompletionContentPartTextPromptCacheBreakpointParam].
+type ChatCompletionContentPartTextPromptCacheBreakpointParam struct {
+	// The breakpoint mode. Always `explicit`.
+	Mode constant.Explicit `json:"mode" default:"explicit"`
+	paramObj
+}
+
+func (r ChatCompletionContentPartTextPromptCacheBreakpointParam) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionContentPartTextPromptCacheBreakpointParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionContentPartTextPromptCacheBreakpointParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -2482,13 +3400,17 @@ type ChatCompletionStoreMessageContentPartUnion struct {
 	// This field is from variant [ChatCompletionContentPartText].
 	Text string `json:"text"`
 	Type string `json:"type"`
+	// This field is a union of [ChatCompletionContentPartTextPromptCacheBreakpoint],
+	// [ChatCompletionContentPartImagePromptCacheBreakpoint]
+	PromptCacheBreakpoint ChatCompletionStoreMessageContentPartUnionPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// This field is from variant [ChatCompletionContentPartImage].
 	ImageURL ChatCompletionContentPartImageImageURL `json:"image_url"`
 	JSON     struct {
-		Text     respjson.Field
-		Type     respjson.Field
-		ImageURL respjson.Field
-		raw      string
+		Text                  respjson.Field
+		Type                  respjson.Field
+		PromptCacheBreakpoint respjson.Field
+		ImageURL              respjson.Field
+		raw                   string
 	} `json:"-"`
 }
 
@@ -2506,6 +3428,26 @@ func (u ChatCompletionStoreMessageContentPartUnion) AsImageContentPart() (v Chat
 func (u ChatCompletionStoreMessageContentPartUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ChatCompletionStoreMessageContentPartUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ChatCompletionStoreMessageContentPartUnionPromptCacheBreakpoint is an implicit
+// subunion of [ChatCompletionStoreMessageContentPartUnion].
+// ChatCompletionStoreMessageContentPartUnionPromptCacheBreakpoint provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ChatCompletionStoreMessageContentPartUnion].
+type ChatCompletionStoreMessageContentPartUnionPromptCacheBreakpoint struct {
+	// This field is from variant [ChatCompletionContentPartTextPromptCacheBreakpoint].
+	Mode constant.Explicit `json:"mode"`
+	JSON struct {
+		Mode respjson.Field
+		raw  string
+	} `json:"-"`
+}
+
+func (r *ChatCompletionStoreMessageContentPartUnionPromptCacheBreakpoint) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -3086,28 +4028,36 @@ type ChatCompletionNewParams struct {
 	//
 	// Any of "text", "audio".
 	Modalities []string `json:"modalities,omitzero"`
+	// Configuration for running moderation on the request input and generated output.
+	Moderation ChatCompletionNewParamsModeration `json:"moderation,omitzero"`
+	// Deprecated. Use `prompt_cache_options.ttl` instead.
+	//
 	// The retention policy for the prompt cache. Set to `24h` to enable extended
 	// prompt caching, which keeps cached prefixes active for longer, up to a maximum
 	// of 24 hours.
 	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+	// This field expresses a maximum retention policy, while
+	// `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
+	// are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
+	// models, only `24h` is supported.
+	//
+	// For older models that support both `in_memory` and `24h`, the default depends on
+	// your organization's data retention policy:
+	//
+	//   - Organizations without ZDR enabled default to `24h`.
+	//   - Organizations with ZDR enabled default to `in_memory` when
+	//     `prompt_cache_retention` is not specified.
 	//
 	// Any of "in_memory", "24h".
 	PromptCacheRetention ChatCompletionNewParamsPromptCacheRetention `json:"prompt_cache_retention,omitzero"`
-	// Constrains effort on reasoning for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-	// Reducing reasoning effort can result in faster responses and fewer tokens used
-	// on reasoning in a response.
+	// Constrains effort on reasoning for reasoning models. Currently supported values
+	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response. Not all reasoning models support every value. See the
+	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// model-specific support.
 	//
-	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-	//     calls are supported for all reasoning values in gpt-5.1.
-	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-	//     support `none`.
-	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-	//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
-	//
-	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	// Specifies the processing type used for serving the request.
 	//
@@ -3163,6 +4113,16 @@ type ChatCompletionNewParams struct {
 	// Static predicted output content, such as the content of a text file that is
 	// being regenerated.
 	Prediction ChatCompletionPredictionContentParam `json:"prediction,omitzero"`
+	// Options for prompt caching. Supported for `gpt-5.6` and later models. By
+	// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
+	// explicit breakpoints to content blocks with `prompt_cache_breakpoint`. Each
+	// request can write up to four breakpoints. For cache matching, OpenAI considers
+	// up to the latest 80 breakpoints in the conversation, without a content-block
+	// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
+	// `ttl` defaults to `30m`, which is currently the only supported value. See the
+	// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+	// for current details.
+	PromptCacheOptions ChatCompletionNewParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
 	// An object specifying the format that the model must output.
 	//
 	// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
@@ -3268,10 +4228,151 @@ func (r *ChatCompletionNewParamsFunction) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Configuration for running moderation on the request input and generated output.
+//
+// The property Model is required.
+type ChatCompletionNewParamsModeration struct {
+	// The moderation model to use for moderated completions, e.g.
+	// 'omni-moderation-latest'.
+	Model string `json:"model" api:"required"`
+	// The policy to apply to moderated response input and output.
+	Policy ChatCompletionNewParamsModerationPolicy `json:"policy,omitzero"`
+	paramObj
+}
+
+func (r ChatCompletionNewParamsModeration) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionNewParamsModeration
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionNewParamsModeration) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The policy to apply to moderated response input and output.
+type ChatCompletionNewParamsModerationPolicy struct {
+	// The moderation policy for the response input.
+	Input ChatCompletionNewParamsModerationPolicyInput `json:"input,omitzero"`
+	// The moderation policy for the response output.
+	Output ChatCompletionNewParamsModerationPolicyOutput `json:"output,omitzero"`
+	paramObj
+}
+
+func (r ChatCompletionNewParamsModerationPolicy) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionNewParamsModerationPolicy
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionNewParamsModerationPolicy) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The moderation policy for the response input.
+//
+// The property Mode is required.
+type ChatCompletionNewParamsModerationPolicyInput struct {
+	// Any of "score", "block".
+	Mode string `json:"mode,omitzero" api:"required"`
+	paramObj
+}
+
+func (r ChatCompletionNewParamsModerationPolicyInput) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionNewParamsModerationPolicyInput
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionNewParamsModerationPolicyInput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionNewParamsModerationPolicyInput](
+		"mode", "score", "block",
+	)
+}
+
+// The moderation policy for the response output.
+//
+// The property Mode is required.
+type ChatCompletionNewParamsModerationPolicyOutput struct {
+	// Any of "score", "block".
+	Mode string `json:"mode,omitzero" api:"required"`
+	paramObj
+}
+
+func (r ChatCompletionNewParamsModerationPolicyOutput) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionNewParamsModerationPolicyOutput
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionNewParamsModerationPolicyOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionNewParamsModerationPolicyOutput](
+		"mode", "score", "block",
+	)
+}
+
+// Options for prompt caching. Supported for `gpt-5.6` and later models. By
+// default, OpenAI automatically chooses one implicit cache breakpoint. You can add
+// explicit breakpoints to content blocks with `prompt_cache_breakpoint`. Each
+// request can write up to four breakpoints. For cache matching, OpenAI considers
+// up to the latest 80 breakpoints in the conversation, without a content-block
+// lookback limit. Set `mode` to `explicit` to disable the implicit breakpoint. The
+// `ttl` defaults to `30m`, which is currently the only supported value. See the
+// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
+// for current details.
+type ChatCompletionNewParamsPromptCacheOptions struct {
+	// Controls whether OpenAI automatically creates an implicit cache breakpoint.
+	// Defaults to `implicit`. With `implicit`, OpenAI creates one implicit breakpoint
+	// and writes up to the latest three explicit breakpoints in the request. With
+	// `explicit`, OpenAI does not create an implicit breakpoint and writes up to the
+	// latest four explicit breakpoints. If there are no explicit breakpoints, the
+	// request does not use prompt caching.
+	//
+	// Any of "implicit", "explicit".
+	Mode string `json:"mode,omitzero"`
+	// The minimum lifetime applied to every implicit and explicit cache breakpoint
+	// written by the request. Defaults to `30m`, which is currently the only supported
+	// value. The backend may retain cache entries for longer.
+	//
+	// Any of "30m".
+	Ttl string `json:"ttl,omitzero"`
+	paramObj
+}
+
+func (r ChatCompletionNewParamsPromptCacheOptions) MarshalJSON() (data []byte, err error) {
+	type shadow ChatCompletionNewParamsPromptCacheOptions
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ChatCompletionNewParamsPromptCacheOptions) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func init() {
+	apijson.RegisterFieldValidator[ChatCompletionNewParamsPromptCacheOptions](
+		"mode", "implicit", "explicit",
+	)
+	apijson.RegisterFieldValidator[ChatCompletionNewParamsPromptCacheOptions](
+		"ttl", "30m",
+	)
+}
+
+// Deprecated. Use `prompt_cache_options.ttl` instead.
+//
 // The retention policy for the prompt cache. Set to `24h` to enable extended
 // prompt caching, which keeps cached prefixes active for longer, up to a maximum
 // of 24 hours.
 // [Learn more](https://platform.openai.com/docs/guides/prompt-caching#prompt-cache-retention).
+// This field expresses a maximum retention policy, while
+// `prompt_cache_options.ttl` expresses a minimum cache lifetime. The two fields
+// are independent and do not interact. For `gpt-5.5`, `gpt-5.5-pro`, and future
+// models, only `24h` is supported.
+//
+// For older models that support both `in_memory` and `24h`, the default depends on
+// your organization's data retention policy:
+//
+//   - Organizations without ZDR enabled default to `24h`.
+//   - Organizations with ZDR enabled default to `in_memory` when
+//     `prompt_cache_retention` is not specified.
 type ChatCompletionNewParamsPromptCacheRetention string
 
 const (

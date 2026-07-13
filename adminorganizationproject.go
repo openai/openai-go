@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -27,14 +26,18 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewAdminOrganizationProjectService] method instead.
 type AdminOrganizationProjectService struct {
-	Options         []option.RequestOption
-	Users           AdminOrganizationProjectUserService
-	ServiceAccounts AdminOrganizationProjectServiceAccountService
-	APIKeys         AdminOrganizationProjectAPIKeyService
-	RateLimits      AdminOrganizationProjectRateLimitService
-	Groups          AdminOrganizationProjectGroupService
-	Roles           AdminOrganizationProjectRoleService
-	Certificates    AdminOrganizationProjectCertificateService
+	Options               []option.RequestOption
+	Users                 AdminOrganizationProjectUserService
+	ServiceAccounts       AdminOrganizationProjectServiceAccountService
+	APIKeys               AdminOrganizationProjectAPIKeyService
+	RateLimits            AdminOrganizationProjectRateLimitService
+	ModelPermissions      AdminOrganizationProjectModelPermissionService
+	HostedToolPermissions AdminOrganizationProjectHostedToolPermissionService
+	Groups                AdminOrganizationProjectGroupService
+	Roles                 AdminOrganizationProjectRoleService
+	DataRetention         AdminOrganizationProjectDataRetentionService
+	SpendAlerts           AdminOrganizationProjectSpendAlertService
+	Certificates          AdminOrganizationProjectCertificateService
 }
 
 // NewAdminOrganizationProjectService generates a new service that applies the
@@ -47,8 +50,12 @@ func NewAdminOrganizationProjectService(opts ...option.RequestOption) (r AdminOr
 	r.ServiceAccounts = NewAdminOrganizationProjectServiceAccountService(opts...)
 	r.APIKeys = NewAdminOrganizationProjectAPIKeyService(opts...)
 	r.RateLimits = NewAdminOrganizationProjectRateLimitService(opts...)
+	r.ModelPermissions = NewAdminOrganizationProjectModelPermissionService(opts...)
+	r.HostedToolPermissions = NewAdminOrganizationProjectHostedToolPermissionService(opts...)
 	r.Groups = NewAdminOrganizationProjectGroupService(opts...)
 	r.Roles = NewAdminOrganizationProjectRoleService(opts...)
+	r.DataRetention = NewAdminOrganizationProjectDataRetentionService(opts...)
+	r.SpendAlerts = NewAdminOrganizationProjectSpendAlertService(opts...)
 	r.Certificates = NewAdminOrganizationProjectCertificateService(opts...)
 	return
 }
@@ -71,7 +78,7 @@ func (r *AdminOrganizationProjectService) Get(ctx context.Context, projectID str
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -84,7 +91,7 @@ func (r *AdminOrganizationProjectService) Update(ctx context.Context, projectID 
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -122,7 +129,7 @@ func (r *AdminOrganizationProjectService) Archive(ctx context.Context, projectID
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/archive", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/archive", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }

@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -49,7 +48,7 @@ func (r *AdminOrganizationProjectServiceAccountService) New(ctx context.Context,
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -66,8 +65,25 @@ func (r *AdminOrganizationProjectServiceAccountService) Get(ctx context.Context,
 		err = errors.New("missing required service_account_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
+// Updates a service account in the project.
+func (r *AdminOrganizationProjectServiceAccountService) Update(ctx context.Context, projectID string, serviceAccountID string, body AdminOrganizationProjectServiceAccountUpdateParams, opts ...option.RequestOption) (res *ProjectServiceAccount, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if projectID == "" {
+		err = errors.New("missing required project_id parameter")
+		return nil, err
+	}
+	if serviceAccountID == "" {
+		err = errors.New("missing required service_account_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
 
@@ -81,7 +97,7 @@ func (r *AdminOrganizationProjectServiceAccountService) List(ctx context.Context
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts", projectID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -114,7 +130,7 @@ func (r *AdminOrganizationProjectServiceAccountService) Delete(ctx context.Conte
 		err = errors.New("missing required service_account_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -244,6 +260,32 @@ func (r AdminOrganizationProjectServiceAccountNewParams) MarshalJSON() (data []b
 func (r *AdminOrganizationProjectServiceAccountNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+type AdminOrganizationProjectServiceAccountUpdateParams struct {
+	// The updated service account name.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The updated service account role.
+	//
+	// Any of "member", "owner".
+	Role AdminOrganizationProjectServiceAccountUpdateParamsRole `json:"role,omitzero"`
+	paramObj
+}
+
+func (r AdminOrganizationProjectServiceAccountUpdateParams) MarshalJSON() (data []byte, err error) {
+	type shadow AdminOrganizationProjectServiceAccountUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdminOrganizationProjectServiceAccountUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The updated service account role.
+type AdminOrganizationProjectServiceAccountUpdateParamsRole string
+
+const (
+	AdminOrganizationProjectServiceAccountUpdateParamsRoleMember AdminOrganizationProjectServiceAccountUpdateParamsRole = "member"
+	AdminOrganizationProjectServiceAccountUpdateParamsRoleOwner  AdminOrganizationProjectServiceAccountUpdateParamsRole = "owner"
+)
 
 type AdminOrganizationProjectServiceAccountListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place

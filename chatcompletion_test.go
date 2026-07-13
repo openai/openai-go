@@ -63,7 +63,18 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
-		Modalities:        []string{"text"},
+		Modalities: []string{"text"},
+		Moderation: openai.ChatCompletionNewParamsModeration{
+			Model: "model",
+			Policy: openai.ChatCompletionNewParamsModerationPolicy{
+				Input: openai.ChatCompletionNewParamsModerationPolicyInput{
+					Mode: "score",
+				},
+				Output: openai.ChatCompletionNewParamsModerationPolicyOutput{
+					Mode: "score",
+				},
+			},
+		},
 		N:                 openai.Int(1),
 		ParallelToolCalls: openai.Bool(true),
 		Prediction: openai.ChatCompletionPredictionContentParam{
@@ -71,8 +82,12 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 				OfString: openai.String("string"),
 			},
 		},
-		PresencePenalty:      openai.Float(-2),
-		PromptCacheKey:       openai.String("prompt-cache-key-1234"),
+		PresencePenalty: openai.Float(-2),
+		PromptCacheKey:  openai.String("prompt-cache-key-1234"),
+		PromptCacheOptions: openai.ChatCompletionNewParamsPromptCacheOptions{
+			Mode: "implicit",
+			Ttl:  "30m",
+		},
 		PromptCacheRetention: openai.ChatCompletionNewParamsPromptCacheRetentionInMemory,
 		ReasoningEffort:      shared.ReasoningEffortNone,
 		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{

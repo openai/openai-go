@@ -26,7 +26,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -65,7 +64,9 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 			return nil, err
 		}
 
-		r.URL.Path = replacementPath
+		if err := setEscapedPath(r.URL, replacementPath); err != nil {
+			return nil, err
+		}
 		return mn(r)
 	})
 
@@ -150,9 +151,15 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 // WithAPIKey configures this client to authenticate using an API key.
 // This function should be paired with a call to [WithEndpoint] to point to your Azure OpenAI instance.
 func WithAPIKey(apiKey string) option.RequestOption {
-	// NOTE: there is an option.WithApiKey(), but that adds the value into
-	// the Authorization header instead so we're doing this instead.
-	return option.WithHeader("Api-Key", apiKey)
+	// NOTE: option.WithAPIKey() uses the Authorization header. Azure expects
+	// Api-Key instead. Deleting Authorization also prevents request security from
+	// automatically injecting environment-derived client credentials.
+	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		return rc.Apply(
+			option.WithHeaderDel("Authorization"),
+			option.WithHeader("Api-Key", apiKey),
+		)
+	})
 }
 
 // jsonRoutes have JSON payloads - we'll deserialize looking for a .model field in there
@@ -185,7 +192,17 @@ func getReplacementPathWithDeployment(req *http.Request) (string, error) {
 	}
 
 	// If route doesn't require deployment ID substitution, just return path with prefix.
-	return path.Join("/openai/", req.URL.Path), nil
+	return "/openai" + req.URL.EscapedPath(), nil
+}
+
+func setEscapedPath(u *url.URL, escapedPath string) error {
+	parsed, err := url.Parse(escapedPath)
+	if err != nil {
+		return err
+	}
+	u.Path = parsed.Path
+	u.RawPath = parsed.RawPath
+	return nil
 }
 
 func getJSONRoute(req *http.Request) (string, error) {
@@ -207,9 +224,8 @@ func getJSONRoute(req *http.Request) (string, error) {
 		return "", err
 	}
 
-	escapedDeployment := url.PathEscape(v.Model)
 	// Convert path from /chat/completions to /openai/deployments/{deployment-id}/chat/completions
-	return "/openai/deployments/" + escapedDeployment + req.URL.Path, nil
+	return requestconfig.FormatPath("/openai/deployments/%s", v.Model) + req.URL.EscapedPath(), nil
 }
 
 func getMultipartRoute(req *http.Request) (string, error) {
@@ -253,9 +269,8 @@ func getMultipartRoute(req *http.Request) (string, error) {
 				return "", err
 			}
 
-			escapedDeployment := url.PathEscape(string(modelBytes))
 			// Convert path from /audio/transcriptions to /openai/deployments/{deployment-id}/audio/transcriptions
-			return "/openai/deployments/" + escapedDeployment + req.URL.Path, nil
+			return requestconfig.FormatPath("/openai/deployments/%s", string(modelBytes)) + req.URL.EscapedPath(), nil
 		}
 	}
 }

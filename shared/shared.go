@@ -42,6 +42,9 @@ type ResponsesModel = string
 // aliased to make [param.APIObject] private when embedding
 
 const (
+	ChatModelGPT5_6Sol                        ChatModel = "gpt-5.6-sol"
+	ChatModelGPT5_6Terra                      ChatModel = "gpt-5.6-terra"
+	ChatModelGPT5_6Luna                       ChatModel = "gpt-5.6-luna"
 	ChatModelGPT5_4                           ChatModel = "gpt-5.4"
 	ChatModelGPT5_4Mini                       ChatModel = "gpt-5.4-mini"
 	ChatModelGPT5_4Nano                       ChatModel = "gpt-5.4-nano"
@@ -796,21 +799,20 @@ const (
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type Reasoning struct {
-	// Constrains effort on reasoning for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-	// Reducing reasoning effort can result in faster responses and fewer tokens used
-	// on reasoning in a response.
+	// Controls which reasoning items are rendered back to the model on later turns.
+	// When returned on a response, this is the effective reasoning context mode used
+	// for the response.
 	//
-	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-	//     calls are supported for all reasoning values in gpt-5.1.
-	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-	//     support `none`.
-	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-	//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
+	// Any of "auto", "current_turn", "all_turns".
+	Context ReasoningContext `json:"context" api:"nullable"`
+	// Constrains effort on reasoning for reasoning models. Currently supported values
+	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response. Not all reasoning models support every value. See the
+	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// model-specific support.
 	//
-	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
 	Effort ReasoningEffort `json:"effort" api:"nullable"`
 	// **Deprecated:** use `summary` instead.
 	//
@@ -822,6 +824,10 @@ type Reasoning struct {
 	//
 	// Deprecated: deprecated
 	GenerateSummary ReasoningGenerateSummary `json:"generate_summary" api:"nullable"`
+	// Controls the reasoning execution mode for the request.
+	//
+	// When returned on a response, this is the effective execution mode.
+	Mode ReasoningMode `json:"mode"`
 	// A summary of the reasoning performed by the model. This can be useful for
 	// debugging and understanding the model's reasoning process. One of `auto`,
 	// `concise`, or `detailed`.
@@ -833,8 +839,10 @@ type Reasoning struct {
 	Summary ReasoningSummary `json:"summary" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
+		Context         respjson.Field
 		Effort          respjson.Field
 		GenerateSummary respjson.Field
+		Mode            respjson.Field
 		Summary         respjson.Field
 		ExtraFields     map[string]respjson.Field
 		raw             string
@@ -856,6 +864,17 @@ func (r Reasoning) ToParam() ReasoningParam {
 	return param.Override[ReasoningParam](json.RawMessage(r.RawJSON()))
 }
 
+// Controls which reasoning items are rendered back to the model on later turns.
+// When returned on a response, this is the effective reasoning context mode used
+// for the response.
+type ReasoningContext string
+
+const (
+	ReasoningContextAuto        ReasoningContext = "auto"
+	ReasoningContextCurrentTurn ReasoningContext = "current_turn"
+	ReasoningContextAllTurns    ReasoningContext = "all_turns"
+)
+
 // **Deprecated:** use `summary` instead.
 //
 // A summary of the reasoning performed by the model. This can be useful for
@@ -867,6 +886,16 @@ const (
 	ReasoningGenerateSummaryAuto     ReasoningGenerateSummary = "auto"
 	ReasoningGenerateSummaryConcise  ReasoningGenerateSummary = "concise"
 	ReasoningGenerateSummaryDetailed ReasoningGenerateSummary = "detailed"
+)
+
+// Controls the reasoning execution mode for the request.
+//
+// When returned on a response, this is the effective execution mode.
+type ReasoningMode string
+
+const (
+	ReasoningModeStandard ReasoningMode = "standard"
+	ReasoningModePro      ReasoningMode = "pro"
 )
 
 // A summary of the reasoning performed by the model. This can be useful for
@@ -888,21 +917,20 @@ const (
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type ReasoningParam struct {
-	// Constrains effort on reasoning for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-	// Reducing reasoning effort can result in faster responses and fewer tokens used
-	// on reasoning in a response.
+	// Controls which reasoning items are rendered back to the model on later turns.
+	// When returned on a response, this is the effective reasoning context mode used
+	// for the response.
 	//
-	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-	//     calls are supported for all reasoning values in gpt-5.1.
-	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-	//     support `none`.
-	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-	//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
+	// Any of "auto", "current_turn", "all_turns".
+	Context ReasoningContext `json:"context,omitzero"`
+	// Constrains effort on reasoning for reasoning models. Currently supported values
+	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response. Not all reasoning models support every value. See the
+	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// model-specific support.
 	//
-	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
 	Effort ReasoningEffort `json:"effort,omitzero"`
 	// **Deprecated:** use `summary` instead.
 	//
@@ -923,6 +951,10 @@ type ReasoningParam struct {
 	//
 	// Any of "auto", "concise", "detailed".
 	Summary ReasoningSummary `json:"summary,omitzero"`
+	// Controls the reasoning execution mode for the request.
+	//
+	// When returned on a response, this is the effective execution mode.
+	Mode ReasoningMode `json:"mode,omitzero"`
 	paramObj
 }
 
@@ -934,19 +966,12 @@ func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Constrains effort on reasoning for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-// Reducing reasoning effort can result in faster responses and fewer tokens used
-// on reasoning in a response.
-//
-//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-//     calls are supported for all reasoning values in gpt-5.1.
-//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-//     support `none`.
-//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
+// Constrains effort on reasoning for reasoning models. Currently supported values
+// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+// reasoning effort can result in faster responses and fewer tokens used on
+// reasoning in a response. Not all reasoning models support every value. See the
+// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+// model-specific support.
 type ReasoningEffort string
 
 const (
@@ -956,6 +981,7 @@ const (
 	ReasoningEffortMedium  ReasoningEffort = "medium"
 	ReasoningEffortHigh    ReasoningEffort = "high"
 	ReasoningEffortXhigh   ReasoningEffort = "xhigh"
+	ReasoningEffortMax     ReasoningEffort = "max"
 )
 
 // JSON object response format. An older method of generating JSON responses. Using

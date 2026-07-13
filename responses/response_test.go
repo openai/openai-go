@@ -47,7 +47,18 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
-		Model:              shared.ResponsesModel("gpt-5.1"),
+		Model: shared.ResponsesModel("gpt-5.1"),
+		Moderation: responses.ResponseNewParamsModeration{
+			Model: "model",
+			Policy: responses.ResponseNewParamsModerationPolicy{
+				Input: responses.ResponseNewParamsModerationPolicyInput{
+					Mode: "score",
+				},
+				Output: responses.ResponseNewParamsModerationPolicyOutput{
+					Mode: "score",
+				},
+			},
+		},
 		ParallelToolCalls:  openai.Bool(true),
 		PreviousResponseID: openai.String("previous_response_id"),
 		Prompt: responses.ResponsePromptParam{
@@ -59,11 +70,17 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 			},
 			Version: openai.String("version"),
 		},
-		PromptCacheKey:       openai.String("prompt-cache-key-1234"),
+		PromptCacheKey: openai.String("prompt-cache-key-1234"),
+		PromptCacheOptions: responses.ResponseNewParamsPromptCacheOptions{
+			Mode: "implicit",
+			Ttl:  "30m",
+		},
 		PromptCacheRetention: responses.ResponseNewParamsPromptCacheRetentionInMemory,
 		Reasoning: shared.ReasoningParam{
+			Context:         shared.ReasoningContextAuto,
 			Effort:          shared.ReasoningEffortNone,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
+			Mode:            shared.ReasoningModeStandard,
 			Summary:         shared.ReasoningSummaryAuto,
 		},
 		SafetyIdentifier: openai.String("safety-identifier-1234"),
@@ -88,9 +105,13 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 				Parameters: map[string]any{
 					"foo": "bar",
 				},
-				Strict:       openai.Bool(true),
-				DeferLoading: openai.Bool(true),
-				Description:  openai.String("description"),
+				Strict:         openai.Bool(true),
+				AllowedCallers: []string{"direct"},
+				DeferLoading:   openai.Bool(true),
+				Description:    openai.String("description"),
+				OutputSchema: map[string]any{
+					"foo": "bar",
+				},
 			},
 		}},
 		TopLogprobs: openai.Int(0),
@@ -198,14 +219,19 @@ func TestResponseCompactWithOptionalParams(t *testing.T) {
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Responses.Compact(context.TODO(), responses.ResponseCompactParams{
-		Model: responses.ResponseCompactParamsModelGPT5_4,
+		Model: responses.ResponseCompactParamsModelGPT5_6Sol,
 		Input: responses.ResponseCompactParamsInputUnion{
 			OfString: openai.String("string"),
 		},
-		Instructions:         openai.String("instructions"),
-		PreviousResponseID:   openai.String("resp_123"),
-		PromptCacheKey:       openai.String("prompt_cache_key"),
+		Instructions:       openai.String("instructions"),
+		PreviousResponseID: openai.String("resp_123"),
+		PromptCacheKey:     openai.String("prompt_cache_key"),
+		PromptCacheOptions: responses.ResponseCompactParamsPromptCacheOptions{
+			Mode: "implicit",
+			Ttl:  "30m",
+		},
 		PromptCacheRetention: responses.ResponseCompactParamsPromptCacheRetentionInMemory,
+		ServiceTier:          responses.ResponseCompactParamsServiceTierAuto,
 	})
 	if err != nil {
 		var apierr *openai.Error

@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -71,7 +70,7 @@ func (r *FineTuningJobService) Get(ctx context.Context, fineTuningJobID string, 
 		err = errors.New("missing required fine_tuning_job_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("fine_tuning/jobs/%s", fineTuningJobID)
+	path := requestconfig.FormatPath("fine_tuning/jobs/%s", fineTuningJobID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -108,7 +107,7 @@ func (r *FineTuningJobService) Cancel(ctx context.Context, fineTuningJobID strin
 		err = errors.New("missing required fine_tuning_job_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("fine_tuning/jobs/%s/cancel", fineTuningJobID)
+	path := requestconfig.FormatPath("fine_tuning/jobs/%s/cancel", fineTuningJobID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }
@@ -123,7 +122,7 @@ func (r *FineTuningJobService) ListEvents(ctx context.Context, fineTuningJobID s
 		err = errors.New("missing required fine_tuning_job_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("fine_tuning/jobs/%s/events", fineTuningJobID)
+	path := requestconfig.FormatPath("fine_tuning/jobs/%s/events", fineTuningJobID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -149,7 +148,7 @@ func (r *FineTuningJobService) Pause(ctx context.Context, fineTuningJobID string
 		err = errors.New("missing required fine_tuning_job_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("fine_tuning/jobs/%s/pause", fineTuningJobID)
+	path := requestconfig.FormatPath("fine_tuning/jobs/%s/pause", fineTuningJobID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }
@@ -162,7 +161,7 @@ func (r *FineTuningJobService) Resume(ctx context.Context, fineTuningJobID strin
 		err = errors.New("missing required fine_tuning_job_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("fine_tuning/jobs/%s/resume", fineTuningJobID)
+	path := requestconfig.FormatPath("fine_tuning/jobs/%s/resume", fineTuningJobID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }

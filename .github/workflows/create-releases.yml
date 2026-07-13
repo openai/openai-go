@@ -1,17 +1,19 @@
 name: Create releases
 on:
-  schedule:
-    - cron: '0 5 * * *' # every day at 5am UTC
   push:
     branches:
       - main
+
+permissions:
+  contents: read
 
 jobs:
   release:
     name: release
     if: github.ref == 'refs/heads/main' && github.repository == 'openai/openai-go'
     runs-on: ubuntu-latest
-    environment: publish
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -22,9 +24,18 @@ jobs:
           repo: ${{ github.event.repository.full_name }}
           stainless-api-key: ${{ secrets.STAINLESS_API_KEY }}
 
+  publish:
+    name: publish
+    needs: release
+    if: ${{ needs.release.outputs.releases_created == 'true' }}
+    runs-on: ubuntu-latest
+    environment: publish
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
       - name: Generate godocs
-        if: ${{ steps.release.outputs.releases_created }}
         run: |
           # x-release-please-start-version
-          version=$(jq -r '. | to_entries[0] | .value' .release-please-manifest.json)
-          curl -X POST https://pkg.go.dev/fetch/github.com/openai/openai-go/v2@v${version}
+          version="$(jq -r '. | to_entries[0] | .value' .release-please-manifest.json)"
+          curl --fail --show-error --silent -X POST "https://pkg.go.dev/fetch/github.com/openai/openai-go/v2@v${version}"
