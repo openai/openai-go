@@ -151,9 +151,15 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 // WithAPIKey configures this client to authenticate using an API key.
 // This function should be paired with a call to [WithEndpoint] to point to your Azure OpenAI instance.
 func WithAPIKey(apiKey string) option.RequestOption {
-	// NOTE: there is an option.WithApiKey(), but that adds the value into
-	// the Authorization header instead so we're doing this instead.
-	return option.WithHeader("Api-Key", apiKey)
+	// NOTE: option.WithAPIKey() uses the Authorization header. Azure expects
+	// Api-Key instead. Deleting Authorization also prevents request security from
+	// automatically injecting environment-derived client credentials.
+	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		return rc.Apply(
+			option.WithHeaderDel("Authorization"),
+			option.WithHeader("Api-Key", apiKey),
+		)
+	})
 }
 
 // jsonRoutes have JSON payloads - we'll deserialize looking for a .model field in there

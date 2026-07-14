@@ -1,5 +1,48 @@
 # Changelog
 
+## 3.43.0 (2026-07-14)
+
+Full Changelog: [v3.42.0...v3.43.0](https://github.com/openai/openai-go/compare/v3.42.0...v3.43.0)
+
+### Features
+
+* **api:** add owner_project_access to APIKeyListParams ([df2e35d](https://github.com/openai/openai-go/commit/df2e35dc39e43e8da55f1006084d27a1041005fc))
+
+
+### Bug Fixes
+
+* **example:** set the 'include usage' field to true under stream options to get accurate usage information ([#125](https://github.com/openai/openai-go/issues/125)) ([c38b6c3](https://github.com/openai/openai-go/commit/c38b6c36c911d47b369518b7222363befa9c1e25))
+* **ssestream:** skip SSE blocks without data ([#621](https://github.com/openai/openai-go/issues/621)) ([114224d](https://github.com/openai/openai-go/commit/114224dd71cf6695a01de8353352145832662e84))
+
+
+### Documentation
+
+* fix Azure API version link typo ([#630](https://github.com/openai/openai-go/issues/630)) ([4d7f649](https://github.com/openai/openai-go/commit/4d7f6493d248af66e42bfbb2bfb6c3bd4ca04b9c))
+* fix function call comment wording in example ([#639](https://github.com/openai/openai-go/issues/639)) ([050ab8a](https://github.com/openai/openai-go/commit/050ab8af70b562ff4c81a16476bf393534849d92))
+* links in README.md ([#308](https://github.com/openai/openai-go/issues/308)) ([35501ce](https://github.com/openai/openai-go/commit/35501ce5ec0449128bd84d57b24841ef541c3122))
+
+## 3.42.0 (2026-07-09)
+
+Full Changelog: [v3.41.1...v3.42.0](https://github.com/openai/openai-go/compare/v3.41.1...v3.42.0)
+
+### Features
+
+* **api:** gpt-5.6-sol updates ([8c062a6](https://github.com/openai/openai-go/commit/8c062a6e8fa8ae91daf96f97e301447d04ecd371))
+
+
+### Bug Fixes
+
+* **api:** restore programmatic response types ([2384620](https://github.com/openai/openai-go/commit/2384620bab9bede6a6b57cc2689bf86084d1e8f3))
+* **api:** restore response union metadata ([7b2e975](https://github.com/openai/openai-go/commit/7b2e9755e6532a33d14085411a9f57d7709ada59))
+
+## 3.41.1 (2026-07-06)
+
+Full Changelog: [v3.41.0...v3.41.1](https://github.com/openai/openai-go/compare/v3.41.0...v3.41.1)
+
+### Documentation
+
+* fix Azure API versioning link ([#649](https://github.com/openai/openai-go/issues/649)) ([a8bd01a](https://github.com/openai/openai-go/commit/a8bd01aa80ba28bb3b5944cdac24a1aadc18fdbe))
+
 ## 3.41.0 (2026-06-17)
 
 Full Changelog: [v3.40.0...v3.41.0](https://github.com/openai/openai-go/compare/v3.40.0...v3.41.0)

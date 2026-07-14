@@ -4,6 +4,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   release:
     name: release
@@ -34,5 +37,5 @@ jobs:
       - name: Generate godocs
         run: |
           # x-release-please-start-version
-          version=$(jq -r '. | to_entries[0] | .value' .release-please-manifest.json)
-          curl -X POST https://pkg.go.dev/fetch/github.com/openai/openai-go/v2@v${version}
+          version="$(jq -r '. | to_entries[0] | .value' .release-please-manifest.json)"
+          curl --fail --show-error --silent -X POST "https://pkg.go.dev/fetch/github.com/openai/openai-go/v2@v${version}"

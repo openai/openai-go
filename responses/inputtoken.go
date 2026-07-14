@@ -236,14 +236,15 @@ func init() {
 // Use [param.IsOmitted] to confirm if a field is set.
 type InputTokenCountParamsToolChoiceUnion struct {
 	// Check if union is this variant with !param.IsOmitted(union.OfToolChoiceMode)
-	OfToolChoiceMode               param.Opt[ToolChoiceOptions] `json:",omitzero,inline"`
-	OfAllowedTools                 *ToolChoiceAllowedParam      `json:",omitzero,inline"`
-	OfHostedTool                   *ToolChoiceTypesParam        `json:",omitzero,inline"`
-	OfFunctionTool                 *ToolChoiceFunctionParam     `json:",omitzero,inline"`
-	OfMcpTool                      *ToolChoiceMcpParam          `json:",omitzero,inline"`
-	OfCustomTool                   *ToolChoiceCustomParam       `json:",omitzero,inline"`
-	OfSpecificApplyPatchToolChoice *ToolChoiceApplyPatchParam   `json:",omitzero,inline"`
-	OfSpecificShellToolChoice      *ToolChoiceShellParam        `json:",omitzero,inline"`
+	OfToolChoiceMode                                                 param.Opt[ToolChoiceOptions]                                         `json:",omitzero,inline"`
+	OfAllowedTools                                                   *ToolChoiceAllowedParam                                              `json:",omitzero,inline"`
+	OfHostedTool                                                     *ToolChoiceTypesParam                                                `json:",omitzero,inline"`
+	OfFunctionTool                                                   *ToolChoiceFunctionParam                                             `json:",omitzero,inline"`
+	OfMcpTool                                                        *ToolChoiceMcpParam                                                  `json:",omitzero,inline"`
+	OfCustomTool                                                     *ToolChoiceCustomParam                                               `json:",omitzero,inline"`
+	OfInputTokenCountsToolChoiceSpecificProgrammaticToolCallingParam *InputTokenCountParamsToolChoiceSpecificProgrammaticToolCallingParam `json:",omitzero,inline"`
+	OfSpecificApplyPatchToolChoice                                   *ToolChoiceApplyPatchParam                                           `json:",omitzero,inline"`
+	OfSpecificShellToolChoice                                        *ToolChoiceShellParam                                                `json:",omitzero,inline"`
 	paramUnion
 }
 
@@ -254,6 +255,7 @@ func (u InputTokenCountParamsToolChoiceUnion) MarshalJSON() ([]byte, error) {
 		u.OfFunctionTool,
 		u.OfMcpTool,
 		u.OfCustomTool,
+		u.OfInputTokenCountsToolChoiceSpecificProgrammaticToolCallingParam,
 		u.OfSpecificApplyPatchToolChoice,
 		u.OfSpecificShellToolChoice)
 }
@@ -274,6 +276,8 @@ func (u *InputTokenCountParamsToolChoiceUnion) asAny() any {
 		return u.OfMcpTool
 	} else if !param.IsOmitted(u.OfCustomTool) {
 		return u.OfCustomTool
+	} else if !param.IsOmitted(u.OfInputTokenCountsToolChoiceSpecificProgrammaticToolCallingParam) {
+		return u.OfInputTokenCountsToolChoiceSpecificProgrammaticToolCallingParam
 	} else if !param.IsOmitted(u.OfSpecificApplyPatchToolChoice) {
 		return u.OfSpecificApplyPatchToolChoice
 	} else if !param.IsOmitted(u.OfSpecificShellToolChoice) {
@@ -318,6 +322,8 @@ func (u InputTokenCountParamsToolChoiceUnion) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfCustomTool; vt != nil {
 		return (*string)(&vt.Type)
+	} else if vt := u.OfInputTokenCountsToolChoiceSpecificProgrammaticToolCallingParam; vt != nil {
+		return (*string)(&vt.Type)
 	} else if vt := u.OfSpecificApplyPatchToolChoice; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfSpecificShellToolChoice; vt != nil {
@@ -336,6 +342,28 @@ func (u InputTokenCountParamsToolChoiceUnion) GetName() *string {
 		return (*string)(&vt.Name)
 	}
 	return nil
+}
+
+func NewInputTokenCountParamsToolChoiceSpecificProgrammaticToolCallingParam() InputTokenCountParamsToolChoiceSpecificProgrammaticToolCallingParam {
+	return InputTokenCountParamsToolChoiceSpecificProgrammaticToolCallingParam{
+		Type: "programmatic_tool_calling",
+	}
+}
+
+// This struct has a constant value, construct it with
+// [NewInputTokenCountParamsToolChoiceSpecificProgrammaticToolCallingParam].
+type InputTokenCountParamsToolChoiceSpecificProgrammaticToolCallingParam struct {
+	// The tool to call. Always `programmatic_tool_calling`.
+	Type constant.ProgrammaticToolCalling `json:"type" default:"programmatic_tool_calling"`
+	paramObj
+}
+
+func (r InputTokenCountParamsToolChoiceSpecificProgrammaticToolCallingParam) MarshalJSON() (data []byte, err error) {
+	type shadow InputTokenCountParamsToolChoiceSpecificProgrammaticToolCallingParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *InputTokenCountParamsToolChoiceSpecificProgrammaticToolCallingParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 // The truncation strategy to use for the model response. - `auto`: If the input to

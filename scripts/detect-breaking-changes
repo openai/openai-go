@@ -27,6 +27,9 @@ TEST_PATHS=(
 	vectorstorefile_test.go
 	vectorstorefilebatch_test.go
 	webhooks/webhook_test.go
+	betaresponse_test.go
+	betaresponseinputitem_test.go
+	betaresponseinputtoken_test.go
 	betachatkitsession_test.go
 	betachatkitthread_test.go
 	betaassistant_test.go

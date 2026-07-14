@@ -64,6 +64,15 @@ const AllModelsGPT5_1CodexMax = shared.AllModelsGPT5_1CodexMax
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
 
+// Equals "gpt-5.6-sol"
+const ChatModelGPT5_6Sol = shared.ChatModelGPT5_6Sol
+
+// Equals "gpt-5.6-terra"
+const ChatModelGPT5_6Terra = shared.ChatModelGPT5_6Terra
+
+// Equals "gpt-5.6-luna"
+const ChatModelGPT5_6Luna = shared.ChatModelGPT5_6Luna
+
 // Equals "gpt-5.4"
 const ChatModelGPT5_4 = shared.ChatModelGPT5_4
 
@@ -499,6 +508,19 @@ const ReasoningGenerateSummaryConcise = shared.ReasoningGenerateSummaryConcise
 // Equals "detailed"
 const ReasoningGenerateSummaryDetailed = shared.ReasoningGenerateSummaryDetailed
 
+// Controls the reasoning execution mode for the request.
+//
+// When returned on a response, this is the effective execution mode.
+//
+// This is an alias to an internal type.
+type ReasoningMode = shared.ReasoningMode
+
+// Equals "standard"
+const ReasoningModeStandard = shared.ReasoningModeStandard
+
+// Equals "pro"
+const ReasoningModePro = shared.ReasoningModePro
+
 // A summary of the reasoning performed by the model. This can be useful for
 // debugging and understanding the model's reasoning process. One of `auto`,
 // `concise`, or `detailed`.
@@ -526,19 +548,12 @@ const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 // This is an alias to an internal type.
 type ReasoningParam = shared.ReasoningParam
 
-// Constrains effort on reasoning for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-// Reducing reasoning effort can result in faster responses and fewer tokens used
-// on reasoning in a response.
-//
-//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-//     calls are supported for all reasoning values in gpt-5.1.
-//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-//     support `none`.
-//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
+// Constrains effort on reasoning for reasoning models. Currently supported values
+// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+// reasoning effort can result in faster responses and fewer tokens used on
+// reasoning in a response. Not all reasoning models support every value. See the
+// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+// model-specific support.
 //
 // This is an alias to an internal type.
 type ReasoningEffort = shared.ReasoningEffort
@@ -560,6 +575,9 @@ const ReasoningEffortHigh = shared.ReasoningEffortHigh
 
 // Equals "xhigh"
 const ReasoningEffortXhigh = shared.ReasoningEffortXhigh
+
+// Equals "max"
+const ReasoningEffortMax = shared.ReasoningEffortMax
 
 // JSON object response format. An older method of generating JSON responses. Using
 // `json_schema` is recommended for models that support it. Note that the model

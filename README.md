@@ -30,7 +30,7 @@ Or to pin the version:
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go/v3@v3.41.0'
+go get -u 'github.com/openai/openai-go/v3@v3.43.0'
 ```
 
 <!-- x-release-please-end -->
@@ -1115,9 +1115,9 @@ Bedrock client.
 
 See [`examples/bedrock`](examples/bedrock) for a complete Responses API example.
 
-## Microsoft Azure OpenAI
+## Azure OpenAI in Azure AI Foundry Models
 
-To use this library with [Azure OpenAI]https://learn.microsoft.com/azure/ai-services/openai/overview),
+To use this library with [Azure OpenAI in Azure AI Foundry Models](https://learn.microsoft.com/azure/ai-services/openai/overview),
 use the option.RequestOption functions in the `azure` package.
 
 ```go
@@ -1133,7 +1133,7 @@ func main() {
 	const azureOpenAIEndpoint = "https://<azure-openai-resource>.openai.azure.com"
 
 	// The latest API versions, including previews, can be found here:
-	// https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versionng
+	// https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning
 	const azureOpenAIAPIVersion = "2024-06-01"
 
 	tokenCredential, err := azidentity.NewDefaultAzureCredential(nil)
