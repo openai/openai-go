@@ -14291,7 +14291,7 @@ type BetaResponseInputItemMultiAgentCallOutputOutput struct {
 	// The content type. Always `output_text`.
 	Type constant.OutputText `json:"type" default:"output_text"`
 	// Citations associated with the text content.
-	Annotations BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion `json:"annotations"`
+	Annotations []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion `json:"annotations"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -14308,64 +14308,110 @@ func (r *BetaResponseInputItemMultiAgentCallOutputOutput) UnmarshalJSON(data []b
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion contains all
+// BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion contains all
 // possible properties and values from
-// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem],
-// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item],
-// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item].
+// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation],
+// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation],
+// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation].
+//
+// Use the [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion.AsAny]
+// method to switch on the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray
-// OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array
-// OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array]
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion struct {
-	// This field will be present if the value is a
-	// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem] instead
-	// of an object.
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem `json:",inline"`
-	// This field will be present if the value is a
-	// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item] instead
-	// of an object.
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item `json:",inline"`
-	// This field will be present if the value is a
-	// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item] instead
-	// of an object.
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item `json:",inline"`
-	JSON                                                                    struct {
-		OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray       respjson.Field
-		OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array respjson.Field
-		OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array respjson.Field
-		raw                                                                     string
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion struct {
+	FileID   string `json:"file_id"`
+	Filename string `json:"filename"`
+	// This field is from variant
+	// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation].
+	Index int64 `json:"index"`
+	// Any of "file_citation", "url_citation", "container_file_citation".
+	Type       string `json:"type"`
+	EndIndex   int64  `json:"end_index"`
+	StartIndex int64  `json:"start_index"`
+	// This field is from variant
+	// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation].
+	Title string `json:"title"`
+	// This field is from variant
+	// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation].
+	URL string `json:"url"`
+	// This field is from variant
+	// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation].
+	ContainerID string `json:"container_id"`
+	JSON        struct {
+		FileID      respjson.Field
+		Filename    respjson.Field
+		Index       respjson.Field
+		Type        respjson.Field
+		EndIndex    respjson.Field
+		StartIndex  respjson.Field
+		Title       respjson.Field
+		URL         respjson.Field
+		ContainerID respjson.Field
+		raw         string
 	} `json:"-"`
 }
 
-func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion) AsBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray() (v []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem) {
+// anyBetaResponseInputItemMultiAgentCallOutputOutputAnnotation is implemented by
+// each variant of [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion]
+// to add type safety for the return type of
+// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion.AsAny]
+type anyBetaResponseInputItemMultiAgentCallOutputOutputAnnotation interface {
+	implBetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion()
+}
+
+func (BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation) implBetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion() {
+}
+func (BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation) implBetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion() {
+}
+func (BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation) implBetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion.AsAny().(type) {
+//	case openai.BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation:
+//	case openai.BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation:
+//	case openai.BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsAny() anyBetaResponseInputItemMultiAgentCallOutputOutputAnnotation {
+	switch u.Type {
+	case "file_citation":
+		return u.AsFileCitation()
+	case "url_citation":
+		return u.AsURLCitation()
+	case "container_file_citation":
+		return u.AsContainerFileCitation()
+	}
+	return nil
+}
+
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsFileCitation() (v BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion) AsBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array() (v []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item) {
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsURLCitation() (v BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion) AsBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array() (v []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item) {
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsContainerFileCitation() (v BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 // Returns the unmodified JSON received from the API
-func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion) RawJSON() string {
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) RawJSON() string {
 	return u.JSON.raw
 }
 
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation struct {
 	// The ID of the file.
 	FileID string `json:"file_id" api:"required"`
 	// The filename of the file cited.
@@ -14386,14 +14432,14 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem struct 
 }
 
 // Returns the unmodified JSON received from the API
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem) RawJSON() string {
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation) RawJSON() string {
 	return r.JSON.raw
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation struct {
 	// The index of the last character of the citation in the message.
 	EndIndex int64 `json:"end_index" api:"required"`
 	// The index of the first character of the citation in the message.
@@ -14417,14 +14463,14 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item struct
 }
 
 // Returns the unmodified JSON received from the API
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item) RawJSON() string {
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation) RawJSON() string {
 	return r.JSON.raw
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation struct {
 	// The ID of the container.
 	ContainerID string `json:"container_id" api:"required"`
 	// The index of the last character of the citation in the message.
@@ -14451,10 +14497,10 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item struct
 }
 
 // Returns the unmodified JSON received from the API
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item) RawJSON() string {
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation) RawJSON() string {
 	return r.JSON.raw
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -18365,7 +18411,7 @@ type BetaResponseInputItemMultiAgentCallOutputOutputParam struct {
 	// The text content.
 	Text string `json:"text" api:"required"`
 	// Citations associated with the text content.
-	Annotations BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnionParam `json:"annotations,omitzero"`
+	Annotations []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam `json:"annotations,omitzero"`
 	// The content type. Always `output_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "output_text".
@@ -18384,33 +18430,126 @@ func (r *BetaResponseInputItemMultiAgentCallOutputOutputParam) UnmarshalJSON(dat
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnionParam struct {
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray       []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam  `json:",omitzero,inline"`
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam `json:",omitzero,inline"`
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam `json:",omitzero,inline"`
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam struct {
+	OfFileCitation          *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam          `json:",omitzero,inline"`
+	OfURLCitation           *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam           `json:",omitzero,inline"`
+	OfContainerFileCitation *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam `json:",omitzero,inline"`
 	paramUnion
 }
 
-func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray, u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array, u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array)
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfFileCitation, u.OfURLCitation, u.OfContainerFileCitation)
 }
-func (u *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnionParam) UnmarshalJSON(data []byte) error {
+func (u *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray) {
-		return &u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray
-	} else if !param.IsOmitted(u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array) {
-		return &u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array
-	} else if !param.IsOmitted(u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array) {
-		return &u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array
+func (u *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfFileCitation) {
+		return u.OfFileCitation
+	} else if !param.IsOmitted(u.OfURLCitation) {
+		return u.OfURLCitation
+	} else if !param.IsOmitted(u.OfContainerFileCitation) {
+		return u.OfContainerFileCitation
 	}
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetIndex() *int64 {
+	if vt := u.OfFileCitation; vt != nil {
+		return &vt.Index
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetTitle() *string {
+	if vt := u.OfURLCitation; vt != nil {
+		return &vt.Title
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetURL() *string {
+	if vt := u.OfURLCitation; vt != nil {
+		return &vt.URL
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetContainerID() *string {
+	if vt := u.OfContainerFileCitation; vt != nil {
+		return &vt.ContainerID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetFileID() *string {
+	if vt := u.OfFileCitation; vt != nil {
+		return (*string)(&vt.FileID)
+	} else if vt := u.OfContainerFileCitation; vt != nil {
+		return (*string)(&vt.FileID)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetFilename() *string {
+	if vt := u.OfFileCitation; vt != nil {
+		return (*string)(&vt.Filename)
+	} else if vt := u.OfContainerFileCitation; vt != nil {
+		return (*string)(&vt.Filename)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetType() *string {
+	if vt := u.OfFileCitation; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfURLCitation; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfContainerFileCitation; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetEndIndex() *int64 {
+	if vt := u.OfURLCitation; vt != nil {
+		return (*int64)(&vt.EndIndex)
+	} else if vt := u.OfContainerFileCitation; vt != nil {
+		return (*int64)(&vt.EndIndex)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetStartIndex() *int64 {
+	if vt := u.OfURLCitation; vt != nil {
+		return (*int64)(&vt.StartIndex)
+	} else if vt := u.OfContainerFileCitation; vt != nil {
+		return (*int64)(&vt.StartIndex)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam](
+		"type",
+		apijson.Discriminator[BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam]("file_citation"),
+		apijson.Discriminator[BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam]("url_citation"),
+		apijson.Discriminator[BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam]("container_file_citation"),
+	)
+}
+
 // The properties FileID, Filename, Index, Type are required.
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam struct {
 	// The ID of the file.
 	FileID string `json:"file_id" api:"required"`
 	// The filename of the file cited.
@@ -18424,16 +18563,16 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam st
 	paramObj
 }
 
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam) MarshalJSON() (data []byte, err error) {
-	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // The properties EndIndex, StartIndex, Title, Type, URL are required.
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam struct {
 	// The index of the last character of the citation in the message.
 	EndIndex int64 `json:"end_index" api:"required"`
 	// The index of the first character of the citation in the message.
@@ -18449,17 +18588,17 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam s
 	paramObj
 }
 
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam) MarshalJSON() (data []byte, err error) {
-	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // The properties ContainerID, EndIndex, FileID, Filename, StartIndex, Type are
 // required.
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam struct {
 	// The ID of the container.
 	ContainerID string `json:"container_id" api:"required"`
 	// The index of the last character of the citation in the message.
@@ -18478,11 +18617,11 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam s
 	paramObj
 }
 
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam) MarshalJSON() (data []byte, err error) {
-	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

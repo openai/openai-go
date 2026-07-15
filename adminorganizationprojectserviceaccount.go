@@ -27,6 +27,7 @@ import (
 // the [NewAdminOrganizationProjectServiceAccountService] method instead.
 type AdminOrganizationProjectServiceAccountService struct {
 	Options []option.RequestOption
+	APIKeys AdminOrganizationProjectServiceAccountAPIKeyService
 }
 
 // NewAdminOrganizationProjectServiceAccountService generates a new service that
@@ -36,11 +37,12 @@ type AdminOrganizationProjectServiceAccountService struct {
 func NewAdminOrganizationProjectServiceAccountService(opts ...option.RequestOption) (r AdminOrganizationProjectServiceAccountService) {
 	r = AdminOrganizationProjectServiceAccountService{}
 	r.Options = opts
+	r.APIKeys = NewAdminOrganizationProjectServiceAccountAPIKeyService(opts...)
 	return
 }
 
-// Creates a new service account in the project. This also returns an unredacted
-// API key for the service account.
+// Creates a new service account in the project. By default, this also returns an
+// unredacted API key for the service account.
 func (r *AdminOrganizationProjectServiceAccountService) New(ctx context.Context, projectID string, body AdminOrganizationProjectServiceAccountNewParams, opts ...option.RequestOption) (res *AdminOrganizationProjectServiceAccountNewResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -145,9 +147,9 @@ type ProjectServiceAccount struct {
 	Name string `json:"name" api:"required"`
 	// The object type, which is always `organization.project.service_account`
 	Object constant.OrganizationProjectServiceAccount `json:"object" default:"organization.project.service_account"`
-	// `owner` or `member`
+	// `owner`, `member`, or `none`
 	//
-	// Any of "owner", "member".
+	// Any of "owner", "member", "none".
 	Role ProjectServiceAccountRole `json:"role" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -167,12 +169,13 @@ func (r *ProjectServiceAccount) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// `owner` or `member`
+// `owner`, `member`, or `none`
 type ProjectServiceAccountRole string
 
 const (
 	ProjectServiceAccountRoleOwner  ProjectServiceAccountRole = "owner"
 	ProjectServiceAccountRoleMember ProjectServiceAccountRole = "member"
+	ProjectServiceAccountRoleNone   ProjectServiceAccountRole = "none"
 )
 
 type AdminOrganizationProjectServiceAccountNewResponse struct {
@@ -181,8 +184,11 @@ type AdminOrganizationProjectServiceAccountNewResponse struct {
 	CreatedAt int64                                                   `json:"created_at" api:"required" format:"unixtime"`
 	Name      string                                                  `json:"name" api:"required"`
 	Object    constant.OrganizationProjectServiceAccount              `json:"object" default:"organization.project.service_account"`
-	// Service accounts can only have one role of type `member`
-	Role constant.Member `json:"role" default:"member"`
+	// Service accounts created with default project membership have role `member`.
+	// Accounts created with `create_service_account_only` have role `none`.
+	//
+	// Any of "member", "none".
+	Role AdminOrganizationProjectServiceAccountNewResponseRole `json:"role" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -227,6 +233,15 @@ func (r *AdminOrganizationProjectServiceAccountNewResponseAPIKey) UnmarshalJSON(
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Service accounts created with default project membership have role `member`.
+// Accounts created with `create_service_account_only` have role `none`.
+type AdminOrganizationProjectServiceAccountNewResponseRole string
+
+const (
+	AdminOrganizationProjectServiceAccountNewResponseRoleMember AdminOrganizationProjectServiceAccountNewResponseRole = "member"
+	AdminOrganizationProjectServiceAccountNewResponseRoleNone   AdminOrganizationProjectServiceAccountNewResponseRole = "none"
+)
+
 type AdminOrganizationProjectServiceAccountDeleteResponse struct {
 	ID      string                                            `json:"id" api:"required"`
 	Deleted bool                                              `json:"deleted" api:"required"`
@@ -250,6 +265,8 @@ func (r *AdminOrganizationProjectServiceAccountDeleteResponse) UnmarshalJSON(dat
 type AdminOrganizationProjectServiceAccountNewParams struct {
 	// The name of the service account being created.
 	Name string `json:"name" api:"required"`
+	// Create the service account without default roles or an API key.
+	CreateServiceAccountOnly param.Opt[bool] `json:"create_service_account_only,omitzero"`
 	paramObj
 }
 
