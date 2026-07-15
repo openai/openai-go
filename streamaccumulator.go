@@ -121,6 +121,7 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 
 		choice.Message.Content += delta.Delta.Content
 		choice.Message.Refusal += delta.Delta.Refusal
+		choice.ReasoningContent += delta.Delta.ReasoningContent
 
 		for j := range delta.Delta.ToolCalls {
 			deltaTool := &delta.Delta.ToolCalls[j]
