@@ -13,7 +13,7 @@ import (
 	"github.com/openai/openai-go/v3/option"
 )
 
-func TestAdminOrganizationProjectServiceAccountNew(t *testing.T) {
+func TestAdminOrganizationProjectServiceAccountNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -30,7 +30,8 @@ func TestAdminOrganizationProjectServiceAccountNew(t *testing.T) {
 		context.TODO(),
 		"project_id",
 		openai.AdminOrganizationProjectServiceAccountNewParams{
-			Name: "name",
+			Name:                     "name",
+			CreateServiceAccountOnly: openai.Bool(true),
 		},
 	)
 	if err != nil {
