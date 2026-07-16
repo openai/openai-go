@@ -28,7 +28,6 @@ import (
 // the [NewAdminOrganizationProjectServiceAccountService] method instead.
 type AdminOrganizationProjectServiceAccountService struct {
 	Options []option.RequestOption
-	APIKeys AdminOrganizationProjectServiceAccountAPIKeyService
 }
 
 // NewAdminOrganizationProjectServiceAccountService generates a new service that
@@ -38,7 +37,6 @@ type AdminOrganizationProjectServiceAccountService struct {
 func NewAdminOrganizationProjectServiceAccountService(opts ...option.RequestOption) (r AdminOrganizationProjectServiceAccountService) {
 	r = AdminOrganizationProjectServiceAccountService{}
 	r.Options = opts
-	r.APIKeys = NewAdminOrganizationProjectServiceAccountAPIKeyService(opts...)
 	return
 }
 
@@ -135,6 +133,23 @@ func (r *AdminOrganizationProjectServiceAccountService) Delete(ctx context.Conte
 	}
 	path := fmt.Sprintf("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
+	return res, err
+}
+
+// Creates an API key for a service account in the project.
+func (r *AdminOrganizationProjectServiceAccountService) NewAPIKey(ctx context.Context, projectID string, serviceAccountID string, body AdminOrganizationProjectServiceAccountNewAPIKeyParams, opts ...option.RequestOption) (res *AdminOrganizationProjectServiceAccountNewAPIKeyResponse, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if projectID == "" {
+		err = errors.New("missing required project_id parameter")
+		return nil, err
+	}
+	if serviceAccountID == "" {
+		err = errors.New("missing required service_account_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("organization/projects/%s/service_accounts/%s/api_keys", projectID, serviceAccountID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
 
@@ -263,6 +278,35 @@ func (r *AdminOrganizationProjectServiceAccountDeleteResponse) UnmarshalJSON(dat
 	return apijson.UnmarshalRoot(data, r)
 }
 
+type AdminOrganizationProjectServiceAccountNewAPIKeyResponse struct {
+	// The identifier of the API key.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp (in seconds) when the API key was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The name of the API key.
+	Name string `json:"name" api:"required"`
+	// The object type, which is always `organization.project.service_account.api_key`
+	Object constant.OrganizationProjectServiceAccountAPIKey `json:"object" default:"organization.project.service_account.api_key"`
+	// The unredacted API key value.
+	Value string `json:"value" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Name        respjson.Field
+		Object      respjson.Field
+		Value       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r AdminOrganizationProjectServiceAccountNewAPIKeyResponse) RawJSON() string { return r.JSON.raw }
+func (r *AdminOrganizationProjectServiceAccountNewAPIKeyResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 type AdminOrganizationProjectServiceAccountNewParams struct {
 	// The name of the service account being created.
 	Name string `json:"name" api:"required"`
@@ -324,4 +368,20 @@ func (r AdminOrganizationProjectServiceAccountListParams) URLQuery() (v url.Valu
 		ArrayFormat:  apiquery.ArrayQueryFormatBrackets,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
+}
+
+type AdminOrganizationProjectServiceAccountNewAPIKeyParams struct {
+	// API key name.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// API key scopes.
+	Scopes []string `json:"scopes,omitzero"`
+	paramObj
+}
+
+func (r AdminOrganizationProjectServiceAccountNewAPIKeyParams) MarshalJSON() (data []byte, err error) {
+	type shadow AdminOrganizationProjectServiceAccountNewAPIKeyParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdminOrganizationProjectServiceAccountNewAPIKeyParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }

@@ -57,7 +57,6 @@ TEST_PATHS=(
 	adminorganizationprojectuser_test.go
 	adminorganizationprojectuserrole_test.go
 	adminorganizationprojectserviceaccount_test.go
-	adminorganizationprojectserviceaccountapikey_test.go
 	adminorganizationprojectapikey_test.go
 	adminorganizationprojectratelimit_test.go
 	adminorganizationprojectmodelpermission_test.go
