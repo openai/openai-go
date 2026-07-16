@@ -147,7 +147,7 @@ func (r *AdminOrganizationProjectServiceAccountService) NewAPIKey(ctx context.Co
 		err = errors.New("missing required service_account_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts/%s/api_keys", projectID, serviceAccountID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts/%s/api_keys", projectID, serviceAccountID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
