@@ -50,15 +50,15 @@ func FormatPath(format string, params ...string) string {
 	return fmt.Sprintf(format, args...)
 }
 
-func getNormalizedOS() string {
-	switch runtime.GOOS {
+func normalizeOS(goos string) string {
+	switch goos {
 	case "ios":
 		return "iOS"
 	case "android":
 		return "Android"
 	case "darwin":
 		return "MacOS"
-	case "window":
+	case "windows":
 		return "Windows"
 	case "freebsd":
 		return "FreeBSD"
@@ -67,8 +67,12 @@ func getNormalizedOS() string {
 	case "linux":
 		return "Linux"
 	default:
-		return fmt.Sprintf("Other:%s", runtime.GOOS)
+		return fmt.Sprintf("Other:%s", goos)
 	}
+}
+
+func getNormalizedOS() string {
+	return normalizeOS(runtime.GOOS)
 }
 
 func getNormalizedArchitecture() string {
