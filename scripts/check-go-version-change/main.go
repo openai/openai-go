@@ -131,6 +131,8 @@ func goDirective(data []byte) (string, error) {
 
 func changedFiles(root, base string) (map[string]bool, error) {
 	changed := make(map[string]bool)
+	// The first command covers committed PR changes. The latter two make the
+	// checker useful before commit by including unstaged and untracked files.
 	commands := [][]string{
 		{"diff", "--name-only", base + "...HEAD"},
 		{"diff", "--name-only"},

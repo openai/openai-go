@@ -17,6 +17,8 @@ import (
 	"time"
 )
 
+// include=all is needed to identify not only the current and previous stable
+// lines, but also the just-retired line that may receive a grace period.
 const defaultReleaseFeed = "https://go.dev/dl/?mode=json&include=all"
 
 var stableVersionPattern = regexp.MustCompile(`^(?:go)?([0-9]+)\.([0-9]+)(?:\.[0-9]+)?$`)
@@ -247,6 +249,8 @@ func checkRepository(root, feedURL string, now time.Time, client *http.Client) (
 	moduleFiles := []string{
 		"go.mod",
 		filepath.Join("examples", "go.mod"),
+		// The consumer fixture is a separate module and must not quietly acquire
+		// a different compiler floor.
 		filepath.Join("internal", "testdata", "consumer", "go.mod"),
 	}
 	for _, relative := range moduleFiles {
@@ -282,6 +286,9 @@ func checkRepository(root, feedURL string, now time.Time, client *http.Client) (
 		return result, nil
 	}
 	ciText := string(ci)
+	// These strings intentionally make CI part of the policy contract. A new Go
+	// release therefore creates a review issue until maintainers update the
+	// tested versions rather than silently changing the support claim.
 	for _, required := range []string{
 		result.Previous.String() + ".x",
 		result.Current.String() + ".x",

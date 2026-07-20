@@ -1,18 +1,26 @@
 version: 2
+# The root SDK and examples are independent Go modules, so Dependabot needs one
+# update entry for each. Updates are proposed for review and are never
+# auto-merged by this configuration.
 updates:
   - package-ecosystem: gomod
     directory: /
     schedule:
       interval: weekly
       day: monday
+      # Stagger the two modules to make runs and resulting PRs easier to follow.
       time: "09:00"
       timezone: Etc/UTC
     open-pull-requests-limit: 5
     groups:
+      # golang.org/x modules are released together and can jointly raise the Go
+      # floor. Keep them in one reviewable PR instead of creating PR spam.
       golang-x:
         patterns:
           - "golang.org/x/*"
       go-dependencies:
+        # Group the remaining Go updates, excluding dependencies already
+        # claimed by the higher-priority golang-x group.
         patterns:
           - "*"
         exclude-patterns:
@@ -27,6 +35,7 @@ updates:
       timezone: Etc/UTC
     open-pull-requests-limit: 5
     groups:
+      # Mirror the root grouping so both module graphs move coherently.
       golang-x:
         patterns:
           - "golang.org/x/*"

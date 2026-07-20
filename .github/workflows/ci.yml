@@ -13,6 +13,9 @@ on:
     branches-ignore:
       - 'stl-preview-head/**'
       - 'stl-preview-base/**'
+  # The vulnerability database changes even when this repository does not.
+  # This schedule runs only the govulncheck job below; lint and tests remain
+  # push-triggered. 10:23 UTC avoids GitHub's busy top-of-hour window.
   schedule:
     - cron: '23 10 * * *'
 
@@ -61,6 +64,8 @@ jobs:
     name: lint
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
+    # Prevent Go's automatic toolchain selection from hiding an accidental
+    # increase above the minimum declared in go.mod.
     env:
       GOTOOLCHAIN: local
 
@@ -72,6 +77,7 @@ jobs:
       - name: Setup go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
+          # go.mod is the source of truth for the minimum compiler used by lint.
           go-version-file: ./go.mod
 
       - name: Run lints
@@ -87,9 +93,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Test the latest patch in the previous and current stable Go lines.
+        # Keep this matrix synchronized with GO_VERSION_POLICY.md and
+        # .github/go-support-policy.json.
         go-version:
           - '1.25.x'
           - '1.26.x'
+    # setup-go installs the selected matrix version first. "local" then stops
+    # the go command from silently switching to a newer toolchain.
     env:
       GOTOOLCHAIN: local
     steps:
@@ -116,12 +127,16 @@ jobs:
 
       - name: Test external consumer
         working-directory: internal/testdata/consumer
+        # This nested module catches accidental reliance on internal packages
+        # and proves representative core and Azure imports compose externally.
         run: go test ./...
 
   vulnerability:
     timeout-minutes: 15
     name: govulncheck
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    # PR scans catch dependency/call-graph changes. The nightly scan catches
+    # newly published advisories against an otherwise unchanged commit.
     if: github.event_name == 'pull_request' || github.event_name == 'schedule'
     env:
       GOTOOLCHAIN: local
@@ -133,6 +148,8 @@ jobs:
       - name: Setup current stable Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
+          # Scan with a patched current toolchain so old standard-library
+          # findings do not obscure dependency findings.
           go-version: '1.26.x'
 
       - name: Install govulncheck
@@ -149,12 +166,15 @@ jobs:
     timeout-minutes: 5
     name: Go version change policy
     runs-on: ubuntu-latest
+    # This check needs both the PR base SHA and PR description, so it runs only
+    # for pull_request events rather than the duplicate branch-push event.
     if: github.event_name == 'pull_request'
     env:
       GOTOOLCHAIN: local
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
+          # The checker compares go.mod at the base SHA with the PR head.
           fetch-depth: 0
           persist-credentials: false
 
@@ -166,5 +186,7 @@ jobs:
       - name: Check required policy artifacts
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          # Pass untrusted PR text through the environment, never interpolate
+          # it into the shell command.
           PR_BODY: ${{ github.event.pull_request.body }}
         run: go run ./scripts/check-go-version-change "$BASE_SHA"

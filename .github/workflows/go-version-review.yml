@@ -1,12 +1,17 @@
 name: Go version review
 
 on:
+  # Review monthly so February/August Go releases and expired grace periods
+  # cannot leave the declared policy stale indefinitely. 14:17 UTC avoids the
+  # top-of-hour scheduling surge.
   schedule:
     - cron: '17 14 1 * *'
+  # Maintainers can also run the review immediately after a Go release.
   workflow_dispatch:
 
 permissions:
   contents: read
+  # Needed only to create or refresh the deduplicated review issue below.
   issues: write
 
 jobs:
@@ -23,10 +28,14 @@ jobs:
       - name: Setup stable Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
+          # This toolchain runs the checker; the checker reads the official
+          # release feed to decide which Go lines should be supported.
           go-version: 'stable'
 
       - name: Compare policy with the official Go release feed
         id: policy
+        # Drift is converted into a durable issue by the next step. Preserve
+        # that control flow instead of stopping the job at the checker.
         continue-on-error: true
         run: |
           report_path="$RUNNER_TEMP/go-version-review.md"
@@ -36,6 +45,8 @@ jobs:
           set -e
 
           if [[ ! -s "$report_path" ]]; then
+            # Ensure the issue step still has useful content if compilation or
+            # another early failure prevents the checker writing its report.
             {
               echo '# Go version support review'
               echo
@@ -56,6 +67,8 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+            // The exact title is the deduplication key: policy drift should
+            // maintain one actionable issue, not create monthly issue spam.
             const title = '[go-version-review] Review Go version support';
             const report = fs.readFileSync(process.env.REPORT_PATH, 'utf8');
             const runURL = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
@@ -75,6 +88,7 @@ jobs:
             });
             const existing = issues.find((issue) => !issue.pull_request && issue.title === title);
             if (existing) {
+              // Replace stale diagnostics with the latest complete report.
               await github.rest.issues.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
