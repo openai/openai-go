@@ -19,17 +19,18 @@ Minimum Go version increases:
 - do not require a new SDK major version when exported APIs and the module
   import path remain compatible.
 
-The complete approved release note and SDK compatibility boundary are stored in
-`.github/go-support-policy.json`. A pull request that changes the minimum Go
-version copies that text into a `## Release note` section in its description.
-When the generated release pull request opens, the release manager copies the
-same text into the matching `CHANGELOG.md` release section. CI blocks the
-generated release pull request until the changelog contains the approved text.
-
 The SDK team reviews this policy within 30 days of each scheduled February and
-August Go release. Automation compares the official Go release feed with the
-repository's module, CI, and documentation settings each month, but never
-changes the minimum version automatically.
+August Go release. Each month, a scheduled Codex workflow reads a snapshot of
+the official Go release feed and the repository policy. If the repository has
+drifted and no generated update is already open, it opens a draft pull request
+containing the proposed module, CI, documentation, and release-note changes.
+The workflow never overwrites an existing draft or merges a proposal
+automatically; the normal compatibility checks and SDK CODEOWNER review decide
+whether it ships.
+
+An active grace period must be recorded in the current-compatibility section
+with an explicit end date and reason. In the absence of that record, automation
+proposes the current and immediately preceding stable Go releases.
 
 ### Current compatibility
 

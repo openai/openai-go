@@ -8,6 +8,7 @@
 /examples/go.mod @openai/sdks-team
 /internal/testdata/consumer/go.mod @openai/sdks-team
 /tools/go.mod @openai/sdks-team
-/.github/go-support-policy.json @openai/sdks-team
 /.github/workflows/ci.yml @openai/sdks-team
+/.github/workflows/go-version-review.yml @openai/sdks-team
+/.github/codex/prompts/go-version-review.md @openai/sdks-team
 /GO_VERSION_POLICY.md @openai/sdks-team

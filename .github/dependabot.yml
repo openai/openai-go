@@ -9,7 +9,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      # Stagger the two modules to make runs and resulting PRs easier to follow.
+      # Stagger the module updates to make resulting PRs easier to follow.
       time: "09:00"
       timezone: Etc/UTC
     open-pull-requests-limit: 5

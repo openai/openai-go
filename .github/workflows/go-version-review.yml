@@ -1,151 +1,166 @@
-name: Go version review
+name: Monthly Go version review
 
 on:
-  # Review monthly so February/August Go releases and expired grace periods
-  # cannot leave the declared policy stale indefinitely. 14:17 UTC avoids the
-  # top-of-hour scheduling surge.
+  # Go normally releases in February and August. A monthly run keeps the
+  # repository current without embedding the release calendar in custom code.
   schedule:
     - cron: '17 14 1 * *'
-  # Maintainers can also run the review immediately after a Go release.
+  # Maintainers can run the same review immediately after a Go release.
   workflow_dispatch:
+
+# Avoid racing two agents that could propose the same maintenance change.
+concurrency:
+  group: monthly-go-version-review
+  cancel-in-progress: false
 
 permissions:
   contents: read
-  # Needed only to create or refresh the deduplicated review issue below.
-  issues: write
 
 jobs:
-  review:
-    name: Check Go support policy
+  propose:
+    name: Propose Go version update
     runs-on: ubuntu-latest
-    env:
-      GOTOOLCHAIN: local
+    outputs:
+      has_patch: ${{ steps.patch.outputs.has_patch }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Check out the trusted default branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
+          fetch-depth: 0
+          # Codex may edit the checkout, but it cannot push or call GitHub with
+          # a repository credential.
           persist-credentials: false
 
-      - name: Setup stable Go
+      - name: Set up the current stable Go toolchain
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          # This toolchain runs the checker; the checker reads the official
-          # release feed to decide which Go lines should be supported.
-          go-version: 'stable'
+          go-version: stable
 
-      - name: Compare policy with the official Go release feed
-        id: policy
-        # Drift is converted into a durable issue by the next step. Preserve
-        # that control flow instead of stopping the job at the checker.
-        continue-on-error: true
-        run: |
-          report_path="$RUNNER_TEMP/go-version-review.md"
-          set +e
-          go run ./scripts/check-go-support-policy -report "$report_path"
-          status=$?
-          set -e
-
-          if [[ ! -s "$report_path" ]]; then
-            # Ensure the issue step still has useful content if compilation or
-            # another early failure prevents the checker writing its report.
-            {
-              echo '# Go version support review'
-              echo
-              echo 'The policy checker failed before it could produce a report.'
-            } > "$report_path"
-          fi
-          exit "$status"
-
-      - name: Add report to workflow summary
-        if: always()
-        run: cat "$RUNNER_TEMP/go-version-review.md" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Reconcile the review issue
-        # Run on both outcomes: drift opens or refreshes the issue, while a
-        # clean review closes every stale issue created by this workflow.
-        if: always()
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+      - name: Snapshot the official Go release feed
         env:
-          REPORT_PATH: ${{ runner.temp }}/go-version-review.md
-          POLICY_OUTCOME: ${{ steps.policy.outcome }}
+          GO_RELEASE_FEED: ${{ runner.temp }}/go-releases.json
+        run: |
+          curl --fail --location --silent --show-error \
+            'https://go.dev/dl/?mode=json&include=all' \
+            --output "$GO_RELEASE_FEED"
+          jq --exit-status 'type == "array" and length > 0' \
+            "$GO_RELEASE_FEED" >/dev/null
+
+      - name: Ask Codex to prepare the update
+        id: codex
+        # Pin the action itself. Dependabot proposes reviewed SHA updates.
+        uses: openai/codex-action@52fe01ec70a42f454c9d2ebd47598f9fd6893d56 # v1
+        env:
+          GO_RELEASE_FEED: ${{ runner.temp }}/go-releases.json
         with:
-          script: |
-            const fs = require('fs');
-            const title = '[go-version-review] Review Go version support';
-            const marker = '<!-- go-version-review -->';
-            const report = fs.readFileSync(process.env.REPORT_PATH, 'utf8');
-            const runURL = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const body = [
-              marker,
-              report,
-              `Workflow run: ${runURL}`,
-              '',
-              'This workflow reports drift only. It never changes go.mod automatically.',
-            ].join('\n');
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/codex/prompts/go-version-review.md
+          output-file: ${{ runner.temp }}/codex-pr-body.md
+          codex-args: '["--ephemeral"]'
+          permission-profile: ':workspace'
+          safety-strategy: drop-sudo
 
-            // Paginate because issues.listForRepo also returns pull requests,
-            // and this repository can have more than 100 open items.
-            const issues = await github.paginate(github.rest.issues.listForRepo, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              per_page: 100,
-            });
-            const existing = issues.filter((issue) =>
-              !issue.pull_request &&
-              (issue.title === title || issue.body?.includes(marker))
-            );
+      - name: Package Codex's patch
+        id: patch
+        env:
+          PATCH_PATH: ${{ runner.temp }}/codex.patch
+        run: |
+          # Intent-to-add makes new files visible to git diff without staging
+          # their contents in the checkout.
+          git add --intent-to-add .
+          git diff --binary HEAD > "$PATCH_PATH"
+          if [[ -s "$PATCH_PATH" ]]; then
+            echo 'has_patch=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'has_patch=false' >> "$GITHUB_OUTPUT"
+          fi
 
-            if (process.env.POLICY_OUTCOME === 'failure') {
-              const primary = existing[0];
-              if (primary) {
-                // Replace stale diagnostics with the latest complete report.
-                await github.rest.issues.update({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: primary.number,
-                  title,
-                  body,
-                });
-              } else {
-                await github.rest.issues.create({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  title,
-                  body,
-                });
-              }
+      - name: Upload the proposed patch
+        if: steps.patch.outputs.has_patch == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: monthly-go-version-update
+          path: |
+            ${{ runner.temp }}/codex.patch
+            ${{ runner.temp }}/codex-pr-body.md
+          if-no-files-found: error
+          retention-days: 7
 
-              // Repair duplicates created by older, non-paginated runs.
-              for (const duplicate of existing.slice(1)) {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: duplicate.number,
-                  body: `Closing duplicate; current review is tracked in ${primary ? `#${primary.number}` : 'the newly created issue'}.`,
-                });
-                await github.rest.issues.update({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: duplicate.number,
-                  state: 'closed',
-                  state_reason: 'not_planned',
-                });
-              }
-              return;
-            }
+  open_pr:
+    name: Open draft Go version update
+    needs: propose
+    if: needs.propose.outputs.has_patch == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out the default branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          # This job has no OpenAI credential. Its GitHub credential is used
+          # only to publish the already-generated patch.
+          persist-credentials: true
 
-            for (const issue of existing) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                body: `The policy review now passes. Closing as resolved.\n\nWorkflow run: ${runURL}`,
-              });
-              await github.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                state: 'closed',
-                state_reason: 'completed',
-              });
-            }
+      - name: Download the Codex proposal
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: monthly-go-version-update
+          path: ${{ runner.temp }}/monthly-go-version-update
+
+      - name: Apply, publish, and open the draft pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PATCH_PATH: ${{ runner.temp }}/monthly-go-version-update/codex.patch
+          PR_BODY_PATH: ${{ runner.temp }}/monthly-go-version-update/codex-pr-body.md
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          marker='<!-- monthly-go-version-review -->'
+          existing_pr="$(
+            gh pr list \
+              --base "${{ github.event.repository.default_branch }}" \
+              --state open \
+              --limit 100 \
+              --json number,body \
+              --jq "map(select((.body // \"\") | contains(\"$marker\")))[0].number // empty"
+          )"
+          if [[ -n "$existing_pr" ]]; then
+            echo "::notice::Monthly Go version update is already tracked in PR #$existing_pr"
+            exit 0
+          fi
+
+          git apply --index "$PATCH_PATH"
+          branch="codex/monthly-go-version-update-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git switch --create "$branch"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit --message 'chore(go): update supported Go versions'
+          git push origin "HEAD:refs/heads/$branch"
+
+          {
+            echo "$marker"
+            cat "$PR_BODY_PATH"
+            echo
+            echo '---'
+            echo
+            echo "Generated by the [monthly Go version review]($RUN_URL)."
+            echo 'This pull request is always opened as a draft and never merges automatically.'
+          } > "$RUNNER_TEMP/pr-body.md"
+
+          gh pr create \
+            --base "${{ github.event.repository.default_branch }}" \
+            --head "$branch" \
+            --draft \
+            --title 'chore(go): update supported Go versions' \
+            --body-file "$RUNNER_TEMP/pr-body.md"
+
+          # GITHUB_TOKEN deliberately does not trigger pull_request workflows.
+          # workflow_dispatch is the documented exception, so run every
+          # required safety workflow against the generated head commit.
+          gh workflow run ci.yml --ref "$branch"
+          gh workflow run detect-breaking-changes.yml \
+            --ref "$branch" \
+            --field base_sha="${{ github.sha }}"
+          gh workflow run codeql.yml --ref "$branch"

@@ -11,14 +11,10 @@ explicitly requires it.
 
 - `go.mod` is the authoritative technical minimum Go version.
 - `GO_VERSION_POLICY.md` is the human-readable support and release policy.
-- `.github/go-support-policy.json` is a custom, machine-readable decision
-  record. It is not interpreted by Go or GitHub. Humans update it in reviewed
-  pull requests, and `scripts/check-go-support-policy` reads it. Its
-  `release_note` object is the durable source for generated release
-  communication.
 - The supported release lines are the current and immediately preceding stable
-  Go releases. An approved grace period adds the retired minimum as a third
-  line. CI tests the latest patch release in every supported line.
+  Go releases. A grace period explicitly documented in
+  `GO_VERSION_POLICY.md` adds the retired minimum as a third line. CI tests the
+  latest patch release in every supported line.
 - Keep the `go` directives in the root, `examples`,
   `internal/testdata/consumer`, and `tools` modules aligned.
 - Do not combine a minimum-Go-version change with unrelated SDK or Azure
@@ -30,35 +26,38 @@ When changing a `go` directive:
 
 1. Update all four modules and run `go mod tidy` in each module.
 2. Update `README.md`, `CONTRIBUTING.md`, and `GO_VERSION_POLICY.md`.
-3. Update `.github/go-support-policy.json` with the decision, reason, grace
-   period, approver, SDK compatibility boundary, and complete release note.
-4. Update the minimum/current CI matrix in `.github/workflows/ci.yml`.
-5. Copy the JSON `release_note.text` into a `## Release note` section in the
-   pull request description. When Release Please generates that SDK release,
-   copy the same text into its `CHANGELOG.md` section; CI blocks the release PR
-   until it is present.
-6. Obtain SDK CODEOWNER approval.
+3. Update the minimum/current CI matrix in `.github/workflows/ci.yml`.
+4. Add a `## Release note` section to the pull request description that names
+   the new minimum and the final SDK release compatible with retired Go
+   versions. Do not promise security backports for an old SDK release.
+5. Obtain SDK CODEOWNER approval.
 
-`scripts/check-go-version-change` enforces these requirements on pull requests.
-It validates the complete repository against the official Go release feed,
-reports omissions, and never edits policy or module files. The stable
-`Go support policy` check aggregates every required Go safety job and is a
-required status check on `main`.
+The stable `Go support policy` check aggregates the deterministic Go safety
+jobs and is a required status check on `main`. It proves the proposed repository
+state builds and tests correctly; it does not attempt to interpret release
+policy or pull request prose.
 
 ## Automation map
 
 - `.github/workflows/ci.yml`
   - On branch pushes: lint, tidy, and tests on each supported Go line.
-  - On pull requests: the same lint and test coverage, plus
-    reachable-vulnerability and Go-version-policy checks.
+  - On pull requests: the same lint and test coverage, plus reachable
+    vulnerability checks.
   - Nightly: reachable-vulnerability checks only, so newly published
     advisories are detected even when the repository has not changed.
 - `.github/workflows/go-version-review.yml`
-  - Monthly and manually: compares the official Go release feed with the
-    recorded policy, module directives, CI matrix, and documentation.
-  - Opens or refreshes one review issue when a human decision is needed and
-    closes stale review issues after the policy is reconciled.
-  - Never changes the supported Go versions automatically.
+  - Monthly and manually: gives Codex a snapshot of the official Go release
+    feed and asks it to reconcile the modules, CI, and documentation.
+  - Requires an `OPENAI_API_KEY` Actions secret available to this repository.
+  - Codex can prepare a patch but has read-only GitHub permissions and no
+    repository credential. A separate job with no OpenAI credential opens one
+    draft pull request from that patch. If a generated draft is already open,
+    automation leaves it untouched for maintainers.
+  - Because GitHub suppresses normal workflow events for pull requests created
+    with `GITHUB_TOKEN`, the publishing job explicitly dispatches CI,
+    compatibility detection, and CodeQL on the generated branch.
+  - The draft never merges automatically. Normal CI and CODEOWNER review remain
+    authoritative.
 - `.github/dependabot.yml`
   - Weekly: proposes grouped Go dependency updates for the root, examples, and
     isolated tools modules, plus independently reviewable GitHub Actions
@@ -80,7 +79,6 @@ go test ./...
 (cd tools && go install golang.org/x/vuln/cmd/govulncheck)
 govulncheck ./...
 (cd examples && govulncheck ./...)
-go run ./scripts/check-go-support-policy
 ```
 
 Also test with `GOTOOLCHAIN=local` on every Go release line listed in the CI
