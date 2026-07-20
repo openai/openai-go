@@ -20,9 +20,34 @@ jobs:
   propose:
     name: Propose Go version update
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # OPENAI_API_KEY already lives in this environment. The environment is
+    # restricted to main, so manually dispatching another ref cannot receive
+    # the key.
+    environment: ci
+    env:
+      CODEX_AUTOMATION_DIR: ${{ github.workspace }}/.codex-automation
+      CODEX_AUTOMATION_HOME: ${{ github.workspace }}/.codex-automation/home
+      CODEX_OUTPUT_FILE: ${{ github.workspace }}/.codex-automation/codex-pr-body.md
+      GOCACHE: ${{ github.workspace }}/.codex-automation/go-build-cache
+      GOMODCACHE: ${{ github.workspace }}/.codex-automation/go-mod-cache
+      GO_RELEASE_FEED: ${{ github.workspace }}/.codex-automation/go-releases.json
     outputs:
       has_patch: ${{ steps.patch.outputs.has_patch }}
     steps:
+      - name: Create an unprivileged Codex user
+        # This runs before the key is passed to any process. Separating the
+        # agent from the runner user prevents a lingering agent process from
+        # inspecting credentials used by later runner-owned steps.
+        run: |
+          sudo adduser \
+            --system \
+            --home /home/codex \
+            --shell /bin/bash \
+            --group codex
+          sudo usermod --append --groups codex runner
+          sudo usermod --append --groups runner codex
+
       - name: Check out the trusted default branch
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -36,32 +61,83 @@ jobs:
         with:
           go-version: stable
 
-      - name: Snapshot the official Go release feed
-        env:
-          GO_RELEASE_FEED: ${{ runner.temp }}/go-releases.json
+      - name: Prepare the isolated Codex workspace
         run: |
-          curl --fail --location --silent --show-error \
+          mkdir --parents "$CODEX_AUTOMATION_HOME"
+          cp \
+            .github/codex/go-version-review-config.toml \
+            "$CODEX_AUTOMATION_HOME/config.toml"
+          # Keep proxy configuration, caches, and Codex output out of the
+          # generated patch without adding repository-wide ignore rules.
+          echo '/.codex-automation/' >> .git/info/exclude
+
+      - name: Snapshot the official Go release feed
+        run: |
+          curl \
+            --fail \
+            --location \
+            --max-time 30 \
+            --proto '=https' \
+            --retry 3 \
+            --retry-all-errors \
+            --silent \
+            --show-error \
+            --tlsv1.2 \
             'https://go.dev/dl/?mode=json&include=all' \
             --output "$GO_RELEASE_FEED"
           jq --exit-status 'type == "array" and length > 0' \
             "$GO_RELEASE_FEED" >/dev/null
 
+      - name: Warm Go dependency caches
+        # Agent-run commands have no network access. Download the existing,
+        # reviewed module graphs before the API key enters the job.
+        run: |
+          go mod download
+          (cd examples && go mod download)
+          (cd internal/testdata/consumer && go mod download)
+          (cd tools && go mod download)
+
+      - name: Grant the Codex user controlled workspace access
+        run: |
+          sudo chown --recursive runner:codex "$GITHUB_WORKSPACE"
+          sudo chmod --recursive g+rwX "$GITHUB_WORKSPACE"
+          sudo find "$GITHUB_WORKSPACE" \
+            -type d \
+            -exec chmod g+s {} +
+
+          # Git metadata remains runner-owned and non-writable to the agent.
+          # The permission profile independently restricts tracked-file writes.
+          sudo chown --recursive runner:runner "$GITHUB_WORKSPACE/.git"
+          sudo chmod --recursive go-w "$GITHUB_WORKSPACE/.git"
+
       - name: Ask Codex to prepare the update
         id: codex
-        # Pin the action itself. Dependabot proposes reviewed SHA updates.
+        # Pin both the action and installed Codex runtime. Dependabot proposes
+        # reviewed action updates; runtime updates are explicit policy changes.
         uses: openai/codex-action@52fe01ec70a42f454c9d2ebd47598f9fd6893d56 # v1
-        env:
-          GO_RELEASE_FEED: ${{ runner.temp }}/go-releases.json
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           prompt-file: .github/codex/prompts/go-version-review.md
-          output-file: ${{ runner.temp }}/codex-pr-body.md
+          output-file: ${{ env.CODEX_OUTPUT_FILE }}
+          codex-home: ${{ env.CODEX_AUTOMATION_HOME }}
+          codex-version: '0.144.6'
           codex-args: '["--ephemeral"]'
-          permission-profile: ':workspace'
-          safety-strategy: drop-sudo
+          permission-profile: go-version-review
+          safety-strategy: unprivileged-user
+          codex-user: codex
+
+      - name: Terminate Codex-owned processes
+        if: always()
+        # Defense in depth before any later step receives an Actions runtime
+        # token. The action normally shuts down its proxy itself.
+        run: |
+          sudo pkill -KILL -u codex 2>/dev/null || true
+          pkill -KILL -f '[c]odex-responses-api-proxy' 2>/dev/null || true
+          sudo chown runner:runner "$CODEX_OUTPUT_FILE" 2>/dev/null || true
 
       - name: Package Codex's patch
         id: patch
+        if: steps.codex.outcome == 'success'
         env:
           PATCH_PATH: ${{ runner.temp }}/codex.patch
         run: |
@@ -82,7 +158,7 @@ jobs:
           name: monthly-go-version-update
           path: |
             ${{ runner.temp }}/codex.patch
-            ${{ runner.temp }}/codex-pr-body.md
+            ${{ env.CODEX_OUTPUT_FILE }}
           if-no-files-found: error
           retention-days: 7
 
@@ -91,27 +167,31 @@ jobs:
     needs: propose
     if: needs.propose.outputs.has_patch == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      branch: ${{ steps.publish.outputs.branch }}
     permissions:
-      actions: write
       contents: write
       pull-requests: write
     steps:
-      - name: Check out the default branch
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          fetch-depth: 0
-          # This job has no OpenAI credential. Its GitHub credential is used
-          # only to publish the already-generated patch.
-          persist-credentials: true
-
       - name: Download the Codex proposal
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: monthly-go-version-update
           path: ${{ runner.temp }}/monthly-go-version-update
 
+      - name: Check out the default branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          # This job has no OpenAI credential. No third-party action runs after
+          # checkout persists this short-lived publisher credential.
+          persist-credentials: true
+
       - name: Apply, publish, and open the draft pull request
+        id: publish
         env:
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
           GH_TOKEN: ${{ github.token }}
           PATCH_PATH: ${{ runner.temp }}/monthly-go-version-update/codex.patch
           PR_BODY_PATH: ${{ runner.temp }}/monthly-go-version-update/codex-pr-body.md
@@ -120,11 +200,15 @@ jobs:
           marker='<!-- monthly-go-version-review -->'
           existing_pr="$(
             gh pr list \
-              --base "${{ github.event.repository.default_branch }}" \
+              --base "$BASE_BRANCH" \
               --state open \
               --limit 100 \
-              --json number,body \
-              --jq "map(select((.body // \"\") | contains(\"$marker\")))[0].number // empty"
+              --json number,body,headRefName,isCrossRepository \
+              --jq "map(select(
+                (.isCrossRepository | not) and
+                (.headRefName | startswith(\"codex/monthly-go-version-update-\")) and
+                ((.body // \"\") | contains(\"$marker\"))
+              ))[0].number // empty"
           )"
           if [[ -n "$existing_pr" ]]; then
             echo "::notice::Monthly Go version update is already tracked in PR #$existing_pr"
@@ -132,12 +216,62 @@ jobs:
           fi
 
           git apply --index "$PATCH_PATH"
+          # The model has no GitHub credential, and this publisher does not
+          # trust its patch blindly. Reject files outside the policy surface
+          # and reject deletes, renames, symlinks, or mode changes before push.
+          if git diff --cached --quiet; then
+            echo '::error::Codex produced an empty patch'
+            exit 1
+          fi
+          while IFS= read -r path; do
+            case "$path" in
+              go.mod|go.sum|README.md|CONTRIBUTING.md|GO_VERSION_POLICY.md)
+                ;;
+              examples/go.mod|examples/go.sum)
+                ;;
+              internal/testdata/consumer/go.mod|internal/testdata/consumer/go.sum)
+                ;;
+              tools/go.mod|tools/go.sum|.github/workflows/ci.yml)
+                ;;
+              *)
+                echo "::error file=$path::Codex changed a file outside the approved policy surface"
+                exit 1
+                ;;
+            esac
+          done < <(git diff --cached --name-only)
+          if [[ -n "$(git diff --cached --summary)" ]]; then
+            echo '::error::Codex patch contains a file creation, deletion, rename, or mode change'
+            exit 1
+          fi
+          # This branch's CI workflow will be dispatched after publication.
+          # It must remain trusted: Codex may update only quoted Go-version
+          # literals, never its triggers, permissions, actions, jobs, or steps.
+          while IFS= read -r line; do
+            case "$line" in
+              ---*|+++*)
+                continue
+                ;;
+              -*|+*)
+                if [[ ! "$line" =~ ^[-+][[:space:]]+(go-version:[[:space:]]+|-[[:space:]]+)\'[0-9]+\.[0-9]+\.x\'$ ]]; then
+                  echo '::error file=.github/workflows/ci.yml::Codex made an unapproved CI workflow change'
+                  exit 1
+                fi
+                ;;
+            esac
+          done < <(git diff --cached --unified=0 -- .github/workflows/ci.yml)
+
           branch="codex/monthly-go-version-update-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          # Ensure checkout's credential is removed even if a later command in
+          # this step fails. GH_TOKEN continues to authenticate GitHub CLI.
+          trap 'git config --local --unset-all http.https://github.com/.extraheader 2>/dev/null || true' EXIT
           git switch --create "$branch"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit --message 'chore(go): update supported Go versions'
           git push origin "HEAD:refs/heads/$branch"
+          git config --local \
+            --unset-all \
+            http.https://github.com/.extraheader 2>/dev/null || true
 
           {
             echo "$marker"
@@ -150,17 +284,35 @@ jobs:
           } > "$RUNNER_TEMP/pr-body.md"
 
           gh pr create \
-            --base "${{ github.event.repository.default_branch }}" \
+            --base "$BASE_BRANCH" \
             --head "$branch" \
             --draft \
             --title 'chore(go): update supported Go versions' \
             --body-file "$RUNNER_TEMP/pr-body.md"
 
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+  dispatch_checks:
+    name: Dispatch draft pull request checks
+    needs: open_pr
+    if: needs.open_pr.outputs.branch != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Run required checks on the generated branch
+        env:
+          BASE_SHA: ${{ github.sha }}
+          BRANCH: ${{ needs.open_pr.outputs.branch }}
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
           # GITHUB_TOKEN deliberately does not trigger pull_request workflows.
-          # workflow_dispatch is the documented exception, so run every
-          # required safety workflow against the generated head commit.
-          gh workflow run ci.yml --ref "$branch"
+          # workflow_dispatch is the documented exception.
+          gh workflow run ci.yml --ref "$BRANCH"
           gh workflow run detect-breaking-changes.yml \
-            --ref "$branch" \
-            --field base_sha="${{ github.sha }}"
-          gh workflow run codeql.yml --ref "$branch"
+            --ref "$BRANCH" \
+            --field base_sha="$BASE_SHA"
+          gh workflow run codeql.yml --ref "$BRANCH"

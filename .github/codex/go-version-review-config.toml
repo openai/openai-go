@@ -1,0 +1,33 @@
+# Least-privilege profile for the scheduled Go version review. The workflow
+# copies this file into an ignored, disposable Codex home before the action
+# starts, so proxy configuration and session state never enter the patch.
+default_permissions = "go-version-review"
+
+[permissions."go-version-review"]
+description = "Review and update only Go-version policy artifacts"
+extends = ":read-only"
+
+[permissions."go-version-review".filesystem]
+glob_scan_max_depth = 4
+
+[permissions."go-version-review".filesystem.":workspace_roots"]
+"." = "read"
+".codex-automation" = "write"
+"go.mod" = "write"
+"go.sum" = "write"
+"README.md" = "write"
+"CONTRIBUTING.md" = "write"
+"GO_VERSION_POLICY.md" = "write"
+"examples/go.mod" = "write"
+"examples/go.sum" = "write"
+"internal/testdata/consumer/go.mod" = "write"
+"internal/testdata/consumer/go.sum" = "write"
+"tools/go.mod" = "write"
+"tools/go.sum" = "write"
+".github/workflows/ci.yml" = "write"
+"**/*.env" = "deny"
+
+[permissions."go-version-review".network]
+# The workflow snapshots the Go release feed and warms module caches before
+# the API key is passed to the action. Agent-run commands need no internet.
+enabled = false

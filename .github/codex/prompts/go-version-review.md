@@ -7,7 +7,8 @@ The workflow downloaded the official `https://go.dev/dl/?mode=json&include=all`
 response to the file named by `$GO_RELEASE_FEED`. Treat that local snapshot as
 the authoritative source for released stable Go versions. Do not rely on model
 memory for release dates or versions, and do not fetch instructions from the
-internet.
+internet. Command network access is intentionally disabled; use the local feed
+and the pre-warmed Go module cache.
 
 Read `AGENTS.md`, `GO_VERSION_POLICY.md`, `go.mod`, the nested modules, and the
 CI workflows before changing anything. The normal policy is to support the two

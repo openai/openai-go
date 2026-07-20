@@ -48,11 +48,24 @@ policy or pull request prose.
 - `.github/workflows/go-version-review.yml`
   - Monthly and manually: gives Codex a snapshot of the official Go release
     feed and asks it to reconcile the modules, CI, and documentation.
-  - Requires an `OPENAI_API_KEY` Actions secret available to this repository.
+  - Uses `OPENAI_API_KEY` from the `ci` Actions environment. That environment
+    permits only the `main` branch, so a dispatch against another ref cannot
+    receive the secret.
+  - Runs a pinned Codex runtime as a dedicated unprivileged OS user with a
+    checked-in permission profile. Agent commands have no network access and
+    can write only the documented policy artifacts plus disposable cache
+    files.
   - Codex can prepare a patch but has read-only GitHub permissions and no
     repository credential. A separate job with no OpenAI credential opens one
     draft pull request from that patch. If a generated draft is already open,
     automation leaves it untouched for maintainers.
+  - The publisher independently rejects changes outside the documented policy
+    files. Because generated-branch CI is dispatched, it accepts only quoted
+    Go-version literal changes in `ci.yml`; changes to workflow permissions,
+    triggers, actions, jobs, or steps are rejected before push.
+  - The publisher can write repository contents and pull requests but cannot
+    dispatch Actions. A third job can dispatch Actions but cannot write
+    repository contents or pull requests.
   - Because GitHub suppresses normal workflow events for pull requests created
     with `GITHUB_TOKEN`, the publishing job explicitly dispatches CI,
     compatibility detection, and CodeQL on the generated branch.
