@@ -26,7 +26,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup stable Go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           # This toolchain runs the checker; the checker reads the official
           # release feed to decide which Go lines should be supported.
@@ -59,47 +59,93 @@ jobs:
         if: always()
         run: cat "$RUNNER_TEMP/go-version-review.md" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Open or refresh the review issue
-        if: steps.policy.outcome == 'failure'
+      - name: Reconcile the review issue
+        # Run on both outcomes: drift opens or refreshes the issue, while a
+        # clean review closes every stale issue created by this workflow.
+        if: always()
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           REPORT_PATH: ${{ runner.temp }}/go-version-review.md
+          POLICY_OUTCOME: ${{ steps.policy.outcome }}
         with:
           script: |
             const fs = require('fs');
-            // The exact title is the deduplication key: policy drift should
-            // maintain one actionable issue, not create monthly issue spam.
             const title = '[go-version-review] Review Go version support';
+            const marker = '<!-- go-version-review -->';
             const report = fs.readFileSync(process.env.REPORT_PATH, 'utf8');
             const runURL = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const body = [
-              '<!-- go-version-review -->',
+              marker,
               report,
               `Workflow run: ${runURL}`,
               '',
               'This workflow reports drift only. It never changes go.mod automatically.',
             ].join('\n');
 
-            const {data: issues} = await github.rest.issues.listForRepo({
+            // Paginate because issues.listForRepo also returns pull requests,
+            // and this repository can have more than 100 open items.
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
               per_page: 100,
             });
-            const existing = issues.find((issue) => !issue.pull_request && issue.title === title);
-            if (existing) {
-              // Replace stale diagnostics with the latest complete report.
+            const existing = issues.filter((issue) =>
+              !issue.pull_request &&
+              (issue.title === title || issue.body?.includes(marker))
+            );
+
+            if (process.env.POLICY_OUTCOME === 'failure') {
+              const primary = existing[0];
+              if (primary) {
+                // Replace stale diagnostics with the latest complete report.
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: primary.number,
+                  title,
+                  body,
+                });
+              } else {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title,
+                  body,
+                });
+              }
+
+              // Repair duplicates created by older, non-paginated runs.
+              for (const duplicate of existing.slice(1)) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: duplicate.number,
+                  body: `Closing duplicate; current review is tracked in ${primary ? `#${primary.number}` : 'the newly created issue'}.`,
+                });
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: duplicate.number,
+                  state: 'closed',
+                  state_reason: 'not_planned',
+                });
+              }
+              return;
+            }
+
+            for (const issue of existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `The policy review now passes. Closing as resolved.\n\nWorkflow run: ${runURL}`,
+              });
               await github.rest.issues.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: existing.number,
-                body,
-              });
-            } else {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body,
+                issue_number: issue.number,
+                state: 'closed',
+                state_reason: 'completed',
               });
             }

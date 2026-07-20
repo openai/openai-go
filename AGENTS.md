@@ -13,11 +13,14 @@ explicitly requires it.
 - `GO_VERSION_POLICY.md` is the human-readable support and release policy.
 - `.github/go-support-policy.json` is a custom, machine-readable decision
   record. It is not interpreted by Go or GitHub. Humans update it in reviewed
-  pull requests, and `scripts/check-go-support-policy` reads it.
+  pull requests, and `scripts/check-go-support-policy` reads it. Its
+  `release_note` object is the durable source for generated release
+  communication.
 - The supported release lines are the current and immediately preceding stable
-  Go releases. CI tests the latest patch release in each supported line.
-- Keep the `go` directives in the root, `examples`, and
-  `internal/testdata/consumer` modules aligned.
+  Go releases. An approved grace period adds the retired minimum as a third
+  line. CI tests the latest patch release in every supported line.
+- Keep the `go` directives in the root, `examples`,
+  `internal/testdata/consumer`, and `tools` modules aligned.
 - Do not combine a minimum-Go-version change with unrelated SDK or Azure
   dependency upgrades.
 
@@ -25,34 +28,41 @@ explicitly requires it.
 
 When changing a `go` directive:
 
-1. Update all three modules and run `go mod tidy` in each module.
+1. Update all four modules and run `go mod tidy` in each module.
 2. Update `README.md`, `CONTRIBUTING.md`, and `GO_VERSION_POLICY.md`.
 3. Update `.github/go-support-policy.json` with the decision, reason, grace
-   period, and approver.
+   period, approver, SDK compatibility boundary, and complete release note.
 4. Update the minimum/current CI matrix in `.github/workflows/ci.yml`.
-5. Add a `## Release note` section to the pull request description. Name the
-   final SDK release that works with the retired Go versions, without implying
-   that it receives security backports.
+5. Copy the JSON `release_note.text` into a `## Release note` section in the
+   pull request description. When Release Please generates that SDK release,
+   copy the same text into its `CHANGELOG.md` section; CI blocks the release PR
+   until it is present.
 6. Obtain SDK CODEOWNER approval.
 
 `scripts/check-go-version-change` enforces these requirements on pull requests.
-It reports omissions but never edits policy or module files.
+It validates the complete repository against the official Go release feed,
+reports omissions, and never edits policy or module files. The stable
+`Go support policy` check aggregates every required Go safety job and is a
+required status check on `main`.
 
 ## Automation map
 
 - `.github/workflows/ci.yml`
   - On branch pushes: lint, tidy, and tests on each supported Go line.
-  - On pull requests: reachable-vulnerability and Go-version-policy checks.
+  - On pull requests: the same lint and test coverage, plus
+    reachable-vulnerability and Go-version-policy checks.
   - Nightly: reachable-vulnerability checks only, so newly published
     advisories are detected even when the repository has not changed.
 - `.github/workflows/go-version-review.yml`
   - Monthly and manually: compares the official Go release feed with the
     recorded policy, module directives, CI matrix, and documentation.
-  - Opens or refreshes one review issue when a human decision is needed.
+  - Opens or refreshes one review issue when a human decision is needed and
+    closes stale review issues after the policy is reconciled.
   - Never changes the supported Go versions automatically.
 - `.github/dependabot.yml`
-  - Weekly: proposes grouped Go dependency updates for the root and examples
-    modules.
+  - Weekly: proposes grouped Go dependency updates for the root, examples, and
+    isolated tools modules, plus independently reviewable GitHub Actions
+    updates.
   - Never auto-merges dependency or Go-version changes.
 
 ## Validation
@@ -62,9 +72,12 @@ Before publishing a Go-version or dependency change, run:
 ```sh
 go mod tidy -diff
 (cd examples && go mod tidy -diff)
+(cd internal/testdata/consumer && go mod tidy -diff)
+(cd tools && go mod tidy -diff)
 go test ./...
 (cd examples && go test ./...)
-(cd internal/testdata/consumer && go test ./...)
+(cd internal/testdata/consumer && go test -mod=readonly ./...)
+(cd tools && go install golang.org/x/vuln/cmd/govulncheck)
 govulncheck ./...
 (cd examples && govulncheck ./...)
 go run ./scripts/check-go-support-policy

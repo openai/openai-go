@@ -1,7 +1,8 @@
 version: 2
-# The root SDK and examples are independent Go modules, so Dependabot needs one
-# update entry for each. Updates are proposed for review and are never
-# auto-merged by this configuration.
+# The root SDK, examples, and development tools are independent Go modules, so
+# Dependabot needs one update entry for each. GitHub Actions are tracked
+# separately. Updates are proposed for review and are never auto-merged by this
+# configuration.
 updates:
   - package-ecosystem: gomod
     directory: /
@@ -44,3 +45,29 @@ updates:
           - "*"
         exclude-patterns:
           - "golang.org/x/*"
+
+  - package-ecosystem: gomod
+    directory: /tools
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:30"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 3
+    groups:
+      # This module currently owns govulncheck and its golang.org/x
+      # dependencies. Keeping it isolated avoids changing SDK users' graph.
+      golang-x-tools:
+        patterns:
+          - "golang.org/x/*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:45"
+      timezone: Etc/UTC
+    # Keep action updates separate so each pinned SHA and runtime change can be
+    # reviewed independently.
+    open-pull-requests-limit: 5

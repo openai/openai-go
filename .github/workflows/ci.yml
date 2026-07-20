@@ -63,7 +63,10 @@ jobs:
     timeout-minutes: 10
     name: lint
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
+    # Run on the PR event even for same-repository branches. The stable
+    # aggregate check at the bottom cannot safely depend on a separate push
+    # workflow run, and every PR should receive the same merge-gating signal.
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
     # Prevent Go's automatic toolchain selection from hiding an accidental
     # increase above the minimum declared in go.mod.
     env:
@@ -75,7 +78,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           # go.mod is the source of truth for the minimum compiler used by lint.
           go-version-file: ./go.mod
@@ -89,7 +92,7 @@ jobs:
     timeout-minutes: 15
     name: test (Go ${{ matrix.go-version }})
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
@@ -109,7 +112,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -129,7 +132,9 @@ jobs:
         working-directory: internal/testdata/consumer
         # This nested module catches accidental reliance on internal packages
         # and proves representative core and Azure imports compose externally.
-        run: go test ./...
+        # readonly also prevents a disposable CI checkout from hiding stale
+        # module metadata by rewriting go.mod or go.sum during the test.
+        run: go test -mod=readonly ./...
 
   vulnerability:
     timeout-minutes: 15
@@ -146,14 +151,17 @@ jobs:
           persist-credentials: false
 
       - name: Setup current stable Go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           # Scan with a patched current toolchain so old standard-library
           # findings do not obscure dependency findings.
           go-version: '1.26.x'
 
       - name: Install govulncheck
-        run: go install golang.org/x/vuln/cmd/govulncheck@v1.6.0
+        # Keep the scanner in its own module so Dependabot can update it without
+        # adding development-tool dependencies to SDK users' module graph.
+        working-directory: tools
+        run: go install golang.org/x/vuln/cmd/govulncheck
 
       - name: Scan root module
         run: govulncheck ./...
@@ -179,7 +187,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version-file: ./go.mod
 
@@ -190,3 +198,41 @@ jobs:
           # it into the shell command.
           PR_BODY: ${{ github.event.pull_request.body }}
         run: go run ./scripts/check-go-version-change "$BASE_SHA"
+
+      - name: Check generated release communication
+        # The approved release note lives in go-support-policy.json. Generated
+        # release PRs must carry it into CHANGELOG.md before they can merge.
+        if: startsWith(github.head_ref, 'release-please--')
+        run: go run ./scripts/check-go-release-note
+
+  required:
+    timeout-minutes: 5
+    name: Go support policy
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'pull_request'
+    needs:
+      - lint
+      - test
+      - vulnerability
+      - go-version-change
+    steps:
+      - name: Require every Go safety job
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+          VULNERABILITY_RESULT: ${{ needs.vulnerability.result }}
+          VERSION_POLICY_RESULT: ${{ needs.go-version-change.result }}
+        run: |
+          failed=0
+          for result in \
+            "$LINT_RESULT" \
+            "$TEST_RESULT" \
+            "$VULNERABILITY_RESULT" \
+            "$VERSION_POLICY_RESULT"
+          do
+            if [[ "$result" != "success" ]]; then
+              echo "Required Go safety job ended with: $result"
+              failed=1
+            fi
+          done
+          exit "$failed"

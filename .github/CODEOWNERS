@@ -6,5 +6,8 @@
 # Minimum Go version and policy changes require SDK-team review.
 /go.mod @openai/sdks-team
 /examples/go.mod @openai/sdks-team
+/internal/testdata/consumer/go.mod @openai/sdks-team
+/tools/go.mod @openai/sdks-team
 /.github/go-support-policy.json @openai/sdks-team
+/.github/workflows/ci.yml @openai/sdks-team
 /GO_VERSION_POLICY.md @openai/sdks-team

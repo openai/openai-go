@@ -7,7 +7,9 @@ preceding stable Go release. The oldest supported release is declared by the
 The SDK team may retain the most recently retired Go release for up to six
 months when the dependency graph and security posture allow it. This grace
 period is discretionary, is not an LTS commitment, and may end early because of
-security, dependency, platform, or toolchain requirements.
+security, dependency, platform, or toolchain requirements. During a grace
+period, CI tests the retired minimum in addition to the current and preceding
+stable Go releases.
 
 Minimum Go version increases:
 
@@ -17,10 +19,12 @@ Minimum Go version increases:
 - do not require a new SDK major version when exported APIs and the module
   import path remain compatible.
 
-A pull request that changes the minimum Go version includes a `## Release note`
-section in its description. When the generated release pull request opens, the
-release manager carries that note into the release pull request before
-approval.
+The complete approved release note and SDK compatibility boundary are stored in
+`.github/go-support-policy.json`. A pull request that changes the minimum Go
+version copies that text into a `## Release note` section in its description.
+When the generated release pull request opens, the release manager copies the
+same text into the matching `CHANGELOG.md` release section. CI blocks the
+generated release pull request until the changelog contains the approved text.
 
 The SDK team reviews this policy within 30 days of each scheduled February and
 August Go release. Automation compares the official Go release feed with the
@@ -31,7 +35,7 @@ changes the minimum version automatically.
 
 | SDK version | Go requirement |
 | --- | --- |
-| v3.45.0 and later | Go 1.25 or later |
+| v3.45.0 through current | Go 1.25 or later |
 | v3.44.0 | Final release that builds with Go 1.22–1.24 |
 
 Previously published SDK versions remain available. Unsupported Go releases

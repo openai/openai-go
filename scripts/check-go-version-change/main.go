@@ -4,11 +4,15 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/openai/openai-go/v3/scripts/internal/gosupport"
 )
 
 var releaseNoteHeading = regexp.MustCompile(`(?mi)^##[ \t]+Release note[ \t]*\r?$`)
@@ -16,6 +20,8 @@ var releaseNoteHeading = regexp.MustCompile(`(?mi)^##[ \t]+Release note[ \t]*\r?
 type directives struct {
 	Root     string
 	Examples string
+	Consumer string
+	Tools    string
 }
 
 type validationInput struct {
@@ -24,6 +30,7 @@ type validationInput struct {
 	Changed    map[string]bool
 	PRBody     string
 	Codeowners string
+	Policy     gosupport.Policy
 }
 
 func main() {
@@ -37,11 +44,11 @@ func main() {
 		fatal(err)
 	}
 
-	base, err := directivesAt(root, os.Args[1])
+	base, err := directivesAt(root, os.Args[1], true)
 	if err != nil {
 		fatal(err)
 	}
-	head, err := directivesAt(root, "")
+	head, err := directivesAt(root, "", false)
 	if err != nil {
 		fatal(err)
 	}
@@ -52,14 +59,20 @@ func main() {
 	}
 
 	fmt.Println("Go directive change detected:")
-	fmt.Printf("  root:     %s -> %s\n", base.Root, head.Root)
-	fmt.Printf("  examples: %s -> %s\n", base.Examples, head.Examples)
+	fmt.Printf("  root:     %s -> %s\n", displayDirective(base.Root), head.Root)
+	fmt.Printf("  examples: %s -> %s\n", displayDirective(base.Examples), head.Examples)
+	fmt.Printf("  consumer: %s -> %s\n", displayDirective(base.Consumer), head.Consumer)
+	fmt.Printf("  tools:    %s -> %s\n", displayDirective(base.Tools), head.Tools)
 
 	changed, err := changedFiles(root, os.Args[1])
 	if err != nil {
 		fatal(err)
 	}
 	codeowners, err := os.ReadFile(filepath.Join(root, ".github", "CODEOWNERS"))
+	if err != nil {
+		fatal(err)
+	}
+	policy, err := gosupport.ReadPolicy(filepath.Join(root, ".github", "go-support-policy.json"))
 	if err != nil {
 		fatal(err)
 	}
@@ -70,12 +83,29 @@ func main() {
 		Changed:    changed,
 		PRBody:     os.Getenv("PR_BODY"),
 		Codeowners: string(codeowners),
+		Policy:     policy,
 	})
 	if len(problems) > 0 {
 		fmt.Fprintln(os.Stderr, "A Go directive change is missing required policy artifacts:")
 		for _, problem := range problems {
 			fmt.Fprintf(os.Stderr, "  - %s\n", problem)
 		}
+		os.Exit(1)
+	}
+
+	// A Go-floor PR is rare and high impact. Validate its complete repository
+	// state against the live official release feed before allowing it to merge.
+	review, err := gosupport.CheckRepository(
+		root,
+		gosupport.DefaultReleaseFeed,
+		time.Now(),
+		&http.Client{Timeout: 30 * time.Second},
+	)
+	if err != nil {
+		fatal(err)
+	}
+	if len(review.Findings) > 0 {
+		fmt.Fprint(os.Stderr, review.Markdown())
 		os.Exit(1)
 	}
 
@@ -87,8 +117,8 @@ func fatal(err error) {
 	os.Exit(1)
 }
 
-func directivesAt(root, revision string) (directives, error) {
-	read := func(relative string) (string, error) {
+func directivesAt(root, revision string, allowMissingNested bool) (directives, error) {
+	read := func(relative string, allowMissing bool) (string, error) {
 		var data []byte
 		var err error
 		if revision == "" {
@@ -99,27 +129,49 @@ func directivesAt(root, revision string) (directives, error) {
 			data = []byte(output)
 		}
 		if err != nil {
+			if allowMissing {
+				return "", nil
+			}
 			return "", err
 		}
 		return goDirective(data)
 	}
 
-	rootDirective, err := read("go.mod")
+	rootDirective, err := read("go.mod", false)
 	if err != nil {
 		return directives{}, err
 	}
-	examplesDirective, err := read(filepath.ToSlash(filepath.Join("examples", "go.mod")))
+	examplesDirective, err := read(filepath.ToSlash(filepath.Join("examples", "go.mod")), false)
 	if err != nil {
 		return directives{}, err
 	}
-	return directives{Root: rootDirective, Examples: examplesDirective}, nil
+	consumerDirective, err := read(
+		filepath.ToSlash(filepath.Join("internal", "testdata", "consumer", "go.mod")),
+		allowMissingNested,
+	)
+	if err != nil {
+		return directives{}, err
+	}
+	toolsDirective, err := read(filepath.ToSlash(filepath.Join("tools", "go.mod")), allowMissingNested)
+	if err != nil {
+		return directives{}, err
+	}
+	return directives{
+		Root:     rootDirective,
+		Examples: examplesDirective,
+		Consumer: consumerDirective,
+		Tools:    toolsDirective,
+	}, nil
 }
 
 func goDirective(data []byte) (string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(string(data)))
 	for scanner.Scan() {
 		fields := strings.Fields(scanner.Text())
-		if len(fields) == 2 && fields[0] == "go" {
+		if len(fields) >= 2 && fields[0] == "go" {
+			if _, err := gosupport.ParseVersion(fields[1]); err != nil {
+				return "", err
+			}
 			return fields[1], nil
 		}
 	}
@@ -131,10 +183,12 @@ func goDirective(data []byte) (string, error) {
 
 func changedFiles(root, base string) (map[string]bool, error) {
 	changed := make(map[string]bool)
-	// The first command covers committed PR changes. The latter two make the
-	// checker useful before commit by including unstaged and untracked files.
+	// The first command covers committed PR changes. The remaining commands
+	// make the checker useful before commit by including staged, unstaged, and
+	// untracked files.
 	commands := [][]string{
 		{"diff", "--name-only", base + "...HEAD"},
+		{"diff", "--cached", "--name-only"},
 		{"diff", "--name-only"},
 		{"ls-files", "--others", "--exclude-standard"},
 	}
@@ -168,11 +222,21 @@ func validate(input validationInput) []string {
 	}
 
 	var problems []string
-	if input.Head.Root != input.Head.Examples {
-		problems = append(problems, "the root and examples modules must use the same Go version")
+	if input.Head.Root != input.Head.Examples ||
+		input.Head.Root != input.Head.Consumer ||
+		input.Head.Root != input.Head.Tools {
+		problems = append(problems, "the root, examples, consumer, and tools modules must use the same Go version")
 	}
 
-	for _, required := range []string{"README.md", "CONTRIBUTING.md", "GO_VERSION_POLICY.md"} {
+	for _, required := range []string{
+		"README.md",
+		"CONTRIBUTING.md",
+		"GO_VERSION_POLICY.md",
+		".github/go-support-policy.json",
+		".github/workflows/ci.yml",
+		"internal/testdata/consumer/go.mod",
+		"tools/go.mod",
+	} {
 		if !input.Changed[required] {
 			problems = append(problems, required)
 		}
@@ -181,14 +245,27 @@ func validate(input validationInput) []string {
 	minimum, err := majorMinor(input.Head.Root)
 	if err != nil {
 		problems = append(problems, err.Error())
-	} else if !releaseNoteHeading.MatchString(input.PRBody) ||
-		!strings.Contains(input.PRBody, "Go "+minimum) {
+	} else if input.Policy.Minimum != minimum {
 		problems = append(problems, fmt.Sprintf(
-			"a PR description with a '## Release note' section mentioning Go %s", minimum,
+			".github/go-support-policy.json declares Go %s; go.mod declares Go %s",
+			input.Policy.Minimum,
+			minimum,
 		))
 	}
 
-	for _, path := range []string{"/go.mod", "/examples/go.mod"} {
+	releaseSection := releaseNoteSection(input.PRBody)
+	if releaseSection == "" || !containsNormalized(releaseSection, input.Policy.Release.Text) {
+		problems = append(problems, "the PR's '## Release note' section must contain release_note.text from .github/go-support-policy.json")
+	}
+
+	for _, path := range []string{
+		"/go.mod",
+		"/examples/go.mod",
+		"/internal/testdata/consumer/go.mod",
+		"/tools/go.mod",
+		"/.github/go-support-policy.json",
+		"/.github/workflows/ci.yml",
+	} {
 		if !hasCodeowner(input.Codeowners, path, "@openai/sdks-team") {
 			problems = append(problems, fmt.Sprintf(
 				"an explicit %s CODEOWNERS entry for @openai/sdks-team", path,
@@ -199,11 +276,31 @@ func validate(input validationInput) []string {
 }
 
 func majorMinor(raw string) (string, error) {
-	parts := strings.Split(raw, ".")
-	if len(parts) < 2 {
-		return "", fmt.Errorf("invalid Go version %q", raw)
+	parsed, err := gosupport.ParseVersion(raw)
+	if err != nil {
+		return "", err
 	}
-	return strings.Join(parts[:2], "."), nil
+	return parsed.String(), nil
+}
+
+func releaseNoteSection(body string) string {
+	location := releaseNoteHeading.FindStringIndex(body)
+	if location == nil {
+		return ""
+	}
+	section := body[location[1]:]
+	nextHeading := regexp.MustCompile(`(?m)^##[ \t]+`).FindStringIndex(section)
+	if nextHeading != nil {
+		section = section[:nextHeading[0]]
+	}
+	return section
+}
+
+func containsNormalized(haystack, needle string) bool {
+	normalize := func(value string) string {
+		return strings.Join(strings.Fields(value), " ")
+	}
+	return strings.Contains(normalize(haystack), normalize(needle))
 }
 
 func hasCodeowner(contents, path, owner string) bool {
@@ -220,4 +317,11 @@ func hasCodeowner(contents, path, owner string) bool {
 		}
 	}
 	return false
+}
+
+func displayDirective(value string) string {
+	if value == "" {
+		return "(missing)"
+	}
+	return value
 }

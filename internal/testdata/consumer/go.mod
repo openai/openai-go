@@ -1,4 +1,4 @@
-module github.com/openai/openai-go/v3/internal/testdata/consumer
+module example.com/openai-go-consumer
 
 go 1.25.0
 

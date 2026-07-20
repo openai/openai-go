@@ -9,3 +9,9 @@ go mod tidy -diff
 
 echo "==> Checking examples/go.mod is tidy"
 (cd examples && go mod tidy -diff)
+
+echo "==> Checking external consumer go.mod is tidy"
+(cd internal/testdata/consumer && go mod tidy -diff)
+
+echo "==> Checking tools/go.mod is tidy"
+(cd tools && go mod tidy -diff)
