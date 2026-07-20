@@ -1,0 +1,91 @@
+name: Go version review
+
+on:
+  schedule:
+    - cron: '17 14 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  review:
+    name: Check Go support policy
+    runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Setup stable Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: 'stable'
+
+      - name: Compare policy with the official Go release feed
+        id: policy
+        continue-on-error: true
+        run: |
+          report_path="$RUNNER_TEMP/go-version-review.md"
+          set +e
+          go run ./scripts/check-go-support-policy -report "$report_path"
+          status=$?
+          set -e
+
+          if [[ ! -s "$report_path" ]]; then
+            {
+              echo '# Go version support review'
+              echo
+              echo 'The policy checker failed before it could produce a report.'
+            } > "$report_path"
+          fi
+          exit "$status"
+
+      - name: Add report to workflow summary
+        if: always()
+        run: cat "$RUNNER_TEMP/go-version-review.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open or refresh the review issue
+        if: steps.policy.outcome == 'failure'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          REPORT_PATH: ${{ runner.temp }}/go-version-review.md
+        with:
+          script: |
+            const fs = require('fs');
+            const title = '[go-version-review] Review Go version support';
+            const report = fs.readFileSync(process.env.REPORT_PATH, 'utf8');
+            const runURL = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              '<!-- go-version-review -->',
+              report,
+              `Workflow run: ${runURL}`,
+              '',
+              'This workflow reports drift only. It never changes go.mod automatically.',
+            ].join('\n');
+
+            const {data: issues} = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const existing = issues.find((issue) => !issue.pull_request && issue.title === title);
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+              });
+            }

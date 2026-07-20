@@ -13,6 +13,8 @@ on:
     branches-ignore:
       - 'stl-preview-head/**'
       - 'stl-preview-base/**'
+  schedule:
+    - cron: '23 10 * * *'
 
 permissions:
   contents: read
@@ -59,6 +61,8 @@ jobs:
     name: lint
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
+    env:
+      GOTOOLCHAIN: local
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -76,10 +80,18 @@ jobs:
       - name: Check go.mod is tidy
         run: ./scripts/check-go-mod
   test:
-    timeout-minutes: 10
-    name: test
+    timeout-minutes: 15
+    name: test (Go ${{ matrix.go-version }})
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version:
+          - '1.25.x'
+          - '1.26.x'
+    env:
+      GOTOOLCHAIN: local
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -88,10 +100,71 @@ jobs:
       - name: Setup go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
-          go-version-file: ./go.mod
+          go-version: ${{ matrix.go-version }}
 
       - name: Bootstrap
+        env:
+          SKIP_BREW: "1"
         run: ./scripts/bootstrap
 
-      - name: Run tests
+      - name: Test root module
         run: ./scripts/test
+
+      - name: Test examples module
+        working-directory: examples
+        run: go test ./...
+
+      - name: Test external consumer
+        working-directory: internal/testdata/consumer
+        run: go test ./...
+
+  vulnerability:
+    timeout-minutes: 15
+    name: govulncheck
+    runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule'
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Setup current stable Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.26.x'
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.6.0
+
+      - name: Scan root module
+        run: govulncheck ./...
+
+      - name: Scan examples module
+        working-directory: examples
+        run: govulncheck ./...
+
+  go-version-change:
+    timeout-minutes: 5
+    name: Go version change policy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: ./go.mod
+
+      - name: Check required policy artifacts
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: go run ./scripts/check-go-version-change "$BASE_SHA"

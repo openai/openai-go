@@ -2,3 +2,9 @@
 # For more information see: https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 
 * @openai/sdks-team
+
+# Minimum Go version and policy changes require SDK-team review.
+/go.mod @openai/sdks-team
+/examples/go.mod @openai/sdks-team
+/.github/go-support-policy.json @openai/sdks-team
+/GO_VERSION_POLICY.md @openai/sdks-team

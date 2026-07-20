@@ -1,0 +1,6 @@
+{
+  "minimum": "1.25",
+  "grace_until": null,
+  "reason": "Go 1.25 is the previous stable release and is required by golang.org/x/net v0.57.0.",
+  "approved_by": "@openai/sdks-team"
+}

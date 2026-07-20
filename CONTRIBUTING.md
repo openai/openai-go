@@ -9,7 +9,10 @@ $ ./scripts/lint
 
 This will install all the required dependencies and build the SDK.
 
-You can also [install go 1.22+ manually](https://go.dev/doc/install).
+You can also [install Go 1.25 or later manually](https://go.dev/doc/install).
+CI tests both the minimum and current stable Go releases with
+`GOTOOLCHAIN=local`, so contributors should not rely on automatic toolchain
+downloads to satisfy the repository's minimum version.
 
 ## Modifying/Adding code
 
