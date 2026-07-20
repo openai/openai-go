@@ -23471,6 +23471,15 @@ func ToolParamOfFunction(name string, parameters map[string]any, strict bool) To
 	return ToolUnionParam{OfFunction: &function}
 }
 
+func ToolParamOfFunctionWithDescription(name string, description string, parameters map[string]any, strict bool) ToolUnionParam {
+	var function FunctionToolParam
+	function.Name = name
+	function.Description = param.NewOpt(description)
+	function.Parameters = parameters
+	function.Strict = param.NewOpt(strict)
+	return ToolUnionParam{OfFunction: &function}
+}
+
 func ToolParamOfFileSearch(vectorStoreIDs []string) ToolUnionParam {
 	var fileSearch FileSearchToolParam
 	fileSearch.VectorStoreIDs = vectorStoreIDs
