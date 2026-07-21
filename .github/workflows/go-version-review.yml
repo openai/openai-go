@@ -51,16 +51,22 @@ jobs:
 
           # The already-running runner process cannot acquire a supplementary
           # group added with usermod. Give its existing `runner` group
-          # traverse-only access to the parent instead: it can reach the
-          # runner-group Codex state directory but cannot list this home.
-          sudo chown codex:runner /home/codex
+          # traverse-only access to the root-owned parent instead. Root
+          # ownership prevents Codex from renaming the protected `.codex`
+          # directory; both principals can reach it but cannot list the home.
+          sudo chown root:runner /home/codex
           sudo chmod 0710 /home/codex
           sudo usermod --append --groups runner codex
           test "$(stat --format '%U:%G:%a' /home/codex)" = \
-            'codex:runner:710'
+            'root:runner:710'
           test -x /home/codex
           if test -r /home/codex; then
             echo 'The runner must not be able to list the Codex home' >&2
+            exit 1
+          fi
+          sudo -u codex -- test -x /home/codex
+          if sudo -u codex -- test -w /home/codex; then
+            echo 'Codex must not be able to modify its home directory' >&2
             exit 1
           fi
 
