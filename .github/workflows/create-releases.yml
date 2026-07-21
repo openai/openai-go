@@ -12,6 +12,9 @@ jobs:
     name: release
     if: github.ref == 'refs/heads/main' && github.repository == 'openai/openai-go'
     runs-on: ubuntu-latest
+    # STAINLESS_API_KEY is scoped to this environment, so the job that invokes
+    # trigger-release-please must explicitly opt in to receive it.
+    environment: publish
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
 
