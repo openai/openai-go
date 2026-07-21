@@ -25,7 +25,7 @@ import (
 
 <!-- x-release-please-end -->
 
-Or to pin the version:
+Or to pin an SDK version (see the Go compatibility note below):
 
 <!-- x-release-please-start-version -->
 
@@ -37,7 +37,12 @@ go get -u 'github.com/openai/openai-go/v3@v3.44.0'
 
 ## Requirements
 
-This library requires Go 1.22+.
+SDK v3.45.0 and later require Go 1.25 or later. If your application must
+remain on Go 1.22–1.24, pin SDK v3.44.0, the final compatible release. Older
+SDK releases receive no guaranteed fixes or security backports.
+
+See the [Go version support policy](GO_VERSION_POLICY.md) for the supported
+release window and upgrade guidance.
 
 ## Usage
 
