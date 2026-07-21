@@ -68,25 +68,43 @@ jobs:
       - name: Prepare the isolated Codex workspace
         run: |
           # Keep this assertion beside the setup: the permission profile must
-          # live where sudo makes the target user look for its default home.
+          # live where the pinned action's own `sudo -u` lookup resolves it.
+          # Do not add `-H` here unless the action does the same; that would
+          # test a different HOME from the one used to launch Codex.
           test \
             "$(sudo -u codex -- printenv HOME)/.codex" = \
             "$CODEX_AUTOMATION_HOME"
 
           # The action normally creates this home itself. We create it first so
-          # the named permission profile is present before Codex starts.
+          # the named permission profile is present before Codex starts. Root
+          # ownership plus the sticky bit lets the runner-group members create
+          # their own disposable state without replacing one another's files.
           sudo install \
             --directory \
-            --owner codex \
-            --group codex \
-            --mode 0755 \
+            --owner root \
+            --group runner \
+            --mode 1770 \
             "$CODEX_AUTOMATION_HOME"
           sudo install \
             --owner root \
-            --group root \
-            --mode 0644 \
+            --group runner \
+            --mode 0640 \
             .github/codex/go-version-review-config.toml \
             "$CODEX_AUTOMATION_HOME/config.toml"
+          test \
+            "$(stat --format '%U:%G:%a' "$CODEX_AUTOMATION_HOME")" = \
+            'root:runner:1770'
+          test \
+            "$(stat --format '%U:%G:%a' \
+              "$CODEX_AUTOMATION_HOME/config.toml")" = \
+            'root:runner:640'
+          sudo -u codex -- test \
+            -r "$CODEX_AUTOMATION_HOME/config.toml"
+          if sudo -u codex -- test \
+            -w "$CODEX_AUTOMATION_HOME/config.toml"; then
+            echo 'The Codex permission profile must not be writable by Codex' >&2
+            exit 1
+          fi
 
           # When the home already exists, codex-action expects its per-run
           # proxy handoff file to exist too. Only the runner-owned proxy needs
@@ -208,8 +226,8 @@ jobs:
     outputs:
       branch: ${{ steps.publish.outputs.branch }}
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write  # Push the validated branch; this job has no OpenAI key.
+      pull-requests: write  # Open that branch as a draft for human review.
     steps:
       - name: Download the Codex proposal
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
@@ -359,8 +377,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
-      actions: write
-      contents: read
+      actions: write  # Dispatch only the explicitly named required workflows.
+      contents: read  # Resolve those workflow files through GitHub CLI.
     steps:
       - name: Run required checks on the generated branch
         env:
