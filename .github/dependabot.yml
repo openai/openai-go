@@ -17,14 +17,16 @@ updates:
     open-pull-requests-limit: 5
     groups:
       # golang.org/x modules are released together and can jointly raise the Go
-      # floor. With "directories", this group updates every coupled module in
-      # one reviewable PR, keeping each checked-in go.mod/go.sum tidy.
+      # floor. group-by coordinates each dependency update across every listed
+      # directory, keeping each checked-in go.mod/go.sum tidy in the same PR.
       golang-x:
+        group-by: dependency-name
         patterns:
           - "golang.org/x/*"
       go-dependencies:
-        # Group the remaining Go updates, excluding dependencies already
-        # claimed by the higher-priority golang-x group.
+        # Coordinate each remaining dependency across directories, excluding
+        # dependencies already claimed by the higher-priority golang-x group.
+        group-by: dependency-name
         patterns:
           - "*"
         exclude-patterns:

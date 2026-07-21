@@ -20,9 +20,13 @@ If the repository already matches policy, make no file changes.
 
 If it has drifted, prepare one focused change:
 
-1. Align the `go` directives in the root, `examples`,
-   `internal/testdata/consumer`, and `tools` modules.
-2. Run `go mod tidy` in every changed module.
+1. Align only the `go` directives in the root, `examples`,
+   `internal/testdata/consumer`, and `tools` modules. Do not change module,
+   toolchain, require, replace, exclude, retract, or tool directives.
+2. Run `go mod tidy -diff` in every module to verify that the directive-only
+   update leaves every `go.mod` and `go.sum` tidy. Do not retain dependency
+   graph or checksum changes; those require a separate maintainer-reviewed
+   dependency update.
 3. Update the supported-version matrix and relevant setup versions in
    `.github/workflows/ci.yml`.
 4. Update `README.md`, `CONTRIBUTING.md`, and `GO_VERSION_POLICY.md`, including

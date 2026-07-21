@@ -232,13 +232,13 @@ jobs:
           fi
           while IFS= read -r path; do
             case "$path" in
-              go.mod|go.sum|README.md|CONTRIBUTING.md|GO_VERSION_POLICY.md)
+              go.mod|README.md|CONTRIBUTING.md|GO_VERSION_POLICY.md)
                 ;;
-              examples/go.mod|examples/go.sum)
+              examples/go.mod)
                 ;;
-              internal/testdata/consumer/go.mod|internal/testdata/consumer/go.sum)
+              internal/testdata/consumer/go.mod)
                 ;;
-              tools/go.mod|tools/go.sum|.github/workflows/ci.yml)
+              tools/go.mod|.github/workflows/ci.yml)
                 ;;
               *)
                 echo "::error file=$path::Codex changed a file outside the approved policy surface"
@@ -250,6 +250,28 @@ jobs:
             echo '::error::Codex patch contains a file creation, deletion, rename, or mode change'
             exit 1
           fi
+          # CI executes the proposed module graph, including the tools module's
+          # govulncheck binary. Before the branch is pushed, prove that every
+          # go.mod is byte-for-byte identical to trusted HEAD after removing
+          # its single Go directive. This permits floor updates but rejects
+          # model-written module, require, replace, toolchain, and tool edits.
+          for module_file in \
+            go.mod \
+            examples/go.mod \
+            internal/testdata/consumer/go.mod \
+            tools/go.mod; do
+            if [[ "$(grep -Ec '^go [0-9]+\.[0-9]+(\.[0-9]+)?$' "$module_file")" -ne 1 ]]; then
+              echo "::error file=$module_file::Expected exactly one valid Go directive"
+              exit 1
+            fi
+            if ! diff --brief \
+              <(git show "HEAD:$module_file" | sed -E '/^go [0-9]+\.[0-9]+(\.[0-9]+)?$/d') \
+              <(sed -E '/^go [0-9]+\.[0-9]+(\.[0-9]+)?$/d' "$module_file") \
+              >/dev/null; then
+              echo "::error file=$module_file::Codex changed the module graph; only the Go directive may change"
+              exit 1
+            fi
+          done
           # This branch's CI workflow will be dispatched after publication.
           # It must remain trusted: Codex may update only quoted Go-version
           # literals, never its triggers, permissions, actions, jobs, or steps.
@@ -274,7 +296,8 @@ jobs:
           git switch --create "$branch"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit --message 'chore(go): update supported Go versions'
+          # Minimum-Go changes are minor SDK releases under the policy.
+          git commit --message 'feat(go): update supported Go versions'
           git push origin "HEAD:refs/heads/$branch"
           git config --local \
             --unset-all \
@@ -294,7 +317,7 @@ jobs:
             --base "$BASE_BRANCH" \
             --head "$branch" \
             --draft \
-            --title 'chore(go): update supported Go versions' \
+            --title 'feat(go): update supported Go versions' \
             --body-file "$RUNNER_TEMP/pr-body.md"
 
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
