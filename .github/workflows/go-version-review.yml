@@ -27,7 +27,10 @@ jobs:
     environment: ci
     env:
       CODEX_AUTOMATION_DIR: ${{ github.workspace }}/.codex-automation
-      CODEX_AUTOMATION_HOME: ${{ github.workspace }}/.codex-automation/home
+      # codex-action crosses a sudo boundary for the unprivileged-user safety
+      # strategy. sudo resets an explicit CODEX_HOME, so install the profile at
+      # the target user's real default instead of a workspace-relative home.
+      CODEX_AUTOMATION_HOME: /home/codex/.codex
       CODEX_OUTPUT_FILE: ${{ github.workspace }}/.codex-automation/codex-pr-body.md
       GOCACHE: ${{ github.workspace }}/.codex-automation/go-build-cache
       GOMODCACHE: ${{ github.workspace }}/.codex-automation/go-mod-cache
@@ -64,10 +67,38 @@ jobs:
 
       - name: Prepare the isolated Codex workspace
         run: |
-          mkdir --parents "$CODEX_AUTOMATION_HOME"
-          cp \
+          # Keep this assertion beside the setup: the permission profile must
+          # live where sudo makes the target user look for its default home.
+          test \
+            "$(sudo -u codex -- printenv HOME)/.codex" = \
+            "$CODEX_AUTOMATION_HOME"
+
+          # The action normally creates this home itself. We create it first so
+          # the named permission profile is present before Codex starts.
+          sudo install \
+            --directory \
+            --owner codex \
+            --group codex \
+            --mode 0755 \
+            "$CODEX_AUTOMATION_HOME"
+          sudo install \
+            --owner root \
+            --group root \
+            --mode 0644 \
             .github/codex/go-version-review-config.toml \
             "$CODEX_AUTOMATION_HOME/config.toml"
+
+          # When the home already exists, codex-action expects its per-run
+          # proxy handoff file to exist too. Only the runner-owned proxy needs
+          # to write it; the action changes it to root-owned, read-only mode
+          # immediately after startup.
+          sudo install \
+            --owner runner \
+            --group runner \
+            --mode 0600 \
+            /dev/null \
+            "$CODEX_AUTOMATION_HOME/${GITHUB_RUN_ID}.json"
+
           # Keep proxy configuration, caches, and Codex output out of the
           # generated patch without adding repository-wide ignore rules.
           echo '/.codex-automation/' >> .git/info/exclude
@@ -120,7 +151,6 @@ jobs:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           prompt-file: .github/codex/prompts/go-version-review.md
           output-file: ${{ env.CODEX_OUTPUT_FILE }}
-          codex-home: ${{ env.CODEX_AUTOMATION_HOME }}
           codex-version: '0.144.6'
           codex-args: '["--ephemeral"]'
           permission-profile: go-version-review

@@ -1,6 +1,8 @@
 # Least-privilege profile for the scheduled Go version review. The workflow
-# copies this file into an ignored, disposable Codex home before the action
-# starts, so proxy configuration and session state never enter the patch.
+# installs this file in the unprivileged user's disposable home before the
+# action starts. Proxy configuration and session state stay outside the
+# checkout, while caches and generated output use its ignored automation
+# directory and never enter the patch.
 default_permissions = "go-version-review"
 
 [permissions."go-version-review"]
