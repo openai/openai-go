@@ -1109,7 +1109,8 @@ client, err := bedrock.NewClient(context.Background(), bedrock.Config{
 Explicit bearer and AWS credential modes are mutually exclusive. AWS SigV4
 authentication signs the fully serialized request again on every retry using
 the `bedrock-mantle` service name. Request bodies must be replayable; response
-streaming is supported. Signed requests do not automatically follow redirects.
+streaming is supported. Authenticated Bedrock requests do not automatically
+follow redirects.
 Ambient `OPENAI_*` credentials, routing, and headers are not inherited by a
 Bedrock client.
 
