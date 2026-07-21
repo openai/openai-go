@@ -81,19 +81,19 @@ func newClientOptions(
 	}
 	opts = append(opts, userOpts...)
 	opts = append(opts, requestconfig.WithRequestFinalizer(func(rc *requestconfig.RequestConfig) error {
-		if rc.APIKey != "" || rc.AdminAPIKey != "" {
+		if resolved.mode != authModeSkip && (rc.APIKey != "" || rc.AdminAPIKey != "") {
 			return errors.New("bedrock: provider authentication cannot be combined with an OpenAI API key; configure authentication in `bedrock.Config`")
 		}
 		if !sameBaseURL(rc.BaseURL, resolved.baseURL) {
 			return errors.New("bedrock: provider routing cannot be overridden with `option.WithBaseURL`; configure `BaseURL` in `bedrock.Config`")
 		}
 
-		if resolved.mode == authModeSigV4 {
+		if resolved.mode == authModeBearer || resolved.mode == authModeSigV4 {
 			if rc.CustomHTTPDoer != nil {
-				return errors.New("bedrock: signed requests require an *http.Client; custom HTTP doers cannot guarantee redirect safety")
+				return errors.New("bedrock: authenticated requests require an *http.Client; custom HTTP doers cannot guarantee redirect safety")
 			}
 			if rc.HTTPClient == nil {
-				return errors.New("bedrock: signed requests require a non-nil *http.Client")
+				return errors.New("bedrock: authenticated requests require a non-nil *http.Client")
 			}
 			client := *rc.HTTPClient
 			client.CheckRedirect = func(*http.Request, []*http.Request) error {
@@ -335,6 +335,14 @@ func reconcileEndpointRegion(baseURL *url.URL, region string) (string, error) {
 }
 
 func loadAWSConfig(ctx context.Context, cfg Config, region string) (aws.Config, error) {
+	explicitProvider := explicitAWSCredentialsProvider(cfg)
+	if explicitProvider != nil && region != "" {
+		return aws.Config{
+			Region:      region,
+			Credentials: aws.NewCredentialsCache(explicitProvider),
+		}, nil
+	}
+
 	loadOptions := make([]func(*awsconfig.LoadOptions) error, 0, 3)
 	if region != "" {
 		loadOptions = append(loadOptions, awsconfig.WithRegion(region))
@@ -343,20 +351,6 @@ func loadAWSConfig(ctx context.Context, cfg Config, region string) (aws.Config, 
 		loadOptions = append(loadOptions, awsconfig.WithSharedConfigProfile(profile))
 	}
 
-	var explicitProvider aws.CredentialsProvider
-	if cfg.AWSAccessKeyID != "" {
-		credentials := aws.Credentials{
-			AccessKeyID:     cfg.AWSAccessKeyID,
-			SecretAccessKey: cfg.AWSSecretAccessKey,
-			SessionToken:    cfg.AWSSessionToken,
-			Source:          "bedrock.Config",
-		}
-		explicitProvider = aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
-			return credentials, nil
-		})
-	} else if cfg.AWSCredentialsProvider != nil {
-		explicitProvider = cfg.AWSCredentialsProvider
-	}
 	if explicitProvider != nil {
 		loadOptions = append(loadOptions, awsconfig.WithCredentialsProvider(explicitProvider))
 	}
@@ -374,6 +368,21 @@ func loadAWSConfig(ctx context.Context, cfg Config, region string) (aws.Config, 
 	return awsCfg, nil
 }
 
+func explicitAWSCredentialsProvider(cfg Config) aws.CredentialsProvider {
+	if cfg.AWSAccessKeyID != "" {
+		credentials := aws.Credentials{
+			AccessKeyID:     cfg.AWSAccessKeyID,
+			SecretAccessKey: cfg.AWSSecretAccessKey,
+			SessionToken:    cfg.AWSSessionToken,
+			Source:          "bedrock.Config",
+		}
+		return aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
+			return credentials, nil
+		})
+	}
+	return cfg.AWSCredentialsProvider
+}
+
 func verifyAWSCredentials(ctx context.Context, awsCfg aws.Config, explicitAWS bool) error {
 	if _, err := awsCfg.Credentials.Retrieve(ctx); err != nil {
 		message := credentialResolutionMessage
@@ -388,10 +397,10 @@ func verifyAWSCredentials(ctx context.Context, awsCfg aws.Config, explicitAWS bo
 func bearerMiddleware(baseURL *url.URL, provider TokenProvider) option.Middleware {
 	return func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 		if err := validateProviderRequest(req, baseURL); err != nil {
-			return nil, err
+			return nil, requestconfig.WithNoRetryError(err)
 		}
 		if req.Header.Get("Authorization") != "" {
-			return nil, errors.New("bedrock: provider authentication cannot be combined with a custom `Authorization` header")
+			return nil, requestconfig.WithNoRetryError(errors.New("bedrock: provider authentication cannot be combined with a custom `Authorization` header"))
 		}
 
 		token, err := provider(req.Context())
@@ -399,7 +408,7 @@ func bearerMiddleware(baseURL *url.URL, provider TokenProvider) option.Middlewar
 			return nil, &safeError{message: "bedrock: failed to resolve a bearer credential", cause: err}
 		}
 		if strings.TrimSpace(token) == "" {
-			return nil, errors.New("bedrock: bearer credential provider must return a non-empty string")
+			return nil, requestconfig.WithNoRetryError(errors.New("bedrock: bearer credential provider must return a non-empty string"))
 		}
 		req.Header.Set("Authorization", "Bearer "+token)
 		return next(req)
@@ -413,25 +422,25 @@ type httpSigner interface {
 func sigV4Middleware(baseURL *url.URL, cfg aws.Config, signer httpSigner, now func() time.Time) option.Middleware {
 	return func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 		if err := validateProviderRequest(req, baseURL); err != nil {
-			return nil, err
+			return nil, requestconfig.WithNoRetryError(err)
 		}
 		if req.Header.Get("Authorization") != "" {
-			return nil, errors.New("bedrock: provider authentication cannot be combined with a custom `Authorization` header")
+			return nil, requestconfig.WithNoRetryError(errors.New("bedrock: provider authentication cannot be combined with a custom `Authorization` header"))
 		}
 		if _, err := reconcileEndpointRegion(req.URL, cfg.Region); err != nil {
-			return nil, err
+			return nil, requestconfig.WithNoRetryError(err)
 		}
 
 		body, err := materializeReplayableBody(req)
 		if err != nil {
-			return nil, err
+			return nil, requestconfig.WithNoRetryError(err)
 		}
 		credentials, err := cfg.Credentials.Retrieve(req.Context())
 		if err != nil {
 			return nil, &safeError{message: credentialResolutionMessage, cause: err}
 		}
 		if strings.TrimSpace(credentials.AccessKeyID) == "" || strings.TrimSpace(credentials.SecretAccessKey) == "" {
-			return nil, errors.New(credentialResolutionMessage)
+			return nil, requestconfig.WithNoRetryError(errors.New(credentialResolutionMessage))
 		}
 
 		req.Method = strings.ToUpper(req.Method)

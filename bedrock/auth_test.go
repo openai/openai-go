@@ -424,17 +424,23 @@ func TestAmbientOpenAIConfigurationIsNotInherited(t *testing.T) {
 }
 
 func TestRejectsCrossOriginBeforeBearerResolution(t *testing.T) {
-	var providerCalls, transportCalls int
+	var attempts, providerCalls, transportCalls int
 	client, err := NewClient(context.Background(), Config{
 		BaseURL: "https://bedrock.example/openai/v1",
 		BedrockTokenProvider: func(context.Context) (string, error) {
 			providerCalls++
 			return "token", nil
 		},
-	}, option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		transportCalls++
-		return successfulResponse(req), nil
-	})}))
+	},
+		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			attempts++
+			return next(req)
+		}),
+		option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			transportCalls++
+			return successfulResponse(req), nil
+		})}),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -443,8 +449,8 @@ func TestRejectsCrossOriginBeforeBearerResolution(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "origin other than") {
 		t.Fatalf("error = %v", err)
 	}
-	if providerCalls != 0 || transportCalls != 0 {
-		t.Fatalf("provider calls = %d, transport calls = %d", providerCalls, transportCalls)
+	if attempts != 1 || providerCalls != 0 || transportCalls != 0 {
+		t.Fatalf("attempts = %d, provider calls = %d, transport calls = %d", attempts, providerCalls, transportCalls)
 	}
 }
 
@@ -525,6 +531,42 @@ func TestSigV4DisablesRedirects(t *testing.T) {
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusFound {
 		t.Fatalf("status = %d", response.StatusCode)
+	}
+	if calls := targetCalls.Load(); calls != 0 {
+		t.Fatalf("redirect target calls = %d", calls)
+	}
+}
+
+func TestBearerDisablesOriginChangingRedirects(t *testing.T) {
+	var sourceAuthorization string
+	var targetCalls atomic.Int32
+	target := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		targetCalls.Add(1)
+	}))
+	defer target.Close()
+	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		sourceAuthorization = req.Header.Get("Authorization")
+		http.Redirect(w, req, target.URL, http.StatusFound)
+	}))
+	defer source.Close()
+
+	client, err := NewClient(context.Background(), Config{
+		APIKey:  "secret-bearer",
+		BaseURL: source.URL,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var response *http.Response
+	if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusFound {
+		t.Fatalf("status = %d", response.StatusCode)
+	}
+	if sourceAuthorization != "Bearer secret-bearer" {
+		t.Fatalf("source Authorization = %q", sourceAuthorization)
 	}
 	if calls := targetCalls.Load(); calls != 0 {
 		t.Fatalf("redirect target calls = %d", calls)

@@ -68,52 +68,82 @@ func (f httpDoerFunc) Do(req *http.Request) (*http.Response, error) {
 	return f(req)
 }
 
-func TestSigV4RejectsCustomHTTPDoer(t *testing.T) {
+func TestAuthenticatedModesRejectCustomHTTPDoer(t *testing.T) {
 	clearAWSEnvironment(t)
-	doerCalls := 0
-	client, err := NewClient(context.Background(), Config{
-		AWSRegion:          "us-east-1",
-		AWSAccessKeyID:     "access-key",
-		AWSSecretAccessKey: "secret-key",
-	},
-		option.WithMaxRetries(0),
-		option.WithHTTPClient(httpDoerFunc(func(req *http.Request) (*http.Response, error) {
-			doerCalls++
-			return successfulResponse(req), nil
-		})),
-	)
-	if err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		name   string
+		config Config
+	}{
+		{
+			name: "SigV4",
+			config: Config{
+				AWSRegion:          "us-east-1",
+				AWSAccessKeyID:     "access-key",
+				AWSSecretAccessKey: "secret-key",
+			},
+		},
+		{
+			name:   "bearer",
+			config: Config{APIKey: "bedrock-key", BaseURL: "https://bedrock.example/openai/v1"},
+		},
 	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			doerCalls := 0
+			client, err := NewClient(context.Background(), test.config,
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(httpDoerFunc(func(req *http.Request) (*http.Response, error) {
+					doerCalls++
+					return successfulResponse(req), nil
+				})),
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	var response *http.Response
-	err = client.Get(context.Background(), "/models", nil, &response)
-	if err == nil || !strings.Contains(err.Error(), "custom HTTP doers cannot guarantee redirect safety") {
-		t.Fatalf("error = %v", err)
-	}
-	if doerCalls != 0 {
-		t.Fatalf("custom HTTP doer calls = %d", doerCalls)
+			var response *http.Response
+			err = client.Get(context.Background(), "/models", nil, &response)
+			if err == nil || !strings.Contains(err.Error(), "custom HTTP doers cannot guarantee redirect safety") {
+				t.Fatalf("error = %v", err)
+			}
+			if doerCalls != 0 {
+				t.Fatalf("custom HTTP doer calls = %d", doerCalls)
+			}
+		})
 	}
 }
 
-func TestSkipAuthAllowsGatewayAuthorization(t *testing.T) {
-	var request *http.Request
-	client, err := NewClient(context.Background(), Config{
-		SkipAuth: true,
-		BaseURL:  "https://gateway.example/openai/v1",
-	}, option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		request = req
-		return successfulResponse(req), nil
-	})}))
-	if err != nil {
-		t.Fatal(err)
+func TestSkipAuthAllowsExplicitGatewayCredentials(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "ambient-openai-key")
+	tests := []struct {
+		name          string
+		option        option.RequestOption
+		authorization string
+	}{
+		{"API key", option.WithAPIKey("gateway-key"), "Bearer gateway-key"},
+		{"admin API key", option.WithAdminAPIKey("gateway-admin-key"), "Bearer gateway-admin-key"},
 	}
-	var response *http.Response
-	if err := client.Get(context.Background(), "/models", nil, &response, option.WithHeader("Authorization", "Gateway credential")); err != nil {
-		t.Fatal(err)
-	}
-	if got := request.Header.Get("Authorization"); got != "Gateway credential" {
-		t.Fatalf("Authorization = %q", got)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var request *http.Request
+			client, err := NewClient(context.Background(), Config{
+				SkipAuth: true,
+				BaseURL:  "https://gateway.example/openai/v1",
+			}, test.option, option.WithHTTPClient(httpDoerFunc(func(req *http.Request) (*http.Response, error) {
+				request = req
+				return successfulResponse(req), nil
+			})))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var response *http.Response
+			if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
+				t.Fatal(err)
+			}
+			if got := request.Header.Get("Authorization"); got != test.authorization {
+				t.Fatalf("Authorization = %q, want %q", got, test.authorization)
+			}
+		})
 	}
 }
 
@@ -212,6 +242,36 @@ func TestBearerProviderFailuresAreSafe(t *testing.T) {
 	}
 }
 
+func TestBearerProviderFailuresRemainRetryable(t *testing.T) {
+	var providerCalls, transportCalls int
+	client, err := NewClient(context.Background(), Config{
+		BaseURL: "https://bedrock.example/openai/v1",
+		BedrockTokenProvider: func(context.Context) (string, error) {
+			providerCalls++
+			if providerCalls == 1 {
+				return "", errors.New("temporary provider failure")
+			}
+			return "token", nil
+		},
+	},
+		option.WithMaxRetries(1),
+		option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			transportCalls++
+			return successfulResponse(req), nil
+		})}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var response *http.Response
+	if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
+		t.Fatal(err)
+	}
+	if providerCalls != 2 || transportCalls != 1 {
+		t.Fatalf("provider calls = %d, transport calls = %d", providerCalls, transportCalls)
+	}
+}
+
 func TestMissingDefaultCredentialsUsesActionableError(t *testing.T) {
 	clearAWSEnvironment(t)
 	credentialsPath, configPath := writeAWSFiles(t, "", "")
@@ -234,6 +294,53 @@ func TestMalformedAWSConfigUsesSafeError(t *testing.T) {
 	_, err := NewClient(context.Background(), Config{AWSRegion: "us-east-1", AWSProfile: "broken"})
 	if err == nil || err.Error() != credentialResolutionMessage {
 		t.Fatalf("error = %v", err)
+	}
+}
+
+func TestExplicitAWSCredentialsWithRegionIgnoreMalformedAmbientConfig(t *testing.T) {
+	clearAWSEnvironment(t)
+	dir := t.TempDir()
+	t.Setenv("AWS_CONFIG_FILE", dir)
+	tests := []struct {
+		name   string
+		config Config
+	}{
+		{
+			name: "static credentials",
+			config: Config{
+				AWSRegion:          "us-east-1",
+				AWSAccessKeyID:     "access-key",
+				AWSSecretAccessKey: "secret-key",
+			},
+		},
+		{
+			name: "credentials provider",
+			config: Config{
+				AWSRegion: "us-east-1",
+				AWSCredentialsProvider: aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
+					return aws.Credentials{AccessKeyID: "access-key", SecretAccessKey: "secret-key"}, nil
+				}),
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			transportCalls := 0
+			client, err := NewClient(context.Background(), test.config, option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+				transportCalls++
+				return successfulResponse(req), nil
+			})}))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var response *http.Response
+			if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
+				t.Fatal(err)
+			}
+			if transportCalls != 1 {
+				t.Fatalf("transport calls = %d", transportCalls)
+			}
+		})
 	}
 }
 

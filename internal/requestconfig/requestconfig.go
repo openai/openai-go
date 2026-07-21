@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -111,6 +112,28 @@ type requestFinalizer func(*RequestConfig) error
 
 type requestFinalizerOption struct {
 	finalize func(*RequestConfig) error
+}
+
+// noRetryError marks deterministic request setup or policy failures that
+// cannot be fixed by replaying the same request. It deliberately remains an
+// internal implementation detail so public error strings and wrapping stay
+// unchanged.
+type noRetryError struct {
+	err error
+}
+
+func (e *noRetryError) Error() string { return e.err.Error() }
+func (e *noRetryError) Unwrap() error { return e.err }
+func (e *noRetryError) noRetry()      {}
+
+// WithNoRetryError marks err as deterministic for the generic request retry
+// loop while preserving its message and unwrap chain. This function is
+// internal API and may change without notice.
+func WithNoRetryError(err error) error {
+	if err == nil {
+		return nil
+	}
+	return &noRetryError{err: err}
 }
 
 func (o requestFinalizerOption) Apply(cfg *RequestConfig) error {
@@ -337,9 +360,14 @@ func applyMiddleware(middleware middleware, next middlewareNext) middlewareNext 
 	}
 }
 
-func shouldRetry(req *http.Request, res *http.Response) bool {
+func shouldRetry(req *http.Request, res *http.Response, err error) bool {
 	// If there is no way to recover the Body, then we shouldn't retry.
 	if req.Body != nil && req.GetBody == nil {
+		return false
+	}
+
+	var deterministic interface{ noRetry() }
+	if errors.As(err, &deterministic) {
 		return false
 	}
 
@@ -542,7 +570,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 		if ctx != nil && ctx.Err() != nil {
 			return ctx.Err()
 		}
-		if !shouldRetry(cfg.Request, res) || retryCount >= cfg.MaxRetries {
+		if !shouldRetry(cfg.Request, res, err) || retryCount >= cfg.MaxRetries {
 			break
 		}
 

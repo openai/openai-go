@@ -69,7 +69,10 @@ type Config struct {
 	BaseURL string
 
 	// SkipAuth disables Bedrock bearer and SigV4 authentication. Use this only
-	// when a trusted gateway or custom transport authenticates requests.
+	// when a trusted gateway or custom transport authenticates requests. In this
+	// mode, explicit option.WithAPIKey and option.WithAdminAPIKey values are
+	// allowed for gateways that use standard OpenAI-style bearer credentials;
+	// ambient OPENAI_* values are still ignored.
 	SkipAuth bool
 }
 
@@ -79,7 +82,11 @@ type Config struct {
 // option.WithMaxRetries, and option.WithMiddleware, may be supplied in opts.
 // Provider authentication and BaseURL must be configured through Config. The
 // Bedrock authentication middleware always runs after client- and method-level
-// middleware so it signs the final request on every attempt.
+// middleware so it signs the final request on every attempt. Bearer and SigV4
+// clients require an *http.Client and do not follow redirects, because a
+// redirected request bypasses provider middleware; use a custom RoundTripper
+// when transport customization is needed. SkipAuth permits a custom HTTP doer
+// and explicit option.WithAPIKey or option.WithAdminAPIKey gateway credentials.
 func NewClient(ctx context.Context, cfg Config, opts ...option.RequestOption) (openai.Client, error) {
 	resolvedOpts, err := newClientOptions(ctx, cfg, time.Now, opts...)
 	if err != nil {
