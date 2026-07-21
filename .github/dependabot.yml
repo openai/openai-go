@@ -1,21 +1,24 @@
 version: 2
-# The root SDK, examples, and development tools are independent Go modules, so
-# Dependabot needs one update entry for each. GitHub Actions are tracked
-# separately. Updates are proposed for review and are never auto-merged by this
-# configuration.
+# The root SDK, examples, and external-consumer module share one dependency
+# graph in practice: the nested modules replace the SDK with the root checkout.
+# Dependabot therefore updates them together. Development tools and GitHub
+# Actions remain isolated. Updates are proposed for review and never auto-merge.
 updates:
   - package-ecosystem: gomod
-    directory: /
+    directories:
+      - /
+      - /examples
+      - /internal/testdata/consumer
     schedule:
       interval: weekly
       day: monday
-      # Stagger the module updates to make resulting PRs easier to follow.
       time: "09:00"
       timezone: Etc/UTC
     open-pull-requests-limit: 5
     groups:
       # golang.org/x modules are released together and can jointly raise the Go
-      # floor. Keep them in one reviewable PR instead of creating PR spam.
+      # floor. With "directories", this group updates every coupled module in
+      # one reviewable PR, keeping each checked-in go.mod/go.sum tidy.
       golang-x:
         patterns:
           - "golang.org/x/*"
@@ -26,32 +29,17 @@ updates:
           - "*"
         exclude-patterns:
           - "golang.org/x/*"
-
-  - package-ecosystem: gomod
-    directory: /examples
-    schedule:
-      interval: weekly
-      day: monday
-      time: "09:15"
-      timezone: Etc/UTC
-    open-pull-requests-limit: 5
-    groups:
-      # Mirror the root grouping so both module graphs move coherently.
-      golang-x:
-        patterns:
-          - "golang.org/x/*"
-      go-dependencies:
-        patterns:
-          - "*"
-        exclude-patterns:
-          - "golang.org/x/*"
+    # The local replace directives make this version a placeholder rather than
+    # an independently maintained dependency.
+    ignore:
+      - dependency-name: "github.com/openai/openai-go/v3"
 
   - package-ecosystem: gomod
     directory: /tools
     schedule:
       interval: weekly
       day: monday
-      time: "09:30"
+      time: "09:15"
       timezone: Etc/UTC
     open-pull-requests-limit: 3
     groups:
@@ -66,7 +54,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: "09:45"
+      time: "09:30"
       timezone: Etc/UTC
     # Keep action updates separate so each pinned SHA and runtime change can be
     # reviewed independently.

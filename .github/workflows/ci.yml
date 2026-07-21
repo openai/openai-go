@@ -125,6 +125,9 @@ jobs:
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version: ${{ matrix.go-version }}
+          # A version range can otherwise reuse an older matching toolcache
+          # entry immediately after a patched Go release becomes available.
+          check-latest: true
 
       - name: Bootstrap
         env:
@@ -169,6 +172,7 @@ jobs:
           # Scan with a patched current toolchain so old standard-library
           # findings do not obscure dependency findings.
           go-version: '1.26.x'
+          check-latest: true
 
       - name: Install govulncheck
         # Keep the scanner in its own module so Dependabot can update it without

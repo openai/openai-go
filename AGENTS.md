@@ -72,9 +72,9 @@ policy or pull request prose.
   - The draft never merges automatically. Normal CI and CODEOWNER review remain
     authoritative.
 - `.github/dependabot.yml`
-  - Weekly: proposes grouped Go dependency updates for the root, examples, and
-    isolated tools modules, plus independently reviewable GitHub Actions
-    updates.
+  - Weekly: proposes coordinated Go dependency updates for the coupled root,
+    examples, and external-consumer modules. The isolated tools module and
+    pinned GitHub Actions receive independently reviewable updates.
   - Never auto-merges dependency or Go-version changes.
 
 ## Validation

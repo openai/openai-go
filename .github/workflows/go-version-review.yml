@@ -60,6 +60,7 @@ jobs:
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version: stable
+          check-latest: true
 
       - name: Prepare the isolated Codex workspace
         run: |
@@ -139,13 +140,19 @@ jobs:
         id: patch
         if: steps.codex.outcome == 'success'
         env:
-          PATCH_PATH: ${{ runner.temp }}/codex.patch
+          CODEX_ARTIFACT_DIR: ${{ runner.temp }}/monthly-go-version-update
         run: |
+          mkdir --parents "$CODEX_ARTIFACT_DIR"
+
           # Intent-to-add makes new files visible to git diff without staging
           # their contents in the checkout.
           git add --intent-to-add .
-          git diff --binary HEAD > "$PATCH_PATH"
-          if [[ -s "$PATCH_PATH" ]]; then
+          git diff --binary HEAD > "$CODEX_ARTIFACT_DIR/codex.patch"
+          cp \
+            "$CODEX_OUTPUT_FILE" \
+            "$CODEX_ARTIFACT_DIR/codex-pr-body.md"
+
+          if [[ -s "$CODEX_ARTIFACT_DIR/codex.patch" ]]; then
             echo 'has_patch=true' >> "$GITHUB_OUTPUT"
           else
             echo 'has_patch=false' >> "$GITHUB_OUTPUT"
@@ -156,9 +163,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: monthly-go-version-update
-          path: |
-            ${{ runner.temp }}/codex.patch
-            ${{ env.CODEX_OUTPUT_FILE }}
+          # Both files are staged under one non-hidden directory so the
+          # downloaded artifact has the flat paths consumed by open_pr.
+          path: ${{ runner.temp }}/monthly-go-version-update
           if-no-files-found: error
           retention-days: 7
 
