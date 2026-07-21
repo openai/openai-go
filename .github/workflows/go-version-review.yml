@@ -32,8 +32,6 @@ jobs:
       # the target user's real default instead of a workspace-relative home.
       CODEX_AUTOMATION_HOME: /home/codex/.codex
       CODEX_OUTPUT_FILE: ${{ github.workspace }}/.codex-automation/codex-pr-body.md
-      GOCACHE: ${{ github.workspace }}/.codex-automation/go-build-cache
-      GOMODCACHE: ${{ github.workspace }}/.codex-automation/go-mod-cache
       GO_RELEASE_FEED: ${{ github.workspace }}/.codex-automation/go-releases.json
     outputs:
       has_patch: ${{ steps.patch.outputs.has_patch }}
@@ -125,6 +123,55 @@ jobs:
             exit 1
           fi
 
+          # Keep generated output in an ignored directory that exists before
+          # the release-feed snapshot. Go defaults to cache and install paths
+          # under the target home; root creates only those two writable
+          # subtrees while the home itself remains immutable to Codex.
+          sudo install \
+            --directory \
+            --owner runner \
+            --group codex \
+            --mode 0770 \
+            "$CODEX_AUTOMATION_DIR"
+          sudo install \
+            --directory \
+            --owner codex \
+            --group codex \
+            --mode 0700 \
+            /home/codex/.cache \
+            /home/codex/.cache/go-build \
+            /home/codex/go \
+            /home/codex/go/bin \
+            /home/codex/go/pkg
+
+          # setup-go prepends a runner-only PATH entry that sudo may discard.
+          # Root-owned symlinks expose this exact toolchain on the target PATH
+          # without giving the agent write access to either executable.
+          go_tool="$(command -v go)"
+          gofmt_tool="$(command -v gofmt)"
+          sudo ln --symbolic --force "$go_tool" /usr/local/bin/go
+          sudo ln --symbolic --force "$gofmt_tool" /usr/local/bin/gofmt
+          sudo -u codex -- /bin/bash -c \
+            'command -v go >/dev/null && command -v gofmt >/dev/null'
+
+          # Clear any runner values while proving that Go resolves its normal
+          # target-user defaults to the writable subtrees created above.
+          test "$(
+            sudo -u codex -- env \
+              -u GOBIN -u GOCACHE -u GOMODCACHE \
+              "$go_tool" env GOPATH
+          )" = '/home/codex/go'
+          test "$(
+            sudo -u codex -- env \
+              -u GOBIN -u GOCACHE -u GOMODCACHE \
+              "$go_tool" env GOCACHE
+          )" = '/home/codex/.cache/go-build'
+          test "$(
+            sudo -u codex -- env \
+              -u GOBIN -u GOCACHE -u GOMODCACHE \
+              "$go_tool" env GOMODCACHE
+          )" = '/home/codex/go/pkg/mod'
+
           # When the home already exists, codex-action expects its per-run
           # proxy handoff file to exist too. Only the runner-owned proxy needs
           # to write it; the action changes it to root-owned, read-only mode
@@ -159,12 +206,32 @@ jobs:
 
       - name: Warm Go dependency caches
         # Agent-run commands have no network access. Download the existing,
-        # reviewed module graphs before the API key enters the job.
+        # reviewed module graphs and install the pinned vulnerability scanner
+        # before the API key enters the job. The root-owned copy is on sudo's
+        # target PATH; an agent may rebuild its writable GOBIN copy without
+        # replacing the executable used for validation.
         run: |
-          go mod download
-          (cd examples && go mod download)
-          (cd internal/testdata/consumer && go mod download)
-          (cd tools && go mod download)
+          go_tool="$(command -v go)"
+          go_as_codex() {
+            sudo -u codex -- env \
+              -u GOBIN -u GOCACHE -u GOMODCACHE \
+              GOTOOLCHAIN=local \
+              "$go_tool" "$@"
+          }
+          go_as_codex mod download
+          (cd examples && go_as_codex mod download)
+          (cd internal/testdata/consumer && go_as_codex mod download)
+          (cd tools && go_as_codex mod download)
+          (cd tools && go_as_codex install \
+            golang.org/x/vuln/cmd/govulncheck)
+          sudo install \
+            --owner root \
+            --group root \
+            --mode 0755 \
+            /home/codex/go/bin/govulncheck \
+            /usr/local/bin/govulncheck
+          sudo -u codex -- /bin/bash -c \
+            'command -v govulncheck >/dev/null'
 
       - name: Grant the Codex user controlled workspace access
         run: |

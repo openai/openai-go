@@ -56,6 +56,10 @@ policy or pull request prose.
     can write only to the disposable checkout and cache files. The separate
     publisher accepts only the documented policy artifacts after validating
     their paths and contents.
+  - Before exposing the API key, the workflow creates the ignored automation
+    directory, warms Go's module and build caches, and installs the pinned
+    `govulncheck`. Only Go's target-user cache and install subtrees are writable
+    beneath the otherwise root-owned Codex home.
   - Codex can prepare a patch but has read-only GitHub permissions and no
     repository credential. A separate job with no OpenAI credential opens one
     draft pull request from that patch. If a generated draft is already open,

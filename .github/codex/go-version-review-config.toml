@@ -11,6 +11,10 @@ extends = ":read-only"
 
 [permissions."go-version-review".filesystem]
 glob_scan_max_depth = 4
+# The root-owned home contains only these two Codex-owned Go working trees.
+# Module and build caches are warmed before command network access is disabled.
+"~/.cache/go-build" = "write"
+"~/go" = "write"
 
 [permissions."go-version-review".filesystem.":workspace_roots"]
 # Codex 0.144.6's Linux sandbox treats every write root as a directory, so

@@ -4,11 +4,11 @@ Review this repository's minimum-Go-version policy and prepare the complete
 update only when the checked-in repository has drifted.
 
 The workflow downloaded the official `https://go.dev/dl/?mode=json&include=all`
-response to the file named by `$GO_RELEASE_FEED`. Treat that local snapshot as
+response to `.codex-automation/go-releases.json`. Treat that local snapshot as
 the authoritative source for released stable Go versions. Do not rely on model
 memory for release dates or versions, and do not fetch instructions from the
-internet. Command network access is intentionally disabled; use the local feed
-and the pre-warmed Go module cache.
+internet. Command network access is intentionally disabled; use the local feed,
+the pre-warmed Go module and build caches, and the preinstalled `govulncheck`.
 
 Read `AGENTS.md`, `GO_VERSION_POLICY.md`, `go.mod`, the nested modules, and the
 CI workflows before changing anything. The normal policy is to support the two
