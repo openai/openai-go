@@ -251,7 +251,7 @@ func resolveAuthMode(cfg Config) (authMode, TokenProvider, bool, error) {
 		return authModeBearer, cfg.BedrockTokenProvider, false, nil
 	}
 	if cfg.APIKey != "" {
-		token := cfg.APIKey
+		token := strings.TrimSpace(cfg.APIKey)
 		return authModeBearer, func(context.Context) (string, error) { return token, nil }, false, nil
 	}
 	if awsModes != 0 {
@@ -259,8 +259,8 @@ func resolveAuthMode(cfg Config) (authMode, TokenProvider, bool, error) {
 	}
 	if strings.TrimSpace(os.Getenv("AWS_BEARER_TOKEN_BEDROCK")) != "" {
 		return authModeBearer, func(context.Context) (string, error) {
-			token := os.Getenv("AWS_BEARER_TOKEN_BEDROCK")
-			if strings.TrimSpace(token) == "" {
+			token := strings.TrimSpace(os.Getenv("AWS_BEARER_TOKEN_BEDROCK"))
+			if token == "" {
 				return "", errors.New(missingCredentialsMessage)
 			}
 			return token, nil
@@ -371,9 +371,9 @@ func loadAWSConfig(ctx context.Context, cfg Config, region string) (aws.Config, 
 func explicitAWSCredentialsProvider(cfg Config) aws.CredentialsProvider {
 	if cfg.AWSAccessKeyID != "" {
 		credentials := aws.Credentials{
-			AccessKeyID:     cfg.AWSAccessKeyID,
-			SecretAccessKey: cfg.AWSSecretAccessKey,
-			SessionToken:    cfg.AWSSessionToken,
+			AccessKeyID:     strings.TrimSpace(cfg.AWSAccessKeyID),
+			SecretAccessKey: strings.TrimSpace(cfg.AWSSecretAccessKey),
+			SessionToken:    strings.TrimSpace(cfg.AWSSessionToken),
 			Source:          "bedrock.Config",
 		}
 		return aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
@@ -407,7 +407,8 @@ func bearerMiddleware(baseURL *url.URL, provider TokenProvider) option.Middlewar
 		if err != nil {
 			return nil, &safeError{message: "bedrock: failed to resolve a bearer credential", cause: err}
 		}
-		if strings.TrimSpace(token) == "" {
+		token = strings.TrimSpace(token)
+		if token == "" {
 			return nil, requestconfig.WithNoRetryError(errors.New("bedrock: bearer credential provider must return a non-empty string"))
 		}
 		req.Header.Set("Authorization", "Bearer "+token)

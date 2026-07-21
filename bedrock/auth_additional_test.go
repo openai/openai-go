@@ -187,6 +187,88 @@ func TestEnvironmentBearerRefreshesAndFailsSafelyWhenRemoved(t *testing.T) {
 	}
 }
 
+func TestCredentialWhitespaceIsTrimmed(t *testing.T) {
+	t.Run("configured bearer credential", func(t *testing.T) {
+		mode, provider, _, err := resolveAuthMode(Config{APIKey: " \tbedrock-token\n"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if mode != authModeBearer {
+			t.Fatalf("auth mode = %v, want %v", mode, authModeBearer)
+		}
+		token, err := provider(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if token != "bedrock-token" {
+			t.Fatalf("token = %q, want %q", token, "bedrock-token")
+		}
+	})
+
+	t.Run("environment bearer credential", func(t *testing.T) {
+		clearAWSEnvironment(t)
+		t.Setenv("AWS_BEARER_TOKEN_BEDROCK", " \tbedrock-token\n")
+		mode, provider, _, err := resolveAuthMode(Config{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if mode != authModeBearer {
+			t.Fatalf("auth mode = %v, want %v", mode, authModeBearer)
+		}
+		token, err := provider(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if token != "bedrock-token" {
+			t.Fatalf("token = %q, want %q", token, "bedrock-token")
+		}
+	})
+
+	t.Run("static AWS credentials", func(t *testing.T) {
+		provider := explicitAWSCredentialsProvider(Config{
+			AWSAccessKeyID:     " access-key\n",
+			AWSSecretAccessKey: "\tsecret-key ",
+			AWSSessionToken:    " session-token\t",
+		})
+		credentials, err := provider.Retrieve(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if credentials.AccessKeyID != "access-key" {
+			t.Fatalf("access key ID = %q, want %q", credentials.AccessKeyID, "access-key")
+		}
+		if credentials.SecretAccessKey != "secret-key" {
+			t.Fatalf("secret access key = %q, want %q", credentials.SecretAccessKey, "secret-key")
+		}
+		if credentials.SessionToken != "session-token" {
+			t.Fatalf("session token = %q, want %q", credentials.SessionToken, "session-token")
+		}
+	})
+
+	t.Run("bearer provider output", func(t *testing.T) {
+		var authorization string
+		client, err := NewClient(context.Background(), Config{
+			BaseURL: "https://bedrock.example/openai/v1",
+			BedrockTokenProvider: func(context.Context) (string, error) {
+				return " \tprovider-token\n", nil
+			},
+		}, option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			authorization = req.Header.Get("Authorization")
+			return successfulResponse(req), nil
+		})}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var response *http.Response
+		if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
+			t.Fatal(err)
+		}
+		if authorization != "Bearer provider-token" {
+			t.Fatalf("Authorization = %q, want %q", authorization, "Bearer provider-token")
+		}
+	})
+}
+
 func TestBearerProviderFailuresAreSafe(t *testing.T) {
 	cause := errors.New("provider internals")
 	tests := []struct {

@@ -1102,7 +1102,7 @@ Bedrock bearer credentials remain supported through `APIKey`,
 ```go
 client, err := bedrock.NewClient(context.Background(), bedrock.Config{
 	AWSRegion: "us-west-2",
-	APIKey:    os.Getenv("BEDROCK_API_KEY"),
+	APIKey:    "bedrock-bearer-token",
 })
 ```
 
