@@ -1,32 +1,24 @@
-# Least-privilege profile for the scheduled Go version review. The workflow
-# installs this file in the unprivileged user's disposable home before the
-# action starts. Proxy configuration and session state stay outside the
-# checkout, while caches and generated output use its ignored automation
-# directory and never enter the patch.
+# Permission profile for the scheduled Go version review. The workflow installs
+# this file in the unprivileged user's disposable home before the action starts.
+# Codex may edit the disposable checkout, but it has no network or repository
+# credential. The publisher independently rejects patch paths and changes that
+# are outside the narrow Go-version policy allowlist.
 default_permissions = "go-version-review"
 
 [permissions."go-version-review"]
-description = "Review and update only Go-version policy artifacts"
+description = "Prepare a validated Go-version policy patch in a disposable checkout"
 extends = ":read-only"
 
 [permissions."go-version-review".filesystem]
 glob_scan_max_depth = 4
 
 [permissions."go-version-review".filesystem.":workspace_roots"]
-"." = "read"
-".codex-automation" = "write"
-"go.mod" = "write"
-"go.sum" = "write"
-"README.md" = "write"
-"CONTRIBUTING.md" = "write"
-"GO_VERSION_POLICY.md" = "write"
-"examples/go.mod" = "write"
-"examples/go.sum" = "write"
-"internal/testdata/consumer/go.mod" = "write"
-"internal/testdata/consumer/go.sum" = "write"
-"tools/go.mod" = "write"
-"tools/go.sum" = "write"
-".github/workflows/ci.yml" = "write"
+# Codex 0.144.6's Linux sandbox treats every write root as a directory, so
+# listing individual files here makes command startup fail while it tries to
+# protect children such as `go.mod/.codex`. Workspace write is the supported
+# directory-granular form. This checkout is disposable; the separate publisher
+# job is the authority that limits which files and literals can reach a branch.
+"." = "write"
 "**/*.env" = "deny"
 
 [permissions."go-version-review".network]

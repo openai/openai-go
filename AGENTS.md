@@ -53,8 +53,9 @@ policy or pull request prose.
     receive the secret.
   - Runs a pinned Codex runtime as a dedicated unprivileged OS user with a
     checked-in permission profile. Agent commands have no network access and
-    can write only the documented policy artifacts plus disposable cache
-    files.
+    can write only to the disposable checkout and cache files. The separate
+    publisher accepts only the documented policy artifacts after validating
+    their paths and contents.
   - Codex can prepare a patch but has read-only GitHub permissions and no
     repository credential. A separate job with no OpenAI credential opens one
     draft pull request from that patch. If a generated draft is already open,

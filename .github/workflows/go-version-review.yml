@@ -48,8 +48,21 @@ jobs:
             --home /home/codex \
             --shell /bin/bash \
             --group codex
-          sudo usermod --append --groups codex runner
+
+          # The already-running runner process cannot acquire a supplementary
+          # group added with usermod. Give its existing `runner` group
+          # traverse-only access to the parent instead: it can reach the
+          # runner-group Codex state directory but cannot list this home.
+          sudo chown codex:runner /home/codex
+          sudo chmod 0710 /home/codex
           sudo usermod --append --groups runner codex
+          test "$(stat --format '%U:%G:%a' /home/codex)" = \
+            'codex:runner:710'
+          test -x /home/codex
+          if test -r /home/codex; then
+            echo 'The runner must not be able to list the Codex home' >&2
+            exit 1
+          fi
 
       - name: Check out the trusted default branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
@@ -156,7 +169,9 @@ jobs:
             -exec chmod g+s {} +
 
           # Git metadata remains runner-owned and non-writable to the agent.
-          # The permission profile independently restricts tracked-file writes.
+          # The profile confines writes to this disposable checkout and denies
+          # network access. The publisher independently restricts patch paths
+          # and validates the permitted module and CI changes before pushing.
           sudo chown --recursive runner:runner "$GITHUB_WORKSPACE/.git"
           sudo chmod --recursive go-w "$GITHUB_WORKSPACE/.git"
 
