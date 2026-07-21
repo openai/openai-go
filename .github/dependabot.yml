@@ -1,0 +1,63 @@
+version: 2
+# The root SDK, examples, and external-consumer module share one dependency
+# graph in practice: the nested modules replace the SDK with the root checkout.
+# Dependabot therefore updates them together. Development tools and GitHub
+# Actions remain isolated. Updates are proposed for review and never auto-merge.
+updates:
+  - package-ecosystem: gomod
+    directories:
+      - /
+      - /examples
+      - /internal/testdata/consumer
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    groups:
+      # golang.org/x modules are released together and can jointly raise the Go
+      # floor. group-by coordinates each dependency update across every listed
+      # directory, keeping each checked-in go.mod/go.sum tidy in the same PR.
+      golang-x:
+        group-by: dependency-name
+        patterns:
+          - "golang.org/x/*"
+      go-dependencies:
+        # Coordinate each remaining dependency across directories, excluding
+        # dependencies already claimed by the higher-priority golang-x group.
+        group-by: dependency-name
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "golang.org/x/*"
+    # The local replace directives make this version a placeholder rather than
+    # an independently maintained dependency.
+    ignore:
+      - dependency-name: "github.com/openai/openai-go/v3"
+
+  - package-ecosystem: gomod
+    directory: /tools
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:15"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 3
+    groups:
+      # This module currently owns govulncheck and its golang.org/x
+      # dependencies. Keeping it isolated avoids changing SDK users' graph.
+      golang-x-tools:
+        patterns:
+          - "golang.org/x/*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:30"
+      timezone: Etc/UTC
+    # Keep action updates separate so each pinned SHA and runtime change can be
+    # reviewed independently.
+    open-pull-requests-limit: 5

@@ -13,6 +13,15 @@ on:
     branches-ignore:
       - 'stl-preview-head/**'
       - 'stl-preview-base/**'
+  # The monthly Codex workflow opens its draft with GITHUB_TOKEN. GitHub does
+  # not emit pull_request workflows for token-created pull requests, so that
+  # workflow explicitly dispatches this validation on the generated branch.
+  workflow_dispatch:
+  # The vulnerability database changes even when this repository does not.
+  # This schedule runs only the govulncheck job below; lint and tests remain
+  # push-triggered. 10:23 UTC avoids GitHub's busy top-of-hour window.
+  schedule:
+    - cron: '23 10 * * *'
 
 permissions:
   contents: read
@@ -30,7 +39,7 @@ jobs:
       github.event_name == 'push' &&
       github.event.head_commit.message != 'codegen metadata'
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
           persist-credentials: false
 
@@ -40,7 +49,7 @@ jobs:
           github.event_name == 'push' &&
           !startsWith(github.ref, 'refs/heads/stl/')
         id: github-oidc
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: core.setOutput('github_token', await core.getIDToken());
 
@@ -58,16 +67,27 @@ jobs:
     timeout-minutes: 10
     name: lint
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
+    # Run on the PR event even for same-repository branches. The stable
+    # aggregate check at the bottom cannot safely depend on a separate push
+    # workflow run, and every PR should receive the same merge-gating signal.
+    if: >-
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch'
+    # Prevent Go's automatic toolchain selection from hiding an accidental
+    # increase above the minimum declared in go.mod.
+    env:
+      GOTOOLCHAIN: local
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
           persist-credentials: false
 
       - name: Setup go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
+          # go.mod is the source of truth for the minimum compiler used by lint.
           go-version-file: ./go.mod
 
       - name: Run lints
@@ -76,22 +96,125 @@ jobs:
       - name: Check go.mod is tidy
         run: ./scripts/check-go-mod
   test:
-    timeout-minutes: 10
-    name: test
+    timeout-minutes: 15
+    name: test (Go ${{ matrix.go-version }})
     runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
+    if: >-
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        # Test the latest patch in the previous and current stable Go lines.
+        # Keep this matrix synchronized with GO_VERSION_POLICY.md. The monthly
+        # Codex review proposes both changes together when a Go release lands.
+        go-version:
+          - '1.25.x'
+          - '1.26.x'
+    # setup-go installs the selected matrix version first. "local" then stops
+    # the go command from silently switching to a newer toolchain.
+    env:
+      GOTOOLCHAIN: local
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
           persist-credentials: false
 
       - name: Setup go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version-file: ./go.mod
+          go-version: ${{ matrix.go-version }}
+          # A version range can otherwise reuse an older matching toolcache
+          # entry immediately after a patched Go release becomes available.
+          check-latest: true
 
       - name: Bootstrap
+        env:
+          SKIP_BREW: "1"
         run: ./scripts/bootstrap
 
-      - name: Run tests
+      - name: Test root module
         run: ./scripts/test
+
+      - name: Test examples module
+        working-directory: examples
+        run: go test ./...
+
+      - name: Test external consumer
+        working-directory: internal/testdata/consumer
+        # This nested module catches accidental reliance on internal packages
+        # and proves representative core and Azure imports compose externally.
+        # readonly also prevents a disposable CI checkout from hiding stale
+        # module metadata by rewriting go.mod or go.sum during the test.
+        run: go test -mod=readonly ./...
+
+  vulnerability:
+    timeout-minutes: 15
+    name: govulncheck
+    runs-on: ${{ github.repository == 'stainless-sdks/openai-go' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
+    # PR scans catch dependency/call-graph changes. The nightly scan catches
+    # newly published advisories against an otherwise unchanged commit.
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          persist-credentials: false
+
+      - name: Setup current stable Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          # Scan with a patched current toolchain so old standard-library
+          # findings do not obscure dependency findings.
+          go-version: '1.26.x'
+          check-latest: true
+
+      - name: Install govulncheck
+        # Keep the scanner in its own module so Dependabot can update it without
+        # adding development-tool dependencies to SDK users' module graph.
+        working-directory: tools
+        run: go install golang.org/x/vuln/cmd/govulncheck
+
+      - name: Scan root module
+        run: govulncheck ./...
+
+      - name: Scan examples module
+        working-directory: examples
+        run: govulncheck ./...
+
+  required:
+    timeout-minutes: 5
+    name: Go support policy
+    runs-on: ubuntu-latest
+    if: >-
+      always() &&
+      (github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch')
+    needs:
+      - lint
+      - test
+      - vulnerability
+    steps:
+      - name: Require every Go safety job
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+          VULNERABILITY_RESULT: ${{ needs.vulnerability.result }}
+        run: |
+          failed=0
+          for result in \
+            "$LINT_RESULT" \
+            "$TEST_RESULT" \
+            "$VULNERABILITY_RESULT"
+          do
+            if [[ "$result" != "success" ]]; then
+              echo "Required Go safety job ended with: $result"
+              failed=1
+            fi
+          done
+          exit "$failed"

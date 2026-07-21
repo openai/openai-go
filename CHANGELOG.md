@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.44.0 (2026-07-17)
+
+Full Changelog: [v3.43.0...v3.44.0](https://github.com/openai/openai-go/compare/v3.43.0...v3.44.0)
+
+### Features
+
+* **api:** /organization/projects/{project_id}/service_accounts/{service_account_id}/api_keys" endpoint ([28d2a6a](https://github.com/openai/openai-go/commit/28d2a6ab978f78d10b29087e70539ed230340274))
+* **api:** manual updates ([a531d4a](https://github.com/openai/openai-go/commit/a531d4a994c75177a7ed3edaf0c909db188147ce))
+* **api:** manual updates ([8073e1e](https://github.com/openai/openai-go/commit/8073e1e1a20907ae89433008157c238bccd4eca9))
+
+
+### Bug Fixes
+
+* **api:** format service account API key path ([999e165](https://github.com/openai/openai-go/commit/999e16536e7dc5ea4040d13b94c413cfc9df98ec))
+* format service account API key path ([9fb19bb](https://github.com/openai/openai-go/commit/9fb19bbb13c067a12c14153f8ba5e57b233cd927))
+
 ## 3.43.0 (2026-07-14)
 
 Full Changelog: [v3.42.0...v3.43.0](https://github.com/openai/openai-go/compare/v3.42.0...v3.43.0)
