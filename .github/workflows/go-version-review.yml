@@ -125,8 +125,8 @@ jobs:
 
           # Keep generated output in an ignored directory that exists before
           # the release-feed snapshot. Go defaults to cache and install paths
-          # under the target home; root creates only those two writable
-          # subtrees while the home itself remains immutable to Codex.
+          # under the target home. Its work directory is configured explicitly
+          # because system temp remains read-only inside the permission profile.
           sudo install \
             --directory \
             --owner runner \
@@ -140,9 +140,24 @@ jobs:
             --mode 0700 \
             /home/codex/.cache \
             /home/codex/.cache/go-build \
+            /home/codex/.cache/go-tmp \
             /home/codex/go \
             /home/codex/go/bin \
             /home/codex/go/pkg
+          sudo install \
+            --directory \
+            --owner root \
+            --group runner \
+            --mode 0750 \
+            /home/codex/.config \
+            /home/codex/.config/go
+          printf '%s\n' 'GOTMPDIR=/home/codex/.cache/go-tmp' |
+            sudo tee /home/codex/.config/go/env >/dev/null
+          sudo chown root:runner /home/codex/.config/go/env
+          sudo chmod 0640 /home/codex/.config/go/env
+          test \
+            "$(stat --format '%U:%G:%a' /home/codex/.config/go/env)" = \
+            'root:runner:640'
 
           # setup-go prepends a runner-only PATH entry that sudo may discard.
           # Root-owned symlinks expose this exact toolchain on the target PATH
@@ -158,19 +173,25 @@ jobs:
           # target-user defaults to the writable subtrees created above.
           test "$(
             sudo -u codex -- env \
-              -u GOBIN -u GOCACHE -u GOMODCACHE \
+              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
               "$go_tool" env GOPATH
           )" = '/home/codex/go'
           test "$(
             sudo -u codex -- env \
-              -u GOBIN -u GOCACHE -u GOMODCACHE \
+              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
               "$go_tool" env GOCACHE
           )" = '/home/codex/.cache/go-build'
           test "$(
             sudo -u codex -- env \
-              -u GOBIN -u GOCACHE -u GOMODCACHE \
+              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
               "$go_tool" env GOMODCACHE
           )" = '/home/codex/go/pkg/mod'
+          test "$(
+            sudo -u codex -- env \
+              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
+              "$go_tool" env GOTMPDIR
+          )" = '/home/codex/.cache/go-tmp'
+          sudo -u codex -- test -w /home/codex/.cache/go-tmp
 
           # When the home already exists, codex-action expects its per-run
           # proxy handoff file to exist too. Only the runner-owned proxy needs
@@ -204,17 +225,18 @@ jobs:
           jq --exit-status 'type == "array" and length > 0' \
             "$GO_RELEASE_FEED" >/dev/null
 
-      - name: Warm Go dependency caches
+      - name: Warm offline Go dependencies
         # Agent-run commands have no network access. Download the existing,
         # reviewed module graphs and install the pinned vulnerability scanner
-        # before the API key enters the job. The root-owned copy is on sudo's
-        # target PATH; an agent may rebuild its writable GOBIN copy without
-        # replacing the executable used for validation.
+        # before the API key enters the job. The scanner's database is not a
+        # persistent cache; the credential-free publisher runs it after
+        # validating the patch. The root-owned binary remains available for
+        # inspection without letting the agent replace it.
         run: |
           go_tool="$(command -v go)"
           go_as_codex() {
             sudo -u codex -- env \
-              -u GOBIN -u GOCACHE -u GOMODCACHE \
+              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
               GOTOOLCHAIN=local \
               "$go_tool" "$@"
           }
@@ -310,7 +332,7 @@ jobs:
     needs: propose
     if: needs.propose.outputs.has_patch == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     outputs:
       branch: ${{ steps.publish.outputs.branch }}
     permissions:
@@ -327,37 +349,30 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
           fetch-depth: 0
-          # This job has no OpenAI credential. No third-party action runs after
-          # checkout persists this short-lived publisher credential.
-          persist-credentials: true
+          # Tests execute only after the patch allowlist is proven, but keep
+          # even the short-lived publisher credential out of their process
+          # tree. The final shell step authenticates only after validation.
+          persist-credentials: false
 
-      - name: Apply, publish, and open the draft pull request
-        id: publish
+      - name: Set up the current stable Go toolchain
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version: stable
+          check-latest: true
+
+      - name: Set up Node for the Steady test server
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '24'
+
+      - name: Apply and validate the proposed patch
         env:
-          BASE_BRANCH: ${{ github.event.repository.default_branch }}
-          GH_TOKEN: ${{ github.token }}
+          # Do not add GH_TOKEN or any other credential to this step. It runs
+          # repository tooling only after proving that Codex changed no
+          # executable source, script, action, or dependency graph.
+          GOTOOLCHAIN: local
           PATCH_PATH: ${{ runner.temp }}/monthly-go-version-update/codex.patch
-          PR_BODY_PATH: ${{ runner.temp }}/monthly-go-version-update/codex-pr-body.md
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          marker='<!-- monthly-go-version-review -->'
-          existing_pr="$(
-            gh pr list \
-              --base "$BASE_BRANCH" \
-              --state open \
-              --limit 100 \
-              --json number,body,headRefName,isCrossRepository \
-              --jq "map(select(
-                (.isCrossRepository | not) and
-                (.headRefName | startswith(\"codex/monthly-go-version-update-\")) and
-                ((.body // \"\") | contains(\"$marker\"))
-              ))[0].number // empty"
-          )"
-          if [[ -n "$existing_pr" ]]; then
-            echo "::notice::Monthly Go version update is already tracked in PR #$existing_pr"
-            exit 0
-          fi
-
           git apply --index "$PATCH_PATH"
           # The model has no GitHub credential, and this publisher does not
           # trust its patch blindly. Reject files outside the policy surface
@@ -425,10 +440,60 @@ jobs:
             esac
           done < <(git diff --cached --unified=0 -- .github/workflows/ci.yml)
 
+          # Every executable input is trusted at this point: the patch can
+          # change only Go directives, documentation, and quoted CI version
+          # literals. Run the complete post-patch validation before any GitHub
+          # credential enters a shell process.
+          ./scripts/check-go-mod
+          ./scripts/lint
+          ./scripts/test
+          (cd examples && go test ./...)
+          (cd internal/testdata/consumer && go test -mod=readonly ./...)
+          (cd tools && go install golang.org/x/vuln/cmd/govulncheck)
+          govulncheck_bin="$(go env GOPATH)/bin/govulncheck"
+          "$govulncheck_bin" ./...
+          (cd examples && "$govulncheck_bin" ./...)
+          if ! git diff --quiet; then
+            echo '::error::Validation modified tracked files'
+            git diff --stat
+            exit 1
+          fi
+
+      - name: Publish and open the draft pull request
+        id: publish
+        env:
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+          GH_TOKEN: ${{ github.token }}
+          PR_BODY_PATH: ${{ runner.temp }}/monthly-go-version-update/codex-pr-body.md
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          marker='<!-- monthly-go-version-review -->'
+          existing_pr="$(
+            gh pr list \
+              --base "$BASE_BRANCH" \
+              --state open \
+              --limit 100 \
+              --json number,body,headRefName,isCrossRepository \
+              --jq "map(select(
+                (.isCrossRepository | not) and
+                (.headRefName | startswith(\"codex/monthly-go-version-update-\")) and
+                ((.body // \"\") | contains(\"$marker\"))
+              ))[0].number // empty"
+          )"
+          if [[ -n "$existing_pr" ]]; then
+            echo "::notice::Monthly Go version update is already tracked in PR #$existing_pr"
+            exit 0
+          fi
+
           branch="codex/monthly-go-version-update-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          # Ensure checkout's credential is removed even if a later command in
-          # this step fails. GH_TOKEN continues to authenticate GitHub CLI.
-          trap 'git config --local --unset-all http.https://github.com/.extraheader 2>/dev/null || true' EXIT
+          # Use GitHub CLI as an ephemeral local credential helper. The token
+          # exists only in this final step's environment and is never written
+          # into the checkout or exposed to validation subprocesses.
+          git config --local credential.https://github.com.helper ''
+          git config --local --add \
+            credential.https://github.com.helper \
+            '!gh auth git-credential'
+          trap 'git config --local --unset-all credential.https://github.com.helper 2>/dev/null || true' EXIT
           git switch --create "$branch"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -437,7 +502,7 @@ jobs:
           git push origin "HEAD:refs/heads/$branch"
           git config --local \
             --unset-all \
-            http.https://github.com/.extraheader 2>/dev/null || true
+            credential.https://github.com.helper 2>/dev/null || true
 
           {
             echo "$marker"

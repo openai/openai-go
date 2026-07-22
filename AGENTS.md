@@ -52,14 +52,14 @@ policy or pull request prose.
     permits only the `main` branch, so a dispatch against another ref cannot
     receive the secret.
   - Runs a pinned Codex runtime as a dedicated unprivileged OS user with a
-    checked-in permission profile. Agent commands have no network access and
-    can write only to the disposable checkout and cache files. The separate
-    publisher accepts only the documented policy artifacts after validating
-    their paths and contents.
+    checked-in permission profile. Agent commands have no network access,
+    including loopback, so they cannot reach the action's local Responses
+    proxy. They can write only to the disposable checkout and cache files.
   - Before exposing the API key, the workflow creates the ignored automation
-    directory, warms Go's module and build caches, and installs the pinned
-    `govulncheck`. Only Go's target-user cache and install subtrees are writable
-    beneath the otherwise root-owned Codex home.
+    directory, configures a writable Go temporary directory, warms Go's module
+    caches, and installs the pinned `govulncheck`. Only Go's target-user cache,
+    temporary, and install subtrees are writable beneath the otherwise
+    root-owned Codex home.
   - Codex can prepare a patch but has read-only GitHub permissions and no
     repository credential. A separate job with no OpenAI credential opens one
     draft pull request from that patch. If a generated draft is already open,
@@ -68,6 +68,10 @@ policy or pull request prose.
     files. Because generated-branch CI is dispatched, it accepts only quoted
     Go-version literal changes in `ci.yml`; changes to workflow permissions,
     triggers, actions, jobs, or steps are rejected before push.
+  - After validating that allowlist, the publisher runs the complete tidy,
+    build, test, and vulnerability suite without an OpenAI or GitHub credential.
+    Only a later step receives the short-lived GitHub token used to push the
+    validated branch and open its draft pull request.
   - The publisher can write repository contents and pull requests but cannot
     dispatch Actions. A third job can dispatch Actions but cannot write
     repository contents or pull requests.

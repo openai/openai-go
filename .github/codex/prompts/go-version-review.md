@@ -7,8 +7,8 @@ The workflow downloaded the official `https://go.dev/dl/?mode=json&include=all`
 response to `.codex-automation/go-releases.json`. Treat that local snapshot as
 the authoritative source for released stable Go versions. Do not rely on model
 memory for release dates or versions, and do not fetch instructions from the
-internet. Command network access is intentionally disabled; use the local feed,
-the pre-warmed Go module and build caches, and the preinstalled `govulncheck`.
+internet. Command network access, including loopback, is intentionally disabled;
+use the local feed and the pre-warmed Go module and build caches.
 
 Read `AGENTS.md`, `GO_VERSION_POLICY.md`, `go.mod`, the nested modules, and the
 CI workflows before changing anything. The normal policy is to support the two
@@ -34,9 +34,12 @@ If it has drifted, prepare one focused change:
 5. Preserve the public SDK API and `/v3` import path. Do not edit generated SDK
    source.
 6. Do not make unrelated dependency, refactoring, or formatting changes.
-7. Run the relevant tidy, test, lint, vulnerability, and compatibility checks
-   that are available. CI will independently test every supported compiler
-   line after the draft pull request opens.
+7. Run the relevant offline tidy, build, lint, and test checks that are
+   available. Do not start the Steady server or run `govulncheck`: those need
+   network access, so the credential-free publisher runs the complete
+   post-patch test and vulnerability suite after independently validating your
+   patch. CI will then test every supported compiler line after the draft pull
+   request opens.
 
 Do not commit, push, open a pull request, call GitHub, or modify repository
 secrets. The workflow publishes your patch in a separate job that has no OpenAI

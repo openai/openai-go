@@ -11,9 +11,11 @@ extends = ":read-only"
 
 [permissions."go-version-review".filesystem]
 glob_scan_max_depth = 4
-# The root-owned home contains only these two Codex-owned Go working trees.
-# Module and build caches are warmed before command network access is disabled.
+# The root-owned home contains only these Codex-owned Go working trees. The
+# explicit temp directory keeps compilation out of the otherwise read-only
+# system temp directory.
 "~/.cache/go-build" = "write"
+"~/.cache/go-tmp" = "write"
 "~/go" = "write"
 
 [permissions."go-version-review".filesystem.":workspace_roots"]
@@ -26,6 +28,8 @@ glob_scan_max_depth = 4
 "**/*.env" = "deny"
 
 [permissions."go-version-review".network]
-# The workflow snapshots the Go release feed and warms module caches before
-# the API key is passed to the action. Agent-run commands need no internet.
+# This also denies loopback. The credential-bearing Responses proxy is a local
+# service, so allowing localhost merely for the Steady test server would widen
+# the key boundary. A separate credential-free job runs the complete test and
+# vulnerability suite after validating the generated patch.
 enabled = false
