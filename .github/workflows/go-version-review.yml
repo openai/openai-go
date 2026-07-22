@@ -28,65 +28,21 @@ jobs:
     environment: ci
     env:
       CODEX_AUTOMATION_DIR: ${{ github.workspace }}/.codex-automation
-      # codex-action crosses a sudo boundary for the unprivileged-user safety
-      # strategy. sudo resets an explicit CODEX_HOME, so install the profile at
-      # the target user's real default instead of a workspace-relative home.
-      CODEX_AUTOMATION_HOME: /home/codex/.codex
       CODEX_OUTPUT_FILE: ${{ github.workspace }}/.codex-automation/codex-pr-body.md
+      # Keep every Go write beneath the disposable checkout. The built-in
+      # :workspace permission profile can use these caches without granting
+      # model-run commands write access elsewhere in the runner's home.
+      GOCACHE: ${{ github.workspace }}/.codex-automation/go-build
+      GOENV: 'off'
+      GOMODCACHE: ${{ github.workspace }}/.codex-automation/go-mod
       GO_RELEASE_FEED: ${{ github.workspace }}/.codex-automation/go-releases.json
+      GOTMPDIR: ${{ github.workspace }}/.codex-automation/go-tmp
+      # Never let the Go command silently download or select another toolchain
+      # after the action removes sudo and command network access.
+      GOTOOLCHAIN: local
     outputs:
       has_patch: ${{ steps.patch.outputs.has_patch }}
     steps:
-      - name: Create an unprivileged Codex user
-        # This runs before the key is passed to any process. Separating the
-        # agent from the runner user prevents a lingering agent process from
-        # inspecting credentials used by later runner-owned steps.
-        run: |
-          sudo adduser \
-            --system \
-            --home /home/codex \
-            --shell /bin/bash \
-            --group codex
-
-          # The already-running runner process cannot acquire a supplementary
-          # group added with usermod. Give its existing `runner` group
-          # traverse-only access to the root-owned parent instead. Root
-          # ownership prevents Codex from renaming the protected `.codex`
-          # directory; both principals can reach it but cannot list the home.
-          sudo chown root:runner /home/codex
-          sudo chmod 0710 /home/codex
-          sudo usermod --append --groups runner codex
-
-          # Ubuntu's runner sudo policy can preserve the caller's HOME when a
-          # command changes users without `-H`. The pinned codex-action uses
-          # that exact `sudo -u codex` form both to resolve the Codex home and
-          # to launch the CLI. Scope always_set_home to the codex target user
-          # so both operations use the dedicated account's root-owned home.
-          # Hosted-runner PAM also restores the runner's XDG_CONFIG_HOME after
-          # sudo filters the environment. Preserve only the trusted value that
-          # target-user steps below pin to the dedicated account's config home.
-          # This file is installed and validated before the API key enters the
-          # job; the unprivileged user cannot modify it.
-          printf '%s\n' \
-            'Defaults>codex always_set_home' \
-            'Defaults>codex env_keep += "XDG_CONFIG_HOME"' |
-            sudo tee /etc/sudoers.d/codex-home >/dev/null
-          sudo chmod 0440 /etc/sudoers.d/codex-home
-          sudo visudo -cf /etc/sudoers.d/codex-home
-
-          test "$(stat --format '%U:%G:%a' /home/codex)" = \
-            'root:runner:710'
-          test -x /home/codex
-          if test -r /home/codex; then
-            echo 'The runner must not be able to list the Codex home' >&2
-            exit 1
-          fi
-          sudo -u codex -- test -x /home/codex
-          if sudo -u codex -- test -w /home/codex; then
-            echo 'Codex must not be able to modify its home directory' >&2
-            exit 1
-          fi
-
       - name: Check out the trusted default branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
@@ -101,148 +57,31 @@ jobs:
           go-version: stable
           check-latest: true
 
-      - name: Prepare the isolated Codex workspace
-        # sudo preserves this trusted step value so Go reads the target user's
-        # root-owned config instead of the hosted runner's XDG config.
-        env:
-          XDG_CONFIG_HOME: /home/codex/.config
+      - name: Prepare the disposable automation workspace
         run: |
-          # Keep this assertion beside the setup: the permission profile must
-          # live where the pinned action's own `sudo -u` lookup resolves it.
-          # Do not add `-H` here unless the action does the same; that would
-          # test a different HOME from the one used to launch Codex.
-          resolved_codex_home="$(
-            sudo -u codex -- printenv HOME
-          )/.codex"
-          if [[ "$resolved_codex_home" != "$CODEX_AUTOMATION_HOME" ]]; then
-            echo "codex-action would resolve $resolved_codex_home; expected $CODEX_AUTOMATION_HOME" >&2
-            exit 1
-          fi
+          mkdir -p \
+            "$CODEX_AUTOMATION_DIR" \
+            "$GOCACHE" \
+            "$GOMODCACHE" \
+            "$GOTMPDIR"
+          chmod 0700 \
+            "$CODEX_AUTOMATION_DIR" \
+            "$GOCACHE" \
+            "$GOMODCACHE" \
+            "$GOTMPDIR"
 
-          # The action normally creates this home itself. We create it first so
-          # the named permission profile is present before Codex starts. Root
-          # ownership plus the sticky bit lets the runner-group members create
-          # their own disposable state without replacing one another's files.
-          sudo install \
-            --directory \
-            --owner root \
-            --group runner \
-            --mode 1770 \
-            "$CODEX_AUTOMATION_HOME"
-          sudo install \
-            --owner root \
-            --group runner \
-            --mode 0640 \
-            .github/codex/go-version-review-config.toml \
-            "$CODEX_AUTOMATION_HOME/config.toml"
-          test \
-            "$(stat --format '%U:%G:%a' "$CODEX_AUTOMATION_HOME")" = \
-            'root:runner:1770'
-          test \
-            "$(stat --format '%U:%G:%a' \
-              "$CODEX_AUTOMATION_HOME/config.toml")" = \
-            'root:runner:640'
-          sudo -u codex -- test \
-            -r "$CODEX_AUTOMATION_HOME/config.toml"
-          if sudo -u codex -- test \
-            -w "$CODEX_AUTOMATION_HOME/config.toml"; then
-            echo 'The Codex permission profile must not be writable by Codex' >&2
-            exit 1
-          fi
+          # These files are execution state, never part of a proposed policy
+          # patch. Keep the exclusion local to this disposable checkout.
+          echo '/.codex-automation/' >> \
+            "$(git rev-parse --git-path info/exclude)"
 
-          # Keep generated output in an ignored directory that exists before
-          # the release-feed snapshot. Go defaults to cache and install paths
-          # under the target home. Its work directory is configured explicitly
-          # because system temp remains read-only inside the permission profile.
-          sudo install \
-            --directory \
-            --owner runner \
-            --group codex \
-            --mode 0770 \
-            "$CODEX_AUTOMATION_DIR"
-          sudo install \
-            --directory \
-            --owner codex \
-            --group codex \
-            --mode 0700 \
-            /home/codex/.cache \
-            /home/codex/.cache/go-build \
-            /home/codex/.cache/go-tmp \
-            /home/codex/go \
-            /home/codex/go/bin \
-            /home/codex/go/pkg
-          sudo install \
-            --directory \
-            --owner root \
-            --group runner \
-            --mode 0750 \
-            /home/codex/.config \
-            /home/codex/.config/go
-          printf '%s\n' 'GOTMPDIR=/home/codex/.cache/go-tmp' |
-            sudo tee /home/codex/.config/go/env >/dev/null
-          sudo chown root:runner /home/codex/.config/go/env
-          sudo chmod 0640 /home/codex/.config/go/env
-          test \
-            "$(stat --format '%U:%G:%a' /home/codex/.config/go/env)" = \
-            'root:runner:640'
-
-          # setup-go prepends a runner-only PATH entry that sudo may discard.
-          # Root-owned symlinks expose this exact toolchain on the target PATH
-          # without giving the agent write access to either executable.
-          go_tool="$(command -v go)"
-          gofmt_tool="$(command -v gofmt)"
-          sudo ln --symbolic --force "$go_tool" /usr/local/bin/go
-          sudo ln --symbolic --force "$gofmt_tool" /usr/local/bin/gofmt
-          sudo -u codex -- /bin/bash -c \
-            'command -v go >/dev/null && command -v gofmt >/dev/null'
-
-          # Clear any runner values while proving that Go resolves its normal
-          # target-user defaults to the writable subtrees created above.
-          resolved_goenv="$(
-            sudo -u codex -- env \
-              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
-              "$go_tool" env GOENV
-          )"
-          if [[ "$resolved_goenv" != '/home/codex/.config/go/env' ]]; then
-            echo "Codex Go environment resolved $resolved_goenv; expected /home/codex/.config/go/env" >&2
-            exit 1
-          fi
-          test "$(
-            sudo -u codex -- env \
-              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
-              "$go_tool" env GOPATH
-          )" = '/home/codex/go'
-          test "$(
-            sudo -u codex -- env \
-              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
-              "$go_tool" env GOCACHE
-          )" = '/home/codex/.cache/go-build'
-          test "$(
-            sudo -u codex -- env \
-              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
-              "$go_tool" env GOMODCACHE
-          )" = '/home/codex/go/pkg/mod'
-          test "$(
-            sudo -u codex -- env \
-              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
-              "$go_tool" env GOTMPDIR
-          )" = '/home/codex/.cache/go-tmp'
-          sudo -u codex -- test -w /home/codex/.cache/go-tmp
-
-          # When the home already exists, codex-action expects its per-run
-          # proxy handoff file to exist too. Only the runner-owned proxy needs
-          # to write it; the action changes it to root-owned, read-only mode
-          # immediately after startup.
-          sudo install \
-            --owner runner \
-            --group runner \
-            --mode 0600 \
-            /dev/null \
-            "$CODEX_AUTOMATION_HOME/${GITHUB_RUN_ID}.json"
-
-          # Keep proxy configuration, caches, and Codex output out of the
-          # generated patch without adding repository-wide ignore rules.
-          echo '/.codex-automation/' >> .git/info/exclude
+          # GOENV=off is reported as an empty path and prevents Go from reading
+          # or writing the runner account's persistent per-user configuration.
+          test -z "$(go env GOENV)"
+          test "$(go env GOCACHE)" = "$GOCACHE"
+          test "$(go env GOMODCACHE)" = "$GOMODCACHE"
+          test "$(go env GOTMPDIR)" = "$GOTMPDIR"
+          test "$(go env GOTOOLCHAIN)" = 'local'
 
       - name: Snapshot the official Go release feed
         run: |
@@ -261,61 +100,33 @@ jobs:
           jq --exit-status 'type == "array" and length > 0' \
             "$GO_RELEASE_FEED" >/dev/null
 
-      - name: Warm offline Go dependencies
+      - name: Warm and verify offline Go dependencies
         # Agent-run commands have no network access. Download the existing,
-        # reviewed module graphs and install the pinned vulnerability scanner
-        # before the API key enters the job. The scanner's database is not a
-        # persistent cache; the credential-free publisher runs it after
-        # validating the patch. The root-owned binary remains available for
-        # inspection without letting the agent replace it.
-        env:
-          XDG_CONFIG_HOME: /home/codex/.config
+        # reviewed module graphs and exercise the tidy/build/test commands on
+        # trusted main before the API key enters the job. `go mod download`
+        # alone omits some test-only dependencies required by `go mod tidy`.
+        # The credential-free publisher installs and runs govulncheck after it
+        # has independently validated the generated patch.
         run: |
-          go_tool="$(command -v go)"
-          go_as_codex() {
-            sudo -u codex -- env \
-              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
-              GOTOOLCHAIN=local \
-              "$go_tool" "$@"
-          }
-          go_as_codex mod download
-          (cd examples && go_as_codex mod download)
-          (cd internal/testdata/consumer && go_as_codex mod download)
-          (cd tools && go_as_codex mod download)
-          (cd tools && go_as_codex install \
-            golang.org/x/vuln/cmd/govulncheck)
-          sudo install \
-            --owner root \
-            --group root \
-            --mode 0755 \
-            /home/codex/go/bin/govulncheck \
-            /usr/local/bin/govulncheck
-          sudo -u codex -- /bin/bash -c \
-            'command -v govulncheck >/dev/null'
-
-      - name: Grant the Codex user controlled workspace access
-        run: |
-          sudo chown --recursive runner:codex "$GITHUB_WORKSPACE"
-          sudo chmod --recursive g+rwX "$GITHUB_WORKSPACE"
-          sudo find "$GITHUB_WORKSPACE" \
-            -type d \
-            -exec chmod g+s {} +
-
-          # Git metadata remains runner-owned and non-writable to the agent.
-          # The profile confines writes to this disposable checkout and denies
-          # network access. The publisher independently restricts patch paths
-          # and validates the permitted module and CI changes before pushing.
-          sudo chown --recursive runner:runner "$GITHUB_WORKSPACE/.git"
-          sudo chmod --recursive go-w "$GITHUB_WORKSPACE/.git"
+          go mod download
+          (cd examples && go mod download)
+          (cd internal/testdata/consumer && go mod download)
+          (cd tools && go mod download)
+          ./scripts/check-go-mod
+          ./scripts/lint
+          (cd examples && go test ./...)
+          (cd internal/testdata/consumer && go test -mod=readonly ./...)
 
       - name: Ask Codex to prepare the update
         id: codex
         # Pin both the action and installed Codex runtime. Dependabot proposes
         # reviewed action updates; runtime updates are explicit policy changes.
-        # Preserve the target config home through the action's `sudo -u codex`
-        # launch so agent-run Go commands use the reviewed, root-owned GOENV.
-        env:
-          XDG_CONFIG_HOME: /home/codex/.config
+        #
+        # drop-sudo is the action's documented GitHub-hosted-runner path. It
+        # irreversibly removes the runner's sudo access before Codex starts.
+        # The built-in :workspace profile permits checkout and temp writes but
+        # denies command network access by default. The job has read-only
+        # repository permissions and checkout did not persist a credential.
         uses: openai/codex-action@52fe01ec70a42f454c9d2ebd47598f9fd6893d56 # v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
@@ -323,26 +134,22 @@ jobs:
           output-file: ${{ env.CODEX_OUTPUT_FILE }}
           codex-version: '0.144.6'
           codex-args: '["--ephemeral"]'
-          permission-profile: go-version-review
-          safety-strategy: unprivileged-user
-          codex-user: codex
-
-      - name: Terminate Codex-owned processes
-        if: always()
-        # Defense in depth before any later step receives an Actions runtime
-        # token. The action normally shuts down its proxy itself.
-        run: |
-          sudo pkill -KILL -u codex 2>/dev/null || true
-          pkill -KILL -f '[c]odex-responses-api-proxy' 2>/dev/null || true
-          sudo chown runner:runner "$CODEX_OUTPUT_FILE" 2>/dev/null || true
+          permission-profile: ':workspace'
+          safety-strategy: drop-sudo
 
       - name: Package Codex's patch
         id: patch
         if: steps.codex.outcome == 'success'
+        # The action's security guide prefers Codex to be the final step when
+        # later steps are privileged. This job's only post-Codex work exports
+        # an untrusted artifact: it has read-only repository permissions and
+        # no checkout credential. A fresh job independently validates every
+        # changed path and executable input before any shell step receives the
+        # write token.
         env:
           CODEX_ARTIFACT_DIR: ${{ runner.temp }}/monthly-go-version-update
         run: |
-          mkdir --parents "$CODEX_ARTIFACT_DIR"
+          mkdir -p "$CODEX_ARTIFACT_DIR"
 
           # Intent-to-add makes new files visible to git diff without staging
           # their contents in the checkout.
