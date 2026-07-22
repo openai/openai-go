@@ -4159,7 +4159,7 @@ type BetaResponse struct {
 	// Used by OpenAI to cache responses for similar requests to optimize your cache
 	// hit rates. Replaces the `user` field.
 	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
-	PromptCacheKey string `json:"prompt_cache_key"`
+	PromptCacheKey string `json:"prompt_cache_key" api:"nullable"`
 	// The prompt-caching options that were applied to the response. Supported for
 	// `gpt-5.6` and later models.
 	PromptCacheOptions BetaResponsePromptCacheOptions `json:"prompt_cache_options"`
@@ -4196,7 +4196,7 @@ type BetaResponse struct {
 	// hashing their username or email address, in order to avoid sending us any
 	// identifying information.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
-	SafetyIdentifier string `json:"safety_identifier"`
+	SafetyIdentifier string `json:"safety_identifier" api:"nullable"`
 	// Specifies the processing type used for serving the request.
 	//
 	//   - If set to 'auto', then the request will be processed with the service tier
@@ -4946,7 +4946,10 @@ const (
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type BetaResponseReasoning struct {
-	// Controls which reasoning items are rendered back to the model on later turns.
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
 	// When returned on a response, this is the effective reasoning context mode used
 	// for the response.
 	//
@@ -8353,12 +8356,13 @@ func (r *BetaResponseCustomToolCallOutputItem) UnmarshalJSON(data []byte) error 
 type BetaResponseError struct {
 	// The error code for the response.
 	//
-	// Any of "server_error", "rate_limit_exceeded", "invalid_prompt", "bio_policy",
-	// "vector_store_timeout", "invalid_image", "invalid_image_format",
-	// "invalid_base64_image", "invalid_image_url", "image_too_large",
-	// "image_too_small", "image_parse_error", "image_content_policy_violation",
-	// "invalid_image_mode", "image_file_too_large", "unsupported_image_media_type",
-	// "empty_image_file", "failed_to_download_image", "image_file_not_found".
+	// Any of "server_error", "rate_limit_exceeded", "invalid_prompt",
+	// "data_residency_mismatch", "bio_policy", "vector_store_timeout",
+	// "invalid_image", "invalid_image_format", "invalid_base64_image",
+	// "invalid_image_url", "image_too_large", "image_too_small", "image_parse_error",
+	// "image_content_policy_violation", "invalid_image_mode", "image_file_too_large",
+	// "unsupported_image_media_type", "empty_image_file", "failed_to_download_image",
+	// "image_file_not_found".
 	Code BetaResponseErrorCode `json:"code" api:"required"`
 	// A human-readable description of the error.
 	Message string `json:"message" api:"required"`
@@ -8384,6 +8388,7 @@ const (
 	BetaResponseErrorCodeServerError                 BetaResponseErrorCode = "server_error"
 	BetaResponseErrorCodeRateLimitExceeded           BetaResponseErrorCode = "rate_limit_exceeded"
 	BetaResponseErrorCodeInvalidPrompt               BetaResponseErrorCode = "invalid_prompt"
+	BetaResponseErrorCodeDataResidencyMismatch       BetaResponseErrorCode = "data_residency_mismatch"
 	BetaResponseErrorCodeBioPolicy                   BetaResponseErrorCode = "bio_policy"
 	BetaResponseErrorCodeVectorStoreTimeout          BetaResponseErrorCode = "vector_store_timeout"
 	BetaResponseErrorCodeInvalidImage                BetaResponseErrorCode = "invalid_image"
@@ -27481,7 +27486,8 @@ type BetaResponseTextConfig struct {
 	Format BetaResponseFormatTextConfigUnion `json:"format"`
 	// Constrains the verbosity of the model's response. Lower values will result in
 	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
+	// responses. Currently supported values are `low`, `medium`, and `high`. The
+	// default is `medium`.
 	//
 	// Any of "low", "medium", "high".
 	Verbosity BetaResponseTextConfigVerbosity `json:"verbosity" api:"nullable"`
@@ -27511,7 +27517,8 @@ func (r BetaResponseTextConfig) ToParam() BetaResponseTextConfigParam {
 
 // Constrains the verbosity of the model's response. Lower values will result in
 // more concise responses, while higher values will result in more verbose
-// responses. Currently supported values are `low`, `medium`, and `high`.
+// responses. Currently supported values are `low`, `medium`, and `high`. The
+// default is `medium`.
 type BetaResponseTextConfigVerbosity string
 
 const (
@@ -27528,7 +27535,8 @@ const (
 type BetaResponseTextConfigParam struct {
 	// Constrains the verbosity of the model's response. Lower values will result in
 	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
+	// responses. Currently supported values are `low`, `medium`, and `high`. The
+	// default is `medium`.
 	//
 	// Any of "low", "medium", "high".
 	Verbosity BetaResponseTextConfigVerbosity `json:"verbosity,omitzero"`
@@ -31535,6 +31543,17 @@ type BetaResponseNewParams struct {
 	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
 	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
+	// Used by OpenAI to cache responses for similar requests to optimize your cache
+	// hit rates. Replaces the `user` field.
+	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
+	// A stable identifier used to help detect users of your application that may be
+	// violating OpenAI's usage policies. The IDs should be a string that uniquely
+	// identifies each user, with a maximum length of 64 characters. We recommend
+	// hashing their username or email address, in order to avoid sending us any
+	// identifying information.
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Whether to store the generated model response for later retrieval via API.
 	Store param.Opt[bool] `json:"store,omitzero"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
@@ -31552,17 +31571,6 @@ type BetaResponseNewParams struct {
 	//
 	// We generally recommend altering this or `temperature` but not both.
 	TopP param.Opt[float64] `json:"top_p,omitzero"`
-	// Used by OpenAI to cache responses for similar requests to optimize your cache
-	// hit rates. Replaces the `user` field.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
-	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
-	// A stable identifier used to help detect users of your application that may be
-	// violating OpenAI's usage policies. The IDs should be a string that uniquely
-	// identifies each user, with a maximum length of 64 characters. We recommend
-	// hashing their username or email address, in order to avoid sending us any
-	// identifying information.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
-	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// This field is being replaced by `safety_identifier` and `prompt_cache_key`. Use
 	// `prompt_cache_key` instead to maintain caching optimizations. A stable
 	// identifier for your end-users. Used to boost cache hit rates by better bucketing
@@ -32087,7 +32095,10 @@ const (
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type BetaResponseNewParamsReasoning struct {
-	// Controls which reasoning items are rendered back to the model on later turns.
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
 	// When returned on a response, this is the effective reasoning context mode used
 	// for the response.
 	//

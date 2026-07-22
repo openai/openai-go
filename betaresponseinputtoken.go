@@ -196,7 +196,10 @@ const (
 // **gpt-5 and o-series models only** Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type BetaResponseInputTokenCountParamsReasoning struct {
-	// Controls which reasoning items are rendered back to the model on later turns.
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
 	// When returned on a response, this is the effective reasoning context mode used
 	// for the response.
 	//
@@ -268,7 +271,8 @@ func init() {
 type BetaResponseInputTokenCountParamsText struct {
 	// Constrains the verbosity of the model's response. Lower values will result in
 	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
+	// responses. Currently supported values are `low`, `medium`, and `high`. The
+	// default is `medium`.
 	//
 	// Any of "low", "medium", "high".
 	Verbosity string `json:"verbosity,omitzero"`
