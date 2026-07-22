@@ -19,6 +19,7 @@ permissions:
 jobs:
   propose:
     name: Propose Go version update
+    if: github.ref == 'refs/heads/main' && github.repository == 'openai/openai-go'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # OPENAI_API_KEY already lives in this environment. The environment is
