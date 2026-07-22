@@ -56,6 +56,21 @@ jobs:
           sudo chown root:runner /home/codex
           sudo chmod 0710 /home/codex
           sudo usermod --append --groups runner codex
+
+          # Ubuntu's runner sudo policy can preserve the caller's HOME when a
+          # command changes users without `-H`. The pinned codex-action uses
+          # that exact `sudo -u codex` form both to resolve the Codex home and
+          # to launch the CLI. Scope always_set_home to the codex target user
+          # so both operations use the dedicated account's root-owned home.
+          # This file is installed and validated before the API key enters the
+          # job; the unprivileged user cannot modify it.
+          printf '%s\n' 'Defaults>codex always_set_home' |
+            sudo tee /etc/sudoers.d/codex-home >/dev/null
+          sudo chmod 0440 /etc/sudoers.d/codex-home
+          sudo visudo \
+            --check \
+            --file /etc/sudoers.d/codex-home
+
           test "$(stat --format '%U:%G:%a' /home/codex)" = \
             'root:runner:710'
           test -x /home/codex
@@ -89,9 +104,13 @@ jobs:
           # live where the pinned action's own `sudo -u` lookup resolves it.
           # Do not add `-H` here unless the action does the same; that would
           # test a different HOME from the one used to launch Codex.
-          test \
-            "$(sudo -u codex -- printenv HOME)/.codex" = \
-            "$CODEX_AUTOMATION_HOME"
+          resolved_codex_home="$(
+            sudo -u codex -- printenv HOME
+          )/.codex"
+          if [[ "$resolved_codex_home" != "$CODEX_AUTOMATION_HOME" ]]; then
+            echo "codex-action would resolve $resolved_codex_home; expected $CODEX_AUTOMATION_HOME" >&2
+            exit 1
+          fi
 
           # The action normally creates this home itself. We create it first so
           # the named permission profile is present before Codex starts. Root
