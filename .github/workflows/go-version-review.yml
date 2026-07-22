@@ -62,9 +62,14 @@ jobs:
           # that exact `sudo -u codex` form both to resolve the Codex home and
           # to launch the CLI. Scope always_set_home to the codex target user
           # so both operations use the dedicated account's root-owned home.
+          # Hosted-runner PAM also restores the runner's XDG_CONFIG_HOME after
+          # sudo filters the environment. Preserve only the trusted value that
+          # target-user steps below pin to the dedicated account's config home.
           # This file is installed and validated before the API key enters the
           # job; the unprivileged user cannot modify it.
-          printf '%s\n' 'Defaults>codex always_set_home' |
+          printf '%s\n' \
+            'Defaults>codex always_set_home' \
+            'Defaults>codex env_keep += "XDG_CONFIG_HOME"' |
             sudo tee /etc/sudoers.d/codex-home >/dev/null
           sudo chmod 0440 /etc/sudoers.d/codex-home
           sudo visudo -cf /etc/sudoers.d/codex-home
@@ -97,6 +102,10 @@ jobs:
           check-latest: true
 
       - name: Prepare the isolated Codex workspace
+        # sudo preserves this trusted step value so Go reads the target user's
+        # root-owned config instead of the hosted runner's XDG config.
+        env:
+          XDG_CONFIG_HOME: /home/codex/.config
         run: |
           # Keep this assertion beside the setup: the permission profile must
           # live where the pinned action's own `sudo -u` lookup resolves it.
@@ -189,6 +198,15 @@ jobs:
 
           # Clear any runner values while proving that Go resolves its normal
           # target-user defaults to the writable subtrees created above.
+          resolved_goenv="$(
+            sudo -u codex -- env \
+              -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
+              "$go_tool" env GOENV
+          )"
+          if [[ "$resolved_goenv" != '/home/codex/.config/go/env' ]]; then
+            echo "Codex Go environment resolved $resolved_goenv; expected /home/codex/.config/go/env" >&2
+            exit 1
+          fi
           test "$(
             sudo -u codex -- env \
               -u GOBIN -u GOCACHE -u GOMODCACHE -u GOTMPDIR \
@@ -250,6 +268,8 @@ jobs:
         # persistent cache; the credential-free publisher runs it after
         # validating the patch. The root-owned binary remains available for
         # inspection without letting the agent replace it.
+        env:
+          XDG_CONFIG_HOME: /home/codex/.config
         run: |
           go_tool="$(command -v go)"
           go_as_codex() {
@@ -292,6 +312,10 @@ jobs:
         id: codex
         # Pin both the action and installed Codex runtime. Dependabot proposes
         # reviewed action updates; runtime updates are explicit policy changes.
+        # Preserve the target config home through the action's `sudo -u codex`
+        # launch so agent-run Go commands use the reviewed, root-owned GOENV.
+        env:
+          XDG_CONFIG_HOME: /home/codex/.config
         uses: openai/codex-action@52fe01ec70a42f454c9d2ebd47598f9fd6893d56 # v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}

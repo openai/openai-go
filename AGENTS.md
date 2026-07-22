@@ -57,10 +57,11 @@ policy or pull request prose.
     proxy. They can write only to the disposable checkout and cache files.
   - Before exposing the API key, the workflow creates the ignored automation
     directory, scopes sudo's target-home behavior to the dedicated Codex user,
-    configures a writable Go temporary directory, warms Go's module caches, and
-    installs the pinned `govulncheck`. Only Go's target-user cache, temporary,
-    and install subtrees are writable beneath the otherwise root-owned Codex
-    home.
+    and pins the target's XDG config home so Go reads the reviewed, root-owned
+    environment file instead of hosted-runner configuration. It then configures
+    a writable Go temporary directory, warms Go's module caches, and installs
+    the pinned `govulncheck`. Only Go's target-user cache, temporary, and install
+    subtrees are writable beneath the otherwise root-owned Codex home.
   - Codex can prepare a patch but has read-only GitHub permissions and no
     repository credential. A separate job with no OpenAI credential opens one
     draft pull request from that patch. If a generated draft is already open,
