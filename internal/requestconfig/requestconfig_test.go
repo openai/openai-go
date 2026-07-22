@@ -2,8 +2,59 @@ package requestconfig
 
 import (
 	"context"
+	"errors"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
 	"testing"
 )
+
+type closeTrackingReadCloser struct {
+	io.ReadCloser
+	closes int
+}
+
+func (b *closeTrackingReadCloser) Close() error {
+	b.closes++
+	return b.ReadCloser.Close()
+}
+
+type httpDoerFunc func(*http.Request) (*http.Response, error)
+
+func (f httpDoerFunc) Do(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func newTrackedFileBody(t *testing.T) *closeTrackingReadCloser {
+	t.Helper()
+
+	f, err := os.CreateTemp(t.TempDir(), "request-body-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.WriteString("body"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	return &closeTrackingReadCloser{ReadCloser: f}
+}
+
+func newBodyCloseRequestConfig(t *testing.T, body io.ReadCloser) *RequestConfig {
+	t.Helper()
+
+	cfg, err := NewRequestConfig(context.Background(), http.MethodPost, "/models", body, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.BaseURL, err = url.Parse("https://example.com/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cfg
+}
 
 func TestFormatPathEscapesPathParams(t *testing.T) {
 	tests := map[string]struct {
@@ -83,4 +134,92 @@ func TestRequestFinalizerComposesThroughApply(t *testing.T) {
 	if !finalized {
 		t.Fatal("request finalizer did not run")
 	}
+}
+
+func TestExecuteClosesAttemptBodyOnHandlerError(t *testing.T) {
+	t.Run("no retry", func(t *testing.T) {
+		body := newTrackedFileBody(t)
+		cfg := newBodyCloseRequestConfig(t, body)
+		cfg.Request.GetBody = func() (io.ReadCloser, error) {
+			t.Fatal("GetBody called for no-retry error")
+			return nil, nil
+		}
+
+		attempts := 0
+		cfg.Middlewares = []middleware{func(*http.Request, middlewareNext) (*http.Response, error) {
+			attempts++
+			return nil, WithNoRetryError(errors.New("blocked"))
+		}}
+
+		err := cfg.Execute()
+		if err == nil || err.Error() != "blocked" {
+			t.Fatalf("Execute() error = %v, want blocked", err)
+		}
+		if attempts != 1 {
+			t.Fatalf("attempts = %d, want 1", attempts)
+		}
+		if body.closes != 1 {
+			t.Fatalf("body closes = %d, want 1", body.closes)
+		}
+	})
+
+	t.Run("retry", func(t *testing.T) {
+		firstBody := newTrackedFileBody(t)
+		bodies := []*closeTrackingReadCloser{firstBody}
+		cfg := newBodyCloseRequestConfig(t, firstBody)
+		cfg.MaxRetries = 1
+		cfg.Request.GetBody = func() (io.ReadCloser, error) {
+			body := newTrackedFileBody(t)
+			bodies = append(bodies, body)
+			return body, nil
+		}
+
+		attempts := 0
+		cfg.Middlewares = []middleware{func(*http.Request, middlewareNext) (*http.Response, error) {
+			attempts++
+			return &http.Response{
+				StatusCode: http.StatusInternalServerError,
+				Header:     http.Header{"Retry-After-Ms": {"0"}},
+				Body:       http.NoBody,
+			}, errors.New("transient")
+		}}
+
+		err := cfg.Execute()
+		if err == nil || err.Error() != "transient" {
+			t.Fatalf("Execute() error = %v, want transient", err)
+		}
+		if attempts != 2 {
+			t.Fatalf("attempts = %d, want 2", attempts)
+		}
+		if len(bodies) != 2 {
+			t.Fatalf("bodies = %d, want 2", len(bodies))
+		}
+		for i, body := range bodies {
+			if body.closes != 1 {
+				t.Fatalf("body %d closes = %d, want 1", i, body.closes)
+			}
+		}
+	})
+
+	t.Run("successful transport", func(t *testing.T) {
+		body := newTrackedFileBody(t)
+		cfg := newBodyCloseRequestConfig(t, body)
+		cfg.CustomHTTPDoer = httpDoerFunc(func(req *http.Request) (*http.Response, error) {
+			if err := req.Body.Close(); err != nil {
+				t.Fatal(err)
+			}
+			return &http.Response{
+				StatusCode: http.StatusNoContent,
+				Header:     make(http.Header),
+				Body:       http.NoBody,
+			}, nil
+		})
+
+		if err := cfg.Execute(); err != nil {
+			t.Fatal(err)
+		}
+		if body.closes != 1 {
+			t.Fatalf("body closes = %d, want 1", body.closes)
+		}
+	})
 }

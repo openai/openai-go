@@ -17,6 +17,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/openai/openai-go/v3/internal"
@@ -482,6 +483,22 @@ func (b *bodyWithTimeout) Close() error {
 	return err
 }
 
+// closeOnceReadCloser lets Execute clean up bodies when middleware returns an
+// error before reaching the transport, without double-closing bodies that a
+// transport has already closed.
+type closeOnceReadCloser struct {
+	io.ReadCloser
+	once sync.Once
+	err  error
+}
+
+func (b *closeOnceReadCloser) Close() error {
+	b.once.Do(func() {
+		b.err = b.ReadCloser.Close()
+	})
+	return b.err
+}
+
 func retryDelay(res *http.Response, retryCount int) time.Duration {
 	// If the backend tells us to wait a certain amount of time, use that value
 	if retryAfterDelay, ok := parseRetryAfterHeader(res); ok {
@@ -562,11 +579,17 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 
 		req := cfg.Request.Clone(ctx)
+		if req.Body != nil {
+			req.Body = &closeOnceReadCloser{ReadCloser: req.Body}
+		}
 		if shouldSendRetryCount {
 			req.Header.Set("X-Stainless-Retry-Count", strconv.Itoa(retryCount))
 		}
 
 		res, err = handler(req)
+		if err != nil && req.Body != nil {
+			_ = req.Body.Close()
+		}
 		if ctx != nil && ctx.Err() != nil {
 			return ctx.Err()
 		}
