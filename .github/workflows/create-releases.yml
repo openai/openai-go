@@ -32,7 +32,6 @@ jobs:
     needs: release
     if: ${{ needs.release.outputs.releases_created == 'true' }}
     runs-on: ubuntu-latest
-    environment: publish
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
