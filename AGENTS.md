@@ -51,16 +51,17 @@ policy or pull request prose.
   - Uses `OPENAI_API_KEY` from the `ci` Actions environment. That environment
     permits only the `main` branch, so a dispatch against another ref cannot
     receive the secret.
-  - Runs a pinned Codex runtime as a dedicated unprivileged OS user with a
-    checked-in permission profile. Agent commands have no network access,
-    including loopback, so they cannot reach the action's local Responses
-    proxy. They can write only to the disposable checkout and cache files.
-  - Before exposing the API key, the workflow creates the ignored automation
-    directory, scopes sudo's target-home behavior to the dedicated Codex user,
-    configures a writable Go temporary directory, warms Go's module caches, and
-    installs the pinned `govulncheck`. Only Go's target-user cache, temporary,
-    and install subtrees are writable beneath the otherwise root-owned Codex
-    home.
+  - Runs a pinned Codex runtime as the normal GitHub-hosted runner user after
+    `codex-action` irreversibly removes that user's sudo access. The built-in
+    `:workspace` permission profile limits writes to the disposable checkout
+    and system temporary directories and denies command network access.
+  - Before exposing the API key, the workflow disables Go's per-user config and
+    automatic toolchain selection, creates ignored workspace-local Go cache and
+    temporary directories, and warms every module's dependencies. `setup-go`
+    caching is disabled in this job so those model-writable directories are
+    never persisted or restored across the publisher boundary. This avoids
+    cross-user HOME, XDG, and cache ownership setup while keeping model-run Go
+    commands inside the sandbox's writable workspace.
   - Codex can prepare a patch but has read-only GitHub permissions and no
     repository credential. A separate job with no OpenAI credential opens one
     draft pull request from that patch. If a generated draft is already open,
