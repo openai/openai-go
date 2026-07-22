@@ -67,9 +67,7 @@ jobs:
           printf '%s\n' 'Defaults>codex always_set_home' |
             sudo tee /etc/sudoers.d/codex-home >/dev/null
           sudo chmod 0440 /etc/sudoers.d/codex-home
-          sudo visudo \
-            --check \
-            --file /etc/sudoers.d/codex-home
+          sudo visudo -cf /etc/sudoers.d/codex-home
 
           test "$(stat --format '%U:%G:%a' /home/codex)" = \
             'root:runner:710'
