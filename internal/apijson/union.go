@@ -2,8 +2,9 @@ package apijson
 
 import (
 	"errors"
-	"github.com/openai/openai-go/v3/packages/param"
 	"reflect"
+
+	"github.com/openai/openai-go/v3/packages/param"
 
 	"github.com/tidwall/gjson"
 )
@@ -79,13 +80,16 @@ func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 	return func(n gjson.Result, v reflect.Value, state *decoderState) error {
 		if discriminated && n.Type == gjson.JSON && len(unionEntry.discriminatorKey) != 0 {
 			discriminator := n.Get(EscapeSJSONKey(unionEntry.discriminatorKey)).Value()
-			for _, decoder := range discriminatedDecoders {
-				if discriminator == decoder.discriminator {
-					inner := v.FieldByIndex(decoder.field.Index)
-					return decoder.decoder(n, inner, state)
+			if discriminator != nil { // Only error if discriminator was present but invalid
+				for _, decoder := range discriminatedDecoders {
+					if discriminator == decoder.discriminator {
+						inner := v.FieldByIndex(decoder.field.Index)
+						return decoder.decoder(n, inner, state)
+					}
 				}
+				return errors.New("apijson: was not able to find discriminated union variant")
 			}
-			return errors.New("apijson: was not able to find discriminated union variant")
+			// Fall through to best-match when discriminator is missing
 		}
 
 		// Set bestExactness to worse than loose
