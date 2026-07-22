@@ -56,6 +56,10 @@ jobs:
         with:
           go-version: stable
           check-latest: true
+          # setup-go's post action runs after Codex. Never save caches that the
+          # model can write, or a later publisher could restore poisoned module
+          # sources across the otherwise clean job boundary.
+          cache: false
 
       - name: Prepare the disposable automation workspace
         run: |
@@ -75,9 +79,14 @@ jobs:
           echo '/.codex-automation/' >> \
             "$(git rev-parse --git-path info/exclude)"
 
-          # GOENV=off is reported as an empty path and prevents Go from reading
-          # or writing the runner account's persistent per-user configuration.
-          test -z "$(go env GOENV)"
+          # GOENV=off prevents Go from reading or writing the runner account's
+          # persistent per-user configuration. Current supported toolchains
+          # report an empty path; accept `off` too for forward compatibility.
+          resolved_goenv="$(go env GOENV)"
+          if [[ -n "$resolved_goenv" && "$resolved_goenv" != 'off' ]]; then
+            echo "GOENV is unexpectedly enabled at $resolved_goenv" >&2
+            exit 1
+          fi
           test "$(go env GOCACHE)" = "$GOCACHE"
           test "$(go env GOMODCACHE)" = "$GOMODCACHE"
           test "$(go env GOTMPDIR)" = "$GOTMPDIR"

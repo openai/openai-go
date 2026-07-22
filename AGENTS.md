@@ -57,7 +57,9 @@ policy or pull request prose.
     and system temporary directories and denies command network access.
   - Before exposing the API key, the workflow disables Go's per-user config and
     automatic toolchain selection, creates ignored workspace-local Go cache and
-    temporary directories, and warms every module's dependencies. This avoids
+    temporary directories, and warms every module's dependencies. `setup-go`
+    caching is disabled in this job so those model-writable directories are
+    never persisted or restored across the publisher boundary. This avoids
     cross-user HOME, XDG, and cache ownership setup while keeping model-run Go
     commands inside the sandbox's writable workspace.
   - Codex can prepare a patch but has read-only GitHub permissions and no
