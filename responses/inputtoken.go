@@ -196,7 +196,8 @@ const (
 type InputTokenCountParamsText struct {
 	// Constrains the verbosity of the model's response. Lower values will result in
 	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
+	// responses. Currently supported values are `low`, `medium`, and `high`. The
+	// default is `medium`.
 	//
 	// Any of "low", "medium", "high".
 	Verbosity string `json:"verbosity,omitzero"`

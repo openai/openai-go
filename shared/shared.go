@@ -798,7 +798,10 @@ const (
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type Reasoning struct {
-	// Controls which reasoning items are rendered back to the model on later turns.
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
 	// When returned on a response, this is the effective reasoning context mode used
 	// for the response.
 	//
@@ -863,7 +866,10 @@ func (r Reasoning) ToParam() ReasoningParam {
 	return param.Override[ReasoningParam](json.RawMessage(r.RawJSON()))
 }
 
-// Controls which reasoning items are rendered back to the model on later turns.
+// Controls which reasoning items are rendered back to the model on later turns. If
+// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+// model family defaults to `all_turns`; earlier models default to `current_turn`.
+//
 // When returned on a response, this is the effective reasoning context mode used
 // for the response.
 type ReasoningContext string
@@ -916,7 +922,10 @@ const (
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type ReasoningParam struct {
-	// Controls which reasoning items are rendered back to the model on later turns.
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
 	// When returned on a response, this is the effective reasoning context mode used
 	// for the response.
 	//

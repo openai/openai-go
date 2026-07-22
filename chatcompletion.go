@@ -3883,6 +3883,17 @@ type ChatCompletionNewParams struct {
 	// whether they appear in the text so far, increasing the model's likelihood to
 	// talk about new topics.
 	PresencePenalty param.Opt[float64] `json:"presence_penalty,omitzero"`
+	// Used by OpenAI to cache responses for similar requests to optimize your cache
+	// hit rates. Replaces the `user` field.
+	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
+	// A stable identifier used to help detect users of your application that may be
+	// violating OpenAI's usage policies. The IDs should be a string that uniquely
+	// identifies each user, with a maximum length of 64 characters. We recommend
+	// hashing their username or email address, in order to avoid sending us any
+	// identifying information.
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// This feature is in Beta. If specified, our system will make a best effort to
 	// sample deterministically, such that repeated requests with the same `seed` and
 	// parameters should return the same result. Determinism is not guaranteed, and you
@@ -3915,17 +3926,6 @@ type ChatCompletionNewParams struct {
 	// [parallel function calling](https://platform.openai.com/docs/guides/function-calling#configuring-parallel-function-calling)
 	// during tool use.
 	ParallelToolCalls param.Opt[bool] `json:"parallel_tool_calls,omitzero"`
-	// Used by OpenAI to cache responses for similar requests to optimize your cache
-	// hit rates. Replaces the `user` field.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
-	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
-	// A stable identifier used to help detect users of your application that may be
-	// violating OpenAI's usage policies. The IDs should be a string that uniquely
-	// identifies each user, with a maximum length of 64 characters. We recommend
-	// hashing their username or email address, in order to avoid sending us any
-	// identifying information.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
-	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// This field is being replaced by `safety_identifier` and `prompt_cache_key`. Use
 	// `prompt_cache_key` instead to maintain caching optimizations. A stable
 	// identifier for your end-users. Used to boost cache hit rates by better bucketing
@@ -4024,7 +4024,8 @@ type ChatCompletionNewParams struct {
 	StreamOptions ChatCompletionStreamOptionsParam `json:"stream_options,omitzero"`
 	// Constrains the verbosity of the model's response. Lower values will result in
 	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
+	// responses. Currently supported values are `low`, `medium`, and `high`. The
+	// default is `medium`.
 	//
 	// Any of "low", "medium", "high".
 	Verbosity ChatCompletionNewParamsVerbosity `json:"verbosity,omitzero"`
@@ -4427,7 +4428,8 @@ func (u *ChatCompletionNewParamsStopUnion) asAny() any {
 
 // Constrains the verbosity of the model's response. Lower values will result in
 // more concise responses, while higher values will result in more verbose
-// responses. Currently supported values are `low`, `medium`, and `high`.
+// responses. Currently supported values are `low`, `medium`, and `high`. The
+// default is `medium`.
 type ChatCompletionNewParamsVerbosity string
 
 const (
