@@ -4,6 +4,14 @@
 
 Full Changelog: [v3.44.0...v3.45.0](https://github.com/openai/openai-go/compare/v3.44.0...v3.45.0)
 
+### Go version requirement
+
+openai-go v3.45.0 requires Go 1.25 or newer. This release upgrades
+`golang.org/x/net` to v0.57.0 to address security findings and aligns the SDK
+with supported Go toolchains. v3.44.0 is the final release that builds with Go
+1.22–1.24; older SDK releases do not receive guaranteed security backports. No
+exported SDK API or `/v3` import path changes are included.
+
 ### Features
 
 * **api:** accept `None` for prompt_cache_key/safety_identifier ([711460e](https://github.com/openai/openai-go/commit/711460ea11963cd250be5e420269b25488b02ef9))
