@@ -51,17 +51,9 @@ jobs:
           # a repository credential.
           persist-credentials: false
 
-      - name: Set up the current stable Go toolchain
-        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
-        with:
-          go-version: stable
-          check-latest: true
-          # setup-go's post action runs after Codex. Never save caches that the
-          # model can write, or a later publisher could restore poisoned module
-          # sources across the otherwise clean job boundary.
-          cache: false
-
-      - name: Prepare the disposable automation workspace
+      - name: Create the disposable automation workspace
+        # These job-wide Go paths must exist before setup-go invokes `go env`.
+        # Creating them does not require Go or expose the API key.
         run: |
           mkdir -p \
             "$CODEX_AUTOMATION_DIR" \
@@ -79,6 +71,18 @@ jobs:
           echo '/.codex-automation/' >> \
             "$(git rev-parse --git-path info/exclude)"
 
+      - name: Set up the current stable Go toolchain
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version: stable
+          check-latest: true
+          # setup-go's post action runs after Codex. Never save caches that the
+          # model can write, or a later publisher could restore poisoned module
+          # sources across the otherwise clean job boundary.
+          cache: false
+
+      - name: Verify the Go automation environment
+        run: |
           # GOENV=off prevents Go from reading or writing the runner account's
           # persistent per-user configuration. Current supported toolchains
           # report an empty path; accept `off` too for forward compatibility.
@@ -176,7 +180,7 @@ jobs:
 
       - name: Upload the proposed patch
         if: steps.patch.outputs.has_patch == 'true'
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: monthly-go-version-update
           # Both files are staged under one non-hidden directory so the
@@ -198,7 +202,7 @@ jobs:
       pull-requests: write  # Open that branch as a draft for human review.
     steps:
       - name: Download the Codex proposal
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: monthly-go-version-update
           path: ${{ runner.temp }}/monthly-go-version-update
