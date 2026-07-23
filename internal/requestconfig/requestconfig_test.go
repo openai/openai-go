@@ -56,6 +56,31 @@ func newBodyCloseRequestConfig(t *testing.T, body io.ReadCloser) *RequestConfig 
 	return cfg
 }
 
+func TestClonePreservesCustomHTTPDoer(t *testing.T) {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://example.com", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	called := false
+	doer := httpDoerFunc(func(*http.Request) (*http.Response, error) {
+		called = true
+		return nil, nil
+	})
+	cfg := &RequestConfig{Request: req, CustomHTTPDoer: doer}
+
+	clone := cfg.Clone(context.Background())
+	if clone.CustomHTTPDoer == nil {
+		t.Fatal("CustomHTTPDoer is nil after cloning")
+	}
+	if _, err := clone.CustomHTTPDoer.Do(req); err != nil {
+		t.Fatal(err)
+	}
+	if !called {
+		t.Fatal("cloned CustomHTTPDoer did not call the configured client")
+	}
+}
+
 func TestFormatPathEscapesPathParams(t *testing.T) {
 	tests := map[string]struct {
 		format string
