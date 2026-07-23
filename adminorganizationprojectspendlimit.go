@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"slices"
 
@@ -45,7 +44,7 @@ func (r *AdminOrganizationProjectSpendLimitService) Get(ctx context.Context, pro
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/spend_limit", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/spend_limit", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -58,7 +57,7 @@ func (r *AdminOrganizationProjectSpendLimitService) Update(ctx context.Context, 
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/spend_limit", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/spend_limit", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -71,7 +70,7 @@ func (r *AdminOrganizationProjectSpendLimitService) Delete(ctx context.Context, 
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/spend_limit", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/spend_limit", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
