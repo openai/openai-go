@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.46.0 (2026-07-23)
+
+Full Changelog: [v3.45.0...v3.46.0](https://github.com/openai/openai-go/compare/v3.45.0...v3.46.0)
+
+### Features
+
+* **api:** add support for `spend_limit` admin apis ([8de8d9b](https://github.com/openai/openai-go/commit/8de8d9b41f2ad94562b42643a06c85a6c7e3a8f4))
+
+
+### Bug Fixes
+
+* **api:** safely format project spend limit paths ([ac981e4](https://github.com/openai/openai-go/commit/ac981e4c1feb83e1be1e7e26055819ccc3eda820))
+
 ## 3.45.0 (2026-07-22)
 
 Full Changelog: [v3.44.0...v3.45.0](https://github.com/openai/openai-go/compare/v3.44.0...v3.45.0)
