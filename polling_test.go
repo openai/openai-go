@@ -18,26 +18,39 @@ func (f pollingHTTPDoerFunc) Do(req *http.Request) (*http.Response, error) {
 	return f(req)
 }
 
+type cancelOnCloseBody struct {
+	io.Reader
+	cancel context.CancelFunc
+}
+
+func (b *cancelOnCloseBody) Close() error {
+	b.cancel()
+	return nil
+}
+
 func TestVideoPollStatusReturnsWhenContextCancelled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
 	client := NewClient(
 		option.WithAPIKey("test-key"),
 		option.WithHTTPClient(pollingHTTPDoerFunc(func(req *http.Request) (*http.Response, error) {
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     http.Header{"Content-Type": []string{"application/json"}},
-				Body:       io.NopCloser(strings.NewReader(`{"id":"video_123","status":"in_progress"}`)),
-				Request:    req,
+				Body: &cancelOnCloseBody{
+					Reader: strings.NewReader(`{"id":"video_123","status":"in_progress"}`),
+					cancel: cancel,
+				},
+				Request: req,
 			}, nil
 		})),
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
-	t.Cleanup(cancel)
-
 	start := time.Now()
 	_, err := client.Videos.PollStatus(ctx, "video_123", 1000)
-	if !errors.Is(err, context.DeadlineExceeded) {
-		t.Fatalf("PollStatus() error = %v, want %v", err, context.DeadlineExceeded)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("PollStatus() error = %v, want %v", err, context.Canceled)
 	}
 	if elapsed := time.Since(start); elapsed > 500*time.Millisecond {
 		t.Fatalf("PollStatus() took %s after context cancellation", elapsed)
