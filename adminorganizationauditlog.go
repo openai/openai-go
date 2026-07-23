@@ -90,7 +90,53 @@ type AdminOrganizationAuditLogListResponse struct {
 	// "role.deleted", "role.assignment.created", "role.assignment.deleted",
 	// "role.bound_to_resource", "role.unbound_from_resource", "scim.enabled",
 	// "scim.disabled", "service_account.created", "service_account.updated",
-	// "service_account.deleted", "user.added", "user.updated", "user.deleted".
+	// "service_account.deleted", "user.added", "user.updated", "user.deleted",
+	// "tenant.metadata.updated", "tenant.microsoft_entra_mapping.upserted",
+	// "tenant.microsoft_entra_mapping.deleted",
+	// "tenant.workload_identity.provider.created",
+	// "tenant.workload_identity.provider.updated",
+	// "tenant.workload_identity.provider.archived",
+	// "tenant.workload_identity.mapping.created",
+	// "tenant.workload_identity.mapping.updated",
+	// "tenant.workload_identity.mapping.archived",
+	// "tenant.workload_identity.binding.created",
+	// "tenant.workload_identity.principal.provisioned",
+	// "tenant.admin_api_key.created", "tenant.admin_api_key.updated",
+	// "tenant.admin_api_key.deleted", "tenant.project_api_key.created",
+	// "tenant.chatgpt_access_token.revoked", "tenant.migration.completed",
+	// "tenant.sso.migrated", "tenant.domains.migrated",
+	// "tenant.sso_connection.created", "tenant.sso_connection.updated",
+	// "tenant.sso_connection.deleted", "tenant.sso_connection.setup.started",
+	// "tenant.policy.created", "tenant.policy.updated", "tenant.policy.deleted",
+	// "tenant.policy.attached", "tenant.policy.detached",
+	// "tenant.principal_authentication_policy.resolved", "tenant.scim.setup.started",
+	// "tenant.scim.deletion.requested", "tenant.scim.directory.created",
+	// "tenant.product_access_policy.updated", "tenant.resource_share_grant.created",
+	// "tenant.resource_share_grant.updated", "tenant.resource_share_grant.accepted",
+	// "tenant.resource_share_grant.declined", "tenant.resource_share_grant.revoked",
+	// "tenant.resource_share_grant.deleted", "tenant.service_account.updated",
+	// "tenant.service_account.deleted", "tenant.service_account.token.revoked",
+	// "tenant.billing.overage_limit.updated", "tenant.billing.alerts.updated",
+	// "tenant.billing.info.updated", "tenant.usage_limit.workspace.updated",
+	// "tenant.usage_limit.group.updated", "tenant.usage_limit.user.updated",
+	// "tenant.usage_limit.increase_request.updated",
+	// "tenant.usage_limit.increase_request.resolved", "tenant.group.created",
+	// "tenant.group.updated", "tenant.group.deleted", "tenant.group.member.added",
+	// "tenant.group.member.removed", "tenant.migration_rollout.status.updated",
+	// "tenant.migration_rollout.tier.updated", "tenant.role.metadata.updated",
+	// "tenant.custom_role.created", "tenant.custom_role.updated",
+	// "tenant.custom_role.deleted", "tenant.role_assignment.created",
+	// "tenant.role_assignment.deleted", "tenant.resource_role_assignment.created",
+	// "tenant.resource_role_assignment.deleted", "tenant.resource_access.updated",
+	// "tenant.resource_access.deleted", "tenant.session_policy.created",
+	// "tenant.session_policy.updated", "tenant.session_policy.deleted",
+	// "tenant.session_revocation.started", "tenant.third_party_app_policy.updated",
+	// "tenant.user.added", "tenant.user.updated", "tenant.user.removed",
+	// "tenant.user.looked_up", "tenant.user.invited", "tenant.membership.revoked",
+	// "tenant.api_organization_invite.upserted",
+	// "tenant.api_organization_invite.deleted",
+	// "tenant.chatgpt_workspace_invite.upserted", "tenant.membership.accepted",
+	// "tenant.membership.declined", "tenant.workspace_invite_email_settings.updated".
 	Type AdminOrganizationAuditLogListResponseType `json:"type" api:"required"`
 	// The actor who performed the audit logged action.
 	Actor AdminOrganizationAuditLogListResponseActor `json:"actor" api:"nullable"`
@@ -286,65 +332,149 @@ func (r *AdminOrganizationAuditLogListResponse) UnmarshalJSON(data []byte) error
 type AdminOrganizationAuditLogListResponseType string
 
 const (
-	AdminOrganizationAuditLogListResponseTypeAPIKeyCreated                          AdminOrganizationAuditLogListResponseType = "api_key.created"
-	AdminOrganizationAuditLogListResponseTypeAPIKeyUpdated                          AdminOrganizationAuditLogListResponseType = "api_key.updated"
-	AdminOrganizationAuditLogListResponseTypeAPIKeyDeleted                          AdminOrganizationAuditLogListResponseType = "api_key.deleted"
-	AdminOrganizationAuditLogListResponseTypeCertificateCreated                     AdminOrganizationAuditLogListResponseType = "certificate.created"
-	AdminOrganizationAuditLogListResponseTypeCertificateUpdated                     AdminOrganizationAuditLogListResponseType = "certificate.updated"
-	AdminOrganizationAuditLogListResponseTypeCertificateDeleted                     AdminOrganizationAuditLogListResponseType = "certificate.deleted"
-	AdminOrganizationAuditLogListResponseTypeCertificatesActivated                  AdminOrganizationAuditLogListResponseType = "certificates.activated"
-	AdminOrganizationAuditLogListResponseTypeCertificatesDeactivated                AdminOrganizationAuditLogListResponseType = "certificates.deactivated"
-	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionCreated            AdminOrganizationAuditLogListResponseType = "checkpoint.permission.created"
-	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionDeleted            AdminOrganizationAuditLogListResponseType = "checkpoint.permission.deleted"
-	AdminOrganizationAuditLogListResponseTypeExternalKeyRegistered                  AdminOrganizationAuditLogListResponseType = "external_key.registered"
-	AdminOrganizationAuditLogListResponseTypeExternalKeyRemoved                     AdminOrganizationAuditLogListResponseType = "external_key.removed"
-	AdminOrganizationAuditLogListResponseTypeGroupCreated                           AdminOrganizationAuditLogListResponseType = "group.created"
-	AdminOrganizationAuditLogListResponseTypeGroupUpdated                           AdminOrganizationAuditLogListResponseType = "group.updated"
-	AdminOrganizationAuditLogListResponseTypeGroupDeleted                           AdminOrganizationAuditLogListResponseType = "group.deleted"
-	AdminOrganizationAuditLogListResponseTypeInviteSent                             AdminOrganizationAuditLogListResponseType = "invite.sent"
-	AdminOrganizationAuditLogListResponseTypeInviteAccepted                         AdminOrganizationAuditLogListResponseType = "invite.accepted"
-	AdminOrganizationAuditLogListResponseTypeInviteDeleted                          AdminOrganizationAuditLogListResponseType = "invite.deleted"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistCreated                     AdminOrganizationAuditLogListResponseType = "ip_allowlist.created"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistUpdated                     AdminOrganizationAuditLogListResponseType = "ip_allowlist.updated"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistDeleted                     AdminOrganizationAuditLogListResponseType = "ip_allowlist.deleted"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigActivated             AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.activated"
-	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigDeactivated           AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.deactivated"
-	AdminOrganizationAuditLogListResponseTypeLoginSucceeded                         AdminOrganizationAuditLogListResponseType = "login.succeeded"
-	AdminOrganizationAuditLogListResponseTypeLoginFailed                            AdminOrganizationAuditLogListResponseType = "login.failed"
-	AdminOrganizationAuditLogListResponseTypeLogoutSucceeded                        AdminOrganizationAuditLogListResponseType = "logout.succeeded"
-	AdminOrganizationAuditLogListResponseTypeLogoutFailed                           AdminOrganizationAuditLogListResponseType = "logout.failed"
-	AdminOrganizationAuditLogListResponseTypeOrganizationUpdated                    AdminOrganizationAuditLogListResponseType = "organization.updated"
-	AdminOrganizationAuditLogListResponseTypeProjectCreated                         AdminOrganizationAuditLogListResponseType = "project.created"
-	AdminOrganizationAuditLogListResponseTypeProjectUpdated                         AdminOrganizationAuditLogListResponseType = "project.updated"
-	AdminOrganizationAuditLogListResponseTypeProjectArchived                        AdminOrganizationAuditLogListResponseType = "project.archived"
-	AdminOrganizationAuditLogListResponseTypeProjectDeleted                         AdminOrganizationAuditLogListResponseType = "project.deleted"
-	AdminOrganizationAuditLogListResponseTypeRateLimitUpdated                       AdminOrganizationAuditLogListResponseType = "rate_limit.updated"
-	AdminOrganizationAuditLogListResponseTypeRateLimitDeleted                       AdminOrganizationAuditLogListResponseType = "rate_limit.deleted"
-	AdminOrganizationAuditLogListResponseTypeResourceDeleted                        AdminOrganizationAuditLogListResponseType = "resource.deleted"
-	AdminOrganizationAuditLogListResponseTypeTunnelCreated                          AdminOrganizationAuditLogListResponseType = "tunnel.created"
-	AdminOrganizationAuditLogListResponseTypeTunnelUpdated                          AdminOrganizationAuditLogListResponseType = "tunnel.updated"
-	AdminOrganizationAuditLogListResponseTypeTunnelDeleted                          AdminOrganizationAuditLogListResponseType = "tunnel.deleted"
-	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderCreated        AdminOrganizationAuditLogListResponseType = "workload_identity_provider.created"
-	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderUpdated        AdminOrganizationAuditLogListResponseType = "workload_identity_provider.updated"
-	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderDeleted        AdminOrganizationAuditLogListResponseType = "workload_identity_provider.deleted"
-	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderMappingCreated AdminOrganizationAuditLogListResponseType = "workload_identity_provider_mapping.created"
-	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderMappingUpdated AdminOrganizationAuditLogListResponseType = "workload_identity_provider_mapping.updated"
-	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderMappingDeleted AdminOrganizationAuditLogListResponseType = "workload_identity_provider_mapping.deleted"
-	AdminOrganizationAuditLogListResponseTypeRoleCreated                            AdminOrganizationAuditLogListResponseType = "role.created"
-	AdminOrganizationAuditLogListResponseTypeRoleUpdated                            AdminOrganizationAuditLogListResponseType = "role.updated"
-	AdminOrganizationAuditLogListResponseTypeRoleDeleted                            AdminOrganizationAuditLogListResponseType = "role.deleted"
-	AdminOrganizationAuditLogListResponseTypeRoleAssignmentCreated                  AdminOrganizationAuditLogListResponseType = "role.assignment.created"
-	AdminOrganizationAuditLogListResponseTypeRoleAssignmentDeleted                  AdminOrganizationAuditLogListResponseType = "role.assignment.deleted"
-	AdminOrganizationAuditLogListResponseTypeRoleBoundToResource                    AdminOrganizationAuditLogListResponseType = "role.bound_to_resource"
-	AdminOrganizationAuditLogListResponseTypeRoleUnboundFromResource                AdminOrganizationAuditLogListResponseType = "role.unbound_from_resource"
-	AdminOrganizationAuditLogListResponseTypeScimEnabled                            AdminOrganizationAuditLogListResponseType = "scim.enabled"
-	AdminOrganizationAuditLogListResponseTypeScimDisabled                           AdminOrganizationAuditLogListResponseType = "scim.disabled"
-	AdminOrganizationAuditLogListResponseTypeServiceAccountCreated                  AdminOrganizationAuditLogListResponseType = "service_account.created"
-	AdminOrganizationAuditLogListResponseTypeServiceAccountUpdated                  AdminOrganizationAuditLogListResponseType = "service_account.updated"
-	AdminOrganizationAuditLogListResponseTypeServiceAccountDeleted                  AdminOrganizationAuditLogListResponseType = "service_account.deleted"
-	AdminOrganizationAuditLogListResponseTypeUserAdded                              AdminOrganizationAuditLogListResponseType = "user.added"
-	AdminOrganizationAuditLogListResponseTypeUserUpdated                            AdminOrganizationAuditLogListResponseType = "user.updated"
-	AdminOrganizationAuditLogListResponseTypeUserDeleted                            AdminOrganizationAuditLogListResponseType = "user.deleted"
+	AdminOrganizationAuditLogListResponseTypeAPIKeyCreated                               AdminOrganizationAuditLogListResponseType = "api_key.created"
+	AdminOrganizationAuditLogListResponseTypeAPIKeyUpdated                               AdminOrganizationAuditLogListResponseType = "api_key.updated"
+	AdminOrganizationAuditLogListResponseTypeAPIKeyDeleted                               AdminOrganizationAuditLogListResponseType = "api_key.deleted"
+	AdminOrganizationAuditLogListResponseTypeCertificateCreated                          AdminOrganizationAuditLogListResponseType = "certificate.created"
+	AdminOrganizationAuditLogListResponseTypeCertificateUpdated                          AdminOrganizationAuditLogListResponseType = "certificate.updated"
+	AdminOrganizationAuditLogListResponseTypeCertificateDeleted                          AdminOrganizationAuditLogListResponseType = "certificate.deleted"
+	AdminOrganizationAuditLogListResponseTypeCertificatesActivated                       AdminOrganizationAuditLogListResponseType = "certificates.activated"
+	AdminOrganizationAuditLogListResponseTypeCertificatesDeactivated                     AdminOrganizationAuditLogListResponseType = "certificates.deactivated"
+	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionCreated                 AdminOrganizationAuditLogListResponseType = "checkpoint.permission.created"
+	AdminOrganizationAuditLogListResponseTypeCheckpointPermissionDeleted                 AdminOrganizationAuditLogListResponseType = "checkpoint.permission.deleted"
+	AdminOrganizationAuditLogListResponseTypeExternalKeyRegistered                       AdminOrganizationAuditLogListResponseType = "external_key.registered"
+	AdminOrganizationAuditLogListResponseTypeExternalKeyRemoved                          AdminOrganizationAuditLogListResponseType = "external_key.removed"
+	AdminOrganizationAuditLogListResponseTypeGroupCreated                                AdminOrganizationAuditLogListResponseType = "group.created"
+	AdminOrganizationAuditLogListResponseTypeGroupUpdated                                AdminOrganizationAuditLogListResponseType = "group.updated"
+	AdminOrganizationAuditLogListResponseTypeGroupDeleted                                AdminOrganizationAuditLogListResponseType = "group.deleted"
+	AdminOrganizationAuditLogListResponseTypeInviteSent                                  AdminOrganizationAuditLogListResponseType = "invite.sent"
+	AdminOrganizationAuditLogListResponseTypeInviteAccepted                              AdminOrganizationAuditLogListResponseType = "invite.accepted"
+	AdminOrganizationAuditLogListResponseTypeInviteDeleted                               AdminOrganizationAuditLogListResponseType = "invite.deleted"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistCreated                          AdminOrganizationAuditLogListResponseType = "ip_allowlist.created"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistUpdated                          AdminOrganizationAuditLogListResponseType = "ip_allowlist.updated"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistDeleted                          AdminOrganizationAuditLogListResponseType = "ip_allowlist.deleted"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigActivated                  AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.activated"
+	AdminOrganizationAuditLogListResponseTypeIPAllowlistConfigDeactivated                AdminOrganizationAuditLogListResponseType = "ip_allowlist.config.deactivated"
+	AdminOrganizationAuditLogListResponseTypeLoginSucceeded                              AdminOrganizationAuditLogListResponseType = "login.succeeded"
+	AdminOrganizationAuditLogListResponseTypeLoginFailed                                 AdminOrganizationAuditLogListResponseType = "login.failed"
+	AdminOrganizationAuditLogListResponseTypeLogoutSucceeded                             AdminOrganizationAuditLogListResponseType = "logout.succeeded"
+	AdminOrganizationAuditLogListResponseTypeLogoutFailed                                AdminOrganizationAuditLogListResponseType = "logout.failed"
+	AdminOrganizationAuditLogListResponseTypeOrganizationUpdated                         AdminOrganizationAuditLogListResponseType = "organization.updated"
+	AdminOrganizationAuditLogListResponseTypeProjectCreated                              AdminOrganizationAuditLogListResponseType = "project.created"
+	AdminOrganizationAuditLogListResponseTypeProjectUpdated                              AdminOrganizationAuditLogListResponseType = "project.updated"
+	AdminOrganizationAuditLogListResponseTypeProjectArchived                             AdminOrganizationAuditLogListResponseType = "project.archived"
+	AdminOrganizationAuditLogListResponseTypeProjectDeleted                              AdminOrganizationAuditLogListResponseType = "project.deleted"
+	AdminOrganizationAuditLogListResponseTypeRateLimitUpdated                            AdminOrganizationAuditLogListResponseType = "rate_limit.updated"
+	AdminOrganizationAuditLogListResponseTypeRateLimitDeleted                            AdminOrganizationAuditLogListResponseType = "rate_limit.deleted"
+	AdminOrganizationAuditLogListResponseTypeResourceDeleted                             AdminOrganizationAuditLogListResponseType = "resource.deleted"
+	AdminOrganizationAuditLogListResponseTypeTunnelCreated                               AdminOrganizationAuditLogListResponseType = "tunnel.created"
+	AdminOrganizationAuditLogListResponseTypeTunnelUpdated                               AdminOrganizationAuditLogListResponseType = "tunnel.updated"
+	AdminOrganizationAuditLogListResponseTypeTunnelDeleted                               AdminOrganizationAuditLogListResponseType = "tunnel.deleted"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderCreated             AdminOrganizationAuditLogListResponseType = "workload_identity_provider.created"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderUpdated             AdminOrganizationAuditLogListResponseType = "workload_identity_provider.updated"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderDeleted             AdminOrganizationAuditLogListResponseType = "workload_identity_provider.deleted"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderMappingCreated      AdminOrganizationAuditLogListResponseType = "workload_identity_provider_mapping.created"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderMappingUpdated      AdminOrganizationAuditLogListResponseType = "workload_identity_provider_mapping.updated"
+	AdminOrganizationAuditLogListResponseTypeWorkloadIdentityProviderMappingDeleted      AdminOrganizationAuditLogListResponseType = "workload_identity_provider_mapping.deleted"
+	AdminOrganizationAuditLogListResponseTypeRoleCreated                                 AdminOrganizationAuditLogListResponseType = "role.created"
+	AdminOrganizationAuditLogListResponseTypeRoleUpdated                                 AdminOrganizationAuditLogListResponseType = "role.updated"
+	AdminOrganizationAuditLogListResponseTypeRoleDeleted                                 AdminOrganizationAuditLogListResponseType = "role.deleted"
+	AdminOrganizationAuditLogListResponseTypeRoleAssignmentCreated                       AdminOrganizationAuditLogListResponseType = "role.assignment.created"
+	AdminOrganizationAuditLogListResponseTypeRoleAssignmentDeleted                       AdminOrganizationAuditLogListResponseType = "role.assignment.deleted"
+	AdminOrganizationAuditLogListResponseTypeRoleBoundToResource                         AdminOrganizationAuditLogListResponseType = "role.bound_to_resource"
+	AdminOrganizationAuditLogListResponseTypeRoleUnboundFromResource                     AdminOrganizationAuditLogListResponseType = "role.unbound_from_resource"
+	AdminOrganizationAuditLogListResponseTypeScimEnabled                                 AdminOrganizationAuditLogListResponseType = "scim.enabled"
+	AdminOrganizationAuditLogListResponseTypeScimDisabled                                AdminOrganizationAuditLogListResponseType = "scim.disabled"
+	AdminOrganizationAuditLogListResponseTypeServiceAccountCreated                       AdminOrganizationAuditLogListResponseType = "service_account.created"
+	AdminOrganizationAuditLogListResponseTypeServiceAccountUpdated                       AdminOrganizationAuditLogListResponseType = "service_account.updated"
+	AdminOrganizationAuditLogListResponseTypeServiceAccountDeleted                       AdminOrganizationAuditLogListResponseType = "service_account.deleted"
+	AdminOrganizationAuditLogListResponseTypeUserAdded                                   AdminOrganizationAuditLogListResponseType = "user.added"
+	AdminOrganizationAuditLogListResponseTypeUserUpdated                                 AdminOrganizationAuditLogListResponseType = "user.updated"
+	AdminOrganizationAuditLogListResponseTypeUserDeleted                                 AdminOrganizationAuditLogListResponseType = "user.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantMetadataUpdated                       AdminOrganizationAuditLogListResponseType = "tenant.metadata.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantMicrosoftEntraMappingUpserted         AdminOrganizationAuditLogListResponseType = "tenant.microsoft_entra_mapping.upserted"
+	AdminOrganizationAuditLogListResponseTypeTenantMicrosoftEntraMappingDeleted          AdminOrganizationAuditLogListResponseType = "tenant.microsoft_entra_mapping.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityProviderCreated       AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.provider.created"
+	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityProviderUpdated       AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.provider.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityProviderArchived      AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.provider.archived"
+	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityMappingCreated        AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.mapping.created"
+	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityMappingUpdated        AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.mapping.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityMappingArchived       AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.mapping.archived"
+	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityBindingCreated        AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.binding.created"
+	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityPrincipalProvisioned  AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.principal.provisioned"
+	AdminOrganizationAuditLogListResponseTypeTenantAdminAPIKeyCreated                    AdminOrganizationAuditLogListResponseType = "tenant.admin_api_key.created"
+	AdminOrganizationAuditLogListResponseTypeTenantAdminAPIKeyUpdated                    AdminOrganizationAuditLogListResponseType = "tenant.admin_api_key.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantAdminAPIKeyDeleted                    AdminOrganizationAuditLogListResponseType = "tenant.admin_api_key.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantProjectAPIKeyCreated                  AdminOrganizationAuditLogListResponseType = "tenant.project_api_key.created"
+	AdminOrganizationAuditLogListResponseTypeTenantChatgptAccessTokenRevoked             AdminOrganizationAuditLogListResponseType = "tenant.chatgpt_access_token.revoked"
+	AdminOrganizationAuditLogListResponseTypeTenantMigrationCompleted                    AdminOrganizationAuditLogListResponseType = "tenant.migration.completed"
+	AdminOrganizationAuditLogListResponseTypeTenantSSOMigrated                           AdminOrganizationAuditLogListResponseType = "tenant.sso.migrated"
+	AdminOrganizationAuditLogListResponseTypeTenantDomainsMigrated                       AdminOrganizationAuditLogListResponseType = "tenant.domains.migrated"
+	AdminOrganizationAuditLogListResponseTypeTenantSSOConnectionCreated                  AdminOrganizationAuditLogListResponseType = "tenant.sso_connection.created"
+	AdminOrganizationAuditLogListResponseTypeTenantSSOConnectionUpdated                  AdminOrganizationAuditLogListResponseType = "tenant.sso_connection.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantSSOConnectionDeleted                  AdminOrganizationAuditLogListResponseType = "tenant.sso_connection.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantSSOConnectionSetupStarted             AdminOrganizationAuditLogListResponseType = "tenant.sso_connection.setup.started"
+	AdminOrganizationAuditLogListResponseTypeTenantPolicyCreated                         AdminOrganizationAuditLogListResponseType = "tenant.policy.created"
+	AdminOrganizationAuditLogListResponseTypeTenantPolicyUpdated                         AdminOrganizationAuditLogListResponseType = "tenant.policy.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantPolicyDeleted                         AdminOrganizationAuditLogListResponseType = "tenant.policy.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantPolicyAttached                        AdminOrganizationAuditLogListResponseType = "tenant.policy.attached"
+	AdminOrganizationAuditLogListResponseTypeTenantPolicyDetached                        AdminOrganizationAuditLogListResponseType = "tenant.policy.detached"
+	AdminOrganizationAuditLogListResponseTypeTenantPrincipalAuthenticationPolicyResolved AdminOrganizationAuditLogListResponseType = "tenant.principal_authentication_policy.resolved"
+	AdminOrganizationAuditLogListResponseTypeTenantScimSetupStarted                      AdminOrganizationAuditLogListResponseType = "tenant.scim.setup.started"
+	AdminOrganizationAuditLogListResponseTypeTenantScimDeletionRequested                 AdminOrganizationAuditLogListResponseType = "tenant.scim.deletion.requested"
+	AdminOrganizationAuditLogListResponseTypeTenantScimDirectoryCreated                  AdminOrganizationAuditLogListResponseType = "tenant.scim.directory.created"
+	AdminOrganizationAuditLogListResponseTypeTenantProductAccessPolicyUpdated            AdminOrganizationAuditLogListResponseType = "tenant.product_access_policy.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantResourceShareGrantCreated             AdminOrganizationAuditLogListResponseType = "tenant.resource_share_grant.created"
+	AdminOrganizationAuditLogListResponseTypeTenantResourceShareGrantUpdated             AdminOrganizationAuditLogListResponseType = "tenant.resource_share_grant.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantResourceShareGrantAccepted            AdminOrganizationAuditLogListResponseType = "tenant.resource_share_grant.accepted"
+	AdminOrganizationAuditLogListResponseTypeTenantResourceShareGrantDeclined            AdminOrganizationAuditLogListResponseType = "tenant.resource_share_grant.declined"
+	AdminOrganizationAuditLogListResponseTypeTenantResourceShareGrantRevoked             AdminOrganizationAuditLogListResponseType = "tenant.resource_share_grant.revoked"
+	AdminOrganizationAuditLogListResponseTypeTenantResourceShareGrantDeleted             AdminOrganizationAuditLogListResponseType = "tenant.resource_share_grant.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantServiceAccountUpdated                 AdminOrganizationAuditLogListResponseType = "tenant.service_account.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantServiceAccountDeleted                 AdminOrganizationAuditLogListResponseType = "tenant.service_account.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantServiceAccountTokenRevoked            AdminOrganizationAuditLogListResponseType = "tenant.service_account.token.revoked"
+	AdminOrganizationAuditLogListResponseTypeTenantBillingOverageLimitUpdated            AdminOrganizationAuditLogListResponseType = "tenant.billing.overage_limit.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantBillingAlertsUpdated                  AdminOrganizationAuditLogListResponseType = "tenant.billing.alerts.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantBillingInfoUpdated                    AdminOrganizationAuditLogListResponseType = "tenant.billing.info.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantUsageLimitWorkspaceUpdated            AdminOrganizationAuditLogListResponseType = "tenant.usage_limit.workspace.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantUsageLimitGroupUpdated                AdminOrganizationAuditLogListResponseType = "tenant.usage_limit.group.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantUsageLimitUserUpdated                 AdminOrganizationAuditLogListResponseType = "tenant.usage_limit.user.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantUsageLimitIncreaseRequestUpdated      AdminOrganizationAuditLogListResponseType = "tenant.usage_limit.increase_request.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantUsageLimitIncreaseRequestResolved     AdminOrganizationAuditLogListResponseType = "tenant.usage_limit.increase_request.resolved"
+	AdminOrganizationAuditLogListResponseTypeTenantGroupCreated                          AdminOrganizationAuditLogListResponseType = "tenant.group.created"
+	AdminOrganizationAuditLogListResponseTypeTenantGroupUpdated                          AdminOrganizationAuditLogListResponseType = "tenant.group.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantGroupDeleted                          AdminOrganizationAuditLogListResponseType = "tenant.group.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantGroupMemberAdded                      AdminOrganizationAuditLogListResponseType = "tenant.group.member.added"
+	AdminOrganizationAuditLogListResponseTypeTenantGroupMemberRemoved                    AdminOrganizationAuditLogListResponseType = "tenant.group.member.removed"
+	AdminOrganizationAuditLogListResponseTypeTenantMigrationRolloutStatusUpdated         AdminOrganizationAuditLogListResponseType = "tenant.migration_rollout.status.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantMigrationRolloutTierUpdated           AdminOrganizationAuditLogListResponseType = "tenant.migration_rollout.tier.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantRoleMetadataUpdated                   AdminOrganizationAuditLogListResponseType = "tenant.role.metadata.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantCustomRoleCreated                     AdminOrganizationAuditLogListResponseType = "tenant.custom_role.created"
+	AdminOrganizationAuditLogListResponseTypeTenantCustomRoleUpdated                     AdminOrganizationAuditLogListResponseType = "tenant.custom_role.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantCustomRoleDeleted                     AdminOrganizationAuditLogListResponseType = "tenant.custom_role.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantRoleAssignmentCreated                 AdminOrganizationAuditLogListResponseType = "tenant.role_assignment.created"
+	AdminOrganizationAuditLogListResponseTypeTenantRoleAssignmentDeleted                 AdminOrganizationAuditLogListResponseType = "tenant.role_assignment.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantResourceRoleAssignmentCreated         AdminOrganizationAuditLogListResponseType = "tenant.resource_role_assignment.created"
+	AdminOrganizationAuditLogListResponseTypeTenantResourceRoleAssignmentDeleted         AdminOrganizationAuditLogListResponseType = "tenant.resource_role_assignment.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantResourceAccessUpdated                 AdminOrganizationAuditLogListResponseType = "tenant.resource_access.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantResourceAccessDeleted                 AdminOrganizationAuditLogListResponseType = "tenant.resource_access.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantSessionPolicyCreated                  AdminOrganizationAuditLogListResponseType = "tenant.session_policy.created"
+	AdminOrganizationAuditLogListResponseTypeTenantSessionPolicyUpdated                  AdminOrganizationAuditLogListResponseType = "tenant.session_policy.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantSessionPolicyDeleted                  AdminOrganizationAuditLogListResponseType = "tenant.session_policy.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantSessionRevocationStarted              AdminOrganizationAuditLogListResponseType = "tenant.session_revocation.started"
+	AdminOrganizationAuditLogListResponseTypeTenantThirdPartyAppPolicyUpdated            AdminOrganizationAuditLogListResponseType = "tenant.third_party_app_policy.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantUserAdded                             AdminOrganizationAuditLogListResponseType = "tenant.user.added"
+	AdminOrganizationAuditLogListResponseTypeTenantUserUpdated                           AdminOrganizationAuditLogListResponseType = "tenant.user.updated"
+	AdminOrganizationAuditLogListResponseTypeTenantUserRemoved                           AdminOrganizationAuditLogListResponseType = "tenant.user.removed"
+	AdminOrganizationAuditLogListResponseTypeTenantUserLookedUp                          AdminOrganizationAuditLogListResponseType = "tenant.user.looked_up"
+	AdminOrganizationAuditLogListResponseTypeTenantUserInvited                           AdminOrganizationAuditLogListResponseType = "tenant.user.invited"
+	AdminOrganizationAuditLogListResponseTypeTenantMembershipRevoked                     AdminOrganizationAuditLogListResponseType = "tenant.membership.revoked"
+	AdminOrganizationAuditLogListResponseTypeTenantAPIOrganizationInviteUpserted         AdminOrganizationAuditLogListResponseType = "tenant.api_organization_invite.upserted"
+	AdminOrganizationAuditLogListResponseTypeTenantAPIOrganizationInviteDeleted          AdminOrganizationAuditLogListResponseType = "tenant.api_organization_invite.deleted"
+	AdminOrganizationAuditLogListResponseTypeTenantChatgptWorkspaceInviteUpserted        AdminOrganizationAuditLogListResponseType = "tenant.chatgpt_workspace_invite.upserted"
+	AdminOrganizationAuditLogListResponseTypeTenantMembershipAccepted                    AdminOrganizationAuditLogListResponseType = "tenant.membership.accepted"
+	AdminOrganizationAuditLogListResponseTypeTenantMembershipDeclined                    AdminOrganizationAuditLogListResponseType = "tenant.membership.declined"
+	AdminOrganizationAuditLogListResponseTypeTenantWorkspaceInviteEmailSettingsUpdated   AdminOrganizationAuditLogListResponseType = "tenant.workspace_invite_email_settings.updated"
 )
 
 // The actor who performed the audit logged action.
@@ -2203,7 +2333,53 @@ type AdminOrganizationAuditLogListParams struct {
 	// "role.deleted", "role.assignment.created", "role.assignment.deleted",
 	// "role.bound_to_resource", "role.unbound_from_resource", "scim.enabled",
 	// "scim.disabled", "service_account.created", "service_account.updated",
-	// "service_account.deleted", "user.added", "user.updated", "user.deleted".
+	// "service_account.deleted", "user.added", "user.updated", "user.deleted",
+	// "tenant.metadata.updated", "tenant.microsoft_entra_mapping.upserted",
+	// "tenant.microsoft_entra_mapping.deleted",
+	// "tenant.workload_identity.provider.created",
+	// "tenant.workload_identity.provider.updated",
+	// "tenant.workload_identity.provider.archived",
+	// "tenant.workload_identity.mapping.created",
+	// "tenant.workload_identity.mapping.updated",
+	// "tenant.workload_identity.mapping.archived",
+	// "tenant.workload_identity.binding.created",
+	// "tenant.workload_identity.principal.provisioned",
+	// "tenant.admin_api_key.created", "tenant.admin_api_key.updated",
+	// "tenant.admin_api_key.deleted", "tenant.project_api_key.created",
+	// "tenant.chatgpt_access_token.revoked", "tenant.migration.completed",
+	// "tenant.sso.migrated", "tenant.domains.migrated",
+	// "tenant.sso_connection.created", "tenant.sso_connection.updated",
+	// "tenant.sso_connection.deleted", "tenant.sso_connection.setup.started",
+	// "tenant.policy.created", "tenant.policy.updated", "tenant.policy.deleted",
+	// "tenant.policy.attached", "tenant.policy.detached",
+	// "tenant.principal_authentication_policy.resolved", "tenant.scim.setup.started",
+	// "tenant.scim.deletion.requested", "tenant.scim.directory.created",
+	// "tenant.product_access_policy.updated", "tenant.resource_share_grant.created",
+	// "tenant.resource_share_grant.updated", "tenant.resource_share_grant.accepted",
+	// "tenant.resource_share_grant.declined", "tenant.resource_share_grant.revoked",
+	// "tenant.resource_share_grant.deleted", "tenant.service_account.updated",
+	// "tenant.service_account.deleted", "tenant.service_account.token.revoked",
+	// "tenant.billing.overage_limit.updated", "tenant.billing.alerts.updated",
+	// "tenant.billing.info.updated", "tenant.usage_limit.workspace.updated",
+	// "tenant.usage_limit.group.updated", "tenant.usage_limit.user.updated",
+	// "tenant.usage_limit.increase_request.updated",
+	// "tenant.usage_limit.increase_request.resolved", "tenant.group.created",
+	// "tenant.group.updated", "tenant.group.deleted", "tenant.group.member.added",
+	// "tenant.group.member.removed", "tenant.migration_rollout.status.updated",
+	// "tenant.migration_rollout.tier.updated", "tenant.role.metadata.updated",
+	// "tenant.custom_role.created", "tenant.custom_role.updated",
+	// "tenant.custom_role.deleted", "tenant.role_assignment.created",
+	// "tenant.role_assignment.deleted", "tenant.resource_role_assignment.created",
+	// "tenant.resource_role_assignment.deleted", "tenant.resource_access.updated",
+	// "tenant.resource_access.deleted", "tenant.session_policy.created",
+	// "tenant.session_policy.updated", "tenant.session_policy.deleted",
+	// "tenant.session_revocation.started", "tenant.third_party_app_policy.updated",
+	// "tenant.user.added", "tenant.user.updated", "tenant.user.removed",
+	// "tenant.user.looked_up", "tenant.user.invited", "tenant.membership.revoked",
+	// "tenant.api_organization_invite.upserted",
+	// "tenant.api_organization_invite.deleted",
+	// "tenant.chatgpt_workspace_invite.upserted", "tenant.membership.accepted",
+	// "tenant.membership.declined", "tenant.workspace_invite_email_settings.updated".
 	EventTypes []string `query:"event_types,omitzero" json:"-"`
 	// Return only events for these projects.
 	ProjectIDs []string `query:"project_ids,omitzero" json:"-"`

@@ -4159,7 +4159,7 @@ type BetaResponse struct {
 	// Used by OpenAI to cache responses for similar requests to optimize your cache
 	// hit rates. Replaces the `user` field.
 	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
-	PromptCacheKey string `json:"prompt_cache_key"`
+	PromptCacheKey string `json:"prompt_cache_key" api:"nullable"`
 	// The prompt-caching options that were applied to the response. Supported for
 	// `gpt-5.6` and later models.
 	PromptCacheOptions BetaResponsePromptCacheOptions `json:"prompt_cache_options"`
@@ -4196,7 +4196,7 @@ type BetaResponse struct {
 	// hashing their username or email address, in order to avoid sending us any
 	// identifying information.
 	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
-	SafetyIdentifier string `json:"safety_identifier"`
+	SafetyIdentifier string `json:"safety_identifier" api:"nullable"`
 	// Specifies the processing type used for serving the request.
 	//
 	//   - If set to 'auto', then the request will be processed with the service tier
@@ -4946,7 +4946,10 @@ const (
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type BetaResponseReasoning struct {
-	// Controls which reasoning items are rendered back to the model on later turns.
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
 	// When returned on a response, this is the effective reasoning context mode used
 	// for the response.
 	//
@@ -8353,12 +8356,13 @@ func (r *BetaResponseCustomToolCallOutputItem) UnmarshalJSON(data []byte) error 
 type BetaResponseError struct {
 	// The error code for the response.
 	//
-	// Any of "server_error", "rate_limit_exceeded", "invalid_prompt", "bio_policy",
-	// "vector_store_timeout", "invalid_image", "invalid_image_format",
-	// "invalid_base64_image", "invalid_image_url", "image_too_large",
-	// "image_too_small", "image_parse_error", "image_content_policy_violation",
-	// "invalid_image_mode", "image_file_too_large", "unsupported_image_media_type",
-	// "empty_image_file", "failed_to_download_image", "image_file_not_found".
+	// Any of "server_error", "rate_limit_exceeded", "invalid_prompt",
+	// "data_residency_mismatch", "bio_policy", "vector_store_timeout",
+	// "invalid_image", "invalid_image_format", "invalid_base64_image",
+	// "invalid_image_url", "image_too_large", "image_too_small", "image_parse_error",
+	// "image_content_policy_violation", "invalid_image_mode", "image_file_too_large",
+	// "unsupported_image_media_type", "empty_image_file", "failed_to_download_image",
+	// "image_file_not_found".
 	Code BetaResponseErrorCode `json:"code" api:"required"`
 	// A human-readable description of the error.
 	Message string `json:"message" api:"required"`
@@ -8384,6 +8388,7 @@ const (
 	BetaResponseErrorCodeServerError                 BetaResponseErrorCode = "server_error"
 	BetaResponseErrorCodeRateLimitExceeded           BetaResponseErrorCode = "rate_limit_exceeded"
 	BetaResponseErrorCodeInvalidPrompt               BetaResponseErrorCode = "invalid_prompt"
+	BetaResponseErrorCodeDataResidencyMismatch       BetaResponseErrorCode = "data_residency_mismatch"
 	BetaResponseErrorCodeBioPolicy                   BetaResponseErrorCode = "bio_policy"
 	BetaResponseErrorCodeVectorStoreTimeout          BetaResponseErrorCode = "vector_store_timeout"
 	BetaResponseErrorCodeInvalidImage                BetaResponseErrorCode = "invalid_image"
@@ -14291,7 +14296,7 @@ type BetaResponseInputItemMultiAgentCallOutputOutput struct {
 	// The content type. Always `output_text`.
 	Type constant.OutputText `json:"type" default:"output_text"`
 	// Citations associated with the text content.
-	Annotations BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion `json:"annotations"`
+	Annotations []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion `json:"annotations"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Text        respjson.Field
@@ -14308,64 +14313,110 @@ func (r *BetaResponseInputItemMultiAgentCallOutputOutput) UnmarshalJSON(data []b
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion contains all
+// BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion contains all
 // possible properties and values from
-// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem],
-// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item],
-// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item].
+// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation],
+// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation],
+// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation].
+//
+// Use the [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion.AsAny]
+// method to switch on the variant.
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray
-// OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array
-// OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array]
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion struct {
-	// This field will be present if the value is a
-	// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem] instead
-	// of an object.
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem `json:",inline"`
-	// This field will be present if the value is a
-	// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item] instead
-	// of an object.
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item `json:",inline"`
-	// This field will be present if the value is a
-	// [[]BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item] instead
-	// of an object.
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item `json:",inline"`
-	JSON                                                                    struct {
-		OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray       respjson.Field
-		OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array respjson.Field
-		OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array respjson.Field
-		raw                                                                     string
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion struct {
+	FileID   string `json:"file_id"`
+	Filename string `json:"filename"`
+	// This field is from variant
+	// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation].
+	Index int64 `json:"index"`
+	// Any of "file_citation", "url_citation", "container_file_citation".
+	Type       string `json:"type"`
+	EndIndex   int64  `json:"end_index"`
+	StartIndex int64  `json:"start_index"`
+	// This field is from variant
+	// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation].
+	Title string `json:"title"`
+	// This field is from variant
+	// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation].
+	URL string `json:"url"`
+	// This field is from variant
+	// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation].
+	ContainerID string `json:"container_id"`
+	JSON        struct {
+		FileID      respjson.Field
+		Filename    respjson.Field
+		Index       respjson.Field
+		Type        respjson.Field
+		EndIndex    respjson.Field
+		StartIndex  respjson.Field
+		Title       respjson.Field
+		URL         respjson.Field
+		ContainerID respjson.Field
+		raw         string
 	} `json:"-"`
 }
 
-func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion) AsBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray() (v []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem) {
+// anyBetaResponseInputItemMultiAgentCallOutputOutputAnnotation is implemented by
+// each variant of [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion]
+// to add type safety for the return type of
+// [BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion.AsAny]
+type anyBetaResponseInputItemMultiAgentCallOutputOutputAnnotation interface {
+	implBetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion()
+}
+
+func (BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation) implBetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion() {
+}
+func (BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation) implBetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion() {
+}
+func (BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation) implBetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion.AsAny().(type) {
+//	case openai.BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation:
+//	case openai.BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation:
+//	case openai.BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsAny() anyBetaResponseInputItemMultiAgentCallOutputOutputAnnotation {
+	switch u.Type {
+	case "file_citation":
+		return u.AsFileCitation()
+	case "url_citation":
+		return u.AsURLCitation()
+	case "container_file_citation":
+		return u.AsContainerFileCitation()
+	}
+	return nil
+}
+
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsFileCitation() (v BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion) AsBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array() (v []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item) {
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsURLCitation() (v BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
-func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion) AsBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array() (v []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item) {
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsContainerFileCitation() (v BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 // Returns the unmodified JSON received from the API
-func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion) RawJSON() string {
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) RawJSON() string {
 	return u.JSON.raw
 }
 
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnion) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation struct {
 	// The ID of the file.
 	FileID string `json:"file_id" api:"required"`
 	// The filename of the file cited.
@@ -14386,14 +14437,14 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem struct 
 }
 
 // Returns the unmodified JSON received from the API
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem) RawJSON() string {
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation) RawJSON() string {
 	return r.JSON.raw
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItem) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation struct {
 	// The index of the last character of the citation in the message.
 	EndIndex int64 `json:"end_index" api:"required"`
 	// The index of the first character of the citation in the message.
@@ -14417,14 +14468,14 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item struct
 }
 
 // Returns the unmodified JSON received from the API
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item) RawJSON() string {
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation) RawJSON() string {
 	return r.JSON.raw
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Item) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation struct {
 	// The ID of the container.
 	ContainerID string `json:"container_id" api:"required"`
 	// The index of the last character of the citation in the message.
@@ -14451,10 +14502,10 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item struct
 }
 
 // Returns the unmodified JSON received from the API
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item) RawJSON() string {
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation) RawJSON() string {
 	return r.JSON.raw
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Item) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -18365,7 +18416,7 @@ type BetaResponseInputItemMultiAgentCallOutputOutputParam struct {
 	// The text content.
 	Text string `json:"text" api:"required"`
 	// Citations associated with the text content.
-	Annotations BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnionParam `json:"annotations,omitzero"`
+	Annotations []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam `json:"annotations,omitzero"`
 	// The content type. Always `output_text`.
 	//
 	// This field can be elided, and will marshal its zero value as "output_text".
@@ -18384,33 +18435,126 @@ func (r *BetaResponseInputItemMultiAgentCallOutputOutputParam) UnmarshalJSON(dat
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnionParam struct {
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray       []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam  `json:",omitzero,inline"`
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam `json:",omitzero,inline"`
-	OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array []BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam `json:",omitzero,inline"`
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam struct {
+	OfFileCitation          *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam          `json:",omitzero,inline"`
+	OfURLCitation           *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam           `json:",omitzero,inline"`
+	OfContainerFileCitation *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam `json:",omitzero,inline"`
 	paramUnion
 }
 
-func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray, u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array, u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array)
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfFileCitation, u.OfURLCitation, u.OfContainerFileCitation)
 }
-func (u *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnionParam) UnmarshalJSON(data []byte) error {
+func (u *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray) {
-		return &u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray
-	} else if !param.IsOmitted(u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array) {
-		return &u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2Array
-	} else if !param.IsOmitted(u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array) {
-		return &u.OfBetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3Array
+func (u *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfFileCitation) {
+		return u.OfFileCitation
+	} else if !param.IsOmitted(u.OfURLCitation) {
+		return u.OfURLCitation
+	} else if !param.IsOmitted(u.OfContainerFileCitation) {
+		return u.OfContainerFileCitation
 	}
 	return nil
 }
 
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetIndex() *int64 {
+	if vt := u.OfFileCitation; vt != nil {
+		return &vt.Index
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetTitle() *string {
+	if vt := u.OfURLCitation; vt != nil {
+		return &vt.Title
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetURL() *string {
+	if vt := u.OfURLCitation; vt != nil {
+		return &vt.URL
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetContainerID() *string {
+	if vt := u.OfContainerFileCitation; vt != nil {
+		return &vt.ContainerID
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetFileID() *string {
+	if vt := u.OfFileCitation; vt != nil {
+		return (*string)(&vt.FileID)
+	} else if vt := u.OfContainerFileCitation; vt != nil {
+		return (*string)(&vt.FileID)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetFilename() *string {
+	if vt := u.OfFileCitation; vt != nil {
+		return (*string)(&vt.Filename)
+	} else if vt := u.OfContainerFileCitation; vt != nil {
+		return (*string)(&vt.Filename)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetType() *string {
+	if vt := u.OfFileCitation; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfURLCitation; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfContainerFileCitation; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetEndIndex() *int64 {
+	if vt := u.OfURLCitation; vt != nil {
+		return (*int64)(&vt.EndIndex)
+	} else if vt := u.OfContainerFileCitation; vt != nil {
+		return (*int64)(&vt.EndIndex)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam) GetStartIndex() *int64 {
+	if vt := u.OfURLCitation; vt != nil {
+		return (*int64)(&vt.StartIndex)
+	} else if vt := u.OfContainerFileCitation; vt != nil {
+		return (*int64)(&vt.StartIndex)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnionParam](
+		"type",
+		apijson.Discriminator[BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam]("file_citation"),
+		apijson.Discriminator[BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam]("url_citation"),
+		apijson.Discriminator[BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam]("container_file_citation"),
+	)
+}
+
 // The properties FileID, Filename, Index, Type are required.
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam struct {
 	// The ID of the file.
 	FileID string `json:"file_id" api:"required"`
 	// The filename of the file cited.
@@ -18424,16 +18568,16 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam st
 	paramObj
 }
 
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam) MarshalJSON() (data []byte, err error) {
-	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArrayItemParam) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // The properties EndIndex, StartIndex, Title, Type, URL are required.
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam struct {
 	// The index of the last character of the citation in the message.
 	EndIndex int64 `json:"end_index" api:"required"`
 	// The index of the first character of the citation in the message.
@@ -18449,17 +18593,17 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam s
 	paramObj
 }
 
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam) MarshalJSON() (data []byte, err error) {
-	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray2ItemParam) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
 // The properties ContainerID, EndIndex, FileID, Filename, StartIndex, Type are
 // required.
-type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam struct {
+type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam struct {
 	// The ID of the container.
 	ContainerID string `json:"container_id" api:"required"`
 	// The index of the last character of the citation in the message.
@@ -18478,11 +18622,11 @@ type BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam s
 	paramObj
 }
 
-func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam) MarshalJSON() (data []byte, err error) {
-	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam
+func (r BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationsArray3ItemParam) UnmarshalJSON(data []byte) error {
+func (r *BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitationParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -27342,7 +27486,8 @@ type BetaResponseTextConfig struct {
 	Format BetaResponseFormatTextConfigUnion `json:"format"`
 	// Constrains the verbosity of the model's response. Lower values will result in
 	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
+	// responses. Currently supported values are `low`, `medium`, and `high`. The
+	// default is `medium`.
 	//
 	// Any of "low", "medium", "high".
 	Verbosity BetaResponseTextConfigVerbosity `json:"verbosity" api:"nullable"`
@@ -27372,7 +27517,8 @@ func (r BetaResponseTextConfig) ToParam() BetaResponseTextConfigParam {
 
 // Constrains the verbosity of the model's response. Lower values will result in
 // more concise responses, while higher values will result in more verbose
-// responses. Currently supported values are `low`, `medium`, and `high`.
+// responses. Currently supported values are `low`, `medium`, and `high`. The
+// default is `medium`.
 type BetaResponseTextConfigVerbosity string
 
 const (
@@ -27389,7 +27535,8 @@ const (
 type BetaResponseTextConfigParam struct {
 	// Constrains the verbosity of the model's response. Lower values will result in
 	// more concise responses, while higher values will result in more verbose
-	// responses. Currently supported values are `low`, `medium`, and `high`.
+	// responses. Currently supported values are `low`, `medium`, and `high`. The
+	// default is `medium`.
 	//
 	// Any of "low", "medium", "high".
 	Verbosity BetaResponseTextConfigVerbosity `json:"verbosity,omitzero"`
@@ -31396,6 +31543,17 @@ type BetaResponseNewParams struct {
 	// [conversation state](https://platform.openai.com/docs/guides/conversation-state).
 	// Cannot be used in conjunction with `conversation`.
 	PreviousResponseID param.Opt[string] `json:"previous_response_id,omitzero"`
+	// Used by OpenAI to cache responses for similar requests to optimize your cache
+	// hit rates. Replaces the `user` field.
+	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
+	// A stable identifier used to help detect users of your application that may be
+	// violating OpenAI's usage policies. The IDs should be a string that uniquely
+	// identifies each user, with a maximum length of 64 characters. We recommend
+	// hashing their username or email address, in order to avoid sending us any
+	// identifying information.
+	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
+	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// Whether to store the generated model response for later retrieval via API.
 	Store param.Opt[bool] `json:"store,omitzero"`
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will
@@ -31413,17 +31571,6 @@ type BetaResponseNewParams struct {
 	//
 	// We generally recommend altering this or `temperature` but not both.
 	TopP param.Opt[float64] `json:"top_p,omitzero"`
-	// Used by OpenAI to cache responses for similar requests to optimize your cache
-	// hit rates. Replaces the `user` field.
-	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
-	PromptCacheKey param.Opt[string] `json:"prompt_cache_key,omitzero"`
-	// A stable identifier used to help detect users of your application that may be
-	// violating OpenAI's usage policies. The IDs should be a string that uniquely
-	// identifies each user, with a maximum length of 64 characters. We recommend
-	// hashing their username or email address, in order to avoid sending us any
-	// identifying information.
-	// [Learn more](https://platform.openai.com/docs/guides/safety-best-practices#safety-identifiers).
-	SafetyIdentifier param.Opt[string] `json:"safety_identifier,omitzero"`
 	// This field is being replaced by `safety_identifier` and `prompt_cache_key`. Use
 	// `prompt_cache_key` instead to maintain caching optimizations. A stable
 	// identifier for your end-users. Used to boost cache hit rates by better bucketing
@@ -31948,7 +32095,10 @@ const (
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type BetaResponseNewParamsReasoning struct {
-	// Controls which reasoning items are rendered back to the model on later turns.
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
 	// When returned on a response, this is the effective reasoning context mode used
 	// for the response.
 	//

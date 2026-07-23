@@ -1,5 +1,38 @@
 # Changelog
 
+## 3.45.0 (2026-07-22)
+
+Full Changelog: [v3.44.0...v3.45.0](https://github.com/openai/openai-go/compare/v3.44.0...v3.45.0)
+
+### Go version requirement
+
+openai-go v3.45.0 requires Go 1.25 or newer. This release upgrades
+`golang.org/x/net` to v0.57.0 to address security findings and aligns the SDK
+with supported Go toolchains. v3.44.0 is the final release that builds with Go
+1.22–1.24; older SDK releases do not receive guaranteed security backports. No
+exported SDK API or `/v3` import path changes are included.
+
+### Features
+
+* **api:** accept `None` for prompt_cache_key/safety_identifier ([711460e](https://github.com/openai/openai-go/commit/711460ea11963cd250be5e420269b25488b02ef9))
+* **stlc:** configurable CI runner and private-production-repo support in workflow templates ([6669f50](https://github.com/openai/openai-go/commit/6669f5011fc02c2160024d26ab6f9240560a778d))
+
+## 3.44.0 (2026-07-17)
+
+Full Changelog: [v3.43.0...v3.44.0](https://github.com/openai/openai-go/compare/v3.43.0...v3.44.0)
+
+### Features
+
+* **api:** /organization/projects/{project_id}/service_accounts/{service_account_id}/api_keys" endpoint ([28d2a6a](https://github.com/openai/openai-go/commit/28d2a6ab978f78d10b29087e70539ed230340274))
+* **api:** manual updates ([a531d4a](https://github.com/openai/openai-go/commit/a531d4a994c75177a7ed3edaf0c909db188147ce))
+* **api:** manual updates ([8073e1e](https://github.com/openai/openai-go/commit/8073e1e1a20907ae89433008157c238bccd4eca9))
+
+
+### Bug Fixes
+
+* **api:** format service account API key path ([999e165](https://github.com/openai/openai-go/commit/999e16536e7dc5ea4040d13b94c413cfc9df98ec))
+* format service account API key path ([9fb19bb](https://github.com/openai/openai-go/commit/9fb19bbb13c067a12c14153f8ba5e57b233cd927))
+
 ## 3.43.0 (2026-07-14)
 
 Full Changelog: [v3.42.0...v3.43.0](https://github.com/openai/openai-go/compare/v3.42.0...v3.43.0)
