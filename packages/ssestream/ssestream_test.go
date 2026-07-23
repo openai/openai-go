@@ -178,3 +178,51 @@ func TestStreamRejectsEmptyDataField(t *testing.T) {
 		t.Fatalf("stream error = %v, want unexpected end of JSON input", err)
 	}
 }
+
+func TestEventStreamDecoderDiscardsIncompleteEventAtEOF(t *testing.T) {
+	for name, body := range map[string]string{
+		"event with data":    "event: update\ndata: hello",
+		"event without data": "event: update",
+	} {
+		t.Run(name, func(t *testing.T) {
+			res := &http.Response{
+				Header: http.Header{
+					"Content-Type": []string{"text/event-stream"},
+				},
+				Body: io.NopCloser(strings.NewReader(body)),
+			}
+
+			decoder := NewDecoder(res)
+			if decoder == nil {
+				t.Fatal("expected decoder")
+			}
+			if decoder.Next() {
+				t.Fatal("unexpected incomplete event")
+			}
+			if err := decoder.Err(); err != nil {
+				t.Fatalf("unexpected decoder error: %v", err)
+			}
+		})
+	}
+}
+
+func TestStreamDiscardsIncompleteEventAtEOF(t *testing.T) {
+	res := &http.Response{
+		Header: http.Header{
+			"Content-Type": []string{"text/event-stream"},
+		},
+		Body: io.NopCloser(strings.NewReader("event: update")),
+	}
+
+	type payload struct {
+		Value string `json:"value"`
+	}
+
+	stream := NewStream[payload](NewDecoder(res), nil)
+	if stream.Next() {
+		t.Fatal("unexpected incomplete stream event")
+	}
+	if err := stream.Err(); err != nil {
+		t.Fatalf("unexpected stream error: %v", err)
+	}
+}
