@@ -254,9 +254,48 @@ func TestAccumulatorNegativeToolCallIndex(t *testing.T) {
 
 func TestAccumulatorEmptyToolCallsArray(t *testing.T) {
 	acc := openai.ChatCompletionAccumulator{}
-	chunk := openai.ChatCompletionChunk{}
-	chunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[]}}]}`))
-	acc.AddChunk(chunk)
+	chunkWithEmptyToolCalls := openai.ChatCompletionChunk{}
+	if err := chunkWithEmptyToolCalls.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[]}}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(chunkWithEmptyToolCalls) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	finishedChunk := openai.ChatCompletionChunk{}
+	if err := finishedChunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(finishedChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	if toolCall, ok := acc.JustFinishedToolCall(); ok {
+		t.Fatalf("JustFinishedToolCall returned unexpected tool call: %+v", toolCall)
+	}
+}
+
+func TestAccumulatorNullToolCalls(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+	chunkWithNullToolCalls := openai.ChatCompletionChunk{}
+	if err := chunkWithNullToolCalls.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":null}}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(chunkWithNullToolCalls) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	finishedChunk := openai.ChatCompletionChunk{}
+	if err := finishedChunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
+	if !acc.AddChunk(finishedChunk) {
+		t.Fatal("AddChunk returned false")
+	}
+
+	if toolCall, ok := acc.JustFinishedToolCall(); ok {
+		t.Fatalf("JustFinishedToolCall returned unexpected tool call: %+v", toolCall)
+	}
 }
 
 // manually created on 11/3/2024
