@@ -187,6 +187,28 @@ jobs:
         working-directory: examples
         run: govulncheck ./...
 
+  go_version_tests:
+    timeout-minutes: 5
+    name: test (all supported Go versions)
+    runs-on: ubuntu-latest
+    if: >-
+      always() &&
+      (github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch')
+    needs:
+      - test
+    steps:
+      - name: Require every supported Go version
+        env:
+          TEST_RESULT: ${{ needs.test.result }}
+        run: |
+          if [[ "$TEST_RESULT" != "success" ]]; then
+            echo "Supported Go version tests ended with: $TEST_RESULT"
+            exit 1
+          fi
+
+  # Keep this compatibility aggregate until the main ruleset requires
+  # "test (all supported Go versions)", "lint", and "govulncheck" directly.
   required:
     timeout-minutes: 5
     name: Go support policy
