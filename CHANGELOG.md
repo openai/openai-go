@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.46.1 (2026-07-24)
+
+Full Changelog: [v3.46.0...v3.46.1](https://github.com/openai/openai-go/compare/v3.46.0...v3.46.1)
+
 ## 3.46.0 (2026-07-23)
 
 Full Changelog: [v3.45.0...v3.46.0](https://github.com/openai/openai-go/compare/v3.45.0...v3.46.0)

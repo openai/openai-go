@@ -30,7 +30,7 @@ Or to pin an SDK version (see the Go compatibility note below):
 <!-- x-release-please-start-version -->
 
 ```sh
-go get -u 'github.com/openai/openai-go/v3@v3.46.0'
+go get -u 'github.com/openai/openai-go/v3@v3.46.1'
 ```
 
 <!-- x-release-please-end -->
