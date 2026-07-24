@@ -32,10 +32,11 @@ When changing a `go` directive:
    versions. Do not promise security backports for an old SDK release.
 5. Obtain SDK CODEOWNER approval.
 
-The stable `Go support policy` check aggregates the deterministic Go safety
-jobs and is a required status check on `main`. It proves the proposed repository
-state builds and tests correctly; it does not attempt to interpret release
-policy or pull request prose.
+The stable `test (all supported Go versions)` check aggregates the floating Go
+test matrix. The `lint` and `govulncheck` jobs are independently required status
+checks on `main`. Together they prove the proposed repository state builds,
+tests, and passes reachable-vulnerability analysis; they do not attempt to
+interpret release policy or pull request prose.
 
 ## Automation map
 

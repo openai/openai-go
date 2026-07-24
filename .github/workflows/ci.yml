@@ -187,34 +187,22 @@ jobs:
         working-directory: examples
         run: govulncheck ./...
 
-  required:
+  go_version_tests:
     timeout-minutes: 5
-    name: Go support policy
+    name: test (all supported Go versions)
     runs-on: ubuntu-latest
     if: >-
       always() &&
       (github.event_name == 'pull_request' ||
       github.event_name == 'workflow_dispatch')
     needs:
-      - lint
       - test
-      - vulnerability
     steps:
-      - name: Require every Go safety job
+      - name: Require every supported Go version
         env:
-          LINT_RESULT: ${{ needs.lint.result }}
           TEST_RESULT: ${{ needs.test.result }}
-          VULNERABILITY_RESULT: ${{ needs.vulnerability.result }}
         run: |
-          failed=0
-          for result in \
-            "$LINT_RESULT" \
-            "$TEST_RESULT" \
-            "$VULNERABILITY_RESULT"
-          do
-            if [[ "$result" != "success" ]]; then
-              echo "Required Go safety job ended with: $result"
-              failed=1
-            fi
-          done
-          exit "$failed"
+          if [[ "$TEST_RESULT" != "success" ]]; then
+            echo "Supported Go version tests ended with: $TEST_RESULT"
+            exit 1
+          fi
