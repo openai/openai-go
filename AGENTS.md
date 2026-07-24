@@ -38,10 +38,6 @@ checks on `main`. Together they prove the proposed repository state builds,
 tests, and passes reachable-vulnerability analysis; they do not attempt to
 interpret release policy or pull request prose.
 
-During the required-check migration, the legacy `Go support policy` aggregate
-remains as a compatibility check. Remove it after the `main` ruleset directly
-requires `test (all supported Go versions)`, `lint`, and `govulncheck`.
-
 ## Automation map
 
 - `.github/workflows/ci.yml`
