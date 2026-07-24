@@ -736,6 +736,7 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		Context:            ctx,
 		Request:            req,
 		BaseURL:            cfg.BaseURL,
+		CustomHTTPDoer:     cfg.CustomHTTPDoer,
 		HTTPClient:         cfg.HTTPClient,
 		Middlewares:        cfg.Middlewares,
 		APIKey:             cfg.APIKey,
