@@ -58,6 +58,11 @@ updates:
       day: monday
       time: "09:30"
       timezone: Etc/UTC
-    # Keep action updates separate so each pinned SHA and runtime change can be
-    # reviewed independently.
+    # Keep unrelated action updates separate so each pinned SHA and runtime
+    # change can be reviewed independently. CodeQL's phases exchange versioned
+    # state, so they must be updated atomically.
+    groups:
+      codeql:
+        patterns:
+          - "github/codeql-action/*"
     open-pull-requests-limit: 5
