@@ -38,6 +38,7 @@ type AudioModel = string
 
 const (
 	AudioModelWhisper1                      AudioModel = "whisper-1"
+	AudioModelGPTTranscribe                 AudioModel = "gpt-transcribe"
 	AudioModelGPT4oTranscribe               AudioModel = "gpt-4o-transcribe"
 	AudioModelGPT4oMiniTranscribe           AudioModel = "gpt-4o-mini-transcribe"
 	AudioModelGPT4oMiniTranscribe2025_12_15 AudioModel = "gpt-4o-mini-transcribe-2025-12-15"
