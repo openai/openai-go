@@ -1,5 +1,28 @@
 # Changelog
 
+## 3.47.0 (2026-07-28)
+
+Full Changelog: [v3.46.0...v3.47.0](https://github.com/openai/openai-go/compare/v3.46.0...v3.47.0)
+
+### Features
+
+* **api:** transcription model updates ([1707706](https://github.com/openai/openai-go/commit/1707706e0ac9d8c91d781e218ee3e6c9ac4fc41d))
+
+
+### Bug Fixes
+
+* windows platform header normalization ([#674](https://github.com/openai/openai-go/issues/674)) ([706d3a8](https://github.com/openai/openai-go/commit/706d3a8c5c76a211a8cf3db6322eb47ef3713d6f))
+
+
+### Build System
+
+* **deps:** bump actions/download-artifact from 7.0.0 to 8.0.1 ([#739](https://github.com/openai/openai-go/issues/739)) ([2c2a363](https://github.com/openai/openai-go/commit/2c2a3637f2c50a01a7b2558c41c68913ca693e81))
+* **deps:** bump actions/setup-go from 6.4.0 to 7.0.0 ([#737](https://github.com/openai/openai-go/issues/737)) ([1fcc7ce](https://github.com/openai/openai-go/commit/1fcc7cef36599d8a0d8f3858fa6c4fe6d27bf241))
+* **deps:** bump actions/setup-node from 6.3.0 to 7.0.0 ([#734](https://github.com/openai/openai-go/issues/734)) ([15562ec](https://github.com/openai/openai-go/commit/15562ec9fc84b9e26b6e3cad42f7284405b5b36e))
+* **deps:** bump actions/upload-artifact from 6.0.0 to 7.0.1 ([#738](https://github.com/openai/openai-go/issues/738)) ([16fcc6a](https://github.com/openai/openai-go/commit/16fcc6a835f0791764841f5a6fc3f0d00b6c1e4d))
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#733](https://github.com/openai/openai-go/issues/733)) ([279abc1](https://github.com/openai/openai-go/commit/279abc1d002c6a87a07470aeae1c3da1e35cfb41))
+* **deps:** bump github/codeql-action from 4.37.2 to 4.37.3 ([#736](https://github.com/openai/openai-go/issues/736)) ([6032a46](https://github.com/openai/openai-go/commit/6032a4681950b0bc426e5528b5ca4d2a2590b815))
+
 ## 3.46.0 (2026-07-23)
 
 Full Changelog: [v3.45.0...v3.46.0](https://github.com/openai/openai-go/compare/v3.45.0...v3.46.0)
