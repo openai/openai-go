@@ -103,6 +103,27 @@ func TestFormatPathEscapesPathParams(t *testing.T) {
 	}
 }
 
+func TestNormalizeOS(t *testing.T) {
+	tests := map[string]string{
+		"android": "Android",
+		"darwin":  "MacOS",
+		"freebsd": "FreeBSD",
+		"ios":     "iOS",
+		"linux":   "Linux",
+		"openbsd": "OpenBSD",
+		"solaris": "Other:solaris",
+		"windows": "Windows",
+	}
+
+	for input, want := range tests {
+		t.Run(input, func(t *testing.T) {
+			if got := normalizeOS(input); got != want {
+				t.Fatalf("normalizeOS(%q) = %q, want %q", input, got, want)
+			}
+		})
+	}
+}
+
 func TestRequestFinalizerComposesThroughApply(t *testing.T) {
 	finalized := false
 	wrapped := RequestOptionFunc(func(cfg *RequestConfig) error {
