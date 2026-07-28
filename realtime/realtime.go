@@ -43,14 +43,22 @@ type AudioTranscription struct {
 	//
 	// Any of "minimal", "low", "medium", "high", "xhigh".
 	Delay AudioTranscriptionDelay `json:"delay"`
+	// Words or phrases to guide transcription of the input audio. Supported by
+	// `gpt-transcribe` and `gpt-live-transcribe`.
+	Keywords []string `json:"keywords"`
 	// The language of the input audio. Supplying the input language in
 	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) (e.g. `en`)
 	// format will improve accuracy and latency.
 	Language string `json:"language"`
+	// Possible languages of the input audio, in
+	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) format.
+	// Supported by `gpt-transcribe` and `gpt-live-transcribe`.
+	Languages []string `json:"languages"`
 	// The model to use for transcription. Current options are `whisper-1`,
-	// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
-	// `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`.
-	// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
+	// `gpt-transcribe`, `gpt-live-transcribe`, `gpt-4o-mini-transcribe`,
+	// `gpt-4o-mini-transcribe-2025-12-15`, `gpt-4o-transcribe`,
+	// `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`. Use
+	// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 	Model AudioTranscriptionModel `json:"model"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. For `whisper-1`, the
@@ -62,7 +70,9 @@ type AudioTranscription struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delay       respjson.Field
+		Keywords    respjson.Field
 		Language    respjson.Field
+		Languages   respjson.Field
 		Model       respjson.Field
 		Prompt      respjson.Field
 		ExtraFields map[string]respjson.Field
@@ -99,13 +109,16 @@ const (
 )
 
 // The model to use for transcription. Current options are `whisper-1`,
-// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
-// `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`.
-// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
+// `gpt-transcribe`, `gpt-live-transcribe`, `gpt-4o-mini-transcribe`,
+// `gpt-4o-mini-transcribe-2025-12-15`, `gpt-4o-transcribe`,
+// `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`. Use
+// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 type AudioTranscriptionModel string
 
 const (
 	AudioTranscriptionModelWhisper1                      AudioTranscriptionModel = "whisper-1"
+	AudioTranscriptionModelGPTTranscribe                 AudioTranscriptionModel = "gpt-transcribe"
+	AudioTranscriptionModelGPTLiveTranscribe             AudioTranscriptionModel = "gpt-live-transcribe"
 	AudioTranscriptionModelGPT4oMiniTranscribe           AudioTranscriptionModel = "gpt-4o-mini-transcribe"
 	AudioTranscriptionModelGPT4oMiniTranscribe2025_12_15 AudioTranscriptionModel = "gpt-4o-mini-transcribe-2025-12-15"
 	AudioTranscriptionModelGPT4oTranscribe               AudioTranscriptionModel = "gpt-4o-transcribe"
@@ -131,10 +144,18 @@ type AudioTranscriptionParam struct {
 	//
 	// Any of "minimal", "low", "medium", "high", "xhigh".
 	Delay AudioTranscriptionDelay `json:"delay,omitzero"`
+	// Words or phrases to guide transcription of the input audio. Supported by
+	// `gpt-transcribe` and `gpt-live-transcribe`.
+	Keywords []string `json:"keywords,omitzero"`
+	// Possible languages of the input audio, in
+	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) format.
+	// Supported by `gpt-transcribe` and `gpt-live-transcribe`.
+	Languages []string `json:"languages,omitzero"`
 	// The model to use for transcription. Current options are `whisper-1`,
-	// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
-	// `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`.
-	// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
+	// `gpt-transcribe`, `gpt-live-transcribe`, `gpt-4o-mini-transcribe`,
+	// `gpt-4o-mini-transcribe-2025-12-15`, `gpt-4o-transcribe`,
+	// `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`. Use
+	// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 	Model AudioTranscriptionModel `json:"model,omitzero"`
 	paramObj
 }

@@ -159,6 +159,7 @@ type Keypress string                                         // Always "keypress
 type LabelModel string                                       // Always "label_model"
 type LastActiveAt string                                     // Always "last_active_at"
 type List string                                             // Always "list"
+type LiveCallIncoming string                                 // Always "live.call.incoming"
 type Local string                                            // Always "local"
 type LocalShell string                                       // Always "local_shell"
 type LocalShellCall string                                   // Always "local_shell_call"
@@ -598,6 +599,7 @@ func (c Keypress) Default() Keypress                             { return "keypr
 func (c LabelModel) Default() LabelModel                         { return "label_model" }
 func (c LastActiveAt) Default() LastActiveAt                     { return "last_active_at" }
 func (c List) Default() List                                     { return "list" }
+func (c LiveCallIncoming) Default() LiveCallIncoming             { return "live.call.incoming" }
 func (c Local) Default() Local                                   { return "local" }
 func (c LocalShell) Default() LocalShell                         { return "local_shell" }
 func (c LocalShellCall) Default() LocalShellCall                 { return "local_shell_call" }
@@ -1191,6 +1193,7 @@ func (c Keypress) MarshalJSON() ([]byte, error)                            { ret
 func (c LabelModel) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c LastActiveAt) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c List) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c LiveCallIncoming) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c Local) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c LocalShell) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c LocalShellCall) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
