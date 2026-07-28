@@ -38,10 +38,13 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 		Instructions:       openai.String("instructions"),
 		Model:              openai.String("model"),
 		ParallelToolCalls:  openai.Bool(true),
+		Personality:        responses.InputTokenCountParamsPersonalityFriendly,
 		PreviousResponseID: openai.String("resp_123"),
 		Reasoning: shared.ReasoningParam{
+			Context:         shared.ReasoningContextAuto,
 			Effort:          shared.ReasoningEffortNone,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
+			Mode:            shared.ReasoningModeStandard,
 			Summary:         shared.ReasoningSummaryAuto,
 		},
 		Text: responses.InputTokenCountParamsText{
@@ -59,9 +62,13 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 				Parameters: map[string]any{
 					"foo": "bar",
 				},
-				Strict:       openai.Bool(true),
-				DeferLoading: openai.Bool(true),
-				Description:  openai.String("description"),
+				Strict:         openai.Bool(true),
+				AllowedCallers: []string{"direct"},
+				DeferLoading:   openai.Bool(true),
+				Description:    openai.String("description"),
+				OutputSchema: map[string]any{
+					"foo": "bar",
+				},
 			},
 		}},
 		Truncation: responses.InputTokenCountParamsTruncationAuto,

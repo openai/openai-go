@@ -213,6 +213,40 @@ func TestAdminOrganizationUsageEmbeddingsWithOptionalParams(t *testing.T) {
 	}
 }
 
+func TestAdminOrganizationUsageFileSearchCallsWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Admin.Organization.Usage.FileSearchCalls(context.TODO(), openai.AdminOrganizationUsageFileSearchCallsParams{
+		StartTime:      0,
+		APIKeyIDs:      []string{"string"},
+		BucketWidth:    openai.AdminOrganizationUsageFileSearchCallsParamsBucketWidth1m,
+		EndTime:        openai.Int(0),
+		GroupBy:        []string{"project_id"},
+		Limit:          openai.Int(0),
+		Page:           openai.String("page"),
+		ProjectIDs:     []string{"string"},
+		UserIDs:        []string{"string"},
+		VectorStoreIDs: []string{"string"},
+	})
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
 func TestAdminOrganizationUsageImagesWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
@@ -304,6 +338,41 @@ func TestAdminOrganizationUsageVectorStoresWithOptionalParams(t *testing.T) {
 		Limit:       openai.Int(0),
 		Page:        openai.String("page"),
 		ProjectIDs:  []string{"string"},
+	})
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestAdminOrganizationUsageWebSearchCallsWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Admin.Organization.Usage.WebSearchCalls(context.TODO(), openai.AdminOrganizationUsageWebSearchCallsParams{
+		StartTime:     0,
+		APIKeyIDs:     []string{"string"},
+		BucketWidth:   openai.AdminOrganizationUsageWebSearchCallsParamsBucketWidth1m,
+		ContextLevels: []string{"low"},
+		EndTime:       openai.Int(0),
+		GroupBy:       []string{"project_id"},
+		Limit:         openai.Int(0),
+		Models:        []string{"string"},
+		Page:          openai.String("page"),
+		ProjectIDs:    []string{"string"},
+		UserIDs:       []string{"string"},
 	})
 	if err != nil {
 		var apierr *openai.Error

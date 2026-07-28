@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -48,6 +47,19 @@ func (r *AdminOrganizationRoleService) New(ctx context.Context, body AdminOrgani
 	return res, err
 }
 
+// Retrieves an organization role.
+func (r *AdminOrganizationRoleService) Get(ctx context.Context, roleID string, opts ...option.RequestOption) (res *Role, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if roleID == "" {
+		err = errors.New("missing required role_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("organization/roles/%s", roleID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
 // Updates an existing organization role.
 func (r *AdminOrganizationRoleService) Update(ctx context.Context, roleID string, body AdminOrganizationRoleUpdateParams, opts ...option.RequestOption) (res *Role, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
@@ -56,7 +68,7 @@ func (r *AdminOrganizationRoleService) Update(ctx context.Context, roleID string
 		err = errors.New("missing required role_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/roles/%s", roleID)
+	path := requestconfig.FormatPath("organization/roles/%s", roleID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -93,7 +105,7 @@ func (r *AdminOrganizationRoleService) Delete(ctx context.Context, roleID string
 		err = errors.New("missing required role_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/roles/%s", roleID)
+	path := requestconfig.FormatPath("organization/roles/%s", roleID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

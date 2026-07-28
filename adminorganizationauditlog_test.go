@@ -41,6 +41,7 @@ func TestAdminOrganizationAuditLogListWithOptionalParams(t *testing.T) {
 		Limit:       openai.Int(0),
 		ProjectIDs:  []string{"string"},
 		ResourceIDs: []string{"string"},
+		TenantOnly:  openai.Bool(true),
 	})
 	if err != nil {
 		var apierr *openai.Error

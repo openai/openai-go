@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -57,7 +56,7 @@ func (r *AdminOrganizationInviteService) Get(ctx context.Context, inviteID strin
 		err = errors.New("missing required invite_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/invites/%s", inviteID)
+	path := requestconfig.FormatPath("organization/invites/%s", inviteID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -94,7 +93,7 @@ func (r *AdminOrganizationInviteService) Delete(ctx context.Context, inviteID st
 		err = errors.New("missing required invite_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/invites/%s", inviteID)
+	path := requestconfig.FormatPath("organization/invites/%s", inviteID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -214,7 +213,8 @@ type AdminOrganizationInviteNewParams struct {
 	Role AdminOrganizationInviteNewParamsRole `json:"role,omitzero" api:"required"`
 	// An array of projects to which membership is granted at the same time the org
 	// invite is accepted. If omitted, the user will be invited to the default project
-	// for compatibility with legacy behavior.
+	// for compatibility with legacy behavior. If empty list is passed, the user will
+	// not be invited to any projects, including the default one.
 	Projects []AdminOrganizationInviteNewParamsProject `json:"projects,omitzero"`
 	paramObj
 }

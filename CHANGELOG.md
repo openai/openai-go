@@ -1,5 +1,151 @@
 # Changelog
 
+## 3.46.0 (2026-07-23)
+
+Full Changelog: [v3.45.0...v3.46.0](https://github.com/openai/openai-go/compare/v3.45.0...v3.46.0)
+
+### Features
+
+* **api:** add support for `spend_limit` admin apis ([8de8d9b](https://github.com/openai/openai-go/commit/8de8d9b41f2ad94562b42643a06c85a6c7e3a8f4))
+
+
+### Bug Fixes
+
+* **api:** safely format project spend limit paths ([ac981e4](https://github.com/openai/openai-go/commit/ac981e4c1feb83e1be1e7e26055819ccc3eda820))
+
+## 3.45.0 (2026-07-22)
+
+Full Changelog: [v3.44.0...v3.45.0](https://github.com/openai/openai-go/compare/v3.44.0...v3.45.0)
+
+### Go version requirement
+
+openai-go v3.45.0 requires Go 1.25 or newer. This release upgrades
+`golang.org/x/net` to v0.57.0 to address security findings and aligns the SDK
+with supported Go toolchains. v3.44.0 is the final release that builds with Go
+1.22–1.24; older SDK releases do not receive guaranteed security backports. No
+exported SDK API or `/v3` import path changes are included.
+
+### Features
+
+* **api:** accept `None` for prompt_cache_key/safety_identifier ([711460e](https://github.com/openai/openai-go/commit/711460ea11963cd250be5e420269b25488b02ef9))
+* **stlc:** configurable CI runner and private-production-repo support in workflow templates ([6669f50](https://github.com/openai/openai-go/commit/6669f5011fc02c2160024d26ab6f9240560a778d))
+
+## 3.44.0 (2026-07-17)
+
+Full Changelog: [v3.43.0...v3.44.0](https://github.com/openai/openai-go/compare/v3.43.0...v3.44.0)
+
+### Features
+
+* **api:** /organization/projects/{project_id}/service_accounts/{service_account_id}/api_keys" endpoint ([28d2a6a](https://github.com/openai/openai-go/commit/28d2a6ab978f78d10b29087e70539ed230340274))
+* **api:** manual updates ([a531d4a](https://github.com/openai/openai-go/commit/a531d4a994c75177a7ed3edaf0c909db188147ce))
+* **api:** manual updates ([8073e1e](https://github.com/openai/openai-go/commit/8073e1e1a20907ae89433008157c238bccd4eca9))
+
+
+### Bug Fixes
+
+* **api:** format service account API key path ([999e165](https://github.com/openai/openai-go/commit/999e16536e7dc5ea4040d13b94c413cfc9df98ec))
+* format service account API key path ([9fb19bb](https://github.com/openai/openai-go/commit/9fb19bbb13c067a12c14153f8ba5e57b233cd927))
+
+## 3.43.0 (2026-07-14)
+
+Full Changelog: [v3.42.0...v3.43.0](https://github.com/openai/openai-go/compare/v3.42.0...v3.43.0)
+
+### Features
+
+* **api:** add owner_project_access to APIKeyListParams ([df2e35d](https://github.com/openai/openai-go/commit/df2e35dc39e43e8da55f1006084d27a1041005fc))
+
+
+### Bug Fixes
+
+* **example:** set the 'include usage' field to true under stream options to get accurate usage information ([#125](https://github.com/openai/openai-go/issues/125)) ([c38b6c3](https://github.com/openai/openai-go/commit/c38b6c36c911d47b369518b7222363befa9c1e25))
+* **ssestream:** skip SSE blocks without data ([#621](https://github.com/openai/openai-go/issues/621)) ([114224d](https://github.com/openai/openai-go/commit/114224dd71cf6695a01de8353352145832662e84))
+
+
+### Documentation
+
+* fix Azure API version link typo ([#630](https://github.com/openai/openai-go/issues/630)) ([4d7f649](https://github.com/openai/openai-go/commit/4d7f6493d248af66e42bfbb2bfb6c3bd4ca04b9c))
+* fix function call comment wording in example ([#639](https://github.com/openai/openai-go/issues/639)) ([050ab8a](https://github.com/openai/openai-go/commit/050ab8af70b562ff4c81a16476bf393534849d92))
+* links in README.md ([#308](https://github.com/openai/openai-go/issues/308)) ([35501ce](https://github.com/openai/openai-go/commit/35501ce5ec0449128bd84d57b24841ef541c3122))
+
+## 3.42.0 (2026-07-09)
+
+Full Changelog: [v3.41.1...v3.42.0](https://github.com/openai/openai-go/compare/v3.41.1...v3.42.0)
+
+### Features
+
+* **api:** gpt-5.6-sol updates ([8c062a6](https://github.com/openai/openai-go/commit/8c062a6e8fa8ae91daf96f97e301447d04ecd371))
+
+
+### Bug Fixes
+
+* **api:** restore programmatic response types ([2384620](https://github.com/openai/openai-go/commit/2384620bab9bede6a6b57cc2689bf86084d1e8f3))
+* **api:** restore response union metadata ([7b2e975](https://github.com/openai/openai-go/commit/7b2e9755e6532a33d14085411a9f57d7709ada59))
+
+## 3.41.1 (2026-07-06)
+
+Full Changelog: [v3.41.0...v3.41.1](https://github.com/openai/openai-go/compare/v3.41.0...v3.41.1)
+
+### Documentation
+
+* fix Azure API versioning link ([#649](https://github.com/openai/openai-go/issues/649)) ([a8bd01a](https://github.com/openai/openai-go/commit/a8bd01aa80ba28bb3b5944cdac24a1aadc18fdbe))
+
+## 3.41.0 (2026-06-17)
+
+Full Changelog: [v3.40.0...v3.41.0](https://github.com/openai/openai-go/compare/v3.40.0...v3.41.0)
+
+### Features
+
+* **api:** update OpenAPI spec or Stainless config ([868891f](https://github.com/openai/openai-go/commit/868891f7fd02f5f92fa86a8b7a0fcd7a8c950bb1))
+
+## 3.40.0 (2026-06-16)
+
+Full Changelog: [v3.39.0...v3.40.0](https://github.com/openai/openai-go/compare/v3.39.0...v3.40.0)
+
+### Features
+
+* **api:** admin spend_alerts ([26992e5](https://github.com/openai/openai-go/commit/26992e5e1d4553d51cc63dddb0c0817a6940448c))
+* **api:** manual updates ([28f7e09](https://github.com/openai/openai-go/commit/28f7e092c03b7458c69c0dd467fbcfcfb7a31864))
+* **api:** update OpenAPI spec or Stainless config ([57c307e](https://github.com/openai/openai-go/commit/57c307e3893744bfc186d23cbb5c0d1f2e9d798a))
+
+## 3.39.0 (2026-06-03)
+
+Full Changelog: [v3.38.0...v3.39.0](https://github.com/openai/openai-go/compare/v3.38.0...v3.39.0)
+
+### Features
+
+* **api:** responses.moderation and chat_completions.moderation ([7a2dac0](https://github.com/openai/openai-go/commit/7a2dac0ddf6b92dfcaa45b190dbe7f51368e199c))
+
+## 3.38.0 (2026-06-01)
+
+Full Changelog: [v3.37.0...v3.38.0](https://github.com/openai/openai-go/compare/v3.37.0...v3.38.0)
+
+### Features
+
+* **api:** manual updates ([d7dac81](https://github.com/openai/openai-go/commit/d7dac8192c292d882cb765d3379e10427930979e))
+* **api:** workload identity in audit logs, additional_tools item in responses, fix ActionSearch.query to be optional. ([4c3981c](https://github.com/openai/openai-go/commit/4c3981cfabc98ec1d67c2baf7c6a891ef6640f96))
+
+## 3.37.0 (2026-05-21)
+
+Full Changelog: [v3.36.0...v3.37.0](https://github.com/openai/openai-go/compare/v3.36.0...v3.37.0)
+
+### Features
+
+* **api:** api update ([7f7416e](https://github.com/openai/openai-go/commit/7f7416ea4f6953a2861189dee6391515c3b995a9))
+* **api:** manual updates ([d646562](https://github.com/openai/openai-go/commit/d6465620413df87d971e7e37ae74bef4c70076b1))
+* **api:** update OpenAPI spec or Stainless config ([b34b78a](https://github.com/openai/openai-go/commit/b34b78a83433003a6168fffd175cc963ad719495))
+* **client:** optimize json encoder for internal types ([93adc6e](https://github.com/openai/openai-go/commit/93adc6e6247e8ce830152c3df0980a3154aa098a))
+
+
+### Bug Fixes
+
+* **go:** format generated admin paths ([1dd8f5e](https://github.com/openai/openai-go/commit/1dd8f5ec0adeeefef6a56068b5532ba5e3b3290e))
+* **go:** format generated project permission paths ([b751c37](https://github.com/openai/openai-go/commit/b751c37ce2d6348545d75451dfc253dd7dda0f4f))
+
+
+### Chores
+
+* **api:** docs updates ([08bc80e](https://github.com/openai/openai-go/commit/08bc80ea58a19ba0725942c1f3afbcfb043851a0))
+
 ## 3.36.0 (2026-05-13)
 
 Full Changelog: [v3.35.0...v3.36.0](https://github.com/openai/openai-go/compare/v3.35.0...v3.36.0)

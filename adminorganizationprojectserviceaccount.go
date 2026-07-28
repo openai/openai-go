@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -28,6 +27,7 @@ import (
 // the [NewAdminOrganizationProjectServiceAccountService] method instead.
 type AdminOrganizationProjectServiceAccountService struct {
 	Options []option.RequestOption
+	APIKeys AdminOrganizationProjectServiceAccountAPIKeyService
 }
 
 // NewAdminOrganizationProjectServiceAccountService generates a new service that
@@ -37,11 +37,12 @@ type AdminOrganizationProjectServiceAccountService struct {
 func NewAdminOrganizationProjectServiceAccountService(opts ...option.RequestOption) (r AdminOrganizationProjectServiceAccountService) {
 	r = AdminOrganizationProjectServiceAccountService{}
 	r.Options = opts
+	r.APIKeys = NewAdminOrganizationProjectServiceAccountAPIKeyService(opts...)
 	return
 }
 
-// Creates a new service account in the project. This also returns an unredacted
-// API key for the service account.
+// Creates a new service account in the project. By default, this also returns an
+// unredacted API key for the service account.
 func (r *AdminOrganizationProjectServiceAccountService) New(ctx context.Context, projectID string, body AdminOrganizationProjectServiceAccountNewParams, opts ...option.RequestOption) (res *AdminOrganizationProjectServiceAccountNewResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -49,7 +50,7 @@ func (r *AdminOrganizationProjectServiceAccountService) New(ctx context.Context,
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -66,8 +67,25 @@ func (r *AdminOrganizationProjectServiceAccountService) Get(ctx context.Context,
 		err = errors.New("missing required service_account_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
+// Updates a service account in the project.
+func (r *AdminOrganizationProjectServiceAccountService) Update(ctx context.Context, projectID string, serviceAccountID string, body AdminOrganizationProjectServiceAccountUpdateParams, opts ...option.RequestOption) (res *ProjectServiceAccount, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if projectID == "" {
+		err = errors.New("missing required project_id parameter")
+		return nil, err
+	}
+	if serviceAccountID == "" {
+		err = errors.New("missing required service_account_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
 
@@ -81,7 +99,7 @@ func (r *AdminOrganizationProjectServiceAccountService) List(ctx context.Context
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts", projectID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -114,7 +132,7 @@ func (r *AdminOrganizationProjectServiceAccountService) Delete(ctx context.Conte
 		err = errors.New("missing required service_account_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -129,9 +147,9 @@ type ProjectServiceAccount struct {
 	Name string `json:"name" api:"required"`
 	// The object type, which is always `organization.project.service_account`
 	Object constant.OrganizationProjectServiceAccount `json:"object" default:"organization.project.service_account"`
-	// `owner` or `member`
+	// `owner`, `member`, or `none`
 	//
-	// Any of "owner", "member".
+	// Any of "owner", "member", "none".
 	Role ProjectServiceAccountRole `json:"role" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -151,12 +169,13 @@ func (r *ProjectServiceAccount) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// `owner` or `member`
+// `owner`, `member`, or `none`
 type ProjectServiceAccountRole string
 
 const (
 	ProjectServiceAccountRoleOwner  ProjectServiceAccountRole = "owner"
 	ProjectServiceAccountRoleMember ProjectServiceAccountRole = "member"
+	ProjectServiceAccountRoleNone   ProjectServiceAccountRole = "none"
 )
 
 type AdminOrganizationProjectServiceAccountNewResponse struct {
@@ -165,8 +184,11 @@ type AdminOrganizationProjectServiceAccountNewResponse struct {
 	CreatedAt int64                                                   `json:"created_at" api:"required" format:"unixtime"`
 	Name      string                                                  `json:"name" api:"required"`
 	Object    constant.OrganizationProjectServiceAccount              `json:"object" default:"organization.project.service_account"`
-	// Service accounts can only have one role of type `member`
-	Role constant.Member `json:"role" default:"member"`
+	// Service accounts created with default project membership have role `member`.
+	// Accounts created with `create_service_account_only` have role `none`.
+	//
+	// Any of "member", "none".
+	Role AdminOrganizationProjectServiceAccountNewResponseRole `json:"role" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -211,6 +233,15 @@ func (r *AdminOrganizationProjectServiceAccountNewResponseAPIKey) UnmarshalJSON(
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// Service accounts created with default project membership have role `member`.
+// Accounts created with `create_service_account_only` have role `none`.
+type AdminOrganizationProjectServiceAccountNewResponseRole string
+
+const (
+	AdminOrganizationProjectServiceAccountNewResponseRoleMember AdminOrganizationProjectServiceAccountNewResponseRole = "member"
+	AdminOrganizationProjectServiceAccountNewResponseRoleNone   AdminOrganizationProjectServiceAccountNewResponseRole = "none"
+)
+
 type AdminOrganizationProjectServiceAccountDeleteResponse struct {
 	ID      string                                            `json:"id" api:"required"`
 	Deleted bool                                              `json:"deleted" api:"required"`
@@ -234,6 +265,8 @@ func (r *AdminOrganizationProjectServiceAccountDeleteResponse) UnmarshalJSON(dat
 type AdminOrganizationProjectServiceAccountNewParams struct {
 	// The name of the service account being created.
 	Name string `json:"name" api:"required"`
+	// Create the service account without default roles or an API key.
+	CreateServiceAccountOnly param.Opt[bool] `json:"create_service_account_only,omitzero"`
 	paramObj
 }
 
@@ -244,6 +277,32 @@ func (r AdminOrganizationProjectServiceAccountNewParams) MarshalJSON() (data []b
 func (r *AdminOrganizationProjectServiceAccountNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+type AdminOrganizationProjectServiceAccountUpdateParams struct {
+	// The updated service account name.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The updated service account role.
+	//
+	// Any of "member", "owner".
+	Role AdminOrganizationProjectServiceAccountUpdateParamsRole `json:"role,omitzero"`
+	paramObj
+}
+
+func (r AdminOrganizationProjectServiceAccountUpdateParams) MarshalJSON() (data []byte, err error) {
+	type shadow AdminOrganizationProjectServiceAccountUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdminOrganizationProjectServiceAccountUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The updated service account role.
+type AdminOrganizationProjectServiceAccountUpdateParamsRole string
+
+const (
+	AdminOrganizationProjectServiceAccountUpdateParamsRoleMember AdminOrganizationProjectServiceAccountUpdateParamsRole = "member"
+	AdminOrganizationProjectServiceAccountUpdateParamsRoleOwner  AdminOrganizationProjectServiceAccountUpdateParamsRole = "owner"
+)
 
 type AdminOrganizationProjectServiceAccountListParams struct {
 	// A cursor for use in pagination. `after` is an object ID that defines your place

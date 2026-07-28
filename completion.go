@@ -234,14 +234,17 @@ func (r *CompletionUsageCompletionTokensDetails) UnmarshalJSON(data []byte) erro
 type CompletionUsagePromptTokensDetails struct {
 	// Audio input tokens present in the prompt.
 	AudioTokens int64 `json:"audio_tokens"`
+	// The unadjusted number of prompt tokens written to cache.
+	CacheWriteTokens int64 `json:"cache_write_tokens"`
 	// Cached tokens present in the prompt.
 	CachedTokens int64 `json:"cached_tokens"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		AudioTokens  respjson.Field
-		CachedTokens respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
+		AudioTokens      respjson.Field
+		CacheWriteTokens respjson.Field
+		CachedTokens     respjson.Field
+		ExtraFields      map[string]respjson.Field
+		raw              string
 	} `json:"-"`
 }
 

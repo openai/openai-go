@@ -18,7 +18,9 @@ func main() {
 		Model:          openai.SpeechModelTTS1,
 		Input:          `Why did the chicken cross the road? To get to the other side.`,
 		ResponseFormat: openai.AudioSpeechNewParamsResponseFormatPCM,
-		Voice:          openai.AudioSpeechNewParamsVoiceAlloy,
+		Voice: openai.AudioSpeechNewParamsVoiceUnion{
+			OfAudioSpeechNewsVoiceString2: openai.String("alloy"),
+		},
 	})
 	defer res.Body.Close()
 	if err != nil {

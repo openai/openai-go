@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -52,6 +51,19 @@ func (r *AdminOrganizationGroupService) New(ctx context.Context, body AdminOrgan
 	return res, err
 }
 
+// Retrieves a group.
+func (r *AdminOrganizationGroupService) Get(ctx context.Context, groupID string, opts ...option.RequestOption) (res *Group, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if groupID == "" {
+		err = errors.New("missing required group_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("organization/groups/%s", groupID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
 // Updates a group's information.
 func (r *AdminOrganizationGroupService) Update(ctx context.Context, groupID string, body AdminOrganizationGroupUpdateParams, opts ...option.RequestOption) (res *AdminOrganizationGroupUpdateResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
@@ -60,7 +72,7 @@ func (r *AdminOrganizationGroupService) Update(ctx context.Context, groupID stri
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s", groupID)
+	path := requestconfig.FormatPath("organization/groups/%s", groupID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -97,7 +109,7 @@ func (r *AdminOrganizationGroupService) Delete(ctx context.Context, groupID stri
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s", groupID)
+	path := requestconfig.FormatPath("organization/groups/%s", groupID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -109,7 +121,9 @@ type Group struct {
 	// Unix timestamp (in seconds) when the group was created.
 	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
 	// The type of the group.
-	GroupType string `json:"group_type" api:"required"`
+	//
+	// Any of "group", "tenant_group".
+	GroupType GroupGroupType `json:"group_type" api:"required"`
 	// Whether the group is managed through SCIM and controlled by your identity
 	// provider.
 	IsScimManaged bool `json:"is_scim_managed" api:"required"`
@@ -132,6 +146,14 @@ func (r Group) RawJSON() string { return r.JSON.raw }
 func (r *Group) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
+
+// The type of the group.
+type GroupGroupType string
+
+const (
+	GroupGroupTypeGroup       GroupGroupType = "group"
+	GroupGroupTypeTenantGroup GroupGroupType = "tenant_group"
+)
 
 // Response returned after updating a group.
 type AdminOrganizationGroupUpdateResponse struct {

@@ -57,8 +57,9 @@ func TestAdminOrganizationProjectAPIKeyListWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"project_id",
 		openai.AdminOrganizationProjectAPIKeyListParams{
-			After: openai.String("after"),
-			Limit: openai.Int(0),
+			After:              openai.String("after"),
+			Limit:              openai.Int(0),
+			OwnerProjectAccess: openai.AdminOrganizationProjectAPIKeyListParamsOwnerProjectAccessActive,
 		},
 	)
 	if err != nil {

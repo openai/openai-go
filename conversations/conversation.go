@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"slices"
 
@@ -61,7 +60,7 @@ func (r *ConversationService) Get(ctx context.Context, conversationID string, op
 		err = errors.New("missing required conversation_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("conversations/%s", conversationID)
+	path := requestconfig.FormatPath("conversations/%s", conversationID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -74,7 +73,7 @@ func (r *ConversationService) Update(ctx context.Context, conversationID string,
 		err = errors.New("missing required conversation_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("conversations/%s", conversationID)
+	path := requestconfig.FormatPath("conversations/%s", conversationID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -87,7 +86,7 @@ func (r *ConversationService) Delete(ctx context.Context, conversationID string,
 		err = errors.New("missing required conversation_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("conversations/%s", conversationID)
+	path := requestconfig.FormatPath("conversations/%s", conversationID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -106,14 +105,19 @@ type ComputerScreenshotContent struct {
 	// Specifies the event type. For a computer screenshot, this property is always set
 	// to `computer_screenshot`.
 	Type constant.ComputerScreenshot `json:"type" default:"computer_screenshot"`
+	// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+	// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+	// token block.
+	PromptCacheBreakpoint ComputerScreenshotContentPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Detail      respjson.Field
-		FileID      respjson.Field
-		ImageURL    respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Detail                respjson.Field
+		FileID                respjson.Field
+		ImageURL              respjson.Field
+		Type                  respjson.Field
+		PromptCacheBreakpoint respjson.Field
+		ExtraFields           map[string]respjson.Field
+		raw                   string
 	} `json:"-"`
 }
 
@@ -133,6 +137,26 @@ const (
 	ComputerScreenshotContentDetailAuto     ComputerScreenshotContentDetail = "auto"
 	ComputerScreenshotContentDetailOriginal ComputerScreenshotContentDetail = "original"
 )
+
+// Marks the exact end of a reusable prompt prefix. The breakpoint inherits its TTL
+// from the request's `prompt_cache_options.ttl`; the boundary is not rounded to a
+// token block.
+type ComputerScreenshotContentPromptCacheBreakpoint struct {
+	// The breakpoint mode. Always `explicit`.
+	Mode constant.Explicit `json:"mode" default:"explicit"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Mode        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ComputerScreenshotContentPromptCacheBreakpoint) RawJSON() string { return r.JSON.raw }
+func (r *ComputerScreenshotContentPromptCacheBreakpoint) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 type Conversation struct {
 	// The unique ID of the conversation.
@@ -244,6 +268,11 @@ type MessageContentUnion struct {
 	// Any of "input_text", "output_text", "text", "summary_text", "reasoning_text",
 	// "refusal", "input_image", "computer_screenshot", "input_file".
 	Type string `json:"type"`
+	// This field is a union of [responses.ResponseInputTextPromptCacheBreakpoint],
+	// [responses.ResponseInputImagePromptCacheBreakpoint],
+	// [ComputerScreenshotContentPromptCacheBreakpoint],
+	// [responses.ResponseInputFilePromptCacheBreakpoint]
+	PromptCacheBreakpoint MessageContentUnionPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// This field is from variant [responses.ResponseOutputText].
 	Annotations []responses.ResponseOutputTextAnnotationUnion `json:"annotations"`
 	// This field is from variant [responses.ResponseOutputText].
@@ -260,18 +289,19 @@ type MessageContentUnion struct {
 	// This field is from variant [responses.ResponseInputFile].
 	Filename string `json:"filename"`
 	JSON     struct {
-		Text        respjson.Field
-		Type        respjson.Field
-		Annotations respjson.Field
-		Logprobs    respjson.Field
-		Refusal     respjson.Field
-		Detail      respjson.Field
-		FileID      respjson.Field
-		ImageURL    respjson.Field
-		FileData    respjson.Field
-		FileURL     respjson.Field
-		Filename    respjson.Field
-		raw         string
+		Text                  respjson.Field
+		Type                  respjson.Field
+		PromptCacheBreakpoint respjson.Field
+		Annotations           respjson.Field
+		Logprobs              respjson.Field
+		Refusal               respjson.Field
+		Detail                respjson.Field
+		FileID                respjson.Field
+		ImageURL              respjson.Field
+		FileData              respjson.Field
+		FileURL               respjson.Field
+		Filename              respjson.Field
+		raw                   string
 	} `json:"-"`
 }
 
@@ -374,6 +404,25 @@ func (u MessageContentUnion) AsInputFile() (v responses.ResponseInputFile) {
 func (u MessageContentUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *MessageContentUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// MessageContentUnionPromptCacheBreakpoint is an implicit subunion of
+// [MessageContentUnion]. MessageContentUnionPromptCacheBreakpoint provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [MessageContentUnion].
+type MessageContentUnionPromptCacheBreakpoint struct {
+	// This field is from variant [responses.ResponseInputTextPromptCacheBreakpoint].
+	Mode constant.Explicit `json:"mode"`
+	JSON struct {
+		Mode respjson.Field
+		raw  string
+	} `json:"-"`
+}
+
+func (r *MessageContentUnionPromptCacheBreakpoint) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

@@ -28,6 +28,9 @@ func main() {
 		Seed:     openai.Int(0),
 		Model:    openai.ChatModelGPT4o,
 		Tools:    tools,
+		StreamOptions: openai.ChatCompletionStreamOptionsParam{
+			IncludeUsage: openai.Bool(true),
+		},
 	}
 
 	stream := client.Chat.Completions.NewStreaming(ctx, params)

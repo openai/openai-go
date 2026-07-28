@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -56,7 +55,7 @@ func (r *BetaThreadMessageService) New(ctx context.Context, threadID string, bod
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/messages", threadID)
+	path := requestconfig.FormatPath("threads/%s/messages", threadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -76,7 +75,7 @@ func (r *BetaThreadMessageService) Get(ctx context.Context, threadID string, mes
 		err = errors.New("missing required message_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/messages/%s", threadID, messageID)
+	path := requestconfig.FormatPath("threads/%s/messages/%s", threadID, messageID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -96,7 +95,7 @@ func (r *BetaThreadMessageService) Update(ctx context.Context, threadID string, 
 		err = errors.New("missing required message_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/messages/%s", threadID, messageID)
+	path := requestconfig.FormatPath("threads/%s/messages/%s", threadID, messageID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -113,7 +112,7 @@ func (r *BetaThreadMessageService) List(ctx context.Context, threadID string, qu
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/messages", threadID)
+	path := requestconfig.FormatPath("threads/%s/messages", threadID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -148,7 +147,7 @@ func (r *BetaThreadMessageService) Delete(ctx context.Context, threadID string, 
 		err = errors.New("missing required message_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("threads/%s/messages/%s", threadID, messageID)
+	path := requestconfig.FormatPath("threads/%s/messages/%s", threadID, messageID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

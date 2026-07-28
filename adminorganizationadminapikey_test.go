@@ -13,7 +13,7 @@ import (
 	"github.com/openai/openai-go/v3/option"
 )
 
-func TestAdminOrganizationAdminAPIKeyNew(t *testing.T) {
+func TestAdminOrganizationAdminAPIKeyNewWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -27,7 +27,8 @@ func TestAdminOrganizationAdminAPIKeyNew(t *testing.T) {
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Admin.Organization.AdminAPIKeys.New(context.TODO(), openai.AdminOrganizationAdminAPIKeyNewParams{
-		Name: "New Admin Key",
+		Name:             "New Admin Key",
+		ExpiresInSeconds: openai.Int(2592000),
 	})
 	if err != nil {
 		var apierr *openai.Error
