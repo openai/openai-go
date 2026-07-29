@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -109,7 +110,7 @@ func (r *WebhookService) VerifySignatureWithTolerance(body []byte, headers http.
 // tolerance specifies the maximum age of the webhook.
 // now allows specifying the current time for testing purposes.
 func (r *WebhookService) VerifySignatureWithToleranceAndTime(body []byte, headers http.Header, tolerance time.Duration, now time.Time, opts ...option.RequestOption) error {
-	cfg, err := requestconfig.PreRequestOptions(r.Options...)
+	cfg, err := requestconfig.PreRequestOptions(slices.Concat(r.Options, opts)...)
 	if err != nil {
 		return err
 	}
