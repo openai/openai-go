@@ -1,0 +1,69 @@
+// The mutual-tls command demonstrates native Go mutual TLS configuration with
+// option.WithHTTPClient.
+package main
+
+import (
+	"crypto/tls"
+	"errors"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"os"
+
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
+)
+
+func main() {
+	if err := run(); err != nil {
+		slog.Error("mutual TLS example failed", "err", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	// client-chain.pem must contain the leaf certificate first, followed by
+	// every intermediate required by the OpenAI mTLS endpoint.
+	certificate, err := tls.LoadX509KeyPair(
+		"/secrets/openai/client-chain.pem",
+		"/secrets/openai/client.key",
+	)
+	if err != nil {
+		return fmt.Errorf("load client certificate: %w", err)
+	}
+
+	httpClient, err := newMutualTLSHTTPClient(certificate)
+	if err != nil {
+		return fmt.Errorf("configure mutual TLS HTTP client: %w", err)
+	}
+
+	client := openai.NewClient(
+		option.WithBaseURL("https://mtls.api.openai.com/v1"),
+		option.WithHTTPClient(httpClient),
+	)
+
+	_ = client
+	return nil
+}
+
+func newMutualTLSHTTPClient(certificate tls.Certificate) (*http.Client, error) {
+	defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		return nil, errors.New("http.DefaultTransport is not an *http.Transport")
+	}
+	transport := defaultTransport.Clone()
+
+	tlsConfig := &tls.Config{}
+	if transport.TLSClientConfig != nil {
+		tlsConfig = transport.TLSClientConfig.Clone()
+	}
+	tlsConfig.Certificates = []tls.Certificate{certificate}
+	transport.TLSClientConfig = tlsConfig
+
+	return &http.Client{
+		Transport: transport,
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}, nil
+}

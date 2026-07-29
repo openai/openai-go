@@ -958,6 +958,64 @@ You may also replace the default `http.Client` with
 accepted (this overwrites any previous client) and receives requests after any
 middleware has been applied.
 
+### Mutual TLS with a custom HTTP client
+
+For API-key authenticated HTTP requests that require mutual TLS, configure a
+native Go `*http.Client` and pass it through `option.WithHTTPClient`. The
+certificate file must contain the client leaf followed by every required
+intermediate:
+
+```go
+certificate, err := tls.LoadX509KeyPair(
+	"/secrets/openai/client-chain.pem",
+	"/secrets/openai/client.key",
+)
+if err != nil {
+	return err
+}
+
+defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+if !ok {
+	return errors.New("http.DefaultTransport is not an *http.Transport")
+}
+transport := defaultTransport.Clone()
+tlsConfig := &tls.Config{}
+if transport.TLSClientConfig != nil {
+	tlsConfig = transport.TLSClientConfig.Clone()
+}
+tlsConfig.Certificates = []tls.Certificate{certificate}
+transport.TLSClientConfig = tlsConfig
+
+httpClient := &http.Client{
+	Transport: transport,
+	CheckRedirect: func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+}
+
+client := openai.NewClient(
+	option.WithBaseURL("https://mtls.api.openai.com/v1"),
+	option.WithHTTPClient(httpClient),
+)
+```
+
+The SDK does not select an mTLS endpoint automatically when a custom HTTP
+client is used. Set `option.WithBaseURL` explicitly, use
+`https://mtls-eu.api.openai.com/v1` for the EU endpoint, or set
+`OPENAI_BASE_URL`. Keep server trust separate by configuring `RootCAs` on the
+cloned `tls.Config` when custom roots are required.
+
+`tls.LoadX509KeyPair` fails for unreadable, malformed, or mismatched local
+certificate and key files. Certificate validity, chain trust, and OpenAI
+product policy remain TLS-handshake/server checks. Rebuild the transport and
+OpenAI client after rotating a certificate because existing TLS connections
+cannot renegotiate client authentication. When overriding the HTTP client, the
+application also owns redirect, proxy, and timeout policy; the example disables
+redirects so the client certificate cannot be offered to another host.
+
+The complete tested recipe is in
+[`examples/mutual-tls`](./examples/mutual-tls/main.go).
+
 ## Workload Identity Authentication
 
 For cloud workloads (Kubernetes, Azure, Google Cloud Platform), you can use workload identity authentication instead of API keys. This provides short-lived tokens that are automatically refreshed.
