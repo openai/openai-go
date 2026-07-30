@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.48.0 (2026-07-30)
+
+Full Changelog: [v3.47.0...v3.48.0](https://github.com/openai/openai-go/compare/v3.47.0...v3.48.0)
+
+### Features
+
+* **api:** fast tier ([cffac28](https://github.com/openai/openai-go/commit/cffac28fd20783bb48a5e69e102e6f327f2adb83))
+
 ## 3.47.0 (2026-07-28)
 
 Full Changelog: [v3.46.0...v3.47.0](https://github.com/openai/openai-go/compare/v3.46.0...v3.47.0)
