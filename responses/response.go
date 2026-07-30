@@ -3441,9 +3441,13 @@ type Response struct {
 	//     will use 'default'.
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
-	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-	//     '[priority](https://openai.com/api-priority-processing/)', then the request
-	//     will be processed with the corresponding service tier.
+	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
+	//     then the request will be processed with the Flex Processing service tier.
+	//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
+	//     include the `service_tier=fast` or `service_tier=priority` parameter for
+	//     Responses or Chat Completions. The response will show `service_tier=priority`
+	//     regardless of if you specify `service_tier=fast` or `priority` in your
+	//     request.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -3451,7 +3455,7 @@ type Response struct {
 	// request. This response value may be different from the value set in the
 	// parameter.
 	//
-	// Any of "auto", "default", "flex", "scale", "priority".
+	// Any of "auto", "default", "flex", "scale", "priority", "fast".
 	ServiceTier ResponseServiceTier `json:"service_tier" api:"nullable"`
 	// The status of the response generation. One of `completed`, `failed`,
 	// `in_progress`, `cancelled`, `queued`, or `incomplete`.
@@ -4086,9 +4090,13 @@ const (
 //     will use 'default'.
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
-//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-//     '[priority](https://openai.com/api-priority-processing/)', then the request
-//     will be processed with the corresponding service tier.
+//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
+//     then the request will be processed with the Flex Processing service tier.
+//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
+//     include the `service_tier=fast` or `service_tier=priority` parameter for
+//     Responses or Chat Completions. The response will show `service_tier=priority`
+//     regardless of if you specify `service_tier=fast` or `priority` in your
+//     request.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -4103,6 +4111,7 @@ const (
 	ResponseServiceTierFlex     ResponseServiceTier = "flex"
 	ResponseServiceTierScale    ResponseServiceTier = "scale"
 	ResponseServiceTierPriority ResponseServiceTier = "priority"
+	ResponseServiceTierFast     ResponseServiceTier = "fast"
 )
 
 // The truncation strategy to use for the model response.
@@ -25825,9 +25834,13 @@ type ResponseNewParams struct {
 	//     will use 'default'.
 	//   - If set to 'default', then the request will be processed with the standard
 	//     pricing and performance for the selected model.
-	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-	//     '[priority](https://openai.com/api-priority-processing/)', then the request
-	//     will be processed with the corresponding service tier.
+	//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
+	//     then the request will be processed with the Flex Processing service tier.
+	//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
+	//     include the `service_tier=fast` or `service_tier=priority` parameter for
+	//     Responses or Chat Completions. The response will show `service_tier=priority`
+	//     regardless of if you specify `service_tier=fast` or `priority` in your
+	//     request.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -25835,7 +25848,7 @@ type ResponseNewParams struct {
 	// request. This response value may be different from the value set in the
 	// parameter.
 	//
-	// Any of "auto", "default", "flex", "scale", "priority".
+	// Any of "auto", "default", "flex", "scale", "priority", "fast".
 	ServiceTier ResponseNewParamsServiceTier `json:"service_tier,omitzero"`
 	// Options for streaming responses. Only set this when you set `stream: true`.
 	StreamOptions ResponseNewParamsStreamOptions `json:"stream_options,omitzero"`
@@ -26147,9 +26160,13 @@ const (
 //     will use 'default'.
 //   - If set to 'default', then the request will be processed with the standard
 //     pricing and performance for the selected model.
-//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)' or
-//     '[priority](https://openai.com/api-priority-processing/)', then the request
-//     will be processed with the corresponding service tier.
+//   - If set to '[flex](https://platform.openai.com/docs/guides/flex-processing)',
+//     then the request will be processed with the Flex Processing service tier.
+//   - To opt-in to [Fast mode](/api/docs/guides/fast-mode) at the request level,
+//     include the `service_tier=fast` or `service_tier=priority` parameter for
+//     Responses or Chat Completions. The response will show `service_tier=priority`
+//     regardless of if you specify `service_tier=fast` or `priority` in your
+//     request.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -26164,6 +26181,7 @@ const (
 	ResponseNewParamsServiceTierFlex     ResponseNewParamsServiceTier = "flex"
 	ResponseNewParamsServiceTierScale    ResponseNewParamsServiceTier = "scale"
 	ResponseNewParamsServiceTierPriority ResponseNewParamsServiceTier = "priority"
+	ResponseNewParamsServiceTierFast     ResponseNewParamsServiceTier = "fast"
 )
 
 // Options for streaming responses. Only set this when you set `stream: true`.
