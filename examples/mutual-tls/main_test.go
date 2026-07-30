@@ -56,6 +56,11 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	defaultTLSConfig.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
 		return nil, nil
 	}
+	defaultTLSConfig.ServerName = "example.invalid"
+	defaultTLSConfig.InsecureSkipVerify = true //nolint:gosec // Verify the dedicated config restores server verification.
+	inheritedRootPool := x509.NewCertPool()
+	inheritedRootPool.AddCert(fixture.root)
+	defaultTLSConfig.RootCAs = inheritedRootPool
 	inheritedSessionCache := tls.NewLRUClientSessionCache(1)
 	defaultTLSConfig.ClientSessionCache = inheritedSessionCache
 	defaultTransport.TLSClientConfig = defaultTLSConfig
@@ -101,6 +106,18 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	if transport.TLSClientConfig.GetClientCertificate == nil {
 		t.Error("newMutualTLSHTTPClient().Transport.TLSClientConfig.GetClientCertificate is nil")
 	}
+	if transport.TLSClientConfig.ServerName != "" {
+		t.Errorf(
+			"newMutualTLSHTTPClient().Transport.TLSClientConfig.ServerName = %q, want empty",
+			transport.TLSClientConfig.ServerName,
+		)
+	}
+	if transport.TLSClientConfig.InsecureSkipVerify {
+		t.Error("newMutualTLSHTTPClient().Transport.TLSClientConfig.InsecureSkipVerify = true")
+	}
+	if transport.TLSClientConfig.RootCAs != nil {
+		t.Error("newMutualTLSHTTPClient().Transport.TLSClientConfig.RootCAs is inherited")
+	}
 	if transport.TLSClientConfig.ClientSessionCache != nil {
 		t.Error("newMutualTLSHTTPClient().Transport.TLSClientConfig.ClientSessionCache is non-nil")
 	}
@@ -130,6 +147,19 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	}
 	if defaultTransport.TLSClientConfig.GetClientCertificate == nil {
 		t.Error("newMutualTLSHTTPClient() cleared http.DefaultTransport.TLSClientConfig.GetClientCertificate")
+	}
+	if got, want := defaultTransport.TLSClientConfig.ServerName, "example.invalid"; got != want {
+		t.Errorf(
+			"newMutualTLSHTTPClient() default TLS server name = %q, want %q",
+			got,
+			want,
+		)
+	}
+	if !defaultTransport.TLSClientConfig.InsecureSkipVerify {
+		t.Error("newMutualTLSHTTPClient() reset http.DefaultTransport.TLSClientConfig.InsecureSkipVerify")
+	}
+	if defaultTransport.TLSClientConfig.RootCAs != inheritedRootPool {
+		t.Error("newMutualTLSHTTPClient() replaced http.DefaultTransport.TLSClientConfig.RootCAs")
 	}
 	if defaultTransport.TLSClientConfig.ClientSessionCache != inheritedSessionCache {
 		t.Error("newMutualTLSHTTPClient() replaced http.DefaultTransport.TLSClientConfig.ClientSessionCache")
