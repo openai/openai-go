@@ -72,7 +72,11 @@ func newMutualTLSHTTPClient(certificate tls.Certificate) (*http.Client, error) {
 		tlsConfig = transport.TLSClientConfig.Clone()
 	}
 	tlsConfig.Certificates = []tls.Certificate{certificate}
-	tlsConfig.GetClientCertificate = nil
+	// Always return this certificate; automatic selection can reject it when
+	// the server's acceptable-CA hint does not match the local chain.
+	tlsConfig.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+		return &certificate, nil
+	}
 	tlsConfig.ClientSessionCache = nil
 	transport.TLSClientConfig = tlsConfig
 

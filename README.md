@@ -991,7 +991,9 @@ if transport.TLSClientConfig != nil {
 	tlsConfig = transport.TLSClientConfig.Clone()
 }
 tlsConfig.Certificates = []tls.Certificate{certificate}
-tlsConfig.GetClientCertificate = nil
+tlsConfig.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+	return &certificate, nil
+}
 tlsConfig.ClientSessionCache = nil
 transport.TLSClientConfig = tlsConfig
 
@@ -1027,11 +1029,14 @@ checks. Rebuild the transport and OpenAI client after rotating a certificate
 because existing TLS connections cannot renegotiate client authentication.
 When overriding the HTTP client, the application also owns redirect, proxy, and
 timeout policy. This dedicated client bypasses proxies, retains the SDK's
-10-minute response-header timeout, clears inherited client-certificate
-callbacks, TLS dial hooks, and TLS session cache, and disables redirects so the
-client certificate is only offered to the configured API endpoint. If a proxy
-is required, use a transport that keeps the proxy TLS configuration separate
-from the origin client certificate.
+10-minute response-header timeout, replaces inherited client-certificate
+callbacks, clears TLS dial hooks and the TLS session cache, and disables
+redirects so the client certificate is only offered to the configured API
+endpoint. Its callback always returns the configured certificate because Go's
+automatic selection can otherwise suppress it when a server's acceptable-CA
+hint does not match the local chain. If a proxy is required, use a transport
+that keeps the proxy TLS configuration separate from the origin client
+certificate.
 
 The complete tested recipe is in
 [`examples/mutual-tls`](./examples/mutual-tls/main.go).

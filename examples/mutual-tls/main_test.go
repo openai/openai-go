@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"errors"
 	"math/big"
 	"net"
 	"net/http"
@@ -97,8 +98,8 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	if got, want := transport.ResponseHeaderTimeout, responseHeaderTimeout; got != want {
 		t.Errorf("newMutualTLSHTTPClient().Transport.ResponseHeaderTimeout = %v, want %v", got, want)
 	}
-	if transport.TLSClientConfig.GetClientCertificate != nil {
-		t.Error("newMutualTLSHTTPClient().Transport.TLSClientConfig.GetClientCertificate is non-nil")
+	if transport.TLSClientConfig.GetClientCertificate == nil {
+		t.Error("newMutualTLSHTTPClient().Transport.TLSClientConfig.GetClientCertificate is nil")
 	}
 	if transport.TLSClientConfig.ClientSessionCache != nil {
 		t.Error("newMutualTLSHTTPClient().Transport.TLSClientConfig.ClientSessionCache is non-nil")
@@ -137,6 +138,11 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	rootPool := x509.NewCertPool()
 	rootPool.AddCert(fixture.root)
 	transport.TLSClientConfig.RootCAs = rootPool
+	serverCertificate := parseCertificate(t, fixture.server.Certificate[0])
+	unrelatedClientCAPool := x509.NewCertPool()
+	// Advertise a CA name that cannot match the client chain, then verify the
+	// presented chain independently in VerifyConnection.
+	unrelatedClientCAPool.AddCert(serverCertificate)
 
 	peerCertificateCount := 0
 	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
@@ -157,9 +163,24 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	}))
 	server.TLS = &tls.Config{
 		Certificates: []tls.Certificate{fixture.server},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    rootPool,
+		ClientAuth:   tls.RequireAnyClientCert,
+		ClientCAs:    unrelatedClientCAPool,
 		MinVersion:   tls.VersionTLS12,
+		VerifyConnection: func(state tls.ConnectionState) error {
+			if len(state.PeerCertificates) == 0 {
+				return errors.New("client certificate missing")
+			}
+			intermediates := x509.NewCertPool()
+			for _, certificate := range state.PeerCertificates[1:] {
+				intermediates.AddCert(certificate)
+			}
+			_, err := state.PeerCertificates[0].Verify(x509.VerifyOptions{
+				Roots:         rootPool,
+				Intermediates: intermediates,
+				KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+			})
+			return err
+		},
 	}
 	server.StartTLS()
 	t.Cleanup(server.Close)
