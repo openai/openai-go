@@ -41,14 +41,28 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 		t.Fatalf("tls.LoadX509KeyPair() chain length = %d, want %d", got, want)
 	}
 
-	defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+	originalDefaultTransport := http.DefaultTransport
+	baseTransport, ok := originalDefaultTransport.(*http.Transport)
 	if !ok {
 		t.Skip("http.DefaultTransport is not an *http.Transport")
 	}
-	originalCertificateCount := 0
+	defaultTransport := baseTransport.Clone()
+	defaultTLSConfig := &tls.Config{}
 	if defaultTransport.TLSClientConfig != nil {
-		originalCertificateCount = len(defaultTransport.TLSClientConfig.Certificates)
+		defaultTLSConfig = defaultTransport.TLSClientConfig.Clone()
 	}
+	defaultTLSConfig.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+		return nil, nil
+	}
+	defaultTransport.TLSClientConfig = defaultTLSConfig
+	defaultTransport.Proxy = http.ProxyFromEnvironment
+	http.DefaultTransport = defaultTransport
+	t.Cleanup(func() {
+		http.DefaultTransport = originalDefaultTransport
+	})
+
+	originalCertificateCount := len(defaultTransport.TLSClientConfig.Certificates)
+	originalResponseHeaderTimeout := defaultTransport.ResponseHeaderTimeout
 	httpClient, err := newMutualTLSHTTPClient(certificate)
 	if err != nil {
 		t.Fatalf("newMutualTLSHTTPClient() error = %v", err)
@@ -62,16 +76,35 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	if transport == defaultTransport {
 		t.Fatal("newMutualTLSHTTPClient() reused http.DefaultTransport")
 	}
-	defaultCertificateCount := 0
-	if defaultTransport.TLSClientConfig != nil {
-		defaultCertificateCount = len(defaultTransport.TLSClientConfig.Certificates)
+	if transport.Proxy != nil {
+		t.Error("newMutualTLSHTTPClient().Transport.Proxy is non-nil")
 	}
+	if got, want := transport.ResponseHeaderTimeout, responseHeaderTimeout; got != want {
+		t.Errorf("newMutualTLSHTTPClient().Transport.ResponseHeaderTimeout = %v, want %v", got, want)
+	}
+	if transport.TLSClientConfig.GetClientCertificate != nil {
+		t.Error("newMutualTLSHTTPClient().Transport.TLSClientConfig.GetClientCertificate is non-nil")
+	}
+	defaultCertificateCount := len(defaultTransport.TLSClientConfig.Certificates)
 	if defaultCertificateCount != originalCertificateCount {
 		t.Errorf(
 			"newMutualTLSHTTPClient() default certificate count = %d, want %d",
 			defaultCertificateCount,
 			originalCertificateCount,
 		)
+	}
+	if defaultTransport.Proxy == nil {
+		t.Error("newMutualTLSHTTPClient() cleared http.DefaultTransport.Proxy")
+	}
+	if defaultTransport.ResponseHeaderTimeout != originalResponseHeaderTimeout {
+		t.Errorf(
+			"newMutualTLSHTTPClient() default response header timeout = %v, want %v",
+			defaultTransport.ResponseHeaderTimeout,
+			originalResponseHeaderTimeout,
+		)
+	}
+	if defaultTransport.TLSClientConfig.GetClientCertificate == nil {
+		t.Error("newMutualTLSHTTPClient() cleared http.DefaultTransport.TLSClientConfig.GetClientCertificate")
 	}
 
 	rootPool := x509.NewCertPool()

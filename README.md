@@ -982,11 +982,14 @@ if !ok {
 	return errors.New("http.DefaultTransport is not an *http.Transport")
 }
 transport := defaultTransport.Clone()
+transport.Proxy = nil
+transport.ResponseHeaderTimeout = 10 * time.Minute
 tlsConfig := &tls.Config{}
 if transport.TLSClientConfig != nil {
 	tlsConfig = transport.TLSClientConfig.Clone()
 }
 tlsConfig.Certificates = []tls.Certificate{certificate}
+tlsConfig.GetClientCertificate = nil
 transport.TLSClientConfig = tlsConfig
 
 httpClient := &http.Client{
@@ -1015,8 +1018,11 @@ parsing, chain trust, and OpenAI product policy remain TLS-handshake/server
 checks. Rebuild the transport and OpenAI client after rotating a certificate
 because existing TLS connections cannot renegotiate client authentication.
 When overriding the HTTP client, the application also owns redirect, proxy, and
-timeout policy; the example disables redirects so the client certificate cannot
-be offered to another host.
+timeout policy. This dedicated client bypasses proxies, retains the SDK's
+10-minute response-header timeout, clears inherited client-certificate
+callbacks, and disables redirects so the client certificate is only offered to
+the configured API endpoint. If a proxy is required, use a transport that keeps
+the proxy TLS configuration separate from the origin client certificate.
 
 The complete tested recipe is in
 [`examples/mutual-tls`](./examples/mutual-tls/main.go).

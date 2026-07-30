@@ -9,10 +9,13 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 )
+
+const responseHeaderTimeout = 10 * time.Minute
 
 func main() {
 	if err := run(); err != nil {
@@ -54,12 +57,15 @@ func newMutualTLSHTTPClient(certificate tls.Certificate) (*http.Client, error) {
 		return nil, errors.New("http.DefaultTransport is not an *http.Transport")
 	}
 	transport := defaultTransport.Clone()
+	transport.Proxy = nil
+	transport.ResponseHeaderTimeout = responseHeaderTimeout
 
 	tlsConfig := &tls.Config{}
 	if transport.TLSClientConfig != nil {
 		tlsConfig = transport.TLSClientConfig.Clone()
 	}
 	tlsConfig.Certificates = []tls.Certificate{certificate}
+	tlsConfig.GetClientCertificate = nil
 	transport.TLSClientConfig = tlsConfig
 
 	return &http.Client{
