@@ -958,6 +958,85 @@ You may also replace the default `http.Client` with
 accepted (this overwrites any previous client) and receives requests after any
 middleware has been applied.
 
+### Mutual TLS with a custom HTTP client
+
+For API-key authenticated HTTP requests that require mutual TLS, configure a
+native Go `*http.Client` and pass it through `option.WithHTTPClient`. The
+certificate file must contain the client leaf followed by every required
+intermediate. Presenting intermediates requires certificate-chain support to be
+enabled for your organization; otherwise, the client certificate must be
+signed directly by an active uploaded certificate. See the
+[OpenAI mTLS setup requirements](https://help.openai.com/en/articles/10876024):
+
+```go
+certificate, err := tls.LoadX509KeyPair(
+	"/secrets/openai/client-chain.pem",
+	"/secrets/openai/client.key",
+)
+if err != nil {
+	return err
+}
+
+defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+if !ok {
+	return errors.New("http.DefaultTransport is not an *http.Transport")
+}
+transport := defaultTransport.Clone()
+transport.Proxy = nil
+transport.DialTLS = nil
+transport.DialTLSContext = nil
+transport.ResponseHeaderTimeout = 10 * time.Minute
+transport.TLSClientConfig = &tls.Config{
+	Certificates: []tls.Certificate{certificate},
+	GetClientCertificate: func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+		return &certificate, nil
+	},
+}
+
+httpClient := &http.Client{
+	Transport: transport,
+	CheckRedirect: func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+}
+
+client := openai.NewClient(
+	option.WithBaseURL("https://mtls.api.openai.com/v1"),
+	option.WithHTTPClient(httpClient),
+)
+
+if _, err := client.Models.List(context.Background()); err != nil {
+	return err
+}
+```
+
+The SDK does not select an mTLS endpoint automatically when a custom HTTP
+client is used. The explicit `option.WithBaseURL` above overrides
+`OPENAI_BASE_URL`; replace it with `https://mtls-eu.api.openai.com/v1` for the
+EU endpoint, or remove it to use `OPENAI_BASE_URL`. Keep server trust separate
+by configuring `RootCAs` on the fresh `tls.Config` when custom roots are
+required.
+
+`tls.LoadX509KeyPair` fails for unreadable files and for malformed or mismatched
+leaf/key material. It loads later `CERTIFICATE` blocks into the presented chain
+without validating those intermediates. Certificate validity, intermediate
+parsing, chain trust, and OpenAI product policy remain TLS-handshake/server
+checks. Rebuild the transport and OpenAI client after rotating a certificate
+because existing TLS connections cannot renegotiate client authentication.
+When overriding the HTTP client, the application also owns redirect, proxy, and
+timeout policy. This dedicated client bypasses proxies, retains the SDK's
+10-minute response-header timeout, replaces inherited client-certificate
+callbacks, TLS dial hooks, and TLS session state with a fresh TLS config, and
+disables redirects so the client certificate is only offered to the configured
+API endpoint. Its callback always returns the configured certificate because
+Go's automatic selection can otherwise suppress it when a server's
+acceptable-CA hint does not match the local chain. If a proxy is required, use
+a transport that keeps the proxy TLS configuration separate from the origin
+client certificate.
+
+The complete tested recipe is in
+[`examples/mutual-tls`](./examples/mutual-tls/main.go).
+
 ## Workload Identity Authentication
 
 For cloud workloads (Kubernetes, Azure, Google Cloud Platform), you can use workload identity authentication instead of API keys. This provides short-lived tokens that are automatically refreshed.
