@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -18,13 +19,13 @@ import (
 const responseHeaderTimeout = 10 * time.Minute
 
 func main() {
-	if err := run(); err != nil {
+	if err := run(context.Background()); err != nil {
 		slog.Error("mutual TLS example failed", "err", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
+func run(ctx context.Context) error {
 	// When certificate-chain support is enabled for the organization,
 	// client-chain.pem must contain the leaf certificate first, followed by
 	// every required intermediate. Otherwise, the leaf must be signed directly
@@ -47,7 +48,11 @@ func run() error {
 		option.WithHTTPClient(httpClient),
 	)
 
-	_ = client
+	models, err := client.Models.List(ctx)
+	if err != nil {
+		return fmt.Errorf("list models: %w", err)
+	}
+	slog.Info("mutual TLS request succeeded", "models", len(models.Data))
 	return nil
 }
 
@@ -58,6 +63,8 @@ func newMutualTLSHTTPClient(certificate tls.Certificate) (*http.Client, error) {
 	}
 	transport := defaultTransport.Clone()
 	transport.Proxy = nil
+	transport.DialTLS = nil
+	transport.DialTLSContext = nil
 	transport.ResponseHeaderTimeout = responseHeaderTimeout
 
 	tlsConfig := &tls.Config{}
@@ -66,6 +73,7 @@ func newMutualTLSHTTPClient(certificate tls.Certificate) (*http.Client, error) {
 	}
 	tlsConfig.Certificates = []tls.Certificate{certificate}
 	tlsConfig.GetClientCertificate = nil
+	tlsConfig.ClientSessionCache = nil
 	transport.TLSClientConfig = tlsConfig
 
 	return &http.Client{

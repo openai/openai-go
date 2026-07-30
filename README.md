@@ -983,6 +983,8 @@ if !ok {
 }
 transport := defaultTransport.Clone()
 transport.Proxy = nil
+transport.DialTLS = nil
+transport.DialTLSContext = nil
 transport.ResponseHeaderTimeout = 10 * time.Minute
 tlsConfig := &tls.Config{}
 if transport.TLSClientConfig != nil {
@@ -990,6 +992,7 @@ if transport.TLSClientConfig != nil {
 }
 tlsConfig.Certificates = []tls.Certificate{certificate}
 tlsConfig.GetClientCertificate = nil
+tlsConfig.ClientSessionCache = nil
 transport.TLSClientConfig = tlsConfig
 
 httpClient := &http.Client{
@@ -1003,13 +1006,18 @@ client := openai.NewClient(
 	option.WithBaseURL("https://mtls.api.openai.com/v1"),
 	option.WithHTTPClient(httpClient),
 )
+
+if _, err := client.Models.List(context.Background()); err != nil {
+	return err
+}
 ```
 
 The SDK does not select an mTLS endpoint automatically when a custom HTTP
-client is used. Set `option.WithBaseURL` explicitly, use
-`https://mtls-eu.api.openai.com/v1` for the EU endpoint, or set
-`OPENAI_BASE_URL`. Keep server trust separate by configuring `RootCAs` on the
-cloned `tls.Config` when custom roots are required.
+client is used. The explicit `option.WithBaseURL` above overrides
+`OPENAI_BASE_URL`; replace it with `https://mtls-eu.api.openai.com/v1` for the
+EU endpoint, or remove it to use `OPENAI_BASE_URL`. Keep server trust separate
+by configuring `RootCAs` on the cloned `tls.Config` when custom roots are
+required.
 
 `tls.LoadX509KeyPair` fails for unreadable files and for malformed or mismatched
 leaf/key material. It loads later `CERTIFICATE` blocks into the presented chain
@@ -1020,9 +1028,10 @@ because existing TLS connections cannot renegotiate client authentication.
 When overriding the HTTP client, the application also owns redirect, proxy, and
 timeout policy. This dedicated client bypasses proxies, retains the SDK's
 10-minute response-header timeout, clears inherited client-certificate
-callbacks, and disables redirects so the client certificate is only offered to
-the configured API endpoint. If a proxy is required, use a transport that keeps
-the proxy TLS configuration separate from the origin client certificate.
+callbacks, TLS dial hooks, and TLS session cache, and disables redirects so the
+client certificate is only offered to the configured API endpoint. If a proxy
+is required, use a transport that keeps the proxy TLS configuration separate
+from the origin client certificate.
 
 The complete tested recipe is in
 [`examples/mutual-tls`](./examples/mutual-tls/main.go).

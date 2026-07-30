@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -54,8 +55,16 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	defaultTLSConfig.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
 		return nil, nil
 	}
+	inheritedSessionCache := tls.NewLRUClientSessionCache(1)
+	defaultTLSConfig.ClientSessionCache = inheritedSessionCache
 	defaultTransport.TLSClientConfig = defaultTLSConfig
 	defaultTransport.Proxy = http.ProxyFromEnvironment
+	defaultTransport.DialTLS = func(string, string) (net.Conn, error) {
+		return nil, nil
+	}
+	defaultTransport.DialTLSContext = func(context.Context, string, string) (net.Conn, error) {
+		return nil, nil
+	}
 	http.DefaultTransport = defaultTransport
 	t.Cleanup(func() {
 		http.DefaultTransport = originalDefaultTransport
@@ -79,11 +88,20 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	if transport.Proxy != nil {
 		t.Error("newMutualTLSHTTPClient().Transport.Proxy is non-nil")
 	}
+	if transport.DialTLS != nil {
+		t.Error("newMutualTLSHTTPClient().Transport.DialTLS is non-nil")
+	}
+	if transport.DialTLSContext != nil {
+		t.Error("newMutualTLSHTTPClient().Transport.DialTLSContext is non-nil")
+	}
 	if got, want := transport.ResponseHeaderTimeout, responseHeaderTimeout; got != want {
 		t.Errorf("newMutualTLSHTTPClient().Transport.ResponseHeaderTimeout = %v, want %v", got, want)
 	}
 	if transport.TLSClientConfig.GetClientCertificate != nil {
 		t.Error("newMutualTLSHTTPClient().Transport.TLSClientConfig.GetClientCertificate is non-nil")
+	}
+	if transport.TLSClientConfig.ClientSessionCache != nil {
+		t.Error("newMutualTLSHTTPClient().Transport.TLSClientConfig.ClientSessionCache is non-nil")
 	}
 	defaultCertificateCount := len(defaultTransport.TLSClientConfig.Certificates)
 	if defaultCertificateCount != originalCertificateCount {
@@ -96,6 +114,12 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	if defaultTransport.Proxy == nil {
 		t.Error("newMutualTLSHTTPClient() cleared http.DefaultTransport.Proxy")
 	}
+	if defaultTransport.DialTLS == nil {
+		t.Error("newMutualTLSHTTPClient() cleared http.DefaultTransport.DialTLS")
+	}
+	if defaultTransport.DialTLSContext == nil {
+		t.Error("newMutualTLSHTTPClient() cleared http.DefaultTransport.DialTLSContext")
+	}
 	if defaultTransport.ResponseHeaderTimeout != originalResponseHeaderTimeout {
 		t.Errorf(
 			"newMutualTLSHTTPClient() default response header timeout = %v, want %v",
@@ -106,6 +130,9 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	if defaultTransport.TLSClientConfig.GetClientCertificate == nil {
 		t.Error("newMutualTLSHTTPClient() cleared http.DefaultTransport.TLSClientConfig.GetClientCertificate")
 	}
+	if defaultTransport.TLSClientConfig.ClientSessionCache != inheritedSessionCache {
+		t.Error("newMutualTLSHTTPClient() replaced http.DefaultTransport.TLSClientConfig.ClientSessionCache")
+	}
 
 	rootPool := x509.NewCertPool()
 	rootPool.AddCert(fixture.root)
@@ -114,11 +141,17 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	peerCertificateCount := 0
 	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
 		peerCertificateCount = len(request.TLS.PeerCertificates)
+		if got, want := request.Method, http.MethodGet; got != want {
+			t.Errorf("request.Method = %q, want %q", got, want)
+		}
+		if got, want := request.URL.Path, "/v1/models"; got != want {
+			t.Errorf("request.URL.Path = %q, want %q", got, want)
+		}
 		if got, want := request.Header.Get("Authorization"), "Bearer test-api-key"; got != want {
 			t.Errorf("Authorization header = %q, want %q", got, want)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		if _, err := w.Write([]byte(`{"ok":true}`)); err != nil {
+		if _, err := w.Write([]byte(`{"object":"list","data":[{"id":"test-model","object":"model","created":1,"owned_by":"openai"}]}`)); err != nil {
 			t.Errorf("ResponseWriter.Write() error = %v", err)
 		}
 	}))
@@ -137,17 +170,18 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 		option.WithHTTPClient(httpClient),
 		option.WithMaxRetries(0),
 	)
-	var response struct {
-		OK bool `json:"ok"`
+	models, err := client.Models.List(t.Context())
+	if err != nil {
+		t.Fatalf("Client.Models.List() error = %v", err)
 	}
-	if err := client.Get(t.Context(), "test", nil, &response); err != nil {
-		t.Fatalf("Client.Get() error = %v", err)
+	if got, want := len(models.Data), 1; got != want {
+		t.Fatalf("Client.Models.List() model count = %d, want %d", got, want)
 	}
-	if !response.OK {
-		t.Error("Client.Get().OK = false, want true")
+	if got, want := models.Data[0].ID, "test-model"; got != want {
+		t.Errorf("Client.Models.List().Data[0].ID = %q, want %q", got, want)
 	}
 	if got, want := peerCertificateCount, 2; got != want {
-		t.Errorf("Client.Get() peer certificate count = %d, want %d", got, want)
+		t.Errorf("Client.Models.List() peer certificate count = %d, want %d", got, want)
 	}
 
 	redirectRequest := &http.Request{}
