@@ -963,7 +963,10 @@ middleware has been applied.
 For API-key authenticated HTTP requests that require mutual TLS, configure a
 native Go `*http.Client` and pass it through `option.WithHTTPClient`. The
 certificate file must contain the client leaf followed by every required
-intermediate:
+intermediate. Presenting intermediates requires certificate-chain support to be
+enabled for your organization; otherwise, the client certificate must be
+signed directly by an active uploaded certificate. See the
+[OpenAI mTLS setup requirements](https://help.openai.com/en/articles/10876024):
 
 ```go
 certificate, err := tls.LoadX509KeyPair(
@@ -1005,13 +1008,15 @@ client is used. Set `option.WithBaseURL` explicitly, use
 `OPENAI_BASE_URL`. Keep server trust separate by configuring `RootCAs` on the
 cloned `tls.Config` when custom roots are required.
 
-`tls.LoadX509KeyPair` fails for unreadable, malformed, or mismatched local
-certificate and key files. Certificate validity, chain trust, and OpenAI
-product policy remain TLS-handshake/server checks. Rebuild the transport and
-OpenAI client after rotating a certificate because existing TLS connections
-cannot renegotiate client authentication. When overriding the HTTP client, the
-application also owns redirect, proxy, and timeout policy; the example disables
-redirects so the client certificate cannot be offered to another host.
+`tls.LoadX509KeyPair` fails for unreadable files and for malformed or mismatched
+leaf/key material. It loads later `CERTIFICATE` blocks into the presented chain
+without validating those intermediates. Certificate validity, intermediate
+parsing, chain trust, and OpenAI product policy remain TLS-handshake/server
+checks. Rebuild the transport and OpenAI client after rotating a certificate
+because existing TLS connections cannot renegotiate client authentication.
+When overriding the HTTP client, the application also owns redirect, proxy, and
+timeout policy; the example disables redirects so the client certificate cannot
+be offered to another host.
 
 The complete tested recipe is in
 [`examples/mutual-tls`](./examples/mutual-tls/main.go).

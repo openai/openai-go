@@ -22,8 +22,10 @@ func main() {
 }
 
 func run() error {
+	// When certificate-chain support is enabled for the organization,
 	// client-chain.pem must contain the leaf certificate first, followed by
-	// every intermediate required by the OpenAI mTLS endpoint.
+	// every required intermediate. Otherwise, the leaf must be signed directly
+	// by an active uploaded certificate.
 	certificate, err := tls.LoadX509KeyPair(
 		"/secrets/openai/client-chain.pem",
 		"/secrets/openai/client.key",
