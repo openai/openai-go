@@ -36,8 +36,9 @@ func main() {
 				},
 			}),
 		},
-		Seed:  openai.Int(0),
-		Model: openai.ChatModelGPT4o,
+		ParallelToolCalls: openai.Bool(false), // JustFinishedToolCall is only safe with parallel calls disabled
+		Seed:              openai.Int(0),
+		Model:             openai.ChatModelGPT4o,
 	}
 
 	stream := client.Chat.Completions.NewStreaming(ctx, params)
@@ -77,7 +78,11 @@ func main() {
 				panic(err)
 			}
 
-			location := args["location"].(string)
+			location, ok := args["location"].(string)
+			if !ok {
+				fmt.Printf("Missing or invalid 'location' argument\n")
+				return
+			}
 			weatherData := getWeather(location)
 			fmt.Printf("Weather in %s: %s\n", location, weatherData)
 
@@ -85,11 +90,16 @@ func main() {
 		}
 	}
 
+	// Disable tools for the second round so the model returns a final answer
+	// instead of making additional tool calls we don't handle.
+	params.Tools = []openai.ChatCompletionToolUnionParam{}
+
 	responseStream := client.Chat.Completions.NewStreaming(ctx, params)
 
 	fmt.Println("\nStreaming second response...")
 	for responseStream.Next() {
 		evt := responseStream.Current()
+		_ = acc.AddChunk(evt) // best-effort; streaming accumulation for display only
 		if len(evt.Choices) > 0 {
 			print(evt.Choices[0].Delta.Content)
 		}
