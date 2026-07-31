@@ -32448,9 +32448,23 @@ type BetaResponseCompactParams struct {
 	//
 	// Any of "in_memory", "24h".
 	PromptCacheRetention BetaResponseCompactParamsPromptCacheRetention `json:"prompt_cache_retention,omitzero"`
-	// The service tier to use for this request.
+	// Specifies the processing type used for serving the request. - If set to 'auto',
+	// then the request will be processed with the service tier configured in the
+	// Project settings. Unless otherwise configured, the Project will use 'default'. -
+	// If set to 'default', then the request will be processed with the standard
+	// pricing and performance for the selected model. - If set to
+	// '[flex](https://platform.openai.com/docs/guides/flex-processing)', then the
+	// request will be processed with the Flex Processing service tier. - To opt-in to
+	// [Fast mode](/api/docs/guides/fast-mode) at the request level, include the
+	// `service_tier=fast` or `service_tier=priority` parameter for Responses or Chat
+	// Completions. The response will show `service_tier=priority` regardless of if you
+	// specify `service_tier=fast` or `priority` in your request. - When not set, the
+	// default behavior is 'auto'. When the `service_tier` parameter is set, the
+	// response body will include the `service_tier` value based on the processing mode
+	// actually used to serve the request. This response value may be different from
+	// the value set in the parameter.
 	//
-	// Any of "auto", "default", "flex", "priority".
+	// Any of "auto", "default", "fast", "flex", "priority".
 	ServiceTier BetaResponseCompactParamsServiceTier `json:"service_tier,omitzero"`
 	// Any of "responses_multi_agent=v1".
 	Betas []string `header:"openai-beta,omitzero" json:"-"`
@@ -32648,12 +32662,27 @@ const (
 	BetaResponseCompactParamsPromptCacheRetention24h      BetaResponseCompactParamsPromptCacheRetention = "24h"
 )
 
-// The service tier to use for this request.
+// Specifies the processing type used for serving the request. - If set to 'auto',
+// then the request will be processed with the service tier configured in the
+// Project settings. Unless otherwise configured, the Project will use 'default'. -
+// If set to 'default', then the request will be processed with the standard
+// pricing and performance for the selected model. - If set to
+// '[flex](https://platform.openai.com/docs/guides/flex-processing)', then the
+// request will be processed with the Flex Processing service tier. - To opt-in to
+// [Fast mode](/api/docs/guides/fast-mode) at the request level, include the
+// `service_tier=fast` or `service_tier=priority` parameter for Responses or Chat
+// Completions. The response will show `service_tier=priority` regardless of if you
+// specify `service_tier=fast` or `priority` in your request. - When not set, the
+// default behavior is 'auto'. When the `service_tier` parameter is set, the
+// response body will include the `service_tier` value based on the processing mode
+// actually used to serve the request. This response value may be different from
+// the value set in the parameter.
 type BetaResponseCompactParamsServiceTier string
 
 const (
 	BetaResponseCompactParamsServiceTierAuto     BetaResponseCompactParamsServiceTier = "auto"
 	BetaResponseCompactParamsServiceTierDefault  BetaResponseCompactParamsServiceTier = "default"
+	BetaResponseCompactParamsServiceTierFast     BetaResponseCompactParamsServiceTier = "fast"
 	BetaResponseCompactParamsServiceTierFlex     BetaResponseCompactParamsServiceTier = "flex"
 	BetaResponseCompactParamsServiceTierPriority BetaResponseCompactParamsServiceTier = "priority"
 )

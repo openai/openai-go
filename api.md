@@ -164,6 +164,16 @@ Methods:
 - <code title="post /images/edits">client.Images.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ImageService.Edit">Edit</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ImageEditParams">ImageEditParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ImagesResponse">ImagesResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="post /images/generations">client.Images.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ImageService.Generate">Generate</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ImageGenerateParams">ImageGenerateParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ImagesResponse">ImagesResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+# ContentProvenanceChecks
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ContentProvenanceCheck">ContentProvenanceCheck</a>
+
+Methods:
+
+- <code title="post /content_provenance_checks">client.ContentProvenanceChecks.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ContentProvenanceCheckService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ContentProvenanceCheckNewParams">ContentProvenanceCheckNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ContentProvenanceCheck">ContentProvenanceCheck</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 # Audio
 
 Params Types:

@@ -33,8 +33,9 @@ type Client struct {
 	// Assistants and Fine-tuning.
 	Files FileService
 	// Given a prompt and/or an input image, the model will generate a new image.
-	Images ImageService
-	Audio  AudioService
+	Images                  ImageService
+	ContentProvenanceChecks ContentProvenanceCheckService
+	Audio                   AudioService
 	// Given text and/or image inputs, classifies if those inputs are potentially
 	// harmful.
 	Moderations ModerationService
@@ -108,6 +109,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Embeddings = NewEmbeddingService(opts...)
 	r.Files = NewFileService(opts...)
 	r.Images = NewImageService(opts...)
+	r.ContentProvenanceChecks = NewContentProvenanceCheckService(opts...)
 	r.Audio = NewAudioService(opts...)
 	r.Moderations = NewModerationService(opts...)
 	r.Models = NewModelService(opts...)

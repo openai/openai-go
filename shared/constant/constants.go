@@ -38,6 +38,7 @@ type BatchCompleted string                                   // Always "batch.co
 type BatchExpired string                                     // Always "batch.expired"
 type BatchFailed string                                      // Always "batch.failed"
 type Bucket string                                           // Always "bucket"
+type C2PA string                                             // Always "c2pa"
 type CertificateDeleted string                               // Always "certificate.deleted"
 type ChatCompletion string                                   // Always "chat.completion"
 type ChatCompletionChunk string                              // Always "chat.completion.chunk"
@@ -348,6 +349,7 @@ type Static string                                           // Always "static"
 type StringCheck string                                      // Always "string_check"
 type SubmitToolOutputs string                                // Always "submit_tool_outputs"
 type SummaryText string                                      // Always "summary_text"
+type SynthID string                                          // Always "synthid"
 type System string                                           // Always "system"
 type Text string                                             // Always "text"
 type TextCompletion string                                   // Always "text_completion"
@@ -438,6 +440,7 @@ func (c BatchCompleted) Default() BatchCompleted               { return "batch.c
 func (c BatchExpired) Default() BatchExpired                   { return "batch.expired" }
 func (c BatchFailed) Default() BatchFailed                     { return "batch.failed" }
 func (c Bucket) Default() Bucket                               { return "bucket" }
+func (c C2PA) Default() C2PA                                   { return "c2pa" }
 func (c CertificateDeleted) Default() CertificateDeleted       { return "certificate.deleted" }
 func (c ChatCompletion) Default() ChatCompletion               { return "chat.completion" }
 func (c ChatCompletionChunk) Default() ChatCompletionChunk     { return "chat.completion.chunk" }
@@ -958,6 +961,7 @@ func (c Static) Default() Static                                 { return "stati
 func (c StringCheck) Default() StringCheck                       { return "string_check" }
 func (c SubmitToolOutputs) Default() SubmitToolOutputs           { return "submit_tool_outputs" }
 func (c SummaryText) Default() SummaryText                       { return "summary_text" }
+func (c SynthID) Default() SynthID                               { return "synthid" }
 func (c System) Default() System                                 { return "system" }
 func (c Text) Default() Text                                     { return "text" }
 func (c TextCompletion) Default() TextCompletion                 { return "text_completion" }
@@ -1064,6 +1068,7 @@ func (c BatchCompleted) MarshalJSON() ([]byte, error)          { return marshalS
 func (c BatchExpired) MarshalJSON() ([]byte, error)            { return marshalString(c) }
 func (c BatchFailed) MarshalJSON() ([]byte, error)             { return marshalString(c) }
 func (c Bucket) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c C2PA) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
 func (c CertificateDeleted) MarshalJSON() ([]byte, error)      { return marshalString(c) }
 func (c ChatCompletion) MarshalJSON() ([]byte, error)          { return marshalString(c) }
 func (c ChatCompletionChunk) MarshalJSON() ([]byte, error)     { return marshalString(c) }
@@ -1398,6 +1403,7 @@ func (c Static) MarshalJSON() ([]byte, error)                             { retu
 func (c StringCheck) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
 func (c SubmitToolOutputs) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c SummaryText) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c SynthID) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
 func (c System) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c Text) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
 func (c TextCompletion) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
