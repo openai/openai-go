@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.49.0 (2026-07-31)
+
+Full Changelog: [v3.48.0...v3.49.0](https://github.com/openai/openai-go/compare/v3.48.0...v3.49.0)
+
+### Features
+
+* **api:** content provenance checks ([5a46c55](https://github.com/openai/openai-go/commit/5a46c55e1714343afcf8b99c69c80fb67801e2a8))
+
+
+### Documentation
+
+* demonstrate mutual TLS with custom HTTP client ([#741](https://github.com/openai/openai-go/issues/741)) ([e862c49](https://github.com/openai/openai-go/commit/e862c4964615058d518d53a15277c1a2d5945f02))
+
 ## 3.48.0 (2026-07-30)
 
 Full Changelog: [v3.47.0...v3.48.0](https://github.com/openai/openai-go/compare/v3.47.0...v3.48.0)
