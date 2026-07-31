@@ -14,6 +14,7 @@ TEST_PATHS=(
 	embedding_test.go
 	file_test.go
 	image_test.go
+	contentprovenancecheck_test.go
 	audiotranscription_test.go
 	audiotranslation_test.go
 	audiospeech_test.go
