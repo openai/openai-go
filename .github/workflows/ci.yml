@@ -13,9 +13,9 @@ on:
     branches-ignore:
       - 'stl-preview-head/**'
       - 'stl-preview-base/**'
-  # The monthly Codex workflow opens its draft with GITHUB_TOKEN. GitHub does
-  # not emit pull_request workflows for token-created pull requests, so that
-  # workflow explicitly dispatches this validation on the generated branch.
+  # GitHub does not emit pull_request workflows for pull requests created with
+  # GITHUB_TOKEN, so repository automation explicitly dispatches this
+  # validation on generated branches.
   workflow_dispatch:
   # The vulnerability database changes even when this repository does not.
   # This schedule runs only the govulncheck job below; lint and tests remain

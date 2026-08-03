@@ -4,8 +4,8 @@ on:
     branches:
       - main
       - next
-  # See ci.yml: GITHUB_TOKEN-created maintenance pull requests dispatch this
-  # workflow explicitly because GitHub suppresses their pull_request event.
+  # See ci.yml: GITHUB_TOKEN-created pull requests dispatch this workflow
+  # explicitly because GitHub suppresses their pull_request event.
   workflow_dispatch:
     inputs:
       base_sha:

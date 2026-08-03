@@ -4,32 +4,68 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   release:
     name: release
     if: github.ref == 'refs/heads/main' && github.repository == 'openai/openai-go'
     runs-on: ubuntu-latest
-    # STAINLESS_API_KEY is scoped to this environment, so the job that invokes
-    # trigger-release-please must explicitly opt in to receive it.
-    environment: publish
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     outputs:
+      prs_created: ${{ steps.release.outputs.prs_created }}
+      release_pr_branch: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
       releases_created: ${{ steps.release.outputs.releases_created }}
 
     steps:
-      - uses: stainless-api/trigger-release-please@bb6677c5a04578eec1ccfd9e1913b5b78ed64c61 # v1.4.0
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         id: release
         with:
-          repo: ${{ github.event.repository.full_name }}
-          stainless-api-key: ${{ secrets.STAINLESS_API_KEY }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target-branch: main
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  dispatch_checks:
+    name: Dispatch release pull request checks
+    needs: release
+    if: needs.release.outputs.prs_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write  # Dispatch only the explicitly named required workflows.
+
+    steps:
+      - name: Run required checks on the release pull request
+        env:
+          BASE_SHA: ${{ github.sha }}
+          BRANCH: ${{ needs.release.outputs.release_pr_branch }}
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # GITHUB_TOKEN deliberately does not trigger pull_request workflows.
+          # workflow_dispatch is the documented exception.
+          if [[ "$BRANCH" != 'release-please--branches--main' ]]; then
+            echo "Unexpected release-please branch: $BRANCH" >&2
+            exit 1
+          fi
+
+          gh workflow run ci.yml --ref "$BRANCH"
+          gh workflow run detect-breaking-changes.yml \
+            --ref "$BRANCH" \
+            --field base_sha="$BASE_SHA"
+          gh workflow run codeql.yml --ref "$BRANCH"
 
   publish:
     name: publish
     needs: release
     if: ${{ needs.release.outputs.releases_created == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
@@ -38,6 +74,6 @@ jobs:
 
       - name: Generate godocs
         run: |
-          # x-release-please-start-version
           version="$(jq -r '. | to_entries[0] | .value' .release-please-manifest.json)"
-          curl --fail --show-error --silent -X POST "https://pkg.go.dev/fetch/github.com/openai/openai-go/v2@v${version}"
+          module="$(awk '$1 == "module" { print $2; exit }' go.mod)"
+          curl --fail --show-error --silent -X POST "https://pkg.go.dev/fetch/${module}@v${version}"
