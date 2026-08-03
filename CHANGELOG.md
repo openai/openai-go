@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.50.0](https://github.com/openai/openai-go/compare/v3.49.0...v3.50.0) (2026-08-03)
+
+
+### Features
+
+* **api:** promote Go SDK changes ([#748](https://github.com/openai/openai-go/issues/748)) ([9e4b4d5](https://github.com/openai/openai-go/commit/9e4b4d5a5ccadc94ea8b8a54148e7a0e52797e94))
+
+
+### Build System
+
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#745](https://github.com/openai/openai-go/issues/745)) ([af89b42](https://github.com/openai/openai-go/commit/af89b4276381d98193419f46429f79d74b490ec9))
+* **deps:** bump the codeql group with 2 updates ([#746](https://github.com/openai/openai-go/issues/746)) ([41c8a70](https://github.com/openai/openai-go/commit/41c8a70fef4c2f7067a7eb6bc095c94d1782a2fe))
+
 ## 3.49.0 (2026-07-31)
 
 Full Changelog: [v3.48.0...v3.49.0](https://github.com/openai/openai-go/compare/v3.48.0...v3.49.0)
