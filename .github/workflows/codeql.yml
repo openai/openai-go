@@ -7,8 +7,8 @@ on:
   pull_request:
     branches:
       - main
-  # The monthly maintenance workflow explicitly dispatches CodeQL because its
-  # GITHUB_TOKEN-created pull request does not emit a pull_request event.
+  # Repository automation explicitly dispatches CodeQL because pull requests
+  # created with GITHUB_TOKEN do not emit a pull_request event.
   workflow_dispatch:
 
 permissions:

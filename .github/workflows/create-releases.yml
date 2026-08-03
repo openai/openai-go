@@ -16,6 +16,8 @@ jobs:
       issues: write
       pull-requests: write
     outputs:
+      prs_created: ${{ steps.release.outputs.prs_created }}
+      release_pr_branch: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
       releases_created: ${{ steps.release.outputs.releases_created }}
 
     steps:
@@ -26,6 +28,36 @@ jobs:
           target-branch: main
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  dispatch_checks:
+    name: Dispatch release pull request checks
+    needs: release
+    if: needs.release.outputs.prs_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write  # Dispatch only the explicitly named required workflows.
+
+    steps:
+      - name: Run required checks on the release pull request
+        env:
+          BASE_SHA: ${{ github.sha }}
+          BRANCH: ${{ needs.release.outputs.release_pr_branch }}
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # GITHUB_TOKEN deliberately does not trigger pull_request workflows.
+          # workflow_dispatch is the documented exception.
+          if [[ "$BRANCH" != 'release-please--branches--main' ]]; then
+            echo "Unexpected release-please branch: $BRANCH" >&2
+            exit 1
+          fi
+
+          gh workflow run ci.yml --ref "$BRANCH"
+          gh workflow run detect-breaking-changes.yml \
+            --ref "$BRANCH" \
+            --field base_sha="$BASE_SHA"
+          gh workflow run codeql.yml --ref "$BRANCH"
 
   publish:
     name: publish
