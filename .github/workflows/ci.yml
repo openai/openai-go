@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - '**'
+      - '!gh-readonly-queue/**'
       - '!integrated/**'
       - '!stl-preview-head/**'
       - '!stl-preview-base/**'
@@ -13,6 +14,9 @@ on:
     branches-ignore:
       - 'stl-preview-head/**'
       - 'stl-preview-base/**'
+  merge_group:
+    types:
+      - checks_requested
   # GitHub does not emit pull_request workflows for pull requests created with
   # GITHUB_TOKEN, so repository automation explicitly dispatches this
   # validation on generated branches.
@@ -73,6 +77,7 @@ jobs:
     if: >-
       github.event_name == 'push' ||
       github.event_name == 'pull_request' ||
+      github.event_name == 'merge_group' ||
       github.event_name == 'workflow_dispatch'
     # Prevent Go's automatic toolchain selection from hiding an accidental
     # increase above the minimum declared in go.mod.
@@ -102,6 +107,7 @@ jobs:
     if: >-
       github.event_name == 'push' ||
       github.event_name == 'pull_request' ||
+      github.event_name == 'merge_group' ||
       github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
@@ -157,6 +163,7 @@ jobs:
     # newly published advisories against an otherwise unchanged commit.
     if: >-
       github.event_name == 'pull_request' ||
+      github.event_name == 'merge_group' ||
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch'
     env:
@@ -194,6 +201,7 @@ jobs:
     if: >-
       always() &&
       (github.event_name == 'pull_request' ||
+      github.event_name == 'merge_group' ||
       github.event_name == 'workflow_dispatch')
     needs:
       - test

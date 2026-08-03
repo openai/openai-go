@@ -4,6 +4,9 @@ on:
     branches:
       - main
       - next
+  merge_group:
+    types:
+      - checks_requested
   # See ci.yml: GITHUB_TOKEN-created pull requests dispatch this workflow
   # explicitly because GitHub suppresses their pull_request event.
   workflow_dispatch:
@@ -35,7 +38,7 @@ jobs:
 
       - name: Detect breaking changes
         env:
-          BASE_SHA: ${{ inputs.base_sha || github.event.pull_request.base.sha }}
+          BASE_SHA: ${{ inputs.base_sha || github.event.merge_group.base_sha || github.event.pull_request.base.sha }}
         run: |
           # Try to check out previous versions of the breaking change detection script. This ensures that
           # we still detect breaking changes when entire files and their tests are removed.
