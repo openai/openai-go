@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -60,7 +61,7 @@ func (r *ConversationService) Get(ctx context.Context, conversationID string, op
 		err = errors.New("missing required conversation_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("conversations/%s", conversationID)
+	path := fmt.Sprintf("conversations/%s", conversationID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -73,7 +74,7 @@ func (r *ConversationService) Update(ctx context.Context, conversationID string,
 		err = errors.New("missing required conversation_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("conversations/%s", conversationID)
+	path := fmt.Sprintf("conversations/%s", conversationID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -86,7 +87,7 @@ func (r *ConversationService) Delete(ctx context.Context, conversationID string,
 		err = errors.New("missing required conversation_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("conversations/%s", conversationID)
+	path := fmt.Sprintf("conversations/%s", conversationID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

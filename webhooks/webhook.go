@@ -3,20 +3,9 @@
 package webhooks
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"crypto/subtle"
-	"encoding/base64"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
-	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/respjson"
 	"github.com/openai/openai-go/v3/shared/constant"
@@ -42,159 +31,13 @@ func NewWebhookService(opts ...option.RequestOption) (r WebhookService) {
 }
 
 // Validates that the given payload was sent by OpenAI and parses the payload.
-func (r *WebhookService) Unwrap(body []byte, headers http.Header, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	// Always perform signature verification
-	err := r.VerifySignature(body, headers, opts...)
-	if err != nil {
-		return nil, err
-	}
-
+func (r *WebhookService) Unwrap(payload []byte, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
 	res := &UnwrapWebhookEventUnion{}
-	err = res.UnmarshalJSON(body)
+	err := res.UnmarshalJSON(payload)
 	if err != nil {
 		return res, err
 	}
 	return res, nil
-}
-
-// UnwrapWithTolerance validates that the given payload was sent by OpenAI using custom tolerance, then parses the payload.
-// tolerance specifies the maximum age of the webhook.
-func (r *WebhookService) UnwrapWithTolerance(body []byte, headers http.Header, tolerance time.Duration, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	err := r.VerifySignatureWithTolerance(body, headers, tolerance, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	res := &UnwrapWebhookEventUnion{}
-	err = res.UnmarshalJSON(body)
-	if err != nil {
-		return res, err
-	}
-	return res, nil
-}
-
-// UnwrapWithToleranceAndTime validates that the given payload was sent by OpenAI using custom tolerance and time, then parses the payload.
-// tolerance specifies the maximum age of the webhook.
-// now allows specifying the current time for testing purposes.
-func (r *WebhookService) UnwrapWithToleranceAndTime(body []byte, headers http.Header, tolerance time.Duration, now time.Time, opts ...option.RequestOption) (*UnwrapWebhookEventUnion, error) {
-	err := r.VerifySignatureWithToleranceAndTime(body, headers, tolerance, now, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	res := &UnwrapWebhookEventUnion{}
-	err = res.UnmarshalJSON(body)
-	if err != nil {
-		return res, err
-	}
-	return res, nil
-}
-
-// VerifySignature validates whether or not the webhook payload was sent by OpenAI.
-// An error will be raised if the webhook signature is invalid.
-// tolerance specifies the maximum age of the webhook (default: 5 minutes).
-func (r *WebhookService) VerifySignature(body []byte, headers http.Header, opts ...option.RequestOption) error {
-	return r.VerifySignatureWithTolerance(body, headers, 5*time.Minute, opts...)
-}
-
-// VerifySignatureWithTolerance validates whether or not the webhook payload was sent by OpenAI.
-// An error will be raised if the webhook signature is invalid.
-// tolerance specifies the maximum age of the webhook.
-func (r *WebhookService) VerifySignatureWithTolerance(body []byte, headers http.Header, tolerance time.Duration, opts ...option.RequestOption) error {
-	return r.VerifySignatureWithToleranceAndTime(body, headers, tolerance, time.Now(), opts...)
-}
-
-// VerifySignatureWithToleranceAndTime validates whether or not the webhook payload was sent by OpenAI.
-// An error will be raised if the webhook signature is invalid.
-// tolerance specifies the maximum age of the webhook.
-// now allows specifying the current time for testing purposes.
-func (r *WebhookService) VerifySignatureWithToleranceAndTime(body []byte, headers http.Header, tolerance time.Duration, now time.Time, opts ...option.RequestOption) error {
-	cfg, err := requestconfig.PreRequestOptions(r.Options...)
-	if err != nil {
-		return err
-	}
-	webhookSecret := cfg.WebhookSecret
-
-	if webhookSecret == "" {
-		return errors.New("webhook secret must be provided either in the method call or configured on the client")
-	}
-
-	if headers == nil {
-		return errors.New("headers are required for webhook verification")
-	}
-
-	// Extract required headers
-	signatureHeader := headers.Get("webhook-signature")
-	if signatureHeader == "" {
-		return errors.New("missing required webhook-signature header")
-	}
-
-	timestampHeader := headers.Get("webhook-timestamp")
-	if timestampHeader == "" {
-		return errors.New("missing required webhook-timestamp header")
-	}
-
-	webhookID := headers.Get("webhook-id")
-	if webhookID == "" {
-		return errors.New("missing required webhook-id header")
-	}
-
-	// Validate timestamp to prevent replay attacks
-	timestampSeconds, err := strconv.ParseInt(timestampHeader, 10, 64)
-	if err != nil {
-		return errors.New("invalid webhook timestamp format")
-	}
-
-	nowUnix := now.Unix()
-	toleranceSeconds := int64(tolerance.Seconds())
-
-	if nowUnix-timestampSeconds > toleranceSeconds {
-		return errors.New("webhook timestamp is too old")
-	}
-
-	if timestampSeconds > nowUnix+toleranceSeconds {
-		return errors.New("webhook timestamp is too new")
-	}
-
-	// Extract signatures from v1,<base64> format
-	// The signature header can have multiple values, separated by spaces.
-	// Each value is in the format v1,<base64>. We should accept if any match.
-	var signatures []string
-	for _, part := range strings.Fields(signatureHeader) {
-		if strings.HasPrefix(part, "v1,") {
-			signatures = append(signatures, part[3:])
-		} else {
-			signatures = append(signatures, part)
-		}
-	}
-
-	// Decode the secret if it starts with whsec_
-	var decodedSecret []byte
-	if strings.HasPrefix(webhookSecret, "whsec_") {
-		decodedSecret, err = base64.StdEncoding.DecodeString(webhookSecret[6:])
-		if err != nil {
-			return fmt.Errorf("invalid webhook secret format: %v", err)
-		}
-	} else {
-		decodedSecret = []byte(webhookSecret)
-	}
-
-	// Create the signed payload: {webhook_id}.{timestamp}.{payload}
-	signedPayload := fmt.Sprintf("%s.%s.%s", webhookID, timestampHeader, string(body))
-
-	// Compute HMAC-SHA256 signature
-	h := hmac.New(sha256.New, decodedSecret)
-	h.Write([]byte(signedPayload))
-	expectedSignature := base64.StdEncoding.EncodeToString(h.Sum(nil))
-
-	// Accept if any signature matches using timing-safe comparison
-	for _, signature := range signatures {
-		if subtle.ConstantTimeCompare([]byte(expectedSignature), []byte(signature)) == 1 {
-			return nil
-		}
-	}
-
-	return errors.New("webhook signature verification failed")
 }
 
 // Sent when a batch API request has been cancelled.

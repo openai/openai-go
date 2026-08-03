@@ -5,6 +5,7 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -44,7 +45,7 @@ func (r *AdminOrganizationProjectModelPermissionService) Get(ctx context.Context
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/model_permissions", projectID)
+	path := fmt.Sprintf("organization/projects/%s/model_permissions", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -57,7 +58,7 @@ func (r *AdminOrganizationProjectModelPermissionService) Update(ctx context.Cont
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/model_permissions", projectID)
+	path := fmt.Sprintf("organization/projects/%s/model_permissions", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -70,7 +71,7 @@ func (r *AdminOrganizationProjectModelPermissionService) Delete(ctx context.Cont
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/model_permissions", projectID)
+	path := fmt.Sprintf("organization/projects/%s/model_permissions", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

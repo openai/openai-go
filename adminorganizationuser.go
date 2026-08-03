@@ -5,6 +5,7 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -48,7 +49,7 @@ func (r *AdminOrganizationUserService) Get(ctx context.Context, userID string, o
 		err = errors.New("missing required user_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/users/%s", userID)
+	path := fmt.Sprintf("organization/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -61,7 +62,7 @@ func (r *AdminOrganizationUserService) Update(ctx context.Context, userID string
 		err = errors.New("missing required user_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/users/%s", userID)
+	path := fmt.Sprintf("organization/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -98,7 +99,7 @@ func (r *AdminOrganizationUserService) Delete(ctx context.Context, userID string
 		err = errors.New("missing required user_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/users/%s", userID)
+	path := fmt.Sprintf("organization/users/%s", userID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

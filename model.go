@@ -5,6 +5,7 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -46,7 +47,7 @@ func (r *ModelService) Get(ctx context.Context, model string, opts ...option.Req
 		err = errors.New("missing required model parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("models/%s", model)
+	path := fmt.Sprintf("models/%s", model)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -86,7 +87,7 @@ func (r *ModelService) Delete(ctx context.Context, model string, opts ...option.
 		err = errors.New("missing required model parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("models/%s", model)
+	path := fmt.Sprintf("models/%s", model)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

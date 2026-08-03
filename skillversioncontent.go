@@ -5,6 +5,7 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -44,7 +45,7 @@ func (r *SkillVersionContentService) Get(ctx context.Context, skillID string, ve
 		err = errors.New("missing required version parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("skills/%s/versions/%s/content", skillID, version)
+	path := fmt.Sprintf("skills/%s/versions/%s/content", skillID, version)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }

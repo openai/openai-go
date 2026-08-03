@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -50,48 +51,9 @@ func (r *VectorStoreFileService) New(ctx context.Context, vectorStoreID string, 
 		err = errors.New("missing required vector_store_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("vector_stores/%s/files", vectorStoreID)
+	path := fmt.Sprintf("vector_stores/%s/files", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
-}
-
-// Create a vector store file by attaching a
-// [File](https://platform.openai.com/docs/api-reference/files) to a
-// [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object).
-//
-// Polls the API and blocks until the task is complete.
-// Default polling interval is 1 second.
-func (r *VectorStoreFileService) NewAndPoll(ctx context.Context, vectorStoreId string, body VectorStoreFileNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
-	file, err := r.New(ctx, vectorStoreId, body, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return r.PollStatus(ctx, vectorStoreId, file.ID, pollIntervalMs, opts...)
-}
-
-// Upload a file to the `files` API and then attach it to the given vector store.
-//
-// Note the file will be asynchronously processed (you can use the alternative
-// polling helper method to wait for processing to complete).
-func (r *VectorStoreFileService) Upload(ctx context.Context, vectorStoreID string, body FileNewParams, opts ...option.RequestOption) (*VectorStoreFile, error) {
-	filesService := NewFileService(r.Options...)
-	fileObj, err := filesService.New(ctx, body, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return r.New(ctx, vectorStoreID, VectorStoreFileNewParams{
-		FileID: fileObj.ID,
-	}, opts...)
-}
-
-// Add a file to a vector store and poll until processing is complete.
-// Default polling interval is 1 second.
-func (r *VectorStoreFileService) UploadAndPoll(ctx context.Context, vectorStoreID string, body FileNewParams, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFile, error) {
-	res, err := r.Upload(ctx, vectorStoreID, body, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return r.PollStatus(ctx, vectorStoreID, res.ID, pollIntervalMs, opts...)
 }
 
 // Retrieves a vector store file.
@@ -107,7 +69,7 @@ func (r *VectorStoreFileService) Get(ctx context.Context, vectorStoreID string, 
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("vector_stores/%s/files/%s", vectorStoreID, fileID)
+	path := fmt.Sprintf("vector_stores/%s/files/%s", vectorStoreID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -125,7 +87,7 @@ func (r *VectorStoreFileService) Update(ctx context.Context, vectorStoreID strin
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("vector_stores/%s/files/%s", vectorStoreID, fileID)
+	path := fmt.Sprintf("vector_stores/%s/files/%s", vectorStoreID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -140,7 +102,7 @@ func (r *VectorStoreFileService) List(ctx context.Context, vectorStoreID string,
 		err = errors.New("missing required vector_store_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("vector_stores/%s/files", vectorStoreID)
+	path := fmt.Sprintf("vector_stores/%s/files", vectorStoreID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -174,7 +136,7 @@ func (r *VectorStoreFileService) Delete(ctx context.Context, vectorStoreID strin
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("vector_stores/%s/files/%s", vectorStoreID, fileID)
+	path := fmt.Sprintf("vector_stores/%s/files/%s", vectorStoreID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -193,7 +155,7 @@ func (r *VectorStoreFileService) Content(ctx context.Context, vectorStoreID stri
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("vector_stores/%s/files/%s/content", vectorStoreID, fileID)
+	path := fmt.Sprintf("vector_stores/%s/files/%s/content", vectorStoreID, fileID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, nil, &res, opts...)
 	if err != nil {
 		return nil, err

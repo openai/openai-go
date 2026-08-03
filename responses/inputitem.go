@@ -5,6 +5,7 @@ package responses
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -48,7 +49,7 @@ func (r *InputItemService) List(ctx context.Context, responseID string, query In
 		err = errors.New("missing required response_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("responses/%s/input_items", responseID)
+	path := fmt.Sprintf("responses/%s/input_items", responseID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err

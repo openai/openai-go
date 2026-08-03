@@ -5,6 +5,7 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -47,7 +48,7 @@ func (r *AdminOrganizationProjectSpendAlertService) New(ctx context.Context, pro
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/spend_alerts", projectID)
+	path := fmt.Sprintf("organization/projects/%s/spend_alerts", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -64,7 +65,7 @@ func (r *AdminOrganizationProjectSpendAlertService) Get(ctx context.Context, pro
 		err = errors.New("missing required alert_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/spend_alerts/%s", projectID, alertID)
+	path := fmt.Sprintf("organization/projects/%s/spend_alerts/%s", projectID, alertID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -81,7 +82,7 @@ func (r *AdminOrganizationProjectSpendAlertService) Update(ctx context.Context, 
 		err = errors.New("missing required alert_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/spend_alerts/%s", projectID, alertID)
+	path := fmt.Sprintf("organization/projects/%s/spend_alerts/%s", projectID, alertID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -96,7 +97,7 @@ func (r *AdminOrganizationProjectSpendAlertService) List(ctx context.Context, pr
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/spend_alerts", projectID)
+	path := fmt.Sprintf("organization/projects/%s/spend_alerts", projectID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -126,7 +127,7 @@ func (r *AdminOrganizationProjectSpendAlertService) Delete(ctx context.Context, 
 		err = errors.New("missing required alert_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/spend_alerts/%s", projectID, alertID)
+	path := fmt.Sprintf("organization/projects/%s/spend_alerts/%s", projectID, alertID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

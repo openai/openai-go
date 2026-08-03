@@ -5,6 +5,7 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -43,7 +44,7 @@ func (r *AdminOrganizationProjectHostedToolPermissionService) Get(ctx context.Co
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/hosted_tool_permissions", projectID)
+	path := fmt.Sprintf("organization/projects/%s/hosted_tool_permissions", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -56,7 +57,7 @@ func (r *AdminOrganizationProjectHostedToolPermissionService) Update(ctx context
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/hosted_tool_permissions", projectID)
+	path := fmt.Sprintf("organization/projects/%s/hosted_tool_permissions", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }

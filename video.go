@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -51,18 +52,6 @@ func (r *VideoService) New(ctx context.Context, body VideoNewParams, opts ...opt
 	return res, err
 }
 
-// Create Video and Poll for Completion
-//
-// Polls the API and blocks until the task is complete.
-// Default polling interval is 1 second.
-func (r *VideoService) NewAndPoll(ctx context.Context, body VideoNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *Video, err error) {
-	video, err := r.New(ctx, body, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return r.PollStatus(ctx, video.ID, pollIntervalMs, opts...)
-}
-
 // Fetch the latest metadata for a generated video.
 func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.RequestOption) (res *Video, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
@@ -71,7 +60,7 @@ func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.R
 		err = errors.New("missing required video_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("videos/%s", videoID)
+	path := fmt.Sprintf("videos/%s", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -108,7 +97,7 @@ func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...optio
 		err = errors.New("missing required video_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("videos/%s", videoID)
+	path := fmt.Sprintf("videos/%s", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -133,7 +122,7 @@ func (r *VideoService) DownloadContent(ctx context.Context, videoID string, quer
 		err = errors.New("missing required video_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("videos/%s/content", videoID)
+	path := fmt.Sprintf("videos/%s/content", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
@@ -165,7 +154,7 @@ func (r *VideoService) GetCharacter(ctx context.Context, characterID string, opt
 		err = errors.New("missing required character_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("videos/characters/%s", characterID)
+	path := fmt.Sprintf("videos/characters/%s", characterID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -178,7 +167,7 @@ func (r *VideoService) Remix(ctx context.Context, videoID string, body VideoRemi
 		err = errors.New("missing required video_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("videos/%s/remix", videoID)
+	path := fmt.Sprintf("videos/%s/remix", videoID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }

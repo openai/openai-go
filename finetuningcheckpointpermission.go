@@ -5,6 +5,7 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -46,14 +47,14 @@ func NewFineTuningCheckpointPermissionService(opts ...option.RequestOption) (r F
 // in their organization.
 func (r *FineTuningCheckpointPermissionService) New(ctx context.Context, fineTunedModelCheckpoint string, body FineTuningCheckpointPermissionNewParams, opts ...option.RequestOption) (res *pagination.Page[FineTuningCheckpointPermissionNewResponse], err error) {
 	var raw *http.Response
-	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if fineTunedModelCheckpoint == "" {
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
+	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodPost, path, body, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -82,13 +83,13 @@ func (r *FineTuningCheckpointPermissionService) NewAutoPaging(ctx context.Contex
 // Deprecated: Retrieve is deprecated. Please swap to the paginated list method
 // instead.
 func (r *FineTuningCheckpointPermissionService) Get(ctx context.Context, fineTunedModelCheckpoint string, query FineTuningCheckpointPermissionGetParams, opts ...option.RequestOption) (res *FineTuningCheckpointPermissionGetResponse, err error) {
-	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if fineTunedModelCheckpoint == "" {
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
+	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
@@ -99,14 +100,14 @@ func (r *FineTuningCheckpointPermissionService) Get(ctx context.Context, fineTun
 // fine-tuned model checkpoint.
 func (r *FineTuningCheckpointPermissionService) List(ctx context.Context, fineTunedModelCheckpoint string, query FineTuningCheckpointPermissionListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[FineTuningCheckpointPermissionListResponse], err error) {
 	var raw *http.Response
-	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	if fineTunedModelCheckpoint == "" {
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
+	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions", fineTunedModelCheckpoint)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -132,7 +133,7 @@ func (r *FineTuningCheckpointPermissionService) ListAutoPaging(ctx context.Conte
 // Organization owners can use this endpoint to delete a permission for a
 // fine-tuned model checkpoint.
 func (r *FineTuningCheckpointPermissionService) Delete(ctx context.Context, fineTunedModelCheckpoint string, permissionID string, opts ...option.RequestOption) (res *FineTuningCheckpointPermissionDeleteResponse, err error) {
-	var preClientOpts = []option.RequestOption{requestconfig.WithAdminAPIKeyAuthSecurity()}
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
 	if fineTunedModelCheckpoint == "" {
 		err = errors.New("missing required fine_tuned_model_checkpoint parameter")
@@ -142,7 +143,7 @@ func (r *FineTuningCheckpointPermissionService) Delete(ctx context.Context, fine
 		err = errors.New("missing required permission_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("fine_tuning/checkpoints/%s/permissions/%s", fineTunedModelCheckpoint, permissionID)
+	path := fmt.Sprintf("fine_tuning/checkpoints/%s/permissions/%s", fineTunedModelCheckpoint, permissionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

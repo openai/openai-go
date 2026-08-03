@@ -5,6 +5,7 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -55,7 +56,7 @@ func (r *AdminOrganizationSpendAlertService) Get(ctx context.Context, alertID st
 		err = errors.New("missing required alert_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/spend_alerts/%s", alertID)
+	path := fmt.Sprintf("organization/spend_alerts/%s", alertID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -68,7 +69,7 @@ func (r *AdminOrganizationSpendAlertService) Update(ctx context.Context, alertID
 		err = errors.New("missing required alert_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/spend_alerts/%s", alertID)
+	path := fmt.Sprintf("organization/spend_alerts/%s", alertID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -105,7 +106,7 @@ func (r *AdminOrganizationSpendAlertService) Delete(ctx context.Context, alertID
 		err = errors.New("missing required alert_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/spend_alerts/%s", alertID)
+	path := fmt.Sprintf("organization/spend_alerts/%s", alertID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

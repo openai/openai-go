@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -50,7 +51,7 @@ func (r *ItemService) New(ctx context.Context, conversationID string, params Ite
 		err = errors.New("missing required conversation_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("conversations/%s/items", conversationID)
+	path := fmt.Sprintf("conversations/%s/items", conversationID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return res, err
 }
@@ -67,7 +68,7 @@ func (r *ItemService) Get(ctx context.Context, conversationID string, itemID str
 		err = errors.New("missing required item_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("conversations/%s/items/%s", conversationID, itemID)
+	path := fmt.Sprintf("conversations/%s/items/%s", conversationID, itemID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
@@ -82,7 +83,7 @@ func (r *ItemService) List(ctx context.Context, conversationID string, query Ite
 		err = errors.New("missing required conversation_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("conversations/%s/items", conversationID)
+	path := fmt.Sprintf("conversations/%s/items", conversationID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -112,7 +113,7 @@ func (r *ItemService) Delete(ctx context.Context, conversationID string, itemID 
 		err = errors.New("missing required item_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("conversations/%s/items/%s", conversationID, itemID)
+	path := fmt.Sprintf("conversations/%s/items/%s", conversationID, itemID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

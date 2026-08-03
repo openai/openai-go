@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -48,7 +49,7 @@ func (r *BetaChatKitThreadService) Get(ctx context.Context, threadID string, opt
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("chatkit/threads/%s", threadID)
+	path := fmt.Sprintf("chatkit/threads/%s", threadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -86,7 +87,7 @@ func (r *BetaChatKitThreadService) Delete(ctx context.Context, threadID string, 
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("chatkit/threads/%s", threadID)
+	path := fmt.Sprintf("chatkit/threads/%s", threadID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -101,7 +102,7 @@ func (r *BetaChatKitThreadService) ListItems(ctx context.Context, threadID strin
 		err = errors.New("missing required thread_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("chatkit/threads/%s/items", threadID)
+	path := fmt.Sprintf("chatkit/threads/%s/items", threadID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err

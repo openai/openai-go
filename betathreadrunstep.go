@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -63,7 +64,7 @@ func (r *BetaThreadRunStepService) Get(ctx context.Context, threadID string, run
 		err = errors.New("missing required step_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("threads/%s/runs/%s/steps/%s", threadID, runID, stepID)
+	path := fmt.Sprintf("threads/%s/runs/%s/steps/%s", threadID, runID, stepID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
@@ -84,7 +85,7 @@ func (r *BetaThreadRunStepService) List(ctx context.Context, threadID string, ru
 		err = errors.New("missing required run_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("threads/%s/runs/%s/steps", threadID, runID)
+	path := fmt.Sprintf("threads/%s/runs/%s/steps", threadID, runID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err

@@ -64,7 +64,7 @@ type Client struct {
 // OPENAI_ADMIN_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_WEBHOOK_SECRET,
 // OPENAI_BASE_URL). This should be used to initialize new clients.
 func DefaultClientOptions() []option.RequestOption {
-	defaults := defaultClientOptionsWithoutEnvironment()
+	defaults := []option.RequestOption{option.WithHTTPClient(defaultHTTPClient()), option.WithEnvironmentProduction()}
 	if o, ok := os.LookupEnv("OPENAI_BASE_URL"); ok {
 		defaults = append(defaults, option.WithBaseURL(o))
 	}
@@ -94,21 +94,13 @@ func DefaultClientOptions() []option.RequestOption {
 	return defaults
 }
 
-func defaultClientOptionsWithoutEnvironment() []option.RequestOption {
-	return []option.RequestOption{option.WithHTTPClient(defaultHTTPClient()), option.WithEnvironmentProduction()}
-}
-
 // NewClient generates a new client with the default option read from the
 // environment (OPENAI_API_KEY, OPENAI_ADMIN_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID,
 // OPENAI_WEBHOOK_SECRET, OPENAI_BASE_URL). The option passed in as arguments are
 // applied after these default arguments, and all option will be passed down to the
 // services and requests that this client makes.
 func NewClient(opts ...option.RequestOption) (r Client) {
-	defaults := DefaultClientOptions()
-	if requestconfig.EnvironmentDefaultsDisabled(opts...) {
-		defaults = defaultClientOptionsWithoutEnvironment()
-	}
-	opts = append(defaults, opts...)
+	opts = append(DefaultClientOptions(), opts...)
 
 	r = Client{Options: opts}
 
@@ -171,7 +163,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 // For even greater flexibility, see [option.WithResponseInto] and
 // [option.WithResponseBodyInto].
 func (r *Client) Execute(ctx context.Context, method string, path string, params any, res any, opts ...option.RequestOption) error {
-	opts = slices.Concat(r.Options, []option.RequestOption{requestconfig.WithBearerAuthPreference()}, opts)
+	opts = slices.Concat(r.Options, opts)
 	return requestconfig.ExecuteNewRequest(ctx, method, path, params, res, opts...)
 }
 

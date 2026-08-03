@@ -6,10 +6,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
-	"strings"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
@@ -97,7 +97,7 @@ func (r *ResponseService) Get(ctx context.Context, responseID string, query Resp
 		err = errors.New("missing required response_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("responses/%s", responseID)
+	path := fmt.Sprintf("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
@@ -115,7 +115,7 @@ func (r *ResponseService) GetStreaming(ctx context.Context, responseID string, q
 		err = errors.New("missing required response_id parameter")
 		return ssestream.NewStream[ResponseStreamEventUnion](nil, err)
 	}
-	path := requestconfig.FormatPath("responses/%s", responseID)
+	path := fmt.Sprintf("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &raw, opts...)
 	return ssestream.NewStream[ResponseStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
@@ -129,7 +129,7 @@ func (r *ResponseService) Delete(ctx context.Context, responseID string, opts ..
 		err = errors.New("missing required response_id parameter")
 		return err
 	}
-	path := requestconfig.FormatPath("responses/%s", responseID)
+	path := fmt.Sprintf("responses/%s", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
 	return err
 }
@@ -144,7 +144,7 @@ func (r *ResponseService) Cancel(ctx context.Context, responseID string, opts ..
 		err = errors.New("missing required response_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("responses/%s/cancel", responseID)
+	path := fmt.Sprintf("responses/%s/cancel", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }
@@ -3533,18 +3533,6 @@ type Response struct {
 		ExtraFields          map[string]respjson.Field
 		raw                  string
 	} `json:"-"`
-}
-
-func (r Response) OutputText() string {
-	var outputText strings.Builder
-	for _, item := range r.Output {
-		for _, content := range item.Content {
-			if content.Type == "output_text" {
-				outputText.WriteString(content.Text)
-			}
-		}
-	}
-	return outputText.String()
 }
 
 // Returns the unmodified JSON received from the API
@@ -10204,7 +10192,7 @@ func (r ResponseFunctionWebSearch) ToParam() ResponseFunctionWebSearchParam {
 // ResponseFunctionWebSearchActionUnion contains all possible properties and values
 // from [ResponseFunctionWebSearchActionSearch],
 // [ResponseFunctionWebSearchActionOpenPage],
-// [ResponseFunctionWebSearchActionFind].
+// [ResponseFunctionWebSearchActionFindInPage].
 //
 // Use the [ResponseFunctionWebSearchActionUnion.AsAny] method to switch on the
 // variant.
@@ -10220,7 +10208,7 @@ type ResponseFunctionWebSearchActionUnion struct {
 	// This field is from variant [ResponseFunctionWebSearchActionSearch].
 	Sources []ResponseFunctionWebSearchActionSearchSource `json:"sources"`
 	URL     string                                        `json:"url"`
-	// This field is from variant [ResponseFunctionWebSearchActionFind].
+	// This field is from variant [ResponseFunctionWebSearchActionFindInPage].
 	Pattern string `json:"pattern"`
 	JSON    struct {
 		Type    respjson.Field
@@ -10240,16 +10228,16 @@ type anyResponseFunctionWebSearchAction interface {
 	implResponseFunctionWebSearchActionUnion()
 }
 
-func (ResponseFunctionWebSearchActionSearch) implResponseFunctionWebSearchActionUnion()   {}
-func (ResponseFunctionWebSearchActionOpenPage) implResponseFunctionWebSearchActionUnion() {}
-func (ResponseFunctionWebSearchActionFind) implResponseFunctionWebSearchActionUnion()     {}
+func (ResponseFunctionWebSearchActionSearch) implResponseFunctionWebSearchActionUnion()     {}
+func (ResponseFunctionWebSearchActionOpenPage) implResponseFunctionWebSearchActionUnion()   {}
+func (ResponseFunctionWebSearchActionFindInPage) implResponseFunctionWebSearchActionUnion() {}
 
 // Use the following switch statement to find the correct variant
 //
 //	switch variant := ResponseFunctionWebSearchActionUnion.AsAny().(type) {
 //	case responses.ResponseFunctionWebSearchActionSearch:
 //	case responses.ResponseFunctionWebSearchActionOpenPage:
-//	case responses.ResponseFunctionWebSearchActionFind:
+//	case responses.ResponseFunctionWebSearchActionFindInPage:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -10260,7 +10248,7 @@ func (u ResponseFunctionWebSearchActionUnion) AsAny() anyResponseFunctionWebSear
 	case "open_page":
 		return u.AsOpenPage()
 	case "find_in_page":
-		return u.AsFind()
+		return u.AsFindInPage()
 	}
 	return nil
 }
@@ -10275,7 +10263,7 @@ func (u ResponseFunctionWebSearchActionUnion) AsOpenPage() (v ResponseFunctionWe
 	return
 }
 
-func (u ResponseFunctionWebSearchActionUnion) AsFind() (v ResponseFunctionWebSearchActionFind) {
+func (u ResponseFunctionWebSearchActionUnion) AsFindInPage() (v ResponseFunctionWebSearchActionFindInPage) {
 	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -10359,7 +10347,7 @@ func (r *ResponseFunctionWebSearchActionOpenPage) UnmarshalJSON(data []byte) err
 }
 
 // Action type "find_in_page": Searches for a pattern within a loaded page.
-type ResponseFunctionWebSearchActionFind struct {
+type ResponseFunctionWebSearchActionFindInPage struct {
 	// The pattern or text to search for within the page.
 	Pattern string `json:"pattern" api:"required"`
 	// The action type.
@@ -10377,8 +10365,8 @@ type ResponseFunctionWebSearchActionFind struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r ResponseFunctionWebSearchActionFind) RawJSON() string { return r.JSON.raw }
-func (r *ResponseFunctionWebSearchActionFind) UnmarshalJSON(data []byte) error {
+func (r ResponseFunctionWebSearchActionFindInPage) RawJSON() string { return r.JSON.raw }
+func (r *ResponseFunctionWebSearchActionFindInPage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -10426,14 +10414,14 @@ func (r *ResponseFunctionWebSearchParam) UnmarshalJSON(data []byte) error {
 //
 // Use [param.IsOmitted] to confirm if a field is set.
 type ResponseFunctionWebSearchActionUnionParam struct {
-	OfSearch   *ResponseFunctionWebSearchActionSearchParam   `json:",omitzero,inline"`
-	OfOpenPage *ResponseFunctionWebSearchActionOpenPageParam `json:",omitzero,inline"`
-	OfFind     *ResponseFunctionWebSearchActionFindParam     `json:",omitzero,inline"`
+	OfSearch     *ResponseFunctionWebSearchActionSearchParam     `json:",omitzero,inline"`
+	OfOpenPage   *ResponseFunctionWebSearchActionOpenPageParam   `json:",omitzero,inline"`
+	OfFindInPage *ResponseFunctionWebSearchActionFindInPageParam `json:",omitzero,inline"`
 	paramUnion
 }
 
 func (u ResponseFunctionWebSearchActionUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfSearch, u.OfOpenPage, u.OfFind)
+	return param.MarshalUnion(u, u.OfSearch, u.OfOpenPage, u.OfFindInPage)
 }
 func (u *ResponseFunctionWebSearchActionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
@@ -10444,8 +10432,8 @@ func (u *ResponseFunctionWebSearchActionUnionParam) asAny() any {
 		return u.OfSearch
 	} else if !param.IsOmitted(u.OfOpenPage) {
 		return u.OfOpenPage
-	} else if !param.IsOmitted(u.OfFind) {
-		return u.OfFind
+	} else if !param.IsOmitted(u.OfFindInPage) {
+		return u.OfFindInPage
 	}
 	return nil
 }
@@ -10476,7 +10464,7 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetSources() []ResponseFuncti
 
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseFunctionWebSearchActionUnionParam) GetPattern() *string {
-	if vt := u.OfFind; vt != nil {
+	if vt := u.OfFindInPage; vt != nil {
 		return &vt.Pattern
 	}
 	return nil
@@ -10488,7 +10476,7 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfOpenPage; vt != nil {
 		return (*string)(&vt.Type)
-	} else if vt := u.OfFind; vt != nil {
+	} else if vt := u.OfFindInPage; vt != nil {
 		return (*string)(&vt.Type)
 	}
 	return nil
@@ -10498,7 +10486,7 @@ func (u ResponseFunctionWebSearchActionUnionParam) GetType() *string {
 func (u ResponseFunctionWebSearchActionUnionParam) GetURL() *string {
 	if vt := u.OfOpenPage; vt != nil && vt.URL.Valid() {
 		return &vt.URL.Value
-	} else if vt := u.OfFind; vt != nil {
+	} else if vt := u.OfFindInPage; vt != nil {
 		return (*string)(&vt.URL)
 	}
 	return nil
@@ -10509,7 +10497,7 @@ func init() {
 		"type",
 		apijson.Discriminator[ResponseFunctionWebSearchActionSearchParam]("search"),
 		apijson.Discriminator[ResponseFunctionWebSearchActionOpenPageParam]("open_page"),
-		apijson.Discriminator[ResponseFunctionWebSearchActionFindParam]("find_in_page"),
+		apijson.Discriminator[ResponseFunctionWebSearchActionFindInPageParam]("find_in_page"),
 	)
 }
 
@@ -10585,7 +10573,7 @@ func (r *ResponseFunctionWebSearchActionOpenPageParam) UnmarshalJSON(data []byte
 // Action type "find_in_page": Searches for a pattern within a loaded page.
 //
 // The properties Pattern, Type, URL are required.
-type ResponseFunctionWebSearchActionFindParam struct {
+type ResponseFunctionWebSearchActionFindInPageParam struct {
 	// The pattern or text to search for within the page.
 	Pattern string `json:"pattern" api:"required"`
 	// The URL of the page searched for the pattern.
@@ -10597,11 +10585,11 @@ type ResponseFunctionWebSearchActionFindParam struct {
 	paramObj
 }
 
-func (r ResponseFunctionWebSearchActionFindParam) MarshalJSON() (data []byte, err error) {
-	type shadow ResponseFunctionWebSearchActionFindParam
+func (r ResponseFunctionWebSearchActionFindInPageParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseFunctionWebSearchActionFindInPageParam
 	return param.MarshalObject(r, (*shadow)(&r))
 }
-func (r *ResponseFunctionWebSearchActionFindParam) UnmarshalJSON(data []byte) error {
+func (r *ResponseFunctionWebSearchActionFindInPageParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -14036,7 +14024,7 @@ func ResponseInputItemParamOfComputerCallOutput(callID string, output ResponseCo
 }
 
 func ResponseInputItemParamOfWebSearchCall[
-	T ResponseFunctionWebSearchActionSearchParam | ResponseFunctionWebSearchActionOpenPageParam | ResponseFunctionWebSearchActionFindParam,
+	T ResponseFunctionWebSearchActionSearchParam | ResponseFunctionWebSearchActionOpenPageParam | ResponseFunctionWebSearchActionFindInPageParam,
 ](action T, id string, status ResponseFunctionWebSearchStatus) ResponseInputItemUnionParam {
 	var webSearchCall ResponseFunctionWebSearchParam
 	switch v := any(action).(type) {
@@ -14044,8 +14032,8 @@ func ResponseInputItemParamOfWebSearchCall[
 		webSearchCall.Action.OfSearch = &v
 	case ResponseFunctionWebSearchActionOpenPageParam:
 		webSearchCall.Action.OfOpenPage = &v
-	case ResponseFunctionWebSearchActionFindParam:
-		webSearchCall.Action.OfFind = &v
+	case ResponseFunctionWebSearchActionFindInPageParam:
+		webSearchCall.Action.OfFindInPage = &v
 	}
 	webSearchCall.ID = id
 	webSearchCall.Status = status
@@ -14863,7 +14851,7 @@ func (u ResponseInputItemUnionParam) GetAction() (res responseInputItemUnionPara
 // [*ResponseComputerToolCallActionWaitParam],
 // [*ResponseFunctionWebSearchActionSearchParam],
 // [*ResponseFunctionWebSearchActionOpenPageParam],
-// [*ResponseFunctionWebSearchActionFindParam],
+// [*ResponseFunctionWebSearchActionFindInPageParam],
 // [*ResponseInputItemLocalShellCallActionParam],
 // [*ResponseInputItemShellCallActionParam]
 type responseInputItemUnionParamAction struct{ any }
@@ -14882,7 +14870,7 @@ type responseInputItemUnionParamAction struct{ any }
 //	case *responses.ResponseComputerToolCallActionWaitParam:
 //	case *responses.ResponseFunctionWebSearchActionSearchParam:
 //	case *responses.ResponseFunctionWebSearchActionOpenPageParam:
-//	case *responses.ResponseFunctionWebSearchActionFindParam:
+//	case *responses.ResponseFunctionWebSearchActionFindInPageParam:
 //	case *responses.ResponseInputItemLocalShellCallActionParam:
 //	case *responses.ResponseInputItemShellCallActionParam:
 //	default:
@@ -18362,10 +18350,12 @@ func (r *ResponseMcpListToolsInProgressEvent) UnmarshalJSON(data []byte) error {
 //
 // Use the methods beginning with 'As' to cast the union to one of its variants.
 type ResponseOutputItemUnion struct {
-	ID      string                              `json:"id"`
-	Content []ResponseOutputMessageContentUnion `json:"content"`
-	Role    string                              `json:"role"`
-	Status  string                              `json:"status"`
+	ID string `json:"id"`
+	// This field is a union of [[]ResponseOutputMessageContentUnion],
+	// [[]ResponseReasoningItemContent]
+	Content ResponseOutputItemUnionContent `json:"content"`
+	Role    string                         `json:"role"`
+	Status  string                         `json:"status"`
 	// Any of "message", "file_search_call", "function_call", "function_call_output",
 	// "web_search_call", "computer_call", "computer_call_output", "reasoning",
 	// "program", "program_output", "tool_search_call", "tool_search_output",
@@ -18758,6 +18748,34 @@ func (u ResponseOutputItemUnion) AsCustomToolCallOutput() (v ResponseCustomToolC
 func (u ResponseOutputItemUnion) RawJSON() string { return u.JSON.raw }
 
 func (r *ResponseOutputItemUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseOutputItemUnionContent is an implicit subunion of
+// [ResponseOutputItemUnion]. ResponseOutputItemUnionContent provides convenient
+// access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ResponseOutputItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfResponseOutputMessageContentArray
+// OfResponseReasoningItemContentArray]
+type ResponseOutputItemUnionContent struct {
+	// This field will be present if the value is a
+	// [[]ResponseOutputMessageContentUnion] instead of an object.
+	OfResponseOutputMessageContentArray []ResponseOutputMessageContentUnion `json:",inline"`
+	// This field will be present if the value is a [[]ResponseReasoningItemContent]
+	// instead of an object.
+	OfResponseReasoningItemContentArray []ResponseReasoningItemContent `json:",inline"`
+	JSON                                struct {
+		OfResponseOutputMessageContentArray respjson.Field
+		OfResponseReasoningItemContentArray respjson.Field
+		raw                                 string
+	} `json:"-"`
+}
+
+func (r *ResponseOutputItemUnionContent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

@@ -5,6 +5,7 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -56,7 +57,7 @@ func (r *AdminOrganizationInviteService) Get(ctx context.Context, inviteID strin
 		err = errors.New("missing required invite_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/invites/%s", inviteID)
+	path := fmt.Sprintf("organization/invites/%s", inviteID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -93,7 +94,7 @@ func (r *AdminOrganizationInviteService) Delete(ctx context.Context, inviteID st
 		err = errors.New("missing required invite_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/invites/%s", inviteID)
+	path := fmt.Sprintf("organization/invites/%s", inviteID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

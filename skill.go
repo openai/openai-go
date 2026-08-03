@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -63,7 +64,7 @@ func (r *SkillService) Get(ctx context.Context, skillID string, opts ...option.R
 		err = errors.New("missing required skill_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("skills/%s", skillID)
+	path := fmt.Sprintf("skills/%s", skillID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -76,7 +77,7 @@ func (r *SkillService) Update(ctx context.Context, skillID string, body SkillUpd
 		err = errors.New("missing required skill_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("skills/%s", skillID)
+	path := fmt.Sprintf("skills/%s", skillID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -113,7 +114,7 @@ func (r *SkillService) Delete(ctx context.Context, skillID string, opts ...optio
 		err = errors.New("missing required skill_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("skills/%s", skillID)
+	path := fmt.Sprintf("skills/%s", skillID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

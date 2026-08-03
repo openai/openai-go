@@ -5,6 +5,7 @@ package realtime
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -44,7 +45,7 @@ func (r *CallService) Accept(ctx context.Context, callID string, body CallAccept
 		err = errors.New("missing required call_id parameter")
 		return err
 	}
-	path := requestconfig.FormatPath("realtime/calls/%s/accept", callID)
+	path := fmt.Sprintf("realtime/calls/%s/accept", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
 	return err
 }
@@ -58,7 +59,7 @@ func (r *CallService) Hangup(ctx context.Context, callID string, opts ...option.
 		err = errors.New("missing required call_id parameter")
 		return err
 	}
-	path := requestconfig.FormatPath("realtime/calls/%s/hangup", callID)
+	path := fmt.Sprintf("realtime/calls/%s/hangup", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, nil, opts...)
 	return err
 }
@@ -72,7 +73,7 @@ func (r *CallService) Refer(ctx context.Context, callID string, body CallReferPa
 		err = errors.New("missing required call_id parameter")
 		return err
 	}
-	path := requestconfig.FormatPath("realtime/calls/%s/refer", callID)
+	path := fmt.Sprintf("realtime/calls/%s/refer", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
 	return err
 }
@@ -86,7 +87,7 @@ func (r *CallService) Reject(ctx context.Context, callID string, body CallReject
 		err = errors.New("missing required call_id parameter")
 		return err
 	}
-	path := requestconfig.FormatPath("realtime/calls/%s/reject", callID)
+	path := fmt.Sprintf("realtime/calls/%s/reject", callID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
 	return err
 }

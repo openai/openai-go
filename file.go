@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -88,7 +89,7 @@ func (r *FileService) Get(ctx context.Context, fileID string, opts ...option.Req
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("files/%s", fileID)
+	path := fmt.Sprintf("files/%s", fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -125,7 +126,7 @@ func (r *FileService) Delete(ctx context.Context, fileID string, opts ...option.
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("files/%s", fileID)
+	path := fmt.Sprintf("files/%s", fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -139,7 +140,7 @@ func (r *FileService) Content(ctx context.Context, fileID string, opts ...option
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("files/%s/content", fileID)
+	path := fmt.Sprintf("files/%s/content", fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }

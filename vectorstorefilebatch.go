@@ -5,10 +5,10 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
-	"sync"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
@@ -48,68 +48,9 @@ func (r *VectorStoreFileBatchService) New(ctx context.Context, vectorStoreID str
 		err = errors.New("missing required vector_store_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("vector_stores/%s/file_batches", vectorStoreID)
+	path := fmt.Sprintf("vector_stores/%s/file_batches", vectorStoreID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
-}
-
-// Create a vector store file batch and polls the API until the task is complete.
-// Pass 0 for pollIntervalMs to enable default polling interval.
-func (r *VectorStoreFileBatchService) NewAndPoll(ctx context.Context, vectorStoreId string, body VectorStoreFileBatchNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFileBatch, err error) {
-	batch, err := r.New(ctx, vectorStoreId, body, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return r.PollStatus(ctx, vectorStoreId, batch.ID, pollIntervalMs, opts...)
-}
-
-// Uploads the given files concurrently and then creates a vector store file batch.
-//
-// If you've already uploaded certain files that you want to include in this batch
-// then you can pass their IDs through the file_ids argument.
-//
-// Pass 0 for pollIntervalMs to enable default polling interval.
-//
-// By default, if any file upload fails then an exception will be eagerly raised.
-func (r *VectorStoreFileBatchService) UploadAndPoll(ctx context.Context, vectorStoreID string, files []FileNewParams, fileIDs []string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFileBatch, error) {
-	if len(files) <= 0 {
-		return nil, errors.New("No `files` provided to process. If you've already uploaded files you should use `.NewAndPoll()` instead")
-	}
-
-	filesService := NewFileService(r.Options...)
-
-	uploadedFileIDs := make(chan string, len(files))
-	fileUploadErrors := make(chan error, len(files))
-	wg := sync.WaitGroup{}
-
-	for _, file := range files {
-		wg.Add(1)
-		go func(file FileNewParams) {
-			defer wg.Done()
-			fileObj, err := filesService.New(ctx, file, opts...)
-			if err != nil {
-				fileUploadErrors <- err
-				return
-			}
-			uploadedFileIDs <- fileObj.ID
-		}(file)
-	}
-
-	wg.Wait()
-	close(uploadedFileIDs)
-	close(fileUploadErrors)
-
-	for err := range fileUploadErrors {
-		return nil, err
-	}
-
-	for id := range uploadedFileIDs {
-		fileIDs = append(fileIDs, id)
-	}
-
-	return r.NewAndPoll(ctx, vectorStoreID, VectorStoreFileBatchNewParams{
-		FileIDs: fileIDs,
-	}, pollIntervalMs, opts...)
 }
 
 // Retrieves a vector store file batch.
@@ -125,7 +66,7 @@ func (r *VectorStoreFileBatchService) Get(ctx context.Context, vectorStoreID str
 		err = errors.New("missing required batch_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("vector_stores/%s/file_batches/%s", vectorStoreID, batchID)
+	path := fmt.Sprintf("vector_stores/%s/file_batches/%s", vectorStoreID, batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -144,7 +85,7 @@ func (r *VectorStoreFileBatchService) Cancel(ctx context.Context, vectorStoreID 
 		err = errors.New("missing required batch_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("vector_stores/%s/file_batches/%s/cancel", vectorStoreID, batchID)
+	path := fmt.Sprintf("vector_stores/%s/file_batches/%s/cancel", vectorStoreID, batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }
@@ -163,7 +104,7 @@ func (r *VectorStoreFileBatchService) ListFiles(ctx context.Context, vectorStore
 		err = errors.New("missing required batch_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("vector_stores/%s/file_batches/%s/files", vectorStoreID, batchID)
+	path := fmt.Sprintf("vector_stores/%s/file_batches/%s/files", vectorStoreID, batchID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err

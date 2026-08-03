@@ -5,6 +5,7 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -49,7 +50,7 @@ func (r *AdminOrganizationProjectCertificateService) List(ctx context.Context, p
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/certificates", projectID)
+	path := fmt.Sprintf("organization/projects/%s/certificates", projectID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -79,7 +80,7 @@ func (r *AdminOrganizationProjectCertificateService) Activate(ctx context.Contex
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/certificates/activate", projectID)
+	path := fmt.Sprintf("organization/projects/%s/certificates/activate", projectID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodPost, path, body, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -110,7 +111,7 @@ func (r *AdminOrganizationProjectCertificateService) Deactivate(ctx context.Cont
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("organization/projects/%s/certificates/deactivate", projectID)
+	path := fmt.Sprintf("organization/projects/%s/certificates/deactivate", projectID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodPost, path, body, &res, opts...)
 	if err != nil {
 		return nil, err

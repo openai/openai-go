@@ -5,6 +5,7 @@ package openai
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -44,7 +45,7 @@ func (r *ContainerFileContentService) Get(ctx context.Context, containerID strin
 		err = errors.New("missing required file_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("containers/%s/files/%s/content", containerID, fileID)
+	path := fmt.Sprintf("containers/%s/files/%s/content", containerID, fileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }

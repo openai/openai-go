@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -118,7 +119,7 @@ func (r *ChatCompletionService) Get(ctx context.Context, completionID string, op
 		err = errors.New("missing required completion_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("chat/completions/%s", completionID)
+	path := fmt.Sprintf("chat/completions/%s", completionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -133,7 +134,7 @@ func (r *ChatCompletionService) Update(ctx context.Context, completionID string,
 		err = errors.New("missing required completion_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("chat/completions/%s", completionID)
+	path := fmt.Sprintf("chat/completions/%s", completionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -173,7 +174,7 @@ func (r *ChatCompletionService) Delete(ctx context.Context, completionID string,
 		err = errors.New("missing required completion_id parameter")
 		return nil, err
 	}
-	path := requestconfig.FormatPath("chat/completions/%s", completionID)
+	path := fmt.Sprintf("chat/completions/%s", completionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
@@ -2547,59 +2548,6 @@ func (r *ChatCompletionMessage) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r ChatCompletionMessage) ToParam() ChatCompletionMessageParamUnion {
-	asst := r.ToAssistantMessageParam()
-	return ChatCompletionMessageParamUnion{OfAssistant: &asst}
-}
-
-func (r ChatCompletionMessage) ToAssistantMessageParam() ChatCompletionAssistantMessageParam {
-	var p ChatCompletionAssistantMessageParam
-
-	// It is important to not rely on the JSON metadata property
-	// here, it may be unset if the receiver was generated via a
-	// [ChatCompletionAccumulator].
-	//
-	// Explicit null is intentionally elided from the response.
-	if r.Content != "" {
-		p.Content.OfString = String(r.Content)
-	}
-	if r.Refusal != "" {
-		p.Refusal = String(r.Refusal)
-	}
-
-	p.Audio.ID = r.Audio.ID
-	p.Role = r.Role
-	p.FunctionCall.Arguments = r.FunctionCall.Arguments
-	p.FunctionCall.Name = r.FunctionCall.Name
-
-	if len(r.ToolCalls) > 0 {
-		for _, v := range r.ToolCalls {
-			u := ChatCompletionMessageToolCallUnionParam{}
-			switch v.AsAny().(type) {
-			case ChatCompletionMessageFunctionToolCall:
-				u.OfFunction = &ChatCompletionMessageFunctionToolCallParam{
-					ID: v.ID,
-					Function: ChatCompletionMessageFunctionToolCallFunctionParam{
-						Arguments: v.Function.Arguments,
-						Name:      v.Function.Name,
-					},
-				}
-			case ChatCompletionMessageCustomToolCall:
-				u.OfCustom = &ChatCompletionMessageCustomToolCallParam{
-					ID: v.ID,
-					Custom: ChatCompletionMessageCustomToolCallCustomParam{
-						Input: v.Custom.Input,
-						Name:  v.Custom.Name,
-					},
-				}
-			}
-
-			p.ToolCalls = append(p.ToolCalls, u)
-		}
-	}
-	return p
-}
-
 // A URL citation when using web search.
 type ChatCompletionMessageAnnotation struct {
 	// The type of the URL citation. Always `url_citation`.
@@ -2873,17 +2821,6 @@ func (r ChatCompletionMessageFunctionToolCallFunctionParam) MarshalJSON() (data 
 }
 func (r *ChatCompletionMessageFunctionToolCallFunctionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func AssistantMessage[T string | []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](content T) ChatCompletionMessageParamUnion {
-	var assistant ChatCompletionAssistantMessageParam
-	switch v := any(content).(type) {
-	case string:
-		assistant.Content.OfString = param.NewOpt(v)
-	case []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion:
-		assistant.Content.OfArrayOfContentParts = v
-	}
-	return ChatCompletionMessageParamUnion{OfAssistant: &assistant}
 }
 
 func DeveloperMessage[T string | []ChatCompletionContentPartTextParam](content T) ChatCompletionMessageParamUnion {
