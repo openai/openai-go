@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.50.0 (2026-08-03)
+
+Full Changelog: [v3.49.0...v3.50.0](https://github.com/openai/openai-go/compare/v3.49.0...v3.50.0)
+
+### Features
+
+* **api:** promote Go SDK changes ([#748](https://github.com/openai/openai-go/issues/748)) ([9e4b4d5](https://github.com/openai/openai-go/commit/9e4b4d5a5ccadc94ea8b8a54148e7a0e52797e94))
+
+
+### Chores
+
+* **api:** disable stainless codeflow ([0676a42](https://github.com/openai/openai-go/commit/0676a42c9d8b0a896633edc46066e4aea5bd2f08))
+
 ## 3.49.0 (2026-07-31)
 
 Full Changelog: [v3.48.0...v3.49.0](https://github.com/openai/openai-go/compare/v3.48.0...v3.49.0)
