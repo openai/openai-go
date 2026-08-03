@@ -9849,6 +9849,10 @@ type ResponseFunctionToolCallOutputItem struct {
 	Caller ResponseFunctionToolCallOutputItemCallerUnion `json:"caller" api:"nullable"`
 	// The identifier of the actor that created the item.
 	CreatedBy string `json:"created_by"`
+	// The name of the tool that produced the output.
+	Name string `json:"name"`
+	// The namespace of the tool that produced the output.
+	Namespace string `json:"namespace"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -9858,6 +9862,8 @@ type ResponseFunctionToolCallOutputItem struct {
 		Type        respjson.Field
 		Caller      respjson.Field
 		CreatedBy   respjson.Field
+		Name        respjson.Field
+		Namespace   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -12557,6 +12563,10 @@ type ResponseInputItemFunctionCallOutput struct {
 	ID string `json:"id" api:"nullable"`
 	// The execution context that produced this tool call.
 	Caller ResponseInputItemFunctionCallOutputCallerUnion `json:"caller" api:"nullable"`
+	// The name of the tool that produced the output.
+	Name string `json:"name" api:"nullable"`
+	// The namespace of the tool that produced the output.
+	Namespace string `json:"namespace" api:"nullable"`
 	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
 	// Populated when items are returned via API.
 	//
@@ -12569,6 +12579,8 @@ type ResponseInputItemFunctionCallOutput struct {
 		Type        respjson.Field
 		ID          respjson.Field
 		Caller      respjson.Field
+		Name        respjson.Field
+		Namespace   respjson.Field
 		Status      respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -14699,6 +14711,8 @@ func (u ResponseInputItemUnionParam) GetCallID() *string {
 func (u ResponseInputItemUnionParam) GetName() *string {
 	if vt := u.OfFunctionCall; vt != nil {
 		return (*string)(&vt.Name)
+	} else if vt := u.OfFunctionCallOutput; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
 	} else if vt := u.OfMcpApprovalRequest; vt != nil {
 		return (*string)(&vt.Name)
 	} else if vt := u.OfMcpCall; vt != nil {
@@ -14712,6 +14726,8 @@ func (u ResponseInputItemUnionParam) GetName() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputItemUnionParam) GetNamespace() *string {
 	if vt := u.OfFunctionCall; vt != nil && vt.Namespace.Valid() {
+		return &vt.Namespace.Value
+	} else if vt := u.OfFunctionCallOutput; vt != nil && vt.Namespace.Valid() {
 		return &vt.Namespace.Value
 	} else if vt := u.OfCustomToolCall; vt != nil && vt.Namespace.Valid() {
 		return &vt.Namespace.Value
@@ -15438,6 +15454,10 @@ type ResponseInputItemFunctionCallOutputParam struct {
 	// The unique ID of the function tool call output. Populated when this item is
 	// returned via API.
 	ID param.Opt[string] `json:"id,omitzero"`
+	// The name of the tool that produced the output.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The namespace of the tool that produced the output.
+	Namespace param.Opt[string] `json:"namespace,omitzero"`
 	// The execution context that produced this tool call.
 	Caller ResponseInputItemFunctionCallOutputCallerUnionParam `json:"caller,omitzero"`
 	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
@@ -26470,6 +26490,7 @@ const (
 	ResponseCompactParamsModelGPT5_6Sol                        ResponseCompactParamsModel = "gpt-5.6-sol"
 	ResponseCompactParamsModelGPT5_6Terra                      ResponseCompactParamsModel = "gpt-5.6-terra"
 	ResponseCompactParamsModelGPT5_6Luna                       ResponseCompactParamsModel = "gpt-5.6-luna"
+	ResponseCompactParamsModelGPT5_5                           ResponseCompactParamsModel = "gpt-5.5"
 	ResponseCompactParamsModelGPT5_4                           ResponseCompactParamsModel = "gpt-5.4"
 	ResponseCompactParamsModelGPT5_4Mini                       ResponseCompactParamsModel = "gpt-5.4-mini"
 	ResponseCompactParamsModelGPT5_4Nano                       ResponseCompactParamsModel = "gpt-5.4-nano"
