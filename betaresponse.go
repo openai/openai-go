@@ -4372,6 +4372,7 @@ const (
 	BetaResponseModelGPT5_6Sol                        BetaResponseModel = "gpt-5.6-sol"
 	BetaResponseModelGPT5_6Terra                      BetaResponseModel = "gpt-5.6-terra"
 	BetaResponseModelGPT5_6Luna                       BetaResponseModel = "gpt-5.6-luna"
+	BetaResponseModelGPT5_5                           BetaResponseModel = "gpt-5.5"
 	BetaResponseModelGPT5_4                           BetaResponseModel = "gpt-5.4"
 	BetaResponseModelGPT5_4Mini                       BetaResponseModel = "gpt-5.4-mini"
 	BetaResponseModelGPT5_4Nano                       BetaResponseModel = "gpt-5.4-nano"
@@ -10889,6 +10890,10 @@ type BetaResponseFunctionToolCallOutputItem struct {
 	Caller BetaResponseFunctionToolCallOutputItemCallerUnion `json:"caller" api:"nullable"`
 	// The identifier of the actor that created the item.
 	CreatedBy string `json:"created_by"`
+	// The name of the tool that produced the output.
+	Name string `json:"name"`
+	// The namespace of the tool that produced the output.
+	Namespace string `json:"namespace"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ID          respjson.Field
@@ -10899,6 +10904,8 @@ type BetaResponseFunctionToolCallOutputItem struct {
 		Agent       respjson.Field
 		Caller      respjson.Field
 		CreatedBy   respjson.Field
+		Name        respjson.Field
+		Namespace   respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
 	} `json:"-"`
@@ -13840,6 +13847,10 @@ type BetaResponseInputItemFunctionCallOutput struct {
 	Agent BetaResponseInputItemFunctionCallOutputAgent `json:"agent" api:"nullable"`
 	// The execution context that produced this tool call.
 	Caller BetaResponseInputItemFunctionCallOutputCallerUnion `json:"caller" api:"nullable"`
+	// The name of the tool that produced the output.
+	Name string `json:"name" api:"nullable"`
+	// The namespace of the tool that produced the output.
+	Namespace string `json:"namespace" api:"nullable"`
 	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
 	// Populated when items are returned via API.
 	//
@@ -13853,6 +13864,8 @@ type BetaResponseInputItemFunctionCallOutput struct {
 		ID          respjson.Field
 		Agent       respjson.Field
 		Caller      respjson.Field
+		Name        respjson.Field
+		Namespace   respjson.Field
 		Status      respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -16947,6 +16960,8 @@ func (u BetaResponseInputItemUnionParam) GetCallID() *string {
 func (u BetaResponseInputItemUnionParam) GetName() *string {
 	if vt := u.OfFunctionCall; vt != nil {
 		return (*string)(&vt.Name)
+	} else if vt := u.OfFunctionCallOutput; vt != nil && vt.Name.Valid() {
+		return &vt.Name.Value
 	} else if vt := u.OfMcpApprovalRequest; vt != nil {
 		return (*string)(&vt.Name)
 	} else if vt := u.OfMcpCall; vt != nil {
@@ -16960,6 +16975,8 @@ func (u BetaResponseInputItemUnionParam) GetName() *string {
 // Returns a pointer to the underlying variant's property, if present.
 func (u BetaResponseInputItemUnionParam) GetNamespace() *string {
 	if vt := u.OfFunctionCall; vt != nil && vt.Namespace.Valid() {
+		return &vt.Namespace.Value
+	} else if vt := u.OfFunctionCallOutput; vt != nil && vt.Namespace.Valid() {
 		return &vt.Namespace.Value
 	} else if vt := u.OfCustomToolCall; vt != nil && vt.Namespace.Valid() {
 		return &vt.Namespace.Value
@@ -17967,6 +17984,10 @@ type BetaResponseInputItemFunctionCallOutputParam struct {
 	// The unique ID of the function tool call output. Populated when this item is
 	// returned via API.
 	ID param.Opt[string] `json:"id,omitzero"`
+	// The name of the tool that produced the output.
+	Name param.Opt[string] `json:"name,omitzero"`
+	// The namespace of the tool that produced the output.
+	Namespace param.Opt[string] `json:"namespace,omitzero"`
 	// The agent that produced this item.
 	Agent BetaResponseInputItemFunctionCallOutputAgentParam `json:"agent,omitzero"`
 	// The execution context that produced this tool call.
@@ -31833,6 +31854,7 @@ const (
 	BetaResponseNewParamsModelGPT5_6Sol                        BetaResponseNewParamsModel = "gpt-5.6-sol"
 	BetaResponseNewParamsModelGPT5_6Terra                      BetaResponseNewParamsModel = "gpt-5.6-terra"
 	BetaResponseNewParamsModelGPT5_6Luna                       BetaResponseNewParamsModel = "gpt-5.6-luna"
+	BetaResponseNewParamsModelGPT5_5                           BetaResponseNewParamsModel = "gpt-5.5"
 	BetaResponseNewParamsModelGPT5_4                           BetaResponseNewParamsModel = "gpt-5.4"
 	BetaResponseNewParamsModelGPT5_4Mini                       BetaResponseNewParamsModel = "gpt-5.4-mini"
 	BetaResponseNewParamsModelGPT5_4Nano                       BetaResponseNewParamsModel = "gpt-5.4-nano"
@@ -32490,6 +32512,7 @@ const (
 	BetaResponseCompactParamsModelGPT5_6Sol                        BetaResponseCompactParamsModel = "gpt-5.6-sol"
 	BetaResponseCompactParamsModelGPT5_6Terra                      BetaResponseCompactParamsModel = "gpt-5.6-terra"
 	BetaResponseCompactParamsModelGPT5_6Luna                       BetaResponseCompactParamsModel = "gpt-5.6-luna"
+	BetaResponseCompactParamsModelGPT5_5                           BetaResponseCompactParamsModel = "gpt-5.5"
 	BetaResponseCompactParamsModelGPT5_4                           BetaResponseCompactParamsModel = "gpt-5.4"
 	BetaResponseCompactParamsModelGPT5_4Mini                       BetaResponseCompactParamsModel = "gpt-5.4-mini"
 	BetaResponseCompactParamsModelGPT5_4Nano                       BetaResponseCompactParamsModel = "gpt-5.4-nano"
