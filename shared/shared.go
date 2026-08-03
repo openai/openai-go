@@ -45,6 +45,7 @@ const (
 	ChatModelGPT5_6Sol                        ChatModel = "gpt-5.6-sol"
 	ChatModelGPT5_6Terra                      ChatModel = "gpt-5.6-terra"
 	ChatModelGPT5_6Luna                       ChatModel = "gpt-5.6-luna"
+	ChatModelGPT5_5                           ChatModel = "gpt-5.5"
 	ChatModelGPT5_4                           ChatModel = "gpt-5.4"
 	ChatModelGPT5_4Mini                       ChatModel = "gpt-5.4-mini"
 	ChatModelGPT5_4Nano                       ChatModel = "gpt-5.4-nano"

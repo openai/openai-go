@@ -73,6 +73,9 @@ const ChatModelGPT5_6Terra = shared.ChatModelGPT5_6Terra
 // Equals "gpt-5.6-luna"
 const ChatModelGPT5_6Luna = shared.ChatModelGPT5_6Luna
 
+// Equals "gpt-5.5"
+const ChatModelGPT5_5 = shared.ChatModelGPT5_5
+
 // Equals "gpt-5.4"
 const ChatModelGPT5_4 = shared.ChatModelGPT5_4
 
