@@ -17,9 +17,9 @@ on:
   merge_group:
     types:
       - checks_requested
-  # GitHub does not emit pull_request workflows for pull requests created with
-  # GITHUB_TOKEN, so repository automation explicitly dispatches this
-  # validation on generated branches.
+  # The monthly Go version review opens its draft with GITHUB_TOKEN. GitHub
+  # requires approval before running pull_request workflows for that draft, so
+  # that workflow explicitly dispatches this validation on its generated branch.
   workflow_dispatch:
   # The vulnerability database changes even when this repository does not.
   # This schedule runs only the govulncheck job below; lint and tests remain

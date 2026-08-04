@@ -402,8 +402,8 @@ jobs:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          # GITHUB_TOKEN deliberately does not trigger pull_request workflows.
-          # workflow_dispatch is the documented exception.
+          # GITHUB_TOKEN-created pull requests require approval before their
+          # pull_request workflows run, so dispatch the required checks directly.
           gh workflow run ci.yml --ref "$BRANCH"
           gh workflow run detect-breaking-changes.yml \
             --ref "$BRANCH" \

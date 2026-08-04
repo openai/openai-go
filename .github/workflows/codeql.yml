@@ -7,8 +7,9 @@ on:
   pull_request:
     branches:
       - main
-  # Repository automation explicitly dispatches CodeQL because pull requests
-  # created with GITHUB_TOKEN do not emit a pull_request event.
+  # The monthly Go version review explicitly dispatches CodeQL because its
+  # GITHUB_TOKEN-created pull request requires approval before pull_request
+  # workflows run.
   workflow_dispatch:
 
 permissions:
