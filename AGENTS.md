@@ -79,9 +79,9 @@ interpret release policy or pull request prose.
   - The publisher can write repository contents and pull requests but cannot
     dispatch Actions. A third job can dispatch Actions but cannot write
     repository contents or pull requests.
-  - Because GitHub suppresses normal workflow events for pull requests created
-    with `GITHUB_TOKEN`, the publishing job explicitly dispatches CI,
-    compatibility detection, and CodeQL on the generated branch.
+  - Because GitHub requires approval before running pull request workflows for
+    pull requests created with `GITHUB_TOKEN`, the publishing job explicitly
+    dispatches CI, compatibility detection, and CodeQL on the generated branch.
   - The draft never merges automatically. Normal CI and CODEOWNER review remain
     authoritative.
 - `.github/dependabot.yml`

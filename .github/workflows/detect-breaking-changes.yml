@@ -7,8 +7,9 @@ on:
   merge_group:
     types:
       - checks_requested
-  # See ci.yml: GITHUB_TOKEN-created pull requests dispatch this workflow
-  # explicitly because GitHub suppresses their pull_request event.
+  # See ci.yml: the GITHUB_TOKEN-created monthly maintenance pull request
+  # explicitly dispatches this workflow because its pull_request workflows
+  # require approval before running.
   workflow_dispatch:
     inputs:
       base_sha:
