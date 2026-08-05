@@ -25,6 +25,22 @@ func getPollInterval(raw *http.Response) (ms int) {
 	return 1000
 }
 
+func waitForPoll(ctx context.Context, interval time.Duration) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	timer := time.NewTimer(interval)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
+
 // PollStatus waits until a VectorStoreFile is no longer in an incomplete state and returns it.
 // Pass 0 as pollIntervalMs to use the default polling interval of 1 second.
 func (r *VectorStoreFileService) PollStatus(ctx context.Context, vectorStoreID string, fileID string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFile, error) {
@@ -42,20 +58,15 @@ func (r *VectorStoreFileService) PollStatus(ctx context.Context, vectorStoreID s
 			if pollIntervalMs <= 0 {
 				pollIntervalMs = getPollInterval(raw)
 			}
-			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
+			if err := waitForPoll(ctx, time.Duration(pollIntervalMs)*time.Millisecond); err != nil {
+				return nil, err
+			}
 		case VectorStoreFileStatusCancelled,
 			VectorStoreFileStatusCompleted,
 			VectorStoreFileStatusFailed:
 			return file, nil
 		default:
 			return nil, fmt.Errorf("invalid vector store file status during polling: received %s", file.Status)
-		}
-
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-
 		}
 	}
 }
@@ -77,19 +88,15 @@ func (r *VectorStoreFileBatchService) PollStatus(ctx context.Context, vectorStor
 			if pollIntervalMs <= 0 {
 				pollIntervalMs = getPollInterval(raw)
 			}
-			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
+			if err := waitForPoll(ctx, time.Duration(pollIntervalMs)*time.Millisecond); err != nil {
+				return nil, err
+			}
 		case VectorStoreFileBatchStatusCancelled,
 			VectorStoreFileBatchStatusCompleted,
 			VectorStoreFileBatchStatusFailed:
 			return batch, nil
 		default:
 			return nil, fmt.Errorf("invalid vector store file batch status during polling: received %s", batch.Status)
-		}
-
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
 		}
 	}
 }
@@ -111,19 +118,14 @@ func (r *VideoService) PollStatus(ctx context.Context, videoID string, pollInter
 			if pollIntervalMs <= 0 {
 				pollIntervalMs = getPollInterval(raw)
 			}
-			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
+			if err := waitForPoll(ctx, time.Duration(pollIntervalMs)*time.Millisecond); err != nil {
+				return nil, err
+			}
 		case VideoStatusCompleted,
 			VideoStatusFailed:
 			return video, nil
 		default:
 			return nil, fmt.Errorf("invalid video status during polling: received %s", video.Status)
-		}
-
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-
 		}
 	}
 }
