@@ -37,6 +37,32 @@ func RegisterDiscriminatedUnion[T any](key string, mappings map[string]reflect.T
 	unionRegistry[reflect.TypeOf(t)] = entry
 }
 
+// knownJSONKeys returns the top-level JSON field names that t recognizes,
+// including those contributed by embedded anonymous structs.
+func knownJSONKeys(t reflect.Type) map[string]bool {
+	keys := map[string]bool{}
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if !field.IsExported() {
+			continue
+		}
+		if field.Anonymous {
+			if field.Type.Kind() == reflect.Struct {
+				for key := range knownJSONKeys(field.Type) {
+					keys[key] = true
+				}
+			}
+			continue
+		}
+		ptag, ok := parseJSONStructTag(field)
+		if !ok || ptag.extras || ptag.inline || ptag.metadata {
+			continue
+		}
+		keys[ptag.name] = true
+	}
+	return keys
+}
+
 func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 	type variantDecoder struct {
 		decoder decoderFunc
@@ -79,12 +105,56 @@ func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 	return func(n gjson.Result, v reflect.Value, state *decoderState) error {
 		if discriminated && n.Type == gjson.JSON && len(unionEntry.discriminatorKey) != 0 {
 			discriminator := n.Get(EscapeSJSONKey(unionEntry.discriminatorKey)).Value()
+			matches := []discriminatedDecoder{}
 			for _, decoder := range discriminatedDecoders {
 				if discriminator == decoder.discriminator {
-					inner := v.FieldByIndex(decoder.field.Index)
-					return decoder.decoder(n, inner, state)
+					matches = append(matches, decoder)
 				}
 			}
+
+			if len(matches) == 1 {
+				decoder := matches[0]
+				inner := v.FieldByIndex(decoder.field.Index)
+				return decoder.decoder(n, inner, state)
+			}
+
+			if len(matches) > 1 {
+				// More than one variant shares this discriminator value (for example,
+				// several "message" shaped variants distinguished only by other
+				// fields), so prefer whichever one's own fields account for the most
+				// of the JSON object's keys, rather than blindly taking the first
+				// match.
+				nodeMap := n.Map()
+				bestUnknown := -1
+				var winner *discriminatedDecoder
+				for i := range matches {
+					decoder := matches[i]
+					known := knownJSONKeys(decoder.field.Type.Elem())
+					unknown := 0
+					for key := range nodeMap {
+						if !known[key] {
+							unknown++
+						}
+					}
+					if bestUnknown == -1 || unknown < bestUnknown {
+						bestUnknown = unknown
+						winner = &matches[i]
+					}
+				}
+
+				inner := v.FieldByIndex(winner.field.Index)
+				err := winner.decoder(n, inner, state)
+
+				for _, decoder := range decoders {
+					if decoder.field.Index[0] == winner.field.Index[0] {
+						continue
+					}
+					v.FieldByIndex(decoder.field.Index).SetZero()
+				}
+
+				return err
+			}
+
 			return errors.New("apijson: was not able to find discriminated union variant")
 		}
 
