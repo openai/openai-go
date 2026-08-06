@@ -3,6 +3,7 @@ package azure
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -46,6 +47,44 @@ func TestJSONRoute(t *testing.T) {
 
 	if replacementPath != "/openai/deployments/arbitraryDeployment/chat/completions" {
 		t.Fatalf("replacementpath didn't match: %s", replacementPath)
+	}
+}
+
+func TestImageGenerationJSONRouteStripsModelFromBody(t *testing.T) {
+	req, err := http.NewRequest(
+		"POST",
+		"/images/generations",
+		bytes.NewReader([]byte(`{"model":"azure-image-deployment","prompt":"a cat"}`)),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	replacementPath, err := getReplacementPathWithDeployment(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if replacementPath != "/openai/deployments/azure-image-deployment/images/generations" {
+		t.Fatalf("replacementpath didn't match: %s", replacementPath)
+	}
+
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(body, &payload); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := payload["model"]; ok {
+		t.Fatalf("expected model to be removed from image generation body, got %s", body)
+	}
+	if payload["prompt"] != "a cat" {
+		t.Fatalf("expected prompt to remain, got %s", body)
+	}
+	if req.ContentLength != int64(len(body)) {
+		t.Fatalf("ContentLength: got %d, expected %d", req.ContentLength, len(body))
 	}
 }
 

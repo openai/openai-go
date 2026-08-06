@@ -33,6 +33,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
+	"github.com/tidwall/sjson"
 )
 
 // WithEndpoint configures this client to connect to an Azure OpenAI endpoint.
@@ -214,7 +215,7 @@ func getJSONRoute(req *http.Request) (string, error) {
 	}
 
 	// make sure we restore the body so it can be used in later middlewares.
-	req.Body = io.NopCloser(bytes.NewReader(jsonBytes))
+	setRequestBody(req, jsonBytes)
 
 	var v *struct {
 		Model string `json:"model"`
@@ -224,8 +225,24 @@ func getJSONRoute(req *http.Request) (string, error) {
 		return "", err
 	}
 
+	if req.URL.Path == "/images/generations" {
+		body, err := sjson.DeleteBytes(jsonBytes, "model")
+		if err != nil {
+			return "", err
+		}
+		setRequestBody(req, body)
+	}
+
 	// Convert path from /chat/completions to /openai/deployments/{deployment-id}/chat/completions
 	return requestconfig.FormatPath("/openai/deployments/%s", v.Model) + req.URL.EscapedPath(), nil
+}
+
+func setRequestBody(req *http.Request, body []byte) {
+	req.ContentLength = int64(len(body))
+	req.GetBody = func() (io.ReadCloser, error) {
+		return io.NopCloser(bytes.NewReader(body)), nil
+	}
+	req.Body, _ = req.GetBody()
 }
 
 func getMultipartRoute(req *http.Request) (string, error) {
