@@ -179,7 +179,9 @@ stream := client.Responses.NewStreaming(ctx, responses.ResponseNewParams{
 
 for stream.Next() {
 	event := stream.Current()
-	print(event.Delta)
+	if data, ok := event.AsAny().(responses.ResponseTextDeltaEvent); ok {
+		print(data.Delta)
+	}
 }
 
 if stream.Err() != nil {
