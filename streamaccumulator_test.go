@@ -259,6 +259,54 @@ func TestAccumulatorEmptyToolCallsArray(t *testing.T) {
 	acc.AddChunk(chunk)
 }
 
+func TestAccumulatorJustFinishedToolCallUsesChoiceIndex(t *testing.T) {
+	acc := openai.ChatCompletionAccumulator{}
+
+	addChunk := func(raw string) {
+		t.Helper()
+
+		var chunk openai.ChatCompletionChunk
+		if err := chunk.UnmarshalJSON([]byte(raw)); err != nil {
+			t.Fatalf("Failed to unmarshal chunk: %v", err)
+		}
+		if !acc.AddChunk(chunk) {
+			t.Fatal("AddChunk returned false")
+		}
+	}
+
+	addChunk(`{"id":"test","choices":[{"index":0,"delta":{"content":"first"}},{"index":1,"delta":{"tool_calls":[{"id":"call_123","index":0,"type":"function","function":{"name":"lookup","arguments":"{\"city\":"}}]}}]}`)
+	if _, ok := acc.JustFinishedToolCall(); ok {
+		t.Fatal("Unexpected finished tool call")
+	}
+
+	addChunk(`{"id":"test","choices":[{"index":0,"delta":{"content":" choice"}},{"index":1,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\"Paris\"}"}}]}}]}`)
+	if _, ok := acc.JustFinishedToolCall(); ok {
+		t.Fatal("Unexpected finished tool call")
+	}
+
+	addChunk(`{"id":"test","choices":[{"index":0,"delta":{"content":" still streaming"}},{"index":1,"delta":{},"finish_reason":"tool_calls"}]}`)
+
+	toolCall, ok := acc.JustFinishedToolCall()
+	if !ok {
+		t.Fatal("Expected finished tool call")
+	}
+	if toolCall.ChoiceIndex != 1 {
+		t.Fatalf("ChoiceIndex: expected 1, got %d", toolCall.ChoiceIndex)
+	}
+	if toolCall.Index != 0 {
+		t.Fatalf("Index: expected 0, got %d", toolCall.Index)
+	}
+	if toolCall.ID != "call_123" {
+		t.Fatalf("ID: expected call_123, got %q", toolCall.ID)
+	}
+	if toolCall.Name != "lookup" {
+		t.Fatalf("Name: expected lookup, got %q", toolCall.Name)
+	}
+	if toolCall.Arguments != `{"city":"Paris"}` {
+		t.Fatalf("Arguments: expected city JSON, got %q", toolCall.Arguments)
+	}
+}
+
 // manually created on 11/3/2024
 var mockResponseBody = `data: {"id":"chatcmpl-A3Tguz3LSXTHBTY2NAPBCSyfBltxF","object":"chat.completion.chunk","created":1725392480,"model":"gpt-4o-2024-05-13","system_fingerprint":"fp_157b3831f5","choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":{"content":[],"refusal":null},"finish_reason":null}],"usage":null}
 

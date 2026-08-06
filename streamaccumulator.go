@@ -12,13 +12,15 @@ type ChatCompletionAccumulator struct {
 
 type FinishedChatCompletionToolCall struct {
 	ChatCompletionMessageFunctionToolCallFunction
-	Index int
-	ID    string
+	Index       int
+	ChoiceIndex int
+	ID          string
 }
 
 type chatCompletionResponseState struct {
-	state chatCompletionResponseStateEnum
-	index int
+	state       chatCompletionResponseStateEnum
+	choiceIndex int
+	index       int
 }
 
 type chatCompletionResponseStateEnum int
@@ -46,9 +48,14 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 		return true
 	}
 
-	chunkIndex := int(chunk.Choices[0].Index)
-	acc.choiceChatCompletionStates = expandToFit(acc.choiceChatCompletionStates, chunkIndex)
-	acc.justFinished = acc.choiceChatCompletionStates[chunkIndex].update(chunk)
+	for _, choice := range chunk.Choices {
+		chunkIndex := int(choice.Index)
+		acc.choiceChatCompletionStates = expandToFit(acc.choiceChatCompletionStates, chunkIndex)
+		justFinished := acc.choiceChatCompletionStates[chunkIndex].update(choice)
+		if acc.justFinished.state == emptyResponseState && justFinished.state != emptyResponseState {
+			acc.justFinished = justFinished
+		}
+	}
 	return true
 }
 
@@ -58,7 +65,7 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 // an empty string is returned and the boolean will be false.
 func (acc *ChatCompletionAccumulator) JustFinishedContent() (content string, ok bool) {
 	if acc.justFinished.state == contentResponseState {
-		return acc.Choices[0].Message.Content, true
+		return acc.Choices[acc.justFinished.choiceIndex].Message.Content, true
 	}
 	return "", false
 }
@@ -69,7 +76,7 @@ func (acc *ChatCompletionAccumulator) JustFinishedContent() (content string, ok 
 // an empty string is returned and the boolean will be false.
 func (acc *ChatCompletionAccumulator) JustFinishedRefusal() (refusal string, ok bool) {
 	if acc.justFinished.state == refusalResponseState {
-		return acc.Choices[0].Message.Refusal, true
+		return acc.Choices[acc.justFinished.choiceIndex].Message.Refusal, true
 	}
 	return "", false
 }
@@ -83,11 +90,13 @@ func (acc *ChatCompletionAccumulator) JustFinishedRefusal() (refusal string, ok 
 // You cannot rely on this with a stream that has ParallelToolCalls enabled.
 func (acc *ChatCompletionAccumulator) JustFinishedToolCall() (toolcall FinishedChatCompletionToolCall, ok bool) {
 	if acc.justFinished.state == toolResponseState {
-		f := acc.Choices[0].Message.ToolCalls[acc.justFinished.index].Function
-		id := acc.Choices[0].Message.ToolCalls[acc.justFinished.index].ID
+		choice := acc.Choices[acc.justFinished.choiceIndex]
+		tool := choice.Message.ToolCalls[acc.justFinished.index]
+		f := tool.Function
 		return FinishedChatCompletionToolCall{
-			ID:    id,
-			Index: acc.justFinished.index,
+			ID:          tool.ID,
+			Index:       acc.justFinished.index,
+			ChoiceIndex: acc.justFinished.choiceIndex,
 			ChatCompletionMessageFunctionToolCallFunction: ChatCompletionMessageFunctionToolCallFunction{
 				Name:      f.Name,
 				Arguments: f.Arguments,
@@ -169,9 +178,9 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 
 // Updates the internal response state and returns the previous state if
 // the state changed. This ensures that JustFinished events only fire once.
-func (prev *chatCompletionResponseState) update(chunk ChatCompletionChunk) (justFinished chatCompletionResponseState) {
-	delta := chunk.Choices[0].Delta
-	new := chatCompletionResponseState{}
+func (prev *chatCompletionResponseState) update(choice ChatCompletionChunkChoice) (justFinished chatCompletionResponseState) {
+	delta := choice.Delta
+	new := chatCompletionResponseState{choiceIndex: int(choice.Index)}
 	switch {
 	case delta.JSON.Content.Valid():
 		new.state = contentResponseState
