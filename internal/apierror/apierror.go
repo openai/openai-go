@@ -40,11 +40,23 @@ func (r *Error) UnmarshalJSON(data []byte) error {
 }
 
 func (r *Error) Error() string {
+	if r.Request == nil && r.Response == nil {
+		return fmt.Sprintf("api error: %s", r.JSON.raw)
+	}
+	if r.Request == nil {
+		return fmt.Sprintf("%d %s %s", r.Response.StatusCode, http.StatusText(r.Response.StatusCode), r.JSON.raw)
+	}
+	if r.Response == nil {
+		return fmt.Sprintf("%s %q: %s", r.Request.Method, r.Request.URL, r.JSON.raw)
+	}
 	// Attempt to re-populate the response body
 	return fmt.Sprintf("%s %q: %d %s %s", r.Request.Method, r.Request.URL, r.Response.StatusCode, http.StatusText(r.Response.StatusCode), r.JSON.raw)
 }
 
 func (r *Error) DumpRequest(body bool) []byte {
+	if r.Request == nil {
+		return nil
+	}
 	if r.Request.GetBody != nil {
 		r.Request.Body, _ = r.Request.GetBody()
 	}
@@ -53,6 +65,9 @@ func (r *Error) DumpRequest(body bool) []byte {
 }
 
 func (r *Error) DumpResponse(body bool) []byte {
+	if r.Response == nil {
+		return nil
+	}
 	out, _ := httputil.DumpResponse(r.Response, body)
 	return out
 }
