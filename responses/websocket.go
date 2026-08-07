@@ -48,12 +48,24 @@ func (r *ResponseService) ConnectWebSocket(ctx context.Context, opts ...option.R
 		return nil, newWebSocketDialError(wsURL, resp, err)
 	}
 
+	// github.com/coder/websocket defaults to a 32 KiB per-message read limit,
+	// which is too small for Responses events that carry large tool-call
+	// arguments. Codex's code-mode host allows 64 MiB frames
+	// (MAX_FRAME_BYTES = 64 * 1024 * 1024); match that here.
+	// See: openai/codex code-mode-protocol host MAX_FRAME_BYTES.
+	conn.SetReadLimit(responsesWebSocketReadLimit)
+
 	var header http.Header
 	if resp != nil {
 		header = resp.Header
 	}
 	return newWebSocketConn(conn, header), nil
 }
+
+// responsesWebSocketReadLimit is the max size of a single WebSocket message
+// read from the Responses API. Aligns with Codex code-mode MAX_FRAME_BYTES
+// (64 MiB). coder/websocket's default is only 32 KiB.
+const responsesWebSocketReadLimit int64 = 64 << 20
 
 func responsesWebSocketURL(cfg *requestconfig.RequestConfig) (string, error) {
 	baseURL := cfg.BaseURL
