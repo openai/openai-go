@@ -25,8 +25,10 @@ func main() {
 			openai.ChatCompletionFunctionTool(openai.FunctionDefinitionParam{
 				Name:        "get_weather",
 				Description: openai.String("Get weather at the given location"),
+				Strict:      openai.Bool(true),
 				Parameters: openai.FunctionParameters{
-					"type": "object",
+					"type":                 "object",
+					"additionalProperties": false,
 					"properties": map[string]any{
 						"location": map[string]string{
 							"type": "string",
@@ -47,7 +49,9 @@ func main() {
 	fmt.Println("\nStreaming first response...")
 	for stream.Next() {
 		chunk := stream.Current()
-		acc.AddChunk(chunk)
+		if !acc.AddChunk(chunk) {
+			panic("failed to accumulate streaming chunk")
+		}
 
 		if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != "" {
 			print(chunk.Choices[0].Delta.Content)
@@ -73,33 +77,40 @@ func main() {
 	params.Messages = append(params.Messages, message.ToParam())
 	for _, toolCall := range toolCalls {
 		if toolCall.Function.Name == "get_weather" {
-			var args map[string]any
-			if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args); err != nil {
-				panic(err)
+			var args struct {
+				Location string `json:"location"`
 			}
-
-			location, ok := args["location"].(string)
-			if !ok {
+			if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args); err != nil {
+				panic(fmt.Sprintf("failed to decode tool arguments: %v", err))
+			}
+			if args.Location == "" {
 				fmt.Printf("Missing or invalid 'location' argument\n")
 				return
 			}
-			weatherData := getWeather(location)
-			fmt.Printf("Weather in %s: %s\n", location, weatherData)
+			weatherData := getWeather(args.Location)
+			fmt.Printf("Weather in %s: %s\n", args.Location, weatherData)
 
 			params.Messages = append(params.Messages, openai.ToolMessage(weatherData, toolCall.ID))
 		}
 	}
 
 	// Disable tools for the second round so the model returns a final answer
-	// instead of making additional tool calls we don't handle.
-	params.Tools = []openai.ChatCompletionToolUnionParam{}
+	// instead of making additional tool calls we don't handle. Use nil (not an
+	// empty slice) so the field is omitted from the request.
+	params.Tools = nil
 
 	responseStream := client.Chat.Completions.NewStreaming(ctx, params)
+
+	// The second response has a new completion ID, so it needs its own
+	// accumulator; reusing `acc` would make AddChunk return false for every chunk.
+	responseAcc := openai.ChatCompletionAccumulator{}
 
 	fmt.Println("\nStreaming second response...")
 	for responseStream.Next() {
 		evt := responseStream.Current()
-		_ = acc.AddChunk(evt) // best-effort; streaming accumulation for display only
+		if !responseAcc.AddChunk(evt) {
+			panic("failed to accumulate second response chunk")
+		}
 		if len(evt.Choices) > 0 {
 			print(evt.Choices[0].Delta.Content)
 		}
