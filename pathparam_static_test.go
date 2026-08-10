@@ -72,11 +72,54 @@ func TestGeneratedPathsUseFormatPath(t *testing.T) {
 	}
 }
 
+func TestIsGeneratedServiceSource(t *testing.T) {
+	tests := []struct {
+		name   string
+		path   string
+		source string
+		want   bool
+	}{
+		{
+			name:   "Castiron-generated service",
+			path:   "service.go",
+			source: "// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.",
+			want:   true,
+		},
+		{
+			name:   "Stainless-generated service",
+			path:   "service.go",
+			source: "// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.",
+			want:   true,
+		},
+		{
+			name:   "generated client",
+			path:   "client.go",
+			source: "// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.",
+			want:   false,
+		},
+		{
+			name:   "handwritten service",
+			path:   "service.go",
+			source: "package openai",
+			want:   false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := isGeneratedServiceSource(test.path, []byte(test.source)); got != test.want {
+				t.Errorf("isGeneratedServiceSource() = %t, want %t", got, test.want)
+			}
+		})
+	}
+}
+
 func isGeneratedServiceSource(path string, source []byte) bool {
 	if path == "client.go" {
 		return false
 	}
-	return strings.HasPrefix(string(source), "// File generated from our OpenAPI spec by Stainless.")
+	return strings.HasPrefix(string(source), "// File generated from our OpenAPI spec by Stainless.") ||
+		strings.HasPrefix(string(source), "// File generated from our OpenAPI spec by Castiron.")
 }
 
 func requestconfigImportNames(file *ast.File) map[string]bool {
