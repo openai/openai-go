@@ -14,6 +14,8 @@ updates:
       day: monday
       time: "09:00"
       timezone: Etc/UTC
+    cooldown:
+      default-days: 8
     open-pull-requests-limit: 5
     groups:
       # golang.org/x modules are released together and can jointly raise the Go
@@ -43,6 +45,8 @@ updates:
       day: monday
       time: "09:15"
       timezone: Etc/UTC
+    cooldown:
+      default-days: 8
     open-pull-requests-limit: 3
     groups:
       # This module currently owns govulncheck and its golang.org/x
@@ -58,6 +62,8 @@ updates:
       day: monday
       time: "09:30"
       timezone: Etc/UTC
+    cooldown:
+      default-days: 8
     # Keep unrelated action updates separate so each pinned SHA and runtime
     # change can be reviewed independently. CodeQL's phases exchange versioned
     # state, so they must be updated atomically.
