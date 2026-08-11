@@ -61,6 +61,15 @@ const AllModelsGPT5Pro2025_10_06 = shared.AllModelsGPT5Pro2025_10_06
 // Equals "gpt-5.1-codex-max"
 const AllModelsGPT5_1CodexMax = shared.AllModelsGPT5_1CodexMax
 
+// Equals "gpt-daybreak-blue-latest"
+const AllModelsGPTDaybreakBlueLatest = shared.AllModelsGPTDaybreakBlueLatest
+
+// Equals "gpt-daybreak-red-latest"
+const AllModelsGPTDaybreakRedLatest = shared.AllModelsGPTDaybreakRedLatest
+
+// Equals "gpt-5.6-cyber"
+const AllModelsGPT5_6Cyber = shared.AllModelsGPT5_6Cyber
+
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
 
@@ -677,3 +686,12 @@ const ResponsesModelGPT5Pro2025_10_06 = shared.ResponsesModelGPT5Pro2025_10_06
 
 // Equals "gpt-5.1-codex-max"
 const ResponsesModelGPT5_1CodexMax = shared.ResponsesModelGPT5_1CodexMax
+
+// Equals "gpt-daybreak-blue-latest"
+const ResponsesModelGPTDaybreakBlueLatest = shared.ResponsesModelGPTDaybreakBlueLatest
+
+// Equals "gpt-daybreak-red-latest"
+const ResponsesModelGPTDaybreakRedLatest = shared.ResponsesModelGPTDaybreakRedLatest
+
+// Equals "gpt-5.6-cyber"
+const ResponsesModelGPT5_6Cyber = shared.ResponsesModelGPT5_6Cyber

@@ -33,6 +33,9 @@ const (
 	AllModelsGPT5Pro                      AllModels = "gpt-5-pro"
 	AllModelsGPT5Pro2025_10_06            AllModels = "gpt-5-pro-2025-10-06"
 	AllModelsGPT5_1CodexMax               AllModels = "gpt-5.1-codex-max"
+	AllModelsGPTDaybreakBlueLatest        AllModels = "gpt-daybreak-blue-latest"
+	AllModelsGPTDaybreakRedLatest         AllModels = "gpt-daybreak-red-latest"
+	AllModelsGPT5_6Cyber                  AllModels = "gpt-5.6-cyber"
 	// Or some ...[ChatModel]
 )
 
@@ -1242,5 +1245,8 @@ const (
 	ResponsesModelGPT5Pro                      ResponsesModel = "gpt-5-pro"
 	ResponsesModelGPT5Pro2025_10_06            ResponsesModel = "gpt-5-pro-2025-10-06"
 	ResponsesModelGPT5_1CodexMax               ResponsesModel = "gpt-5.1-codex-max"
+	ResponsesModelGPTDaybreakBlueLatest        ResponsesModel = "gpt-daybreak-blue-latest"
+	ResponsesModelGPTDaybreakRedLatest         ResponsesModel = "gpt-daybreak-red-latest"
+	ResponsesModelGPT5_6Cyber                  ResponsesModel = "gpt-5.6-cyber"
 	// Or some ...[ChatModel]
 )
