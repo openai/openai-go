@@ -26565,6 +26565,9 @@ const (
 	ResponseCompactParamsModelGPT5Pro                          ResponseCompactParamsModel = "gpt-5-pro"
 	ResponseCompactParamsModelGPT5Pro2025_10_06                ResponseCompactParamsModel = "gpt-5-pro-2025-10-06"
 	ResponseCompactParamsModelGPT5_1CodexMax                   ResponseCompactParamsModel = "gpt-5.1-codex-max"
+	ResponseCompactParamsModelGPTDaybreakBlueLatest            ResponseCompactParamsModel = "gpt-daybreak-blue-latest"
+	ResponseCompactParamsModelGPTDaybreakRedLatest             ResponseCompactParamsModel = "gpt-daybreak-red-latest"
+	ResponseCompactParamsModelGPT5_6Cyber                      ResponseCompactParamsModel = "gpt-5.6-cyber"
 )
 
 // Only one field can be non-zero.
