@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -49,7 +48,7 @@ func (r *AdminOrganizationProjectRateLimitService) ListRateLimits(ctx context.Co
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/rate_limits", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/rate_limits", projectID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -79,7 +78,7 @@ func (r *AdminOrganizationProjectRateLimitService) UpdateRateLimit(ctx context.C
 		err = errors.New("missing required rate_limit_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/rate_limits/%s", projectID, rateLimitID)
+	path := requestconfig.FormatPath("organization/projects/%s/rate_limits/%s", projectID, rateLimitID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }

@@ -105,7 +105,7 @@ func (r *BetaResponseService) Get(ctx context.Context, responseID string, params
 		err = errors.New("missing required response_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("responses/%s?beta=true", responseID)
+	path := requestconfig.FormatPath("responses/%s?beta=true", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &res, opts...)
 	return res, err
 }
@@ -126,7 +126,7 @@ func (r *BetaResponseService) GetStreaming(ctx context.Context, responseID strin
 		err = errors.New("missing required response_id parameter")
 		return ssestream.NewStream[BetaResponseStreamEventUnion](nil, err)
 	}
-	path := fmt.Sprintf("responses/%s?beta=true", responseID)
+	path := requestconfig.FormatPath("responses/%s?beta=true", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, &raw, opts...)
 	return ssestream.NewStream[BetaResponseStreamEventUnion](ssestream.NewDecoder(raw), err)
 }
@@ -143,7 +143,7 @@ func (r *BetaResponseService) Delete(ctx context.Context, responseID string, bod
 		err = errors.New("missing required response_id parameter")
 		return err
 	}
-	path := fmt.Sprintf("responses/%s?beta=true", responseID)
+	path := requestconfig.FormatPath("responses/%s?beta=true", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
 	return err
 }
@@ -161,7 +161,7 @@ func (r *BetaResponseService) Cancel(ctx context.Context, responseID string, bod
 		err = errors.New("missing required response_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("responses/%s/cancel?beta=true", responseID)
+	path := requestconfig.FormatPath("responses/%s/cancel?beta=true", responseID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }
@@ -4465,6 +4465,9 @@ const (
 	BetaResponseModelGPT5Pro                          BetaResponseModel = "gpt-5-pro"
 	BetaResponseModelGPT5Pro2025_10_06                BetaResponseModel = "gpt-5-pro-2025-10-06"
 	BetaResponseModelGPT5_1CodexMax                   BetaResponseModel = "gpt-5.1-codex-max"
+	BetaResponseModelGPTDaybreakBlueLatest            BetaResponseModel = "gpt-daybreak-blue-latest"
+	BetaResponseModelGPTDaybreakRedLatest             BetaResponseModel = "gpt-daybreak-red-latest"
+	BetaResponseModelGPT5_6Cyber                      BetaResponseModel = "gpt-5.6-cyber"
 )
 
 // BetaResponseToolChoiceUnion contains all possible properties and values from
@@ -31947,6 +31950,9 @@ const (
 	BetaResponseNewParamsModelGPT5Pro                          BetaResponseNewParamsModel = "gpt-5-pro"
 	BetaResponseNewParamsModelGPT5Pro2025_10_06                BetaResponseNewParamsModel = "gpt-5-pro-2025-10-06"
 	BetaResponseNewParamsModelGPT5_1CodexMax                   BetaResponseNewParamsModel = "gpt-5.1-codex-max"
+	BetaResponseNewParamsModelGPTDaybreakBlueLatest            BetaResponseNewParamsModel = "gpt-daybreak-blue-latest"
+	BetaResponseNewParamsModelGPTDaybreakRedLatest             BetaResponseNewParamsModel = "gpt-daybreak-red-latest"
+	BetaResponseNewParamsModelGPT5_6Cyber                      BetaResponseNewParamsModel = "gpt-5.6-cyber"
 )
 
 // Configuration for running moderation on the input and output of this response.
@@ -32605,6 +32611,9 @@ const (
 	BetaResponseCompactParamsModelGPT5Pro                          BetaResponseCompactParamsModel = "gpt-5-pro"
 	BetaResponseCompactParamsModelGPT5Pro2025_10_06                BetaResponseCompactParamsModel = "gpt-5-pro-2025-10-06"
 	BetaResponseCompactParamsModelGPT5_1CodexMax                   BetaResponseCompactParamsModel = "gpt-5.1-codex-max"
+	BetaResponseCompactParamsModelGPTDaybreakBlueLatest            BetaResponseCompactParamsModel = "gpt-daybreak-blue-latest"
+	BetaResponseCompactParamsModelGPTDaybreakRedLatest             BetaResponseCompactParamsModel = "gpt-daybreak-red-latest"
+	BetaResponseCompactParamsModelGPT5_6Cyber                      BetaResponseCompactParamsModel = "gpt-5.6-cyber"
 )
 
 // Only one field can be non-zero.

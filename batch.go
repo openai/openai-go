@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -59,7 +58,7 @@ func (r *BatchService) Get(ctx context.Context, batchID string, opts ...option.R
 		err = errors.New("missing required batch_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("batches/%s", batchID)
+	path := requestconfig.FormatPath("batches/%s", batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -98,7 +97,7 @@ func (r *BatchService) Cancel(ctx context.Context, batchID string, opts ...optio
 		err = errors.New("missing required batch_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("batches/%s/cancel", batchID)
+	path := requestconfig.FormatPath("batches/%s/cancel", batchID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
 }

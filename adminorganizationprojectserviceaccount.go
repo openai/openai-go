@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -51,7 +50,7 @@ func (r *AdminOrganizationProjectServiceAccountService) New(ctx context.Context,
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts", projectID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -68,7 +67,7 @@ func (r *AdminOrganizationProjectServiceAccountService) Get(ctx context.Context,
 		err = errors.New("missing required service_account_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -85,7 +84,7 @@ func (r *AdminOrganizationProjectServiceAccountService) Update(ctx context.Conte
 		err = errors.New("missing required service_account_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -100,7 +99,7 @@ func (r *AdminOrganizationProjectServiceAccountService) List(ctx context.Context
 		err = errors.New("missing required project_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts", projectID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts", projectID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -133,7 +132,7 @@ func (r *AdminOrganizationProjectServiceAccountService) Delete(ctx context.Conte
 		err = errors.New("missing required service_account_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
+	path := requestconfig.FormatPath("organization/projects/%s/service_accounts/%s", projectID, serviceAccountID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

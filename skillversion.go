@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -53,7 +52,7 @@ func (r *SkillVersionService) New(ctx context.Context, skillID string, body Skil
 		err = errors.New("missing required skill_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("skills/%s/versions", skillID)
+	path := requestconfig.FormatPath("skills/%s/versions", skillID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -70,7 +69,7 @@ func (r *SkillVersionService) Get(ctx context.Context, skillID string, version s
 		err = errors.New("missing required version parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("skills/%s/versions/%s", skillID, version)
+	path := requestconfig.FormatPath("skills/%s/versions/%s", skillID, version)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -85,7 +84,7 @@ func (r *SkillVersionService) List(ctx context.Context, skillID string, query Sk
 		err = errors.New("missing required skill_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("skills/%s/versions", skillID)
+	path := requestconfig.FormatPath("skills/%s/versions", skillID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -115,7 +114,7 @@ func (r *SkillVersionService) Delete(ctx context.Context, skillID string, versio
 		err = errors.New("missing required version parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("skills/%s/versions/%s", skillID, version)
+	path := requestconfig.FormatPath("skills/%s/versions/%s", skillID, version)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }

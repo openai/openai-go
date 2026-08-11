@@ -5,7 +5,6 @@ package openai
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
@@ -60,7 +59,7 @@ func (r *AdminOrganizationGroupService) Get(ctx context.Context, groupID string,
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s", groupID)
+	path := requestconfig.FormatPath("organization/groups/%s", groupID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
@@ -73,7 +72,7 @@ func (r *AdminOrganizationGroupService) Update(ctx context.Context, groupID stri
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s", groupID)
+	path := requestconfig.FormatPath("organization/groups/%s", groupID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
 }
@@ -110,7 +109,7 @@ func (r *AdminOrganizationGroupService) Delete(ctx context.Context, groupID stri
 		err = errors.New("missing required group_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("organization/groups/%s", groupID)
+	path := requestconfig.FormatPath("organization/groups/%s", groupID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
 }
