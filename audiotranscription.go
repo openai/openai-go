@@ -839,7 +839,9 @@ func (r *AudioTranscriptionNewResponseUnionUsage) UnmarshalJSON(data []byte) err
 
 type AudioTranscriptionNewParams struct {
 	// The audio file object (not file name) to transcribe, in one of these formats:
-	// flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm.
+	// flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm. The request must include
+	// enough format metadata for the file to be identified. We recommend an
+	// extension-bearing filename and an appropriate content type.
 	File io.Reader `json:"file,omitzero" api:"required" format:"binary"`
 	// ID of the model to use. The options are `gpt-transcribe`, `gpt-4o-transcribe`,
 	// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`, `whisper-1`
