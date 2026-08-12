@@ -101,10 +101,10 @@ type AdminOrganizationAuditLogListResponse struct {
 	// "tenant.workload_identity.mapping.archived",
 	// "tenant.workload_identity.binding.created",
 	// "tenant.workload_identity.principal.provisioned",
-	// "tenant.admin_api_key.created", "tenant.admin_api_key.updated",
-	// "tenant.admin_api_key.deleted", "tenant.project_api_key.created",
-	// "tenant.chatgpt_access_token.revoked", "tenant.migration.completed",
-	// "tenant.sso.migrated", "tenant.domains.migrated",
+	// "tenant.workload_identity.access_token.issued", "tenant.admin_api_key.created",
+	// "tenant.admin_api_key.updated", "tenant.admin_api_key.deleted",
+	// "tenant.project_api_key.created", "tenant.chatgpt_access_token.revoked",
+	// "tenant.migration.completed", "tenant.sso.migrated", "tenant.domains.migrated",
 	// "tenant.sso_connection.created", "tenant.sso_connection.updated",
 	// "tenant.sso_connection.deleted", "tenant.sso_connection.setup.started",
 	// "tenant.policy.created", "tenant.policy.updated", "tenant.policy.deleted",
@@ -402,6 +402,7 @@ const (
 	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityMappingArchived       AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.mapping.archived"
 	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityBindingCreated        AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.binding.created"
 	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityPrincipalProvisioned  AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.principal.provisioned"
+	AdminOrganizationAuditLogListResponseTypeTenantWorkloadIdentityAccessTokenIssued     AdminOrganizationAuditLogListResponseType = "tenant.workload_identity.access_token.issued"
 	AdminOrganizationAuditLogListResponseTypeTenantAdminAPIKeyCreated                    AdminOrganizationAuditLogListResponseType = "tenant.admin_api_key.created"
 	AdminOrganizationAuditLogListResponseTypeTenantAdminAPIKeyUpdated                    AdminOrganizationAuditLogListResponseType = "tenant.admin_api_key.updated"
 	AdminOrganizationAuditLogListResponseTypeTenantAdminAPIKeyDeleted                    AdminOrganizationAuditLogListResponseType = "tenant.admin_api_key.deleted"
@@ -2344,10 +2345,10 @@ type AdminOrganizationAuditLogListParams struct {
 	// "tenant.workload_identity.mapping.archived",
 	// "tenant.workload_identity.binding.created",
 	// "tenant.workload_identity.principal.provisioned",
-	// "tenant.admin_api_key.created", "tenant.admin_api_key.updated",
-	// "tenant.admin_api_key.deleted", "tenant.project_api_key.created",
-	// "tenant.chatgpt_access_token.revoked", "tenant.migration.completed",
-	// "tenant.sso.migrated", "tenant.domains.migrated",
+	// "tenant.workload_identity.access_token.issued", "tenant.admin_api_key.created",
+	// "tenant.admin_api_key.updated", "tenant.admin_api_key.deleted",
+	// "tenant.project_api_key.created", "tenant.chatgpt_access_token.revoked",
+	// "tenant.migration.completed", "tenant.sso.migrated", "tenant.domains.migrated",
 	// "tenant.sso_connection.created", "tenant.sso_connection.updated",
 	// "tenant.sso_connection.deleted", "tenant.sso_connection.setup.started",
 	// "tenant.policy.created", "tenant.policy.updated", "tenant.policy.deleted",
