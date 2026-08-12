@@ -66,3 +66,6 @@ This library uses the standard gofmt code formatter:
 ```sh
 $ ./scripts/format
 ```
+
+The [Go code quality policy](GO_CODE_QUALITY_POLICY.md) describes the staged
+formatting and static-analysis rules for generated and handwritten code.
