@@ -10,9 +10,10 @@ fixtures, and development tools where the check is applicable.
 
 ## Principles
 
-1. **Use idiomatic Go tools.** `gofmt` is the formatting authority. Import
-   management is handled by `goimports`. Stricter, non-standard formatters such
-   as `gofumpt` are not part of the required policy.
+1. **Use the standard Go toolchain by default.** `gofmt` is the formatting
+   authority. The compiler enforces import correctness, and generators must
+   emit the exact imports their output needs. `goimports`, `gofumpt`, and other
+   non-standard formatters are not required gates.
 2. **Prefer correctness checks before style checks.** The rollout prioritizes
    `go vet`, `staticcheck` correctness checks, `ineffassign`, `errcheck`, and
    unused-code analysis before optional style or complexity rules.
@@ -39,9 +40,9 @@ with:
 ./scripts/format
 ```
 
-The staged quality rollout will add `goimports` as a required import-management
-check. Generated output must be clean under the same formatting commands as
-handwritten code, without a post-generation patch.
+Generated output must be `gofmt`-clean without a post-generation patch. A
+developer may use `goimports` as an editor convenience, but CI and generation
+do not depend on it; generated imports are fixed at their source instead.
 
 ## Static analysis
 
@@ -57,7 +58,7 @@ updates are explicit policy changes and receive normal SDK CODEOWNER review.
 
 The initial rollout order is:
 
-1. `gofmt` and `goimports`;
+1. `gofmt`;
 2. suppression hygiene and `ineffassign`;
 3. full `go vet` and `staticcheck` correctness checks;
 4. `errcheck` and resource-lifecycle checks;
