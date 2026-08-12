@@ -7,6 +7,9 @@ cd "$(dirname "$0")/.."
 echo "==> Running Go build"
 go build ./...
 
+echo "==> Running golangci-lint"
+golangci-lint run ./...
+
 echo "==> Checking tests compile"
 go test -run=^$ ./...
 
