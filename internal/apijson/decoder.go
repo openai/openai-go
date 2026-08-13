@@ -316,6 +316,9 @@ func (d *decoderBuilder) newArrayTypeDecoder(t reflect.Type) decoderFunc {
 			if err != nil {
 				return err
 			}
+			if itemState.exactness < state.exactness {
+				state.exactness = itemState.exactness
+			}
 		}
 
 		value.Set(arrayValue)

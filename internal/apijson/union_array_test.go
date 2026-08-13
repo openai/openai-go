@@ -54,6 +54,27 @@ func TestArrayDecoderPreservesUnknownDiscriminatedUnionVariant(t *testing.T) {
 	}
 }
 
+func TestArrayDecoderPropagatesKnownUnionElementExactness(t *testing.T) {
+	cases := map[string]exactness{
+		`{"parts":[{"type":"text","text":"kept","extra":true}]}`: extras,
+		`{"parts":[{"type":"text","text":42}]}`:                  loose,
+	}
+
+	for raw, expected := range cases {
+		t.Run(raw, func(t *testing.T) {
+			var got arrayDiscriminatedHolder
+			decoder := decoderBuilder{root: true}
+			exactness, err := decoder.unmarshalWithExactness([]byte(raw), &got)
+			if err != nil {
+				t.Fatalf("Unmarshal returned error: %v", err)
+			}
+			if exactness != expected {
+				t.Fatalf("exactness = %d, want %d", exactness, expected)
+			}
+		})
+	}
+}
+
 func TestArrayDecoderDoesNotPreserveMalformedUnionElement(t *testing.T) {
 	var got arrayDiscriminatedHolder
 	err := Unmarshal([]byte(`{"parts":[42,{"type":"text","text":"kept"}]}`), &got)
