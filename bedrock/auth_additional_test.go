@@ -17,7 +17,8 @@ import (
 )
 
 func TestNewClientOptionsRejectsNilContext(t *testing.T) {
-	_, err := newClientOptions(nil, Config{}, time.Now)
+	var nilContext context.Context
+	_, err := newClientOptions(nilContext, Config{}, time.Now)
 	if err == nil || !strings.Contains(err.Error(), "nil context") {
 		t.Fatalf("error = %v", err)
 	}

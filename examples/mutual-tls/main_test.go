@@ -65,7 +65,7 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	defaultTLSConfig.ClientSessionCache = inheritedSessionCache
 	defaultTransport.TLSClientConfig = defaultTLSConfig
 	defaultTransport.Proxy = http.ProxyFromEnvironment
-	defaultTransport.DialTLS = func(string, string) (net.Conn, error) {
+	defaultTransport.DialTLS = func(string, string) (net.Conn, error) { //nolint:staticcheck // SA1019: Exercise clearing an inherited legacy hook.
 		return nil, nil
 	}
 	defaultTransport.DialTLSContext = func(context.Context, string, string) (net.Conn, error) {
@@ -94,7 +94,7 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	if transport.Proxy != nil {
 		t.Error("newMutualTLSHTTPClient().Transport.Proxy is non-nil")
 	}
-	if transport.DialTLS != nil {
+	if transport.DialTLS != nil { //nolint:staticcheck // SA1019: Verify the legacy hook cannot bypass the dedicated TLS configuration.
 		t.Error("newMutualTLSHTTPClient().Transport.DialTLS is non-nil")
 	}
 	if transport.DialTLSContext != nil {
@@ -132,7 +132,7 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	if defaultTransport.Proxy == nil {
 		t.Error("newMutualTLSHTTPClient() cleared http.DefaultTransport.Proxy")
 	}
-	if defaultTransport.DialTLS == nil {
+	if defaultTransport.DialTLS == nil { //nolint:staticcheck // SA1019: Verify cloning did not mutate the original legacy hook.
 		t.Error("newMutualTLSHTTPClient() cleared http.DefaultTransport.DialTLS")
 	}
 	if defaultTransport.DialTLSContext == nil {
