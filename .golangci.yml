@@ -10,6 +10,7 @@ linters:
     - govet
     - ineffassign
     - nolintlint
+    - staticcheck
   exclusions:
     generated: disable
   settings:
@@ -24,3 +25,6 @@ linters:
       allow-unused: true
       require-explanation: true
       require-specific: true
+    staticcheck:
+      checks:
+        - "SA*"
