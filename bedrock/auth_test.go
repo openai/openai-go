@@ -216,12 +216,15 @@ func TestSigV4Fixture(t *testing.T) {
 	}
 
 	called := false
-	_, err = sigV4Middleware(baseURL, awsConfig, v4.NewSigner(), func() time.Time { return signingDate })(request, func(req *http.Request) (*http.Response, error) {
+	response, err := sigV4Middleware(baseURL, awsConfig, v4.NewSigner(), func() time.Time { return signingDate })(request, func(req *http.Request) (*http.Response, error) {
 		called = true
 		return successfulResponse(req), nil
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+	if closeErr := response.Body.Close(); closeErr != nil {
+		t.Fatalf("close response body: %v", closeErr)
 	}
 	if !called {
 		t.Fatal("transport was not called")

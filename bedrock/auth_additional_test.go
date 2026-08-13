@@ -508,10 +508,15 @@ func TestSigV4MiddlewareRejectsUnsafeRequests(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			transportCalls := 0
-			_, err := sigV4Middleware(baseURL, test.config, v4.NewSigner(), time.Now)(test.request(), func(req *http.Request) (*http.Response, error) {
+			response, err := sigV4Middleware(baseURL, test.config, v4.NewSigner(), time.Now)(test.request(), func(req *http.Request) (*http.Response, error) {
 				transportCalls++
 				return successfulResponse(req), nil
 			})
+			if response != nil {
+				if closeErr := response.Body.Close(); closeErr != nil {
+					t.Fatalf("close response body: %v", closeErr)
+				}
+			}
 			if err == nil || !strings.Contains(err.Error(), test.message) {
 				t.Fatalf("error = %v, want substring %q", err, test.message)
 			}
@@ -562,10 +567,15 @@ func TestSigV4MiddlewareCredentialAndSignerFailures(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodPost, "https://bedrock-mantle.us-east-1.api.aws/openai/v1/responses", strings.NewReader("body"))
 			contentLength := req.ContentLength
-			_, err := sigV4Middleware(baseURL, test.config, test.signer, time.Now)(req, func(req *http.Request) (*http.Response, error) {
+			response, err := sigV4Middleware(baseURL, test.config, test.signer, time.Now)(req, func(req *http.Request) (*http.Response, error) {
 				t.Fatal("transport must not be called")
 				return nil, nil
 			})
+			if response != nil {
+				if closeErr := response.Body.Close(); closeErr != nil {
+					t.Fatalf("close response body: %v", closeErr)
+				}
+			}
 			if err == nil || !strings.Contains(err.Error(), test.message) {
 				t.Fatalf("error = %v, want substring %q", err, test.message)
 			}
