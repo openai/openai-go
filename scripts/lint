@@ -7,6 +7,7 @@ cd "$(dirname "$0")/.."
 echo "==> Checking Go formatting"
 go_files=()
 while IFS= read -r -d '' file; do
+  [[ -f "$file" ]] || continue
   go_files+=("$file")
 done < <(git ls-files --cached --others --exclude-standard -z -- '*.go' ':(exclude,glob)**/vendor/**')
 
