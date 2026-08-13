@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/openai/openai-go/v3"
@@ -27,6 +28,27 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Uploaded file with ID: %s\n", file.ID)
+
+	fmt.Println("Waiting for file to be processed")
+	for {
+		file, err = client.Files.Get(ctx, file.ID)
+		if err != nil {
+			panic(err)
+		}
+
+		status, statusErr := strconv.Unquote(file.JSON.Status.Raw())
+		if statusErr != nil {
+			panic(fmt.Errorf("decode file processing status: %w", statusErr))
+		}
+		fmt.Printf("File status: %s\n", status)
+		if status == string(openai.FileObjectStatusProcessed) {
+			break
+		}
+		if status == string(openai.FileObjectStatusError) {
+			panic(fmt.Errorf("training file %s failed processing", file.ID))
+		}
+		time.Sleep(time.Second)
+	}
 
 	fmt.Println("")
 	fmt.Println("==> Starting fine-tuning")

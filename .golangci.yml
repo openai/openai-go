@@ -17,8 +17,10 @@ linters:
     govet:
       enable-all: true
       disable:
-        # Generated public API structs preserve schema field order; layout-only
-        # reordering would create compatibility risk without improving safety.
+        # fieldalignment is not part of normal go vet or gopls: layout advice
+        # rarely identifies a real problem and may introduce false sharing.
+        # Reordering exported handwritten or generated structs also breaks
+        # positional literals and compatibility-critical schema field order.
         - fieldalignment
     nolintlint:
       # A disabled analyzer cannot reliably prove whether its directive is stale.
