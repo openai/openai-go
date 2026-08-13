@@ -43,3 +43,15 @@ for module in "$repo_root" "$repo_root/examples" "$repo_root/internal/testdata/c
       --tests="${OPENAI_GO_LINT_TESTS:-true}"
   )
 done
+
+if [[ "$(go env GOOS)" == linux ]]; then
+  echo "==> Running static analysis for non-Linux examples"
+  (
+    cd "$repo_root/examples"
+    lint_runner="$(go tool -modfile="$repo_root/tools/go.mod" -n golangci-lint)"
+    GOOS=windows "$lint_runner" run \
+      --config "$repo_root/.golangci.yml" \
+      --tests="${OPENAI_GO_LINT_TESTS:-true}" \
+      ./audio-text-to-speech
+  )
+fi

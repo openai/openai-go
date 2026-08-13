@@ -25,11 +25,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer func() {
-		if closeErr := res.Body.Close(); closeErr != nil {
-			panic(closeErr)
-		}
-	}()
+	defer func() { _ = res.Body.Close() }()
 
 	op := &oto.NewContextOptions{}
 	op.SampleRate = 24000
