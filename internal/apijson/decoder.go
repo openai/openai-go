@@ -48,9 +48,10 @@ type decoderBuilder struct {
 
 // decoderState contains the 'run-time' state of the decoder.
 type decoderState struct {
-	strict    bool
-	exactness exactness
-	validator *validationEntry
+	strict                            bool
+	exactness                         exactness
+	validator                         *validationEntry
+	preserveUnknownDiscriminatedUnion bool
 }
 
 // Exactness refers to how close to the type the result was if deserialization
@@ -288,7 +289,13 @@ func (d *decoderBuilder) newMapDecoder(t reflect.Type) decoderFunc {
 }
 
 func (d *decoderBuilder) newArrayTypeDecoder(t reflect.Type) decoderFunc {
-	itemDecoder := d.typeDecoder(t.Elem())
+	itemType := t.Elem()
+	itemDecoder := d.typeDecoder(itemType)
+	preserveUnknownUnion := false
+	if _, registered := unionRegistry[itemType]; registered && isStructUnion(itemType) {
+		itemDecoder = d.newStructUnionDecoder(itemType)
+		preserveUnknownUnion = true
+	}
 
 	return func(node gjson.Result, value reflect.Value, state *decoderState) (err error) {
 		if !node.IsArray() {
@@ -299,7 +306,13 @@ func (d *decoderBuilder) newArrayTypeDecoder(t reflect.Type) decoderFunc {
 
 		arrayValue := reflect.MakeSlice(reflect.SliceOf(t.Elem()), len(arrayNode), len(arrayNode))
 		for i, itemNode := range arrayNode {
-			err = itemDecoder(itemNode, arrayValue.Index(i), state)
+			itemState := state
+			if preserveUnknownUnion {
+				copy := *state
+				copy.preserveUnknownDiscriminatedUnion = true
+				itemState = &copy
+			}
+			err = itemDecoder(itemNode, arrayValue.Index(i), itemState)
 			if err != nil {
 				return err
 			}
