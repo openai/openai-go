@@ -31,4 +31,13 @@ echo "==> Checking tests compile"
 go test -run=^$ ./...
 
 echo "==> Building examples"
-cd examples && go build ./...
+(cd examples && go build ./...)
+
+echo "==> Running static analysis"
+repo_root="$PWD"
+for module in "$repo_root" "$repo_root/examples" "$repo_root/internal/testdata/consumer"; do
+  (
+    cd "$module"
+    go tool -modfile="$repo_root/tools/go.mod" golangci-lint run --config "$repo_root/.golangci.yml"
+  )
+done

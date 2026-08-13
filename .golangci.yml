@@ -1,0 +1,12 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - nolintlint
+  settings:
+    nolintlint:
+      # A disabled analyzer cannot reliably prove whether its directive is stale.
+      allow-unused: true
+      require-explanation: true
+      require-specific: true
