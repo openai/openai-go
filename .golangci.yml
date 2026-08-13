@@ -7,6 +7,7 @@ issues:
 linters:
   default: none
   enable:
+    - errcheck
     - govet
     - ineffassign
     - nolintlint

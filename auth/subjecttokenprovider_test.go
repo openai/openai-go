@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -12,19 +13,13 @@ import (
 )
 
 func TestK8sProviderFileReading(t *testing.T) {
-	tmpFile, err := os.CreateTemp("", "k8s-token-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	defer os.Remove(tmpFile.Name())
-
+	tokenPath := filepath.Join(t.TempDir(), "token")
 	tokenContent := "  test-jwt-token-123  \n"
-	if _, writeErr := tmpFile.WriteString(tokenContent); writeErr != nil {
+	if writeErr := os.WriteFile(tokenPath, []byte(tokenContent), 0o600); writeErr != nil {
 		t.Fatalf("Failed to write to temp file: %v", writeErr)
 	}
-	tmpFile.Close()
 
-	provider := auth.K8sServiceAccountTokenProvider(tmpFile.Name())
+	provider := auth.K8sServiceAccountTokenProvider(tokenPath)
 
 	token, err := provider.GetToken(context.Background(), nil)
 	if err != nil {
@@ -89,20 +84,14 @@ func TestK8sProviderErrorHandling(t *testing.T) {
 }
 
 func TestK8sProviderEmptyToken(t *testing.T) {
-	tmpFile, err := os.CreateTemp("", "k8s-token-empty-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-	defer os.Remove(tmpFile.Name())
-
-	if _, writeErr := tmpFile.WriteString("   \n   "); writeErr != nil {
+	tokenPath := filepath.Join(t.TempDir(), "token")
+	if writeErr := os.WriteFile(tokenPath, []byte("   \n   "), 0o600); writeErr != nil {
 		t.Fatalf("Failed to write to temp file: %v", writeErr)
 	}
-	tmpFile.Close()
 
-	provider := auth.K8sServiceAccountTokenProvider(tmpFile.Name())
+	provider := auth.K8sServiceAccountTokenProvider(tokenPath)
 
-	_, err = provider.GetToken(context.Background(), nil)
+	_, err := provider.GetToken(context.Background(), nil)
 	if err == nil {
 		t.Fatal("Expected error for empty token, got nil")
 	}

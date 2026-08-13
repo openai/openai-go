@@ -528,7 +528,11 @@ func TestSigV4DisablesRedirects(t *testing.T) {
 	if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
 		t.Fatal(err)
 	}
-	defer response.Body.Close()
+	defer func() {
+		if closeErr := response.Body.Close(); closeErr != nil {
+			t.Errorf("close response body: %v", closeErr)
+		}
+	}()
 	if response.StatusCode != http.StatusFound {
 		t.Fatalf("status = %d", response.StatusCode)
 	}
@@ -561,7 +565,11 @@ func TestBearerDisablesOriginChangingRedirects(t *testing.T) {
 	if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
 		t.Fatal(err)
 	}
-	defer response.Body.Close()
+	defer func() {
+		if closeErr := response.Body.Close(); closeErr != nil {
+			t.Errorf("close response body: %v", closeErr)
+		}
+	}()
 	if response.StatusCode != http.StatusFound {
 		t.Fatalf("status = %d", response.StatusCode)
 	}

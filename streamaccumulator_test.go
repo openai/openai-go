@@ -255,7 +255,9 @@ func TestAccumulatorNegativeToolCallIndex(t *testing.T) {
 func TestAccumulatorEmptyToolCallsArray(t *testing.T) {
 	acc := openai.ChatCompletionAccumulator{}
 	chunk := openai.ChatCompletionChunk{}
-	chunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[]}}]}`))
+	if err := chunk.UnmarshalJSON([]byte(`{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[]}}]}`)); err != nil {
+		t.Fatalf("Failed to unmarshal chunk: %v", err)
+	}
 	acc.AddChunk(chunk)
 }
 
