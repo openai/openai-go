@@ -3,6 +3,7 @@ version: "2"
 linters:
   default: none
   enable:
+    - ineffassign
     - nolintlint
   exclusions:
     generated: disable

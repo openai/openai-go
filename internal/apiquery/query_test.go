@@ -1,6 +1,7 @@
 package apiquery
 
 import (
+	"errors"
 	"net/url"
 	"testing"
 	"time"
@@ -110,6 +111,19 @@ type RichPrimitives struct {
 type QueryOmitTest struct {
 	A param.Opt[string] `query:"a,omitzero"`
 	B string            `query:"b,omitzero"`
+}
+
+type firstErrorMarshaler struct {
+	calls *int
+	err   error
+}
+
+func (m firstErrorMarshaler) MarshalJSON() ([]byte, error) {
+	*m.calls++
+	if *m.calls == 1 {
+		return nil, m.err
+	}
+	return []byte(`"ok"`), nil
 }
 
 type NamedEnum string
@@ -432,5 +446,18 @@ func TestEncode(t *testing.T) {
 				t.Fatalf("expected %+#v to serialize to %s but got %s", test.val, test.enc, str)
 			}
 		})
+	}
+}
+
+func TestEncodeMapElementError(t *testing.T) {
+	calls := 0
+	wantErr := errors.New("marshal failed")
+	values := map[string]firstErrorMarshaler{
+		"first":  {calls: &calls, err: wantErr},
+		"second": {calls: &calls, err: wantErr},
+	}
+
+	if _, err := Marshal(values); err == nil {
+		t.Fatalf("Marshal(%v) error = nil, want non-nil", values)
 	}
 }
