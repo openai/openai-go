@@ -639,7 +639,11 @@ func TestMaterializeReplayableBodyFailuresAndReset(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer replayed.Close()
+	defer func() {
+		if closeErr := replayed.Close(); closeErr != nil {
+			t.Errorf("close replayed request body: %v", closeErr)
+		}
+	}()
 	replayedBody, err := io.ReadAll(replayed)
 	if err != nil {
 		t.Fatal(err)

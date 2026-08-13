@@ -22,7 +22,11 @@ func main() {
 		if err != nil {
 			panic("file open failed:" + err.Error())
 		}
-		defer rdr.Close()
+		defer func() {
+			if closeErr := rdr.Close(); closeErr != nil {
+				panic(closeErr)
+			}
+		}()
 
 		fileParams = append(fileParams, openai.FileNewParams{
 			File:    rdr,

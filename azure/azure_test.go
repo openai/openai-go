@@ -52,7 +52,6 @@ func TestJSONRoute(t *testing.T) {
 func TestGetAudioMultipartRoute(t *testing.T) {
 	buff := &bytes.Buffer{}
 	mw := multipart.NewWriter(buff)
-	defer mw.Close()
 
 	fw, err := mw.CreateFormFile("file", "test.mp3")
 
@@ -99,7 +98,9 @@ func TestAPIKeyAuthentication(t *testing.T) {
 		},
 	}
 
-	WithAPIKey("my-api-key").Apply(rc)
+	if err := WithAPIKey("my-api-key").Apply(rc); err != nil {
+		t.Fatal(err)
+	}
 
 	if got := rc.Request.Header.Get("Api-Key"); got != "my-api-key" {
 		t.Errorf("Api-Key header: got %q, expected %q", got, "my-api-key")
