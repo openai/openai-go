@@ -96,6 +96,9 @@ func (r *VectorStoreFileBatchService) PollStatus(ctx context.Context, vectorStor
 
 // PollStatus waits until a VectorStoreFile is no longer in an incomplete state and returns it.
 // Pass 0 as pollIntervalMs to use the default polling interval of 1 second.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) PollStatus(ctx context.Context, videoID string, pollIntervalMs int, opts ...option.RequestOption) (*Video, error) {
 	var raw *http.Response
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
