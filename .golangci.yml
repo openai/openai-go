@@ -4,6 +4,8 @@ linters:
   default: none
   enable:
     - nolintlint
+  exclusions:
+    generated: disable
   settings:
     nolintlint:
       # A disabled analyzer cannot reliably prove whether its directive is stale.
