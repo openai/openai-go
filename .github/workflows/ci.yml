@@ -47,11 +47,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup go
+      - name: Setup current stable Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          # go.mod is the source of truth for the minimum compiler used by lint.
-          go-version-file: ./go.mod
+          # The lint runner must be built by a Go release at least as new as
+          # every release it analyzes. Minimum-version coverage remains in the
+          # test matrix below.
+          go-version: '1.26.x'
+          check-latest: true
 
       - name: Run lints
         run: ./scripts/lint

@@ -40,6 +40,9 @@ jobs:
       - name: Detect breaking changes
         env:
           BASE_SHA: ${{ inputs.base_sha || github.event.merge_group.base_sha || github.event.pull_request.base.sha }}
+          # Historical compatibility tests predate the current lint policy.
+          # scripts/lint still compiles them while analyzing current SDK code.
+          OPENAI_GO_LINT_TESTS: "false"
         run: |
           # Try to check out previous versions of the breaking change detection script. This ensures that
           # we still detect breaking changes when entire files and their tests are removed.
