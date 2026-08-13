@@ -4,5 +4,5 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "==> Running gofmt -s -w"
-gofmt -s -w .
+echo "==> Running gofmt -w"
+find . -type f -name '*.go' -not -path '*/vendor/*' -exec gofmt -w {} +

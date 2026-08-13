@@ -4,6 +4,17 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+echo "==> Checking Go formatting"
+unformatted="$(find . -type f -name '*.go' -not -path '*/vendor/*' -exec gofmt -l {} +)"
+if [[ -n "$unformatted" ]]; then
+  echo "The following files are not formatted with gofmt:"
+  printf '%s\n' "$unformatted"
+  echo
+  find . -type f -name '*.go' -not -path '*/vendor/*' -exec gofmt -d {} +
+  echo "Run ./scripts/format to fix formatting."
+  exit 1
+fi
+
 echo "==> Running Go build"
 go build ./...
 
