@@ -120,8 +120,8 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 	if err != nil {
 		return resolvedConfig{}, err
 	}
-	if err := validateAWSRegion(region); err != nil {
-		return resolvedConfig{}, err
+	if regionErr := validateAWSRegion(region); regionErr != nil {
+		return resolvedConfig{}, regionErr
 	}
 	baseURLValue, err := resolveOptionalConfigValue("BaseURL", cfg.BaseURL, "AWS_BEDROCK_BASE_URL")
 	if err != nil {
@@ -137,8 +137,8 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 		if err != nil {
 			return resolvedConfig{}, err
 		}
-		if err := validateAWSRegion(region); err != nil {
-			return resolvedConfig{}, err
+		if regionErr := validateAWSRegion(region); regionErr != nil {
+			return resolvedConfig{}, regionErr
 		}
 	}
 
@@ -158,17 +158,17 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 		if region == "" {
 			return resolvedConfig{}, errors.New(missingRegionMessage)
 		}
-		if err := validateAWSRegion(region); err != nil {
-			return resolvedConfig{}, err
+		if regionErr := validateAWSRegion(region); regionErr != nil {
+			return resolvedConfig{}, regionErr
 		}
 		if baseURL != nil {
-			if _, err := reconcileEndpointRegion(baseURL, region); err != nil {
-				return resolvedConfig{}, err
+			if _, endpointErr := reconcileEndpointRegion(baseURL, region); endpointErr != nil {
+				return resolvedConfig{}, endpointErr
 			}
 		}
 		awsCfg.Region = region
-		if err := verifyAWSCredentials(ctx, awsCfg, explicitAWS); err != nil {
-			return resolvedConfig{}, err
+		if credentialErr := verifyAWSCredentials(ctx, awsCfg, explicitAWS); credentialErr != nil {
+			return resolvedConfig{}, credentialErr
 		}
 		resolved.region = region
 	default:
