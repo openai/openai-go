@@ -33,11 +33,13 @@ fixtures, and development tools where the check is applicable.
 
 ## Formatting
 
-All Go source must conform to `gofmt`. Contributors can format the repository
-with:
+All Go source must conform to `gofmt`. Contributors should use the standard
+`go fmt` command in each module that contains Go source:
 
 ```sh
-./scripts/format
+go fmt ./...
+go -C examples fmt ./...
+go -C internal/testdata/consumer fmt ./...
 ```
 
 Generated output must be `gofmt`-clean without a post-generation patch. A

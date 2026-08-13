@@ -61,10 +61,13 @@ $ ./scripts/test
 
 ## Formatting
 
-This library uses the standard gofmt code formatter:
+This library uses the standard `go fmt` command. Run it in each module that
+contains Go source:
 
 ```sh
-$ ./scripts/format
+$ go fmt ./...
+$ go -C examples fmt ./...
+$ go -C internal/testdata/consumer fmt ./...
 ```
 
 The [Go code quality policy](GO_CODE_QUALITY_POLICY.md) describes the staged
