@@ -384,12 +384,12 @@ func (u ChatCompletionModerationInputUnion) AsAny() anyChatCompletionModerationI
 }
 
 func (u ChatCompletionModerationInputUnion) AsModerationResults() (v ChatCompletionModerationInputModerationResults) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionModerationInputUnion) AsError() (v ChatCompletionModerationInputError) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -541,12 +541,12 @@ func (u ChatCompletionModerationOutputUnion) AsAny() anyChatCompletionModeration
 }
 
 func (u ChatCompletionModerationOutputUnion) AsModerationResults() (v ChatCompletionModerationOutputModerationResults) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionModerationOutputUnion) AsError() (v ChatCompletionModerationOutputError) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1323,12 +1323,12 @@ func (u ChatCompletionChunkModerationInputUnion) AsAny() anyChatCompletionChunkM
 }
 
 func (u ChatCompletionChunkModerationInputUnion) AsModerationResults() (v ChatCompletionChunkModerationInputModerationResults) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionChunkModerationInputUnion) AsError() (v ChatCompletionChunkModerationInputError) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1485,12 +1485,12 @@ func (u ChatCompletionChunkModerationOutputUnion) AsAny() anyChatCompletionChunk
 }
 
 func (u ChatCompletionChunkModerationOutputUnion) AsModerationResults() (v ChatCompletionChunkModerationOutputModerationResults) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionChunkModerationOutputUnion) AsError() (v ChatCompletionChunkModerationOutputError) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -3170,12 +3170,12 @@ func (u ChatCompletionMessageToolCallUnion) AsAny() anyChatCompletionMessageTool
 }
 
 func (u ChatCompletionMessageToolCallUnion) AsFunction() (v ChatCompletionMessageFunctionToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionMessageToolCallUnion) AsCustom() (v ChatCompletionMessageCustomToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -3433,12 +3433,12 @@ type ChatCompletionStoreMessageContentPartUnion struct {
 }
 
 func (u ChatCompletionStoreMessageContentPartUnion) AsTextContentPart() (v ChatCompletionContentPartText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatCompletionStoreMessageContentPartUnion) AsImageContentPart() (v ChatCompletionContentPartImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 

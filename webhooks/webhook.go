@@ -1292,82 +1292,82 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchCancelled() (v BatchCancelledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchCompleted() (v BatchCompletedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchExpired() (v BatchExpiredWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsBatchFailed() (v BatchFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsEvalRunCanceled() (v EvalRunCanceledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsEvalRunFailed() (v EvalRunFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsEvalRunSucceeded() (v EvalRunSucceededWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsFineTuningJobCancelled() (v FineTuningJobCancelledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsFineTuningJobFailed() (v FineTuningJobFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsFineTuningJobSucceeded() (v FineTuningJobSucceededWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsLiveCallIncoming() (v LiveCallIncomingWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsRealtimeCallIncoming() (v RealtimeCallIncomingWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseCancelled() (v ResponseCancelledWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseCompleted() (v ResponseCompletedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseFailed() (v ResponseFailedWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseIncomplete() (v ResponseIncompleteWebhookEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 

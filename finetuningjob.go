@@ -334,12 +334,12 @@ type FineTuningJobHyperparametersBatchSizeUnion struct {
 }
 
 func (u FineTuningJobHyperparametersBatchSizeUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningJobHyperparametersBatchSizeUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -371,12 +371,12 @@ type FineTuningJobHyperparametersLearningRateMultiplierUnion struct {
 }
 
 func (u FineTuningJobHyperparametersLearningRateMultiplierUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningJobHyperparametersLearningRateMultiplierUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -408,12 +408,12 @@ type FineTuningJobHyperparametersNEpochsUnion struct {
 }
 
 func (u FineTuningJobHyperparametersNEpochsUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningJobHyperparametersNEpochsUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 

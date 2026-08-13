@@ -145,12 +145,12 @@ func (u ContentProvenanceCheckResultUnion) AsAny() anyContentProvenanceCheckResu
 }
 
 func (u ContentProvenanceCheckResultUnion) AsC2PA() (v ContentProvenanceCheckResultC2PA) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ContentProvenanceCheckResultUnion) AsSynthID() (v ContentProvenanceCheckResultSynthID) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -253,7 +253,7 @@ func (r ContentProvenanceCheckNewParams) MarshalMultipart() (data []byte, conten
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()

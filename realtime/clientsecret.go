@@ -332,12 +332,12 @@ func (u RealtimeSessionCreateResponseAudioInputTurnDetectionUnion) AsAny() anyRe
 }
 
 func (u RealtimeSessionCreateResponseAudioInputTurnDetectionUnion) AsServerVad() (v RealtimeSessionCreateResponseAudioInputTurnDetectionServerVad) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseAudioInputTurnDetectionUnion) AsSemanticVad() (v RealtimeSessionCreateResponseAudioInputTurnDetectionSemanticVad) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -507,12 +507,12 @@ type RealtimeSessionCreateResponseMaxOutputTokensUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseMaxOutputTokensUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseMaxOutputTokensUnion) AsInf() (v constant.Inf) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -574,17 +574,17 @@ type RealtimeSessionCreateResponseToolChoiceUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolChoiceUnion) AsToolChoiceMode() (v responses.ToolChoiceOptions) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolChoiceUnion) AsFunctionTool() (v responses.ToolChoiceFunction) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolChoiceUnion) AsMcpTool() (v responses.ToolChoiceMcp) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -650,12 +650,12 @@ type RealtimeSessionCreateResponseToolUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolUnion) AsFunctionTool() (v RealtimeFunctionTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolUnion) AsMcpTool() (v RealtimeSessionCreateResponseToolMcpTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -770,12 +770,12 @@ type RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion) AsMcpAllowedTools() (v []string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion) AsMcpToolFilter() (v RealtimeSessionCreateResponseToolMcpToolAllowedToolsMcpToolFilter) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -841,12 +841,12 @@ type RealtimeSessionCreateResponseToolMcpToolRequireApprovalUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolRequireApprovalUnion) AsMcpToolApprovalFilter() (v RealtimeSessionCreateResponseToolMcpToolRequireApprovalMcpToolApprovalFilter) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolRequireApprovalUnion) AsMcpToolApprovalSetting() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -976,12 +976,12 @@ type RealtimeSessionCreateResponseTracingUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseTracingUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseTracingUnion) AsTracingConfiguration() (v RealtimeSessionCreateResponseTracingTracingConfiguration) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1273,12 +1273,12 @@ func (u ClientSecretNewResponseSessionUnion) AsAny() anyClientSecretNewResponseS
 }
 
 func (u ClientSecretNewResponseSessionUnion) AsRealtime() (v RealtimeSessionCreateResponse) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ClientSecretNewResponseSessionUnion) AsTranscription() (v RealtimeTranscriptionSessionCreateResponse) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 

@@ -244,7 +244,7 @@ func (r ContainerFileNewParams) MarshalMultipart() (data []byte, contentType str
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()

@@ -92,12 +92,12 @@ type DpoHyperparametersBatchSizeUnionResp struct {
 }
 
 func (u DpoHyperparametersBatchSizeUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u DpoHyperparametersBatchSizeUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -129,12 +129,12 @@ type DpoHyperparametersBetaUnionResp struct {
 }
 
 func (u DpoHyperparametersBetaUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u DpoHyperparametersBetaUnionResp) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -166,12 +166,12 @@ type DpoHyperparametersLearningRateMultiplierUnionResp struct {
 }
 
 func (u DpoHyperparametersLearningRateMultiplierUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u DpoHyperparametersLearningRateMultiplierUnionResp) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -203,12 +203,12 @@ type DpoHyperparametersNEpochsUnionResp struct {
 }
 
 func (u DpoHyperparametersNEpochsUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u DpoHyperparametersNEpochsUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -462,12 +462,12 @@ type ReinforcementHyperparametersBatchSizeUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersBatchSizeUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersBatchSizeUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -499,12 +499,12 @@ type ReinforcementHyperparametersComputeMultiplierUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersComputeMultiplierUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersComputeMultiplierUnionResp) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -536,12 +536,12 @@ type ReinforcementHyperparametersEvalIntervalUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersEvalIntervalUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersEvalIntervalUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -573,12 +573,12 @@ type ReinforcementHyperparametersEvalSamplesUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersEvalSamplesUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersEvalSamplesUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -610,12 +610,12 @@ type ReinforcementHyperparametersLearningRateMultiplierUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersLearningRateMultiplierUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersLearningRateMultiplierUnionResp) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -649,12 +649,12 @@ type ReinforcementHyperparametersNEpochsUnionResp struct {
 }
 
 func (u ReinforcementHyperparametersNEpochsUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementHyperparametersNEpochsUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -941,27 +941,27 @@ type ReinforcementMethodGraderUnion struct {
 }
 
 func (u ReinforcementMethodGraderUnion) AsStringCheckGrader() (v StringCheckGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementMethodGraderUnion) AsTextSimilarityGrader() (v TextSimilarityGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementMethodGraderUnion) AsPythonGrader() (v PythonGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementMethodGraderUnion) AsScoreModelGrader() (v ScoreModelGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ReinforcementMethodGraderUnion) AsMultiGrader() (v MultiGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1254,12 +1254,12 @@ type SupervisedHyperparametersBatchSizeUnionResp struct {
 }
 
 func (u SupervisedHyperparametersBatchSizeUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u SupervisedHyperparametersBatchSizeUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1291,12 +1291,12 @@ type SupervisedHyperparametersLearningRateMultiplierUnionResp struct {
 }
 
 func (u SupervisedHyperparametersLearningRateMultiplierUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u SupervisedHyperparametersLearningRateMultiplierUnionResp) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1328,12 +1328,12 @@ type SupervisedHyperparametersNEpochsUnionResp struct {
 }
 
 func (u SupervisedHyperparametersNEpochsUnionResp) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u SupervisedHyperparametersNEpochsUnionResp) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 

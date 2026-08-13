@@ -165,22 +165,22 @@ type AssistantResponseFormatOptionUnion struct {
 }
 
 func (u AssistantResponseFormatOptionUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AssistantResponseFormatOptionUnion) AsText() (v shared.ResponseFormatText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AssistantResponseFormatOptionUnion) AsJSONObject() (v shared.ResponseFormatJSONObject) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AssistantResponseFormatOptionUnion) AsJSONSchema() (v shared.ResponseFormatJSONSchema) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -390,12 +390,12 @@ type AssistantToolChoiceOptionUnion struct {
 }
 
 func (u AssistantToolChoiceOptionUnion) AsAuto() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AssistantToolChoiceOptionUnion) AsAssistantToolChoice() (v AssistantToolChoice) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 

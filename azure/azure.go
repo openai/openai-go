@@ -260,7 +260,7 @@ func getMultipartRoute(req *http.Request) (string, error) {
 			return "", err
 		}
 
-		defer mp.Close()
+		defer func() { _ = mp.Close() }()
 
 		if mp.FormName() == "model" {
 			modelBytes, err := io.ReadAll(mp)

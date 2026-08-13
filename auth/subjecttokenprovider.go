@@ -119,7 +119,7 @@ func (p *azureManagedIdentityTokenProvider) GetToken(ctx context.Context, httpCl
 			Cause:    err,
 		}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, readErr := io.ReadAll(resp.Body)
@@ -209,7 +209,7 @@ func (p *gcpIDTokenProvider) GetToken(ctx context.Context, httpClient HTTPDoer) 
 			Cause:    err,
 		}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)

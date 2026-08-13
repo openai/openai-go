@@ -366,47 +366,47 @@ func (u BetaComputerActionUnion) AsAny() anyBetaComputerAction {
 }
 
 func (u BetaComputerActionUnion) AsClick() (v BetaComputerActionClick) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaComputerActionUnion) AsDoubleClick() (v BetaComputerActionDoubleClick) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaComputerActionUnion) AsDrag() (v BetaComputerActionDrag) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaComputerActionUnion) AsKeypress() (v BetaComputerActionKeypress) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaComputerActionUnion) AsMove() (v BetaComputerActionMove) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaComputerActionUnion) AsScreenshot() (v BetaComputerActionScreenshot) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaComputerActionUnion) AsScroll() (v BetaComputerActionScroll) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaComputerActionUnion) AsType() (v BetaComputerActionType) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaComputerActionUnion) AsWait() (v BetaComputerActionWait) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1412,12 +1412,12 @@ func (u BetaContainerAutoNetworkPolicyUnion) AsAny() anyBetaContainerAutoNetwork
 }
 
 func (u BetaContainerAutoNetworkPolicyUnion) AsDisabled() (v BetaContainerNetworkPolicyDisabled) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaContainerAutoNetworkPolicyUnion) AsAllowlist() (v BetaContainerNetworkPolicyAllowlist) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1487,12 +1487,12 @@ func (u BetaContainerAutoSkillUnion) AsAny() anyBetaContainerAutoSkill {
 }
 
 func (u BetaContainerAutoSkillUnion) AsSkillReference() (v BetaSkillReference) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaContainerAutoSkillUnion) AsInline() (v BetaInlineSkill) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1971,12 +1971,12 @@ func (u BetaCustomToolFormatUnion) AsAny() anyBetaCustomToolFormat {
 }
 
 func (u BetaCustomToolFormatUnion) AsText() (v BetaCustomToolFormatText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaCustomToolFormatUnion) AsGrammar() (v BetaCustomToolFormatGrammar) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -2249,12 +2249,12 @@ type BetaEasyInputMessageContentUnion struct {
 }
 
 func (u BetaEasyInputMessageContentUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaEasyInputMessageContentUnion) AsInputItemContentList() (v BetaResponseInputMessageContentList) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -2422,12 +2422,12 @@ type BetaFileSearchToolFiltersUnion struct {
 }
 
 func (u BetaFileSearchToolFiltersUnion) AsComparisonFilter() (v BetaFileSearchToolFiltersComparisonFilter) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaFileSearchToolFiltersUnion) AsCompoundFilter() (v BetaFileSearchToolFiltersCompoundFilter) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -2506,22 +2506,22 @@ type BetaFileSearchToolFiltersComparisonFilterValueUnion struct {
 }
 
 func (u BetaFileSearchToolFiltersComparisonFilterValueUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaFileSearchToolFiltersComparisonFilterValueUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaFileSearchToolFiltersComparisonFilterValueUnion) AsBool() (v bool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaFileSearchToolFiltersComparisonFilterValueUnion) AsBetaFileSearchToolFiltersComparisonFilterValueArray() (v []BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnion) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -2552,12 +2552,12 @@ type BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnion struct {
 }
 
 func (u BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -2662,22 +2662,22 @@ type BetaFileSearchToolFiltersCompoundFilterFilterValueUnion struct {
 }
 
 func (u BetaFileSearchToolFiltersCompoundFilterFilterValueUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaFileSearchToolFiltersCompoundFilterFilterValueUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaFileSearchToolFiltersCompoundFilterFilterValueUnion) AsBool() (v bool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaFileSearchToolFiltersCompoundFilterFilterValueUnion) AsBetaFileSearchToolFiltersCompoundFilterFilterValueArray() (v []BetaFileSearchToolFiltersCompoundFilterFilterValueArrayItemUnion) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -2708,12 +2708,12 @@ type BetaFileSearchToolFiltersCompoundFilterFilterValueArrayItemUnion struct {
 }
 
 func (u BetaFileSearchToolFiltersCompoundFilterFilterValueArrayItemUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaFileSearchToolFiltersCompoundFilterFilterValueArrayItemUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -3237,17 +3237,17 @@ func (u BetaFunctionShellToolEnvironmentUnion) AsAny() anyBetaFunctionShellToolE
 }
 
 func (u BetaFunctionShellToolEnvironmentUnion) AsContainerAuto() (v BetaContainerAuto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaFunctionShellToolEnvironmentUnion) AsLocal() (v BetaLocalEnvironment) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaFunctionShellToolEnvironmentUnion) AsContainerReference() (v BetaContainerReference) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -3825,12 +3825,12 @@ func (u BetaNamespaceToolToolUnion) AsAny() anyBetaNamespaceToolTool {
 }
 
 func (u BetaNamespaceToolToolUnion) AsFunction() (v BetaNamespaceToolToolFunction) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaNamespaceToolToolUnion) AsCustom() (v BetaCustomTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -4345,12 +4345,12 @@ type BetaResponseInstructionsUnion struct {
 }
 
 func (u BetaResponseInstructionsUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInstructionsUnion) AsInputItemList() (v []BetaResponseInputItemUnion) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -4504,47 +4504,47 @@ type BetaResponseToolChoiceUnion struct {
 }
 
 func (u BetaResponseToolChoiceUnion) AsToolChoiceMode() (v BetaToolChoiceOptions) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseToolChoiceUnion) AsAllowedTools() (v BetaToolChoiceAllowed) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseToolChoiceUnion) AsHostedTool() (v BetaToolChoiceTypes) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseToolChoiceUnion) AsFunctionTool() (v BetaToolChoiceFunction) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseToolChoiceUnion) AsMcpTool() (v BetaToolChoiceMcp) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseToolChoiceUnion) AsCustomTool() (v BetaToolChoiceCustom) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseToolChoiceUnion) AsBetaResponseToolChoiceBetaSpecificProgrammaticToolCallingParam() (v BetaResponseToolChoiceBetaSpecificProgrammaticToolCallingParam) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseToolChoiceUnion) AsSpecificApplyPatchToolChoice() (v BetaToolChoiceApplyPatch) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseToolChoiceUnion) AsSpecificShellToolChoice() (v BetaToolChoiceShell) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -4682,12 +4682,12 @@ func (u BetaResponseModerationInputUnion) AsAny() anyBetaResponseModerationInput
 }
 
 func (u BetaResponseModerationInputUnion) AsModerationResult() (v BetaResponseModerationInputModerationResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseModerationInputUnion) AsError() (v BetaResponseModerationInputError) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -4824,12 +4824,12 @@ func (u BetaResponseModerationOutputUnion) AsAny() anyBetaResponseModerationOutp
 }
 
 func (u BetaResponseModerationOutputUnion) AsModerationResult() (v BetaResponseModerationOutputModerationResult) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseModerationOutputUnion) AsError() (v BetaResponseModerationOutputError) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -5159,17 +5159,17 @@ func (u BetaResponseApplyPatchToolCallOperationUnion) AsAny() anyBetaResponseApp
 }
 
 func (u BetaResponseApplyPatchToolCallOperationUnion) AsCreateFile() (v BetaResponseApplyPatchToolCallOperationCreateFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseApplyPatchToolCallOperationUnion) AsDeleteFile() (v BetaResponseApplyPatchToolCallOperationDeleteFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseApplyPatchToolCallOperationUnion) AsUpdateFile() (v BetaResponseApplyPatchToolCallOperationUpdateFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -5324,12 +5324,12 @@ func (u BetaResponseApplyPatchToolCallCallerUnion) AsAny() anyBetaResponseApplyP
 }
 
 func (u BetaResponseApplyPatchToolCallCallerUnion) AsDirect() (v BetaResponseApplyPatchToolCallCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseApplyPatchToolCallCallerUnion) AsProgram() (v BetaResponseApplyPatchToolCallCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -5494,12 +5494,12 @@ func (u BetaResponseApplyPatchToolCallOutputCallerUnion) AsAny() anyBetaResponse
 }
 
 func (u BetaResponseApplyPatchToolCallOutputCallerUnion) AsDirect() (v BetaResponseApplyPatchToolCallOutputCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseApplyPatchToolCallOutputCallerUnion) AsProgram() (v BetaResponseApplyPatchToolCallOutputCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -6073,12 +6073,12 @@ func (u BetaResponseCodeInterpreterToolCallOutputUnion) AsAny() anyBetaResponseC
 }
 
 func (u BetaResponseCodeInterpreterToolCallOutputUnion) AsLogs() (v BetaResponseCodeInterpreterToolCallOutputLogs) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseCodeInterpreterToolCallOutputUnion) AsImage() (v BetaResponseCodeInterpreterToolCallOutputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -6976,17 +6976,17 @@ func (u BetaResponseContentPartAddedEventPartUnion) AsAny() anyBetaResponseConte
 }
 
 func (u BetaResponseContentPartAddedEventPartUnion) AsOutputText() (v BetaResponseOutputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseContentPartAddedEventPartUnion) AsRefusal() (v BetaResponseOutputRefusal) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseContentPartAddedEventPartUnion) AsReasoningText() (v BetaResponseContentPartAddedEventPartReasoningText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -7134,17 +7134,17 @@ func (u BetaResponseContentPartDoneEventPartUnion) AsAny() anyBetaResponseConten
 }
 
 func (u BetaResponseContentPartDoneEventPartUnion) AsOutputText() (v BetaResponseOutputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseContentPartDoneEventPartUnion) AsRefusal() (v BetaResponseOutputRefusal) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseContentPartDoneEventPartUnion) AsReasoningText() (v BetaResponseContentPartDoneEventPartReasoningText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -7372,12 +7372,12 @@ func (u BetaResponseCustomToolCallCallerUnion) AsAny() anyBetaResponseCustomTool
 }
 
 func (u BetaResponseCustomToolCallCallerUnion) AsDirect() (v BetaResponseCustomToolCallCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseCustomToolCallCallerUnion) AsProgram() (v BetaResponseCustomToolCallCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -7759,12 +7759,12 @@ type BetaResponseCustomToolCallOutputOutputUnion struct {
 }
 
 func (u BetaResponseCustomToolCallOutputOutputUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseCustomToolCallOutputOutputUnion) AsOutputContentList() (v []BetaResponseCustomToolCallOutputOutputOutputContentListItemUnion) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -7852,17 +7852,17 @@ func (u BetaResponseCustomToolCallOutputOutputOutputContentListItemUnion) AsAny(
 }
 
 func (u BetaResponseCustomToolCallOutputOutputOutputContentListItemUnion) AsInputText() (v BetaResponseInputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseCustomToolCallOutputOutputOutputContentListItemUnion) AsInputImage() (v BetaResponseInputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseCustomToolCallOutputOutputOutputContentListItemUnion) AsInputFile() (v BetaResponseInputFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -7965,12 +7965,12 @@ func (u BetaResponseCustomToolCallOutputCallerUnion) AsAny() anyBetaResponseCust
 }
 
 func (u BetaResponseCustomToolCallOutputCallerUnion) AsDirect() (v BetaResponseCustomToolCallOutputCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseCustomToolCallOutputCallerUnion) AsProgram() (v BetaResponseCustomToolCallOutputCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -8794,17 +8794,17 @@ type BetaResponseFileSearchToolCallResultAttributeUnion struct {
 }
 
 func (u BetaResponseFileSearchToolCallResultAttributeUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFileSearchToolCallResultAttributeUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFileSearchToolCallResultAttributeUnion) AsBool() (v bool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -8983,17 +8983,17 @@ func (u BetaResponseFormatTextConfigUnion) AsAny() anyBetaResponseFormatTextConf
 }
 
 func (u BetaResponseFormatTextConfigUnion) AsText() (v BetaResponseFormatTextConfigText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFormatTextConfigUnion) AsJSONSchema() (v BetaResponseFormatTextJSONSchemaConfig) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFormatTextConfigUnion) AsJSONObject() (v BetaResponseFormatTextConfigJSONObject) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -9453,17 +9453,17 @@ func (u BetaResponseFunctionCallOutputItemUnion) AsAny() anyBetaResponseFunction
 }
 
 func (u BetaResponseFunctionCallOutputItemUnion) AsInputText() (v BetaResponseInputTextContent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionCallOutputItemUnion) AsInputImage() (v BetaResponseInputImageContent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionCallOutputItemUnion) AsInputFile() (v BetaResponseInputFileContent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -9755,12 +9755,12 @@ func (u BetaResponseFunctionShellCallOutputContentOutcomeUnion) AsAny() anyBetaR
 }
 
 func (u BetaResponseFunctionShellCallOutputContentOutcomeUnion) AsTimeout() (v BetaResponseFunctionShellCallOutputContentOutcomeTimeout) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionShellCallOutputContentOutcomeUnion) AsExit() (v BetaResponseFunctionShellCallOutputContentOutcomeExit) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -10045,12 +10045,12 @@ func (u BetaResponseFunctionShellToolCallEnvironmentUnion) AsAny() anyBetaRespon
 }
 
 func (u BetaResponseFunctionShellToolCallEnvironmentUnion) AsLocal() (v BetaResponseLocalEnvironment) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionShellToolCallEnvironmentUnion) AsContainerReference() (v BetaResponseContainerReference) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -10140,12 +10140,12 @@ func (u BetaResponseFunctionShellToolCallCallerUnion) AsAny() anyBetaResponseFun
 }
 
 func (u BetaResponseFunctionShellToolCallCallerUnion) AsDirect() (v BetaResponseFunctionShellToolCallCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionShellToolCallCallerUnion) AsProgram() (v BetaResponseFunctionShellToolCallCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -10320,12 +10320,12 @@ func (u BetaResponseFunctionShellToolCallOutputOutputOutcomeUnion) AsAny() anyBe
 }
 
 func (u BetaResponseFunctionShellToolCallOutputOutputOutcomeUnion) AsTimeout() (v BetaResponseFunctionShellToolCallOutputOutputOutcomeTimeout) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionShellToolCallOutputOutputOutcomeUnion) AsExit() (v BetaResponseFunctionShellToolCallOutputOutputOutcomeExit) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -10460,12 +10460,12 @@ func (u BetaResponseFunctionShellToolCallOutputCallerUnion) AsAny() anyBetaRespo
 }
 
 func (u BetaResponseFunctionShellToolCallOutputCallerUnion) AsDirect() (v BetaResponseFunctionShellToolCallOutputCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionShellToolCallOutputCallerUnion) AsProgram() (v BetaResponseFunctionShellToolCallOutputCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -10635,12 +10635,12 @@ func (u BetaResponseFunctionToolCallCallerUnion) AsAny() anyBetaResponseFunction
 }
 
 func (u BetaResponseFunctionToolCallCallerUnion) AsDirect() (v BetaResponseFunctionToolCallCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionToolCallCallerUnion) AsProgram() (v BetaResponseFunctionToolCallCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -10943,12 +10943,12 @@ type BetaResponseFunctionToolCallOutputItemOutputUnion struct {
 }
 
 func (u BetaResponseFunctionToolCallOutputItemOutputUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionToolCallOutputItemOutputUnion) AsOutputContentList() (v []BetaResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -11039,17 +11039,17 @@ func (u BetaResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion) 
 }
 
 func (u BetaResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion) AsInputText() (v BetaResponseInputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion) AsInputImage() (v BetaResponseInputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionToolCallOutputItemOutputOutputContentListItemUnion) AsInputFile() (v BetaResponseInputFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -11163,12 +11163,12 @@ func (u BetaResponseFunctionToolCallOutputItemCallerUnion) AsAny() anyBetaRespon
 }
 
 func (u BetaResponseFunctionToolCallOutputItemCallerUnion) AsDirect() (v BetaResponseFunctionToolCallOutputItemCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionToolCallOutputItemCallerUnion) AsProgram() (v BetaResponseFunctionToolCallOutputItemCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -11326,17 +11326,17 @@ func (u BetaResponseFunctionWebSearchActionUnion) AsAny() anyBetaResponseFunctio
 }
 
 func (u BetaResponseFunctionWebSearchActionUnion) AsSearch() (v BetaResponseFunctionWebSearchActionSearch) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionWebSearchActionUnion) AsOpenPage() (v BetaResponseFunctionWebSearchActionOpenPage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseFunctionWebSearchActionUnion) AsFindInPage() (v BetaResponseFunctionWebSearchActionFindInPage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -12100,17 +12100,17 @@ func (u BetaResponseInputContentUnion) AsAny() anyBetaResponseInputContent {
 }
 
 func (u BetaResponseInputContentUnion) AsInputText() (v BetaResponseInputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputContentUnion) AsInputImage() (v BetaResponseInputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputContentUnion) AsInputFile() (v BetaResponseInputFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -13242,177 +13242,177 @@ func (u BetaResponseInputItemUnion) AsAny() anyBetaResponseInputItem {
 }
 
 func (u BetaResponseInputItemUnion) AsMessage() (v BetaEasyInputMessage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsInputMessage() (v BetaResponseInputItemMessage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsOutputMessage() (v BetaResponseOutputMessage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsFileSearchCall() (v BetaResponseFileSearchToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsComputerCall() (v BetaResponseComputerToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsComputerCallOutput() (v BetaResponseInputItemComputerCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsWebSearchCall() (v BetaResponseFunctionWebSearch) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsFunctionCall() (v BetaResponseFunctionToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsFunctionCallOutput() (v BetaResponseInputItemFunctionCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsAgentMessage() (v BetaResponseInputItemAgentMessage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsMultiAgentCall() (v BetaResponseInputItemMultiAgentCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsMultiAgentCallOutput() (v BetaResponseInputItemMultiAgentCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsToolSearchCall() (v BetaResponseInputItemToolSearchCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsToolSearchOutput() (v BetaResponseToolSearchOutputItemParamResp) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsAdditionalTools() (v BetaResponseInputItemAdditionalTools) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsReasoning() (v BetaResponseReasoningItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsCompaction() (v BetaResponseCompactionItemParamResp) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsImageGenerationCall() (v BetaResponseInputItemImageGenerationCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsCodeInterpreterCall() (v BetaResponseCodeInterpreterToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsLocalShellCall() (v BetaResponseInputItemLocalShellCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsLocalShellCallOutput() (v BetaResponseInputItemLocalShellCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsShellCall() (v BetaResponseInputItemShellCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsShellCallOutput() (v BetaResponseInputItemShellCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsApplyPatchCall() (v BetaResponseInputItemApplyPatchCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsApplyPatchCallOutput() (v BetaResponseInputItemApplyPatchCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsMcpListTools() (v BetaResponseInputItemMcpListTools) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsMcpApprovalRequest() (v BetaResponseInputItemMcpApprovalRequest) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsMcpApprovalResponse() (v BetaResponseInputItemMcpApprovalResponse) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsMcpCall() (v BetaResponseInputItemMcpCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsCustomToolCallOutput() (v BetaResponseCustomToolCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsCustomToolCall() (v BetaResponseCustomToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsCompactionTrigger() (v BetaResponseInputItemCompactionTrigger) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsItemReference() (v BetaResponseInputItemItemReference) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsProgram() (v BetaResponseInputItemProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemUnion) AsProgramOutput() (v BetaResponseInputItemProgramOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -13902,12 +13902,12 @@ type BetaResponseInputItemFunctionCallOutputOutputUnion struct {
 }
 
 func (u BetaResponseInputItemFunctionCallOutputOutputUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemFunctionCallOutputOutputUnion) AsBetaResponseFunctionCallOutputItemArray() (v BetaResponseFunctionCallOutputItemList) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -13989,12 +13989,12 @@ func (u BetaResponseInputItemFunctionCallOutputCallerUnion) AsAny() anyBetaRespo
 }
 
 func (u BetaResponseInputItemFunctionCallOutputCallerUnion) AsDirect() (v BetaResponseInputItemFunctionCallOutputCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemFunctionCallOutputCallerUnion) AsProgram() (v BetaResponseInputItemFunctionCallOutputCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -14146,17 +14146,17 @@ func (u BetaResponseInputItemAgentMessageContentUnion) AsAny() anyBetaResponseIn
 }
 
 func (u BetaResponseInputItemAgentMessageContentUnion) AsInputText() (v BetaResponseInputTextContent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemAgentMessageContentUnion) AsInputImage() (v BetaResponseInputImageContent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemAgentMessageContentUnion) AsEncryptedContent() (v BetaResponseInputItemAgentMessageContentEncryptedContent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -14418,17 +14418,17 @@ func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsAny() 
 }
 
 func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsFileCitation() (v BetaResponseInputItemMultiAgentCallOutputOutputAnnotationFileCitation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsURLCitation() (v BetaResponseInputItemMultiAgentCallOutputOutputAnnotationURLCitation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemMultiAgentCallOutputOutputAnnotationUnion) AsContainerFileCitation() (v BetaResponseInputItemMultiAgentCallOutputOutputAnnotationContainerFileCitation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -14977,12 +14977,12 @@ func (u BetaResponseInputItemShellCallCallerUnion) AsAny() anyBetaResponseInputI
 }
 
 func (u BetaResponseInputItemShellCallCallerUnion) AsDirect() (v BetaResponseInputItemShellCallCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemShellCallCallerUnion) AsProgram() (v BetaResponseInputItemShellCallCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -15081,12 +15081,12 @@ func (u BetaResponseInputItemShellCallEnvironmentUnion) AsAny() anyBetaResponseI
 }
 
 func (u BetaResponseInputItemShellCallEnvironmentUnion) AsLocal() (v BetaLocalEnvironment) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemShellCallEnvironmentUnion) AsContainerReference() (v BetaContainerReference) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -15210,12 +15210,12 @@ func (u BetaResponseInputItemShellCallOutputCallerUnion) AsAny() anyBetaResponse
 }
 
 func (u BetaResponseInputItemShellCallOutputCallerUnion) AsDirect() (v BetaResponseInputItemShellCallOutputCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemShellCallOutputCallerUnion) AsProgram() (v BetaResponseInputItemShellCallOutputCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -15363,17 +15363,17 @@ func (u BetaResponseInputItemApplyPatchCallOperationUnion) AsAny() anyBetaRespon
 }
 
 func (u BetaResponseInputItemApplyPatchCallOperationUnion) AsCreateFile() (v BetaResponseInputItemApplyPatchCallOperationCreateFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemApplyPatchCallOperationUnion) AsDeleteFile() (v BetaResponseInputItemApplyPatchCallOperationDeleteFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemApplyPatchCallOperationUnion) AsUpdateFile() (v BetaResponseInputItemApplyPatchCallOperationUpdateFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -15522,12 +15522,12 @@ func (u BetaResponseInputItemApplyPatchCallCallerUnion) AsAny() anyBetaResponseI
 }
 
 func (u BetaResponseInputItemApplyPatchCallCallerUnion) AsDirect() (v BetaResponseInputItemApplyPatchCallCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemApplyPatchCallCallerUnion) AsProgram() (v BetaResponseInputItemApplyPatchCallCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -15687,12 +15687,12 @@ func (u BetaResponseInputItemApplyPatchCallOutputCallerUnion) AsAny() anyBetaRes
 }
 
 func (u BetaResponseInputItemApplyPatchCallOutputCallerUnion) AsDirect() (v BetaResponseInputItemApplyPatchCallOutputCallerDirect) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseInputItemApplyPatchCallOutputCallerUnion) AsProgram() (v BetaResponseInputItemApplyPatchCallOutputCallerProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -20826,162 +20826,162 @@ func (u BetaResponseItemUnion) AsAny() anyBetaResponseItem {
 }
 
 func (u BetaResponseItemUnion) AsMessage() (v BetaResponseInputMessageItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsOutputMessage() (v BetaResponseOutputMessage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsFileSearchCall() (v BetaResponseFileSearchToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsComputerCall() (v BetaResponseComputerToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsComputerCallOutput() (v BetaResponseComputerToolCallOutputItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsWebSearchCall() (v BetaResponseFunctionWebSearch) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsFunctionCall() (v BetaResponseFunctionToolCallItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsFunctionCallOutput() (v BetaResponseFunctionToolCallOutputItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsAgentMessage() (v BetaResponseItemAgentMessage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsMultiAgentCall() (v BetaResponseItemMultiAgentCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsMultiAgentCallOutput() (v BetaResponseItemMultiAgentCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsToolSearchCall() (v BetaResponseToolSearchCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsToolSearchOutput() (v BetaResponseToolSearchOutputItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsAdditionalTools() (v BetaResponseItemAdditionalTools) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsReasoning() (v BetaResponseReasoningItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsProgram() (v BetaResponseItemProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsProgramOutput() (v BetaResponseItemProgramOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsCompaction() (v BetaResponseCompactionItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsImageGenerationCall() (v BetaResponseItemImageGenerationCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsCodeInterpreterCall() (v BetaResponseCodeInterpreterToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsLocalShellCall() (v BetaResponseItemLocalShellCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsLocalShellCallOutput() (v BetaResponseItemLocalShellCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsShellCall() (v BetaResponseFunctionShellToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsShellCallOutput() (v BetaResponseFunctionShellToolCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsApplyPatchCall() (v BetaResponseApplyPatchToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsApplyPatchCallOutput() (v BetaResponseApplyPatchToolCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsMcpListTools() (v BetaResponseItemMcpListTools) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsMcpApprovalRequest() (v BetaResponseItemMcpApprovalRequest) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsMcpApprovalResponse() (v BetaResponseItemMcpApprovalResponse) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsMcpCall() (v BetaResponseItemMcpCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsCustomToolCall() (v BetaResponseCustomToolCallItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemUnion) AsCustomToolCallOutput() (v BetaResponseCustomToolCallOutputItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -21400,52 +21400,52 @@ func (u BetaResponseItemAgentMessageContentUnion) AsAny() anyBetaResponseItemAge
 }
 
 func (u BetaResponseItemAgentMessageContentUnion) AsInputText() (v BetaResponseInputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemAgentMessageContentUnion) AsOutputText() (v BetaResponseOutputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemAgentMessageContentUnion) AsText() (v BetaResponseItemAgentMessageContentText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemAgentMessageContentUnion) AsSummaryText() (v BetaResponseItemAgentMessageContentSummaryText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemAgentMessageContentUnion) AsReasoningText() (v BetaResponseItemAgentMessageContentReasoningText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemAgentMessageContentUnion) AsRefusal() (v BetaResponseOutputRefusal) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemAgentMessageContentUnion) AsInputImage() (v BetaResponseInputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemAgentMessageContentUnion) AsComputerScreenshot() (v BetaResponseItemAgentMessageContentComputerScreenshot) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemAgentMessageContentUnion) AsInputFile() (v BetaResponseInputFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseItemAgentMessageContentUnion) AsEncryptedContent() (v BetaResponseItemAgentMessageContentEncryptedContent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -23064,157 +23064,157 @@ func (u BetaResponseOutputItemUnion) AsAny() anyBetaResponseOutputItem {
 }
 
 func (u BetaResponseOutputItemUnion) AsMessage() (v BetaResponseOutputMessage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsFileSearchCall() (v BetaResponseFileSearchToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsFunctionCall() (v BetaResponseFunctionToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsFunctionCallOutput() (v BetaResponseFunctionToolCallOutputItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsAgentMessage() (v BetaResponseOutputItemAgentMessage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsMultiAgentCall() (v BetaResponseOutputItemMultiAgentCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsMultiAgentCallOutput() (v BetaResponseOutputItemMultiAgentCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsWebSearchCall() (v BetaResponseFunctionWebSearch) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsComputerCall() (v BetaResponseComputerToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsComputerCallOutput() (v BetaResponseComputerToolCallOutputItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsReasoning() (v BetaResponseReasoningItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsProgram() (v BetaResponseOutputItemProgram) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsProgramOutput() (v BetaResponseOutputItemProgramOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsToolSearchCall() (v BetaResponseToolSearchCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsToolSearchOutput() (v BetaResponseToolSearchOutputItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsAdditionalTools() (v BetaResponseOutputItemAdditionalTools) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsCompaction() (v BetaResponseCompactionItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsImageGenerationCall() (v BetaResponseOutputItemImageGenerationCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsCodeInterpreterCall() (v BetaResponseCodeInterpreterToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsLocalShellCall() (v BetaResponseOutputItemLocalShellCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsLocalShellCallOutput() (v BetaResponseOutputItemLocalShellCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsShellCall() (v BetaResponseFunctionShellToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsShellCallOutput() (v BetaResponseFunctionShellToolCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsApplyPatchCall() (v BetaResponseApplyPatchToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsApplyPatchCallOutput() (v BetaResponseApplyPatchToolCallOutput) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsMcpCall() (v BetaResponseOutputItemMcpCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsMcpListTools() (v BetaResponseOutputItemMcpListTools) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsMcpApprovalRequest() (v BetaResponseOutputItemMcpApprovalRequest) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsMcpApprovalResponse() (v BetaResponseOutputItemMcpApprovalResponse) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsCustomToolCall() (v BetaResponseCustomToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemUnion) AsCustomToolCallOutput() (v BetaResponseCustomToolCallOutputItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -23631,52 +23631,52 @@ func (u BetaResponseOutputItemAgentMessageContentUnion) AsAny() anyBetaResponseO
 }
 
 func (u BetaResponseOutputItemAgentMessageContentUnion) AsInputText() (v BetaResponseInputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemAgentMessageContentUnion) AsOutputText() (v BetaResponseOutputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemAgentMessageContentUnion) AsText() (v BetaResponseOutputItemAgentMessageContentText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemAgentMessageContentUnion) AsSummaryText() (v BetaResponseOutputItemAgentMessageContentSummaryText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemAgentMessageContentUnion) AsReasoningText() (v BetaResponseOutputItemAgentMessageContentReasoningText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemAgentMessageContentUnion) AsRefusal() (v BetaResponseOutputRefusal) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemAgentMessageContentUnion) AsInputImage() (v BetaResponseInputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemAgentMessageContentUnion) AsComputerScreenshot() (v BetaResponseOutputItemAgentMessageContentComputerScreenshot) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemAgentMessageContentUnion) AsInputFile() (v BetaResponseInputFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputItemAgentMessageContentUnion) AsEncryptedContent() (v BetaResponseOutputItemAgentMessageContentEncryptedContent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -24769,12 +24769,12 @@ func (u BetaResponseOutputMessageContentUnion) AsAny() anyBetaResponseOutputMess
 }
 
 func (u BetaResponseOutputMessageContentUnion) AsOutputText() (v BetaResponseOutputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputMessageContentUnion) AsRefusal() (v BetaResponseOutputRefusal) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -25121,22 +25121,22 @@ func (u BetaResponseOutputTextAnnotationUnion) AsAny() anyBetaResponseOutputText
 }
 
 func (u BetaResponseOutputTextAnnotationUnion) AsFileCitation() (v BetaResponseOutputTextAnnotationFileCitation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputTextAnnotationUnion) AsURLCitation() (v BetaResponseOutputTextAnnotationURLCitation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputTextAnnotationUnion) AsContainerFileCitation() (v BetaResponseOutputTextAnnotationContainerFileCitation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseOutputTextAnnotationUnion) AsFilePath() (v BetaResponseOutputTextAnnotationFilePath) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -25740,22 +25740,22 @@ type BetaResponsePromptVariableUnion struct {
 }
 
 func (u BetaResponsePromptVariableUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponsePromptVariableUnion) AsInputText() (v BetaResponseInputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponsePromptVariableUnion) AsInputImage() (v BetaResponseInputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponsePromptVariableUnion) AsInputFile() (v BetaResponseInputFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -27148,267 +27148,267 @@ func (u BetaResponseStreamEventUnion) AsAny() anyBetaResponseStreamEvent {
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseAudioDelta() (v BetaResponseAudioDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseAudioDone() (v BetaResponseAudioDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseAudioTranscriptDelta() (v BetaResponseAudioTranscriptDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseAudioTranscriptDone() (v BetaResponseAudioTranscriptDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseCodeInterpreterCallCodeDelta() (v BetaResponseCodeInterpreterCallCodeDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseCodeInterpreterCallCodeDone() (v BetaResponseCodeInterpreterCallCodeDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseCodeInterpreterCallCompleted() (v BetaResponseCodeInterpreterCallCompletedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseCodeInterpreterCallInProgress() (v BetaResponseCodeInterpreterCallInProgressEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseCodeInterpreterCallInterpreting() (v BetaResponseCodeInterpreterCallInterpretingEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseCompleted() (v BetaResponseCompletedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseContentPartAdded() (v BetaResponseContentPartAddedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseContentPartDone() (v BetaResponseContentPartDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseCreated() (v BetaResponseCreatedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsError() (v BetaResponseErrorEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseFileSearchCallCompleted() (v BetaResponseFileSearchCallCompletedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseFileSearchCallInProgress() (v BetaResponseFileSearchCallInProgressEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseFileSearchCallSearching() (v BetaResponseFileSearchCallSearchingEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseFunctionCallArgumentsDelta() (v BetaResponseFunctionCallArgumentsDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseFunctionCallArgumentsDone() (v BetaResponseFunctionCallArgumentsDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseInProgress() (v BetaResponseInProgressEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseFailed() (v BetaResponseFailedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseIncomplete() (v BetaResponseIncompleteEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseOutputItemAdded() (v BetaResponseOutputItemAddedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseOutputItemDone() (v BetaResponseOutputItemDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseReasoningSummaryPartAdded() (v BetaResponseReasoningSummaryPartAddedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseReasoningSummaryPartDone() (v BetaResponseReasoningSummaryPartDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseReasoningSummaryTextDelta() (v BetaResponseReasoningSummaryTextDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseReasoningSummaryTextDone() (v BetaResponseReasoningSummaryTextDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseReasoningTextDelta() (v BetaResponseReasoningTextDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseReasoningTextDone() (v BetaResponseReasoningTextDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseRefusalDelta() (v BetaResponseRefusalDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseRefusalDone() (v BetaResponseRefusalDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseOutputTextDelta() (v BetaResponseTextDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseOutputTextDone() (v BetaResponseTextDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseWebSearchCallCompleted() (v BetaResponseWebSearchCallCompletedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseWebSearchCallInProgress() (v BetaResponseWebSearchCallInProgressEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseWebSearchCallSearching() (v BetaResponseWebSearchCallSearchingEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseImageGenerationCallCompleted() (v BetaResponseImageGenCallCompletedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseImageGenerationCallGenerating() (v BetaResponseImageGenCallGeneratingEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseImageGenerationCallInProgress() (v BetaResponseImageGenCallInProgressEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseImageGenerationCallPartialImage() (v BetaResponseImageGenCallPartialImageEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseMcpCallArgumentsDelta() (v BetaResponseMcpCallArgumentsDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseMcpCallArgumentsDone() (v BetaResponseMcpCallArgumentsDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseMcpCallCompleted() (v BetaResponseMcpCallCompletedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseMcpCallFailed() (v BetaResponseMcpCallFailedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseMcpCallInProgress() (v BetaResponseMcpCallInProgressEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseMcpListToolsCompleted() (v BetaResponseMcpListToolsCompletedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseMcpListToolsFailed() (v BetaResponseMcpListToolsFailedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseMcpListToolsInProgress() (v BetaResponseMcpListToolsInProgressEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseOutputTextAnnotationAdded() (v BetaResponseOutputTextAnnotationAddedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseQueued() (v BetaResponseQueuedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseCustomToolCallInputDelta() (v BetaResponseCustomToolCallInputDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseCustomToolCallInputDone() (v BetaResponseCustomToolCallInputDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -28505,82 +28505,82 @@ type BetaToolUnion struct {
 }
 
 func (u BetaToolUnion) AsFunction() (v BetaFunctionTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsFileSearch() (v BetaFileSearchTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsComputer() (v BetaComputerTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsComputerUsePreview() (v BetaComputerUsePreviewTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsWebSearch() (v BetaWebSearchTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsMcp() (v BetaToolMcp) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsCodeInterpreter() (v BetaToolCodeInterpreter) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsProgrammaticToolCalling() (v BetaToolProgrammaticToolCalling) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsImageGeneration() (v BetaToolImageGeneration) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsLocalShell() (v BetaToolLocalShell) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsShell() (v BetaFunctionShellTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsCustom() (v BetaCustomTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsNamespace() (v BetaNamespaceTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsToolSearch() (v BetaToolSearchTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsWebSearchPreview() (v BetaWebSearchPreviewTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolUnion) AsApplyPatch() (v BetaApplyPatchTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -28824,12 +28824,12 @@ type BetaToolMcpAllowedToolsUnion struct {
 }
 
 func (u BetaToolMcpAllowedToolsUnion) AsMcpAllowedTools() (v []string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolMcpAllowedToolsUnion) AsMcpToolFilter() (v BetaToolMcpAllowedToolsMcpToolFilter) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -28887,12 +28887,12 @@ type BetaToolMcpRequireApprovalUnion struct {
 }
 
 func (u BetaToolMcpRequireApprovalUnion) AsMcpToolApprovalFilter() (v BetaToolMcpRequireApprovalMcpToolApprovalFilter) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolMcpRequireApprovalUnion) AsMcpToolApprovalSetting() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -29044,12 +29044,12 @@ type BetaToolCodeInterpreterContainerUnion struct {
 }
 
 func (u BetaToolCodeInterpreterContainerUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolCodeInterpreterContainerUnion) AsCodeInterpreterToolAuto() (v BetaToolCodeInterpreterContainerCodeInterpreterToolAuto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -29147,12 +29147,12 @@ func (u BetaToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnio
 }
 
 func (u BetaToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) AsDisabled() (v BetaContainerNetworkPolicyDisabled) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u BetaToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnion) AsAllowlist() (v BetaContainerNetworkPolicyAllowlist) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
