@@ -29,6 +29,9 @@ import (
 // Note, unlike clients, this service does not read variables from the environment
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewVideoService] method instead.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 type VideoService struct {
 	Options []option.RequestOption
 }
@@ -43,6 +46,9 @@ func NewVideoService(opts ...option.RequestOption) (r VideoService) {
 }
 
 // Create a new video generation job from a prompt and optional reference assets.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) New(ctx context.Context, body VideoNewParams, opts ...option.RequestOption) (res *Video, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -64,6 +70,9 @@ func (r *VideoService) NewAndPoll(ctx context.Context, body VideoNewParams, poll
 }
 
 // Fetch the latest metadata for a generated video.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.RequestOption) (res *Video, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -77,6 +86,9 @@ func (r *VideoService) Get(ctx context.Context, videoID string, opts ...option.R
 }
 
 // List recently generated videos for the current project.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) List(ctx context.Context, query VideoListParams, opts ...option.RequestOption) (res *pagination.ConversationCursorPage[Video], err error) {
 	var raw *http.Response
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
@@ -96,11 +108,17 @@ func (r *VideoService) List(ctx context.Context, query VideoListParams, opts ...
 }
 
 // List recently generated videos for the current project.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) ListAutoPaging(ctx context.Context, query VideoListParams, opts ...option.RequestOption) *pagination.ConversationCursorPageAutoPager[Video] {
 	return pagination.NewConversationCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
 // Permanently delete a completed or failed video and its stored assets.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...option.RequestOption) (res *VideoDeleteResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -114,6 +132,9 @@ func (r *VideoService) Delete(ctx context.Context, videoID string, opts ...optio
 }
 
 // Create a character from an uploaded video.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) NewCharacter(ctx context.Context, body VideoNewCharacterParams, opts ...option.RequestOption) (res *VideoNewCharacterResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -125,6 +146,9 @@ func (r *VideoService) NewCharacter(ctx context.Context, body VideoNewCharacterP
 // Download the generated video bytes or a derived preview asset.
 //
 // Streams the rendered video content for the specified video job.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) DownloadContent(ctx context.Context, videoID string, query VideoDownloadContentParams, opts ...option.RequestOption) (res *http.Response, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -140,6 +164,9 @@ func (r *VideoService) DownloadContent(ctx context.Context, videoID string, quer
 
 // Create a new video generation job by editing a source video or existing
 // generated video.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) Edit(ctx context.Context, body VideoEditParams, opts ...option.RequestOption) (res *Video, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -149,6 +176,9 @@ func (r *VideoService) Edit(ctx context.Context, body VideoEditParams, opts ...o
 }
 
 // Create an extension of a completed video.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) Extend(ctx context.Context, body VideoExtendParams, opts ...option.RequestOption) (res *Video, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -158,6 +188,9 @@ func (r *VideoService) Extend(ctx context.Context, body VideoExtendParams, opts 
 }
 
 // Fetch a character.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) GetCharacter(ctx context.Context, characterID string, opts ...option.RequestOption) (res *VideoGetCharacterResponse, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
@@ -171,6 +204,9 @@ func (r *VideoService) GetCharacter(ctx context.Context, characterID string, opt
 }
 
 // Create a remix of a completed video using a refreshed prompt.
+//
+// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+// 2026.
 func (r *VideoService) Remix(ctx context.Context, videoID string, body VideoRemixParams, opts ...option.RequestOption) (res *Video, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
