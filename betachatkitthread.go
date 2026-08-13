@@ -577,12 +577,12 @@ func (u ChatKitResponseOutputTextAnnotationUnion) AsAny() anyChatKitResponseOutp
 }
 
 func (u ChatKitResponseOutputTextAnnotationUnion) AsFile() (v ChatKitResponseOutputTextAnnotationFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitResponseOutputTextAnnotationUnion) AsURL() (v ChatKitResponseOutputTextAnnotationURL) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -787,17 +787,17 @@ func (u ChatKitThreadStatusUnion) AsAny() anyChatKitThreadStatus {
 }
 
 func (u ChatKitThreadStatusUnion) AsActive() (v ChatKitThreadStatusActive) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadStatusUnion) AsLocked() (v ChatKitThreadStatusLocked) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadStatusUnion) AsClosed() (v ChatKitThreadStatusClosed) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1044,32 +1044,32 @@ func (u ChatKitThreadItemListDataUnion) AsAny() anyChatKitThreadItemListData {
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitUserMessage() (v ChatKitThreadUserMessageItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitAssistantMessage() (v ChatKitThreadAssistantMessageItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitWidget() (v ChatKitWidgetItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitClientToolCall() (v ChatKitThreadItemListDataChatKitClientToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitTask() (v ChatKitThreadItemListDataChatKitTask) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitTaskGroup() (v ChatKitThreadItemListDataChatKitTaskGroup) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1342,12 +1342,12 @@ func (u ChatKitThreadUserMessageItemContentUnion) AsAny() anyChatKitThreadUserMe
 }
 
 func (u ChatKitThreadUserMessageItemContentUnion) AsInputText() (v ChatKitThreadUserMessageItemContentInputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadUserMessageItemContentUnion) AsQuotedText() (v ChatKitThreadUserMessageItemContentQuotedText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 

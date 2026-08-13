@@ -104,7 +104,7 @@ func (r UploadPartNewParams) MarshalMultipart() (data []byte, contentType string
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()

@@ -455,7 +455,7 @@ func (r VideoNewParams) MarshalMultipart() (data []byte, contentType string, err
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -536,7 +536,7 @@ func (r VideoNewCharacterParams) MarshalMultipart() (data []byte, contentType st
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -588,7 +588,7 @@ func (r VideoEditParams) MarshalMultipart() (data []byte, contentType string, er
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -661,7 +661,7 @@ func (r VideoExtendParams) MarshalMultipart() (data []byte, contentType string, 
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()

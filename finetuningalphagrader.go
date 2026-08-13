@@ -211,27 +211,27 @@ type FineTuningAlphaGraderValidateResponseGraderUnion struct {
 }
 
 func (u FineTuningAlphaGraderValidateResponseGraderUnion) AsStringCheckGrader() (v StringCheckGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningAlphaGraderValidateResponseGraderUnion) AsTextSimilarityGrader() (v TextSimilarityGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningAlphaGraderValidateResponseGraderUnion) AsPythonGrader() (v PythonGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningAlphaGraderValidateResponseGraderUnion) AsScoreModelGrader() (v ScoreModelGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningAlphaGraderValidateResponseGraderUnion) AsMultiGrader() (v MultiGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 

@@ -415,12 +415,12 @@ func (u ImageEditStreamEventUnion) AsAny() anyImageEditStreamEvent {
 }
 
 func (u ImageEditStreamEventUnion) AsImageEditPartialImage() (v ImageEditPartialImageEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ImageEditStreamEventUnion) AsImageEditCompleted() (v ImageEditCompletedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -713,12 +713,12 @@ func (u ImageGenStreamEventUnion) AsAny() anyImageGenStreamEvent {
 }
 
 func (u ImageGenStreamEventUnion) AsImageGenerationPartialImage() (v ImageGenPartialImageEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ImageGenStreamEventUnion) AsImageGenerationCompleted() (v ImageGenCompletedEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -932,7 +932,7 @@ func (r ImageNewVariationParams) MarshalMultipart() (data []byte, contentType st
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -1066,7 +1066,7 @@ func (r ImageEditParams) MarshalMultipart() (data []byte, contentType string, er
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()

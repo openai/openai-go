@@ -222,7 +222,7 @@ func (r SkillVersionNewParams) MarshalMultipart() (data []byte, contentType stri
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()

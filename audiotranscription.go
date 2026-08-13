@@ -186,12 +186,12 @@ func (u TranscriptionUsageUnion) AsAny() anyTranscriptionUsage {
 }
 
 func (u TranscriptionUsageUnion) AsTokens() (v TranscriptionUsageTokens) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u TranscriptionUsageUnion) AsDuration() (v TranscriptionUsageDuration) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -425,17 +425,17 @@ func (u TranscriptionStreamEventUnion) AsAny() anyTranscriptionStreamEvent {
 }
 
 func (u TranscriptionStreamEventUnion) AsTranscriptTextSegment() (v TranscriptionTextSegmentEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u TranscriptionStreamEventUnion) AsTranscriptTextDelta() (v TranscriptionTextDeltaEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u TranscriptionStreamEventUnion) AsTranscriptTextDone() (v TranscriptionTextDoneEvent) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -789,12 +789,12 @@ type AudioTranscriptionNewResponseUnion struct {
 }
 
 func (u AudioTranscriptionNewResponseUnion) AsTranscription() (v Transcription) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AudioTranscriptionNewResponseUnion) AsTranscriptionVerbose() (v TranscriptionVerbose) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -923,7 +923,7 @@ func (r AudioTranscriptionNewParams) MarshalMultipart() (data []byte, contentTyp
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()

@@ -207,12 +207,12 @@ func (u AnnotationUnion) AsAny() anyAnnotation {
 }
 
 func (u AnnotationUnion) AsFileCitation() (v FileCitationAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AnnotationUnion) AsFilePath() (v FilePathAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -280,12 +280,12 @@ func (u AnnotationDeltaUnion) AsAny() anyAnnotationDelta {
 }
 
 func (u AnnotationDeltaUnion) AsFileCitation() (v FileCitationDeltaAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AnnotationDeltaUnion) AsFilePath() (v FilePathDeltaAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -941,12 +941,12 @@ type MessageAttachmentToolUnion struct {
 }
 
 func (u MessageAttachmentToolUnion) AsCodeInterpreterTool() (v CodeInterpreterTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageAttachmentToolUnion) AsFileSearchTool() (v MessageAttachmentToolFileSearchTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1077,22 +1077,22 @@ func (u MessageContentUnion) AsAny() anyMessageContent {
 }
 
 func (u MessageContentUnion) AsImageFile() (v ImageFileContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsImageURL() (v ImageURLContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsText() (v TextContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsRefusal() (v RefusalContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1170,22 +1170,22 @@ func (u MessageContentDeltaUnion) AsAny() anyMessageContentDelta {
 }
 
 func (u MessageContentDeltaUnion) AsImageFile() (v ImageFileDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsText() (v TextDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsRefusal() (v RefusalDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsImageURL() (v ImageURLDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
