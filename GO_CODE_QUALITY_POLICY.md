@@ -70,6 +70,27 @@ The initial rollout order is:
 Existing build, test, module-tidiness, supported-Go, vulnerability, and public
 API checks remain authoritative throughout the rollout.
 
+## Error handling
+
+Every discarded error must be an intentional, documented ownership decision.
+
+- Return actionable encoding, decoding, request, and finalization errors to the
+  caller. On a successful multipart write, return any error from `Close`.
+- If encoding already failed, close the multipart writer as best-effort cleanup
+  and preserve the original failure. Use `_ = writer.Close()` rather than
+  overwriting or obscuring the primary error.
+- Close HTTP response bodies on every ownership path. If a response is already
+  fully consumed or an earlier request error is being returned, explicitly
+  discard a non-actionable cleanup error with `_ = body.Close()`.
+- Generated union accessors without an error return cannot expose decode errors
+  without changing their public API. Preserve their existing return behavior
+  and make the intentional discard explicit in the Castiron template.
+- In tests, fail setup, fixture writes, finalization, and required cleanup with
+  `t.Fatal`, `t.Error`, or a checked `t.Cleanup` callback, as appropriate. Do
+  not add an inline lint suppression when ordinary error handling is clearer.
+- Fix generated models, resource methods, and generated tests in Castiron;
+  correct repository-owned runtime, examples, and handwritten tests in the SDK.
+
 ## Exceptions
 
 Exceptions are a last resort. They must:
