@@ -5,15 +5,21 @@ set -e
 cd "$(dirname "$0")/.."
 
 echo "==> Checking Go formatting"
-unformatted="$(find . -type d \( -name .git -o -name vendor -o -name .codex-automation \) -prune \
-  -o -type f -name '*.go' -exec gofmt -l {} +)"
+go_files=()
+while IFS= read -r -d '' file; do
+  go_files+=("$file")
+done < <(git ls-files --cached --others --exclude-standard -z -- '*.go' ':(exclude,glob)**/vendor/**')
+
+unformatted=""
+if ((${#go_files[@]} > 0)); then
+  unformatted="$(gofmt -l "${go_files[@]}")"
+fi
 if [[ -n "$unformatted" ]]; then
   echo "The following files are not formatted with gofmt:"
   printf '%s\n' "$unformatted"
   echo
-  find . -type d \( -name .git -o -name vendor -o -name .codex-automation \) -prune \
-    -o -type f -name '*.go' -exec gofmt -d {} +
-  echo "Run ./scripts/format to fix formatting."
+  gofmt -d "${go_files[@]}"
+  echo "Run go fmt ./... in each affected Go module, or gofmt -w on the listed files."
   exit 1
 fi
 
