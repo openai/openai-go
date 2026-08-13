@@ -7,19 +7,19 @@ cd "$(dirname "$0")/.."
 echo "==> Checking Go formatting"
 go_files=()
 while IFS= read -r -d '' file; do
-  [[ -f "$file" ]] || continue
+  [[ -f "$file" && ! -L "$file" ]] || continue
   go_files+=("./$file")
 done < <(git ls-files --cached --others --exclude-standard -z -- '*.go' ':(exclude,glob)**/vendor/**')
 
 unformatted=""
 if ((${#go_files[@]} > 0)); then
-  unformatted="$(gofmt -l "${go_files[@]}")"
+  unformatted="$(gofmt -l -- "${go_files[@]}")"
 fi
 if [[ -n "$unformatted" ]]; then
   echo "The following files are not formatted with gofmt:"
   printf '%s\n' "$unformatted"
   echo
-  gofmt -d "${go_files[@]}"
+  gofmt -d -- "${go_files[@]}"
   echo "Run go fmt ./... in each affected Go module, or gofmt -w on the listed files."
   exit 1
 fi
