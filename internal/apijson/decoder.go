@@ -217,7 +217,8 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 	switch t.Kind() {
 	case reflect.Pointer:
 		inner := t.Elem()
-		innerDecoder := d.typeDecoder(inner)
+		innerBuilder := decoderBuilder{root: isRoot, dateFormat: d.dateFormat}
+		innerDecoder := innerBuilder.typeDecoder(inner)
 
 		return func(n gjson.Result, v reflect.Value, state *decoderState) error {
 			if !v.IsValid() {
