@@ -93,7 +93,7 @@ func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 		bestVariant := -1
 		for i, decoder := range decoders {
 			// Pointers are used to discern JSON object variants from value variants
-			if n.Type != gjson.JSON && decoder.field.Type.Kind() == reflect.Ptr {
+			if n.Type != gjson.JSON && decoder.field.Type.Kind() == reflect.Pointer {
 				continue
 			}
 
