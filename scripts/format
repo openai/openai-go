@@ -5,4 +5,5 @@ set -e
 cd "$(dirname "$0")/.."
 
 echo "==> Running gofmt -w"
-find . -type f -name '*.go' -not -path '*/vendor/*' -exec gofmt -w {} +
+find . -type d \( -name .git -o -name vendor -o -name .codex-automation \) -prune \
+  -o -type f -name '*.go' -exec gofmt -w {} +
