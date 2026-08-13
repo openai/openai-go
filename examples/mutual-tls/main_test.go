@@ -187,8 +187,8 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 			t.Errorf("Authorization header = %q, want %q", got, want)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		if _, err := w.Write([]byte(`{"object":"list","data":[{"id":"test-model","object":"model","created":1,"owned_by":"openai"}]}`)); err != nil {
-			t.Errorf("ResponseWriter.Write() error = %v", err)
+		if _, writeErr := w.Write([]byte(`{"object":"list","data":[{"id":"test-model","object":"model","created":1,"owned_by":"openai"}]}`)); writeErr != nil {
+			t.Errorf("ResponseWriter.Write() error = %v", writeErr)
 		}
 	}))
 	server.TLS = &tls.Config{
@@ -204,12 +204,12 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 			for _, certificate := range state.PeerCertificates[1:] {
 				intermediates.AddCert(certificate)
 			}
-			_, err := state.PeerCertificates[0].Verify(x509.VerifyOptions{
+			_, verifyErr := state.PeerCertificates[0].Verify(x509.VerifyOptions{
 				Roots:         rootPool,
 				Intermediates: intermediates,
 				KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 			})
-			return err
+			return verifyErr
 		},
 	}
 	server.StartTLS()
