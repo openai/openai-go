@@ -63,7 +63,7 @@ func newMutualTLSHTTPClient(certificate tls.Certificate) (*http.Client, error) {
 	}
 	transport := defaultTransport.Clone()
 	transport.Proxy = nil
-	transport.DialTLS = nil
+	transport.DialTLS = nil //nolint:staticcheck // SA1019: Clear an inherited legacy hook so TLSClientConfig remains authoritative.
 	transport.DialTLSContext = nil
 	transport.ResponseHeaderTimeout = responseHeaderTimeout
 
