@@ -83,8 +83,8 @@ Every discarded error must be an intentional, documented ownership decision.
   fully consumed or an earlier request error is being returned, explicitly
   discard a non-actionable cleanup error with `_ = body.Close()`.
 - Generated union accessors without an error return cannot expose decode errors
-  without changing their public API. Preserve their existing zero-value
-  behavior and make the intentional discard explicit in the Castiron template.
+  without changing their public API. Preserve their existing return behavior
+  and make the intentional discard explicit in the Castiron template.
 - In tests, fail setup, fixture writes, finalization, and required cleanup with
   `t.Fatal`, `t.Error`, or a checked `t.Cleanup` callback, as appropriate. Do
   not add an inline lint suppression when ordinary error handling is clearer.
