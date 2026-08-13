@@ -189,8 +189,8 @@ func TestSigV4Fixture(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := json.Unmarshal(contents, &fixture); err != nil {
-		t.Fatal(err)
+	if unmarshalErr := json.Unmarshal(contents, &fixture); unmarshalErr != nil {
+		t.Fatal(unmarshalErr)
 	}
 	if fixture.Service != bedrockService {
 		t.Fatalf("fixture service = %q", fixture.Service)
