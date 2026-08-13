@@ -460,4 +460,7 @@ func TestEncodeMapElementError(t *testing.T) {
 	if _, err := Marshal(values); err == nil {
 		t.Fatalf("Marshal(%v) error = nil, want non-nil", values)
 	}
+	if calls != 1 {
+		t.Fatalf("Marshal marshaler calls = %d, want 1", calls)
+	}
 }
