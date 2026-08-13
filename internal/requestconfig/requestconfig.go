@@ -542,8 +542,8 @@ func (cfg *RequestConfig) Execute() (err error) {
 		case *bytes.Reader:
 			cfg.Request.ContentLength = int64(body.Len())
 			cfg.Request.GetBody = func() (io.ReadCloser, error) {
-				_, seekErr := body.Seek(0, 0)
-				return io.NopCloser(body), seekErr
+				_, err := body.Seek(0, 0)
+				return io.NopCloser(body), err
 			}
 			cfg.Request.Body, _ = cfg.Request.GetBody()
 		default:
@@ -641,10 +641,10 @@ func (cfg *RequestConfig) Execute() (err error) {
 	}
 
 	if res.StatusCode >= 400 {
-		contents, readErr := io.ReadAll(res.Body)
+		contents, err := io.ReadAll(res.Body)
 		_ = res.Body.Close()
-		if readErr != nil {
-			return readErr
+		if err != nil {
+			return err
 		}
 
 		// If there is an APIError, re-populate the response body so that debugging

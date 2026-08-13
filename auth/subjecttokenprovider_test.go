@@ -19,8 +19,8 @@ func TestK8sProviderFileReading(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	tokenContent := "  test-jwt-token-123  \n"
-	if _, writeErr := tmpFile.WriteString(tokenContent); writeErr != nil {
-		t.Fatalf("Failed to write to temp file: %v", writeErr)
+	if _, err := tmpFile.WriteString(tokenContent); err != nil {
+		t.Fatalf("Failed to write to temp file: %v", err)
 	}
 	tmpFile.Close()
 
@@ -95,8 +95,8 @@ func TestK8sProviderEmptyToken(t *testing.T) {
 	}
 	defer os.Remove(tmpFile.Name())
 
-	if _, writeErr := tmpFile.WriteString("   \n   "); writeErr != nil {
-		t.Fatalf("Failed to write to temp file: %v", writeErr)
+	if _, err := tmpFile.WriteString("   \n   "); err != nil {
+		t.Fatalf("Failed to write to temp file: %v", err)
 	}
 	tmpFile.Close()
 

@@ -17,8 +17,7 @@ import (
 )
 
 func TestNewClientOptionsRejectsNilContext(t *testing.T) {
-	var nilContext context.Context
-	_, err := newClientOptions(nilContext, Config{}, time.Now)
+	_, err := newClientOptions(nil, Config{}, time.Now)
 	if err == nil || !strings.Contains(err.Error(), "nil context") {
 		t.Fatalf("error = %v", err)
 	}
@@ -166,21 +165,21 @@ func TestEnvironmentBearerRefreshesAndFailsSafelyWhenRemoved(t *testing.T) {
 	}
 
 	var response *http.Response
-	if requestErr := client.Get(context.Background(), "/models", nil, &response); requestErr != nil {
-		t.Fatal(requestErr)
+	if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
+		t.Fatal(err)
 	}
-	if setEnvErr := os.Setenv("AWS_BEARER_TOKEN_BEDROCK", "second-token"); setEnvErr != nil {
-		t.Fatal(setEnvErr)
+	if err := os.Setenv("AWS_BEARER_TOKEN_BEDROCK", "second-token"); err != nil {
+		t.Fatal(err)
 	}
-	if requestErr := client.Get(context.Background(), "/models", nil, &response); requestErr != nil {
-		t.Fatal(requestErr)
+	if err := client.Get(context.Background(), "/models", nil, &response); err != nil {
+		t.Fatal(err)
 	}
 	if got := strings.Join(authorizations, ","); got != "Bearer first-token,Bearer second-token" {
 		t.Fatalf("authorizations = %q", got)
 	}
 
-	if unsetEnvErr := os.Unsetenv("AWS_BEARER_TOKEN_BEDROCK"); unsetEnvErr != nil {
-		t.Fatal(unsetEnvErr)
+	if err := os.Unsetenv("AWS_BEARER_TOKEN_BEDROCK"); err != nil {
+		t.Fatal(err)
 	}
 	err = client.Get(context.Background(), "/models", nil, &response)
 	if err == nil || !strings.Contains(err.Error(), "failed to resolve a bearer credential") {

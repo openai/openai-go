@@ -65,7 +65,7 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	defaultTLSConfig.ClientSessionCache = inheritedSessionCache
 	defaultTransport.TLSClientConfig = defaultTLSConfig
 	defaultTransport.Proxy = http.ProxyFromEnvironment
-	defaultTransport.DialTLS = func(string, string) (net.Conn, error) { //nolint:staticcheck // SA1019: Exercise clearing an inherited legacy hook.
+	defaultTransport.DialTLS = func(string, string) (net.Conn, error) {
 		return nil, nil
 	}
 	defaultTransport.DialTLSContext = func(context.Context, string, string) (net.Conn, error) {
@@ -94,7 +94,7 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	if transport.Proxy != nil {
 		t.Error("newMutualTLSHTTPClient().Transport.Proxy is non-nil")
 	}
-	if transport.DialTLS != nil { //nolint:staticcheck // SA1019: Verify the legacy hook cannot bypass the dedicated TLS configuration.
+	if transport.DialTLS != nil {
 		t.Error("newMutualTLSHTTPClient().Transport.DialTLS is non-nil")
 	}
 	if transport.DialTLSContext != nil {
@@ -132,7 +132,7 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 	if defaultTransport.Proxy == nil {
 		t.Error("newMutualTLSHTTPClient() cleared http.DefaultTransport.Proxy")
 	}
-	if defaultTransport.DialTLS == nil { //nolint:staticcheck // SA1019: Verify cloning did not mutate the original legacy hook.
+	if defaultTransport.DialTLS == nil {
 		t.Error("newMutualTLSHTTPClient() cleared http.DefaultTransport.DialTLS")
 	}
 	if defaultTransport.DialTLSContext == nil {
@@ -187,8 +187,8 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 			t.Errorf("Authorization header = %q, want %q", got, want)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		if _, writeErr := w.Write([]byte(`{"object":"list","data":[{"id":"test-model","object":"model","created":1,"owned_by":"openai"}]}`)); writeErr != nil {
-			t.Errorf("ResponseWriter.Write() error = %v", writeErr)
+		if _, err := w.Write([]byte(`{"object":"list","data":[{"id":"test-model","object":"model","created":1,"owned_by":"openai"}]}`)); err != nil {
+			t.Errorf("ResponseWriter.Write() error = %v", err)
 		}
 	}))
 	server.TLS = &tls.Config{
@@ -204,12 +204,12 @@ func TestNativeMutualTLSHTTPClient(t *testing.T) {
 			for _, certificate := range state.PeerCertificates[1:] {
 				intermediates.AddCert(certificate)
 			}
-			_, verifyErr := state.PeerCertificates[0].Verify(x509.VerifyOptions{
+			_, err := state.PeerCertificates[0].Verify(x509.VerifyOptions{
 				Roots:         rootPool,
 				Intermediates: intermediates,
 				KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 			})
-			return verifyErr
+			return err
 		},
 	}
 	server.StartTLS()

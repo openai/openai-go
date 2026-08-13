@@ -38,7 +38,7 @@ func WithDebugLog(logger *log.Logger) RequestOption {
 			return resp, err
 		}
 
-		if respBytes, dumpErr := dumpRedactedResponse(resp); dumpErr == nil {
+		if respBytes, err := dumpRedactedResponse(resp); err == nil {
 			logger.Printf("Response Content:\n%s\n", respBytes)
 		}
 

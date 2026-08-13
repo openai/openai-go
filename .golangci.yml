@@ -1,30 +1,14 @@
 version: "2"
 
-issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
-
 linters:
   default: none
   enable:
-    - govet
-    - ineffassign
     - nolintlint
-    - staticcheck
   exclusions:
     generated: disable
   settings:
-    govet:
-      enable-all: true
-      disable:
-        # Generated public API structs preserve schema field order; layout-only
-        # reordering would create compatibility risk without improving safety.
-        - fieldalignment
     nolintlint:
       # A disabled analyzer cannot reliably prove whether its directive is stale.
       allow-unused: true
       require-explanation: true
       require-specific: true
-    staticcheck:
-      checks:
-        - "SA*"

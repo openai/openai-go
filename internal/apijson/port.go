@@ -10,16 +10,16 @@ func Port(from any, to any) error {
 	toVal := reflect.ValueOf(to)
 	fromVal := reflect.ValueOf(from)
 
-	if toVal.Kind() != reflect.Pointer || toVal.IsNil() {
+	if toVal.Kind() != reflect.Ptr || toVal.IsNil() {
 		return fmt.Errorf("destination must be a non-nil pointer")
 	}
 
-	for toVal.Kind() == reflect.Pointer {
+	for toVal.Kind() == reflect.Ptr {
 		toVal = toVal.Elem()
 	}
 	toType := toVal.Type()
 
-	for fromVal.Kind() == reflect.Pointer {
+	for fromVal.Kind() == reflect.Ptr {
 		fromVal = fromVal.Elem()
 	}
 	fromType := fromVal.Type()

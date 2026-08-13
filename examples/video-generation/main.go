@@ -12,7 +12,6 @@ func main() {
 
 	ctx := context.Background()
 
-	//nolint:staticcheck // SA1019: the SDK team keeps this example until the Sora API shuts down on 2026-09-24.
 	video, err := client.Videos.NewAndPoll(ctx, openai.VideoNewParams{
 		Model:  openai.VideoModelSora2,
 		Prompt: "A video of the words 'Thank you' in sparkling letters",

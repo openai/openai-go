@@ -28,6 +28,19 @@ func main() {
 	}
 	fmt.Printf("Uploaded file with ID: %s\n", file.ID)
 
+	fmt.Println("Waiting for file to be processed")
+	for {
+		file, err = client.Files.Get(ctx, file.ID)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("File status: %s\n", file.Status)
+		if file.Status == "processed" {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+
 	fmt.Println("")
 	fmt.Println("==> Starting fine-tuning")
 	fineTune, err := client.FineTuning.Jobs.New(ctx, openai.FineTuningJobNewParams{

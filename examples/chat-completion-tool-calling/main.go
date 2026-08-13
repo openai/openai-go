@@ -61,9 +61,9 @@ func main() {
 		if toolCall.Function.Name == "get_weather" {
 			// Extract the location from the function call arguments
 			var args map[string]interface{}
-			unmarshalErr := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
-			if unmarshalErr != nil {
-				panic(unmarshalErr)
+			err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+			if err != nil {
+				panic(err)
 			}
 			location := args["location"].(string)
 
