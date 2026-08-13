@@ -138,9 +138,12 @@ jobs:
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           # Scan with a patched current toolchain so old standard-library
-          # findings do not obscure dependency findings.
+          # findings do not obscure dependency findings. Resolve the range
+          # against Go's official feed: its vulnerability database can publish
+          # new advisories before setup-go's version mirror lists the fix.
           go-version: '1.26.x'
           check-latest: true
+          go-download-base-url: https://go.dev/dl
 
       - name: Install govulncheck
         # Keep the scanner in its own module so Dependabot can update it without

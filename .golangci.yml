@@ -1,14 +1,32 @@
 version: "2"
 
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
 linters:
   default: none
   enable:
+    - govet
+    - ineffassign
     - nolintlint
+    - staticcheck
   exclusions:
     generated: disable
   settings:
+    govet:
+      enable-all: true
+      disable:
+        # fieldalignment is not part of normal go vet or gopls: layout advice
+        # rarely identifies a real problem and may introduce false sharing.
+        # Reordering exported handwritten or generated structs also breaks
+        # positional literals and compatibility-critical schema field order.
+        - fieldalignment
     nolintlint:
       # A disabled analyzer cannot reliably prove whether its directive is stale.
       allow-unused: true
       require-explanation: true
       require-specific: true
+    staticcheck:
+      checks:
+        - "SA*"

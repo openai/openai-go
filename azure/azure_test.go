@@ -64,12 +64,12 @@ func TestGetAudioMultipartRoute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := mw.WriteField("model", "arbitraryDeployment"); err != nil {
-		t.Fatal(err)
+	if writeErr := mw.WriteField("model", "arbitraryDeployment"); writeErr != nil {
+		t.Fatal(writeErr)
 	}
 
-	if err := mw.Close(); err != nil {
-		t.Fatal(err)
+	if closeErr := mw.Close(); closeErr != nil {
+		t.Fatal(closeErr)
 	}
 
 	req, err := http.NewRequest("POST", "/audio/transcriptions", bytes.NewReader(buff.Bytes()))
@@ -378,11 +378,11 @@ func newMultipartRouteRequest(t *testing.T, route string, model string) *http.Re
 	if _, err = fw.Write([]byte("ignore me")); err != nil {
 		t.Fatal(err)
 	}
-	if err := mw.WriteField("model", model); err != nil {
-		t.Fatal(err)
+	if writeErr := mw.WriteField("model", model); writeErr != nil {
+		t.Fatal(writeErr)
 	}
-	if err := mw.Close(); err != nil {
-		t.Fatal(err)
+	if closeErr := mw.Close(); closeErr != nil {
+		t.Fatal(closeErr)
 	}
 
 	req, err := http.NewRequest("POST", route, bytes.NewReader(buff.Bytes()))

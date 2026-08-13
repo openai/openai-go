@@ -269,9 +269,9 @@ func (e *encoder) newStructTypeEncoder(t reflect.Type) encoderFunc {
 
 		for _, ef := range encoderFields {
 			field := value.FieldByIndex(ef.idx)
-			encoded, err := ef.fn(field)
-			if err != nil {
-				return nil, err
+			encoded, encodeErr := ef.fn(field)
+			if encodeErr != nil {
+				return nil, encodeErr
 			}
 			if ef.tag.defaultValue != nil && (!field.IsValid() || field.IsZero()) {
 				encoded, err = shimjson.Marshal(ef.tag.defaultValue)
