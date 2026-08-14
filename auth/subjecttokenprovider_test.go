@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -47,8 +48,8 @@ func TestK8sProviderDefaultPath(t *testing.T) {
 		return
 	}
 
-	providerErr, ok := err.(*auth.SubjectTokenProviderError)
-	if !ok {
+	var providerErr *auth.SubjectTokenProviderError
+	if !errors.As(err, &providerErr) {
 		t.Fatalf("Expected *SubjectTokenProviderError, got %T", err)
 	}
 
@@ -69,8 +70,8 @@ func TestK8sProviderErrorHandling(t *testing.T) {
 		t.Fatal("Expected error, got nil")
 	}
 
-	providerErr, ok := err.(*auth.SubjectTokenProviderError)
-	if !ok {
+	var providerErr *auth.SubjectTokenProviderError
+	if !errors.As(err, &providerErr) {
 		t.Fatalf("Expected *SubjectTokenProviderError, got %T", err)
 	}
 
@@ -96,8 +97,8 @@ func TestK8sProviderEmptyToken(t *testing.T) {
 		t.Fatal("Expected error for empty token, got nil")
 	}
 
-	providerErr, ok := err.(*auth.SubjectTokenProviderError)
-	if !ok {
+	var providerErr *auth.SubjectTokenProviderError
+	if !errors.As(err, &providerErr) {
 		t.Fatalf("Expected *SubjectTokenProviderError, got %T", err)
 	}
 

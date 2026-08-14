@@ -9,14 +9,28 @@ linters:
   enable:
     - bodyclose
     - errcheck
+    - errchkjson
+    - errorlint
     - govet
     - ineffassign
+    - makezero
     - nilerr
+    - nilnesserr
     - nolintlint
     - staticcheck
   exclusions:
     generated: disable
   settings:
+    errorlint:
+      # Wrapping an existing public error changes its errors.Is/As contract.
+      # Keep format-verb checks disabled until wrapping is reviewed separately.
+      errorf: false
+      allowed-errors:
+        # io.Reader EOF and net/http redirect sentinels require identity.
+        - err: io.EOF
+          fun: (*github.com/openai/openai-go/v3/internal/encoding/json.Decoder).refill
+        - err: net/http.ErrUseLastResponse
+          fun: (*net/http.Client).CheckRedirect
     govet:
       enable-all: true
       disable:
