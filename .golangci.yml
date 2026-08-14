@@ -13,6 +13,7 @@ linters:
     - govet
     - ineffassign
     - nilerr
+    - nilnesserr
     - nolintlint
     - staticcheck
   exclusions:
