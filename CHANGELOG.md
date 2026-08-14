@@ -1,5 +1,46 @@
 # Changelog
 
+## [3.51.0](https://github.com/openai/openai-go/compare/v3.50.0...v3.51.0) (2026-08-14)
+
+
+### Features
+
+* **api:** Add model constants for Daybreak and gpt-5.6-cyber ([df00e97](https://github.com/openai/openai-go/commit/df00e9760b4584dc0986b7383ecb843a9cf67789))
+* **api:** add WebSocket stream IDs ([#776](https://github.com/openai/openai-go/issues/776)) ([0b6316e](https://github.com/openai/openai-go/commit/0b6316e74982b8403aac3854405ed90153dfb2e0))
+* **api:** add workload identity access token issued event ([#766](https://github.com/openai/openai-go/issues/766)) ([c61af30](https://github.com/openai/openai-go/commit/c61af303735128ab487ec1486cdf4983047bcbc0))
+* **api:** deprecate Sora video APIs ([#775](https://github.com/openai/openai-go/issues/775)) ([602c5e4](https://github.com/openai/openai-go/commit/602c5e48c7c51827cd656b4f613f3680bd858a7c))
+* **api:** Ultrafast tier, structured MCP and websocket errors, separate websocket events ([#789](https://github.com/openai/openai-go/issues/789)) ([f8b63fd](https://github.com/openai/openai-go/commit/f8b63fd68a81b586a8227e1032d173b039bd888e))
+
+
+### Bug Fixes
+
+* **api:** Add model constants for Daybreak and gpt-5.6-cyber ([#763](https://github.com/openai/openai-go/issues/763)) ([df00e97](https://github.com/openai/openai-go/commit/df00e9760b4584dc0986b7383ecb843a9cf67789))
+* **api:** clarify audio upload metadata requirements ([#764](https://github.com/openai/openai-go/issues/764)) ([e75e3aa](https://github.com/openai/openai-go/commit/e75e3aaf598f6257445984cfedaf3dd40d790a29))
+* handle ignored errors in generated and runtime Go code ([#778](https://github.com/openai/openai-go/issues/778)) ([ba5f249](https://github.com/openai/openai-go/commit/ba5f249454f32f1ba16a184c2290e64b32cd1bee))
+* recover approved Go correctness analyzers after stacked merges ([#782](https://github.com/openai/openai-go/issues/782)) ([a98cf53](https://github.com/openai/openai-go/commit/a98cf53f7a98a977ab90750f3365c65b276df38d))
+
+
+### Chores
+
+* **api:** No public API change; update file header comments ([#755](https://github.com/openai/openai-go/issues/755)) ([d0a42cc](https://github.com/openai/openai-go/commit/d0a42cc753ffb56b7f268ecc2b9975ca58203215))
+* enforce Go lint suppression hygiene ([#771](https://github.com/openai/openai-go/issues/771)) ([7a3bb22](https://github.com/openai/openai-go/commit/7a3bb22e4b29b489efaecc9e539c44be8fa52d2d))
+* enforce gofmt across the repository ([#770](https://github.com/openai/openai-go/issues/770)) ([41b2f1f](https://github.com/openai/openai-go/commit/41b2f1f4d7b30399d143e6cb456b6c94ce7f51e2)), closes [#771](https://github.com/openai/openai-go/issues/771)
+* remove Stainless attribution and infrastructure ([#765](https://github.com/openai/openai-go/issues/765)) ([9b3d395](https://github.com/openai/openai-go/commit/9b3d395105c3272d0d703f8e1e3e37776f7b42a5))
+
+
+### Documentation
+
+* **api:** describe response stream event unions ([#783](https://github.com/openai/openai-go/issues/783)) ([4cc4021](https://github.com/openai/openai-go/commit/4cc4021ca46415326b78377b07f221e11f979b4d))
+* define Go code quality policy ([#767](https://github.com/openai/openai-go/issues/767)) ([4119aa3](https://github.com/openai/openai-go/commit/4119aa3b19feb7c20757d78d4fd6ed0c09233a9b))
+* define Go ignored-error handling policy ([#777](https://github.com/openai/openai-go/issues/777)) ([1941f81](https://github.com/openai/openai-go/commit/1941f81fa2b3353feec2d39c5dd7fd2b85e58780))
+
+
+### Build System
+
+* **deps:** bump github.com/aws/aws-sdk-go-v2/config in / ([#759](https://github.com/openai/openai-go/issues/759)) ([e8dfbe0](https://github.com/openai/openai-go/commit/e8dfbe097d282f0c0aee74f6aed00a6b4decb7c0))
+* **deps:** bump the codeql group with 2 updates ([#760](https://github.com/openai/openai-go/issues/760)) ([9bbfebf](https://github.com/openai/openai-go/commit/9bbfebf71e721d0575ccbd56d0aaeacc4a4cef10))
+* **deps:** enforce an eight-day dependency cooldown ([#762](https://github.com/openai/openai-go/issues/762)) ([744e64f](https://github.com/openai/openai-go/commit/744e64ff17ba988371534849e22555255d90bb56))
+
 ## [3.50.0](https://github.com/openai/openai-go/compare/v3.49.0...v3.50.0) (2026-08-03)
 
 
