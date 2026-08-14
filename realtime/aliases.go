@@ -49,6 +49,12 @@ const AllModelsComputerUsePreview = shared.AllModelsComputerUsePreview
 // Equals "computer-use-preview-2025-03-11"
 const AllModelsComputerUsePreview2025_03_11 = shared.AllModelsComputerUsePreview2025_03_11
 
+// Equals "gpt-5.5-pro"
+const AllModelsGPT5_5Pro = shared.AllModelsGPT5_5Pro
+
+// Equals "gpt-5.5-pro-2026-04-23"
+const AllModelsGPT5_5Pro2026_04_23 = shared.AllModelsGPT5_5Pro2026_04_23
+
 // Equals "gpt-5-codex"
 const AllModelsGPT5Codex = shared.AllModelsGPT5Codex
 
@@ -84,6 +90,9 @@ const ChatModelGPT5_6Luna = shared.ChatModelGPT5_6Luna
 
 // Equals "gpt-5.5"
 const ChatModelGPT5_5 = shared.ChatModelGPT5_5
+
+// Equals "gpt-5.5-2026-04-23"
+const ChatModelGPT5_5_2026_04_23 = shared.ChatModelGPT5_5_2026_04_23
 
 // Equals "gpt-5.4"
 const ChatModelGPT5_4 = shared.ChatModelGPT5_4
@@ -674,6 +683,12 @@ const ResponsesModelComputerUsePreview = shared.ResponsesModelComputerUsePreview
 
 // Equals "computer-use-preview-2025-03-11"
 const ResponsesModelComputerUsePreview2025_03_11 = shared.ResponsesModelComputerUsePreview2025_03_11
+
+// Equals "gpt-5.5-pro"
+const ResponsesModelGPT5_5Pro = shared.ResponsesModelGPT5_5Pro
+
+// Equals "gpt-5.5-pro-2026-04-23"
+const ResponsesModelGPT5_5Pro2026_04_23 = shared.ResponsesModelGPT5_5Pro2026_04_23
 
 // Equals "gpt-5-codex"
 const ResponsesModelGPT5Codex = shared.ResponsesModelGPT5Codex

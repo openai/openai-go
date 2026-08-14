@@ -214,10 +214,11 @@ type ConversationItemUnion struct {
 	// This field is from variant [responses.ResponseFunctionShellToolCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [responses.ResponseApplyPatchToolCall].
-	Operation         responses.ResponseApplyPatchToolCallOperationUnion `json:"operation"`
-	ServerLabel       string                                             `json:"server_label"`
-	Error             string                                             `json:"error"`
-	ApprovalRequestID string                                             `json:"approval_request_id"`
+	Operation   responses.ResponseApplyPatchToolCallOperationUnion `json:"operation"`
+	ServerLabel string                                             `json:"server_label"`
+	// This field is a union of [string], [responses.McpToolCallErrorUnion]
+	Error             ConversationItemUnionError `json:"error"`
+	ApprovalRequestID string                     `json:"approval_request_id"`
 	// This field is from variant [ConversationItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [ConversationItemMcpApprovalResponse].
@@ -740,6 +741,37 @@ func (r *ConversationItemUnionTools) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// ConversationItemUnionError is an implicit subunion of [ConversationItemUnion].
+// ConversationItemUnionError provides convenient access to the sub-properties of
+// the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [ConversationItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString]
+type ConversationItemUnionError struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	Code     int64  `json:"code"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
+	// This field is from variant [responses.McpToolCallErrorUnion].
+	Content any `json:"content"`
+	JSON    struct {
+		OfString respjson.Field
+		Code     respjson.Field
+		Message  respjson.Field
+		Type     respjson.Field
+		Content  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *ConversationItemUnionError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // An image generation request made by the model.
 type ConversationItemImageGenerationCall struct {
 	// The unique ID of the image generation call.
@@ -1086,7 +1118,7 @@ type ConversationItemMcpCall struct {
 	// corresponding tool call.
 	ApprovalRequestID string `json:"approval_request_id" api:"nullable"`
 	// The error from the tool call, if any.
-	Error string `json:"error" api:"nullable"`
+	Error responses.McpToolCallErrorUnion `json:"error" api:"nullable"`
 	// The output from the tool call.
 	Output string `json:"output" api:"nullable"`
 	// The status of the tool call. One of `in_progress`, `completed`, `incomplete`,

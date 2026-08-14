@@ -130,7 +130,7 @@ func (r *FileService) Delete(ctx context.Context, fileID string, opts ...option.
 	return res, err
 }
 
-// Returns the contents of the specified file.
+// Returns a response containing the contents of the specified file.
 func (r *FileService) Content(ctx context.Context, fileID string, opts ...option.RequestOption) (res *http.Response, err error) {
 	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
 	opts = slices.Concat(preClientOpts, r.Options, opts)
