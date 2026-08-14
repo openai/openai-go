@@ -3725,6 +3725,300 @@ func (r *BetaLocalSkillParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// BetaMcpToolCallErrorUnion contains all possible properties and values from
+// [BetaMcpToolCallErrorMcpProtocolError],
+// [BetaMcpToolCallErrorMcpToolExecutionError], [BetaMcpToolCallErrorHTTPError].
+//
+// Use the [BetaMcpToolCallErrorUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaMcpToolCallErrorUnion struct {
+	Code    int64  `json:"code"`
+	Message string `json:"message"`
+	// Any of "mcp_protocol_error", "mcp_tool_execution_error", "http_error".
+	Type string `json:"type"`
+	// This field is from variant [BetaMcpToolCallErrorMcpToolExecutionError].
+	Content any `json:"content"`
+	JSON    struct {
+		Code    respjson.Field
+		Message respjson.Field
+		Type    respjson.Field
+		Content respjson.Field
+		raw     string
+	} `json:"-"`
+}
+
+// anyBetaMcpToolCallError is implemented by each variant of
+// [BetaMcpToolCallErrorUnion] to add type safety for the return type of
+// [BetaMcpToolCallErrorUnion.AsAny]
+type anyBetaMcpToolCallError interface {
+	implBetaMcpToolCallErrorUnion()
+}
+
+func (BetaMcpToolCallErrorMcpProtocolError) implBetaMcpToolCallErrorUnion()      {}
+func (BetaMcpToolCallErrorMcpToolExecutionError) implBetaMcpToolCallErrorUnion() {}
+func (BetaMcpToolCallErrorHTTPError) implBetaMcpToolCallErrorUnion()             {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaMcpToolCallErrorUnion.AsAny().(type) {
+//	case openai.BetaMcpToolCallErrorMcpProtocolError:
+//	case openai.BetaMcpToolCallErrorMcpToolExecutionError:
+//	case openai.BetaMcpToolCallErrorHTTPError:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaMcpToolCallErrorUnion) AsAny() anyBetaMcpToolCallError {
+	switch u.Type {
+	case "mcp_protocol_error":
+		return u.AsMcpProtocolError()
+	case "mcp_tool_execution_error":
+		return u.AsMcpToolExecutionError()
+	case "http_error":
+		return u.AsHTTPError()
+	}
+	return nil
+}
+
+func (u BetaMcpToolCallErrorUnion) AsMcpProtocolError() (v BetaMcpToolCallErrorMcpProtocolError) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaMcpToolCallErrorUnion) AsMcpToolExecutionError() (v BetaMcpToolCallErrorMcpToolExecutionError) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaMcpToolCallErrorUnion) AsHTTPError() (v BetaMcpToolCallErrorHTTPError) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaMcpToolCallErrorUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaMcpToolCallErrorUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this BetaMcpToolCallErrorUnion to a
+// BetaMcpToolCallErrorUnionParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// BetaMcpToolCallErrorUnionParam.Overrides()
+func (r BetaMcpToolCallErrorUnion) ToParam() BetaMcpToolCallErrorUnionParam {
+	return param.Override[BetaMcpToolCallErrorUnionParam](json.RawMessage(r.RawJSON()))
+}
+
+type BetaMcpToolCallErrorMcpProtocolError struct {
+	Code    int64                     `json:"code" api:"required"`
+	Message string                    `json:"message" api:"required"`
+	Type    constant.McpProtocolError `json:"type" default:"mcp_protocol_error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaMcpToolCallErrorMcpProtocolError) RawJSON() string { return r.JSON.raw }
+func (r *BetaMcpToolCallErrorMcpProtocolError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaMcpToolCallErrorMcpToolExecutionError struct {
+	Content any                            `json:"content" api:"required"`
+	Type    constant.McpToolExecutionError `json:"type" default:"mcp_tool_execution_error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Content     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaMcpToolCallErrorMcpToolExecutionError) RawJSON() string { return r.JSON.raw }
+func (r *BetaMcpToolCallErrorMcpToolExecutionError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaMcpToolCallErrorHTTPError struct {
+	Code    int64              `json:"code" api:"required"`
+	Message string             `json:"message" api:"required"`
+	Type    constant.HTTPError `json:"type" default:"http_error"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaMcpToolCallErrorHTTPError) RawJSON() string { return r.JSON.raw }
+func (r *BetaMcpToolCallErrorHTTPError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func BetaMcpToolCallErrorParamOfMcpProtocolError(code int64, message string) BetaMcpToolCallErrorUnionParam {
+	var mcpProtocolError BetaMcpToolCallErrorMcpProtocolErrorParam
+	mcpProtocolError.Code = code
+	mcpProtocolError.Message = message
+	return BetaMcpToolCallErrorUnionParam{OfMcpProtocolError: &mcpProtocolError}
+}
+
+func BetaMcpToolCallErrorParamOfMcpToolExecutionError(content any) BetaMcpToolCallErrorUnionParam {
+	var mcpToolExecutionError BetaMcpToolCallErrorMcpToolExecutionErrorParam
+	mcpToolExecutionError.Content = content
+	return BetaMcpToolCallErrorUnionParam{OfMcpToolExecutionError: &mcpToolExecutionError}
+}
+
+func BetaMcpToolCallErrorParamOfHTTPError(code int64, message string) BetaMcpToolCallErrorUnionParam {
+	var httpError BetaMcpToolCallErrorHTTPErrorParam
+	httpError.Code = code
+	httpError.Message = message
+	return BetaMcpToolCallErrorUnionParam{OfHTTPError: &httpError}
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaMcpToolCallErrorUnionParam struct {
+	OfMcpProtocolError      *BetaMcpToolCallErrorMcpProtocolErrorParam      `json:",omitzero,inline"`
+	OfMcpToolExecutionError *BetaMcpToolCallErrorMcpToolExecutionErrorParam `json:",omitzero,inline"`
+	OfHTTPError             *BetaMcpToolCallErrorHTTPErrorParam             `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaMcpToolCallErrorUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfMcpProtocolError, u.OfMcpToolExecutionError, u.OfHTTPError)
+}
+func (u *BetaMcpToolCallErrorUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+func (u *BetaMcpToolCallErrorUnionParam) asAny() any {
+	if !param.IsOmitted(u.OfMcpProtocolError) {
+		return u.OfMcpProtocolError
+	} else if !param.IsOmitted(u.OfMcpToolExecutionError) {
+		return u.OfMcpToolExecutionError
+	} else if !param.IsOmitted(u.OfHTTPError) {
+		return u.OfHTTPError
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaMcpToolCallErrorUnionParam) GetContent() *any {
+	if vt := u.OfMcpToolExecutionError; vt != nil {
+		return &vt.Content
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaMcpToolCallErrorUnionParam) GetCode() *int64 {
+	if vt := u.OfMcpProtocolError; vt != nil {
+		return (*int64)(&vt.Code)
+	} else if vt := u.OfHTTPError; vt != nil {
+		return (*int64)(&vt.Code)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaMcpToolCallErrorUnionParam) GetMessage() *string {
+	if vt := u.OfMcpProtocolError; vt != nil {
+		return (*string)(&vt.Message)
+	} else if vt := u.OfHTTPError; vt != nil {
+		return (*string)(&vt.Message)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaMcpToolCallErrorUnionParam) GetType() *string {
+	if vt := u.OfMcpProtocolError; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfMcpToolExecutionError; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfHTTPError; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaMcpToolCallErrorUnionParam](
+		"type",
+		apijson.Discriminator[BetaMcpToolCallErrorMcpProtocolErrorParam]("mcp_protocol_error"),
+		apijson.Discriminator[BetaMcpToolCallErrorMcpToolExecutionErrorParam]("mcp_tool_execution_error"),
+		apijson.Discriminator[BetaMcpToolCallErrorHTTPErrorParam]("http_error"),
+	)
+}
+
+// The properties Code, Message, Type are required.
+type BetaMcpToolCallErrorMcpProtocolErrorParam struct {
+	Code    int64  `json:"code" api:"required"`
+	Message string `json:"message" api:"required"`
+	// This field can be elided, and will marshal its zero value as
+	// "mcp_protocol_error".
+	Type constant.McpProtocolError `json:"type" default:"mcp_protocol_error"`
+	paramObj
+}
+
+func (r BetaMcpToolCallErrorMcpProtocolErrorParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaMcpToolCallErrorMcpProtocolErrorParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaMcpToolCallErrorMcpProtocolErrorParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Content, Type are required.
+type BetaMcpToolCallErrorMcpToolExecutionErrorParam struct {
+	Content any `json:"content,omitzero" api:"required"`
+	// This field can be elided, and will marshal its zero value as
+	// "mcp_tool_execution_error".
+	Type constant.McpToolExecutionError `json:"type" default:"mcp_tool_execution_error"`
+	paramObj
+}
+
+func (r BetaMcpToolCallErrorMcpToolExecutionErrorParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaMcpToolCallErrorMcpToolExecutionErrorParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaMcpToolCallErrorMcpToolExecutionErrorParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The properties Code, Message, Type are required.
+type BetaMcpToolCallErrorHTTPErrorParam struct {
+	Code    int64  `json:"code" api:"required"`
+	Message string `json:"message" api:"required"`
+	// This field can be elided, and will marshal its zero value as "http_error".
+	Type constant.HTTPError `json:"type" default:"http_error"`
+	paramObj
+}
+
+func (r BetaMcpToolCallErrorHTTPErrorParam) MarshalJSON() (data []byte, err error) {
+	type shadow BetaMcpToolCallErrorHTTPErrorParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *BetaMcpToolCallErrorHTTPErrorParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Groups function/custom tools under a shared namespace.
 type BetaNamespaceTool struct {
 	// A description of the namespace shown to the model.
@@ -4211,6 +4505,10 @@ type BetaResponse struct {
 	//     Responses or Chat Completions. The response will show `service_tier=priority`
 	//     regardless of if you specify `service_tier=fast` or `priority` in your
 	//     request.
+	//   - If set to 'ultrafast', then the request will be processed with the
+	//     access-controlled Ultrafast Processing service tier. This tier is currently
+	//     available for `gpt-5.6-sol`; a response served through it will show
+	//     `service_tier=ultrafast`.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -4218,7 +4516,7 @@ type BetaResponse struct {
 	// request. This response value may be different from the value set in the
 	// parameter.
 	//
-	// Any of "auto", "default", "flex", "scale", "priority", "fast".
+	// Any of "auto", "default", "flex", "scale", "priority", "fast", "ultrafast".
 	ServiceTier BetaResponseServiceTier `json:"service_tier" api:"nullable"`
 	// The status of the response generation. One of `completed`, `failed`,
 	// `in_progress`, `cancelled`, `queued`, or `incomplete`.
@@ -4373,6 +4671,7 @@ const (
 	BetaResponseModelGPT5_6Terra                      BetaResponseModel = "gpt-5.6-terra"
 	BetaResponseModelGPT5_6Luna                       BetaResponseModel = "gpt-5.6-luna"
 	BetaResponseModelGPT5_5                           BetaResponseModel = "gpt-5.5"
+	BetaResponseModelGPT5_5_2026_04_23                BetaResponseModel = "gpt-5.5-2026-04-23"
 	BetaResponseModelGPT5_4                           BetaResponseModel = "gpt-5.4"
 	BetaResponseModelGPT5_4Mini                       BetaResponseModel = "gpt-5.4-mini"
 	BetaResponseModelGPT5_4Nano                       BetaResponseModel = "gpt-5.4-nano"
@@ -4461,6 +4760,8 @@ const (
 	BetaResponseModelO4MiniDeepResearch2025_06_26     BetaResponseModel = "o4-mini-deep-research-2025-06-26"
 	BetaResponseModelComputerUsePreview               BetaResponseModel = "computer-use-preview"
 	BetaResponseModelComputerUsePreview2025_03_11     BetaResponseModel = "computer-use-preview-2025-03-11"
+	BetaResponseModelGPT5_5Pro                        BetaResponseModel = "gpt-5.5-pro"
+	BetaResponseModelGPT5_5Pro2026_04_23              BetaResponseModel = "gpt-5.5-pro-2026-04-23"
 	BetaResponseModelGPT5Codex                        BetaResponseModel = "gpt-5-codex"
 	BetaResponseModelGPT5Pro                          BetaResponseModel = "gpt-5-pro"
 	BetaResponseModelGPT5Pro2025_10_06                BetaResponseModel = "gpt-5-pro-2025-10-06"
@@ -5027,6 +5328,10 @@ func (r *BetaResponseReasoning) UnmarshalJSON(data []byte) error {
 //     Responses or Chat Completions. The response will show `service_tier=priority`
 //     regardless of if you specify `service_tier=fast` or `priority` in your
 //     request.
+//   - If set to 'ultrafast', then the request will be processed with the
+//     access-controlled Ultrafast Processing service tier. This tier is currently
+//     available for `gpt-5.6-sol`; a response served through it will show
+//     `service_tier=ultrafast`.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -5036,12 +5341,13 @@ func (r *BetaResponseReasoning) UnmarshalJSON(data []byte) error {
 type BetaResponseServiceTier string
 
 const (
-	BetaResponseServiceTierAuto     BetaResponseServiceTier = "auto"
-	BetaResponseServiceTierDefault  BetaResponseServiceTier = "default"
-	BetaResponseServiceTierFlex     BetaResponseServiceTier = "flex"
-	BetaResponseServiceTierScale    BetaResponseServiceTier = "scale"
-	BetaResponseServiceTierPriority BetaResponseServiceTier = "priority"
-	BetaResponseServiceTierFast     BetaResponseServiceTier = "fast"
+	BetaResponseServiceTierAuto      BetaResponseServiceTier = "auto"
+	BetaResponseServiceTierDefault   BetaResponseServiceTier = "default"
+	BetaResponseServiceTierFlex      BetaResponseServiceTier = "flex"
+	BetaResponseServiceTierScale     BetaResponseServiceTier = "scale"
+	BetaResponseServiceTierPriority  BetaResponseServiceTier = "priority"
+	BetaResponseServiceTierFast      BetaResponseServiceTier = "fast"
+	BetaResponseServiceTierUltrafast BetaResponseServiceTier = "ultrafast"
 )
 
 // The truncation strategy to use for the model response.
@@ -13029,10 +13335,11 @@ type BetaResponseInputItemUnion struct {
 	// This field is from variant [BetaResponseInputItemShellCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [BetaResponseInputItemApplyPatchCall].
-	Operation         BetaResponseInputItemApplyPatchCallOperationUnion `json:"operation"`
-	ServerLabel       string                                            `json:"server_label"`
-	Error             string                                            `json:"error"`
-	ApprovalRequestID string                                            `json:"approval_request_id"`
+	Operation   BetaResponseInputItemApplyPatchCallOperationUnion `json:"operation"`
+	ServerLabel string                                            `json:"server_label"`
+	// This field is a union of [string], [BetaMcpToolCallErrorUnion]
+	Error             BetaResponseInputItemUnionError `json:"error"`
+	ApprovalRequestID string                          `json:"approval_request_id"`
 	// This field is from variant [BetaResponseInputItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [BetaResponseInputItemMcpApprovalResponse].
@@ -13680,6 +13987,37 @@ type BetaResponseInputItemUnionTools struct {
 }
 
 func (r *BetaResponseInputItemUnionTools) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseInputItemUnionError is an implicit subunion of
+// [BetaResponseInputItemUnion]. BetaResponseInputItemUnionError provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseInputItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString]
+type BetaResponseInputItemUnionError struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	Code     int64  `json:"code"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
+	// This field is from variant [BetaMcpToolCallErrorUnion].
+	Content any `json:"content"`
+	JSON    struct {
+		OfString respjson.Field
+		Code     respjson.Field
+		Message  respjson.Field
+		Type     respjson.Field
+		Content  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *BetaResponseInputItemUnionError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -15939,7 +16277,7 @@ type BetaResponseInputItemMcpCall struct {
 	// corresponding tool call.
 	ApprovalRequestID string `json:"approval_request_id" api:"nullable"`
 	// The error from the tool call, if any.
-	Error string `json:"error" api:"nullable"`
+	Error BetaMcpToolCallErrorUnion `json:"error" api:"nullable"`
 	// The output from the tool call.
 	Output string `json:"output" api:"nullable"`
 	// The status of the tool call. One of `in_progress`, `completed`, `incomplete`,
@@ -17040,16 +17378,6 @@ func (u BetaResponseInputItemUnionParam) GetServerLabel() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u BetaResponseInputItemUnionParam) GetError() *string {
-	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
-		return &vt.Error.Value
-	} else if vt := u.OfMcpCall; vt != nil && vt.Error.Valid() {
-		return &vt.Error.Value
-	}
-	return nil
-}
-
-// Returns a pointer to the underlying variant's property, if present.
 func (u BetaResponseInputItemUnionParam) GetApprovalRequestID() *string {
 	if vt := u.OfMcpApprovalResponse; vt != nil {
 		return (*string)(&vt.ApprovalRequestID)
@@ -17790,6 +18118,72 @@ type betaResponseInputItemUnionParamTools struct{ any }
 //	    fmt.Errorf("not present")
 //	}
 func (u betaResponseInputItemUnionParamTools) AsAny() any { return u.any }
+
+// Returns a subunion which exports methods to access subproperties
+//
+// Or use AsAny() to get the underlying value
+func (u BetaResponseInputItemUnionParam) GetError() (res betaResponseInputItemUnionParamError) {
+	if vt := u.OfMcpListTools; vt != nil && vt.Error.Valid() {
+		res.any = &vt.Error.Value
+	} else if vt := u.OfMcpCall; vt != nil {
+		res.any = vt.Error.asAny()
+	}
+	return
+}
+
+// Can have the runtime types [*string],
+// [*BetaMcpToolCallErrorMcpProtocolErrorParam],
+// [*BetaMcpToolCallErrorMcpToolExecutionErrorParam],
+// [*BetaMcpToolCallErrorHTTPErrorParam]
+type betaResponseInputItemUnionParamError struct{ any }
+
+// Use the following switch statement to get the type of the union:
+//
+//	switch u.AsAny().(type) {
+//	case *string:
+//	case *openai.BetaMcpToolCallErrorMcpProtocolErrorParam:
+//	case *openai.BetaMcpToolCallErrorMcpToolExecutionErrorParam:
+//	case *openai.BetaMcpToolCallErrorHTTPErrorParam:
+//	default:
+//	    fmt.Errorf("not present")
+//	}
+func (u betaResponseInputItemUnionParamError) AsAny() any { return u.any }
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseInputItemUnionParamError) GetCode() *int64 {
+	switch vt := u.any.(type) {
+	case *BetaMcpToolCallErrorUnionParam:
+		return vt.GetCode()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseInputItemUnionParamError) GetMessage() *string {
+	switch vt := u.any.(type) {
+	case *BetaMcpToolCallErrorUnionParam:
+		return vt.GetMessage()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseInputItemUnionParamError) GetType() *string {
+	switch vt := u.any.(type) {
+	case *BetaMcpToolCallErrorUnionParam:
+		return vt.GetType()
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u betaResponseInputItemUnionParamError) GetContent() *any {
+	switch vt := u.any.(type) {
+	case *BetaMcpToolCallErrorUnionParam:
+		return vt.GetContent()
+	}
+	return nil
+}
 
 func init() {
 	apijson.RegisterUnion[BetaResponseInputItemUnionParam](
@@ -19978,12 +20372,12 @@ type BetaResponseInputItemMcpCallParam struct {
 	// a subsequent `mcp_approval_response` input to approve or reject the
 	// corresponding tool call.
 	ApprovalRequestID param.Opt[string] `json:"approval_request_id,omitzero"`
-	// The error from the tool call, if any.
-	Error param.Opt[string] `json:"error,omitzero"`
 	// The output from the tool call.
 	Output param.Opt[string] `json:"output,omitzero"`
 	// The agent that produced this item.
 	Agent BetaResponseInputItemMcpCallAgentParam `json:"agent,omitzero"`
+	// The error from the tool call, if any.
+	Error BetaMcpToolCallErrorUnionParam `json:"error,omitzero"`
 	// The status of the tool call. One of `in_progress`, `completed`, `incomplete`,
 	// `calling`, or `failed`.
 	//
@@ -20625,10 +21019,11 @@ type BetaResponseItemUnion struct {
 	// This field is from variant [BetaResponseFunctionShellToolCallOutput].
 	MaxOutputLength int64 `json:"max_output_length"`
 	// This field is from variant [BetaResponseApplyPatchToolCall].
-	Operation         BetaResponseApplyPatchToolCallOperationUnion `json:"operation"`
-	ServerLabel       string                                       `json:"server_label"`
-	Error             string                                       `json:"error"`
-	ApprovalRequestID string                                       `json:"approval_request_id"`
+	Operation   BetaResponseApplyPatchToolCallOperationUnion `json:"operation"`
+	ServerLabel string                                       `json:"server_label"`
+	// This field is a union of [string], [BetaMcpToolCallErrorUnion]
+	Error             BetaResponseItemUnionError `json:"error"`
+	ApprovalRequestID string                     `json:"approval_request_id"`
 	// This field is from variant [BetaResponseItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [BetaResponseItemMcpApprovalResponse].
@@ -21240,6 +21635,37 @@ type BetaResponseItemUnionTools struct {
 }
 
 func (r *BetaResponseItemUnionTools) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseItemUnionError is an implicit subunion of [BetaResponseItemUnion].
+// BetaResponseItemUnionError provides convenient access to the sub-properties of
+// the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString]
+type BetaResponseItemUnionError struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	Code     int64  `json:"code"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
+	// This field is from variant [BetaMcpToolCallErrorUnion].
+	Content any `json:"content"`
+	JSON    struct {
+		OfString respjson.Field
+		Code     respjson.Field
+		Message  respjson.Field
+		Type     respjson.Field
+		Content  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *BetaResponseItemUnionError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -22278,7 +22704,7 @@ type BetaResponseItemMcpCall struct {
 	// corresponding tool call.
 	ApprovalRequestID string `json:"approval_request_id" api:"nullable"`
 	// The error from the tool call, if any.
-	Error string `json:"error" api:"nullable"`
+	Error BetaMcpToolCallErrorUnion `json:"error" api:"nullable"`
 	// The output from the tool call.
 	Output string `json:"output" api:"nullable"`
 	// The status of the tool call. One of `in_progress`, `completed`, `incomplete`,
@@ -22867,7 +23293,8 @@ type BetaResponseOutputItemUnion struct {
 	Operation         BetaResponseApplyPatchToolCallOperationUnion `json:"operation"`
 	ServerLabel       string                                       `json:"server_label"`
 	ApprovalRequestID string                                       `json:"approval_request_id"`
-	Error             string                                       `json:"error"`
+	// This field is a union of [BetaMcpToolCallErrorUnion], [string]
+	Error BetaResponseOutputItemUnionError `json:"error"`
 	// This field is from variant [BetaResponseOutputItemMcpApprovalResponse].
 	Approve bool `json:"approve"`
 	// This field is from variant [BetaResponseOutputItemMcpApprovalResponse].
@@ -23469,6 +23896,37 @@ type BetaResponseOutputItemUnionTools struct {
 }
 
 func (r *BetaResponseOutputItemUnionTools) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseOutputItemUnionError is an implicit subunion of
+// [BetaResponseOutputItemUnion]. BetaResponseOutputItemUnionError provides
+// convenient access to the sub-properties of the union.
+//
+// For type safety it is recommended to directly use a variant of the
+// [BetaResponseOutputItemUnion].
+//
+// If the underlying value is not a json object, one of the following properties
+// will be valid: OfString]
+type BetaResponseOutputItemUnionError struct {
+	// This field will be present if the value is a [string] instead of an object.
+	OfString string `json:",inline"`
+	Code     int64  `json:"code"`
+	Message  string `json:"message"`
+	Type     string `json:"type"`
+	// This field is from variant [BetaMcpToolCallErrorUnion].
+	Content any `json:"content"`
+	JSON    struct {
+		OfString respjson.Field
+		Code     respjson.Field
+		Message  respjson.Field
+		Type     respjson.Field
+		Content  respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+func (r *BetaResponseOutputItemUnionError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -24333,7 +24791,7 @@ type BetaResponseOutputItemMcpCall struct {
 	// corresponding tool call.
 	ApprovalRequestID string `json:"approval_request_id" api:"nullable"`
 	// The error from the tool call, if any.
-	Error string `json:"error" api:"nullable"`
+	Error BetaMcpToolCallErrorUnion `json:"error" api:"nullable"`
 	// The output from the tool call.
 	Output string `json:"output" api:"nullable"`
 	// The status of the tool call. One of `in_progress`, `completed`, `incomplete`,
@@ -24564,7 +25022,10 @@ func (r *BetaResponseOutputItemMcpApprovalResponseAgent) UnmarshalJSON(data []by
 
 // Emitted when a new output item is added.
 type BetaResponseOutputItemAddedEvent struct {
-	// The output item that was added.
+	// The output item that was added. For reasoning items, `encrypted_content` may be
+	// incomplete while the item is in progress. Use the reasoning item from the
+	// corresponding `response.output_item.done` event when passing it as input to a
+	// subsequent request.
 	Item BetaResponseOutputItemUnion `json:"item" api:"required"`
 	// The index of the output item that was added.
 	OutputIndex int64 `json:"output_index" api:"required"`
@@ -25605,8 +26066,8 @@ func (r *BetaResponseOutputTextLogprobTopLogprobParam) UnmarshalJSON(data []byte
 
 // Emitted when an annotation is added to output text content.
 type BetaResponseOutputTextAnnotationAddedEvent struct {
-	// The annotation object being added. (See annotation schema for details.)
-	Annotation any `json:"annotation" api:"required"`
+	// An annotation that applies to a span of output text.
+	Annotation BetaResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation" api:"required"`
 	// The index of the annotation within the content part.
 	AnnotationIndex int64 `json:"annotation_index" api:"required"`
 	// The index of the content part within the output item.
@@ -25639,6 +26100,240 @@ type BetaResponseOutputTextAnnotationAddedEvent struct {
 // Returns the unmodified JSON received from the API
 func (r BetaResponseOutputTextAnnotationAddedEvent) RawJSON() string { return r.JSON.raw }
 func (r *BetaResponseOutputTextAnnotationAddedEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaResponseOutputTextAnnotationAddedEventAnnotationUnion contains all possible
+// properties and values from
+// [BetaResponseOutputTextAnnotationAddedEventAnnotationFileCitation],
+// [BetaResponseOutputTextAnnotationAddedEventAnnotationURLCitation],
+// [BetaResponseOutputTextAnnotationAddedEventAnnotationContainerFileCitation],
+// [BetaResponseOutputTextAnnotationAddedEventAnnotationFilePath].
+//
+// Use the [BetaResponseOutputTextAnnotationAddedEventAnnotationUnion.AsAny] method
+// to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponseOutputTextAnnotationAddedEventAnnotationUnion struct {
+	FileID   string `json:"file_id"`
+	Filename string `json:"filename"`
+	Index    int64  `json:"index"`
+	// Any of "file_citation", "url_citation", "container_file_citation", "file_path".
+	Type       string `json:"type"`
+	EndIndex   int64  `json:"end_index"`
+	StartIndex int64  `json:"start_index"`
+	// This field is from variant
+	// [BetaResponseOutputTextAnnotationAddedEventAnnotationURLCitation].
+	Title string `json:"title"`
+	// This field is from variant
+	// [BetaResponseOutputTextAnnotationAddedEventAnnotationURLCitation].
+	URL string `json:"url"`
+	// This field is from variant
+	// [BetaResponseOutputTextAnnotationAddedEventAnnotationContainerFileCitation].
+	ContainerID string `json:"container_id"`
+	JSON        struct {
+		FileID      respjson.Field
+		Filename    respjson.Field
+		Index       respjson.Field
+		Type        respjson.Field
+		EndIndex    respjson.Field
+		StartIndex  respjson.Field
+		Title       respjson.Field
+		URL         respjson.Field
+		ContainerID respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// anyBetaResponseOutputTextAnnotationAddedEventAnnotation is implemented by each
+// variant of [BetaResponseOutputTextAnnotationAddedEventAnnotationUnion] to add
+// type safety for the return type of
+// [BetaResponseOutputTextAnnotationAddedEventAnnotationUnion.AsAny]
+type anyBetaResponseOutputTextAnnotationAddedEventAnnotation interface {
+	implBetaResponseOutputTextAnnotationAddedEventAnnotationUnion()
+}
+
+func (BetaResponseOutputTextAnnotationAddedEventAnnotationFileCitation) implBetaResponseOutputTextAnnotationAddedEventAnnotationUnion() {
+}
+func (BetaResponseOutputTextAnnotationAddedEventAnnotationURLCitation) implBetaResponseOutputTextAnnotationAddedEventAnnotationUnion() {
+}
+func (BetaResponseOutputTextAnnotationAddedEventAnnotationContainerFileCitation) implBetaResponseOutputTextAnnotationAddedEventAnnotationUnion() {
+}
+func (BetaResponseOutputTextAnnotationAddedEventAnnotationFilePath) implBetaResponseOutputTextAnnotationAddedEventAnnotationUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponseOutputTextAnnotationAddedEventAnnotationUnion.AsAny().(type) {
+//	case openai.BetaResponseOutputTextAnnotationAddedEventAnnotationFileCitation:
+//	case openai.BetaResponseOutputTextAnnotationAddedEventAnnotationURLCitation:
+//	case openai.BetaResponseOutputTextAnnotationAddedEventAnnotationContainerFileCitation:
+//	case openai.BetaResponseOutputTextAnnotationAddedEventAnnotationFilePath:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponseOutputTextAnnotationAddedEventAnnotationUnion) AsAny() anyBetaResponseOutputTextAnnotationAddedEventAnnotation {
+	switch u.Type {
+	case "file_citation":
+		return u.AsFileCitation()
+	case "url_citation":
+		return u.AsURLCitation()
+	case "container_file_citation":
+		return u.AsContainerFileCitation()
+	case "file_path":
+		return u.AsFilePath()
+	}
+	return nil
+}
+
+func (u BetaResponseOutputTextAnnotationAddedEventAnnotationUnion) AsFileCitation() (v BetaResponseOutputTextAnnotationAddedEventAnnotationFileCitation) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseOutputTextAnnotationAddedEventAnnotationUnion) AsURLCitation() (v BetaResponseOutputTextAnnotationAddedEventAnnotationURLCitation) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseOutputTextAnnotationAddedEventAnnotationUnion) AsContainerFileCitation() (v BetaResponseOutputTextAnnotationAddedEventAnnotationContainerFileCitation) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseOutputTextAnnotationAddedEventAnnotationUnion) AsFilePath() (v BetaResponseOutputTextAnnotationAddedEventAnnotationFilePath) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponseOutputTextAnnotationAddedEventAnnotationUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *BetaResponseOutputTextAnnotationAddedEventAnnotationUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A citation to a file.
+type BetaResponseOutputTextAnnotationAddedEventAnnotationFileCitation struct {
+	// The ID of the file.
+	FileID string `json:"file_id" api:"required"`
+	// The filename of the file cited.
+	Filename string `json:"filename" api:"required"`
+	// The index of the file in the list of files.
+	Index int64 `json:"index" api:"required"`
+	// The type of the file citation. Always `file_citation`.
+	Type constant.FileCitation `json:"type" default:"file_citation"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		FileID      respjson.Field
+		Filename    respjson.Field
+		Index       respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseOutputTextAnnotationAddedEventAnnotationFileCitation) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseOutputTextAnnotationAddedEventAnnotationFileCitation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A citation for a web resource used to generate a model response.
+type BetaResponseOutputTextAnnotationAddedEventAnnotationURLCitation struct {
+	// The index of the last character of the URL citation in the message.
+	EndIndex int64 `json:"end_index" api:"required"`
+	// The index of the first character of the URL citation in the message.
+	StartIndex int64 `json:"start_index" api:"required"`
+	// The title of the web resource.
+	Title string `json:"title" api:"required"`
+	// The type of the URL citation. Always `url_citation`.
+	Type constant.URLCitation `json:"type" default:"url_citation"`
+	// The URL of the web resource.
+	URL string `json:"url" api:"required" format:"uri"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EndIndex    respjson.Field
+		StartIndex  respjson.Field
+		Title       respjson.Field
+		Type        respjson.Field
+		URL         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseOutputTextAnnotationAddedEventAnnotationURLCitation) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseOutputTextAnnotationAddedEventAnnotationURLCitation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A citation for a container file used to generate a model response.
+type BetaResponseOutputTextAnnotationAddedEventAnnotationContainerFileCitation struct {
+	// The ID of the container file.
+	ContainerID string `json:"container_id" api:"required"`
+	// The index of the last character of the container file citation in the message.
+	EndIndex int64 `json:"end_index" api:"required"`
+	// The ID of the file.
+	FileID string `json:"file_id" api:"required"`
+	// The filename of the container file cited.
+	Filename string `json:"filename" api:"required"`
+	// The index of the first character of the container file citation in the message.
+	StartIndex int64 `json:"start_index" api:"required"`
+	// The type of the container file citation. Always `container_file_citation`.
+	Type constant.ContainerFileCitation `json:"type" default:"container_file_citation"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ContainerID respjson.Field
+		EndIndex    respjson.Field
+		FileID      respjson.Field
+		Filename    respjson.Field
+		StartIndex  respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseOutputTextAnnotationAddedEventAnnotationContainerFileCitation) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseOutputTextAnnotationAddedEventAnnotationContainerFileCitation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A path to a file.
+type BetaResponseOutputTextAnnotationAddedEventAnnotationFilePath struct {
+	// The ID of the file.
+	FileID string `json:"file_id" api:"required"`
+	// The index of the file in the list of files.
+	Index int64 `json:"index" api:"required"`
+	// The type of the file path. Always `file_path`.
+	Type constant.FilePath `json:"type" default:"file_path"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		FileID      respjson.Field
+		Index       respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponseOutputTextAnnotationAddedEventAnnotationFilePath) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponseOutputTextAnnotationAddedEventAnnotationFilePath) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -26019,6 +26714,11 @@ type BetaResponseReasoningItem struct {
 	// The encrypted content of the reasoning item. This is populated by default for
 	// reasoning items returned by `POST /v1/responses` and WebSocket `response.create`
 	// requests.
+	//
+	// When streaming, use the completed reasoning item and its `encrypted_content`
+	// from the `response.output_item.done` event in subsequent requests. The
+	// `encrypted_content` in `response.output_item.added` may be incomplete. This is
+	// especially important when `store` is `false` or when using Zero Data Retention.
 	EncryptedContent string `json:"encrypted_content" api:"nullable"`
 	// The status of the item. One of `in_progress`, `completed`, or `incomplete`.
 	// Populated when items are returned via API.
@@ -26139,6 +26839,11 @@ type BetaResponseReasoningItemParam struct {
 	// The encrypted content of the reasoning item. This is populated by default for
 	// reasoning items returned by `POST /v1/responses` and WebSocket `response.create`
 	// requests.
+	//
+	// When streaming, use the completed reasoning item and its `encrypted_content`
+	// from the `response.output_item.done` event in subsequent requests. The
+	// `encrypted_content` in `response.output_item.added` may be incomplete. This is
+	// especially important when `store` is `false` or when using Zero Data Retention.
 	EncryptedContent param.Opt[string] `json:"encrypted_content,omitzero"`
 	// The agent that produced this item.
 	Agent BetaResponseReasoningItemAgentParam `json:"agent,omitzero"`
@@ -26880,7 +27585,7 @@ type BetaResponseStreamEventUnion struct {
 	// This field is from variant [BetaResponseImageGenCallPartialImageEvent].
 	PartialImageIndex int64 `json:"partial_image_index"`
 	// This field is from variant [BetaResponseOutputTextAnnotationAddedEvent].
-	Annotation any `json:"annotation"`
+	Annotation BetaResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation"`
 	// This field is from variant [BetaResponseOutputTextAnnotationAddedEvent].
 	AnnotationIndex int64 `json:"annotation_index"`
 	// This field is from variant [BetaResponseCustomToolCallInputDoneEvent].
@@ -28402,8 +29107,10 @@ type BetaToolUnion struct {
 	DisplayWidth int64 `json:"display_width"`
 	// This field is a union of [BetaComputerUsePreviewToolEnvironment],
 	// [BetaFunctionShellToolEnvironmentUnion]
-	Environment       BetaToolUnionEnvironment `json:"environment"`
-	SearchContextSize string                   `json:"search_context_size"`
+	Environment BetaToolUnionEnvironment `json:"environment"`
+	// This field is from variant [BetaWebSearchTool].
+	ExternalWebAccess bool   `json:"external_web_access"`
+	SearchContextSize string `json:"search_context_size"`
 	// This field is a union of [BetaWebSearchToolUserLocation],
 	// [BetaWebSearchPreviewToolUserLocation]
 	UserLocation BetaToolUnionUserLocation `json:"user_location"`
@@ -28473,6 +29180,7 @@ type BetaToolUnion struct {
 		DisplayHeight      respjson.Field
 		DisplayWidth       respjson.Field
 		Environment        respjson.Field
+		ExternalWebAccess  respjson.Field
 		SearchContextSize  respjson.Field
 		UserLocation       respjson.Field
 		ServerLabel        respjson.Field
@@ -29514,6 +30222,14 @@ func (u BetaToolUnionParam) GetDisplayHeight() *int64 {
 func (u BetaToolUnionParam) GetDisplayWidth() *int64 {
 	if vt := u.OfComputerUsePreview; vt != nil {
 		return &vt.DisplayWidth
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaToolUnionParam) GetExternalWebAccess() *bool {
+	if vt := u.OfWebSearch; vt != nil && vt.ExternalWebAccess.Valid() {
+		return &vt.ExternalWebAccess.Value
 	}
 	return nil
 }
@@ -31362,6 +32078,10 @@ type BetaWebSearchTool struct {
 	//
 	// Any of "web_search", "web_search_2025_08_26".
 	Type BetaWebSearchToolType `json:"type" api:"required"`
+	// Allow live internet access for web search. Defaults to true when omitted. When
+	// false, the web search tool runs in offline/cache-only mode and will not fetch
+	// new external content.
+	ExternalWebAccess bool `json:"external_web_access"`
 	// Filters for the search.
 	Filters BetaWebSearchToolFilters `json:"filters" api:"nullable"`
 	// High level guidance for the amount of context window space to use for the
@@ -31374,6 +32094,7 @@ type BetaWebSearchTool struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Type              respjson.Field
+		ExternalWebAccess respjson.Field
 		Filters           respjson.Field
 		SearchContextSize respjson.Field
 		UserLocation      respjson.Field
@@ -31479,6 +32200,10 @@ type BetaWebSearchToolParam struct {
 	//
 	// Any of "web_search", "web_search_2025_08_26".
 	Type BetaWebSearchToolType `json:"type,omitzero" api:"required"`
+	// Allow live internet access for web search. Defaults to true when omitted. When
+	// false, the web search tool runs in offline/cache-only mode and will not fetch
+	// new external content.
+	ExternalWebAccess param.Opt[bool] `json:"external_web_access,omitzero"`
 	// Filters for the search.
 	Filters BetaWebSearchToolFiltersParam `json:"filters,omitzero"`
 	// The approximate location of the user.
@@ -31689,6 +32414,10 @@ type BetaResponseNewParams struct {
 	//     Responses or Chat Completions. The response will show `service_tier=priority`
 	//     regardless of if you specify `service_tier=fast` or `priority` in your
 	//     request.
+	//   - If set to 'ultrafast', then the request will be processed with the
+	//     access-controlled Ultrafast Processing service tier. This tier is currently
+	//     available for `gpt-5.6-sol`; a response served through it will show
+	//     `service_tier=ultrafast`.
 	//   - When not set, the default behavior is 'auto'.
 	//
 	// When the `service_tier` parameter is set, the response body will include the
@@ -31696,7 +32425,7 @@ type BetaResponseNewParams struct {
 	// request. This response value may be different from the value set in the
 	// parameter.
 	//
-	// Any of "auto", "default", "flex", "scale", "priority", "fast".
+	// Any of "auto", "default", "flex", "scale", "priority", "fast", "ultrafast".
 	ServiceTier BetaResponseNewParamsServiceTier `json:"service_tier,omitzero"`
 	// Options for streaming responses. Only set this when you set `stream: true`.
 	StreamOptions BetaResponseNewParamsStreamOptions `json:"stream_options,omitzero"`
@@ -31858,6 +32587,7 @@ const (
 	BetaResponseNewParamsModelGPT5_6Terra                      BetaResponseNewParamsModel = "gpt-5.6-terra"
 	BetaResponseNewParamsModelGPT5_6Luna                       BetaResponseNewParamsModel = "gpt-5.6-luna"
 	BetaResponseNewParamsModelGPT5_5                           BetaResponseNewParamsModel = "gpt-5.5"
+	BetaResponseNewParamsModelGPT5_5_2026_04_23                BetaResponseNewParamsModel = "gpt-5.5-2026-04-23"
 	BetaResponseNewParamsModelGPT5_4                           BetaResponseNewParamsModel = "gpt-5.4"
 	BetaResponseNewParamsModelGPT5_4Mini                       BetaResponseNewParamsModel = "gpt-5.4-mini"
 	BetaResponseNewParamsModelGPT5_4Nano                       BetaResponseNewParamsModel = "gpt-5.4-nano"
@@ -31946,6 +32676,8 @@ const (
 	BetaResponseNewParamsModelO4MiniDeepResearch2025_06_26     BetaResponseNewParamsModel = "o4-mini-deep-research-2025-06-26"
 	BetaResponseNewParamsModelComputerUsePreview               BetaResponseNewParamsModel = "computer-use-preview"
 	BetaResponseNewParamsModelComputerUsePreview2025_03_11     BetaResponseNewParamsModel = "computer-use-preview-2025-03-11"
+	BetaResponseNewParamsModelGPT5_5Pro                        BetaResponseNewParamsModel = "gpt-5.5-pro"
+	BetaResponseNewParamsModelGPT5_5Pro2026_04_23              BetaResponseNewParamsModel = "gpt-5.5-pro-2026-04-23"
 	BetaResponseNewParamsModelGPT5Codex                        BetaResponseNewParamsModel = "gpt-5-codex"
 	BetaResponseNewParamsModelGPT5Pro                          BetaResponseNewParamsModel = "gpt-5-pro"
 	BetaResponseNewParamsModelGPT5Pro2025_10_06                BetaResponseNewParamsModel = "gpt-5-pro-2025-10-06"
@@ -32217,6 +32949,10 @@ func init() {
 //     Responses or Chat Completions. The response will show `service_tier=priority`
 //     regardless of if you specify `service_tier=fast` or `priority` in your
 //     request.
+//   - If set to 'ultrafast', then the request will be processed with the
+//     access-controlled Ultrafast Processing service tier. This tier is currently
+//     available for `gpt-5.6-sol`; a response served through it will show
+//     `service_tier=ultrafast`.
 //   - When not set, the default behavior is 'auto'.
 //
 // When the `service_tier` parameter is set, the response body will include the
@@ -32226,12 +32962,13 @@ func init() {
 type BetaResponseNewParamsServiceTier string
 
 const (
-	BetaResponseNewParamsServiceTierAuto     BetaResponseNewParamsServiceTier = "auto"
-	BetaResponseNewParamsServiceTierDefault  BetaResponseNewParamsServiceTier = "default"
-	BetaResponseNewParamsServiceTierFlex     BetaResponseNewParamsServiceTier = "flex"
-	BetaResponseNewParamsServiceTierScale    BetaResponseNewParamsServiceTier = "scale"
-	BetaResponseNewParamsServiceTierPriority BetaResponseNewParamsServiceTier = "priority"
-	BetaResponseNewParamsServiceTierFast     BetaResponseNewParamsServiceTier = "fast"
+	BetaResponseNewParamsServiceTierAuto      BetaResponseNewParamsServiceTier = "auto"
+	BetaResponseNewParamsServiceTierDefault   BetaResponseNewParamsServiceTier = "default"
+	BetaResponseNewParamsServiceTierFlex      BetaResponseNewParamsServiceTier = "flex"
+	BetaResponseNewParamsServiceTierScale     BetaResponseNewParamsServiceTier = "scale"
+	BetaResponseNewParamsServiceTierPriority  BetaResponseNewParamsServiceTier = "priority"
+	BetaResponseNewParamsServiceTierFast      BetaResponseNewParamsServiceTier = "fast"
+	BetaResponseNewParamsServiceTierUltrafast BetaResponseNewParamsServiceTier = "ultrafast"
 )
 
 // Options for streaming responses. Only set this when you set `stream: true`.
@@ -32519,6 +33256,7 @@ const (
 	BetaResponseCompactParamsModelGPT5_6Terra                      BetaResponseCompactParamsModel = "gpt-5.6-terra"
 	BetaResponseCompactParamsModelGPT5_6Luna                       BetaResponseCompactParamsModel = "gpt-5.6-luna"
 	BetaResponseCompactParamsModelGPT5_5                           BetaResponseCompactParamsModel = "gpt-5.5"
+	BetaResponseCompactParamsModelGPT5_5_2026_04_23                BetaResponseCompactParamsModel = "gpt-5.5-2026-04-23"
 	BetaResponseCompactParamsModelGPT5_4                           BetaResponseCompactParamsModel = "gpt-5.4"
 	BetaResponseCompactParamsModelGPT5_4Mini                       BetaResponseCompactParamsModel = "gpt-5.4-mini"
 	BetaResponseCompactParamsModelGPT5_4Nano                       BetaResponseCompactParamsModel = "gpt-5.4-nano"
@@ -32607,6 +33345,8 @@ const (
 	BetaResponseCompactParamsModelO4MiniDeepResearch2025_06_26     BetaResponseCompactParamsModel = "o4-mini-deep-research-2025-06-26"
 	BetaResponseCompactParamsModelComputerUsePreview               BetaResponseCompactParamsModel = "computer-use-preview"
 	BetaResponseCompactParamsModelComputerUsePreview2025_03_11     BetaResponseCompactParamsModel = "computer-use-preview-2025-03-11"
+	BetaResponseCompactParamsModelGPT5_5Pro                        BetaResponseCompactParamsModel = "gpt-5.5-pro"
+	BetaResponseCompactParamsModelGPT5_5Pro2026_04_23              BetaResponseCompactParamsModel = "gpt-5.5-pro-2026-04-23"
 	BetaResponseCompactParamsModelGPT5Codex                        BetaResponseCompactParamsModel = "gpt-5-codex"
 	BetaResponseCompactParamsModelGPT5Pro                          BetaResponseCompactParamsModel = "gpt-5-pro"
 	BetaResponseCompactParamsModelGPT5Pro2025_10_06                BetaResponseCompactParamsModel = "gpt-5-pro-2025-10-06"

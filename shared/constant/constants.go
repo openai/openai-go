@@ -175,6 +175,8 @@ type McpListTools string                                     // Always "mcp_list
 type McpListToolsCompleted string                            // Always "mcp_list_tools.completed"
 type McpListToolsFailed string                               // Always "mcp_list_tools.failed"
 type McpListToolsInProgress string                           // Always "mcp_list_tools.in_progress"
+type McpProtocolError string                                 // Always "mcp_protocol_error"
+type McpToolExecutionError string                            // Always "mcp_tool_execution_error"
 type Message string                                          // Always "message"
 type MessageCreation string                                  // Always "message_creation"
 type Model string                                            // Always "model"
@@ -617,6 +619,8 @@ func (c McpListTools) Default() McpListTools                     { return "mcp_l
 func (c McpListToolsCompleted) Default() McpListToolsCompleted   { return "mcp_list_tools.completed" }
 func (c McpListToolsFailed) Default() McpListToolsFailed         { return "mcp_list_tools.failed" }
 func (c McpListToolsInProgress) Default() McpListToolsInProgress { return "mcp_list_tools.in_progress" }
+func (c McpProtocolError) Default() McpProtocolError             { return "mcp_protocol_error" }
+func (c McpToolExecutionError) Default() McpToolExecutionError   { return "mcp_tool_execution_error" }
 func (c Message) Default() Message                               { return "message" }
 func (c MessageCreation) Default() MessageCreation               { return "message_creation" }
 func (c Model) Default() Model                                   { return "model" }
@@ -1213,6 +1217,8 @@ func (c McpListTools) MarshalJSON() ([]byte, error)                        { ret
 func (c McpListToolsCompleted) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c McpListToolsFailed) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
 func (c McpListToolsInProgress) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c McpProtocolError) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c McpToolExecutionError) MarshalJSON() ([]byte, error)               { return marshalString(c) }
 func (c Message) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
 func (c MessageCreation) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
 func (c Model) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
