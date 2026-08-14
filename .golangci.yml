@@ -8,6 +8,7 @@ linters:
   default: none
   enable:
     - bodyclose
+    - durationcheck
     - errcheck
     - errchkjson
     - errorlint
