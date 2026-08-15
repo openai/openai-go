@@ -32,7 +32,7 @@ const (
 	nonReplayableBodyMessage    = "bedrock: SigV4 authentication requires a replayable request body; buffer the body before sending or use bearer authentication"
 )
 
-var awsRegionPattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)+$`)
+var awsRegionPattern = regexp.MustCompile(`^[a-z]{2,8}(?:-[a-z0-9]+)+-[0-9]+$`)
 
 type authMode int
 

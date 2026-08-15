@@ -65,6 +65,9 @@ func TestBedrockEndpointValidation(t *testing.T) {
 		{"Mantle hostname mismatch", Config{Endpoint: EndpointRuntime, APIKey: "token", BaseURL: "https://bedrock-mantle.us-east-1.api.aws/openai/v1"}, "does not match"},
 		{"Runtime region mismatch", Config{APIKey: "token", AWSRegion: "us-west-2", BaseURL: "https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1"}, "does not match"},
 		{"Runtime malformed region", Config{APIKey: "token", BaseURL: "https://bedrock-runtime.us--east-1.amazonaws.com/openai/v1"}, "invalid AWS region"},
+		{"Runtime incomplete configured region", Config{Endpoint: EndpointRuntime, APIKey: "token", AWSRegion: "us-east"}, "invalid AWS region"},
+		{"Runtime incomplete canonical region", Config{APIKey: "token", BaseURL: "https://bedrock-runtime.us-east.amazonaws.com/openai/v1"}, "invalid AWS region"},
+		{"Runtime digit-leading region", Config{Endpoint: EndpointRuntime, APIKey: "token", AWSRegion: "1s-east-1"}, "invalid AWS region"},
 		{"custom SigV4 endpoint", Config{AWSRegion: "us-east-1", AWSAccessKeyID: "access", AWSSecretAccessKey: "secret", BaseURL: "https://proxy.example/openai/v1"}, "requires an explicit `Endpoint`"},
 	}
 	for _, test := range tests {
