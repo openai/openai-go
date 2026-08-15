@@ -157,6 +157,40 @@ func TestRequestFinalizerComposesThroughApply(t *testing.T) {
 	}
 }
 
+func TestRequestConfigClonePreservesCustomHTTPDoer(t *testing.T) {
+	calls := 0
+	cfg, err := NewRequestConfig(context.Background(), http.MethodGet, "/models", nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.BaseURL, err = url.Parse("https://example.com/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.CustomHTTPDoer = httpDoerFunc(func(*http.Request) (*http.Response, error) {
+		calls++
+		return &http.Response{
+			StatusCode: http.StatusNoContent,
+			Header:     make(http.Header),
+			Body:       http.NoBody,
+		}, nil
+	})
+
+	clone := cfg.Clone(t.Context())
+	if clone == nil {
+		t.Fatal("Clone() = nil")
+	}
+	if clone.CustomHTTPDoer == nil {
+		t.Fatal("Clone() did not preserve CustomHTTPDoer")
+	}
+	if err := clone.Execute(); err != nil {
+		t.Fatalf("cloned Execute() error = %v", err)
+	}
+	if calls != 1 {
+		t.Fatalf("custom HTTP doer calls = %d, want 1", calls)
+	}
+}
+
 func TestExecuteClosesAttemptBodyOnHandlerError(t *testing.T) {
 	t.Run("no retry", func(t *testing.T) {
 		body := newTrackedFileBody(t)
