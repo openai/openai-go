@@ -248,15 +248,6 @@ func (u *SkillVersionNewParamsFilesUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *SkillVersionNewParamsFilesUnion) asAny() any {
-	if !param.IsOmitted(u.OfFileArray) {
-		return &u.OfFileArray
-	} else if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	}
-	return nil
-}
-
 type SkillVersionListParams struct {
 	// The skill version ID to start after.
 	After param.Opt[string] `query:"after,omitzero" json:"-"`

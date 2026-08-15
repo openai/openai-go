@@ -316,21 +316,6 @@ func (u *FineTuningAlphaGraderRunParamsGraderUnion) UnmarshalJSON(data []byte) e
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *FineTuningAlphaGraderRunParamsGraderUnion) asAny() any {
-	if !param.IsOmitted(u.OfStringCheck) {
-		return u.OfStringCheck
-	} else if !param.IsOmitted(u.OfTextSimilarity) {
-		return u.OfTextSimilarity
-	} else if !param.IsOmitted(u.OfPython) {
-		return u.OfPython
-	} else if !param.IsOmitted(u.OfScoreModel) {
-		return u.OfScoreModel
-	} else if !param.IsOmitted(u.OfMulti) {
-		return u.OfMulti
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u FineTuningAlphaGraderRunParamsGraderUnion) GetOperation() *string {
 	if vt := u.OfStringCheck; vt != nil {
@@ -518,21 +503,6 @@ func (u FineTuningAlphaGraderValidateParamsGraderUnion) MarshalJSON() ([]byte, e
 }
 func (u *FineTuningAlphaGraderValidateParamsGraderUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningAlphaGraderValidateParamsGraderUnion) asAny() any {
-	if !param.IsOmitted(u.OfStringCheckGrader) {
-		return u.OfStringCheckGrader
-	} else if !param.IsOmitted(u.OfTextSimilarityGrader) {
-		return u.OfTextSimilarityGrader
-	} else if !param.IsOmitted(u.OfPythonGrader) {
-		return u.OfPythonGrader
-	} else if !param.IsOmitted(u.OfScoreModelGrader) {
-		return u.OfScoreModelGrader
-	} else if !param.IsOmitted(u.OfMultiGrader) {
-		return u.OfMultiGrader
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

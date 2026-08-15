@@ -19,6 +19,7 @@ linters:
     - nilnesserr
     - nolintlint
     - staticcheck
+    - unused
   exclusions:
     generated: disable
   settings:

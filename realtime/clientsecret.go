@@ -1471,15 +1471,6 @@ func (u *ClientSecretNewParamsSessionUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ClientSecretNewParamsSessionUnion) asAny() any {
-	if !param.IsOmitted(u.OfRealtime) {
-		return u.OfRealtime
-	} else if !param.IsOmitted(u.OfTranscription) {
-		return u.OfTranscription
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ClientSecretNewParamsSessionUnion) GetInstructions() *string {
 	if vt := u.OfRealtime; vt != nil && vt.Instructions.Valid() {

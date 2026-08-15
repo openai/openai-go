@@ -761,15 +761,6 @@ func (u *BetaThreadRunNewParamsAdditionalMessageContentUnion) UnmarshalJSON(data
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaThreadRunNewParamsAdditionalMessageContentUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfContentParts) {
-		return &u.OfArrayOfContentParts
-	}
-	return nil
-}
-
 type BetaThreadRunNewParamsAdditionalMessageAttachment struct {
 	// The ID of the file to attach to the message.
 	FileID param.Opt[string] `json:"file_id,omitzero"`
@@ -800,15 +791,6 @@ func (u BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) MarshalJSON(
 }
 func (u *BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadRunNewParamsAdditionalMessageAttachmentToolUnion) asAny() any {
-	if !param.IsOmitted(u.OfCodeInterpreter) {
-		return u.OfCodeInterpreter
-	} else if !param.IsOmitted(u.OfFileSearch) {
-		return u.OfFileSearch
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

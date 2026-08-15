@@ -309,8 +309,10 @@ func TestOverride(t *testing.T) {
 // since it was defined in a different package.
 type almostOpt struct{}
 
-func (almostOpt) Valid() bool  { return true }
-func (almostOpt) Null() bool   { return false }
+func (almostOpt) Valid() bool { return true }
+func (almostOpt) Null() bool  { return false }
+
+//nolint:unused // Same-named private method is part of the cross-package assignability fixture.
 func (almostOpt) isZero() bool { return false }
 
 func (almostOpt) implOpt() {}

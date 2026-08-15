@@ -1092,15 +1092,6 @@ func (u *ImageEditParamsImageUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ImageEditParamsImageUnion) asAny() any {
-	if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	} else if !param.IsOmitted(u.OfFileArray) {
-		return &u.OfFileArray
-	}
-	return nil
-}
-
 // Allows to set transparency for the background of the generated image(s). This
 // parameter is only supported for GPT image models that support transparent
 // backgrounds. Must be one of `transparent`, `opaque`, or `auto` (default value).

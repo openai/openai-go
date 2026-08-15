@@ -1454,17 +1454,6 @@ func (u *AssistantToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *AssistantToolUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfCodeInterpreter) {
-		return u.OfCodeInterpreter
-	} else if !param.IsOmitted(u.OfFileSearch) {
-		return u.OfFileSearch
-	} else if !param.IsOmitted(u.OfFunction) {
-		return u.OfFunction
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u AssistantToolUnionParam) GetFileSearch() *FileSearchToolFileSearchParam {
 	if vt := u.OfFileSearch; vt != nil {
@@ -1948,15 +1937,6 @@ func (u BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategy
 }
 func (u *BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaAssistantNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return u.OfAuto
-	} else if !param.IsOmitted(u.OfStatic) {
-		return u.OfStatic
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
