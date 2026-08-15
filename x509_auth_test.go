@@ -614,6 +614,60 @@ func TestClientX509WorkloadIdentity401ReappliesBodyMiddleware(t *testing.T) {
 	}
 }
 
+func TestClientX509WorkloadIdentity401ReplaysFromPreMiddlewareState(t *testing.T) {
+	var exchangeCalls int
+	var middlewareCalls int
+	var queryValueCounts []int
+	var signatureCounts []int
+	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+		if req.URL.Host == "mtls.auth.openai.com" {
+			exchangeCalls++
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				Body: io.NopCloser(strings.NewReader(fmt.Sprintf(
+					`{"access_token":"token-%d","expires_in":3600}`,
+					exchangeCalls,
+				))),
+			}, nil
+		}
+		queryValueCounts = append(queryValueCounts, len(req.URL.Query()["signed"]))
+		signatureCounts = append(signatureCounts, len(req.Header.Values("X-Test-Signature")))
+		if len(queryValueCounts) == 1 {
+			return &http.Response{StatusCode: http.StatusUnauthorized, Header: make(http.Header), Body: http.NoBody}, nil
+		}
+		return modelsListResponse(), nil
+	}}}
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+		option.WithHTTPClient(httpClient),
+		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			middlewareCalls++
+			query := req.URL.Query()
+			query.Add("signed", "true")
+			req.URL.RawQuery = query.Encode()
+			req.Header.Add("X-Test-Signature", "signature")
+			return next(req)
+		}),
+	)
+
+	if _, err := client.Models.List(t.Context()); err != nil {
+		t.Fatalf("Models.List() error = %v", err)
+	}
+	if got, want := middlewareCalls, 2; got != want {
+		t.Errorf("middleware calls = %d, want %d", got, want)
+	}
+	if got, want := exchangeCalls, 2; got != want {
+		t.Errorf("token exchange calls = %d, want %d", got, want)
+	}
+	if got, want := fmt.Sprint(queryValueCounts), "[1 1]"; got != want {
+		t.Errorf("query value counts = %s, want %s", got, want)
+	}
+	if got, want := fmt.Sprint(signatureCounts), "[1 1]"; got != want {
+		t.Errorf("signature counts = %s, want %s", got, want)
+	}
+}
+
 func TestClientX509WorkloadIdentity401DoesNotReplayStreamingBody(t *testing.T) {
 	var exchangeCalls int
 	var apiCalls int

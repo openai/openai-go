@@ -16,6 +16,10 @@ func WorkloadIdentityMiddleware(
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
+	var retryReq *http.Request
+	if req.Body == nil || req.GetBody != nil {
+		retryReq = req.Clone(req.Context())
+	}
 
 	resp, err := next(req)
 	if err != nil || resp == nil || resp.StatusCode != http.StatusUnauthorized {
@@ -24,11 +28,9 @@ func WorkloadIdentityMiddleware(
 
 	wia.invalidateToken(token)
 
-	if req.Body != nil && req.GetBody == nil {
+	if retryReq == nil {
 		return resp, nil
 	}
-
-	retryReq := req.Clone(req.Context())
 
 	token, err = wia.GetToken(req.Context(), httpClient)
 	if err != nil {
@@ -37,8 +39,8 @@ func WorkloadIdentityMiddleware(
 	}
 	retryReq.Header.Set("Authorization", "Bearer "+token)
 
-	if req.GetBody != nil {
-		retryReq.Body, err = req.GetBody()
+	if retryReq.GetBody != nil {
+		retryReq.Body, err = retryReq.GetBody()
 		if err != nil {
 			_ = resp.Body.Close()
 			return nil, err
