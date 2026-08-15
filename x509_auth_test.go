@@ -28,6 +28,17 @@ func (d nonComparableHTTPDoer) Do(req *http.Request) (*http.Response, error) {
 	return d.do(req)
 }
 
+// dynamicallyNonComparableHTTPDoer has a comparable Go type, but values are
+// not comparable when state contains a slice, map, or function.
+type dynamicallyNonComparableHTTPDoer struct {
+	state any
+	doer  auth.HTTPDoer
+}
+
+func (d dynamicallyNonComparableHTTPDoer) Do(req *http.Request) (*http.Response, error) {
+	return d.doer.Do(req)
+}
+
 func clientX509WorkloadIdentity() auth.X509WorkloadIdentity {
 	return auth.X509WorkloadIdentity{
 		IdentityProviderID: "idp-test",
@@ -368,6 +379,37 @@ func TestClientX509WorkloadIdentityCachesNonComparableHTTPDoer(t *testing.T) {
 	}
 	if got, want := apiCalls.Load(), int32(requestCount); got != want {
 		t.Errorf("API calls = %d, want %d", got, want)
+	}
+}
+
+func TestClientX509WorkloadIdentityCachesDynamicallyNonComparableHTTPDoer(t *testing.T) {
+	var exchangeCalls atomic.Int32
+	httpDoer := dynamicallyNonComparableHTTPDoer{
+		state: []string{"not-comparable"},
+		doer: nonComparableHTTPDoer{do: func(req *http.Request) (*http.Response, error) {
+			if req.URL.Host == "mtls.auth.openai.com" {
+				exchangeCalls.Add(1)
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     http.Header{"Content-Type": []string{"application/json"}},
+					Body:       io.NopCloser(strings.NewReader(`{"access_token":"x509-token","expires_in":3600}`)),
+				}, nil
+			}
+			return modelsListResponse(), nil
+		}},
+	}
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+		option.WithHTTPClient(httpDoer),
+	)
+
+	for range 2 {
+		if _, err := client.Models.List(t.Context()); err != nil {
+			t.Fatalf("Models.List() error = %v", err)
+		}
+	}
+	if got, want := exchangeCalls.Load(), int32(1); got != want {
+		t.Errorf("token exchange calls = %d, want %d", got, want)
 	}
 }
 

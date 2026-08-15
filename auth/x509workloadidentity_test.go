@@ -29,6 +29,15 @@ func (b *closeTrackingReadCloser) Close() error {
 	return b.ReadCloser.Close()
 }
 
+type dynamicallyNonComparableHTTPDoer struct {
+	state any
+	doer  auth.HTTPDoer
+}
+
+func (d dynamicallyNonComparableHTTPDoer) Do(req *http.Request) (*http.Response, error) {
+	return d.doer.Do(req)
+}
+
 func testX509WorkloadIdentity() auth.X509WorkloadIdentity {
 	return auth.X509WorkloadIdentity{
 		IdentityProviderID: "idp-test",
@@ -125,6 +134,25 @@ func TestX509WorkloadIdentityAuthRejectsHTTPDoerChange(t *testing.T) {
 	}
 	if got := callsB.Load(); got != 0 {
 		t.Errorf("HTTP client B exchange calls = %d, want 0", got)
+	}
+}
+
+func TestX509WorkloadIdentityAuthRejectsDynamicallyNonComparableHTTPDoer(t *testing.T) {
+	httpDoer := dynamicallyNonComparableHTTPDoer{
+		state: []string{"not-comparable"},
+		doer: &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+			t.Fatal("dynamically non-comparable HTTP doer was called")
+			return nil, nil
+		}}},
+	}
+	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+	if err != nil {
+		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+	}
+
+	_, err = wia.GetToken(t.Context(), httpDoer)
+	if err == nil || !strings.Contains(err.Error(), "requires a comparable HTTP client") {
+		t.Fatalf("GetToken() error = %v, want comparable HTTP client error", err)
 	}
 }
 

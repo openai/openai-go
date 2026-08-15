@@ -255,7 +255,7 @@ func (w *WorkloadIdentityAuth) bindHTTPDoerLocked(httpClient HTTPDoer) error {
 	if w.source.kind() != workloadIdentityCredentialSourceX509 {
 		return nil
 	}
-	if !reflect.TypeOf(httpClient).Comparable() {
+	if !reflect.ValueOf(httpClient).Comparable() {
 		return fmt.Errorf("X.509 workload identity requires a comparable HTTP client")
 	}
 	if w.boundHTTPDoer == nil {

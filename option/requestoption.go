@@ -72,7 +72,7 @@ type comparableHTTPClient struct {
 // [http.RoundTripper] as its transport, rather than directly implementing [HTTPClient].
 func WithHTTPClient(client HTTPClient) RequestOption {
 	customHTTPClient := client
-	if client != nil && !reflect.TypeOf(client).Comparable() {
+	if client != nil && !reflect.ValueOf(client).Comparable() {
 		customHTTPClient = &comparableHTTPClient{HTTPClient: client}
 	}
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
