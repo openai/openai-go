@@ -519,6 +519,7 @@ func TestSigV4DisablesRedirects(t *testing.T) {
 	defer source.Close()
 
 	client, err := NewClient(context.Background(), Config{
+		Endpoint:           EndpointMantle,
 		AWSRegion:          "us-east-1",
 		AWSAccessKeyID:     "access-key",
 		AWSSecretAccessKey: "secret-key",

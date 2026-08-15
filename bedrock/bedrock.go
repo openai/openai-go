@@ -4,7 +4,7 @@
 // New clients use the AWS SDK for Go v2 credential chain by default, including
 // environment credentials, shared credentials and config files, named profiles,
 // workload identity, and instance or container roles. Requests are signed with
-// AWS Signature Version 4 using the bedrock-mantle service name.
+// AWS Signature Version 4 using the service name for the selected endpoint.
 package bedrock
 
 import (
@@ -20,6 +20,17 @@ import (
 // request attempt so expiring credentials can be refreshed for retries.
 type TokenProvider func(context.Context) (string, error)
 
+// Endpoint selects an Amazon Bedrock endpoint and its SigV4 signing service.
+type Endpoint string
+
+const (
+	// EndpointMantle preserves the existing Bedrock Mantle endpoint and signer.
+	EndpointMantle Endpoint = "mantle"
+
+	// EndpointRuntime uses the Bedrock Runtime endpoint and bedrock signer.
+	EndpointRuntime Endpoint = "runtime"
+)
+
 // Config configures an Amazon Bedrock client.
 //
 // Authentication is selected in this order:
@@ -31,6 +42,11 @@ type TokenProvider func(context.Context) (string, error)
 //
 // Configure at most one explicit authentication mode.
 type Config struct {
+	// Endpoint selects the Bedrock endpoint family. Mantle remains the default.
+	// Canonical AWS BaseURL overrides infer their endpoint when it is omitted.
+	// Custom or proxy hosts require an explicit endpoint for SigV4 signing.
+	Endpoint Endpoint
+
 	// APIKey is an explicit Amazon Bedrock bearer credential.
 	APIKey string
 
@@ -62,10 +78,10 @@ type Config struct {
 	// according to normal AWS semantics.
 	AWSCredentialsProvider aws.CredentialsProvider
 
-	// BaseURL overrides AWS_BEDROCK_BASE_URL and the regional Mantle endpoint.
-	// The default is https://bedrock-mantle.{region}.api.aws/openai/v1. The
-	// /openai/v1 prefix is the Bedrock OpenAI compatibility contract; /v1 is a
-	// different API surface.
+	// BaseURL overrides AWS_BEDROCK_BASE_URL and the selected regional endpoint.
+	// Mantle defaults to https://bedrock-mantle.{region}.api.aws/openai/v1;
+	// Runtime defaults to https://bedrock-runtime.{region}.amazonaws.com/openai/v1
+	// in the standard AWS partition. Use BaseURL if a deployment requires /v1.
 	BaseURL string
 
 	// SkipAuth disables Bedrock bearer and SigV4 authentication. Use this only
