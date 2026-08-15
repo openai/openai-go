@@ -634,6 +634,16 @@ func TestX509Concurrent401InvalidationKeepsNewToken(t *testing.T) {
 }
 
 func TestX509WorkloadIdentity401ClosesReplayBodyWhenMiddlewareFails(t *testing.T) {
+	testX509ReplayBodyClose(t, false)
+}
+
+func TestX509WorkloadIdentity401DoesNotDoubleCloseReplayBodyOnDownstreamError(t *testing.T) {
+	testX509ReplayBodyClose(t, true)
+}
+
+func testX509ReplayBodyClose(t *testing.T, downstreamClosesBody bool) {
+	t.Helper()
+
 	var exchangeCalls atomic.Int32
 	exchangeClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
 		call := exchangeCalls.Add(1)
@@ -671,7 +681,7 @@ func TestX509WorkloadIdentity401ClosesReplayBodyWhenMiddlewareFails(t *testing.T
 
 	middlewareErr := errors.New("middleware rejected replay")
 	var calls int
-	next := func(*http.Request) (*http.Response, error) {
+	next := func(replayReq *http.Request) (*http.Response, error) {
 		calls++
 		if calls == 1 {
 			return &http.Response{
@@ -679,6 +689,9 @@ func TestX509WorkloadIdentity401ClosesReplayBodyWhenMiddlewareFails(t *testing.T
 				Body:       http.NoBody,
 				Header:     make(http.Header),
 			}, nil
+		}
+		if downstreamClosesBody {
+			_ = replayReq.Body.Close()
 		}
 		return nil, middlewareErr
 	}

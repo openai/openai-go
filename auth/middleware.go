@@ -2,6 +2,8 @@ package auth
 
 import (
 	"net/http"
+
+	"github.com/openai/openai-go/v3/internal"
 )
 
 func WorkloadIdentityMiddleware(
@@ -48,6 +50,9 @@ func WorkloadIdentityMiddleware(
 	}
 
 	_ = resp.Body.Close()
+	if retryReq.Body != nil {
+		retryReq.Body = internal.NewCloseOnceReadCloser(retryReq.Body)
+	}
 	resp, err = next(retryReq)
 	if err != nil && retryReq.Body != nil {
 		_ = retryReq.Body.Close()
