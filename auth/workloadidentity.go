@@ -13,13 +13,13 @@ import (
 )
 
 const (
-	TokenExchangeGrantType         = "urn:ietf:params:oauth:grant-type:token-exchange"
-	JWTTokenType                   = "urn:ietf:params:oauth:token-type:jwt"
-	IDTokenType                    = "urn:ietf:params:oauth:token-type:id_token"
-	DefaultTokenExpiry             = 60 * time.Minute
-	DefaultRefreshBuffer           = 20 * time.Minute
-	TokenExchangeURL               = "https://auth.openai.com/oauth/token"
-	workloadIdentityRefreshTimeout = 30 * time.Second
+	TokenExchangeGrantType              = "urn:ietf:params:oauth:grant-type:token-exchange"
+	JWTTokenType                        = "urn:ietf:params:oauth:token-type:jwt"
+	IDTokenType                         = "urn:ietf:params:oauth:token-type:id_token"
+	DefaultTokenExpiry                  = 60 * time.Minute
+	DefaultRefreshBuffer                = 20 * time.Minute
+	TokenExchangeURL                    = "https://auth.openai.com/oauth/token"
+	subjectTokenWorkloadIdentityTimeout = 30 * time.Second
 )
 
 type workloadIdentityCredentialSourceKind uint8
@@ -77,6 +77,7 @@ type exchangedToken struct {
 type workloadIdentityCredentialSource interface {
 	exchange(context.Context, HTTPDoer, string, string) (exchangedToken, error)
 	refreshBuffer(time.Duration) time.Duration
+	refreshTimeout() time.Duration
 	kind() workloadIdentityCredentialSourceKind
 }
 
@@ -136,6 +137,10 @@ func (s subjectTokenCredentialSource) refreshBuffer(time.Duration) time.Duration
 		return DefaultRefreshBuffer
 	}
 	return s.refreshBefore
+}
+
+func (subjectTokenCredentialSource) refreshTimeout() time.Duration {
+	return subjectTokenWorkloadIdentityTimeout
 }
 
 func (subjectTokenCredentialSource) kind() workloadIdentityCredentialSourceKind {
@@ -280,7 +285,7 @@ func (w *WorkloadIdentityAuth) beginRefreshLocked() *tokenRefreshState {
 }
 
 func (w *WorkloadIdentityAuth) startSharedRefresh(state *tokenRefreshState, httpClient HTTPDoer) {
-	refreshCtx, cancel := context.WithTimeout(context.Background(), workloadIdentityRefreshTimeout)
+	refreshCtx, cancel := context.WithTimeout(context.Background(), w.source.refreshTimeout())
 	state.cancel = cancel
 	go func() {
 		defer cancel()

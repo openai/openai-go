@@ -14,6 +14,10 @@ const (
 	x509TokenExchangeURL          = "https://mtls.auth.openai.com/oauth/token"
 	tokenExchangeMaxRetries       = 2
 	tokenExchangeResponseBodySize = 1 << 20
+	// Allow every accepted Retry-After delay plus a bounded aggregate budget
+	// for the initial request and retries.
+	x509TokenExchangeRequestBudget     = 30 * time.Second
+	x509WorkloadIdentityRefreshTimeout = tokenExchangeMaxRetryDelay*tokenExchangeMaxRetries + x509TokenExchangeRequestBudget
 )
 
 // x509TokenExchangeRequest deliberately has no SubjectToken or ClientID field.
@@ -104,6 +108,10 @@ func (s x509CredentialSource) refreshBuffer(expiresIn time.Duration) time.Durati
 		refreshBefore = DefaultRefreshBuffer
 	}
 	return min(refreshBefore, expiresIn/2)
+}
+
+func (x509CredentialSource) refreshTimeout() time.Duration {
+	return x509WorkloadIdentityRefreshTimeout
 }
 
 func (x509CredentialSource) kind() workloadIdentityCredentialSourceKind {

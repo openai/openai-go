@@ -39,11 +39,33 @@ func TestTokenExchangeRetryDelayHonorsRetryAfter(t *testing.T) {
 	t.Run("http date", func(t *testing.T) {
 		retryAt := time.Now().Add(5 * time.Second).UTC().Truncate(time.Second)
 		resp := &http.Response{Header: http.Header{"Retry-After": []string{retryAt.Format(http.TimeFormat)}}}
+		before := time.Until(retryAt)
 		got := tokenExchangeRetryDelay(resp, 0)
-		if got < 4*time.Second || got > 5*time.Second {
-			t.Errorf("tokenExchangeRetryDelay() = %v, want between 4s and 5s", got)
+		after := time.Until(retryAt)
+		if got < after || got > before {
+			t.Errorf("tokenExchangeRetryDelay() = %v, want between %v and %v", got, after, before)
 		}
 	})
+}
+
+func TestX509RefreshTimeoutCoversRetryDelayBudget(t *testing.T) {
+	retryDelayBudget := tokenExchangeMaxRetryDelay * tokenExchangeMaxRetries
+	if x509WorkloadIdentityRefreshTimeout <= retryDelayBudget {
+		t.Fatalf(
+			"X.509 refresh timeout = %v, must exceed retry delay budget %v",
+			x509WorkloadIdentityRefreshTimeout,
+			retryDelayBudget,
+		)
+	}
+}
+
+func TestCredentialSourcesHaveIndependentRefreshTimeouts(t *testing.T) {
+	if got, want := (subjectTokenCredentialSource{}).refreshTimeout(), 30*time.Second; got != want {
+		t.Errorf("subject-token refresh timeout = %v, want %v", got, want)
+	}
+	if got, want := (x509CredentialSource{}).refreshTimeout(), x509WorkloadIdentityRefreshTimeout; got != want {
+		t.Errorf("X.509 refresh timeout = %v, want %v", got, want)
+	}
 }
 
 func TestX509CanceledLeaderDoesNotCancelSharedRefresh(t *testing.T) {
