@@ -371,6 +371,38 @@ func TestClientX509WorkloadIdentityCachesNonComparableHTTPDoer(t *testing.T) {
 	}
 }
 
+func TestClientX509WorkloadIdentityCachesComparableHTTPDoerAcrossOptions(t *testing.T) {
+	var exchangeCalls atomic.Int32
+	var apiCalls atomic.Int32
+	httpDoer := &nonComparableHTTPDoer{do: func(req *http.Request) (*http.Response, error) {
+		if req.URL.Host == "mtls.auth.openai.com" {
+			exchangeCalls.Add(1)
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				Body:       io.NopCloser(strings.NewReader(`{"access_token":"x509-token","expires_in":3600}`)),
+			}, nil
+		}
+		apiCalls.Add(1)
+		return modelsListResponse(), nil
+	}}
+	client := openai.NewClient(option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()))
+
+	if _, err := client.Models.List(t.Context(), option.WithHTTPClient(httpDoer)); err != nil {
+		t.Fatalf("first Models.List() error = %v", err)
+	}
+	if _, err := client.Models.List(t.Context(), option.WithHTTPClient(httpDoer)); err != nil {
+		t.Fatalf("second Models.List() error = %v", err)
+	}
+
+	if got, want := exchangeCalls.Load(), int32(1); got != want {
+		t.Errorf("token exchange calls = %d, want %d", got, want)
+	}
+	if got, want := apiCalls.Load(), int32(2); got != want {
+		t.Errorf("API calls = %d, want %d", got, want)
+	}
+}
+
 func TestClientX509WorkloadIdentityLaterOptionReplacesCredential(t *testing.T) {
 	var exchangedServiceAccounts []string
 	var apiAuthorization string
