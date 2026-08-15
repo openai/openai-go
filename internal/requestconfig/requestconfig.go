@@ -127,7 +127,7 @@ type noRetryError struct {
 
 func (e *noRetryError) Error() string { return e.err.Error() }
 func (e *noRetryError) Unwrap() error { return e.err }
-func (e *noRetryError) noRetry()      {}
+func (e *noRetryError) NoRetry()      {}
 
 // WithNoRetryError marks err as deterministic for the generic request retry
 // loop while preserving its message and unwrap chain. This function is
@@ -379,7 +379,7 @@ func shouldRetry(req *http.Request, res *http.Response, err error) bool {
 		return false
 	}
 
-	var deterministic interface{ noRetry() }
+	var deterministic interface{ NoRetry() }
 	if errors.As(err, &deterministic) {
 		return false
 	}

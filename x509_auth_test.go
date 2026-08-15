@@ -2,6 +2,7 @@ package openai_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -211,6 +212,7 @@ func TestClientRejectsMultipleWorkloadIdentityCredentialSources(t *testing.T) {
 
 func TestClientX509WorkloadIdentityRefusesAPIRedirects(t *testing.T) {
 	var redirectedRequests atomic.Int32
+	var apiRequests atomic.Int32
 	redirectTarget := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
 		redirectedRequests.Add(1)
 	}))
@@ -226,6 +228,7 @@ func TestClientX509WorkloadIdentityRefusesAPIRedirects(t *testing.T) {
 				}, nil
 			}
 			if req.URL.Host == "api.example" {
+				apiRequests.Add(1)
 				return &http.Response{
 					StatusCode: http.StatusFound,
 					Header:     http.Header{"Location": []string{redirectTarget.URL}},
@@ -241,11 +244,109 @@ func TestClientX509WorkloadIdentityRefusesAPIRedirects(t *testing.T) {
 		option.WithBaseURL("https://api.example/v1"),
 		option.WithHTTPClient(httpClient),
 	)
-	if _, err := client.Models.List(t.Context()); err == nil {
-		t.Fatal("Models.List() error = nil")
+	if err := client.Execute(t.Context(), http.MethodDelete, "/custom", nil, nil); err == nil {
+		t.Fatal("Execute() error = nil")
 	}
 	if got := redirectedRequests.Load(); got != 0 {
 		t.Errorf("redirect target requests = %d, want 0", got)
+	}
+	if got := apiRequests.Load(); got != 1 {
+		t.Errorf("API requests = %d, want 1", got)
+	}
+}
+
+func TestClientX509WorkloadIdentityScopesTokenCacheToHTTPDoer(t *testing.T) {
+	exchangeCalls := map[string]int{}
+	apiAuth := map[string][]string{}
+	newHTTPClient := func(name string) *http.Client {
+		return &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+			if req.URL.Host == "mtls.auth.openai.com" {
+				exchangeCalls[name]++
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     http.Header{"Content-Type": []string{"application/json"}},
+					Body:       io.NopCloser(strings.NewReader(fmt.Sprintf(`{"access_token":"token-%s","expires_in":3600}`, name))),
+				}, nil
+			}
+			apiAuth[name] = append(apiAuth[name], req.Header.Get("Authorization"))
+			return modelsListResponse(), nil
+		}}}
+	}
+
+	httpClientA := newHTTPClient("a")
+	httpClientB := newHTTPClient("b")
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+		option.WithHTTPClient(httpClientA),
+	)
+
+	if _, err := client.Models.List(t.Context()); err != nil {
+		t.Fatalf("first Models.List() error = %v", err)
+	}
+	if _, err := client.Models.List(t.Context(), option.WithHTTPClient(httpClientB)); err != nil {
+		t.Fatalf("overridden Models.List() error = %v", err)
+	}
+	if _, err := client.Models.List(t.Context()); err != nil {
+		t.Fatalf("second Models.List() error = %v", err)
+	}
+
+	if got, want := exchangeCalls["a"], 1; got != want {
+		t.Errorf("transport A exchange calls = %d, want %d", got, want)
+	}
+	if got, want := exchangeCalls["b"], 1; got != want {
+		t.Errorf("transport B exchange calls = %d, want %d", got, want)
+	}
+	if got, want := strings.Join(apiAuth["a"], ","), "Bearer token-a,Bearer token-a"; got != want {
+		t.Errorf("transport A Authorization = %q, want %q", got, want)
+	}
+	if got, want := strings.Join(apiAuth["b"], ","), "Bearer token-b"; got != want {
+		t.Errorf("transport B Authorization = %q, want %q", got, want)
+	}
+}
+
+func TestClientX509WorkloadIdentityExchangeFailureDoesNotEnterAPIRetryLoop(t *testing.T) {
+	testCases := []struct {
+		name      string
+		status    int
+		wantCalls int
+	}{
+		{name: "OAuth failure", status: http.StatusForbidden, wantCalls: 1},
+		{name: "exhausted transient failure", status: http.StatusServiceUnavailable, wantCalls: 3},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			exchangeCalls := 0
+			httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+				if req.URL.Host != "mtls.auth.openai.com" {
+					t.Fatalf("unexpected API request %s", req.URL)
+				}
+				exchangeCalls++
+				return &http.Response{
+					StatusCode: testCase.status,
+					Header:     http.Header{"Retry-After": []string{"0"}},
+					Body:       io.NopCloser(strings.NewReader(`{"error":"exchange_failed"}`)),
+				}, nil
+			}}}
+			client := openai.NewClient(
+				option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+				option.WithHTTPClient(httpClient),
+			)
+
+			_, err := client.Models.List(t.Context())
+			if err == nil {
+				t.Fatal("Models.List() error = nil")
+			}
+			if testCase.status == http.StatusForbidden {
+				var oauthErr *auth.OAuthError
+				if !errors.As(err, &oauthErr) {
+					t.Fatalf("Models.List() error = %v, want *auth.OAuthError", err)
+				}
+			}
+			if exchangeCalls != testCase.wantCalls {
+				t.Errorf("token exchange calls = %d, want %d", exchangeCalls, testCase.wantCalls)
+			}
+		})
 	}
 }
 

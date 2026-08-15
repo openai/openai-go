@@ -29,6 +29,23 @@ type x509CredentialSource struct {
 	refreshBefore time.Duration
 }
 
+// x509TokenExchangeError prevents the generic API request loop from repeating
+// an exchange that has already exhausted the X.509 exchange retry policy.
+type x509TokenExchangeError struct {
+	err error
+}
+
+func (e *x509TokenExchangeError) Error() string { return e.err.Error() }
+func (e *x509TokenExchangeError) Unwrap() error { return e.err }
+func (e *x509TokenExchangeError) NoRetry()      {}
+
+func noRetryX509TokenExchangeError(err error) error {
+	if err == nil {
+		return nil
+	}
+	return &x509TokenExchangeError{err: err}
+}
+
 // NewX509WorkloadIdentityAuth creates the HTTP authentication state for an
 // X.509 workload identity. Token exchange remains lazy until GetToken is called.
 func NewX509WorkloadIdentityAuth(config X509WorkloadIdentity) (*WorkloadIdentityAuth, error) {
@@ -58,7 +75,7 @@ func (s x509CredentialSource) exchange(
 		ServiceAccountID:   serviceAccountID,
 	})
 	if err != nil {
-		return exchangedToken{}, fmt.Errorf("failed to marshal token exchange request: %w", err)
+		return exchangedToken{}, noRetryX509TokenExchangeError(fmt.Errorf("failed to marshal token exchange request: %w", err))
 	}
 	resp, err := exchangeToken(
 		ctx,
@@ -68,14 +85,15 @@ func (s x509CredentialSource) exchange(
 		tokenExchangeMaxRetries,
 	)
 	if err != nil {
-		return exchangedToken{}, err
+		return exchangedToken{}, noRetryX509TokenExchangeError(err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 	responseBody, err := readTokenExchangeResponse(resp.Body, tokenExchangeResponseBodySize)
 	if err != nil {
-		return exchangedToken{}, err
+		return exchangedToken{}, noRetryX509TokenExchangeError(err)
 	}
-	return parseX509TokenExchangeResponse(resp.StatusCode, responseBody)
+	token, err := parseX509TokenExchangeResponse(resp.StatusCode, responseBody)
+	return token, noRetryX509TokenExchangeError(err)
 }
 
 func (s x509CredentialSource) refreshBuffer(expiresIn time.Duration) time.Duration {

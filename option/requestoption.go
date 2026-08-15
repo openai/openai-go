@@ -2,10 +2,12 @@ package option
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -325,15 +327,45 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 // When no base URL is configured explicitly or through OPENAI_BASE_URL, X.509
 // workload identity clients use https://mtls.api.openai.com/v1.
 func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
-	authOption := withWorkloadIdentityAuth(requestconfig.WorkloadIdentityCredentialSourceX509, func() (*auth.WorkloadIdentityAuth, error) {
-		return auth.NewX509WorkloadIdentityAuth(config)
-	})
+	cache := x509WorkloadIdentityAuthCache{}
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		if err := authOption.Apply(r); err != nil {
+		if err := r.UseWorkloadIdentityCredential(requestconfig.WorkloadIdentityCredentialSourceX509); err != nil {
 			return err
 		}
-		return r.Apply(requestconfig.WithRequestFinalizer(configureX509Request))
+		r.SetAPIKey("")
+		return r.Apply(requestconfig.WithRequestFinalizer(func(r *requestconfig.RequestConfig) error {
+			return configureX509Request(r, &cache, config)
+		}))
 	})
+}
+
+type x509WorkloadIdentityAuthCache struct {
+	mu         sync.Mutex
+	byHTTPDoer map[auth.HTTPDoer]*auth.WorkloadIdentityAuth
+}
+
+func (c *x509WorkloadIdentityAuthCache) get(
+	httpDoer auth.HTTPDoer,
+	config auth.X509WorkloadIdentity,
+) (*auth.WorkloadIdentityAuth, error) {
+	if httpDoer == nil || !reflect.TypeOf(httpDoer).Comparable() {
+		return auth.NewX509WorkloadIdentityAuth(config)
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if wia := c.byHTTPDoer[httpDoer]; wia != nil {
+		return wia, nil
+	}
+	wia, err := auth.NewX509WorkloadIdentityAuth(config)
+	if err != nil {
+		return nil, err
+	}
+	if c.byHTTPDoer == nil {
+		c.byHTTPDoer = make(map[auth.HTTPDoer]*auth.WorkloadIdentityAuth)
+	}
+	c.byHTTPDoer[httpDoer] = wia
+	return wia, nil
 }
 
 func withWorkloadIdentityAuth(
@@ -372,19 +404,40 @@ func withWorkloadIdentityAuth(
 	})
 }
 
-func configureX509Request(r *requestconfig.RequestConfig) error {
+func configureX509Request(
+	r *requestconfig.RequestConfig,
+	cache *x509WorkloadIdentityAuthCache,
+	config auth.X509WorkloadIdentity,
+) error {
 	if r.BaseURL == nil {
 		if err := r.Apply(requestconfig.WithDefaultBaseURL(x509APIBaseURL)); err != nil {
 			return err
 		}
 	}
-	if r.CustomHTTPDoer != nil || r.HTTPClient == nil {
-		return nil
+
+	var configuredHTTPDoer auth.HTTPDoer = r.HTTPClient
+	if r.CustomHTTPDoer != nil {
+		configuredHTTPDoer = r.CustomHTTPDoer
 	}
-	clone := *r.HTTPClient
-	clone.CheckRedirect = func(*http.Request, []*http.Request) error {
-		return http.ErrUseLastResponse
+	wia, err := cache.get(configuredHTTPDoer, config)
+	if err != nil {
+		return err
 	}
-	r.HTTPClient = &clone
+
+	if r.CustomHTTPDoer == nil && r.HTTPClient != nil {
+		clone := *r.HTTPClient
+		clone.CheckRedirect = func(*http.Request, []*http.Request) error {
+			return errors.New("X.509 workload identity API redirects are disabled")
+		}
+		r.HTTPClient = &clone
+	}
+
+	var httpDoer auth.HTTPDoer = r.HTTPClient
+	if r.CustomHTTPDoer != nil {
+		httpDoer = r.CustomHTTPDoer
+	}
+	r.Middlewares = append(r.Middlewares, func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
+		return auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
+	})
 	return nil
 }
