@@ -1,6 +1,8 @@
 package openai_test
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -519,6 +521,96 @@ func TestClientX509WorkloadIdentity401ReplaysReplayableBodyOnce(t *testing.T) {
 	}
 	if got, want := strings.Join(apiAuth, ","), "Bearer token-1,Bearer token-2"; got != want {
 		t.Errorf("API Authorization sequence = %q, want %q", got, want)
+	}
+}
+
+func TestClientX509WorkloadIdentity401ReappliesBodyMiddleware(t *testing.T) {
+	var exchangeCalls int
+	var middlewareCalls int
+	var apiBodies []string
+	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+		if req.URL.Host == "mtls.auth.openai.com" {
+			exchangeCalls++
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				Body: io.NopCloser(strings.NewReader(fmt.Sprintf(
+					`{"access_token":"token-%d","expires_in":3600}`,
+					exchangeCalls,
+				))),
+			}, nil
+		}
+		if got, want := req.Header.Get("Content-Encoding"), "gzip"; got != want {
+			return nil, fmt.Errorf("Content-Encoding = %q, want %q", got, want)
+		}
+		reader, err := gzip.NewReader(req.Body)
+		if err != nil {
+			return nil, err
+		}
+		body, err := io.ReadAll(reader)
+		if closeErr := reader.Close(); err == nil {
+			err = closeErr
+		}
+		if err != nil {
+			return nil, err
+		}
+		apiBodies = append(apiBodies, string(body))
+		if len(apiBodies) == 1 {
+			return &http.Response{StatusCode: http.StatusUnauthorized, Header: make(http.Header), Body: http.NoBody}, nil
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{"Content-Type": []string{"application/json"}},
+			Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+		}, nil
+	}}}
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+		option.WithBaseURL("https://api.example/v1"),
+		option.WithHTTPClient(httpClient),
+		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			middlewareCalls++
+			body, err := io.ReadAll(req.Body)
+			_ = req.Body.Close()
+			if err != nil {
+				return nil, err
+			}
+			var compressed bytes.Buffer
+			writer := gzip.NewWriter(&compressed)
+			if _, err := writer.Write(body); err != nil {
+				return nil, err
+			}
+			if err := writer.Close(); err != nil {
+				return nil, err
+			}
+			req.Body = io.NopCloser(bytes.NewReader(compressed.Bytes()))
+			req.ContentLength = int64(compressed.Len())
+			req.Header.Set("Content-Encoding", "gzip")
+			return next(req)
+		}),
+	)
+
+	const requestBody = `{"hello":"world"}`
+	var result map[string]any
+	err := client.Execute(
+		t.Context(),
+		http.MethodPost,
+		"/custom",
+		nil,
+		&result,
+		option.WithRequestBody("application/json", []byte(requestBody)),
+	)
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if got, want := middlewareCalls, 2; got != want {
+		t.Errorf("middleware calls = %d, want %d", got, want)
+	}
+	if got, want := exchangeCalls, 2; got != want {
+		t.Errorf("token exchange calls = %d, want %d", got, want)
+	}
+	if got, want := strings.Join(apiBodies, ","), requestBody+","+requestBody; got != want {
+		t.Errorf("API bodies = %q, want %q", got, want)
 	}
 }
 

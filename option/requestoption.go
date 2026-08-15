@@ -18,6 +18,11 @@ import (
 
 const x509APIBaseURL = "https://mtls.api.openai.com/v1/"
 
+// Keep enough transport-scoped auth states for a primary client plus a small
+// set of method-level overrides without retaining every transport ever used by
+// a long-lived client.
+const x509WorkloadIdentityAuthCacheCapacity = 8
+
 // RequestOption is an option for the requests made by the openai API Client
 // which can be supplied to clients, services, and methods. You can read more about this functional
 // options pattern in our [README].
@@ -347,8 +352,13 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 }
 
 type x509WorkloadIdentityAuthCache struct {
-	mu         sync.Mutex
-	byHTTPDoer map[auth.HTTPDoer]*auth.WorkloadIdentityAuth
+	mu      sync.Mutex
+	entries []x509WorkloadIdentityAuthCacheEntry
+}
+
+type x509WorkloadIdentityAuthCacheEntry struct {
+	httpDoer auth.HTTPDoer
+	auth     *auth.WorkloadIdentityAuth
 }
 
 func (c *x509WorkloadIdentityAuthCache) get(
@@ -357,17 +367,26 @@ func (c *x509WorkloadIdentityAuthCache) get(
 ) (*auth.WorkloadIdentityAuth, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if wia := c.byHTTPDoer[httpDoer]; wia != nil {
-		return wia, nil
+	for i := range c.entries {
+		if c.entries[i].httpDoer != httpDoer {
+			continue
+		}
+		entry := c.entries[i]
+		copy(c.entries[i:], c.entries[i+1:])
+		c.entries[len(c.entries)-1] = entry
+		return entry.auth, nil
 	}
 	wia, err := auth.NewX509WorkloadIdentityAuth(config)
 	if err != nil {
 		return nil, err
 	}
-	if c.byHTTPDoer == nil {
-		c.byHTTPDoer = make(map[auth.HTTPDoer]*auth.WorkloadIdentityAuth)
+	entry := x509WorkloadIdentityAuthCacheEntry{httpDoer: httpDoer, auth: wia}
+	if len(c.entries) == x509WorkloadIdentityAuthCacheCapacity {
+		copy(c.entries, c.entries[1:])
+		c.entries[len(c.entries)-1] = entry
+	} else {
+		c.entries = append(c.entries, entry)
 	}
-	c.byHTTPDoer[httpDoer] = wia
 	return wia, nil
 }
 
@@ -438,8 +457,9 @@ func configureX509Request(
 		r.HTTPClient = &clone
 	}
 
-	r.Middlewares = append(r.Middlewares, func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
+	authMiddleware := Middleware(func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
 		return auth.WorkloadIdentityMiddleware(wia, configuredHTTPDoer, req, next)
 	})
+	r.Middlewares = append([]Middleware{authMiddleware}, r.Middlewares...)
 	return nil
 }

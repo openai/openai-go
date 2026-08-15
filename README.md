@@ -1064,6 +1064,8 @@ if !ok {
 	return errors.New("http.DefaultTransport is not an *http.Transport")
 }
 transport := baseTransport.Clone()
+transport.DialTLS = nil
+transport.DialTLSContext = nil
 transport.TLSClientConfig = &tls.Config{
 	Certificates: []tls.Certificate{certificate},
 	GetClientCertificate: func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
