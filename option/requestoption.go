@@ -15,6 +15,8 @@ import (
 	"github.com/tidwall/sjson"
 )
 
+const x509APIBaseURL = "https://mtls.api.openai.com/v1/"
+
 // RequestOption is an option for the requests made by the openai API Client
 // which can be supplied to clients, services, and methods. You can read more about this functional
 // options pattern in our [README].
@@ -310,16 +312,47 @@ func WithWebhookSecret(value string) requestconfig.PreRequestOptionFunc {
 // This enables the client to authenticate using short-lived tokens from cloud providers
 // (Kubernetes, Azure, GCP) instead of long-lived API keys.
 func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
+	return withWorkloadIdentityAuth(requestconfig.WorkloadIdentityCredentialSourceSubjectToken, func() (*auth.WorkloadIdentityAuth, error) {
+		return auth.NewWorkloadIdentityAuth(config)
+	})
+}
+
+// WithX509WorkloadIdentity returns a RequestOption that configures X.509
+// workload identity authentication. The configured HTTP client must present
+// the client certificate for token exchange and API requests. Custom HTTPClient
+// implementations are responsible for refusing redirects internally.
+//
+// When no base URL is configured explicitly or through OPENAI_BASE_URL, X.509
+// workload identity clients use https://mtls.api.openai.com/v1.
+func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
+	authOption := withWorkloadIdentityAuth(requestconfig.WorkloadIdentityCredentialSourceX509, func() (*auth.WorkloadIdentityAuth, error) {
+		return auth.NewX509WorkloadIdentityAuth(config)
+	})
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		if err := authOption.Apply(r); err != nil {
+			return err
+		}
+		return r.Apply(requestconfig.WithRequestFinalizer(configureX509Request))
+	})
+}
+
+func withWorkloadIdentityAuth(
+	credentialSource requestconfig.WorkloadIdentityCredentialSource,
+	newAuth func() (*auth.WorkloadIdentityAuth, error),
+) RequestOption {
 	var wia *auth.WorkloadIdentityAuth
 	var initOnce sync.Once
 	var initErr error
 
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		if err := r.UseWorkloadIdentityCredential(credentialSource); err != nil {
+			return err
+		}
 		r.SetAPIKey("")
 
 		r.Middlewares = append(r.Middlewares, func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
 			initOnce.Do(func() {
-				wia, initErr = auth.NewWorkloadIdentityAuth(config)
+				wia, initErr = newAuth()
 			})
 
 			if initErr != nil {
@@ -337,4 +370,21 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 		})
 		return nil
 	})
+}
+
+func configureX509Request(r *requestconfig.RequestConfig) error {
+	if r.BaseURL == nil {
+		if err := r.Apply(requestconfig.WithDefaultBaseURL(x509APIBaseURL)); err != nil {
+			return err
+		}
+	}
+	if r.CustomHTTPDoer != nil || r.HTTPClient == nil {
+		return nil
+	}
+	clone := *r.HTTPClient
+	clone.CheckRedirect = func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	r.HTTPClient = &clone
+	return nil
 }

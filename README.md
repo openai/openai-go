@@ -988,6 +988,7 @@ transport.DialTLSContext = nil
 transport.ResponseHeaderTimeout = 10 * time.Minute
 transport.TLSClientConfig = &tls.Config{
 	Certificates: []tls.Certificate{certificate},
+	MinVersion:   tls.VersionTLS12,
 	GetClientCertificate: func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
 		return &certificate, nil
 	},
@@ -1010,8 +1011,8 @@ if _, err := client.Models.List(context.Background()); err != nil {
 }
 ```
 
-The SDK does not select an mTLS endpoint automatically when a custom HTTP
-client is used. The explicit `option.WithBaseURL` above overrides
+API-key authentication does not select an mTLS endpoint automatically when a
+custom HTTP client is used. The explicit `option.WithBaseURL` above overrides
 `OPENAI_BASE_URL`; replace it with `https://mtls-eu.api.openai.com/v1` for the
 EU endpoint, or remove it to use `OPENAI_BASE_URL`. Keep server trust separate
 by configuring `RootCAs` on the fresh `tls.Config` when custom roots are
@@ -1039,7 +1040,74 @@ The complete tested recipe is in
 
 ## Workload Identity Authentication
 
-For cloud workloads (Kubernetes, Azure, Google Cloud Platform), you can use workload identity authentication instead of API keys. This provides short-lived tokens that are automatically refreshed.
+For cloud workloads, you can use workload identity authentication instead of API keys. This provides short-lived tokens that are automatically refreshed. JWT/ID-token providers and X.509 workload identity use separate typed configuration.
+
+### X.509 certificates (beta)
+
+X.509 workload identity federation uses the caller-configured native Go HTTP
+transport for both certificate-authenticated token exchange and API requests.
+The SDK does not load or retain certificate files, private keys, passphrases,
+custom trust, proxy configuration, or HSM state. Configure those concerns on a
+dedicated `*http.Client`, then select the X.509 credential branch:
+
+```go
+certificate, err := tls.LoadX509KeyPair(
+	os.Getenv("OPENAI_MTLS_CERTIFICATE_CHAIN"),
+	os.Getenv("OPENAI_MTLS_PRIVATE_KEY"),
+)
+if err != nil {
+	return err
+}
+
+baseTransport, ok := http.DefaultTransport.(*http.Transport)
+if !ok {
+	return errors.New("http.DefaultTransport is not an *http.Transport")
+}
+transport := baseTransport.Clone()
+transport.TLSClientConfig = &tls.Config{
+	Certificates: []tls.Certificate{certificate},
+	GetClientCertificate: func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+		return &certificate, nil
+	},
+}
+httpClient := &http.Client{
+	Transport: transport,
+	CheckRedirect: func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+}
+
+client := openai.NewClient(
+	option.WithHTTPClient(httpClient),
+	option.WithX509WorkloadIdentity(auth.X509WorkloadIdentity{
+		IdentityProviderID: os.Getenv("OPENAI_IDENTITY_PROVIDER_ID"),
+		ServiceAccountID:   os.Getenv("OPENAI_SERVICE_ACCOUNT_ID"),
+	}),
+)
+```
+
+When no explicit `option.WithBaseURL` or `OPENAI_BASE_URL` is present, only
+this X.509 mode defaults to `https://mtls.api.openai.com/v1`. Token exchange is
+always an exact `POST https://mtls.auth.openai.com/oauth/token`, refuses HTTP
+redirects, and structurally omits `subject_token`. The configured HTTP client
+must therefore be suitable for both mTLS hosts. A custom exchange URL is not
+supported. The SDK disables redirects on a native `*http.Client`; custom
+`option.HTTPClient` implementations must also refuse redirects internally.
+
+The exchange is lazy, cached against Go's monotonic clock, refreshed with a
+buffer clamped to half the returned TTL, and single-flighted across concurrent
+callers. Transient exchange failures receive bounded retries honoring
+`Retry-After`. An API `401` invalidates the rejected token and is retried once
+only when the request has no body or has a `GetBody` replay function. Realtime
+WebSocket authentication is not part of this HTTP-only phase.
+
+For an application-owned rollout, set `OPENAI_AUTH_MODE=api_key` (the default)
+or `OPENAI_AUTH_MODE=x509`. X.509 mode also uses
+`OPENAI_IDENTITY_PROVIDER_ID`, `OPENAI_SERVICE_ACCOUNT_ID`,
+`OPENAI_MTLS_CERTIFICATE_CHAIN`, and `OPENAI_MTLS_PRIVATE_KEY`. The SDK does not
+read the certificate variables implicitly. See the complete toggle in
+[`examples/x509-workload-identity`](./examples/x509-workload-identity/main.go)
+and the [X.509 workload identity guide](https://developers.openai.com/api/docs/guides/workload-identity-federation/x509).
 
 ### Kubernetes
 

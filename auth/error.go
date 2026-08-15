@@ -33,5 +33,8 @@ type OAuthError struct {
 }
 
 func (e *OAuthError) Error() string {
+	if e.ErrorCode == "" && e.ErrorDescription == "" {
+		return fmt.Sprintf("OAuth error (status %d)", e.StatusCode)
+	}
 	return fmt.Sprintf("OAuth error (status %d): %s - %s", e.StatusCode, e.ErrorCode, e.ErrorDescription)
 }

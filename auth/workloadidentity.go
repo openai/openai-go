@@ -1,11 +1,9 @@
 package auth
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -23,18 +21,23 @@ const (
 )
 
 type WorkloadIdentityAuth struct {
-	config WorkloadIdentity
+	identityProviderID string
+	serviceAccountID   string
+	source             workloadIdentityCredentialSource
 
-	// Protects cachedToken, tokenExpiry, and refreshInFlight
+	// Protects cachedToken, tokenExpiry, tokenRefreshAt, and refreshInFlight.
 	mu              sync.Mutex
 	cachedToken     string
 	tokenExpiry     time.Time
+	tokenRefreshAt  time.Time
 	refreshInFlight *tokenRefreshState
 }
 
 type tokenRefreshResult struct {
-	token string
-	err   error
+	token     string
+	expiresAt time.Time
+	refreshAt time.Time
+	err       error
 }
 
 // Coordinates concurrent access to a single in-flight refresh operation
@@ -44,7 +47,7 @@ type tokenRefreshState struct {
 	result tokenRefreshResult
 }
 
-type tokenExchangeRequest struct {
+type subjectTokenExchangeRequest struct {
 	GrantType          string `json:"grant_type"`
 	ClientID           string `json:"client_id,omitempty"`
 	SubjectToken       string `json:"subject_token"`
@@ -53,12 +56,77 @@ type tokenExchangeRequest struct {
 	ServiceAccountID   string `json:"service_account_id"`
 }
 
-func NewWorkloadIdentityAuth(config WorkloadIdentity) (*WorkloadIdentityAuth, error) {
-	if config.IdentityProviderID == "" {
-		return nil, fmt.Errorf("WorkloadIdentity: IdentityProviderID is required")
+type exchangedToken struct {
+	accessToken string
+	expiresIn   time.Duration
+}
+
+type workloadIdentityCredentialSource interface {
+	exchange(context.Context, HTTPDoer, string, string) (exchangedToken, error)
+	refreshBuffer(time.Duration) time.Duration
+}
+
+type subjectTokenCredentialSource struct {
+	clientID      string
+	provider      SubjectTokenProvider
+	refreshBefore time.Duration
+}
+
+func (s subjectTokenCredentialSource) exchange(
+	ctx context.Context,
+	httpClient HTTPDoer,
+	identityProviderID string,
+	serviceAccountID string,
+) (exchangedToken, error) {
+	subjectToken, err := s.provider.GetToken(ctx, httpClient)
+	if err != nil {
+		return exchangedToken{}, err
 	}
-	if config.ServiceAccountID == "" {
-		return nil, fmt.Errorf("WorkloadIdentity: ServiceAccountID is required")
+
+	providerTokenType := s.provider.TokenType()
+	var subjectTokenType string
+	switch providerTokenType {
+	case SubjectTokenTypeJWT:
+		subjectTokenType = JWTTokenType
+	case SubjectTokenTypeID:
+		subjectTokenType = IDTokenType
+	default:
+		return exchangedToken{}, fmt.Errorf("unsupported subject token type %q", providerTokenType)
+	}
+
+	body, err := json.Marshal(subjectTokenExchangeRequest{
+		GrantType:          TokenExchangeGrantType,
+		ClientID:           s.clientID,
+		SubjectToken:       subjectToken,
+		SubjectTokenType:   subjectTokenType,
+		IdentityProviderID: identityProviderID,
+		ServiceAccountID:   serviceAccountID,
+	})
+	if err != nil {
+		return exchangedToken{}, fmt.Errorf("failed to marshal token exchange request: %w", err)
+	}
+	resp, err := exchangeToken(ctx, httpClient, TokenExchangeURL, body, 0)
+	if err != nil {
+		return exchangedToken{}, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	responseBody, err := readTokenExchangeResponse(resp.Body, 0)
+	if err != nil {
+		return exchangedToken{}, err
+	}
+	return parseSubjectTokenExchangeResponse(resp.StatusCode, responseBody)
+}
+
+func (s subjectTokenCredentialSource) refreshBuffer(time.Duration) time.Duration {
+	if s.refreshBefore == 0 {
+		return DefaultRefreshBuffer
+	}
+	return s.refreshBefore
+}
+
+func NewWorkloadIdentityAuth(config WorkloadIdentity) (*WorkloadIdentityAuth, error) {
+	if err := validateWorkloadIdentity("WorkloadIdentity", config.IdentityProviderID, config.ServiceAccountID); err != nil {
+		return nil, err
 	}
 	if config.Provider == nil {
 		return nil, fmt.Errorf("WorkloadIdentity: Provider is required")
@@ -66,9 +134,37 @@ func NewWorkloadIdentityAuth(config WorkloadIdentity) (*WorkloadIdentityAuth, er
 	if config.RefreshBufferSeconds < 0 {
 		return nil, fmt.Errorf("WorkloadIdentity: RefreshBufferSeconds must be non-negative")
 	}
+	return newWorkloadIdentityAuth(
+		config.IdentityProviderID,
+		config.ServiceAccountID,
+		subjectTokenCredentialSource{
+			clientID:      config.ClientID,
+			provider:      config.Provider,
+			refreshBefore: time.Duration(config.RefreshBufferSeconds) * time.Second,
+		},
+	), nil
+}
+
+func validateWorkloadIdentity(configName string, identityProviderID string, serviceAccountID string) error {
+	if identityProviderID == "" {
+		return fmt.Errorf("%s: IdentityProviderID is required", configName)
+	}
+	if serviceAccountID == "" {
+		return fmt.Errorf("%s: ServiceAccountID is required", configName)
+	}
+	return nil
+}
+
+func newWorkloadIdentityAuth(
+	identityProviderID string,
+	serviceAccountID string,
+	source workloadIdentityCredentialSource,
+) *WorkloadIdentityAuth {
 	return &WorkloadIdentityAuth{
-		config: config,
-	}, nil
+		identityProviderID: identityProviderID,
+		serviceAccountID:   serviceAccountID,
+		source:             source,
+	}
 }
 
 func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer) (string, error) {
@@ -84,25 +180,18 @@ func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer
 	}
 
 	now := time.Now()
-	if now.After(w.tokenExpiry) {
+	if !now.Before(w.tokenExpiry) {
 		return w.handleLockedRefresh(ctx, httpClient)
 	}
 
-	refreshBuffer := w.config.RefreshBufferSeconds
-	if refreshBuffer == 0 {
-		refreshBuffer = int(DefaultRefreshBuffer / time.Second)
-	}
-	refreshTime := w.tokenExpiry.Add(-time.Duration(refreshBuffer) * time.Second)
-
 	// Proactive background refresh: start if within refresh window and no refresh active
-	if now.After(refreshTime) && w.refreshInFlight == nil {
+	if !now.Before(w.tokenRefreshAt) && w.refreshInFlight == nil {
 		state := w.beginRefreshLocked()
 		// Background goroutine with independent context, lock released before spawn
 		go func() {
 			refreshCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
-			token, err := w.refreshToken(refreshCtx, httpClient)
-			w.finishRefresh(state, token, err)
+			w.finishRefresh(state, w.refreshToken(refreshCtx, httpClient))
 		}()
 	}
 
@@ -117,7 +206,9 @@ func (w *WorkloadIdentityAuth) handleLockedRefresh(ctx context.Context, httpClie
 		// No refresh running: start foreground refresh, unlock before blocking operation
 		state := w.beginRefreshLocked()
 		w.mu.Unlock()
-		return w.completeForegroundRefresh(ctx, state, httpClient)
+		result := w.refreshToken(ctx, httpClient)
+		w.finishRefresh(state, result)
+		return result.token, result.err
 	}
 
 	// Refresh already running: unlock and wait for its completion
@@ -126,11 +217,15 @@ func (w *WorkloadIdentityAuth) handleLockedRefresh(ctx context.Context, httpClie
 	return w.waitForRefresh(ctx, state)
 }
 
-func (w *WorkloadIdentityAuth) invalidateToken() {
+func (w *WorkloadIdentityAuth) invalidateToken(token string) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
+	if w.cachedToken != token {
+		return
+	}
 	w.cachedToken = ""
 	w.tokenExpiry = time.Time{}
+	w.tokenRefreshAt = time.Time{}
 }
 
 func (w *WorkloadIdentityAuth) beginRefreshLocked() *tokenRefreshState {
@@ -138,20 +233,19 @@ func (w *WorkloadIdentityAuth) beginRefreshLocked() *tokenRefreshState {
 	return w.refreshInFlight
 }
 
-func (w *WorkloadIdentityAuth) completeForegroundRefresh(ctx context.Context, state *tokenRefreshState, httpClient HTTPDoer) (string, error) {
-	token, err := w.refreshToken(ctx, httpClient)
-	w.finishRefresh(state, token, err)
-	return token, err
-}
-
 // Atomically publishes refresh result and signals all waiting goroutines via channel close
-func (w *WorkloadIdentityAuth) finishRefresh(state *tokenRefreshState, token string, err error) {
+func (w *WorkloadIdentityAuth) finishRefresh(state *tokenRefreshState, result tokenRefreshResult) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if w.refreshInFlight != state {
 		return
 	}
-	state.result = tokenRefreshResult{token: token, err: err}
+	state.result = result
+	if result.err == nil {
+		w.cachedToken = result.token
+		w.tokenExpiry = result.expiresAt
+		w.tokenRefreshAt = result.refreshAt
+	}
 	close(state.done) // Broadcasts completion to all waiters
 	w.refreshInFlight = nil
 }
@@ -166,95 +260,54 @@ func (w *WorkloadIdentityAuth) waitForRefresh(ctx context.Context, state *tokenR
 	}
 }
 
-func (w *WorkloadIdentityAuth) refreshToken(ctx context.Context, httpClient HTTPDoer) (string, error) {
+func (w *WorkloadIdentityAuth) refreshToken(ctx context.Context, httpClient HTTPDoer) tokenRefreshResult {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 
-	subjectToken, err := w.config.Provider.GetToken(ctx, httpClient)
+	token, err := w.source.exchange(ctx, httpClient, w.identityProviderID, w.serviceAccountID)
 	if err != nil {
-		return "", err
+		return tokenRefreshResult{err: err}
 	}
 
-	subjectTokenType := w.config.Provider.TokenType()
-	var subjectTokenTypeURN string
-	switch subjectTokenType {
-	case SubjectTokenTypeJWT:
-		subjectTokenTypeURN = JWTTokenType
-	case SubjectTokenTypeID:
-		subjectTokenTypeURN = IDTokenType
-	default:
-		return "", fmt.Errorf("unsupported subject token type %q", subjectTokenType)
-	}
+	now := time.Now()
+	expiresAt := now.Add(token.expiresIn)
 
-	requestBody := tokenExchangeRequest{
-		GrantType:          TokenExchangeGrantType,
-		ClientID:           w.config.ClientID,
-		SubjectToken:       subjectToken,
-		SubjectTokenType:   subjectTokenTypeURN,
-		IdentityProviderID: w.config.IdentityProviderID,
-		ServiceAccountID:   w.config.ServiceAccountID,
+	return tokenRefreshResult{
+		token:     token.accessToken,
+		expiresAt: expiresAt,
+		refreshAt: expiresAt.Add(-w.source.refreshBuffer(token.expiresIn)),
 	}
+}
 
-	jsonBody, err := json.Marshal(requestBody)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal token exchange request: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", TokenExchangeURL, bytes.NewReader(jsonBody))
-	if err != nil {
-		return "", fmt.Errorf("failed to create token exchange request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to exchange token: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read token exchange response: %w", err)
-	}
-
-	if resp.StatusCode == http.StatusBadRequest || resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+func parseSubjectTokenExchangeResponse(statusCode int, body []byte) (exchangedToken, error) {
+	if statusCode == http.StatusBadRequest || statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
 		var oauthErr struct {
 			Error            string `json:"error"`
 			ErrorDescription string `json:"error_description"`
 		}
 		if json.Unmarshal(body, &oauthErr) == nil {
-			return "", &OAuthError{
-				StatusCode:       resp.StatusCode,
+			return exchangedToken{}, &OAuthError{
+				StatusCode:       statusCode,
 				ErrorCode:        shared.OAuthErrorCode(oauthErr.Error),
 				ErrorDescription: oauthErr.ErrorDescription,
 			}
 		}
 	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("token exchange failed with status %d: %s", resp.StatusCode, string(body))
+	if statusCode != http.StatusOK {
+		return exchangedToken{}, fmt.Errorf("token exchange failed with status %d: %s", statusCode, string(body))
 	}
 
 	var tokenResp TokenExchangeResponse
 	if err := json.Unmarshal(body, &tokenResp); err != nil {
-		return "", fmt.Errorf("failed to decode token exchange response: %w", err)
+		return exchangedToken{}, fmt.Errorf("failed to decode token exchange response: %w", err)
 	}
-
 	if tokenResp.AccessToken == "" {
-		return "", fmt.Errorf("token exchange response missing 'access_token' field. Response: %s", string(body))
+		return exchangedToken{}, fmt.Errorf("token exchange response missing 'access_token' field. Response: %s", string(body))
 	}
-
-	expiresIn := int(DefaultTokenExpiry / time.Second)
+	expiresIn := DefaultTokenExpiry
 	if tokenResp.ExpiresIn != nil {
-		expiresIn = *tokenResp.ExpiresIn
+		expiresIn = time.Duration(*tokenResp.ExpiresIn) * time.Second
 	}
-
-	// Atomically update cached token and expiry
-	w.mu.Lock()
-	w.cachedToken = tokenResp.AccessToken
-	w.tokenExpiry = time.Now().Add(time.Duration(expiresIn) * time.Second)
-	w.mu.Unlock()
-
-	return tokenResp.AccessToken, nil
+	return exchangedToken{accessToken: tokenResp.AccessToken, expiresIn: expiresIn}, nil
 }

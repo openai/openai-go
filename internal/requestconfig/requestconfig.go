@@ -337,6 +337,7 @@ type RequestConfig struct {
 	finalizers         []requestFinalizer
 	authHeaderOverride bool
 	authPreference     authCredentialPreference
+	workloadIdentity   WorkloadIdentityCredentialSource
 	// Configure which security scheme(s) should be enabled for this request
 	Security Security
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
@@ -348,6 +349,15 @@ type RequestConfig struct {
 	ResponseInto **http.Response
 	Body         io.Reader
 }
+
+// WorkloadIdentityCredentialSource identifies the selected workload identity
+// branch. It is internal API used to reject incompatible authentication options.
+type WorkloadIdentityCredentialSource uint8
+
+const (
+	WorkloadIdentityCredentialSourceSubjectToken WorkloadIdentityCredentialSource = iota + 1
+	WorkloadIdentityCredentialSourceX509
+)
 
 // middleware is exactly the same type as the Middleware type found in the [option] package,
 // but it is redeclared here for circular dependency issues.
@@ -748,6 +758,7 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		finalizers:         append([]requestFinalizer(nil), cfg.finalizers...),
 		authHeaderOverride: cfg.authHeaderOverride,
 		authPreference:     cfg.authPreference,
+		workloadIdentity:   cfg.workloadIdentity,
 	}
 
 	return new
@@ -784,6 +795,17 @@ func (cfg *RequestConfig) SetAdminAPIKey(value string) {
 	cfg.AdminAPIKey = value
 	cfg.authHeaderOverride = false
 	cfg.authPreference = authCredentialPreferenceAdmin
+}
+
+// UseWorkloadIdentityCredential selects one workload identity credential
+// branch and rejects configurations that combine subject-token and X.509 WIF.
+// This function is internal API and may change without notice.
+func (cfg *RequestConfig) UseWorkloadIdentityCredential(source WorkloadIdentityCredentialSource) error {
+	if cfg.workloadIdentity != 0 && cfg.workloadIdentity != source {
+		return fmt.Errorf("requestconfig: workload identity credential options are mutually exclusive")
+	}
+	cfg.workloadIdentity = source
+	return nil
 }
 
 func (cfg *RequestConfig) Apply(opts ...RequestOption) error {

@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"net/http"
+	"time"
 )
 
 type HTTPDoer interface {
@@ -27,6 +28,15 @@ type WorkloadIdentity struct {
 	ServiceAccountID     string
 	Provider             SubjectTokenProvider
 	RefreshBufferSeconds int
+}
+
+// X509WorkloadIdentity configures X.509 workload identity federation. Client
+// certificate and TLS configuration remain the responsibility of the HTTP
+// transport supplied to the OpenAI client.
+type X509WorkloadIdentity struct {
+	IdentityProviderID string
+	ServiceAccountID   string
+	RefreshBuffer      time.Duration
 }
 
 type TokenExchangeResponse struct {

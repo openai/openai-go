@@ -22,7 +22,7 @@ func WorkloadIdentityMiddleware(
 		return resp, err
 	}
 
-	wia.invalidateToken()
+	wia.invalidateToken(token)
 
 	if req.Body != nil && req.GetBody == nil {
 		return resp, nil

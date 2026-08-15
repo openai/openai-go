@@ -1,0 +1,134 @@
+package auth
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"math"
+	"net/http"
+	"time"
+)
+
+const (
+	x509SubjectTokenType          = "urn:openai:params:oauth:token-type:x509"
+	x509TokenExchangeURL          = "https://mtls.auth.openai.com/oauth/token"
+	tokenExchangeMaxRetries       = 2
+	tokenExchangeResponseBodySize = 1 << 20
+)
+
+// x509TokenExchangeRequest deliberately has no SubjectToken or ClientID field.
+// The mutually authenticated TLS connection is the subject credential.
+type x509TokenExchangeRequest struct {
+	GrantType          string `json:"grant_type"`
+	SubjectTokenType   string `json:"subject_token_type"`
+	IdentityProviderID string `json:"identity_provider_id"`
+	ServiceAccountID   string `json:"service_account_id"`
+}
+
+type x509CredentialSource struct {
+	refreshBefore time.Duration
+}
+
+// NewX509WorkloadIdentityAuth creates the HTTP authentication state for an
+// X.509 workload identity. Token exchange remains lazy until GetToken is called.
+func NewX509WorkloadIdentityAuth(config X509WorkloadIdentity) (*WorkloadIdentityAuth, error) {
+	if err := validateWorkloadIdentity("X509WorkloadIdentity", config.IdentityProviderID, config.ServiceAccountID); err != nil {
+		return nil, err
+	}
+	if config.RefreshBuffer < 0 {
+		return nil, fmt.Errorf("X509WorkloadIdentity: RefreshBuffer must be non-negative")
+	}
+	return newWorkloadIdentityAuth(
+		config.IdentityProviderID,
+		config.ServiceAccountID,
+		x509CredentialSource{refreshBefore: config.RefreshBuffer},
+	), nil
+}
+
+func (s x509CredentialSource) exchange(
+	ctx context.Context,
+	httpClient HTTPDoer,
+	identityProviderID string,
+	serviceAccountID string,
+) (exchangedToken, error) {
+	body, err := json.Marshal(x509TokenExchangeRequest{
+		GrantType:          TokenExchangeGrantType,
+		SubjectTokenType:   x509SubjectTokenType,
+		IdentityProviderID: identityProviderID,
+		ServiceAccountID:   serviceAccountID,
+	})
+	if err != nil {
+		return exchangedToken{}, fmt.Errorf("failed to marshal token exchange request: %w", err)
+	}
+	resp, err := exchangeToken(
+		ctx,
+		withoutRedirects(httpClient),
+		x509TokenExchangeURL,
+		body,
+		tokenExchangeMaxRetries,
+	)
+	if err != nil {
+		return exchangedToken{}, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	responseBody, err := readTokenExchangeResponse(resp.Body, tokenExchangeResponseBodySize)
+	if err != nil {
+		return exchangedToken{}, err
+	}
+	return parseX509TokenExchangeResponse(resp.StatusCode, responseBody)
+}
+
+func (s x509CredentialSource) refreshBuffer(expiresIn time.Duration) time.Duration {
+	refreshBefore := s.refreshBefore
+	if refreshBefore == 0 {
+		refreshBefore = DefaultRefreshBuffer
+	}
+	return min(refreshBefore, expiresIn/2)
+}
+
+func parseX509TokenExchangeResponse(statusCode int, body []byte) (exchangedToken, error) {
+	if statusCode == http.StatusBadRequest || statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
+		// Preserve the typed OAuth status without retaining or surfacing an
+		// untrusted response body that could contain credential material.
+		return exchangedToken{}, &OAuthError{StatusCode: statusCode}
+	}
+	if statusCode != http.StatusOK {
+		return exchangedToken{}, fmt.Errorf("token exchange failed with status %d", statusCode)
+	}
+
+	var tokenResp struct {
+		AccessToken string   `json:"access_token"`
+		ExpiresIn   *float64 `json:"expires_in"`
+	}
+	if err := json.Unmarshal(body, &tokenResp); err != nil {
+		return exchangedToken{}, fmt.Errorf("failed to decode token exchange response: %w", err)
+	}
+	if tokenResp.ExpiresIn == nil {
+		return exchangedToken{}, fmt.Errorf("token exchange response requires a positive numeric 'expires_in' field")
+	}
+	seconds := *tokenResp.ExpiresIn
+	if math.IsNaN(seconds) || math.IsInf(seconds, 0) ||
+		seconds > float64(math.MaxInt64)/float64(time.Second) {
+		return exchangedToken{}, fmt.Errorf("token exchange response has invalid 'expires_in' field")
+	}
+	expiresIn := time.Duration(seconds * float64(time.Second))
+	if expiresIn <= 0 {
+		return exchangedToken{}, fmt.Errorf("token exchange response requires a positive numeric 'expires_in' field")
+	}
+	if tokenResp.AccessToken == "" {
+		return exchangedToken{}, fmt.Errorf("token exchange response missing 'access_token' field")
+	}
+	return exchangedToken{accessToken: tokenResp.AccessToken, expiresIn: expiresIn}, nil
+}
+
+func withoutRedirects(httpClient HTTPDoer) HTTPDoer {
+	client, ok := httpClient.(*http.Client)
+	if !ok {
+		return httpClient
+	}
+	clone := *client
+	clone.CheckRedirect = func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	return &clone
+}
