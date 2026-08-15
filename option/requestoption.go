@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -54,12 +53,19 @@ type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
+// comparableHTTPClient preserves a stable identity for custom HTTPClient
+// values that cannot themselves be used as map keys.
+type comparableHTTPClient struct {
+	HTTPClient
+}
+
 // WithHTTPClient returns a RequestOption that changes the underlying http client used to make this
 // request, which by default is [http.DefaultClient].
 //
 // For custom uses cases, it is recommended to provide an [*http.Client] with a custom
 // [http.RoundTripper] as its transport, rather than directly implementing [HTTPClient].
 func WithHTTPClient(client HTTPClient) RequestOption {
+	customHTTPClient := &comparableHTTPClient{HTTPClient: client}
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		if client == nil {
 			return fmt.Errorf("requestoption: custom http client cannot be nil")
@@ -70,7 +76,7 @@ func WithHTTPClient(client HTTPClient) RequestOption {
 			r.HTTPClient = c
 			r.CustomHTTPDoer = nil
 		} else {
-			r.CustomHTTPDoer = client
+			r.CustomHTTPDoer = customHTTPClient
 		}
 
 		return nil
@@ -333,9 +339,10 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 			return err
 		}
 		r.SetAPIKey("")
-		return r.Apply(requestconfig.WithRequestFinalizer(func(r *requestconfig.RequestConfig) error {
+		r.SetWorkloadIdentityFinalizer(func(r *requestconfig.RequestConfig) error {
 			return configureX509Request(r, &cache, config)
-		}))
+		})
+		return nil
 	})
 }
 
@@ -348,10 +355,6 @@ func (c *x509WorkloadIdentityAuthCache) get(
 	httpDoer auth.HTTPDoer,
 	config auth.X509WorkloadIdentity,
 ) (*auth.WorkloadIdentityAuth, error) {
-	if httpDoer == nil || !reflect.TypeOf(httpDoer).Comparable() {
-		return auth.NewX509WorkloadIdentityAuth(config)
-	}
-
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if wia := c.byHTTPDoer[httpDoer]; wia != nil {
@@ -419,6 +422,9 @@ func configureX509Request(
 	if r.CustomHTTPDoer != nil {
 		configuredHTTPDoer = r.CustomHTTPDoer
 	}
+	if configuredHTTPDoer == nil {
+		return errors.New("X.509 workload identity requires an HTTP client")
+	}
 	wia, err := cache.get(configuredHTTPDoer, config)
 	if err != nil {
 		return err
@@ -430,14 +436,11 @@ func configureX509Request(
 			return errors.New("X.509 workload identity API redirects are disabled")
 		}
 		r.HTTPClient = &clone
+		configuredHTTPDoer = &clone
 	}
 
-	var httpDoer auth.HTTPDoer = r.HTTPClient
-	if r.CustomHTTPDoer != nil {
-		httpDoer = r.CustomHTTPDoer
-	}
 	r.Middlewares = append(r.Middlewares, func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
-		return auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
+		return auth.WorkloadIdentityMiddleware(wia, configuredHTTPDoer, req, next)
 	})
 	return nil
 }

@@ -2,6 +2,7 @@ package openai_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +17,14 @@ import (
 	"github.com/openai/openai-go/v3/auth"
 	"github.com/openai/openai-go/v3/option"
 )
+
+type nonComparableHTTPDoer struct {
+	do func(*http.Request) (*http.Response, error)
+}
+
+func (d nonComparableHTTPDoer) Do(req *http.Request) (*http.Response, error) {
+	return d.do(req)
+}
 
 func clientX509WorkloadIdentity() auth.X509WorkloadIdentity {
 	return auth.X509WorkloadIdentity{
@@ -301,6 +310,106 @@ func TestClientX509WorkloadIdentityScopesTokenCacheToHTTPDoer(t *testing.T) {
 	}
 	if got, want := strings.Join(apiAuth["b"], ","), "Bearer token-b"; got != want {
 		t.Errorf("transport B Authorization = %q, want %q", got, want)
+	}
+}
+
+func TestClientX509WorkloadIdentityCachesNonComparableHTTPDoer(t *testing.T) {
+	var exchangeCalls atomic.Int32
+	var apiCalls atomic.Int32
+	httpDoer := nonComparableHTTPDoer{do: func(req *http.Request) (*http.Response, error) {
+		if req.URL.Host == "mtls.auth.openai.com" {
+			exchangeCalls.Add(1)
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				Body:       io.NopCloser(strings.NewReader(`{"access_token":"x509-token","expires_in":3600}`)),
+			}, nil
+		}
+		apiCalls.Add(1)
+		return modelsListResponse(), nil
+	}}
+	const requestCount = 16
+	var ready sync.WaitGroup
+	ready.Add(requestCount)
+	releaseRequests := make(chan struct{})
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+		option.WithHTTPClient(httpDoer),
+		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			ready.Done()
+			<-releaseRequests
+			return next(req)
+		}),
+	)
+
+	errs := make(chan error, requestCount)
+	var requests sync.WaitGroup
+	requests.Add(requestCount)
+	for range requestCount {
+		go func() {
+			defer requests.Done()
+			_, err := client.Models.List(t.Context())
+			errs <- err
+		}()
+	}
+	ready.Wait()
+	close(releaseRequests)
+	requests.Wait()
+	close(errs)
+	for err := range errs {
+		if err != nil {
+			t.Fatalf("Models.List() error = %v", err)
+		}
+	}
+	if got, want := exchangeCalls.Load(), int32(1); got != want {
+		t.Errorf("token exchange calls = %d, want %d", got, want)
+	}
+	if got, want := apiCalls.Load(), int32(requestCount); got != want {
+		t.Errorf("API calls = %d, want %d", got, want)
+	}
+}
+
+func TestClientX509WorkloadIdentityLaterOptionReplacesCredential(t *testing.T) {
+	var exchangedServiceAccounts []string
+	var apiAuthorization string
+	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+		if req.URL.Host == "mtls.auth.openai.com" {
+			var body struct {
+				ServiceAccountID string `json:"service_account_id"`
+			}
+			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+				return nil, err
+			}
+			exchangedServiceAccounts = append(exchangedServiceAccounts, body.ServiceAccountID)
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				Body: io.NopCloser(strings.NewReader(fmt.Sprintf(
+					`{"access_token":"token-%s","expires_in":3600}`,
+					body.ServiceAccountID,
+				))),
+			}, nil
+		}
+		apiAuthorization = req.Header.Get("Authorization")
+		return modelsListResponse(), nil
+	}}}
+	first := clientX509WorkloadIdentity()
+	first.ServiceAccountID = "svc-first"
+	second := clientX509WorkloadIdentity()
+	second.ServiceAccountID = "svc-second"
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(first),
+		option.WithHTTPClient(httpClient),
+	)
+
+	if _, err := client.Models.List(t.Context(), option.WithX509WorkloadIdentity(second)); err != nil {
+		t.Fatalf("Models.List() error = %v", err)
+	}
+	if got, want := strings.Join(exchangedServiceAccounts, ","), "svc-second"; got != want {
+		t.Errorf("exchanged service accounts = %q, want %q", got, want)
+	}
+	if got, want := apiAuthorization, "Bearer token-svc-second"; got != want {
+		t.Errorf("API Authorization = %q, want %q", got, want)
 	}
 }
 

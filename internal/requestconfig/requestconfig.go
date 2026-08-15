@@ -289,6 +289,11 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 			return nil, err
 		}
 	}
+	if cfg.wifFinalizer != nil {
+		if err := cfg.wifFinalizer(&cfg); err != nil {
+			return nil, err
+		}
+	}
 
 	// This must run after `cfg.Apply(...)` above so we know which specific security scheme to add
 	ApplySecurity(cfg)
@@ -335,6 +340,7 @@ type RequestConfig struct {
 	Project            string
 	WebhookSecret      string
 	finalizers         []requestFinalizer
+	wifFinalizer       requestFinalizer
 	authHeaderOverride bool
 	authPreference     authCredentialPreference
 	workloadIdentity   WorkloadIdentityCredentialSource
@@ -757,6 +763,7 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		Project:            cfg.Project,
 		WebhookSecret:      cfg.WebhookSecret,
 		finalizers:         append([]requestFinalizer(nil), cfg.finalizers...),
+		wifFinalizer:       cfg.wifFinalizer,
 		authHeaderOverride: cfg.authHeaderOverride,
 		authPreference:     cfg.authPreference,
 		workloadIdentity:   cfg.workloadIdentity,
@@ -807,6 +814,14 @@ func (cfg *RequestConfig) UseWorkloadIdentityCredential(source WorkloadIdentityC
 	}
 	cfg.workloadIdentity = source
 	return nil
+}
+
+// SetWorkloadIdentityFinalizer installs the finalizer for the selected
+// workload identity branch. A later credential option replaces the earlier
+// finalizer instead of stacking authentication middleware.
+// This function is internal API and may change without notice.
+func (cfg *RequestConfig) SetWorkloadIdentityFinalizer(finalize func(*RequestConfig) error) {
+	cfg.wifFinalizer = finalize
 }
 
 func (cfg *RequestConfig) Apply(opts ...RequestOption) error {

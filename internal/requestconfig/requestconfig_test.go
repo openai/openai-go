@@ -157,6 +157,42 @@ func TestRequestFinalizerComposesThroughApply(t *testing.T) {
 	}
 }
 
+func TestWorkloadIdentityFinalizerReplacesEarlierCredential(t *testing.T) {
+	var finalized []string
+	first := RequestOptionFunc(func(cfg *RequestConfig) error {
+		cfg.SetWorkloadIdentityFinalizer(func(*RequestConfig) error {
+			finalized = append(finalized, "first")
+			return nil
+		})
+		return nil
+	})
+	second := RequestOptionFunc(func(cfg *RequestConfig) error {
+		cfg.SetWorkloadIdentityFinalizer(func(*RequestConfig) error {
+			finalized = append(finalized, "second")
+			return nil
+		})
+		return nil
+	})
+
+	if _, err := NewRequestConfig(
+		context.Background(),
+		http.MethodGet,
+		"/models",
+		nil,
+		nil,
+		first,
+		second,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := len(finalized), 1; got != want {
+		t.Fatalf("finalizer calls = %d, want %d", got, want)
+	}
+	if got, want := finalized[0], "second"; got != want {
+		t.Errorf("finalizer = %q, want %q", got, want)
+	}
+}
+
 func TestRequestConfigClonePreservesCustomHTTPDoer(t *testing.T) {
 	calls := 0
 	cfg, err := NewRequestConfig(context.Background(), http.MethodGet, "/models", nil, nil)
@@ -175,7 +211,6 @@ func TestRequestConfigClonePreservesCustomHTTPDoer(t *testing.T) {
 			Body:       http.NoBody,
 		}, nil
 	})
-
 	clone := cfg.Clone(t.Context())
 	if clone == nil {
 		t.Fatal("Clone() = nil")
