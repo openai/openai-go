@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"sync"
 	"time"
 
@@ -12,12 +13,20 @@ import (
 )
 
 const (
-	TokenExchangeGrantType = "urn:ietf:params:oauth:grant-type:token-exchange"
-	JWTTokenType           = "urn:ietf:params:oauth:token-type:jwt"
-	IDTokenType            = "urn:ietf:params:oauth:token-type:id_token"
-	DefaultTokenExpiry     = 60 * time.Minute
-	DefaultRefreshBuffer   = 20 * time.Minute
-	TokenExchangeURL       = "https://auth.openai.com/oauth/token"
+	TokenExchangeGrantType         = "urn:ietf:params:oauth:grant-type:token-exchange"
+	JWTTokenType                   = "urn:ietf:params:oauth:token-type:jwt"
+	IDTokenType                    = "urn:ietf:params:oauth:token-type:id_token"
+	DefaultTokenExpiry             = 60 * time.Minute
+	DefaultRefreshBuffer           = 20 * time.Minute
+	TokenExchangeURL               = "https://auth.openai.com/oauth/token"
+	workloadIdentityRefreshTimeout = 30 * time.Second
+)
+
+type workloadIdentityCredentialSourceKind uint8
+
+const (
+	workloadIdentityCredentialSourceSubjectToken workloadIdentityCredentialSourceKind = iota + 1
+	workloadIdentityCredentialSourceX509
 )
 
 type WorkloadIdentityAuth struct {
@@ -25,8 +34,10 @@ type WorkloadIdentityAuth struct {
 	serviceAccountID   string
 	source             workloadIdentityCredentialSource
 
-	// Protects cachedToken, tokenExpiry, tokenRefreshAt, and refreshInFlight.
+	// Protects boundHTTPDoer, cachedToken, tokenExpiry, tokenRefreshAt, and
+	// refreshInFlight.
 	mu              sync.Mutex
+	boundHTTPDoer   HTTPDoer
 	cachedToken     string
 	tokenExpiry     time.Time
 	tokenRefreshAt  time.Time
@@ -43,8 +54,10 @@ type tokenRefreshResult struct {
 // Coordinates concurrent access to a single in-flight refresh operation
 // done channel signals completion to all waiting goroutines
 type tokenRefreshState struct {
-	done   chan struct{}
-	result tokenRefreshResult
+	done    chan struct{}
+	result  tokenRefreshResult
+	cancel  context.CancelFunc
+	waiters int
 }
 
 type subjectTokenExchangeRequest struct {
@@ -64,6 +77,7 @@ type exchangedToken struct {
 type workloadIdentityCredentialSource interface {
 	exchange(context.Context, HTTPDoer, string, string) (exchangedToken, error)
 	refreshBuffer(time.Duration) time.Duration
+	kind() workloadIdentityCredentialSourceKind
 }
 
 type subjectTokenCredentialSource struct {
@@ -124,6 +138,10 @@ func (s subjectTokenCredentialSource) refreshBuffer(time.Duration) time.Duration
 	return s.refreshBefore
 }
 
+func (subjectTokenCredentialSource) kind() workloadIdentityCredentialSourceKind {
+	return workloadIdentityCredentialSourceSubjectToken
+}
+
 func NewWorkloadIdentityAuth(config WorkloadIdentity) (*WorkloadIdentityAuth, error) {
 	if err := validateWorkloadIdentity("WorkloadIdentity", config.IdentityProviderID, config.ServiceAccountID); err != nil {
 		return nil, err
@@ -174,6 +192,10 @@ func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer
 
 	// Lock for entire decision: check cache, decide refresh strategy, potentially start background refresh
 	w.mu.Lock()
+	if err := w.bindHTTPDoerLocked(httpClient); err != nil {
+		w.mu.Unlock()
+		return "", err
+	}
 
 	if w.cachedToken == "" {
 		return w.handleLockedRefresh(ctx, httpClient)
@@ -187,12 +209,7 @@ func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer
 	// Proactive background refresh: start if within refresh window and no refresh active
 	if !now.Before(w.tokenRefreshAt) && w.refreshInFlight == nil {
 		state := w.beginRefreshLocked()
-		// Background goroutine with independent context, lock released before spawn
-		go func() {
-			refreshCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			w.finishRefresh(state, w.refreshToken(refreshCtx, httpClient))
-		}()
+		w.startSharedRefresh(state, httpClient)
 	}
 
 	token := w.cachedToken
@@ -203,8 +220,13 @@ func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer
 // Single-flight pattern: ensures only one refresh runs, others wait for result
 func (w *WorkloadIdentityAuth) handleLockedRefresh(ctx context.Context, httpClient HTTPDoer) (string, error) {
 	if w.refreshInFlight == nil {
-		// No refresh running: start foreground refresh, unlock before blocking operation
 		state := w.beginRefreshLocked()
+		if w.source.kind() == workloadIdentityCredentialSourceX509 {
+			w.startSharedRefresh(state, httpClient)
+			return w.waitForLockedRefresh(ctx, state)
+		}
+
+		// Preserve subject-token WIF's foreground context behavior.
 		w.mu.Unlock()
 		result := w.refreshToken(ctx, httpClient)
 		w.finishRefresh(state, result)
@@ -213,8 +235,32 @@ func (w *WorkloadIdentityAuth) handleLockedRefresh(ctx context.Context, httpClie
 
 	// Refresh already running: unlock and wait for its completion
 	state := w.refreshInFlight
+	return w.waitForLockedRefresh(ctx, state)
+}
+
+func (w *WorkloadIdentityAuth) waitForLockedRefresh(ctx context.Context, state *tokenRefreshState) (string, error) {
+	if state.cancel != nil {
+		state.waiters++
+	}
 	w.mu.Unlock()
 	return w.waitForRefresh(ctx, state)
+}
+
+func (w *WorkloadIdentityAuth) bindHTTPDoerLocked(httpClient HTTPDoer) error {
+	if w.source.kind() != workloadIdentityCredentialSourceX509 {
+		return nil
+	}
+	if !reflect.TypeOf(httpClient).Comparable() {
+		return fmt.Errorf("X.509 workload identity requires a comparable HTTP client")
+	}
+	if w.boundHTTPDoer == nil {
+		w.boundHTTPDoer = httpClient
+		return nil
+	}
+	if w.boundHTTPDoer != httpClient {
+		return fmt.Errorf("X.509 workload identity auth cannot change HTTP clients")
+	}
+	return nil
 }
 
 func (w *WorkloadIdentityAuth) invalidateToken(token string) {
@@ -231,6 +277,15 @@ func (w *WorkloadIdentityAuth) invalidateToken(token string) {
 func (w *WorkloadIdentityAuth) beginRefreshLocked() *tokenRefreshState {
 	w.refreshInFlight = &tokenRefreshState{done: make(chan struct{})}
 	return w.refreshInFlight
+}
+
+func (w *WorkloadIdentityAuth) startSharedRefresh(state *tokenRefreshState, httpClient HTTPDoer) {
+	refreshCtx, cancel := context.WithTimeout(context.Background(), workloadIdentityRefreshTimeout)
+	state.cancel = cancel
+	go func() {
+		defer cancel()
+		w.finishRefresh(state, w.refreshToken(refreshCtx, httpClient))
+	}()
 }
 
 // Atomically publishes refresh result and signals all waiting goroutines via channel close
@@ -256,7 +311,21 @@ func (w *WorkloadIdentityAuth) waitForRefresh(ctx context.Context, state *tokenR
 	case <-state.done: // Refresh completed
 		return state.result.token, state.result.err
 	case <-ctx.Done(): // Caller context canceled
+		w.cancelRefreshWaiter(state)
 		return "", ctx.Err()
+	}
+}
+
+func (w *WorkloadIdentityAuth) cancelRefreshWaiter(state *tokenRefreshState) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if w.refreshInFlight != state || state.cancel == nil {
+		return
+	}
+	state.waiters--
+	if state.waiters == 0 {
+		w.refreshInFlight = nil
+		state.cancel()
 	}
 }
 

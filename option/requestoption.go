@@ -436,7 +436,6 @@ func configureX509Request(
 			return errors.New("X.509 workload identity API redirects are disabled")
 		}
 		r.HTTPClient = &clone
-		configuredHTTPDoer = &clone
 	}
 
 	r.Middlewares = append(r.Middlewares, func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {

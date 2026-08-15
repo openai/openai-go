@@ -48,6 +48,8 @@ func noRetryX509TokenExchangeError(err error) error {
 
 // NewX509WorkloadIdentityAuth creates the HTTP authentication state for an
 // X.509 workload identity. Token exchange remains lazy until GetToken is called.
+// The state binds to the first comparable HTTPDoer used and rejects later doer
+// changes so cached tokens cannot cross certificate-backed transports.
 func NewX509WorkloadIdentityAuth(config X509WorkloadIdentity) (*WorkloadIdentityAuth, error) {
 	if err := validateWorkloadIdentity("X509WorkloadIdentity", config.IdentityProviderID, config.ServiceAccountID); err != nil {
 		return nil, err
@@ -102,6 +104,10 @@ func (s x509CredentialSource) refreshBuffer(expiresIn time.Duration) time.Durati
 		refreshBefore = DefaultRefreshBuffer
 	}
 	return min(refreshBefore, expiresIn/2)
+}
+
+func (x509CredentialSource) kind() workloadIdentityCredentialSourceKind {
+	return workloadIdentityCredentialSourceX509
 }
 
 func parseX509TokenExchangeResponse(statusCode int, body []byte) (exchangedToken, error) {

@@ -75,6 +75,48 @@ func TestX509WorkloadIdentityDoesNotOwnCertificateMaterial(t *testing.T) {
 	}
 }
 
+func TestX509WorkloadIdentityAuthRejectsHTTPDoerChange(t *testing.T) {
+	var callsA atomic.Int32
+	var callsB atomic.Int32
+	httpClientA := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+		callsA.Add(1)
+		return tokenResponse("token-a", 60), nil
+	}}}
+	httpClientB := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+		callsB.Add(1)
+		return tokenResponse("token-b", 60), nil
+	}}}
+	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+	if err != nil {
+		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+	}
+
+	token, err := wia.GetToken(t.Context(), httpClientA)
+	if err != nil {
+		t.Fatalf("first GetToken() error = %v", err)
+	}
+	if token != "token-a" {
+		t.Fatalf("first GetToken() = %q, want token-a", token)
+	}
+	_, err = wia.GetToken(t.Context(), httpClientB)
+	if err == nil {
+		t.Fatal("GetToken() with different HTTP client error = nil")
+	}
+	token, err = wia.GetToken(t.Context(), httpClientA)
+	if err != nil {
+		t.Fatalf("cached GetToken() error = %v", err)
+	}
+	if token != "token-a" {
+		t.Errorf("cached GetToken() = %q, want token-a", token)
+	}
+	if got, want := callsA.Load(), int32(1); got != want {
+		t.Errorf("HTTP client A exchange calls = %d, want %d", got, want)
+	}
+	if got := callsB.Load(); got != 0 {
+		t.Errorf("HTTP client B exchange calls = %d, want 0", got)
+	}
+}
+
 func TestX509TokenExchangeRequest(t *testing.T) {
 	var requestBody map[string]any
 	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
@@ -378,6 +420,37 @@ func TestX509CanceledWaiterDoesNotCancelRefresh(t *testing.T) {
 	close(releaseExchange)
 	if err := <-leaderDone; err != nil {
 		t.Fatalf("leader GetToken() error = %v", err)
+	}
+}
+
+func TestX509CanceledOnlyWaiterCancelsSharedRefresh(t *testing.T) {
+	exchangeStarted := make(chan struct{})
+	exchangeCanceled := make(chan struct{})
+	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+		close(exchangeStarted)
+		<-req.Context().Done()
+		close(exchangeCanceled)
+		return nil, req.Context().Err()
+	}}}
+	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+	if err != nil {
+		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+	}
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan error, 1)
+	go func() {
+		_, getTokenErr := wia.GetToken(ctx, httpClient)
+		done <- getTokenErr
+	}()
+	<-exchangeStarted
+	cancel()
+	if err := <-done; !errors.Is(err, context.Canceled) {
+		t.Errorf("GetToken() error = %v, want context.Canceled", err)
+	}
+	select {
+	case <-exchangeCanceled:
+	case <-time.After(time.Second):
+		t.Fatal("shared exchange context was not canceled")
 	}
 }
 
