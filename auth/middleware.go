@@ -48,5 +48,9 @@ func WorkloadIdentityMiddleware(
 	}
 
 	_ = resp.Body.Close()
-	return next(retryReq)
+	resp, err = next(retryReq)
+	if err != nil && retryReq.Body != nil {
+		_ = retryReq.Body.Close()
+	}
+	return resp, err
 }

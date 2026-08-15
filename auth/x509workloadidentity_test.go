@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -17,6 +18,16 @@ import (
 
 	"github.com/openai/openai-go/v3/auth"
 )
+
+type closeTrackingReadCloser struct {
+	io.ReadCloser
+	closes atomic.Int32
+}
+
+func (b *closeTrackingReadCloser) Close() error {
+	b.closes.Add(1)
+	return b.ReadCloser.Close()
+}
 
 func testX509WorkloadIdentity() auth.X509WorkloadIdentity {
 	return auth.X509WorkloadIdentity{
@@ -619,5 +630,82 @@ func TestX509Concurrent401InvalidationKeepsNewToken(t *testing.T) {
 	}
 	if got, want := exchangeCalls.Load(), int32(2); got != want {
 		t.Errorf("token exchange calls = %d, want %d", got, want)
+	}
+}
+
+func TestX509WorkloadIdentity401ClosesReplayBodyWhenMiddlewareFails(t *testing.T) {
+	var exchangeCalls atomic.Int32
+	exchangeClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+		call := exchangeCalls.Add(1)
+		return tokenResponse(fmt.Sprintf("token-%d", call), 60), nil
+	}}}
+	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+	if err != nil {
+		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+	}
+
+	bodyPath := t.TempDir() + "/body"
+	if writeErr := os.WriteFile(bodyPath, []byte("request body"), 0o600); writeErr != nil {
+		t.Fatal(writeErr)
+	}
+	req, err := http.NewRequestWithContext(
+		t.Context(),
+		http.MethodPost,
+		"https://mtls.api.openai.com/v1/custom",
+		strings.NewReader("request body"),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = req.Body.Close() }()
+
+	var replayBody *closeTrackingReadCloser
+	req.GetBody = func() (io.ReadCloser, error) {
+		body, openErr := os.Open(bodyPath)
+		if openErr != nil {
+			return nil, openErr
+		}
+		replayBody = &closeTrackingReadCloser{ReadCloser: body}
+		return replayBody, nil
+	}
+
+	middlewareErr := errors.New("middleware rejected replay")
+	var calls int
+	next := func(*http.Request) (*http.Response, error) {
+		calls++
+		if calls == 1 {
+			return &http.Response{
+				StatusCode: http.StatusUnauthorized,
+				Body:       http.NoBody,
+				Header:     make(http.Header),
+			}, nil
+		}
+		return nil, middlewareErr
+	}
+
+	resp, err := auth.WorkloadIdentityMiddleware(wia, exchangeClient, req, next)
+	if !errors.Is(err, middlewareErr) {
+		t.Fatalf("WorkloadIdentityMiddleware() error = %v, want %v", err, middlewareErr)
+	}
+	if resp != nil {
+		if resp.Body != nil {
+			_ = resp.Body.Close()
+		}
+		t.Errorf("WorkloadIdentityMiddleware() response = %#v, want nil", resp)
+	}
+	if got, want := calls, 2; got != want {
+		t.Errorf("middleware calls = %d, want %d", got, want)
+	}
+	if got, want := exchangeCalls.Load(), int32(2); got != want {
+		t.Errorf("token exchange calls = %d, want %d", got, want)
+	}
+	if replayBody == nil {
+		t.Fatal("GetBody was not called")
+	}
+	if got, want := replayBody.closes.Load(), int32(1); got != want {
+		t.Errorf("replay body closes = %d, want %d", got, want)
+	}
+	if _, err := replayBody.Read(make([]byte, 1)); err == nil {
+		t.Error("replay body remains readable after middleware error")
 	}
 }
