@@ -423,6 +423,11 @@ func withWorkloadIdentityAuth(
 			} else {
 				httpDoer = r.HTTPClient
 			}
+			if credentialSource == requestconfig.WorkloadIdentityCredentialSourceSubjectToken {
+				if wrapped, ok := httpDoer.(*comparableHTTPClient); ok {
+					httpDoer = wrapped.HTTPClient
+				}
+			}
 
 			return auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
 		})

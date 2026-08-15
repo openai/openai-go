@@ -23,6 +23,19 @@ type mockSubjectTokenProvider struct {
 	mu        sync.Mutex
 }
 
+type observingSubjectTokenProvider struct {
+	httpDoer auth.HTTPDoer
+}
+
+func (*observingSubjectTokenProvider) TokenType() auth.SubjectTokenType {
+	return auth.SubjectTokenTypeJWT
+}
+
+func (p *observingSubjectTokenProvider) GetToken(_ context.Context, httpDoer auth.HTTPDoer) (string, error) {
+	p.httpDoer = httpDoer
+	return "test-subject-token", nil
+}
+
 func (m *mockSubjectTokenProvider) TokenType() auth.SubjectTokenType {
 	return m.tokenType
 }
@@ -45,6 +58,32 @@ func testWorkloadIdentity(provider auth.SubjectTokenProvider) auth.WorkloadIdent
 		IdentityProviderID: "test-idp-id",
 		ServiceAccountID:   "test-sa-id",
 		Provider:           provider,
+	}
+}
+
+func TestClientWorkloadIdentityPreservesNonComparableHTTPDoerForProvider(t *testing.T) {
+	provider := &observingSubjectTokenProvider{}
+	httpDoer := nonComparableHTTPDoer{do: func(req *http.Request) (*http.Response, error) {
+		if req.URL.Host == "auth.openai.com" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				Body:       io.NopCloser(strings.NewReader(`{"access_token":"exchanged-token","expires_in":3600}`)),
+			}, nil
+		}
+		return modelsListResponse(), nil
+	}}
+	client := openai.NewClient(
+		option.WithWorkloadIdentity(testWorkloadIdentity(provider)),
+		option.WithHTTPClient(httpDoer),
+		option.WithMaxRetries(0),
+	)
+
+	if _, err := client.Models.List(t.Context()); err != nil {
+		t.Fatalf("Models.List() error = %v", err)
+	}
+	if _, ok := provider.httpDoer.(nonComparableHTTPDoer); !ok {
+		t.Fatalf("provider HTTP doer type = %T, want nonComparableHTTPDoer", provider.httpDoer)
 	}
 }
 
