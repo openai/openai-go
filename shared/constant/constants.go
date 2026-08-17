@@ -318,6 +318,11 @@ type ResponseReasoningTextDelta string                       // Always "response
 type ResponseReasoningTextDone string                        // Always "response.reasoning_text.done"
 type ResponseRefusalDelta string                             // Always "response.refusal.delta"
 type ResponseRefusalDone string                              // Always "response.refusal.done"
+type ResponseShellCallCommandAdded string                    // Always "response.shell_call_command.added"
+type ResponseShellCallCommandDelta string                    // Always "response.shell_call_command.delta"
+type ResponseShellCallCommandDone string                     // Always "response.shell_call_command.done"
+type ResponseShellCallOutputContentDelta string              // Always "response.shell_call_output_content.delta"
+type ResponseShellCallOutputContentDone string               // Always "response.shell_call_output_content.done"
 type ResponseWebSearchCallCompleted string                   // Always "response.web_search_call.completed"
 type ResponseWebSearchCallInProgress string                  // Always "response.web_search_call.in_progress"
 type ResponseWebSearchCallSearching string                   // Always "response.web_search_call.searching"
@@ -918,6 +923,21 @@ func (c ResponseReasoningTextDone) Default() ResponseReasoningTextDone {
 }
 func (c ResponseRefusalDelta) Default() ResponseRefusalDelta { return "response.refusal.delta" }
 func (c ResponseRefusalDone) Default() ResponseRefusalDone   { return "response.refusal.done" }
+func (c ResponseShellCallCommandAdded) Default() ResponseShellCallCommandAdded {
+	return "response.shell_call_command.added"
+}
+func (c ResponseShellCallCommandDelta) Default() ResponseShellCallCommandDelta {
+	return "response.shell_call_command.delta"
+}
+func (c ResponseShellCallCommandDone) Default() ResponseShellCallCommandDone {
+	return "response.shell_call_command.done"
+}
+func (c ResponseShellCallOutputContentDelta) Default() ResponseShellCallOutputContentDelta {
+	return "response.shell_call_output_content.delta"
+}
+func (c ResponseShellCallOutputContentDone) Default() ResponseShellCallOutputContentDone {
+	return "response.shell_call_output_content.done"
+}
 func (c ResponseWebSearchCallCompleted) Default() ResponseWebSearchCallCompleted {
 	return "response.web_search_call.completed"
 }
@@ -1344,141 +1364,146 @@ func (c ResponseImageGenerationCallInProgress) MarshalJSON() ([]byte, error) { r
 func (c ResponseImageGenerationCallPartialImage) MarshalJSON() ([]byte, error) {
 	return marshalString(c)
 }
-func (c ResponseInProgress) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
-func (c ResponseIncomplete) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
-func (c ResponseInject) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
-func (c ResponseInjectCreated) MarshalJSON() ([]byte, error)              { return marshalString(c) }
-func (c ResponseInjectFailed) MarshalJSON() ([]byte, error)               { return marshalString(c) }
-func (c ResponseInputTokens) MarshalJSON() ([]byte, error)                { return marshalString(c) }
-func (c ResponseMcpCallArgumentsDelta) MarshalJSON() ([]byte, error)      { return marshalString(c) }
-func (c ResponseMcpCallArgumentsDone) MarshalJSON() ([]byte, error)       { return marshalString(c) }
-func (c ResponseMcpCallCompleted) MarshalJSON() ([]byte, error)           { return marshalString(c) }
-func (c ResponseMcpCallFailed) MarshalJSON() ([]byte, error)              { return marshalString(c) }
-func (c ResponseMcpCallInProgress) MarshalJSON() ([]byte, error)          { return marshalString(c) }
-func (c ResponseMcpListToolsCompleted) MarshalJSON() ([]byte, error)      { return marshalString(c) }
-func (c ResponseMcpListToolsFailed) MarshalJSON() ([]byte, error)         { return marshalString(c) }
-func (c ResponseMcpListToolsInProgress) MarshalJSON() ([]byte, error)     { return marshalString(c) }
-func (c ResponseOutputAudioTranscriptDelta) MarshalJSON() ([]byte, error) { return marshalString(c) }
-func (c ResponseOutputAudioTranscriptDone) MarshalJSON() ([]byte, error)  { return marshalString(c) }
-func (c ResponseOutputAudioDelta) MarshalJSON() ([]byte, error)           { return marshalString(c) }
-func (c ResponseOutputAudioDone) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c ResponseOutputItemAdded) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c ResponseOutputItemDone) MarshalJSON() ([]byte, error)             { return marshalString(c) }
-func (c ResponseOutputTextAnnotationAdded) MarshalJSON() ([]byte, error)  { return marshalString(c) }
-func (c ResponseOutputTextDelta) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c ResponseOutputTextDone) MarshalJSON() ([]byte, error)             { return marshalString(c) }
-func (c ResponseQueued) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
-func (c ResponseReasoningSummaryPartAdded) MarshalJSON() ([]byte, error)  { return marshalString(c) }
-func (c ResponseReasoningSummaryPartDone) MarshalJSON() ([]byte, error)   { return marshalString(c) }
-func (c ResponseReasoningSummaryTextDelta) MarshalJSON() ([]byte, error)  { return marshalString(c) }
-func (c ResponseReasoningSummaryTextDone) MarshalJSON() ([]byte, error)   { return marshalString(c) }
-func (c ResponseReasoningTextDelta) MarshalJSON() ([]byte, error)         { return marshalString(c) }
-func (c ResponseReasoningTextDone) MarshalJSON() ([]byte, error)          { return marshalString(c) }
-func (c ResponseRefusalDelta) MarshalJSON() ([]byte, error)               { return marshalString(c) }
-func (c ResponseRefusalDone) MarshalJSON() ([]byte, error)                { return marshalString(c) }
-func (c ResponseWebSearchCallCompleted) MarshalJSON() ([]byte, error)     { return marshalString(c) }
-func (c ResponseWebSearchCallInProgress) MarshalJSON() ([]byte, error)    { return marshalString(c) }
-func (c ResponseWebSearchCallSearching) MarshalJSON() ([]byte, error)     { return marshalString(c) }
-func (c RetentionRatio) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
-func (c Role) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
-func (c RoleDeleted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
-func (c ScoreModel) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
-func (c Screenshot) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
-func (c Scroll) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c Search) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c SemanticVad) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
-func (c ServerVad) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
-func (c SessionClose) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
-func (c SessionClosed) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
-func (c SessionCreated) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
-func (c SessionInputAudioBufferAppend) MarshalJSON() ([]byte, error)      { return marshalString(c) }
-func (c SessionInputTranscriptDelta) MarshalJSON() ([]byte, error)        { return marshalString(c) }
-func (c SessionOutputAudioDelta) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c SessionOutputTranscriptDelta) MarshalJSON() ([]byte, error)       { return marshalString(c) }
-func (c SessionUpdate) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
-func (c SessionUpdated) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
-func (c Shell) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
-func (c ShellCall) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
-func (c ShellCallOutput) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
-func (c Skill) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
-func (c SkillReference) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
-func (c SkillDeleted) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
-func (c SkillVersion) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
-func (c SkillVersionDeleted) MarshalJSON() ([]byte, error)                { return marshalString(c) }
-func (c Static) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c StringCheck) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
-func (c SubmitToolOutputs) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
-func (c SummaryText) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
-func (c SynthID) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
-func (c System) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c Text) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
-func (c TextCompletion) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
-func (c TextSimilarity) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
-func (c Thread) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c ThreadCreated) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
-func (c ThreadDeleted) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
-func (c ThreadMessage) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
-func (c ThreadMessageCompleted) MarshalJSON() ([]byte, error)             { return marshalString(c) }
-func (c ThreadMessageCreated) MarshalJSON() ([]byte, error)               { return marshalString(c) }
-func (c ThreadMessageDeleted) MarshalJSON() ([]byte, error)               { return marshalString(c) }
-func (c ThreadMessageDelta) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
-func (c ThreadMessageInProgress) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c ThreadMessageIncomplete) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c ThreadRun) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
-func (c ThreadRunCancelled) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
-func (c ThreadRunCancelling) MarshalJSON() ([]byte, error)                { return marshalString(c) }
-func (c ThreadRunCompleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
-func (c ThreadRunCreated) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
-func (c ThreadRunExpired) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
-func (c ThreadRunFailed) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
-func (c ThreadRunInProgress) MarshalJSON() ([]byte, error)                { return marshalString(c) }
-func (c ThreadRunIncomplete) MarshalJSON() ([]byte, error)                { return marshalString(c) }
-func (c ThreadRunQueued) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
-func (c ThreadRunRequiresAction) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c ThreadRunStep) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
-func (c ThreadRunStepCancelled) MarshalJSON() ([]byte, error)             { return marshalString(c) }
-func (c ThreadRunStepCompleted) MarshalJSON() ([]byte, error)             { return marshalString(c) }
-func (c ThreadRunStepCreated) MarshalJSON() ([]byte, error)               { return marshalString(c) }
-func (c ThreadRunStepDelta) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
-func (c ThreadRunStepExpired) MarshalJSON() ([]byte, error)               { return marshalString(c) }
-func (c ThreadRunStepFailed) MarshalJSON() ([]byte, error)                { return marshalString(c) }
-func (c ThreadRunStepInProgress) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c Timeout) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
-func (c Tokens) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c Tool) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
-func (c ToolCalls) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
-func (c ToolExecutionError) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
-func (c ToolSearch) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
-func (c ToolSearchCall) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
-func (c ToolSearchOutput) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
-func (c Transcribe) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
-func (c TranscriptTextDelta) MarshalJSON() ([]byte, error)                { return marshalString(c) }
-func (c TranscriptTextDone) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
-func (c TranscriptTextSegment) MarshalJSON() ([]byte, error)              { return marshalString(c) }
-func (c Transcription) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
-func (c TranscriptionSessionUpdate) MarshalJSON() ([]byte, error)         { return marshalString(c) }
-func (c TranscriptionSessionUpdated) MarshalJSON() ([]byte, error)        { return marshalString(c) }
-func (c Translation) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
-func (c Type) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
-func (c UpdateFile) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
-func (c Upload) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
-func (c UploadPart) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
-func (c URL) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
-func (c URLCitation) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
-func (c User) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
-func (c UserRole) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
-func (c VectorStore) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
-func (c VectorStoreDeleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
-func (c VectorStoreFile) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
-func (c VectorStoreFileContentPage) MarshalJSON() ([]byte, error)         { return marshalString(c) }
-func (c VectorStoreFileDeleted) MarshalJSON() ([]byte, error)             { return marshalString(c) }
-func (c VectorStoreFilesBatch) MarshalJSON() ([]byte, error)              { return marshalString(c) }
-func (c VectorStoreSearchResultsPage) MarshalJSON() ([]byte, error)       { return marshalString(c) }
-func (c Video) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
-func (c VideoDeleted) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
-func (c Wait) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
-func (c Wandb) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
-func (c WebSearchCall) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c ResponseInProgress) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c ResponseIncomplete) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c ResponseInject) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c ResponseInjectCreated) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c ResponseInjectFailed) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c ResponseInputTokens) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c ResponseMcpCallArgumentsDelta) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c ResponseMcpCallArgumentsDone) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c ResponseMcpCallCompleted) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c ResponseMcpCallFailed) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c ResponseMcpCallInProgress) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c ResponseMcpListToolsCompleted) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c ResponseMcpListToolsFailed) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c ResponseMcpListToolsInProgress) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c ResponseOutputAudioTranscriptDelta) MarshalJSON() ([]byte, error)  { return marshalString(c) }
+func (c ResponseOutputAudioTranscriptDone) MarshalJSON() ([]byte, error)   { return marshalString(c) }
+func (c ResponseOutputAudioDelta) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c ResponseOutputAudioDone) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ResponseOutputItemAdded) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ResponseOutputItemDone) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c ResponseOutputTextAnnotationAdded) MarshalJSON() ([]byte, error)   { return marshalString(c) }
+func (c ResponseOutputTextDelta) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ResponseOutputTextDone) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c ResponseQueued) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c ResponseReasoningSummaryPartAdded) MarshalJSON() ([]byte, error)   { return marshalString(c) }
+func (c ResponseReasoningSummaryPartDone) MarshalJSON() ([]byte, error)    { return marshalString(c) }
+func (c ResponseReasoningSummaryTextDelta) MarshalJSON() ([]byte, error)   { return marshalString(c) }
+func (c ResponseReasoningSummaryTextDone) MarshalJSON() ([]byte, error)    { return marshalString(c) }
+func (c ResponseReasoningTextDelta) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c ResponseReasoningTextDone) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c ResponseRefusalDelta) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c ResponseRefusalDone) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c ResponseShellCallCommandAdded) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c ResponseShellCallCommandDelta) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c ResponseShellCallCommandDone) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c ResponseShellCallOutputContentDelta) MarshalJSON() ([]byte, error) { return marshalString(c) }
+func (c ResponseShellCallOutputContentDone) MarshalJSON() ([]byte, error)  { return marshalString(c) }
+func (c ResponseWebSearchCallCompleted) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c ResponseWebSearchCallInProgress) MarshalJSON() ([]byte, error)     { return marshalString(c) }
+func (c ResponseWebSearchCallSearching) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c RetentionRatio) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c Role) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c RoleDeleted) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c ScoreModel) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c Screenshot) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c Scroll) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c Search) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c SemanticVad) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c ServerVad) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
+func (c SessionClose) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c SessionClosed) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c SessionCreated) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c SessionInputAudioBufferAppend) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c SessionInputTranscriptDelta) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c SessionOutputAudioDelta) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c SessionOutputTranscriptDelta) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c SessionUpdate) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c SessionUpdated) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c Shell) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
+func (c ShellCall) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
+func (c ShellCallOutput) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c Skill) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
+func (c SkillReference) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c SkillDeleted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c SkillVersion) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c SkillVersionDeleted) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c Static) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c StringCheck) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c SubmitToolOutputs) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c SummaryText) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c SynthID) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
+func (c System) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c Text) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c TextCompletion) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c TextSimilarity) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c Thread) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c ThreadCreated) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c ThreadDeleted) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c ThreadMessage) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c ThreadMessageCompleted) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c ThreadMessageCreated) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c ThreadMessageDeleted) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c ThreadMessageDelta) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c ThreadMessageInProgress) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ThreadMessageIncomplete) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ThreadRun) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
+func (c ThreadRunCancelled) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c ThreadRunCancelling) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c ThreadRunCompleted) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c ThreadRunCreated) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c ThreadRunExpired) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c ThreadRunFailed) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c ThreadRunInProgress) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c ThreadRunIncomplete) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c ThreadRunQueued) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c ThreadRunRequiresAction) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ThreadRunStep) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c ThreadRunStepCancelled) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c ThreadRunStepCompleted) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c ThreadRunStepCreated) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c ThreadRunStepDelta) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c ThreadRunStepExpired) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c ThreadRunStepFailed) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c ThreadRunStepInProgress) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c Timeout) MarshalJSON() ([]byte, error)                             { return marshalString(c) }
+func (c Tokens) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c Tool) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c ToolCalls) MarshalJSON() ([]byte, error)                           { return marshalString(c) }
+func (c ToolExecutionError) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c ToolSearch) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c ToolSearchCall) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c ToolSearchOutput) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c Transcribe) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c TranscriptTextDelta) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c TranscriptTextDone) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c TranscriptTextSegment) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c Transcription) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c TranscriptionSessionUpdate) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c TranscriptionSessionUpdated) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c Translation) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c Type) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c UpdateFile) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c Upload) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
+func (c UploadPart) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
+func (c URL) MarshalJSON() ([]byte, error)                                 { return marshalString(c) }
+func (c URLCitation) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c User) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c UserRole) MarshalJSON() ([]byte, error)                            { return marshalString(c) }
+func (c VectorStore) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
+func (c VectorStoreDeleted) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c VectorStoreFile) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c VectorStoreFileContentPage) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c VectorStoreFileDeleted) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c VectorStoreFilesBatch) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c VectorStoreSearchResultsPage) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c Video) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
+func (c VideoDeleted) MarshalJSON() ([]byte, error)                        { return marshalString(c) }
+func (c Wait) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c Wandb) MarshalJSON() ([]byte, error)                               { return marshalString(c) }
+func (c WebSearchCall) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
 
 type constant[T any] interface {
 	Constant[T]

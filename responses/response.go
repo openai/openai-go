@@ -11010,6 +11010,14 @@ type ResponseImageGenCallPartialImageEvent struct {
 	SequenceNumber int64 `json:"sequence_number" api:"required"`
 	// The type of the event. Always 'response.image_generation_call.partial_image'.
 	Type constant.ResponseImageGenerationCallPartialImage `json:"type" default:"response.image_generation_call.partial_image"`
+	// The background setting that was used.
+	Background string `json:"background"`
+	// The output format that was used.
+	OutputFormat string `json:"output_format"`
+	// The image quality that was used.
+	Quality string `json:"quality"`
+	// The image size that was used.
+	Size string `json:"size"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		ItemID            respjson.Field
@@ -11018,6 +11026,10 @@ type ResponseImageGenCallPartialImageEvent struct {
 		PartialImageIndex respjson.Field
 		SequenceNumber    respjson.Field
 		Type              respjson.Field
+		Background        respjson.Field
+		OutputFormat      respjson.Field
+		Quality           respjson.Field
+		Size              respjson.Field
 		ExtraFields       map[string]respjson.Field
 		raw               string
 	} `json:"-"`
@@ -21852,6 +21864,327 @@ func (r *ResponseRefusalDoneEvent) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// A streaming event that indicated a shell command was added to a tool call.
+type ResponseShellCallCommandAddedEvent struct {
+	// The shell command that was added.
+	Command string `json:"command" api:"required"`
+	// The index of the shell command that was added.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The type of the event, always `response.shell_call_command.added`.
+	Type constant.ResponseShellCallCommandAdded `json:"type" default:"response.shell_call_command.added"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Command        respjson.Field
+		CommandIndex   respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseShellCallCommandAddedEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseShellCallCommandAddedEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated a shell command was incrementally updated.
+type ResponseShellCallCommandDeltaEvent struct {
+	// The index of the shell command that was updated.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The shell command delta that was appended.
+	Delta string `json:"delta" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The type of the event, always `response.shell_call_command.delta`.
+	Type constant.ResponseShellCallCommandDelta `json:"type" default:"response.shell_call_command.delta"`
+	// An obfuscation string that was added to pad the event payload.
+	Obfuscation string `json:"obfuscation"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CommandIndex   respjson.Field
+		Delta          respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		Obfuscation    respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseShellCallCommandDeltaEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseShellCallCommandDeltaEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated a shell command was completed.
+type ResponseShellCallCommandDoneEvent struct {
+	// The final shell command that was emitted.
+	Command string `json:"command" api:"required"`
+	// The index of the shell command that was completed.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The type of the event, always `response.shell_call_command.done`.
+	Type constant.ResponseShellCallCommandDone `json:"type" default:"response.shell_call_command.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Command        respjson.Field
+		CommandIndex   respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseShellCallCommandDoneEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseShellCallCommandDoneEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated shell call output was incrementally added.
+type ResponseShellCallOutputContentDeltaEvent struct {
+	// The index of the shell command that produced output.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The stdout/stderr delta that was emitted.
+	Delta ResponseShellCallOutputContentDeltaEventDelta `json:"delta" api:"required"`
+	// The ID of the output item that was updated.
+	ItemID string `json:"item_id" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The type of the event, always `response.shell_call_output_content.delta`.
+	Type constant.ResponseShellCallOutputContentDelta `json:"type" default:"response.shell_call_output_content.delta"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CommandIndex   respjson.Field
+		Delta          respjson.Field
+		ItemID         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseShellCallOutputContentDeltaEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseShellCallOutputContentDeltaEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The stdout/stderr delta that was emitted.
+type ResponseShellCallOutputContentDeltaEventDelta struct {
+	// The stderr delta that was emitted.
+	Stderr string `json:"stderr"`
+	// The stdout delta that was emitted.
+	Stdout string `json:"stdout"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Stderr      respjson.Field
+		Stdout      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseShellCallOutputContentDeltaEventDelta) RawJSON() string { return r.JSON.raw }
+func (r *ResponseShellCallOutputContentDeltaEventDelta) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// A streaming event that indicated shell call output was completed.
+type ResponseShellCallOutputContentDoneEvent struct {
+	// The index of the shell command that produced output.
+	CommandIndex int64 `json:"command_index" api:"required"`
+	// The ID of the output item that was updated.
+	ItemID string `json:"item_id" api:"required"`
+	// The output contents emitted for the shell command.
+	Output []ResponseShellCallOutputContentDoneEventOutput `json:"output" api:"required"`
+	// The index of the output item that was updated.
+	OutputIndex int64 `json:"output_index" api:"required"`
+	// The sequence number of the event that was emitted.
+	SequenceNumber int64 `json:"sequence_number" api:"required"`
+	// The type of the event, always `response.shell_call_output_content.done`.
+	Type constant.ResponseShellCallOutputContentDone `json:"type" default:"response.shell_call_output_content.done"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CommandIndex   respjson.Field
+		ItemID         respjson.Field
+		Output         respjson.Field
+		OutputIndex    respjson.Field
+		SequenceNumber respjson.Field
+		Type           respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseShellCallOutputContentDoneEvent) RawJSON() string { return r.JSON.raw }
+func (r *ResponseShellCallOutputContentDoneEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The content of a shell tool call output that was emitted.
+type ResponseShellCallOutputContentDoneEventOutput struct {
+	// Represents either an exit outcome (with an exit code) or a timeout outcome for a
+	// shell call output chunk.
+	Outcome ResponseShellCallOutputContentDoneEventOutputOutcomeUnion `json:"outcome" api:"required"`
+	// The standard error output that was captured.
+	Stderr string `json:"stderr" api:"required"`
+	// The standard output that was captured.
+	Stdout string `json:"stdout" api:"required"`
+	// The identifier of the actor that created the item.
+	CreatedBy string `json:"created_by"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Outcome     respjson.Field
+		Stderr      respjson.Field
+		Stdout      respjson.Field
+		CreatedBy   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseShellCallOutputContentDoneEventOutput) RawJSON() string { return r.JSON.raw }
+func (r *ResponseShellCallOutputContentDoneEventOutput) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ResponseShellCallOutputContentDoneEventOutputOutcomeUnion contains all possible
+// properties and values from
+// [ResponseShellCallOutputContentDoneEventOutputOutcomeTimeout],
+// [ResponseShellCallOutputContentDoneEventOutputOutcomeExit].
+//
+// Use the [ResponseShellCallOutputContentDoneEventOutputOutcomeUnion.AsAny] method
+// to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ResponseShellCallOutputContentDoneEventOutputOutcomeUnion struct {
+	// Any of "timeout", "exit".
+	Type string `json:"type"`
+	// This field is from variant
+	// [ResponseShellCallOutputContentDoneEventOutputOutcomeExit].
+	ExitCode int64 `json:"exit_code"`
+	JSON     struct {
+		Type     respjson.Field
+		ExitCode respjson.Field
+		raw      string
+	} `json:"-"`
+}
+
+// anyResponseShellCallOutputContentDoneEventOutputOutcome is implemented by each
+// variant of [ResponseShellCallOutputContentDoneEventOutputOutcomeUnion] to add
+// type safety for the return type of
+// [ResponseShellCallOutputContentDoneEventOutputOutcomeUnion.AsAny]
+type anyResponseShellCallOutputContentDoneEventOutputOutcome interface {
+	implResponseShellCallOutputContentDoneEventOutputOutcomeUnion()
+}
+
+func (ResponseShellCallOutputContentDoneEventOutputOutcomeTimeout) implResponseShellCallOutputContentDoneEventOutputOutcomeUnion() {
+}
+func (ResponseShellCallOutputContentDoneEventOutputOutcomeExit) implResponseShellCallOutputContentDoneEventOutputOutcomeUnion() {
+}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ResponseShellCallOutputContentDoneEventOutputOutcomeUnion.AsAny().(type) {
+//	case responses.ResponseShellCallOutputContentDoneEventOutputOutcomeTimeout:
+//	case responses.ResponseShellCallOutputContentDoneEventOutputOutcomeExit:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ResponseShellCallOutputContentDoneEventOutputOutcomeUnion) AsAny() anyResponseShellCallOutputContentDoneEventOutputOutcome {
+	switch u.Type {
+	case "timeout":
+		return u.AsTimeout()
+	case "exit":
+		return u.AsExit()
+	}
+	return nil
+}
+
+func (u ResponseShellCallOutputContentDoneEventOutputOutcomeUnion) AsTimeout() (v ResponseShellCallOutputContentDoneEventOutputOutcomeTimeout) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseShellCallOutputContentDoneEventOutputOutcomeUnion) AsExit() (v ResponseShellCallOutputContentDoneEventOutputOutcomeExit) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ResponseShellCallOutputContentDoneEventOutputOutcomeUnion) RawJSON() string {
+	return u.JSON.raw
+}
+
+func (r *ResponseShellCallOutputContentDoneEventOutputOutcomeUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Indicates that the shell call exceeded its configured time limit.
+type ResponseShellCallOutputContentDoneEventOutputOutcomeTimeout struct {
+	// The outcome type. Always `timeout`.
+	Type constant.Timeout `json:"type" default:"timeout"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseShellCallOutputContentDoneEventOutputOutcomeTimeout) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ResponseShellCallOutputContentDoneEventOutputOutcomeTimeout) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Indicates that the shell commands finished and returned an exit code.
+type ResponseShellCallOutputContentDoneEventOutputOutcomeExit struct {
+	// Exit code from the shell process.
+	ExitCode int64 `json:"exit_code" api:"required"`
+	// The outcome type. Always `exit`.
+	Type constant.Exit `json:"type" default:"exit"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ExitCode    respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseShellCallOutputContentDoneEventOutputOutcomeExit) RawJSON() string { return r.JSON.raw }
+func (r *ResponseShellCallOutputContentDoneEventOutputOutcomeExit) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The status of the response generation. One of `completed`, `failed`,
 // `in_progress`, `cancelled`, `queued`, or `incomplete`.
 type ResponseStatus string
@@ -21878,7 +22211,9 @@ const (
 // [ResponseFileSearchCallCompletedEvent], [ResponseFileSearchCallInProgressEvent],
 // [ResponseFileSearchCallSearchingEvent],
 // [ResponseFunctionCallArgumentsDeltaEvent],
-// [ResponseFunctionCallArgumentsDoneEvent], [ResponseInProgressEvent],
+// [ResponseFunctionCallArgumentsDoneEvent], [ResponseShellCallCommandAddedEvent],
+// [ResponseShellCallCommandDeltaEvent], [ResponseShellCallCommandDoneEvent],
+// [ResponseShellCallOutputContentDoneEvent], [ResponseInProgressEvent],
 // [ResponseFailedEvent], [ResponseIncompleteEvent],
 // [ResponseOutputItemAddedEvent], [ResponseOutputItemDoneEvent],
 // [ResponseReasoningSummaryPartAddedEvent],
@@ -21915,7 +22250,9 @@ type ResponseStreamEventUnion struct {
 	// "error", "response.file_search_call.completed",
 	// "response.file_search_call.in_progress", "response.file_search_call.searching",
 	// "response.function_call_arguments.delta",
-	// "response.function_call_arguments.done", "response.in_progress",
+	// "response.function_call_arguments.done", "response.shell_call_command.added",
+	// "response.shell_call_command.delta", "response.shell_call_command.done",
+	// "response.shell_call_output_content.done", "response.in_progress",
 	// "response.failed", "response.incomplete", "response.output_item.added",
 	// "response.output_item.done", "response.reasoning_summary_part.added",
 	// "response.reasoning_summary_part.done", "response.reasoning_summary_text.delta",
@@ -21952,7 +22289,13 @@ type ResponseStreamEventUnion struct {
 	Param     string `json:"param"`
 	Arguments string `json:"arguments"`
 	// This field is from variant [ResponseFunctionCallArgumentsDoneEvent].
-	Name string `json:"name"`
+	Name         string `json:"name"`
+	Command      string `json:"command"`
+	CommandIndex int64  `json:"command_index"`
+	// This field is from variant [ResponseShellCallCommandDeltaEvent].
+	Obfuscation string `json:"obfuscation"`
+	// This field is from variant [ResponseShellCallOutputContentDoneEvent].
+	Output []ResponseShellCallOutputContentDoneEventOutput `json:"output"`
 	// This field is from variant [ResponseOutputItemAddedEvent].
 	Item         ResponseOutputItemUnion `json:"item"`
 	SummaryIndex int64                   `json:"summary_index"`
@@ -21968,6 +22311,14 @@ type ResponseStreamEventUnion struct {
 	PartialImageB64 string `json:"partial_image_b64"`
 	// This field is from variant [ResponseImageGenCallPartialImageEvent].
 	PartialImageIndex int64 `json:"partial_image_index"`
+	// This field is from variant [ResponseImageGenCallPartialImageEvent].
+	Background string `json:"background"`
+	// This field is from variant [ResponseImageGenCallPartialImageEvent].
+	OutputFormat string `json:"output_format"`
+	// This field is from variant [ResponseImageGenCallPartialImageEvent].
+	Quality string `json:"quality"`
+	// This field is from variant [ResponseImageGenCallPartialImageEvent].
+	Size string `json:"size"`
 	// This field is from variant [ResponseOutputTextAnnotationAddedEvent].
 	Annotation ResponseOutputTextAnnotationAddedEventAnnotationUnion `json:"annotation"`
 	// This field is from variant [ResponseOutputTextAnnotationAddedEvent].
@@ -21988,6 +22339,10 @@ type ResponseStreamEventUnion struct {
 		Param             respjson.Field
 		Arguments         respjson.Field
 		Name              respjson.Field
+		Command           respjson.Field
+		CommandIndex      respjson.Field
+		Obfuscation       respjson.Field
+		Output            respjson.Field
 		Item              respjson.Field
 		SummaryIndex      respjson.Field
 		Status            respjson.Field
@@ -21996,6 +22351,10 @@ type ResponseStreamEventUnion struct {
 		Logprobs          respjson.Field
 		PartialImageB64   respjson.Field
 		PartialImageIndex respjson.Field
+		Background        respjson.Field
+		OutputFormat      respjson.Field
+		Quality           respjson.Field
+		Size              respjson.Field
 		Annotation        respjson.Field
 		AnnotationIndex   respjson.Field
 		Input             respjson.Field
@@ -22029,6 +22388,10 @@ func (ResponseFileSearchCallInProgressEvent) implResponseStreamEventUnion()     
 func (ResponseFileSearchCallSearchingEvent) implResponseStreamEventUnion()         {}
 func (ResponseFunctionCallArgumentsDeltaEvent) implResponseStreamEventUnion()      {}
 func (ResponseFunctionCallArgumentsDoneEvent) implResponseStreamEventUnion()       {}
+func (ResponseShellCallCommandAddedEvent) implResponseStreamEventUnion()           {}
+func (ResponseShellCallCommandDeltaEvent) implResponseStreamEventUnion()           {}
+func (ResponseShellCallCommandDoneEvent) implResponseStreamEventUnion()            {}
+func (ResponseShellCallOutputContentDoneEvent) implResponseStreamEventUnion()      {}
 func (ResponseInProgressEvent) implResponseStreamEventUnion()                      {}
 func (ResponseFailedEvent) implResponseStreamEventUnion()                          {}
 func (ResponseIncompleteEvent) implResponseStreamEventUnion()                      {}
@@ -22086,6 +22449,10 @@ func (ResponseCustomToolCallInputDoneEvent) implResponseStreamEventUnion()      
 //	case responses.ResponseFileSearchCallSearchingEvent:
 //	case responses.ResponseFunctionCallArgumentsDeltaEvent:
 //	case responses.ResponseFunctionCallArgumentsDoneEvent:
+//	case responses.ResponseShellCallCommandAddedEvent:
+//	case responses.ResponseShellCallCommandDeltaEvent:
+//	case responses.ResponseShellCallCommandDoneEvent:
+//	case responses.ResponseShellCallOutputContentDoneEvent:
 //	case responses.ResponseInProgressEvent:
 //	case responses.ResponseFailedEvent:
 //	case responses.ResponseIncompleteEvent:
@@ -22163,6 +22530,14 @@ func (u ResponseStreamEventUnion) AsAny() anyResponseStreamEvent {
 		return u.AsResponseFunctionCallArgumentsDelta()
 	case "response.function_call_arguments.done":
 		return u.AsResponseFunctionCallArgumentsDone()
+	case "response.shell_call_command.added":
+		return u.AsResponseShellCallCommandAdded()
+	case "response.shell_call_command.delta":
+		return u.AsResponseShellCallCommandDelta()
+	case "response.shell_call_command.done":
+		return u.AsResponseShellCallCommandDone()
+	case "response.shell_call_output_content.done":
+		return u.AsResponseShellCallOutputContentDone()
 	case "response.in_progress":
 		return u.AsResponseInProgress()
 	case "response.failed":
@@ -22326,6 +22701,26 @@ func (u ResponseStreamEventUnion) AsResponseFunctionCallArgumentsDelta() (v Resp
 }
 
 func (u ResponseStreamEventUnion) AsResponseFunctionCallArgumentsDone() (v ResponseFunctionCallArgumentsDoneEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseStreamEventUnion) AsResponseShellCallCommandAdded() (v ResponseShellCallCommandAddedEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseStreamEventUnion) AsResponseShellCallCommandDelta() (v ResponseShellCallCommandDeltaEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseStreamEventUnion) AsResponseShellCallCommandDone() (v ResponseShellCallCommandDoneEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseStreamEventUnion) AsResponseShellCallOutputContentDone() (v ResponseShellCallOutputContentDoneEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
