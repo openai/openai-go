@@ -260,15 +260,6 @@ func (u *FileChunkingStrategyParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *FileChunkingStrategyParamUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return u.OfAuto
-	} else if !param.IsOmitted(u.OfStatic) {
-		return u.OfStatic
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u FileChunkingStrategyParamUnion) GetStatic() *StaticFileChunkingStrategyParam {
 	if vt := u.OfStatic; vt != nil {
@@ -823,15 +814,6 @@ func (u *VectorStoreSearchParamsQueryUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *VectorStoreSearchParamsQueryUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfStringArray) {
-		return &u.OfStringArray
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -846,15 +828,6 @@ func (u VectorStoreSearchParamsFiltersUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *VectorStoreSearchParamsFiltersUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *VectorStoreSearchParamsFiltersUnion) asAny() any {
-	if !param.IsOmitted(u.OfComparisonFilter) {
-		return u.OfComparisonFilter
-	} else if !param.IsOmitted(u.OfCompoundFilter) {
-		return u.OfCompoundFilter
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

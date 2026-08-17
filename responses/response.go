@@ -738,29 +738,6 @@ func (u *ComputerActionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ComputerActionUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfClick) {
-		return u.OfClick
-	} else if !param.IsOmitted(u.OfDoubleClick) {
-		return u.OfDoubleClick
-	} else if !param.IsOmitted(u.OfDrag) {
-		return u.OfDrag
-	} else if !param.IsOmitted(u.OfKeypress) {
-		return u.OfKeypress
-	} else if !param.IsOmitted(u.OfMove) {
-		return u.OfMove
-	} else if !param.IsOmitted(u.OfScreenshot) {
-		return u.OfScreenshot
-	} else if !param.IsOmitted(u.OfScroll) {
-		return u.OfScroll
-	} else if !param.IsOmitted(u.OfType) {
-		return u.OfType
-	} else if !param.IsOmitted(u.OfWait) {
-		return u.OfWait
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ComputerActionUnionParam) GetButton() *string {
 	if vt := u.OfClick; vt != nil {
@@ -1521,15 +1498,6 @@ func (u *ContainerAutoNetworkPolicyUnionParam) UnmarshalJSON(data []byte) error 
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ContainerAutoNetworkPolicyUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfDisabled) {
-		return u.OfDisabled
-	} else if !param.IsOmitted(u.OfAllowlist) {
-		return u.OfAllowlist
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ContainerAutoNetworkPolicyUnionParam) GetAllowedDomains() []string {
 	if vt := u.OfAllowlist; vt != nil {
@@ -1578,15 +1546,6 @@ func (u ContainerAutoSkillUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *ContainerAutoSkillUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ContainerAutoSkillUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfSkillReference) {
-		return u.OfSkillReference
-	} else if !param.IsOmitted(u.OfInline) {
-		return u.OfInline
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -3448,15 +3407,6 @@ func (u NamespaceToolToolUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *NamespaceToolToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *NamespaceToolToolUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfFunction) {
-		return u.OfFunction
-	} else if !param.IsOmitted(u.OfCustom) {
-		return u.OfCustom
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -5329,15 +5279,6 @@ func (u ResponseCodeInterpreterToolCallOutputUnionParam) MarshalJSON() ([]byte, 
 }
 func (u *ResponseCodeInterpreterToolCallOutputUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ResponseCodeInterpreterToolCallOutputUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfLogs) {
-		return u.OfLogs
-	} else if !param.IsOmitted(u.OfImage) {
-		return u.OfImage
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -7743,17 +7684,6 @@ func (u *ResponseCustomToolCallOutputOutputOutputContentListItemUnionParam) Unma
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ResponseCustomToolCallOutputOutputOutputContentListItemUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfInputText) {
-		return u.OfInputText
-	} else if !param.IsOmitted(u.OfInputImage) {
-		return u.OfInputImage
-	} else if !param.IsOmitted(u.OfInputFile) {
-		return u.OfInputFile
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseCustomToolCallOutputOutputOutputContentListItemUnionParam) GetText() *string {
 	if vt := u.OfInputText; vt != nil {
@@ -8401,17 +8331,6 @@ func (u *ResponseFileSearchToolCallResultAttributeUnionParam) UnmarshalJSON(data
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ResponseFileSearchToolCallResultAttributeUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	} else if !param.IsOmitted(u.OfBool) {
-		return &u.OfBool.Value
-	}
-	return nil
-}
-
 // ResponseFormatTextConfigUnion contains all possible properties and values from
 // [shared.ResponseFormatText], [ResponseFormatTextJSONSchemaConfig],
 // [shared.ResponseFormatJSONObject].
@@ -8524,17 +8443,6 @@ func (u ResponseFormatTextConfigUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *ResponseFormatTextConfigUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ResponseFormatTextConfigUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	} else if !param.IsOmitted(u.OfJSONSchema) {
-		return u.OfJSONSchema
-	} else if !param.IsOmitted(u.OfJSONObject) {
-		return u.OfJSONObject
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -8885,17 +8793,6 @@ func (u *ResponseFunctionCallOutputItemUnionParam) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ResponseFunctionCallOutputItemUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfInputText) {
-		return u.OfInputText
-	} else if !param.IsOmitted(u.OfInputImage) {
-		return u.OfInputImage
-	} else if !param.IsOmitted(u.OfInputFile) {
-		return u.OfInputFile
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseFunctionCallOutputItemUnionParam) GetText() *string {
 	if vt := u.OfInputText; vt != nil {
@@ -9201,15 +9098,6 @@ func (u ResponseFunctionShellCallOutputContentOutcomeUnionParam) MarshalJSON() (
 }
 func (u *ResponseFunctionShellCallOutputContentOutcomeUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ResponseFunctionShellCallOutputContentOutcomeUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfTimeout) {
-		return u.OfTimeout
-	} else if !param.IsOmitted(u.OfExit) {
-		return u.OfExit
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -11369,17 +11257,6 @@ func (u ResponseInputContentUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *ResponseInputContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ResponseInputContentUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfInputText) {
-		return u.OfInputText
-	} else if !param.IsOmitted(u.OfInputImage) {
-		return u.OfInputImage
-	} else if !param.IsOmitted(u.OfInputFile) {
-		return u.OfInputFile
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -14633,75 +14510,6 @@ func (u *ResponseInputItemUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ResponseInputItemUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfMessage) {
-		return u.OfMessage
-	} else if !param.IsOmitted(u.OfInputMessage) {
-		return u.OfInputMessage
-	} else if !param.IsOmitted(u.OfOutputMessage) {
-		return u.OfOutputMessage
-	} else if !param.IsOmitted(u.OfFileSearchCall) {
-		return u.OfFileSearchCall
-	} else if !param.IsOmitted(u.OfComputerCall) {
-		return u.OfComputerCall
-	} else if !param.IsOmitted(u.OfComputerCallOutput) {
-		return u.OfComputerCallOutput
-	} else if !param.IsOmitted(u.OfWebSearchCall) {
-		return u.OfWebSearchCall
-	} else if !param.IsOmitted(u.OfFunctionCall) {
-		return u.OfFunctionCall
-	} else if !param.IsOmitted(u.OfFunctionCallOutput) {
-		return u.OfFunctionCallOutput
-	} else if !param.IsOmitted(u.OfToolSearchCall) {
-		return u.OfToolSearchCall
-	} else if !param.IsOmitted(u.OfToolSearchOutput) {
-		return u.OfToolSearchOutput
-	} else if !param.IsOmitted(u.OfAdditionalTools) {
-		return u.OfAdditionalTools
-	} else if !param.IsOmitted(u.OfReasoning) {
-		return u.OfReasoning
-	} else if !param.IsOmitted(u.OfCompaction) {
-		return u.OfCompaction
-	} else if !param.IsOmitted(u.OfImageGenerationCall) {
-		return u.OfImageGenerationCall
-	} else if !param.IsOmitted(u.OfCodeInterpreterCall) {
-		return u.OfCodeInterpreterCall
-	} else if !param.IsOmitted(u.OfLocalShellCall) {
-		return u.OfLocalShellCall
-	} else if !param.IsOmitted(u.OfLocalShellCallOutput) {
-		return u.OfLocalShellCallOutput
-	} else if !param.IsOmitted(u.OfShellCall) {
-		return u.OfShellCall
-	} else if !param.IsOmitted(u.OfShellCallOutput) {
-		return u.OfShellCallOutput
-	} else if !param.IsOmitted(u.OfApplyPatchCall) {
-		return u.OfApplyPatchCall
-	} else if !param.IsOmitted(u.OfApplyPatchCallOutput) {
-		return u.OfApplyPatchCallOutput
-	} else if !param.IsOmitted(u.OfMcpListTools) {
-		return u.OfMcpListTools
-	} else if !param.IsOmitted(u.OfMcpApprovalRequest) {
-		return u.OfMcpApprovalRequest
-	} else if !param.IsOmitted(u.OfMcpApprovalResponse) {
-		return u.OfMcpApprovalResponse
-	} else if !param.IsOmitted(u.OfMcpCall) {
-		return u.OfMcpCall
-	} else if !param.IsOmitted(u.OfCustomToolCallOutput) {
-		return u.OfCustomToolCallOutput
-	} else if !param.IsOmitted(u.OfCustomToolCall) {
-		return u.OfCustomToolCall
-	} else if !param.IsOmitted(u.OfCompactionTrigger) {
-		return u.OfCompactionTrigger
-	} else if !param.IsOmitted(u.OfItemReference) {
-		return u.OfItemReference
-	} else if !param.IsOmitted(u.OfProgram) {
-		return u.OfProgram
-	} else if !param.IsOmitted(u.OfProgramOutput) {
-		return u.OfProgramOutput
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputItemUnionParam) GetQueries() []string {
 	if vt := u.OfFileSearchCall; vt != nil {
@@ -16383,15 +16191,6 @@ func (u *ResponseInputItemShellCallEnvironmentUnionParam) UnmarshalJSON(data []b
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ResponseInputItemShellCallEnvironmentUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfLocal) {
-		return u.OfLocal
-	} else if !param.IsOmitted(u.OfContainerReference) {
-		return u.OfContainerReference
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseInputItemShellCallEnvironmentUnionParam) GetSkills() []LocalSkillParam {
 	if vt := u.OfLocal; vt != nil {
@@ -16616,17 +16415,6 @@ func (u ResponseInputItemApplyPatchCallOperationUnionParam) MarshalJSON() ([]byt
 }
 func (u *ResponseInputItemApplyPatchCallOperationUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ResponseInputItemApplyPatchCallOperationUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfCreateFile) {
-		return u.OfCreateFile
-	} else if !param.IsOmitted(u.OfDeleteFile) {
-		return u.OfDeleteFile
-	} else if !param.IsOmitted(u.OfUpdateFile) {
-		return u.OfUpdateFile
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -20061,15 +19849,6 @@ func (u *ResponseOutputMessageContentUnionParam) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ResponseOutputMessageContentUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfOutputText) {
-		return u.OfOutputText
-	} else if !param.IsOmitted(u.OfRefusal) {
-		return u.OfRefusal
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ResponseOutputMessageContentUnionParam) GetAnnotations() []ResponseOutputTextAnnotationUnionParam {
 	if vt := u.OfOutputText; vt != nil {
@@ -20509,19 +20288,6 @@ func (u ResponseOutputTextAnnotationUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *ResponseOutputTextAnnotationUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ResponseOutputTextAnnotationUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfFileCitation) {
-		return u.OfFileCitation
-	} else if !param.IsOmitted(u.OfURLCitation) {
-		return u.OfURLCitation
-	} else if !param.IsOmitted(u.OfContainerFileCitation) {
-		return u.OfContainerFileCitation
-	} else if !param.IsOmitted(u.OfFilePath) {
-		return u.OfFilePath
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -21197,19 +20963,6 @@ func (u ResponsePromptVariableUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *ResponsePromptVariableUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ResponsePromptVariableUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfInputText) {
-		return u.OfInputText
-	} else if !param.IsOmitted(u.OfInputImage) {
-		return u.OfInputImage
-	} else if !param.IsOmitted(u.OfInputFile) {
-		return u.OfInputFile
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -24701,43 +24454,6 @@ func (u *ToolUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ToolUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfFunction) {
-		return u.OfFunction
-	} else if !param.IsOmitted(u.OfFileSearch) {
-		return u.OfFileSearch
-	} else if !param.IsOmitted(u.OfComputer) {
-		return u.OfComputer
-	} else if !param.IsOmitted(u.OfComputerUsePreview) {
-		return u.OfComputerUsePreview
-	} else if !param.IsOmitted(u.OfWebSearch) {
-		return u.OfWebSearch
-	} else if !param.IsOmitted(u.OfMcp) {
-		return u.OfMcp
-	} else if !param.IsOmitted(u.OfCodeInterpreter) {
-		return u.OfCodeInterpreter
-	} else if !param.IsOmitted(u.OfProgrammaticToolCalling) {
-		return u.OfProgrammaticToolCalling
-	} else if !param.IsOmitted(u.OfImageGeneration) {
-		return u.OfImageGeneration
-	} else if !param.IsOmitted(u.OfLocalShell) {
-		return u.OfLocalShell
-	} else if !param.IsOmitted(u.OfShell) {
-		return u.OfShell
-	} else if !param.IsOmitted(u.OfCustom) {
-		return u.OfCustom
-	} else if !param.IsOmitted(u.OfNamespace) {
-		return u.OfNamespace
-	} else if !param.IsOmitted(u.OfToolSearch) {
-		return u.OfToolSearch
-	} else if !param.IsOmitted(u.OfWebSearchPreview) {
-		return u.OfWebSearchPreview
-	} else if !param.IsOmitted(u.OfApplyPatch) {
-		return u.OfApplyPatch
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ToolUnionParam) GetStrict() *bool {
 	if vt := u.OfFunction; vt != nil && vt.Strict.Valid() {
@@ -25497,15 +25213,6 @@ func (u *ToolMcpAllowedToolsUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ToolMcpAllowedToolsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfMcpAllowedTools) {
-		return &u.OfMcpAllowedTools
-	} else if !param.IsOmitted(u.OfMcpToolFilter) {
-		return u.OfMcpToolFilter
-	}
-	return nil
-}
-
 // A filter object to specify which tools are allowed.
 type ToolMcpAllowedToolsMcpToolFilterParam struct {
 	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
@@ -25542,15 +25249,6 @@ func (u ToolMcpRequireApprovalUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *ToolMcpRequireApprovalUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ToolMcpRequireApprovalUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfMcpToolApprovalFilter) {
-		return u.OfMcpToolApprovalFilter
-	} else if !param.IsOmitted(u.OfMcpToolApprovalSetting) {
-		return &u.OfMcpToolApprovalSetting
-	}
-	return nil
 }
 
 // Specify which of the MCP server's tools require approval. Can be `always`,
@@ -25654,15 +25352,6 @@ func (u *ToolCodeInterpreterContainerUnionParam) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ToolCodeInterpreterContainerUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfCodeInterpreterToolAuto) {
-		return u.OfCodeInterpreterToolAuto
-	}
-	return nil
-}
-
 // Configuration for a code interpreter container. Optionally specify the IDs of
 // the files to run the code on.
 //
@@ -25711,15 +25400,6 @@ func (u ToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionPar
 }
 func (u *ToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ToolCodeInterpreterContainerCodeInterpreterToolAutoNetworkPolicyUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfDisabled) {
-		return u.OfDisabled
-	} else if !param.IsOmitted(u.OfAllowlist) {
-		return u.OfAllowlist
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -27100,15 +26780,6 @@ func (u *ResponseNewParamsConversationUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ResponseNewParamsConversationUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfConversationObject) {
-		return u.OfConversationObject
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -27123,15 +26794,6 @@ func (u ResponseNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ResponseNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ResponseNewParamsInputUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfInputItemList) {
-		return &u.OfInputItemList
-	}
-	return nil
 }
 
 // Configuration for running moderation on the input and output of this response.
@@ -27372,29 +27034,6 @@ func (u ResponseNewParamsToolChoiceUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ResponseNewParamsToolChoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ResponseNewParamsToolChoiceUnion) asAny() any {
-	if !param.IsOmitted(u.OfToolChoiceMode) {
-		return &u.OfToolChoiceMode
-	} else if !param.IsOmitted(u.OfAllowedTools) {
-		return u.OfAllowedTools
-	} else if !param.IsOmitted(u.OfHostedTool) {
-		return u.OfHostedTool
-	} else if !param.IsOmitted(u.OfFunctionTool) {
-		return u.OfFunctionTool
-	} else if !param.IsOmitted(u.OfMcpTool) {
-		return u.OfMcpTool
-	} else if !param.IsOmitted(u.OfCustomTool) {
-		return u.OfCustomTool
-	} else if !param.IsOmitted(u.OfResponseNewsToolChoiceSpecificProgrammaticToolCallingParam) {
-		return u.OfResponseNewsToolChoiceSpecificProgrammaticToolCallingParam
-	} else if !param.IsOmitted(u.OfSpecificApplyPatchToolChoice) {
-		return u.OfSpecificApplyPatchToolChoice
-	} else if !param.IsOmitted(u.OfSpecificShellToolChoice) {
-		return u.OfSpecificShellToolChoice
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -27705,15 +27344,6 @@ func (u ResponseCompactParamsInputUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ResponseCompactParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ResponseCompactParamsInputUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfResponseInputItemArray) {
-		return &u.OfResponseInputItemArray
-	}
-	return nil
 }
 
 // Options for prompt caching. Supported for `gpt-5.6` and later models. By

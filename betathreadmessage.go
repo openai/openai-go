@@ -1231,17 +1231,6 @@ func (u *MessageContentPartParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *MessageContentPartParamUnion) asAny() any {
-	if !param.IsOmitted(u.OfImageFile) {
-		return u.OfImageFile
-	} else if !param.IsOmitted(u.OfImageURL) {
-		return u.OfImageURL
-	} else if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u MessageContentPartParamUnion) GetImageFile() *ImageFileParam {
 	if vt := u.OfImageFile; vt != nil {
@@ -1556,15 +1545,6 @@ func (u *BetaThreadMessageNewParamsContentUnion) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaThreadMessageNewParamsContentUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfContentParts) {
-		return &u.OfArrayOfContentParts
-	}
-	return nil
-}
-
 // The role of the entity that is creating the message. Allowed values include:
 //
 //   - `user`: Indicates the message is sent by an actual user and should be used in
@@ -1608,15 +1588,6 @@ func (u BetaThreadMessageNewParamsAttachmentToolUnion) MarshalJSON() ([]byte, er
 }
 func (u *BetaThreadMessageNewParamsAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadMessageNewParamsAttachmentToolUnion) asAny() any {
-	if !param.IsOmitted(u.OfCodeInterpreter) {
-		return u.OfCodeInterpreter
-	} else if !param.IsOmitted(u.OfFileSearch) {
-		return u.OfFileSearch
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

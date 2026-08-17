@@ -481,15 +481,6 @@ func (u *VideoNewParamsInputReferenceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *VideoNewParamsInputReferenceUnion) asAny() any {
-	if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	} else if !param.IsOmitted(u.OfImageInputReference) {
-		return u.OfImageInputReference
-	}
-	return nil
-}
-
 type VideoListParams struct {
 	// Identifier for the last item from the previous pagination request
 	After param.Opt[string] `query:"after,omitzero" json:"-"`
@@ -614,15 +605,6 @@ func (u *VideoEditParamsVideoUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *VideoEditParamsVideoUnion) asAny() any {
-	if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	} else if !param.IsOmitted(u.OfVideoEditsVideoVideoReferenceInputParam) {
-		return u.OfVideoEditsVideoVideoReferenceInputParam
-	}
-	return nil
-}
-
 // Reference to the completed video to edit.
 //
 // The property ID is required.
@@ -685,15 +667,6 @@ func (u VideoExtendParamsVideoUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *VideoExtendParamsVideoUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *VideoExtendParamsVideoUnion) asAny() any {
-	if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	} else if !param.IsOmitted(u.OfVideoExtendsVideoVideoReferenceInputParam) {
-		return u.OfVideoExtendsVideoVideoReferenceInputParam
-	}
-	return nil
 }
 
 // Reference to the completed video.

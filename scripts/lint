@@ -35,12 +35,21 @@ echo "==> Building examples"
 
 echo "==> Running static analysis"
 repo_root="$PWD"
+lint_tests="${OPENAI_GO_LINT_TESTS:-true}"
+lint_args=(
+  --config "$repo_root/.golangci.yml"
+  --tests="$lint_tests"
+)
+if [[ "$lint_tests" == false ]]; then
+  # Compatibility checks intentionally omit historical tests from analysis.
+  # unused needs current test references to classify test-only helpers correctly.
+  lint_args+=(--disable unused)
+fi
 for module in "$repo_root" "$repo_root/examples" "$repo_root/internal/testdata/consumer"; do
   (
     cd "$module"
     go tool -modfile="$repo_root/tools/go.mod" golangci-lint run \
-      --config "$repo_root/.golangci.yml" \
-      --tests="${OPENAI_GO_LINT_TESTS:-true}"
+      "${lint_args[@]}"
   )
 done
 
@@ -50,8 +59,7 @@ if [[ "$(go env GOOS)" == linux ]]; then
     cd "$repo_root/examples"
     lint_runner="$(go tool -modfile="$repo_root/tools/go.mod" -n golangci-lint)"
     GOOS=windows "$lint_runner" run \
-      --config "$repo_root/.golangci.yml" \
-      --tests="${OPENAI_GO_LINT_TESTS:-true}" \
+      "${lint_args[@]}" \
       ./audio-text-to-speech
   )
 fi

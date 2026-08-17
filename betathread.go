@@ -230,19 +230,6 @@ func (u *AssistantResponseFormatOptionUnionParam) UnmarshalJSON(data []byte) err
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *AssistantResponseFormatOptionUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	} else if !param.IsOmitted(u.OfJSONObject) {
-		return u.OfJSONObject
-	} else if !param.IsOmitted(u.OfJSONSchema) {
-		return u.OfJSONSchema
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u AssistantResponseFormatOptionUnionParam) GetJSONSchema() *shared.ResponseFormatJSONSchemaJSONSchemaParam {
 	if vt := u.OfJSONSchema; vt != nil {
@@ -451,15 +438,6 @@ func (u *AssistantToolChoiceOptionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *AssistantToolChoiceOptionUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfAssistantToolChoice) {
-		return u.OfAssistantToolChoice
-	}
-	return nil
-}
-
 // Represents a thread that contains
 // [messages](https://platform.openai.com/docs/api-reference/messages).
 type Thread struct {
@@ -662,15 +640,6 @@ func (u *BetaThreadNewParamsMessageContentUnion) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaThreadNewParamsMessageContentUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfContentParts) {
-		return &u.OfArrayOfContentParts
-	}
-	return nil
-}
-
 type BetaThreadNewParamsMessageAttachment struct {
 	// The ID of the file to attach to the message.
 	FileID param.Opt[string] `json:"file_id,omitzero"`
@@ -701,15 +670,6 @@ func (u BetaThreadNewParamsMessageAttachmentToolUnion) MarshalJSON() ([]byte, er
 }
 func (u *BetaThreadNewParamsMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadNewParamsMessageAttachmentToolUnion) asAny() any {
-	if !param.IsOmitted(u.OfCodeInterpreter) {
-		return u.OfCodeInterpreter
-	} else if !param.IsOmitted(u.OfFileSearch) {
-		return u.OfFileSearch
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -849,15 +809,6 @@ func (u BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUni
 }
 func (u *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadNewParamsToolResourcesFileSearchVectorStoreChunkingStrategyUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return u.OfAuto
-	} else if !param.IsOmitted(u.OfStatic) {
-		return u.OfStatic
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1208,15 +1159,6 @@ func (u *BetaThreadNewAndRunParamsThreadMessageContentUnion) UnmarshalJSON(data 
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaThreadNewAndRunParamsThreadMessageContentUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfContentParts) {
-		return &u.OfArrayOfContentParts
-	}
-	return nil
-}
-
 type BetaThreadNewAndRunParamsThreadMessageAttachment struct {
 	// The ID of the file to attach to the message.
 	FileID param.Opt[string] `json:"file_id,omitzero"`
@@ -1247,15 +1189,6 @@ func (u BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) MarshalJSON()
 }
 func (u *BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadNewAndRunParamsThreadMessageAttachmentToolUnion) asAny() any {
-	if !param.IsOmitted(u.OfCodeInterpreter) {
-		return u.OfCodeInterpreter
-	} else if !param.IsOmitted(u.OfFileSearch) {
-		return u.OfFileSearch
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1395,15 +1328,6 @@ func (u BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkin
 }
 func (u *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadNewAndRunParamsThreadToolResourcesFileSearchVectorStoreChunkingStrategyUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return u.OfAuto
-	} else if !param.IsOmitted(u.OfStatic) {
-		return u.OfStatic
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

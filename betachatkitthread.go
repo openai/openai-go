@@ -436,17 +436,6 @@ func (u *ChatSessionWorkflowParamStateVariableUnion) UnmarshalJSON(data []byte) 
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ChatSessionWorkflowParamStateVariableUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfBool) {
-		return &u.OfBool.Value
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
-}
-
 // Optional tracing overrides for the workflow invocation. When omitted, tracing is
 // enabled by default.
 type ChatSessionWorkflowParamTracing struct {

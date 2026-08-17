@@ -310,17 +310,6 @@ func (u *RealtimeAudioConfigOutputVoiceUnionParam) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *RealtimeAudioConfigOutputVoiceUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfRealtimeAudioConfigOutputVoiceString2) {
-		return &u.OfRealtimeAudioConfigOutputVoiceString2
-	} else if !param.IsOmitted(u.OfRealtimeAudioConfigOutputVoiceID) {
-		return u.OfRealtimeAudioConfigOutputVoiceID
-	}
-	return nil
-}
-
 type RealtimeAudioConfigOutputVoiceString2 string
 
 const (
@@ -518,17 +507,6 @@ func (u *RealtimeAudioFormatsUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *RealtimeAudioFormatsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfAudioPCM) {
-		return u.OfAudioPCM
-	} else if !param.IsOmitted(u.OfAudioPCMU) {
-		return u.OfAudioPCMU
-	} else if !param.IsOmitted(u.OfAudioPCMA) {
-		return u.OfAudioPCMA
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u RealtimeAudioFormatsUnionParam) GetRate() *int64 {
 	if vt := u.OfAudioPCM; vt != nil {
@@ -648,15 +626,6 @@ func (u RealtimeAudioInputTurnDetectionUnionParam) MarshalJSON() ([]byte, error)
 }
 func (u *RealtimeAudioInputTurnDetectionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeAudioInputTurnDetectionUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfServerVad) {
-		return u.OfServerVad
-	} else if !param.IsOmitted(u.OfSemanticVad) {
-		return u.OfSemanticVad
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1074,15 +1043,6 @@ func (u *RealtimeSessionCreateRequestMaxOutputTokensUnionParam) UnmarshalJSON(da
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *RealtimeSessionCreateRequestMaxOutputTokensUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	} else if !param.IsOmitted(u.OfInf) {
-		return &u.OfInf
-	}
-	return nil
-}
-
 // The Realtime model used for this session.
 type RealtimeSessionCreateRequestModel = string
 
@@ -1138,17 +1098,6 @@ func (u *RealtimeToolChoiceConfigUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *RealtimeToolChoiceConfigUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfToolChoiceMode) {
-		return &u.OfToolChoiceMode
-	} else if !param.IsOmitted(u.OfFunctionTool) {
-		return u.OfFunctionTool
-	} else if !param.IsOmitted(u.OfMcpTool) {
-		return u.OfMcpTool
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u RealtimeToolChoiceConfigUnionParam) GetServerLabel() *string {
 	if vt := u.OfMcpTool; vt != nil {
@@ -1199,15 +1148,6 @@ func (u RealtimeToolsConfigUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *RealtimeToolsConfigUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeToolsConfigUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfFunction) {
-		return u.OfFunction
-	} else if !param.IsOmitted(u.OfMcp) {
-		return u.OfMcp
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1430,15 +1370,6 @@ func (u *RealtimeToolsConfigUnionMcpAllowedToolsParam) UnmarshalJSON(data []byte
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *RealtimeToolsConfigUnionMcpAllowedToolsParam) asAny() any {
-	if !param.IsOmitted(u.OfMcpAllowedTools) {
-		return &u.OfMcpAllowedTools
-	} else if !param.IsOmitted(u.OfMcpToolFilter) {
-		return u.OfMcpToolFilter
-	}
-	return nil
-}
-
 // A filter object to specify which tools are allowed.
 type RealtimeToolsConfigUnionMcpAllowedToolsMcpToolFilterParam struct {
 	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
@@ -1475,15 +1406,6 @@ func (u RealtimeToolsConfigUnionMcpRequireApprovalParam) MarshalJSON() ([]byte, 
 }
 func (u *RealtimeToolsConfigUnionMcpRequireApprovalParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeToolsConfigUnionMcpRequireApprovalParam) asAny() any {
-	if !param.IsOmitted(u.OfMcpToolApprovalFilter) {
-		return u.OfMcpToolApprovalFilter
-	} else if !param.IsOmitted(u.OfMcpToolApprovalSetting) {
-		return &u.OfMcpToolApprovalSetting
-	}
-	return nil
 }
 
 // Specify which of the MCP server's tools require approval. Can be `always`,
@@ -1573,15 +1495,6 @@ func (u RealtimeTracingConfigUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *RealtimeTracingConfigUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeTracingConfigUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfTracingConfiguration) {
-		return u.OfTracingConfiguration
-	}
-	return nil
 }
 
 // Granular configuration for tracing.
@@ -1703,15 +1616,6 @@ func (u RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) MarshalJS
 }
 func (u *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfServerVad) {
-		return u.OfServerVad
-	} else if !param.IsOmitted(u.OfSemanticVad) {
-		return u.OfSemanticVad
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -2003,15 +1907,6 @@ func (u RealtimeTruncationUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *RealtimeTruncationUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeTruncationUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfRealtimeTruncationStrategy) {
-		return &u.OfRealtimeTruncationStrategy
-	} else if !param.IsOmitted(u.OfRetentionRatioTruncation) {
-		return u.OfRetentionRatioTruncation
-	}
-	return nil
 }
 
 // Retain a fraction of the conversation tokens when the conversation exceeds the

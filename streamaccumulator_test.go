@@ -15,12 +15,6 @@ import (
 	"github.com/openai/openai-go/v3/shared"
 )
 
-// Mock function to simulate weather data retrieval
-func getWeather(_ string) string {
-	// In a real implementation, this function would call a weather API
-	return "Sunny, 25°C"
-}
-
 // Since the streamed response is hardcoded, we can hardcode the expected tool call
 var expectedToolCall = openai.ChatCompletionMessageFunctionToolCallFunction{
 	Arguments: `{"location":"Santorini, Greece"}`,
