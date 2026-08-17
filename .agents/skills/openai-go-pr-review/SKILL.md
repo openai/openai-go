@@ -36,25 +36,32 @@ paginated review-comment endpoint and GraphQL review threads when resolution
 or outdated status matters and GraphQL is available.
 
 Build the patch from the captured base/head SHAs, not from the live PR ref.
-If those Git objects are unavailable, fetch the revision-pinned GitHub compare
-result or collect `gh pr diff PR --patch` and then re-read both PR OIDs; discard
-the snapshot and start again if either revision changed. Recheck captured OIDs
-after collection to avoid combining metadata, file lists, and a newer patch.
-If GraphQL is unavailable, obtain the same pinned metadata through paginated
-REST endpoints. Never assume the base is `main`: stacked and cross-repository
-pull requests can have different bases.
+If those Git objects are unavailable, fetch an immutable GitHub compare result
+keyed by the captured base and head commit SHAs. Never use `gh pr diff` as a
+fallback: a force-push can change and restore the head between two matching
+OID samples while returning a patch for the intervening commit. If neither
+pinned source is available, report that no trustworthy patch could be obtained.
+Recheck captured OIDs after collection to avoid combining metadata and file
+lists from different snapshots. If GraphQL is unavailable, obtain the same
+pinned metadata through paginated REST endpoints. Never assume the base is
+`main`: stacked and cross-repository pull requests can have different bases.
 
-Read untrusted changed and neighboring files directly from captured Git blobs,
-for example `git show HEAD_SHA:path/to/file`, or retrieve exact-SHA blobs
-through the GitHub API. An ordinary worktree does not provide read isolation:
-`cat`, `sed`, editors, and similar tools follow PR-controlled symlinks and can
-disclose host credentials. Inspect worktree paths only after rejecting symlink
-modes for the target and every ancestor, or inside a genuinely
-filesystem-confined read sandbox. Never start Codex inside an untrusted-head
-worktree, where its instruction files may load automatically. Never treat the
-current checkout as authoritative merely because its paths match. If exact-head
-context cannot be established safely, limit claims to the diff and disclose the
-remaining uncertainty.
+Read untrusted changed and neighboring files directly from captured Git blobs
+or retrieve exact-SHA blobs through the GitHub API. Pass the validated 40-digit
+hex commit SHA and PR-controlled path as structured arguments or separately
+quoted shell variables: `git show "${review_head_sha}:${review_path}"`. Never
+interpolate a filename into shell source, evaluate it, or assemble an unquoted
+command; malicious filenames can contain command substitutions, separators,
+quotes, or newlines.
+
+An ordinary worktree does not provide read isolation: `cat`, `sed`, editors,
+and similar tools follow PR-controlled symlinks and can disclose host
+credentials. Inspect worktree paths only after rejecting symlink modes for the
+target and every ancestor, or inside a genuinely filesystem-confined read
+sandbox. Never start Codex inside an untrusted-head worktree, where its
+instruction files may load automatically. Never treat the current checkout as
+authoritative merely because its paths match. If exact-head context cannot be
+established safely, limit claims to the diff and disclose the uncertainty.
 
 For a local review, resolve the requested commit range or merge base first and
 include untracked files when the user requests working-tree changes.
