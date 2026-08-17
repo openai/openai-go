@@ -1,5 +1,9 @@
 ## Setting up the environment
 
+Before running any setup commands, review dependency origins, installation
+tooling, and the [security requirements](#security-requirements). Bootstrap and
+lint scripts can download Go, Homebrew, and direct or transitive dependencies.
+
 To set up the repository, run:
 
 ```sh
@@ -28,8 +32,9 @@ modify the contents of the `lib/` and `examples/` directories.
   examples, tests, and fixtures. Prefer `httptest` or the existing local mock
   server over requests to live services.
 - Redact `Authorization` and `Cookie` headers, credential-bearing URLs,
-  request or response bodies, and webhook secrets from logs, returned errors,
-  fixtures, recordings, and CI output.
+  real or sensitive request or response bodies, and webhook secrets from logs,
+  returned errors, fixtures, recordings, and CI output. Preserve safe synthetic
+  payloads and intentional public error diagnostics.
 - Review direct and transitive dependency changes in `go.mod` and `go.sum`
   across the root, `examples`, `internal/testdata/consumer`, and `tools`
   modules. Review new `replace` directives, dependency origins, installation
