@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,11 +33,6 @@ type x509TokenExchangeRequest struct {
 
 type x509CredentialSource struct {
 	refreshBefore time.Duration
-}
-
-type x509HTTPTransportIdentity struct {
-	native            bool
-	certificateSHA256 [sha256.Size]byte
 }
 
 // x509TokenExchangeError prevents the generic API request loop from repeating
@@ -78,10 +72,10 @@ func NewX509WorkloadIdentityAuth(config X509WorkloadIdentity) (*WorkloadIdentity
 	), nil
 }
 
-func x509HTTPTransportIdentityFor(roundTripper http.RoundTripper) (x509HTTPTransportIdentity, error) {
+func validateX509HTTPTransportIdentity(roundTripper http.RoundTripper) error {
 	transport, ok := roundTripper.(*http.Transport)
 	if !ok {
-		return x509HTTPTransportIdentity{}, nil
+		return nil
 	}
 	legacyTLSDialConfigured := transport.DialTLS != nil //nolint:staticcheck // Reject a legacy hook that can select another client identity.
 	tlsConfig := transport.TLSClientConfig
@@ -89,12 +83,9 @@ func x509HTTPTransportIdentityFor(roundTripper http.RoundTripper) (x509HTTPTrans
 		len(tlsConfig.Certificates[0].Certificate) != 0 &&
 		tlsConfig.GetClientCertificate == nil &&
 		!legacyTLSDialConfigured && transport.DialTLSContext == nil {
-		return x509HTTPTransportIdentity{
-			native:            true,
-			certificateSHA256: sha256.Sum256(tlsConfig.Certificates[0].Certificate[0]),
-		}, nil
+		return nil
 	}
-	return x509HTTPTransportIdentity{}, errors.New("X.509 workload identity requires one immutable client identity per native HTTP transport; configure exactly one static TLS certificate without TLS dial or certificate-selection hooks, and replace the transport to rotate identities")
+	return errors.New("X.509 workload identity requires one immutable client identity per native HTTP transport; configure exactly one static TLS certificate without TLS dial or certificate-selection hooks, and replace the transport to rotate identities")
 }
 
 func (s x509CredentialSource) exchange(

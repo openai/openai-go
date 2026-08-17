@@ -149,15 +149,6 @@ func TestClientX509UsesOneStaticCertificateForExchangeAndAPI(t *testing.T) {
 	if got := requests.mismatches.Load(); got != 0 {
 		t.Errorf("certificate/bearer mismatches = %d, want 0", got)
 	}
-
-	requestCount := requests.total.Load()
-	transport.TLSClientConfig.Certificates[0] = pki.clients["tenant-b"]
-	if _, err := client.Models.List(t.Context()); err == nil {
-		t.Fatal("Models.List() after certificate mutation error = nil")
-	}
-	if got := requests.total.Load(); got != requestCount {
-		t.Errorf("mTLS requests after certificate mutation = %d, want %d", got, requestCount)
-	}
 }
 
 type x509IdentityTestRequestCounts struct {

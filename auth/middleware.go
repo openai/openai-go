@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/openai/openai-go/v3/internal"
@@ -12,6 +13,9 @@ func WorkloadIdentityMiddleware(
 	req *http.Request,
 	next func(*http.Request) (*http.Response, error),
 ) (*http.Response, error) {
+	if wia.source.kind() == workloadIdentityCredentialSourceX509 && !internal.HasX509RequestPolicy(req) {
+		return nil, errors.New("X.509 workload identity middleware requires the SDK X.509 request policy")
+	}
 	token, err := wia.GetToken(req.Context(), httpClient)
 	if err != nil {
 		return nil, err

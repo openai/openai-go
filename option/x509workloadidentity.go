@@ -159,7 +159,7 @@ func configureX509Request(
 			if err := apiOrigin.validateRequest(req); err != nil {
 				return nil, requestconfig.WithNoRetryError(err)
 			}
-			return auth.WorkloadIdentityMiddleware(wia, configuredHTTPDoer, req, next)
+			return auth.WorkloadIdentityMiddleware(wia, configuredHTTPDoer, internal.WithX509RequestPolicy(req), next)
 		}
 	} else {
 		expectedAuthorization := ""

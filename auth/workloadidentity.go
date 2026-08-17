@@ -35,12 +35,11 @@ type WorkloadIdentityAuth struct {
 	serviceAccountID   string
 	source             workloadIdentityCredentialSource
 
-	// Protects boundHTTPDoer, boundHTTPTransport, boundX509Identity,
-	// cachedToken, tokenExpiry, tokenRefreshAt, and refreshInFlight.
+	// Protects boundHTTPDoer, boundHTTPTransport, cachedToken, tokenExpiry,
+	// tokenRefreshAt, and refreshInFlight.
 	mu                 sync.Mutex
 	boundHTTPDoer      HTTPDoer
 	boundHTTPTransport http.RoundTripper
-	boundX509Identity  x509HTTPTransportIdentity
 	cachedToken        string
 	tokenExpiry        time.Time
 	tokenRefreshAt     time.Time
@@ -265,14 +264,12 @@ func (w *WorkloadIdentityAuth) bindHTTPDoerLocked(httpClient HTTPDoer) error {
 	if httpTransport != nil && !reflect.ValueOf(httpTransport).Comparable() {
 		return fmt.Errorf("X.509 workload identity requires a comparable HTTP transport")
 	}
-	identity, err := x509HTTPTransportIdentityFor(httpTransport)
-	if err != nil {
+	if err := validateX509HTTPTransportIdentity(httpTransport); err != nil {
 		return err
 	}
 	if w.boundHTTPDoer == nil {
 		w.boundHTTPDoer = httpClient
 		w.boundHTTPTransport = httpTransport
-		w.boundX509Identity = identity
 		return nil
 	}
 	if w.boundHTTPDoer != httpClient {
@@ -280,9 +277,6 @@ func (w *WorkloadIdentityAuth) bindHTTPDoerLocked(httpClient HTTPDoer) error {
 	}
 	if w.boundHTTPTransport != httpTransport {
 		return fmt.Errorf("X.509 workload identity auth cannot change HTTP transports")
-	}
-	if w.boundX509Identity != identity {
-		return fmt.Errorf("X.509 workload identity auth cannot change native HTTP transport client identities")
 	}
 	return nil
 }

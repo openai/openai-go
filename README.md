@@ -1102,9 +1102,11 @@ provider authentication.
 Each native `*http.Transport` used for X.509 workload identity must contain
 exactly one static client certificate and must not use custom TLS dial or
 certificate-selection hooks. This keeps cached and single-flight tokens bound
-to one client identity. Do not mutate a transport after use; replace the
-transport and client to rotate identities. A custom HTTP transport likewise
-must represent one immutable client identity per comparable transport instance.
+to one client identity. The static certificate's `PrivateKey` may be backed by
+an HSM through Go's `crypto.Signer` interface. Do not mutate a transport after
+use; replace the transport and client to rotate identities. A custom HTTP
+transport likewise must represent one immutable client identity per comparable
+transport instance.
 
 The exchange is lazy, cached against Go's monotonic clock, refreshed with a
 buffer clamped to half the returned TTL, and single-flighted across concurrent

