@@ -1064,6 +1064,7 @@ if !ok {
 	return errors.New("http.DefaultTransport is not an *http.Transport")
 }
 transport := baseTransport.Clone()
+transport.Proxy = nil
 transport.DialTLS = nil
 transport.DialTLSContext = nil
 transport.TLSClientConfig = &tls.Config{
@@ -1095,6 +1096,11 @@ redirects, and structurally omits `subject_token`. The configured HTTP client
 must therefore be suitable for both mTLS hosts. A custom exchange URL is not
 supported. The SDK disables redirects on a native `*http.Client`; custom
 `option.HTTPClient` implementations must also refuse redirects internally.
+An explicit API base must be an absolute HTTPS URL without userinfo. The SDK
+binds the bearer to that normalized origin before exchange and again after
+request middleware, so absolute request URLs and middleware cannot move it to
+another origin. X.509 authentication cannot be combined with Azure or Bedrock
+provider authentication.
 
 The exchange is lazy, cached against Go's monotonic clock, refreshed with a
 buffer clamped to half the returned TTL, and single-flighted across concurrent

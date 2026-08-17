@@ -5,7 +5,25 @@ import (
 	"testing"
 
 	"github.com/openai/openai-go/v3/auth"
+	"github.com/openai/openai-go/v3/internal"
 )
+
+func TestX509CredentialHeaderGuardPreservesTransportProxyAuthentication(t *testing.T) {
+	transport := &http.Transport{
+		ProxyConnectHeader: http.Header{"Proxy-Authorization": []string{"Basic proxy-secret"}},
+	}
+	client := &http.Client{Transport: transport}
+
+	if got := internal.NativeHTTPTransport(client); got != transport {
+		t.Fatal("X.509 transport identity did not preserve the configured transport")
+	}
+	if hasConflictingX509CredentialHeaders(make(http.Header)) {
+		t.Fatal("transport-level CONNECT credentials were treated as target request headers")
+	}
+	if got, want := transport.ProxyConnectHeader.Get("Proxy-Authorization"), "Basic proxy-secret"; got != want {
+		t.Fatalf("ProxyConnectHeader Authorization = %q, want %q", got, want)
+	}
+}
 
 func TestX509WorkloadIdentityAuthCacheIsBoundedAndLeastRecentlyUsed(t *testing.T) {
 	config := auth.X509WorkloadIdentity{

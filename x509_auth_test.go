@@ -193,6 +193,7 @@ func TestClientX509WorkloadIdentityBaseURLPrecedence(t *testing.T) {
 			}
 		})
 	}
+
 }
 
 func TestClientX509WorkloadIdentityEnvironmentBaseURLWins(t *testing.T) {
@@ -323,6 +324,55 @@ func TestClientX509WorkloadIdentityScopesTokenCacheToHTTPDoer(t *testing.T) {
 	}
 	if got, want := strings.Join(apiAuth["b"], ","), "Bearer token-b"; got != want {
 		t.Errorf("transport B Authorization = %q, want %q", got, want)
+	}
+}
+
+func TestClientX509WorkloadIdentityScopesTokenCacheToNativeTransport(t *testing.T) {
+	type transportCapture struct {
+		exchangeCalls  int
+		authorizations []string
+	}
+	newTransport := func(name string, capture *transportCapture) http.RoundTripper {
+		return &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+			if req.URL.Hostname() == "mtls.auth.openai.com" {
+				capture.exchangeCalls++
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     http.Header{"Content-Type": []string{"application/json"}},
+					Body: io.NopCloser(strings.NewReader(fmt.Sprintf(
+						`{"access_token":"token-%s","expires_in":3600}`,
+						name,
+					))),
+				}, nil
+			}
+			capture.authorizations = append(capture.authorizations, req.Header.Get("Authorization"))
+			return modelsListResponse(), nil
+		}}
+	}
+
+	var transportA, transportB transportCapture
+	httpClient := &http.Client{Transport: newTransport("a", &transportA)}
+	client := openai.NewClient(
+		option.WithBaseURL("https://trusted.example/v1"),
+		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+		option.WithHTTPClient(httpClient),
+	)
+	if _, err := client.Models.List(t.Context()); err != nil {
+		t.Fatalf("first Models.List() error = %v", err)
+	}
+	httpClient.Transport = newTransport("b", &transportB)
+	if _, err := client.Models.List(t.Context()); err != nil {
+		t.Fatalf("second Models.List() error = %v", err)
+	}
+
+	if got, want := transportA.exchangeCalls, 1; got != want {
+		t.Fatalf("transport A exchange calls = %d, want %d", got, want)
+	}
+	if got, want := transportB.exchangeCalls, 1; got != want {
+		t.Fatalf("transport B exchange calls = %d, want %d", got, want)
+	}
+	if got, want := strings.Join(transportB.authorizations, ","), "Bearer token-b"; got != want {
+		t.Fatalf("transport B Authorization = %q, want %q", got, want)
 	}
 }
 
@@ -486,6 +536,53 @@ func TestClientX509WorkloadIdentityLaterOptionReplacesCredential(t *testing.T) {
 	}
 	if got, want := apiAuthorization, "Bearer token-svc-second"; got != want {
 		t.Errorf("API Authorization = %q, want %q", got, want)
+	}
+}
+
+func TestClientX509WorkloadIdentitySnapshotsConfigurationAndSupportsClientCopies(t *testing.T) {
+	var exchangedServiceAccounts []string
+	var exchangeCalls int
+	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+		if req.URL.Hostname() == "mtls.auth.openai.com" {
+			exchangeCalls++
+			var body struct {
+				ServiceAccountID string `json:"service_account_id"`
+			}
+			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+				return nil, err
+			}
+			exchangedServiceAccounts = append(exchangedServiceAccounts, body.ServiceAccountID)
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				Body:       io.NopCloser(strings.NewReader(`{"access_token":"x509-token","expires_in":3600}`)),
+			}, nil
+		}
+		return modelsListResponse(), nil
+	}}}
+	config := clientX509WorkloadIdentity()
+	config.ServiceAccountID = "svc-original"
+	x509Option := option.WithX509WorkloadIdentity(config)
+	config.IdentityProviderID = "idp-mutated"
+	config.ServiceAccountID = "svc-mutated"
+	client := openai.NewClient(
+		x509Option,
+		option.WithBaseURL("https://trusted.example/v1"),
+		option.WithHTTPClient(httpClient),
+	)
+	clientCopy := client
+
+	if _, err := client.Models.List(t.Context()); err != nil {
+		t.Fatalf("original Models.List() error = %v", err)
+	}
+	if _, err := clientCopy.Models.List(t.Context()); err != nil {
+		t.Fatalf("copied Models.List() error = %v", err)
+	}
+	if got, want := strings.Join(exchangedServiceAccounts, ","), "svc-original"; got != want {
+		t.Fatalf("exchanged service accounts = %q, want %q", got, want)
+	}
+	if exchangeCalls != 1 {
+		t.Fatalf("exchange calls = %d, want 1", exchangeCalls)
 	}
 }
 

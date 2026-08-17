@@ -113,6 +113,7 @@ func WithTokenCredentialScopes(scopes []string) func(*tokenCredentialConfig) err
 // [Azure Identity]: https://pkg.go.dev/github.com/Azure/azure-sdk-for-go/sdk/azidentity
 func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...TokenCredentialOption) option.RequestOption {
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		rc.SetProviderAuthentication(requestconfig.ProviderAuthenticationAzure)
 		tc := &tokenCredentialConfig{
 			Scopes: []string{"https://cognitiveservices.azure.com/.default"},
 		}
@@ -155,6 +156,7 @@ func WithAPIKey(apiKey string) option.RequestOption {
 	// Api-Key instead. Deleting Authorization also prevents request security from
 	// automatically injecting environment-derived client credentials.
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		rc.SetProviderAuthentication(requestconfig.ProviderAuthenticationAzure)
 		return rc.Apply(
 			option.WithHeaderDel("Authorization"),
 			option.WithHeader("Api-Key", apiKey),

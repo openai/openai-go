@@ -36,6 +36,22 @@ func TestTokenExchangeRetryDelayHonorsRetryAfter(t *testing.T) {
 		}
 	})
 
+	t.Run("far future date", func(t *testing.T) {
+		resp := &http.Response{Header: http.Header{"Retry-After": []string{"Fri, 31 Dec 9999 23:59:59 GMT"}}}
+		if got, want := tokenExchangeRetryDelay(resp, 0), tokenExchangeMaxRetryDelay; got != want {
+			t.Errorf("tokenExchangeRetryDelay() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("malformed values remain bounded", func(t *testing.T) {
+		for _, retryAfter := range []string{"1e999", "NaN", "+Inf", "-Inf", "+999999999999999999999", "-1"} {
+			resp := &http.Response{Header: http.Header{"Retry-After": []string{retryAfter}}}
+			if got := tokenExchangeRetryDelay(resp, 0); got < 0 || got > tokenExchangeMaxRetryDelay {
+				t.Errorf("tokenExchangeRetryDelay(%q) = %v, want a bounded delay", retryAfter, got)
+			}
+		}
+	})
+
 	t.Run("http date", func(t *testing.T) {
 		retryAt := time.Now().Add(5 * time.Second).UTC().Truncate(time.Second)
 		resp := &http.Response{Header: http.Header{"Retry-After": []string{retryAt.Format(http.TimeFormat)}}}
@@ -144,5 +160,40 @@ func TestX509CanceledLeaderDoesNotCancelSharedRefresh(t *testing.T) {
 	}
 	if got, want := calls.Load(), int32(1); got != want {
 		t.Errorf("token exchange calls = %d, want %d", got, want)
+	}
+}
+
+func TestX509SharedRefreshPreservesInitiatorContextValues(t *testing.T) {
+	type tenantContextKey struct{}
+	const tenant = "tenant-a"
+	httpClient := &internalHTTPDoer{do: func(req *http.Request) (*http.Response, error) {
+		if got := req.Context().Value(tenantContextKey{}); got != tenant {
+			return &http.Response{
+				StatusCode: http.StatusBadRequest,
+				Header:     make(http.Header),
+				Body:       io.NopCloser(strings.NewReader(`{"error":"missing_tenant"}`)),
+			}, nil
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{"Content-Type": []string{"application/json"}},
+			Body:       io.NopCloser(strings.NewReader(`{"access_token":"tenant-token","expires_in":60}`)),
+		}, nil
+	}}
+	wia, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
+		IdentityProviderID: "idp-test",
+		ServiceAccountID:   "svc-test",
+	})
+	if err != nil {
+		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+	}
+	ctx := context.WithValue(t.Context(), tenantContextKey{}, tenant)
+
+	token, err := wia.GetToken(ctx, httpClient)
+	if err != nil {
+		t.Fatalf("GetToken() error = %v", err)
+	}
+	if got, want := token, "tenant-token"; got != want {
+		t.Fatalf("GetToken() = %q, want %q", got, want)
 	}
 }

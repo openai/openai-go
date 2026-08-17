@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/auth"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -34,6 +35,35 @@ func successfulResponse(req *http.Request) *http.Response {
 		Header:     http.Header{"Content-Type": {"application/json"}},
 		Body:       io.NopCloser(strings.NewReader(`{}`)),
 		Request:    req,
+	}
+}
+
+func TestProviderAuthenticationRejectsX509BeforeExchange(t *testing.T) {
+	var calls atomic.Int32
+	httpClient := &http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
+		calls.Add(1)
+		return nil, errors.New("HTTP request must not be attempted")
+	})}
+	client, err := NewClient(t.Context(), Config{
+		APIKey:    "bedrock-key",
+		AWSRegion: "us-east-1",
+		BaseURL:   "https://bedrock.example/openai/v1",
+	},
+		option.WithX509WorkloadIdentity(auth.X509WorkloadIdentity{
+			IdentityProviderID: "idp-test",
+			ServiceAccountID:   "svc-test",
+		}),
+		option.WithHTTPClient(httpClient),
+	)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+
+	if _, err := client.Models.List(t.Context()); err == nil {
+		t.Fatal("Models.List() error = nil")
+	}
+	if got := calls.Load(); got != 0 {
+		t.Fatalf("HTTP calls = %d, want 0", got)
 	}
 }
 

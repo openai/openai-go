@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"reflect"
 	"strings"
@@ -268,6 +270,95 @@ func TestX509TokenExchangeRequiresPositiveExpiresIn(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestX509TokenExchangeValidatesBearerTokenTypeAndGrammar(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
+		for _, body := range []string{
+			`{"access_token":"abc-._~+/==","expires_in":60}`,
+			`{"access_token":"abc-._~+/==","expires_in":60,"token_type":"Bearer"}`,
+			`{"access_token":"abc-._~+/==","expires_in":60,"token_type":"bearer"}`,
+		} {
+			wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+			if err != nil {
+				t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+			}
+			if _, err := wia.GetToken(t.Context(), mockOAuthServer(body, http.StatusOK)); err != nil {
+				t.Errorf("GetToken() body %s error = %v", body, err)
+			}
+		}
+	})
+
+	t.Run("invalid token type", func(t *testing.T) {
+		for _, tokenType := range []string{`"Basic"`, `"MAC"`, `"DPoP"`, `null`, `123`} {
+			body := fmt.Sprintf(`{"access_token":"must-not-leak","expires_in":60,"token_type":%s}`, tokenType)
+			wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+			if err != nil {
+				t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+			}
+			_, err = wia.GetToken(t.Context(), mockOAuthServer(body, http.StatusOK))
+			if err == nil {
+				t.Errorf("GetToken() token_type %s error = nil", tokenType)
+			} else if strings.Contains(err.Error(), "must-not-leak") {
+				t.Errorf("GetToken() error contains access token: %v", err)
+			}
+		}
+	})
+
+	t.Run("invalid access token", func(t *testing.T) {
+		invalidTokens := []string{
+			" leading", "trailing ", "two words", "line\r\nbreak", "line\nbreak",
+			"nul\x00byte", "tab\tbyte", "nonascii-\u00e9", "bad!punctuation", "=padding-only", "abc=more",
+		}
+		for _, accessToken := range invalidTokens {
+			body, err := json.Marshal(map[string]any{
+				"access_token": accessToken,
+				"expires_in":   60,
+				"token_type":   "Bearer",
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+			if err != nil {
+				t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+			}
+			_, err = wia.GetToken(t.Context(), mockOAuthServer(string(body), http.StatusOK))
+			if err == nil {
+				t.Errorf("GetToken() token %q error = nil", accessToken)
+			} else if strings.Contains(err.Error(), accessToken) {
+				t.Errorf("GetToken() error contains access token: %v", err)
+			}
+		}
+	})
+
+	t.Run("invalid token is not cached", func(t *testing.T) {
+		var calls atomic.Int32
+		httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+			if calls.Add(1) == 1 {
+				return tokenResponse("line\r\nbreak", 60), nil
+			}
+			return tokenResponse("safe-token", 60), nil
+		}}}
+		wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+		if err != nil {
+			t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+		}
+		_, err = wia.GetToken(t.Context(), httpClient)
+		if err == nil {
+			t.Fatal("first GetToken() error = nil")
+		}
+		token, err := wia.GetToken(t.Context(), httpClient)
+		if err != nil {
+			t.Fatalf("second GetToken() error = %v", err)
+		}
+		if got, want := token, "safe-token"; got != want {
+			t.Fatalf("second GetToken() = %q, want %q", got, want)
+		}
+		if got, want := calls.Load(), int32(2); got != want {
+			t.Fatalf("token exchange calls = %d, want %d", got, want)
+		}
+	})
 }
 
 func TestIDTokenWorkloadIdentityRegression(t *testing.T) {
@@ -658,6 +749,74 @@ func TestX509Concurrent401InvalidationKeepsNewToken(t *testing.T) {
 	}
 	if got, want := exchangeCalls.Load(), int32(2); got != want {
 		t.Errorf("token exchange calls = %d, want %d", got, want)
+	}
+}
+
+func TestX509Second401InvalidatesReplayToken(t *testing.T) {
+	var exchangeCalls atomic.Int32
+	exchangeClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+		call := exchangeCalls.Add(1)
+		return tokenResponse(fmt.Sprintf("token-%d", call), 60), nil
+	}}}
+	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+	if err != nil {
+		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+	}
+	var authorizations []string
+	next := func(req *http.Request) (*http.Response, error) {
+		authorizations = append(authorizations, req.Header.Get("Authorization"))
+		return &http.Response{
+			StatusCode: http.StatusUnauthorized,
+			Header:     make(http.Header),
+			Body:       http.NoBody,
+		}, nil
+	}
+
+	for range 2 {
+		req, reqErr := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://mtls.api.openai.com/v1/models", nil)
+		if reqErr != nil {
+			t.Fatal(reqErr)
+		}
+		resp, middlewareErr := auth.WorkloadIdentityMiddleware(wia, exchangeClient, req, next)
+		if middlewareErr != nil {
+			t.Fatalf("WorkloadIdentityMiddleware() error = %v", middlewareErr)
+		}
+		_ = resp.Body.Close()
+	}
+
+	if got, want := strings.Join(authorizations, ","), "Bearer token-1,Bearer token-2,Bearer token-3,Bearer token-4"; got != want {
+		t.Fatalf("Authorization sequence = %q, want %q", got, want)
+	}
+}
+
+func TestX509TokenExchangeDoesNotInheritHTTPClientCookies(t *testing.T) {
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	authURL, err := url.Parse("https://mtls.auth.openai.com/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	jar.SetCookies(authURL, []*http.Cookie{{Name: "api-session", Value: "secret", Path: "/"}})
+	var exchangeCookie string
+	httpClient := &http.Client{
+		Jar: jar,
+		Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+			exchangeCookie = req.Header.Get("Cookie")
+			return tokenResponse("x509-token", 60), nil
+		}},
+	}
+	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+	if err != nil {
+		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+	}
+
+	if _, err := wia.GetToken(t.Context(), httpClient); err != nil {
+		t.Fatalf("GetToken() error = %v", err)
+	}
+	if exchangeCookie != "" {
+		t.Fatalf("token exchange Cookie = %q, want empty", exchangeCookie)
 	}
 }
 

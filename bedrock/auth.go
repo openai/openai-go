@@ -80,6 +80,9 @@ func newClientOptions(
 	}
 	opts = append(opts, userOpts...)
 	opts = append(opts, requestconfig.WithRequestFinalizer(func(rc *requestconfig.RequestConfig) error {
+		if resolved.mode != authModeSkip {
+			rc.SetProviderAuthentication(requestconfig.ProviderAuthenticationBedrock)
+		}
 		if resolved.mode != authModeSkip && (rc.APIKey != "" || rc.AdminAPIKey != "") {
 			return errors.New("bedrock: provider authentication cannot be combined with an OpenAI API key; configure authentication in `bedrock.Config`")
 		}

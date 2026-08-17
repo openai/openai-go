@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -129,8 +130,9 @@ func parseX509TokenExchangeResponse(statusCode int, body []byte) (exchangedToken
 	}
 
 	var tokenResp struct {
-		AccessToken string   `json:"access_token"`
-		ExpiresIn   *float64 `json:"expires_in"`
+		AccessToken string          `json:"access_token"`
+		ExpiresIn   *float64        `json:"expires_in"`
+		TokenType   json.RawMessage `json:"token_type"`
 	}
 	if err := json.Unmarshal(body, &tokenResp); err != nil {
 		return exchangedToken{}, fmt.Errorf("failed to decode token exchange response: %w", err)
@@ -147,10 +149,42 @@ func parseX509TokenExchangeResponse(statusCode int, body []byte) (exchangedToken
 	if expiresIn <= 0 {
 		return exchangedToken{}, fmt.Errorf("token exchange response requires a positive numeric 'expires_in' field")
 	}
-	if tokenResp.AccessToken == "" {
-		return exchangedToken{}, fmt.Errorf("token exchange response missing 'access_token' field")
+	if len(tokenResp.TokenType) != 0 {
+		var tokenType string
+		if tokenResp.TokenType[0] != '"' || json.Unmarshal(tokenResp.TokenType, &tokenType) != nil ||
+			!strings.EqualFold(tokenType, "Bearer") {
+			return exchangedToken{}, fmt.Errorf("token exchange response has invalid 'token_type' field")
+		}
+	}
+	if !validBearerAccessToken(tokenResp.AccessToken) {
+		return exchangedToken{}, fmt.Errorf("token exchange response has invalid 'access_token' field")
 	}
 	return exchangedToken{accessToken: tokenResp.AccessToken, expiresIn: expiresIn}, nil
+}
+
+func validBearerAccessToken(token string) bool {
+	if token == "" {
+		return false
+	}
+	padding := false
+	for i := range len(token) {
+		character := token[i]
+		switch {
+		case character == '=':
+			padding = true
+		case character >= 'a' && character <= 'z',
+			character >= 'A' && character <= 'Z',
+			character >= '0' && character <= '9',
+			character == '-', character == '.', character == '_', character == '~',
+			character == '+', character == '/':
+			if padding {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+	return token[0] != '='
 }
 
 func withoutRedirects(httpClient HTTPDoer) HTTPDoer {
@@ -159,6 +193,7 @@ func withoutRedirects(httpClient HTTPDoer) HTTPDoer {
 		return httpClient
 	}
 	clone := *client
+	clone.Jar = nil
 	clone.CheckRedirect = func(*http.Request, []*http.Request) error {
 		return http.ErrUseLastResponse
 	}

@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/openai/openai-go/v3/internal"
 	"github.com/openai/openai-go/v3/shared"
 )
 
@@ -34,14 +35,15 @@ type WorkloadIdentityAuth struct {
 	serviceAccountID   string
 	source             workloadIdentityCredentialSource
 
-	// Protects boundHTTPDoer, cachedToken, tokenExpiry, tokenRefreshAt, and
-	// refreshInFlight.
-	mu              sync.Mutex
-	boundHTTPDoer   HTTPDoer
-	cachedToken     string
-	tokenExpiry     time.Time
-	tokenRefreshAt  time.Time
-	refreshInFlight *tokenRefreshState
+	// Protects boundHTTPDoer, boundHTTPTransport, cachedToken, tokenExpiry,
+	// tokenRefreshAt, and refreshInFlight.
+	mu                 sync.Mutex
+	boundHTTPDoer      HTTPDoer
+	boundHTTPTransport http.RoundTripper
+	cachedToken        string
+	tokenExpiry        time.Time
+	tokenRefreshAt     time.Time
+	refreshInFlight    *tokenRefreshState
 }
 
 type tokenRefreshResult struct {
@@ -214,7 +216,7 @@ func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer
 	// Proactive background refresh: start if within refresh window and no refresh active
 	if !now.Before(w.tokenRefreshAt) && w.refreshInFlight == nil {
 		state := w.beginRefreshLocked()
-		w.startSharedRefresh(state, httpClient)
+		w.startSharedRefresh(ctx, state, httpClient)
 	}
 
 	token := w.cachedToken
@@ -227,7 +229,7 @@ func (w *WorkloadIdentityAuth) handleLockedRefresh(ctx context.Context, httpClie
 	if w.refreshInFlight == nil {
 		state := w.beginRefreshLocked()
 		if w.source.kind() == workloadIdentityCredentialSourceX509 {
-			w.startSharedRefresh(state, httpClient)
+			w.startSharedRefresh(ctx, state, httpClient)
 			return w.waitForLockedRefresh(ctx, state)
 		}
 
@@ -258,12 +260,20 @@ func (w *WorkloadIdentityAuth) bindHTTPDoerLocked(httpClient HTTPDoer) error {
 	if !reflect.ValueOf(httpClient).Comparable() {
 		return fmt.Errorf("X.509 workload identity requires a comparable HTTP client")
 	}
+	httpTransport := internal.NativeHTTPTransport(httpClient)
+	if httpTransport != nil && !reflect.ValueOf(httpTransport).Comparable() {
+		return fmt.Errorf("X.509 workload identity requires a comparable HTTP transport")
+	}
 	if w.boundHTTPDoer == nil {
 		w.boundHTTPDoer = httpClient
+		w.boundHTTPTransport = httpTransport
 		return nil
 	}
 	if w.boundHTTPDoer != httpClient {
 		return fmt.Errorf("X.509 workload identity auth cannot change HTTP clients")
+	}
+	if w.boundHTTPTransport != httpTransport {
+		return fmt.Errorf("X.509 workload identity auth cannot change HTTP transports")
 	}
 	return nil
 }
@@ -284,8 +294,8 @@ func (w *WorkloadIdentityAuth) beginRefreshLocked() *tokenRefreshState {
 	return w.refreshInFlight
 }
 
-func (w *WorkloadIdentityAuth) startSharedRefresh(state *tokenRefreshState, httpClient HTTPDoer) {
-	refreshCtx, cancel := context.WithTimeout(context.Background(), w.source.refreshTimeout())
+func (w *WorkloadIdentityAuth) startSharedRefresh(ctx context.Context, state *tokenRefreshState, httpClient HTTPDoer) {
+	refreshCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), w.source.refreshTimeout())
 	state.cancel = cancel
 	go func() {
 		defer cancel()

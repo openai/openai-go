@@ -343,6 +343,7 @@ type RequestConfig struct {
 	authHeaderOverride bool
 	authPreference     authCredentialPreference
 	workloadIdentity   WorkloadIdentityCredentialSource
+	providerAuth       ProviderAuthentication
 	// Configure which security scheme(s) should be enabled for this request
 	Security Security
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
@@ -362,6 +363,14 @@ type WorkloadIdentityCredentialSource uint8
 const (
 	WorkloadIdentityCredentialSourceSubjectToken WorkloadIdentityCredentialSource = iota + 1
 	WorkloadIdentityCredentialSourceX509
+)
+
+// ProviderAuthentication identifies a provider-owned credential mode.
+type ProviderAuthentication string
+
+const (
+	ProviderAuthenticationAzure   ProviderAuthentication = "Azure"
+	ProviderAuthenticationBedrock ProviderAuthentication = "Bedrock"
 )
 
 // middleware is exactly the same type as the Middleware type found in the [option] package,
@@ -750,6 +759,7 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		authHeaderOverride: cfg.authHeaderOverride,
 		authPreference:     cfg.authPreference,
 		workloadIdentity:   cfg.workloadIdentity,
+		providerAuth:       cfg.providerAuth,
 	}
 
 	return new
@@ -805,6 +815,19 @@ func (cfg *RequestConfig) UseWorkloadIdentityCredential(source WorkloadIdentityC
 // This function is internal API and may change without notice.
 func (cfg *RequestConfig) SetWorkloadIdentityFinalizer(finalize func(*RequestConfig) error) {
 	cfg.wifFinalizer = finalize
+}
+
+// SetProviderAuthentication records a provider-owned credential mode so it
+// cannot be combined with an incompatible OpenAI credential at finalization.
+// This function is internal API and may change without notice.
+func (cfg *RequestConfig) SetProviderAuthentication(provider ProviderAuthentication) {
+	cfg.providerAuth = provider
+}
+
+// ProviderAuthentication returns the selected provider-owned credential mode.
+// This function is internal API and may change without notice.
+func (cfg *RequestConfig) ProviderAuthentication() ProviderAuthentication {
+	return cfg.providerAuth
 }
 
 func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
