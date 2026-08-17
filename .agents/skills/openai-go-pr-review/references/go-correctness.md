@@ -26,17 +26,19 @@ material maintainability regressions, not a transcript of every checklist item.
 
 ## Context, concurrency, and resources
 
-- Propagate the caller's `context.Context` through HTTP requests, token
-  acquisition, retry waits, paging, and goroutines. Do not replace it with
-  `context.Background()` inside a request path.
+- Propagate the caller's `context.Context` through request-owned HTTP work,
+  foreground token acquisition, retry waits, and paging. An independently
+  owned proactive refresh may intentionally use its own timeout-bounded
+  context so one caller cannot cancel a shared credential-cache refresh.
 - Separate the overall context deadline from per-attempt request timeouts;
   verify cancellation and timer cleanup on success, error, retry, and stream
   termination.
 - Establish who closes every request body, response body, multipart writer,
   stream decoder, file, timer, channel, and spawned goroutine. Check
   unexpected-response and early-error branches, not only the success path.
-- Preserve request-body replayability and `GetBody` before adding retries,
-  authentication refreshes, middleware body reads, or SigV4 signing.
+- Preserve the request body's existing replayability and `GetBody` contract
+  when adding retries, authentication refreshes, middleware reads, or SigV4
+  signing. Do not manufacture replayability for a caller-supplied one-shot body.
 - Review shared maps, slices, mutable client options, global decoder
   registration, token caches, refresh deduplication, and concurrent requests
   for data races and ownership leaks. Use `go test -race` for an affected

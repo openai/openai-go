@@ -62,14 +62,16 @@ Inspect `packages/param`, `internal/apijson`, `internal/apiquery`, and
 - Retry only replayable bodies. Preserve `GetBody`, server `x-should-retry`
   directives, retry-after units and dates, cancellation, per-attempt timeouts,
   retry limits, deterministic no-retry errors, and response-body cleanup.
-- A middleware that consumes the request body must restore a replayable body
-  for later middleware, signing, and retries.
+- A middleware that consumes the request body must restore readability for
+  downstream middleware while preserving the original `GetBody` and
+  replayability contract. Do not synthesize retries for a one-shot body.
 - Debug output must redact `Authorization`, `Api-Key`, `X-Api-Key`, AWS
   session tokens, cookies, and equivalent sensitive headers without mutating
   the headers of the live request or response.
-- Workload identity must preserve caller context, cache expiry, proactive
-  refresh, concurrent refresh deduplication, provider errors, 401 refresh
-  behavior, nonreplayable bodies, and close ownership.
+- Workload identity must preserve request-owned caller contexts, cache
+  expiry, timeout-bounded independently owned proactive refresh, concurrent
+  refresh deduplication, provider errors, 401 refresh behavior, nonreplayable
+  bodies, and close ownership.
 
 ## Server-sent events and streams
 
@@ -117,10 +119,12 @@ Inspect `packages/param`, `internal/apijson`, `internal/apiquery`, and
 - Preserve AWS partition suffixes, canonical/FIPS/dual-stack hostname
   inference, region matching, endpoint-family matching, canonical HTTPS,
   explicitly configured custom hosts, and custom endpoint paths.
-- Explicit API keys or token providers outrank explicit AWS credentials;
-  explicit AWS credentials outrank ambient `AWS_BEARER_TOKEN_BEDROCK`; the
-  standard AWS credential chain is the fallback. Confirm precise precedence
-  against the current provider documentation.
+- Explicit Bedrock authentication modes are mutually exclusive: reject an API
+  key combined with a token provider, bearer credentials combined with AWS
+  credentials, multiple explicit AWS modes, and provider credentials combined
+  with `SkipAuth`. A valid explicit mode overrides ambient bearer credentials;
+  otherwise `AWS_BEARER_TOKEN_BEDROCK` precedes the implicit AWS credential
+  chain.
 - Prevent ambient OpenAI settings from leaking into any Bedrock request. In
   Bedrock-authenticated modes, reject cross-origin requests before resolving
   credentials, preserve redirect restrictions, reject conflicting custom
