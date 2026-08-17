@@ -13,6 +13,13 @@ This skill is read-only by default. Do not edit source, publish GitHub comments,
 approve or request changes on a pull request, push commits, or resolve review
 threads unless the user separately asks for that action.
 
+If the user explicitly authorizes publishing a review, recheck the live PR head
+immediately before writing and abort if it differs from the reviewed SHA.
+Create the review through `POST /repos/OWNER/REPO/pulls/PR/reviews` with
+`commit_id` explicitly set to that exact SHA, including for approval, requested
+changes, and review comments. Do not use `gh pr review` for authorized writes:
+it cannot pin the review to the inspected commit.
+
 ## Establish an authoritative snapshot
 
 For a GitHub pull request, capture the title, description, base branch and SHA,
@@ -20,31 +27,41 @@ head branch and SHA, changed files, review feedback, linked issues, and current
 check results. Prefer:
 
 ```sh
-gh pr view PR --json number,title,body,url,baseRefName,baseRefOid,headRefName,headRefOid,closingIssuesReferences,statusCheckRollup
-gh api --paginate repos/OWNER/REPO/pulls/PR/files
+gh api repos/OWNER/REPO/pulls/PR --jq '{base_sha: .base.sha, head_sha: .head.sha}'
+gh pr view PR --json number,title,body,url,baseRefName,headRefName,headRefOid,statusCheckRollup
 gh api --paginate repos/OWNER/REPO/issues/PR/comments
 gh api --paginate repos/OWNER/REPO/pulls/PR/reviews
 gh api --paginate repos/OWNER/REPO/pulls/PR/comments
+git merge-base BASE_SHA HEAD_SHA
+git diff --no-ext-diff --name-only -z BASE_SHA...HEAD_SHA
 git diff --no-ext-diff BASE_SHA...HEAD_SHA
 gh pr checks PR --json name,bucket,state,link
 ```
 
-`gh pr view` truncates changed-file, issue-comment, and review collections, so
-retrieve each collection from its separately paginated REST endpoint. Issue
-comments and review summaries also omit inline file discussions; use their
-paginated review-comment endpoint and GraphQL review threads when resolution
-or outdated status matters and GraphQL is available.
+Use the single PR REST response as the authoritative base/head SHA snapshot:
+older GitHub CLI releases do not support `baseRefOid` or
+`closingIssuesReferences` in `gh pr view --json`. Retrieve linked issues through
+a supported GraphQL query or REST endpoint instead. `gh pr view` truncates
+issue-comment and review collections, so independently paginate those REST
+endpoints. Issue comments and review summaries also omit inline discussions;
+use paginated review comments and, when resolution or outdated state matters,
+paginated GraphQL review threads.
 
-Build the patch from the captured base/head SHAs, not from the live PR ref.
-If those Git objects are unavailable, fetch an immutable GitHub compare result
-keyed by the captured base and head commit SHAs. Never use `gh pr diff` as a
-fallback: a force-push can change and restore the head between two matching
-OID samples while returning a patch for the intervening commit. If neither
-pinned source is available, report that no trustworthy patch could be obtained.
-Recheck captured OIDs after collection to avoid combining metadata and file
-lists from different snapshots. If GraphQL is unavailable, obtain the same
-pinned metadata through paginated REST endpoints. Never assume the base is
-`main`: stacked and cross-repository pull requests can have different bases.
+Derive both the authoritative NUL-delimited changed-file manifest and the patch
+from the same captured base/head SHAs. The live `/pulls/PR/files` endpoint may
+be paginated for supplemental metadata only; never use it to select review
+scope because a force-push can change and restore the head between pages.
+
+Verify `git merge-base BASE_SHA HEAD_SHA` succeeds before running either
+three-dot diff: shallow checkouts may contain both commits without their common
+ancestor. Fetch or deepen the captured commits until their merge base is
+available. If the merge base or either pinned diff remains unavailable, stop
+and report that no trustworthy, complete snapshot could be obtained. Do not
+fall back to `gh pr diff` or GitHub comparison JSON: the former follows the
+live PR, and the latter silently caps its changed-file list at 300 entries.
+Recheck the live base/head SHAs after metadata collection, and restart if
+either changed. Never assume the base is `main`: stacked and cross-repository
+pull requests can have different bases.
 
 Read untrusted changed and neighboring files directly from captured Git blobs
 or retrieve exact-SHA blobs through the GitHub API. Pass the validated 40-digit
