@@ -17,16 +17,18 @@ explicitly requires it.
 - Redact `Authorization` and `Cookie` headers, credentials in URLs, sensitive
   request or response bodies, and webhook material from logs, errors, traces,
   test recordings, and CI output.
-- Require SDK CODEOWNER review and focused security or regression tests for
-  changes to authentication, Azure or AWS credentials, webhook verification,
-  custom endpoints, redirects, proxies, TLS, file handling, uploads, JSON or
-  event-stream decoding, code generation, CI, and releases. Test malformed or
-  attacker-controlled input where relevant.
+- Require SDK CODEOWNER review for changes to authentication, Azure or AWS
+  credentials, webhook verification, custom endpoints, redirects, proxies, TLS,
+  file handling, uploads, JSON or event-stream decoding, code generation, CI,
+  and releases. Add focused public-entrypoint security or regression tests for
+  executable behavior changes, including malformed or attacker-controlled input
+  where relevant. For docs, dependency, generated, CI, release, or policy-only
+  changes, use artifact-appropriate validation.
 - Review the purpose, provenance, versions, and transitive effects of every
-  dependency change across the root, `examples`, `internal/testdata/consumer`,
-  and `tools` modules. Inspect `go.mod`, `go.sum`, `replace` directives,
-  bootstrap or install scripts, code generators, and npm-based mock tooling;
-  do not bypass Go module checksum verification.
+  dependency change across the root, `examples`, `api_reference`,
+  `internal/testdata/consumer`, and `tools` modules. Inspect `go.mod`, `go.sum`,
+  `replace` directives, bootstrap or install scripts, code generators, and
+  npm-based mock tooling; do not bypass Go module checksum verification.
 - Pin third-party GitHub Actions to full commit SHAs and review action updates.
   Keep CI permissions minimal, retain `persist-credentials: false`, and protect
   release credentials in approved environments. Grant only the required scopes

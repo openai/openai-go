@@ -36,17 +36,20 @@ modify the contents of the `lib/` and `examples/` directories.
   returned errors, fixtures, recordings, and CI output. Preserve safe synthetic
   payloads and intentional public error diagnostics.
 - Review direct and transitive dependency changes in `go.mod` and `go.sum`
-  across the root, `examples`, `internal/testdata/consumer`, and `tools`
-  modules. Review new `replace` directives, dependency origins, installation
-  scripts, code generators, and npm-based mock tooling before running them;
-  preserve Go checksum verification and run the existing vulnerability checks.
+  across the root, `examples`, `api_reference`, `internal/testdata/consumer`,
+  and `tools` modules. Review new `replace` directives, dependency origins,
+  installation scripts, code generators, and npm-based mock tooling before
+  running them; preserve Go checksum verification and run the existing
+  vulnerability checks.
 - Keep third-party GitHub Actions pinned to reviewed full commit SHAs, grant
   CI and publishing jobs only their required permissions, and isolate release
   credentials from untrusted pull requests or other untrusted code.
-- Obtain SDK CODEOWNER review and add focused regression or security tests for
-  changes involving authentication, webhook verification, base URLs,
-  redirects, proxies, TLS, file paths or uploads, JSON or event-stream
-  decoding, dependency installation, code generation, CI, or release tooling.
+- Obtain SDK CODEOWNER review for changes involving authentication, webhook
+  verification, base URLs, redirects, proxies, TLS, file paths or uploads, JSON
+  or event-stream decoding, dependency installation, code generation, CI, or
+  release tooling. Add focused public-entrypoint regression or security tests
+  for executable behavior changes; use artifact-appropriate validation for
+  docs, dependency, generated, CI, release, or policy-only changes.
 - Report suspected vulnerabilities privately according to [SECURITY.md](SECURITY.md).
   Do not open public issues, pull requests, or discussions about them.
 
