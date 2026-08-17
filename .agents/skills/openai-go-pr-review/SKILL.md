@@ -17,9 +17,10 @@ If the user explicitly authorizes publishing a review, recheck both live PR
 base/head SHAs immediately before writing and abort if either differs from the
 reviewed snapshot.
 Create the review through `POST /repos/OWNER/REPO/pulls/PR/reviews` with
-`commit_id` explicitly set to that exact SHA, including for approval, requested
-changes, and review comments. Do not use `gh pr review` for authorized writes:
-it cannot pin the review to the inspected commit.
+`commit_id` explicitly set to that exact SHA and `event` explicitly set to the
+authorized action: `COMMENT`, `APPROVE`, or `REQUEST_CHANGES`. Omitting `event`
+creates an unpublished pending review. Do not use `gh pr review` for authorized
+writes: it cannot pin the review to the inspected commit.
 
 ## Start from a trusted local checkout
 
@@ -47,7 +48,7 @@ gh api --paginate repos/OWNER/REPO/issues/PR/comments
 gh api --paginate repos/OWNER/REPO/pulls/PR/reviews
 gh api --paginate repos/OWNER/REPO/pulls/PR/comments
 gh api --paginate repos/OWNER/REPO/commits/HEAD_SHA/check-runs
-gh api repos/OWNER/REPO/commits/HEAD_SHA/status
+gh api --paginate repos/OWNER/REPO/commits/HEAD_SHA/status
 git diff --name-status "$review_base_sha...$review_head_sha"
 git diff --no-ext-diff --no-textconv --no-color "$review_base_sha...$review_head_sha"
 ```
@@ -57,7 +58,8 @@ PR's base is not necessarily `main`. Pin every subsequent file, diff, and CI
 lookup to those revisions, and restart if either revision changes. Paginate
 issue comments, review summaries, and inline review comments separately; use
 paginated GraphQL review threads when resolution or outdated state matters.
-Check both exact-commit check runs and legacy commit-status contexts.
+Check both exact-commit check runs and every page of the combined legacy
+commit-status endpoint, which preserves the latest state for each context.
 
 For large changes or discussions, inspect files and comments in manageable
 batches. If GitHub limits, missing history, truncated output, or unavailable
