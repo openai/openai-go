@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.52.0](https://github.com/openai/openai-go/compare/v3.51.0...v3.52.0) (2026-08-17)
+
+
+### Features
+
+* add Bedrock Runtime endpoint support (SDK-290) ([#793](https://github.com/openai/openai-go/issues/793)) ([8e8444e](https://github.com/openai/openai-go/commit/8e8444ecf7918b3370356fa0d8478788e2c8196d))
+
 ## [3.51.0](https://github.com/openai/openai-go/compare/v3.50.0...v3.51.0) (2026-08-14)
 
 
