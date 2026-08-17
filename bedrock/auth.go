@@ -131,7 +131,7 @@ func resolveConfig(ctx context.Context, cfg Config, now func() time.Time) (resol
 	if err != nil {
 		return resolvedConfig{}, err
 	}
-	endpoint, err := resolveEndpoint(cfg.Endpoint, baseURL, mode)
+	endpoint, err := resolveEndpoint(cfg.Endpoint, baseURL)
 	if err != nil {
 		return resolvedConfig{}, err
 	}
@@ -320,7 +320,7 @@ func normalizeBaseURL(value *url.URL) *url.URL {
 	return &copy
 }
 
-func resolveEndpoint(endpoint Endpoint, baseURL *url.URL, mode authMode) (Endpoint, error) {
+func resolveEndpoint(endpoint Endpoint, baseURL *url.URL) (Endpoint, error) {
 	if endpoint != "" && endpoint != EndpointMantle && endpoint != EndpointRuntime {
 		return "", errors.New("bedrock: `Endpoint` must be `EndpointMantle` or `EndpointRuntime`")
 	}
@@ -336,8 +336,6 @@ func resolveEndpoint(endpoint Endpoint, baseURL *url.URL, mode authMode) (Endpoi
 			if endpoint == "" {
 				endpoint = canonicalEndpoint
 			}
-		} else if mode == authModeSigV4 && endpoint == "" {
-			return "", errors.New("bedrock: a custom endpoint requires an explicit `Endpoint` when using AWS credential authentication")
 		}
 	}
 	if endpoint == "" {

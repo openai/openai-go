@@ -44,7 +44,7 @@ const (
 type Config struct {
 	// Endpoint selects the Bedrock endpoint family. Mantle remains the default.
 	// Canonical AWS BaseURL overrides infer their endpoint when it is omitted.
-	// Custom or proxy hosts require an explicit endpoint for SigV4 signing.
+	// Custom or proxy hosts default to Mantle; select Runtime explicitly.
 	Endpoint Endpoint
 
 	// APIKey is an explicit Amazon Bedrock bearer credential.

@@ -24,6 +24,8 @@ func TestBedrockEndpointResolution(t *testing.T) {
 		baseURL  string
 	}{
 		{"Mantle default", Config{APIKey: "token", AWSRegion: "us-east-1"}, EndpointMantle, "https://bedrock-mantle.us-east-1.api.aws/openai/v1/"},
+		{"custom SigV4 Mantle default", Config{AWSRegion: "us-east-1", AWSAccessKeyID: "access", AWSSecretAccessKey: "secret", BaseURL: "https://proxy.example/openai/v1"}, EndpointMantle, "https://proxy.example/openai/v1/"},
+		{"custom SigV4 Runtime", Config{Endpoint: EndpointRuntime, AWSRegion: "us-east-1", AWSAccessKeyID: "access", AWSSecretAccessKey: "secret", BaseURL: "https://proxy.example/openai/v1"}, EndpointRuntime, "https://proxy.example/openai/v1/"},
 		{"Runtime standard", Config{Endpoint: EndpointRuntime, APIKey: "token", AWSRegion: "us-east-1"}, EndpointRuntime, "https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1/"},
 		{"Runtime China", Config{Endpoint: EndpointRuntime, APIKey: "token", AWSRegion: "cn-north-1"}, EndpointRuntime, "https://bedrock-runtime.cn-north-1.amazonaws.com.cn/openai/v1/"},
 		{"Runtime European sovereign", Config{Endpoint: EndpointRuntime, APIKey: "token", AWSRegion: "eusc-de-east-1"}, EndpointRuntime, "https://bedrock-runtime.eusc-de-east-1.amazonaws.eu/openai/v1/"},
@@ -68,7 +70,6 @@ func TestBedrockEndpointValidation(t *testing.T) {
 		{"Runtime incomplete configured region", Config{Endpoint: EndpointRuntime, APIKey: "token", AWSRegion: "us-east"}, "invalid AWS region"},
 		{"Runtime incomplete canonical region", Config{APIKey: "token", BaseURL: "https://bedrock-runtime.us-east.amazonaws.com/openai/v1"}, "invalid AWS region"},
 		{"Runtime digit-leading region", Config{Endpoint: EndpointRuntime, APIKey: "token", AWSRegion: "1s-east-1"}, "invalid AWS region"},
-		{"custom SigV4 endpoint", Config{AWSRegion: "us-east-1", AWSAccessKeyID: "access", AWSSecretAccessKey: "secret", BaseURL: "https://proxy.example/openai/v1"}, "requires an explicit `Endpoint`"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -223,16 +224,32 @@ func runtimeResponse(req *http.Request, api string, streaming bool, model string
 
 func TestRuntimeCustomHostUsesSelectedSigner(t *testing.T) {
 	clearAWSEnvironment(t)
-	for _, endpoint := range []Endpoint{EndpointMantle, EndpointRuntime} {
-		t.Run(string(endpoint), func(t *testing.T) {
+	tests := []struct {
+		name        string
+		endpoint    Endpoint
+		environment bool
+	}{
+		{"default Mantle", "", false},
+		{"explicit Mantle", EndpointMantle, false},
+		{"explicit Runtime", EndpointRuntime, false},
+		{"environment Mantle", "", true},
+		{"environment Runtime", EndpointRuntime, true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			var authorization string
-			client, err := NewClient(context.Background(), Config{
-				Endpoint:           endpoint,
+			config := Config{
+				Endpoint:           test.endpoint,
 				AWSRegion:          "us-east-1",
 				AWSAccessKeyID:     "access",
 				AWSSecretAccessKey: "secret",
-				BaseURL:            "https://proxy.example/openai/v1",
-			}, option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			}
+			if test.environment {
+				t.Setenv("AWS_BEDROCK_BASE_URL", "https://proxy.example/openai/v1")
+			} else {
+				config.BaseURL = "https://proxy.example/openai/v1"
+			}
+			client, err := NewClient(context.Background(), config, option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 				authorization = req.Header.Get("Authorization")
 				return successfulResponse(req), nil
 			})}))
@@ -244,7 +261,7 @@ func TestRuntimeCustomHostUsesSelectedSigner(t *testing.T) {
 				t.Fatal(err)
 			}
 			service := bedrockService
-			if endpoint == EndpointRuntime {
+			if test.endpoint == EndpointRuntime {
 				service = bedrockRuntimeService
 			}
 			if !strings.Contains(authorization, "/us-east-1/"+service+"/aws4_request") {
