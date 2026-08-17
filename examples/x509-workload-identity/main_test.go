@@ -62,15 +62,8 @@ func TestNewX509HTTPClientOwnsTransportConfiguration(t *testing.T) {
 	if transport.TLSClientConfig.Certificates[0].PrivateKey == nil {
 		t.Error("transport-owned certificate has no private key")
 	}
-	if transport.TLSClientConfig.GetClientCertificate == nil {
-		t.Fatal("GetClientCertificate is nil")
-	}
-	certificate, err := transport.TLSClientConfig.GetClientCertificate(&tls.CertificateRequestInfo{})
-	if err != nil {
-		t.Fatalf("GetClientCertificate() error = %v", err)
-	}
-	if certificate.PrivateKey != transport.TLSClientConfig.Certificates[0].PrivateKey {
-		t.Error("GetClientCertificate() returned a different private key")
+	if transport.TLSClientConfig.GetClientCertificate != nil {
+		t.Fatal("GetClientCertificate is non-nil")
 	}
 	if err := httpClient.CheckRedirect(nil, nil); !errors.Is(err, http.ErrUseLastResponse) {
 		t.Errorf("CheckRedirect() error = %v, want http.ErrUseLastResponse", err)

@@ -35,7 +35,8 @@ import (
 	"github.com/openai/openai-go/v3/option"
 )
 
-// WithEndpoint configures this client to connect to an Azure OpenAI endpoint.
+// WithEndpoint configures this client to connect to an Azure OpenAI endpoint
+// and marks requests as Azure provider traffic.
 //
 //   - endpoint - the Azure OpenAI endpoint to connect to. Ex: https://<azure-openai-resource>.openai.azure.com
 //   - apiVersion - the Azure OpenAI API version to target (ex: 2024-06-01). See [Azure OpenAI apiversions] for current API versions. This value cannot be empty.
@@ -74,6 +75,7 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 		if apiVersion == "" {
 			return errors.New("apiVersion is an empty string, but needs to be set. See https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning for details.")
 		}
+		rc.SetProviderAuthentication(requestconfig.ProviderAuthenticationAzure)
 
 		if err := withQueryAdd.Apply(rc); err != nil {
 			return err

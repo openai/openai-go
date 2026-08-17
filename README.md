@@ -1069,9 +1069,6 @@ transport.DialTLS = nil
 transport.DialTLSContext = nil
 transport.TLSClientConfig = &tls.Config{
 	Certificates: []tls.Certificate{certificate},
-	GetClientCertificate: func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
-		return &certificate, nil
-	},
 }
 httpClient := &http.Client{
 	Transport: transport,
@@ -1101,6 +1098,13 @@ binds the bearer to that normalized origin before exchange and again after
 request middleware, so absolute request URLs and middleware cannot move it to
 another origin. X.509 authentication cannot be combined with Azure or Bedrock
 provider authentication.
+
+Each native `*http.Transport` used for X.509 workload identity must contain
+exactly one static client certificate and must not use custom TLS dial or
+certificate-selection hooks. This keeps cached and single-flight tokens bound
+to one client identity. Do not mutate a transport after use; replace the
+transport and client to rotate identities. A custom HTTP transport likewise
+must represent one immutable client identity per comparable transport instance.
 
 The exchange is lazy, cached against Go's monotonic clock, refreshed with a
 buffer clamped to half the returned TTL, and single-flighted across concurrent

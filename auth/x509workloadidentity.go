@@ -2,7 +2,9 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -34,6 +36,11 @@ type x509CredentialSource struct {
 	refreshBefore time.Duration
 }
 
+type x509HTTPTransportIdentity struct {
+	native            bool
+	certificateSHA256 [sha256.Size]byte
+}
+
 // x509TokenExchangeError prevents the generic API request loop from repeating
 // an exchange that has already exhausted the X.509 exchange retry policy.
 type x509TokenExchangeError struct {
@@ -54,7 +61,9 @@ func noRetryX509TokenExchangeError(err error) error {
 // NewX509WorkloadIdentityAuth creates the HTTP authentication state for an
 // X.509 workload identity. Token exchange remains lazy until GetToken is called.
 // The state binds to the first comparable HTTPDoer used and rejects later doer
-// changes so cached tokens cannot cross certificate-backed transports.
+// changes so cached tokens cannot cross certificate-backed transports. A native
+// *http.Transport must use exactly one static client certificate; replace the
+// transport rather than mutating it when rotating the identity.
 func NewX509WorkloadIdentityAuth(config X509WorkloadIdentity) (*WorkloadIdentityAuth, error) {
 	if err := validateWorkloadIdentity("X509WorkloadIdentity", config.IdentityProviderID, config.ServiceAccountID); err != nil {
 		return nil, err
@@ -67,6 +76,25 @@ func NewX509WorkloadIdentityAuth(config X509WorkloadIdentity) (*WorkloadIdentity
 		config.ServiceAccountID,
 		x509CredentialSource{refreshBefore: config.RefreshBuffer},
 	), nil
+}
+
+func x509HTTPTransportIdentityFor(roundTripper http.RoundTripper) (x509HTTPTransportIdentity, error) {
+	transport, ok := roundTripper.(*http.Transport)
+	if !ok {
+		return x509HTTPTransportIdentity{}, nil
+	}
+	legacyTLSDialConfigured := transport.DialTLS != nil //nolint:staticcheck // Reject a legacy hook that can select another client identity.
+	tlsConfig := transport.TLSClientConfig
+	if tlsConfig != nil && len(tlsConfig.Certificates) == 1 &&
+		len(tlsConfig.Certificates[0].Certificate) != 0 &&
+		tlsConfig.GetClientCertificate == nil &&
+		!legacyTLSDialConfigured && transport.DialTLSContext == nil {
+		return x509HTTPTransportIdentity{
+			native:            true,
+			certificateSHA256: sha256.Sum256(tlsConfig.Certificates[0].Certificate[0]),
+		}, nil
+	}
+	return x509HTTPTransportIdentity{}, errors.New("X.509 workload identity requires one immutable client identity per native HTTP transport; configure exactly one static TLS certificate without TLS dial or certificate-selection hooks, and replace the transport to rotate identities")
 }
 
 func (s x509CredentialSource) exchange(

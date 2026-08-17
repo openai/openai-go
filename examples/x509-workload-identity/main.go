@@ -100,9 +100,6 @@ func newX509HTTPClient(certificateChainPath string, privateKeyPath string) (*htt
 	transport.TLSClientConfig = &tls.Config{
 		Certificates: []tls.Certificate{certificate},
 		MinVersion:   tls.VersionTLS12,
-		GetClientCertificate: func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
-			return &certificate, nil
-		},
 	}
 
 	return &http.Client{

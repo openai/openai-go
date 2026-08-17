@@ -1,6 +1,10 @@
 package auth_test
 
 import (
+	"context"
+	"crypto/tls"
+	"errors"
+	"net"
 	"net/http"
 	"sync/atomic"
 	"testing"
@@ -99,4 +103,59 @@ func TestX509WorkloadIdentityAuthRejectsHTTPTransportChange(t *testing.T) {
 			t.Errorf("default HTTP transport B exchange calls = %d, want 0", got)
 		}
 	})
+}
+
+func TestX509WorkloadIdentityAuthRequiresImmutableNativeTransportIdentity(t *testing.T) {
+	staticCertificate := []tls.Certificate{{Certificate: [][]byte{{1}}, PrivateKey: struct{}{}}}
+	testCases := []struct {
+		name      string
+		transport *http.Transport
+	}{
+		{name: "missing static certificate", transport: &http.Transport{}},
+		{
+			name: "certificate selection hook",
+			transport: &http.Transport{TLSClientConfig: &tls.Config{
+				Certificates: staticCertificate,
+				GetClientCertificate: func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+					return &staticCertificate[0], nil
+				},
+			}},
+		},
+		{
+			name: "multiple static certificates",
+			transport: &http.Transport{TLSClientConfig: &tls.Config{
+				Certificates: append(staticCertificate, tls.Certificate{}),
+			}},
+		},
+		{
+			name: "legacy TLS dial hook",
+			transport: &http.Transport{
+				TLSClientConfig: &tls.Config{Certificates: staticCertificate},
+				DialTLS: func(string, string) (net.Conn, error) {
+					return nil, errors.New("must not be called")
+				},
+			},
+		},
+		{
+			name: "context TLS dial hook",
+			transport: &http.Transport{
+				TLSClientConfig: &tls.Config{Certificates: staticCertificate},
+				DialTLSContext: func(context.Context, string, string) (net.Conn, error) {
+					return nil, errors.New("must not be called")
+				},
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+			if err != nil {
+				t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+			}
+			if _, err := wia.GetToken(t.Context(), &http.Client{Transport: testCase.transport}); err == nil {
+				t.Fatal("GetToken() error = nil")
+			}
+		})
+	}
 }

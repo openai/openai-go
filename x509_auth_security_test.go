@@ -520,6 +520,38 @@ func TestClientRejectsAzureAuthenticationWithX509BeforeExchange(t *testing.T) {
 	}
 }
 
+func TestClientRejectsAzureEndpointWithX509BeforeExchange(t *testing.T) {
+	endpoint := azure.WithEndpoint("https://resource.openai.azure.com", "2024-10-21")
+	x509 := option.WithX509WorkloadIdentity(clientX509WorkloadIdentity())
+	testCases := []struct {
+		name string
+		opts []option.RequestOption
+	}{
+		{name: "endpoint before X.509", opts: []option.RequestOption{endpoint, x509}},
+		{name: "endpoint after X.509", opts: []option.RequestOption{x509, endpoint}},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var calls atomic.Int32
+			httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+				calls.Add(1)
+				return nil, errors.New("HTTP request must not be attempted")
+			}}}
+			opts := append([]option.RequestOption{}, testCase.opts...)
+			opts = append(opts, option.WithHTTPClient(httpClient))
+			client := openai.NewClient(opts...)
+
+			if _, err := client.Models.List(t.Context()); err == nil {
+				t.Fatal("Models.List() error = nil")
+			}
+			if got := calls.Load(); got != 0 {
+				t.Fatalf("HTTP calls = %d, want 0", got)
+			}
+		})
+	}
+}
+
 func TestClientX509RejectsLaterAPIKeyCredentialsBeforeExchange(t *testing.T) {
 	testCases := []struct {
 		name        string
