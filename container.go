@@ -488,15 +488,6 @@ func (u *ContainerNewParamsNetworkPolicyUnion) UnmarshalJSON(data []byte) error 
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ContainerNewParamsNetworkPolicyUnion) asAny() any {
-	if !param.IsOmitted(u.OfDisabled) {
-		return u.OfDisabled
-	} else if !param.IsOmitted(u.OfAllowlist) {
-		return u.OfAllowlist
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ContainerNewParamsNetworkPolicyUnion) GetAllowedDomains() []string {
 	if vt := u.OfAllowlist; vt != nil {
@@ -545,15 +536,6 @@ func (u ContainerNewParamsSkillUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ContainerNewParamsSkillUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ContainerNewParamsSkillUnion) asAny() any {
-	if !param.IsOmitted(u.OfSkillReference) {
-		return u.OfSkillReference
-	} else if !param.IsOmitted(u.OfInline) {
-		return u.OfInline
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

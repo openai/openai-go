@@ -411,19 +411,6 @@ func (u *CompletionNewParamsPromptUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *CompletionNewParamsPromptUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfStrings) {
-		return &u.OfArrayOfStrings
-	} else if !param.IsOmitted(u.OfArrayOfTokens) {
-		return &u.OfArrayOfTokens
-	} else if !param.IsOmitted(u.OfArrayOfTokenArrays) {
-		return &u.OfArrayOfTokenArrays
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -438,13 +425,4 @@ func (u CompletionNewParamsStopUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *CompletionNewParamsStopUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *CompletionNewParamsStopUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfStringArray) {
-		return &u.OfStringArray
-	}
-	return nil
 }

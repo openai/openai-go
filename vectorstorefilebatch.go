@@ -312,17 +312,6 @@ func (u *VectorStoreFileBatchNewParamsAttributeUnion) UnmarshalJSON(data []byte)
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *VectorStoreFileBatchNewParamsAttributeUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	} else if !param.IsOmitted(u.OfBool) {
-		return &u.OfBool.Value
-	}
-	return nil
-}
-
 // The property FileID is required.
 type VectorStoreFileBatchNewParamsFile struct {
 	// A [File](https://platform.openai.com/docs/api-reference/files) ID that the
@@ -366,17 +355,6 @@ func (u VectorStoreFileBatchNewParamsFileAttributeUnion) MarshalJSON() ([]byte, 
 }
 func (u *VectorStoreFileBatchNewParamsFileAttributeUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *VectorStoreFileBatchNewParamsFileAttributeUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	} else if !param.IsOmitted(u.OfBool) {
-		return &u.OfBool.Value
-	}
-	return nil
 }
 
 type VectorStoreFileBatchListFilesParams struct {

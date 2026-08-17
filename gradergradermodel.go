@@ -171,21 +171,6 @@ func (u *GraderInputUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *GraderInputUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfInputText) {
-		return u.OfInputText
-	} else if !param.IsOmitted(u.OfOutputText) {
-		return u.OfOutputText
-	} else if !param.IsOmitted(u.OfInputImage) {
-		return u.OfInputImage
-	} else if !param.IsOmitted(u.OfInputAudio) {
-		return u.OfInputAudio
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u GraderInputUnionParam) GetPromptCacheBreakpoint() *responses.ResponseInputTextPromptCacheBreakpointParam {
 	if vt := u.OfInputText; vt != nil {
@@ -579,23 +564,6 @@ func (u *LabelModelGraderInputContentUnionParam) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *LabelModelGraderInputContentUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfInputText) {
-		return u.OfInputText
-	} else if !param.IsOmitted(u.OfOutputText) {
-		return u.OfOutputText
-	} else if !param.IsOmitted(u.OfInputImage) {
-		return u.OfInputImage
-	} else if !param.IsOmitted(u.OfInputAudio) {
-		return u.OfInputAudio
-	} else if !param.IsOmitted(u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio) {
-		return &u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u LabelModelGraderInputContentUnionParam) GetPromptCacheBreakpoint() *responses.ResponseInputTextPromptCacheBreakpointParam {
 	if vt := u.OfInputText; vt != nil {
@@ -893,21 +861,6 @@ func (u MultiGraderGradersUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *MultiGraderGradersUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *MultiGraderGradersUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfStringCheckGrader) {
-		return u.OfStringCheckGrader
-	} else if !param.IsOmitted(u.OfTextSimilarityGrader) {
-		return u.OfTextSimilarityGrader
-	} else if !param.IsOmitted(u.OfPythonGrader) {
-		return u.OfPythonGrader
-	} else if !param.IsOmitted(u.OfScoreModelGrader) {
-		return u.OfScoreModelGrader
-	} else if !param.IsOmitted(u.OfLabelModelGrader) {
-		return u.OfLabelModelGrader
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1447,23 +1400,6 @@ func (u ScoreModelGraderInputContentUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *ScoreModelGraderInputContentUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ScoreModelGraderInputContentUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfInputText) {
-		return u.OfInputText
-	} else if !param.IsOmitted(u.OfOutputText) {
-		return u.OfOutputText
-	} else if !param.IsOmitted(u.OfInputImage) {
-		return u.OfInputImage
-	} else if !param.IsOmitted(u.OfInputAudio) {
-		return u.OfInputAudio
-	} else if !param.IsOmitted(u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio) {
-		return &u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

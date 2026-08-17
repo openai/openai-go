@@ -242,15 +242,6 @@ func (u *SkillNewParamsFilesUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *SkillNewParamsFilesUnion) asAny() any {
-	if !param.IsOmitted(u.OfFileArray) {
-		return &u.OfFileArray
-	} else if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	}
-	return nil
-}
-
 type SkillUpdateParams struct {
 	// The skill version number to set as default.
 	DefaultVersion string `json:"default_version" api:"required"`

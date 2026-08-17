@@ -149,15 +149,6 @@ func (u *BetaResponseInputTokenCountParamsConversationUnion) UnmarshalJSON(data 
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaResponseInputTokenCountParamsConversationUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfConversationObject) {
-		return u.OfConversationObject
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -172,15 +163,6 @@ func (u BetaResponseInputTokenCountParamsInputUnion) MarshalJSON() ([]byte, erro
 }
 func (u *BetaResponseInputTokenCountParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaResponseInputTokenCountParamsInputUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfBetaResponseInputItemArray) {
-		return &u.OfBetaResponseInputItemArray
-	}
-	return nil
 }
 
 // A model-owned style preset to apply to this request. Omit this parameter to use
@@ -337,29 +319,6 @@ func (u BetaResponseInputTokenCountParamsToolChoiceUnion) MarshalJSON() ([]byte,
 }
 func (u *BetaResponseInputTokenCountParamsToolChoiceUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaResponseInputTokenCountParamsToolChoiceUnion) asAny() any {
-	if !param.IsOmitted(u.OfToolChoiceMode) {
-		return &u.OfToolChoiceMode
-	} else if !param.IsOmitted(u.OfAllowedTools) {
-		return u.OfAllowedTools
-	} else if !param.IsOmitted(u.OfHostedTool) {
-		return u.OfHostedTool
-	} else if !param.IsOmitted(u.OfFunctionTool) {
-		return u.OfFunctionTool
-	} else if !param.IsOmitted(u.OfMcpTool) {
-		return u.OfMcpTool
-	} else if !param.IsOmitted(u.OfCustomTool) {
-		return u.OfCustomTool
-	} else if !param.IsOmitted(u.OfBetaResponseInputTokenCountsToolChoiceBetaSpecificProgrammaticToolCallingParam) {
-		return u.OfBetaResponseInputTokenCountsToolChoiceBetaSpecificProgrammaticToolCallingParam
-	} else if !param.IsOmitted(u.OfSpecificApplyPatchToolChoice) {
-		return u.OfSpecificApplyPatchToolChoice
-	} else if !param.IsOmitted(u.OfSpecificShellToolChoice) {
-		return u.OfSpecificShellToolChoice
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

@@ -4,15 +4,8 @@ package webhooks
 
 import (
 	"github.com/openai/openai-go/v3/internal/apierror"
-	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/shared"
 )
-
-// aliased to make [param.APIUnion] private when embedding
-type paramUnion = param.APIUnion
-
-// aliased to make [param.APIObject] private when embedding
-type paramObj = param.APIObject
 
 type Error = apierror.Error
 

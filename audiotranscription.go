@@ -950,15 +950,6 @@ func (u *AudioTranscriptionNewParamsChunkingStrategyUnion) UnmarshalJSON(data []
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *AudioTranscriptionNewParamsChunkingStrategyUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfAudioTranscriptionNewsChunkingStrategyVadConfig) {
-		return u.OfAudioTranscriptionNewsChunkingStrategyVadConfig
-	}
-	return nil
-}
-
 // The property Type is required.
 type AudioTranscriptionNewParamsChunkingStrategyVadConfig struct {
 	// Must be set to `server_vad` to enable manual chunking using server side VAD.
