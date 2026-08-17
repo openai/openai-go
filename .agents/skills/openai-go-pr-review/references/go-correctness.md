@@ -97,10 +97,7 @@ head-controlled code or scripts only when the trust and isolation requirements
 in `SKILL.md` permit it; otherwise use static review:
 
 ```sh
-git --no-replace-objects -C "$review_repo_root" -c diff.relative=false diff \
-  --no-ext-diff --no-textconv --ignore-submodules=none --submodule=short \
-  --no-relative --no-renames --no-color --text --check \
-  "$review_merge_base_sha" "$review_head_sha"
+git diff --check "$review_base_sha...$review_head_sha"
 go test ./path/to/changed/package
 go test -race ./path/to/concurrent/package
 ./scripts/lint

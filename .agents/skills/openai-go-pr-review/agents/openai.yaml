@@ -1,4 +1,0 @@
-interface:
-  display_name: "OpenAI Go SDK PR Review"
-  short_description: "Exhaustive, evidence-driven OpenAI Go SDK PR reviews"
-  default_prompt: "Use $openai-go-pr-review to exhaustively review the requested pull request and report only validated findings."
