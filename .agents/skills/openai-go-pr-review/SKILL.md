@@ -1,6 +1,6 @@
 ---
 name: openai-go-pr-review
-description: Exhaustively review openai-go pull requests, branches, commit ranges, or local changes for Go correctness, SDK compatibility, generated-code ownership, provider security, and repository-specific gotchas.
+description: Exhaustively review committed openai-go pull requests, branches, and commit ranges, or provide best-effort review of uncommitted local changes, for Go correctness, SDK compatibility, generated-code ownership, provider security, and repository-specific gotchas.
 ---
 
 # Exhaustive OpenAI Go SDK code review
@@ -21,6 +21,12 @@ code locally; use existing hosted CI for its runtime results. Do not edit code,
 post reviews, approve changes, or resolve comments unless the user asks.
 Review hosted patches or size-bounded Git blobs pinned to the reviewed
 revisions; do not follow untrusted worktree symlinks.
+
+Exhaustive review requires committed or hosted immutable revisions. A dirty
+working-tree review is best-effort because staged, unstaged, or untracked bytes
+are not guaranteed to exist in pinned Git blobs. For exhaustive local coverage,
+the user must first commit the intended changes; do not create that commit
+without separate authorization.
 
 ## Understand the change
 
