@@ -47,8 +47,13 @@ Inspect `packages/param`, `internal/apijson`, `internal/apiquery`, and
   (`"null"`), and an invalid nonempty raw value.
 - Preserve `JSON.ExtraFields`, `RawJSON`, unknown enum/union behavior,
   discriminators, structured error details, and generated accessor contracts.
+- Reject invalid root JSON shapes consistently through value and pointer
+  decoders. Keep every schema-declared streaming event in its generated union,
+  including object-valued deltas and their typed `AsAny` dispatch.
 - Generated union accessors may lack an error return. Do not change their
   exported signatures solely to surface an internal decoding error.
+- Preserve generated service/subservice hierarchy, enum aliases, exported
+  field types, and conditional response-field optionality across SDK minors.
 - URL path parameters must remain escaped exactly once. Review `%2F`, query
   characters, spaces, Unicode, Azure deployment IDs, `URL.Path`, and
   `URL.RawPath` together.
@@ -59,6 +64,13 @@ Inspect `packages/param`, `internal/apijson`, `internal/apiquery`, and
   delete behavior, API-key versus admin-key preference, custom HTTP clients,
   middleware ordering, query options, custom request bodies, and response
   capture ownership.
+- Match endpoint security schemes to their actual operation: admin-only
+  endpoints need admin credentials, ordinary calls and generic execution must
+  not inherit admin privilege accidentally, and request-level overrides must
+  remain effective when both credentials are configured.
+- Request-option side effects must remain composable through normal option
+  application and config cloning; do not depend on rescanning a concrete
+  private option type or silently drop a custom HTTP doer on pagination.
 - Retry only replayable bodies. Preserve `GetBody`, server `x-should-retry`
   directives, retry-after units and dates, cancellation, per-attempt timeouts,
   retry limits, deterministic no-retry errors, and response-body cleanup.
@@ -72,6 +84,34 @@ Inspect `packages/param`, `internal/apijson`, `internal/apiquery`, and
   expiry, timeout-bounded independently owned proactive refresh, concurrent
   refresh deduplication, provider errors, 401 refresh behavior, nonreplayable
   bodies, and close ownership.
+- On a 401 replay, restart from pristine pre-middleware request state, rerun
+  necessary body-transforming/signing middleware exactly once, and close a
+  replay body exactly once according to whether middleware or `http.Client`
+  owns it. Refused redirects must not become successful no-body operations.
+- Scope workload tokens to the effective certificate/transport identity. Test
+  reused options, method-level custom doers, comparable and non-comparable
+  values, interface fields with non-comparable dynamic values, concurrent
+  followers, cancellation, retry-delay budgets, and bounded cache retention.
+
+## Mutual TLS and X.509 workload identity
+
+- Require HTTPS for both certificate-bound token exchanges and credentialed API
+  endpoints; reject incompatible Azure/API-key combinations before acquiring
+  an OpenAI token or installing authorization middleware.
+- Cloning `http.DefaultTransport` also inherits proxies, insecure server
+  verification, custom TLS dialers, `ServerName`, certificate callbacks,
+  session caches, and timeout settings. Inspect each inherited capability for
+  certificate disclosure, stale identity, ignored TLS config, or lost SDK
+  response-header deadlines.
+- An HTTPS proxy can request the client certificate before the intended
+  origin connection. Preserve documented custom transport support, but do not
+  claim origin isolation unless the complete proxy/redirect path enforces it.
+- Preserve caller context values for request-owned token exchanges while
+  keeping shared refresh independently bounded; one canceled leader must not
+  incorrectly fail other live callers.
+- Treat README snippets and examples as executable security guidance. Verify
+  base-URL option precedence, certificate-chain prerequisites, and what
+  `tls.LoadX509KeyPair` does and does not validate.
 
 ## Server-sent events and streams
 
@@ -81,9 +121,15 @@ Inspect `packages/param`, `internal/apijson`, `internal/apiquery`, and
   field; preserve the existing invalid-JSON behavior where applicable.
 - Do not silently change custom registered decoders or synthesized custom
   events while fixing the built-in SSE parser.
+- EOF does not terminate an SSE event: discard a pending event that lacks its
+  required blank-line delimiter, including an `event:`-only block.
 - Preserve multiline data, event-type reset, `[DONE]` draining, structured
   stream errors, decoder/scanner errors, malformed JSON, typed union decoding,
   `Current`/`Err` semantics, scanner limits, and stream close ownership.
+- Streaming tool examples must check `AddChunk`, use a fresh accumulator per
+  response, respect `JustFinishedToolCall` parallel-call limitations, validate
+  typed strict-schema arguments, and either continue tool-call rounds or
+  explicitly disable tools without sending a rejected empty tools array.
 
 ## Pagination
 

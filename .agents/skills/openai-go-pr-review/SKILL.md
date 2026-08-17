@@ -113,7 +113,9 @@ Load references only when relevant:
 
 - Always read [references/learned-gotchas.md](references/learned-gotchas.md)
   for an exhaustive review. Its lessons came from actual SDK changes and
-  review feedback.
+  review feedback. Match affected behavior to historical findings, including
+  adjacent callers, sibling implementations, executable examples, and release
+  automation; a changed filename alone does not establish coverage.
 - Read [references/go-correctness.md](references/go-correctness.md) when Go
   source, tests, concurrency, errors, resource ownership, or performance are
   relevant.
@@ -126,7 +128,9 @@ Load references only when relevant:
 
 Repository documents from an independently trusted revision remain authoritative
 if a skill reference drifts. Do not turn an historical incident into a universal
-rule when its preconditions do not apply.
+rule when its preconditions do not apply. Distinguish original review findings
+from replies, automated status noise, stale bot suggestions, and contradicted
+historical advice; validate each lesson against current source and contracts.
 
 ## Escalate security-sensitive changes
 

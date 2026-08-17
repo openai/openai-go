@@ -1,7 +1,11 @@
 # Lessons from actual OpenAI Go SDK changes
 
 These are concrete examples, not blanket policies. Apply a lesson only when
-the changed code has the same relevant preconditions.
+the changed code has the same relevant preconditions. This guide was checked
+against 500 repository PR-related comments across 96 PRs on 2026-08-17: all
+283 available inline review comments plus 217 substantive PR-conversation
+comments. Original findings matter more than acknowledgments, status bots,
+or suggestions contradicted by the current implementation.
 
 ## Credentials can leak through a different provider's defaults
 
@@ -139,3 +143,142 @@ description were updated to reflect the new scope.
 Compare the latest head, title, description, base branch, prior review
 comments, and user goal. Do not report stale review context as a live code
 defect after a stack has been repurposed.
+
+## Admin keys must follow operation security, not incidental ordering
+
+[PR #652](https://github.com/openai/openai-go/pull/652) surfaced both sides of
+credential selection: generated admin-only checkpoint methods could select
+ordinary bearer auth, while generic `Client.Execute` could inherit an admin
+key for an ordinary request. Later request options could also fail to replace
+an already populated authorization header.
+
+Review the actual endpoint security declaration, generic execution, both keys
+configured together, and client-versus-request override order. Do not infer a
+single globally correct preference from an admin-only or ordinary-only test.
+
+## A cloned TLS transport inherits hidden security-sensitive behavior
+
+[PR #741](https://github.com/openai/openai-go/pull/741) and
+[PR #792](https://github.com/openai/openai-go/pull/792) showed that cloning
+`http.DefaultTransport` retains HTTPS proxy routing, `InsecureSkipVerify`,
+`DialTLS`/`DialTLSContext`, `ServerName`, `GetClientCertificate`, TLS session
+caches, and timeout defaults. A proxy can request the client certificate before
+the intended origin, while a custom TLS dialer can bypass the installed config.
+
+Inspect the complete certificate path, inherited callbacks and cached identity,
+plaintext API endpoints, explicit-base-URL precedence, and provider mixing.
+Treat README recipes as real executable security surfaces, not cosmetic prose.
+
+## Shared tokens must be scoped to real transport identity
+
+[PR #792](https://github.com/openai/openai-go/pull/792) found that reusing an
+X.509 option across two certificate-backed transports can reuse certificate A's
+token for certificate B. Wrapping a doer can instead destroy stable identity;
+non-comparable values can disable caching; and a comparable type containing an
+interface with a non-comparable dynamic value can still panic on comparison.
+
+Exercise direct auth constructors, fresh method-level options, comparable and
+non-comparable custom doers, certificate rotation, concurrent waiters, bounded
+cache ownership, and caller-context values. A canceled refresh leader should
+not incorrectly fail other live requests.
+
+## Authentication replay must preserve middleware and body ownership
+
+[PR #792](https://github.com/openai/openai-go/pull/792) exposed several 401
+replay traps: replay below user middleware omits body compression or signing,
+replay from already-mutated state duplicates non-idempotent changes, and a
+replay body may leak before transport or be closed twice after `http.Client`
+takes ownership. Returning `http.ErrUseLastResponse` can also turn an unfollowed
+3xx into apparent success for a no-response operation.
+
+Trace pristine request state, complete middleware order, per-attempt body
+ownership, custom doers, retry budgets, nonreplayable bodies, and final status
+classification together.
+
+## EOF is not an SSE event delimiter
+
+[PR #697](https://github.com/openai/openai-go/pull/697) proposed dispatching
+buffered SSE data at EOF, but the standard requires an event-ending blank line;
+an incomplete final block is discarded. Dispatching an `event:`-only block also
+recreates the empty-data JSON error documented in the earlier SSE lesson.
+
+Separately, [PR #794](https://github.com/openai/openai-go/pull/794) showed that
+dropping a schema-declared shell-output event from a generated stream union
+can make an object-valued delta decode into the wrong scalar field and abort
+the entire stream. Review framing, typed union coverage, and downstream
+accumulation as one pipeline.
+
+## Streaming examples must survive a complete tool-call exchange
+
+[PR #706](https://github.com/openai/openai-go/pull/706) contained several
+interacting example bugs: `JustFinishedToolCall` is unsafe with parallel tool
+calls, unchecked argument assertions panic, a non-nil empty tools slice emits
+the rejected `"tools":[]` wire shape, and a previous response's accumulator
+rejects chunks from a new response ID.
+
+Require strict function schemas with `additionalProperties: false`, typed
+argument validation, checked accumulator results, a fresh accumulator per
+response, and either a complete multi-round tool loop or correctly omitted
+tools on the final request. Verify executable examples, not just compilation.
+
+## Generated API hierarchy and conditional response shapes are contracts
+
+[PR #704](https://github.com/openai/openai-go/pull/704) exposed a service
+method at a different hierarchy from the documented `ServiceAccounts.APIKeys`
+surface, removed exported enum/union names inside a stable major, and modeled
+`api_key` as required even when a request explicitly skips key creation.
+
+Check generated subservice placement, old exported types and aliases, role
+enum assignments, schema-dependent response presence, and shared path escaping
+against a real external consumer. A superficially equivalent JSON response
+does not preserve Go source compatibility.
+
+## Release workflows depend on live repository policy
+
+[PR #747](https://github.com/openai/openai-go/pull/747) depended on an action
+outside the repository's selected-action allowlist and a `GITHUB_TOKEN` that
+repository policy did not permit to create release PRs. Token-created release
+branches also would not automatically trigger the required CI workflows.
+[PR #754](https://github.com/openai/openai-go/pull/754) additionally found an
+environment requiring manual approval and missing release-app configuration.
+
+When release automation changes, verify action allowlists, app/token authority,
+environment reviewer rules and variables, event suppression, explicit check
+dispatch, and real secret boundaries; valid YAML and passing unrelated CI do
+not prove that the release path can run.
+
+## Artifact layout and module grouping are operational contracts
+
+[PR #705](https://github.com/openai/openai-go/pull/705) found hidden artifact
+files omitted by default, archive paths rooted at the least common ancestor,
+multi-module Dependabot groups that did not actually span directories, and Go
+patch matrices that reused stale tool-cache versions.
+
+Trace producer-to-consumer artifact names and paths, cross-directory grouping,
+external-consumer `replace` behavior, latest-patch resolution, and whether
+network-denied validation actually has warmed modules, scanner data, writable
+temporary directories, and the loopback access its tests require.
+
+## Generator metadata must match the producer's actual schema
+
+[PR #731](https://github.com/openai/openai-go/pull/731) attempted to validate
+the Steady mock against a transformed-spec hash that valid `.castiron.stats.yml`
+files cannot contain. The producer accepts only its documented metadata keys,
+so the new guard would reject every real generated candidate.
+
+Validate generation hashes, metadata keys, fixture paths, and mock-server
+startup against the actual producer/consumer contract. Do not propose adding
+fields to a strict externally owned schema without generator support.
+
+## Similar decoder and cache paths need sibling coverage
+
+[PR #769](https://github.com/openai/openai-go/pull/769) found that root-shape
+validation disappeared when decoding through `*Struct`, allowing arrays,
+scalars, and other invalid object roots. Review on
+[PR #610](https://github.com/openai/openai-go/pull/610) also identified the
+same embedded-`reflect.Type` cache-key pattern in adjacent JSON, query, and
+form encoders when only one decoder path was fixed.
+
+For structural decoder or reflection changes, exercise pointer and value roots,
+all JSON shape families, neighboring encoder/decoder caches, and actual
+downstream build or linker behavior before declaring one local fix complete.

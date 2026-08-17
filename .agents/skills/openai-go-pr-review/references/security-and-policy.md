@@ -19,7 +19,8 @@ not obviously named for security:
 
 - OpenAI, Azure, and Bedrock credentials; workload identity; token refresh;
   AWS signing; credential precedence; environment fallbacks; header redaction;
-  request origins; redirects; and cross-provider credential isolation.
+  request origins; redirects; admin-only endpoints; HTTPS proxy/client-cert
+  exposure; transport-bound token caches; and cross-provider isolation.
 - Webhook signature verification, timestamp tolerance, replay resistance,
   cryptographic comparisons, request-size bounds, and malformed inputs.
 - URLs, multipart/file paths, JSON and SSE parsing, pagination cursors,
@@ -55,6 +56,17 @@ findings, modify code, or execute untrusted proofs without separate authority.
   model output out of directly interpolated shell code.
 - Do not treat a renamed, missing, skipped, or separate-event status check as
   equivalent to the repository's stable required checks.
+- Check live repository and organization policy when proposing a new action,
+  publishing credential, or release environment: selected-action allowlists,
+  full-SHA requirements, `GITHUB_TOKEN` PR-creation restrictions, environment
+  reviewer gates, required variables, and GitHub App installation/permissions
+  can reject an otherwise valid-looking workflow before its first step runs.
+- `GITHUB_TOKEN`-authored pushes and pull requests do not automatically fire
+  normal downstream workflow events. Confirm an authorized, least-privileged
+  dispatch path actually runs every required generated-branch check.
+- Artifact upload excludes hidden files by default and preserves paths under
+  the inputs' least common ancestor. Verify download names, directory layout,
+  executable/symlink modes, and actual publisher-consumed paths.
 
 ## Monthly Go-version automation
 
@@ -98,6 +110,11 @@ allowlists, or executable untrusted workflow edits as consequential defects.
   selection can hide an accidental minimum-version increase.
 - Keep root, examples, and external-consumer dependency updates coordinated.
   Keep development tools isolated from SDK customers' module graphs.
+- A separate Go package does not isolate dependency graphs; a separately
+  versioned module is required when optional provider dependencies must not
+  enter every SDK customer's module graph.
+- For multi-directory Dependabot updates, verify grouping really spans the
+  coupled modules rather than independently updating identically named groups.
 - Review `replace`, `toolchain`, `tool`, direct/indirect dependency, checksum,
   and Azure/AWS dependency changes rather than focusing only on `go` lines.
 - Use `./scripts/check-go-mod`; verify the external consumer with
@@ -117,6 +134,8 @@ allowlists, or executable untrusted workflow edits as consequential defects.
 - Generated and handwritten Go remain under the same checks. Broad generated
   exclusions, blanket directory exclusions, bare `nolint`, wildcard
   suppressions, and unowned baseline files are not acceptable.
+- Explicitly inspect linter defaults as well as configured values: generated
+  files can be excluded by default even when no exclusion is written.
 - Verify that enabled checks from previously approved stacked branches
   actually survive in the proposed merge into `main`; branch ancestry and a
   green isolated stack do not prove that its cumulative changes will land.
