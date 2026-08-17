@@ -20,6 +20,31 @@ Most of the SDK is generated code. Modifications to code will be persisted betwe
 result in merge conflicts between manual patches and changes from the generator. The generator will never
 modify the contents of the `lib/` and `examples/` directories.
 
+## Security requirements
+
+- Never commit API keys, access tokens, Azure or AWS credentials, signing
+  keys, `.env` files, or customer data. Read credentials from environment
+  variables such as `OPENAI_API_KEY`; use synthetic values and payloads in
+  examples, tests, and fixtures. Prefer `httptest` or the existing local mock
+  server over requests to live services.
+- Redact `Authorization` and `Cookie` headers, credential-bearing URLs,
+  request or response bodies, and webhook secrets from logs, returned errors,
+  fixtures, recordings, and CI output.
+- Review direct and transitive dependency changes in `go.mod` and `go.sum`
+  across the root, `examples`, `internal/testdata/consumer`, and `tools`
+  modules. Review new `replace` directives, dependency origins, installation
+  scripts, code generators, and npm-based mock tooling before running them;
+  preserve Go checksum verification and run the existing vulnerability checks.
+- Keep third-party GitHub Actions pinned to reviewed full commit SHAs, grant
+  CI and publishing jobs only their required permissions, and isolate release
+  credentials from untrusted pull requests or other untrusted code.
+- Obtain SDK CODEOWNER review and add focused regression or security tests for
+  changes involving authentication, webhook verification, base URLs,
+  redirects, proxies, TLS, file paths or uploads, JSON or event-stream
+  decoding, dependency installation, code generation, CI, or release tooling.
+- Report suspected vulnerabilities privately according to [SECURITY.md](SECURITY.md).
+  Do not open public issues, pull requests, or discussions about them.
+
 ## Adding and running examples
 
 All files in the `examples/` directory are not modified by the generator and can be freely edited or added to.
