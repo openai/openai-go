@@ -43,14 +43,15 @@ Use standard GitHub and Git commands from the trusted checkout:
 
 ```sh
 gh api repos/OWNER/REPO/pulls/PR --jq '{base_sha: .base.sha, head_sha: .head.sha}'
-gh pr view PR --repo OWNER/REPO --json number,title,body,url,baseRefName,headRefName,headRefOid
+gh pr view PR --repo OWNER/REPO \
+  --json number,title,body,url,baseRefName,headRefName,headRefOid,closingIssuesReferences
+gh api --paginate repos/OWNER/REPO/pulls/PR/files \
+  --jq '.[] | {filename,status,additions,deletions,changes}'
 gh api --paginate repos/OWNER/REPO/issues/PR/comments
 gh api --paginate repos/OWNER/REPO/pulls/PR/reviews
 gh api --paginate repos/OWNER/REPO/pulls/PR/comments
 gh api --paginate repos/OWNER/REPO/commits/HEAD_SHA/check-runs
 gh api --paginate repos/OWNER/REPO/commits/HEAD_SHA/status
-git diff --name-status "$review_base_sha...$review_head_sha"
-git diff --no-ext-diff --no-textconv --no-color "$review_base_sha...$review_head_sha"
 ```
 
 Use the PR REST response as the source of both exact commit SHAs; a stacked
@@ -60,18 +61,22 @@ issue comments, review summaries, and inline review comments separately; use
 paginated GraphQL review threads when resolution or outdated state matters.
 Check both exact-commit check runs and every page of the combined legacy
 commit-status endpoint, which preserves the latest state for each context.
+Read issues linked through GitHub's Development panel from
+`closingIssuesReferences`, not just issue numbers mentioned in the PR body.
 
-For large changes or discussions, inspect files and comments in manageable
-batches. If GitHub limits, missing history, truncated output, or unavailable
-files prevent complete coverage, say what could not be reviewed instead of
-claiming exhaustive coverage. Use a clean, trusted checkout rather than trying
-to sanitize arbitrary hostile Git configuration or manufacture custom capture
-infrastructure.
+Inspect untrusted source through GitHub-hosted per-file patches. Do not run a
+local full `git diff` or force contributor-controlled binary or pathological
+blobs through a local diff engine. Before reading an exact-commit Git blob,
+check its size with `git cat-file -s "${review_head_sha}:${review_path}"` and
+read it only when it fits a conservative, predetermined size limit; apply the
+same check to the base blob when needed. For large changes or discussions,
+inspect hosted files and comments in manageable batches. If GitHub's file
+limits, omitted patches, missing history, truncated output, oversized blobs,
+or unavailable files prevent complete coverage, disclose the gap instead of
+claiming exhaustive coverage.
 
-Read changed or neighboring files from the pinned commit or GitHub API, for
-example `git show "${review_head_sha}:${review_path}"`. Quote paths as data;
-never evaluate PR-controlled filenames as shell code or follow symlinks from
-an untrusted checkout.
+Quote paths as data; never evaluate PR-controlled filenames as shell code or
+follow symlinks from an untrusted checkout.
 
 For a trusted local working-tree review, inspect staged changes, unstaged
 changes, and relevant untracked files. If concurrent edits or unavailable
@@ -181,10 +186,12 @@ For each proposed finding:
    boundary; a generator-owned defect usually needs a generator-side fix.
 
 Tests, Go package initialization, build tools, dependencies, and repository
-scripts from an external PR can execute contributor-controlled code. Run them
-locally only when the user trusts that code and authorizes execution. Otherwise
-use existing CI results or an established isolated review environment, perform
-static review, and report any runtime checks that were not executed.
+scripts from an external PR can execute contributor-controlled code. Never run
+untrusted PR code on the reviewer host or in an environment described only as
+"isolated." For untrusted changes, perform static review, inspect existing
+hosted CI results, and report runtime checks that were not executed. Run tests
+locally only after the user independently trusts the exact code and explicitly
+authorizes execution.
 
 Choose authorized verification proportionate to the diff. `go test ./...`
 may depend on the Steady mock server; `./scripts/test` starts that server when

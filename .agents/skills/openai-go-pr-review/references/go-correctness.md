@@ -92,9 +92,9 @@ material maintainability regressions, not a transcript of every checklist item.
 
 ## Practical checks
 
-Select the smallest checks that answer the actual review question. Execute
-head-controlled code or scripts only when the trust and isolation requirements
-in `SKILL.md` permit it; otherwise use static review:
+Select the smallest checks that answer the actual review question. Run the
+following commands only when the user independently trusts the exact code and
+authorizes local execution; for untrusted PRs, use hosted patches and CI:
 
 ```sh
 git diff --check "$review_base_sha...$review_head_sha"

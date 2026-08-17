@@ -152,9 +152,9 @@ allowlists, or executable untrusted workflow edits as consequential defects.
 
 ## Validation and compatibility
 
-Select applicable checks based on what changed. Execute head-controlled code
-or scripts only when the trust and isolation requirements in `SKILL.md`
-permit it; otherwise use static review:
+Select applicable checks based on what changed. Run these commands only when
+the user independently trusts the exact code and authorizes local execution;
+for untrusted PRs, use static review and existing hosted CI:
 
 ```sh
 ./scripts/lint
