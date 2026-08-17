@@ -128,6 +128,33 @@ Repository documents from an independently trusted revision remain authoritative
 if a skill reference drifts. Do not turn an historical incident into a universal
 rule when its preconditions do not apply.
 
+## Escalate security-sensitive changes
+
+Treat a change as security-sensitive when it touches authentication,
+authorization, credentials, secrets, signing, cryptography, webhook
+verification, provider configuration, request origins or redirects, URL/path
+handling, input parsing, resource limits, dependency or generated-code supply
+chains, GitHub Actions, model instructions, sandboxing, artifacts, caches,
+permissions, or any other trust boundary. Classify by behavior and reachable
+callers, not filenames or whether the author labels the change security-related.
+
+For every security-sensitive PR, invoke the Codex Security plugin's
+`$codex-security:security-diff-scan` skill against the same exact captured
+base/head revisions. Follow its threat-model, finding-discovery, validation,
+and attack-path-analysis phases; use its native scan tools when available.
+Escalate to `$codex-security:deep-security-scan` when the user requests an
+exhaustive security audit or the change substantially affects multiple trust
+boundaries; keep the target scope proportionate to the affected architecture.
+
+Preserve this skill's untrusted-head execution and filesystem-isolation rules
+during security scanning and proof-of-concept validation. Consolidate validated
+security findings into the main PR review with concrete attacker inputs,
+affected trust boundaries, exploitability, impact, and remaining proof gaps.
+If the Codex Security plugin, required skills, or scan tools are unavailable,
+say so explicitly, continue with a manual threat-model-driven security pass,
+and mark the review's security assurance incomplete. Never claim a scan ran
+when it did not.
+
 ## Run independent, risk-focused passes
 
 When subagents are available, explicitly delegate independent review passes;
@@ -138,7 +165,8 @@ scale the number of agents and their scopes to the actual diff:
 2. Go correctness, cancellation, concurrency, resource lifetimes, error
    contracts, retries, tests, and maintainability.
 3. Security, credential isolation, GitHub Actions, module/toolchain policy,
-   dependency changes, and CI coverage when those surfaces changed.
+   dependency changes, and CI coverage when those surfaces changed. A general
+   reviewer does not replace the mandatory Codex Security scan.
 
 Give each reviewer the same exact base/head metadata, changed files, relevant
 references, and explicit user constraints. Ask them to trace neighboring code,

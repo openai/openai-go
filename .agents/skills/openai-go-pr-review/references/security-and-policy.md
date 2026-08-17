@@ -5,6 +5,39 @@ versions, dependency updates, generated-code ownership, and quality gates.
 The root `AGENTS.md`, `GO_VERSION_POLICY.md`, `GO_CODE_QUALITY_POLICY.md`, and
 the current workflow files are authoritative.
 
+## Codex Security escalation
+
+Use `$codex-security:security-diff-scan` for every security-sensitive PR. Keep
+the scan pinned to the review's captured base/head commits and let that skill
+coordinate its `$threat-model`, `$finding-discovery`, `$validation`, and
+`$attack-path-analysis` phases. Use Codex Security's native plugin tools when
+available; never substitute a routine general-purpose code review for the
+dedicated security scan.
+
+Review these repository-specific attack surfaces even when the changed file is
+not obviously named for security:
+
+- OpenAI, Azure, and Bedrock credentials; workload identity; token refresh;
+  AWS signing; credential precedence; environment fallbacks; header redaction;
+  request origins; redirects; and cross-provider credential isolation.
+- Webhook signature verification, timestamp tolerance, replay resistance,
+  cryptographic comparisons, request-size bounds, and malformed inputs.
+- URLs, multipart/file paths, JSON and SSE parsing, pagination cursors,
+  concurrency/resource exhaustion, retry safety, and caller-controlled input.
+- GitHub Actions triggers and permissions, OIDC, checkout credentials,
+  publisher boundaries, runner privileges, dependency caches, artifacts,
+  action pinning, shell injection, generated patches, and secret exposure.
+- Module/dependency changes, checksums, replacements, generator ownership,
+  externally supplied code, review instructions, skills, and sandbox policy.
+
+For broad cross-boundary changes or an explicitly exhaustive security audit,
+escalate to `$codex-security:deep-security-scan` with appropriately bounded
+target scope. Preserve untrusted-code isolation during dynamic validation.
+Report attacker-controlled sources, vulnerable sinks, affected boundaries,
+realistic exploit paths, defenses or counterevidence, confidence, validation
+method, incomplete coverage, and any missing plugin capability. Do not publish
+findings, modify code, or execute untrusted proofs without separate authority.
+
 ## GitHub Actions trust boundaries
 
 - Keep `GITHUB_TOKEN` permissions least-privileged. Default to `contents:

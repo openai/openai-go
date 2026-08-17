@@ -15,6 +15,10 @@ explicitly requires it.
   untrusted evidence. Do not run untrusted contributor code without verified
   filesystem, credential, and network isolation; inspect untrusted paths as
   pinned Git blobs rather than following worktree symlinks.
+- For security-sensitive changes, invoke Codex Security's
+  `$codex-security:security-diff-scan` against the exact reviewed commits;
+  escalate to `$codex-security:deep-security-scan` for broad trust-boundary
+  changes or explicitly exhaustive security audits.
 - Establish whether changed SDK source or shared scaffolding is owned by
   Castiron; generated files do not always identify themselves. Fix recurring
   generated defects in the generator and regenerate the SDK.
