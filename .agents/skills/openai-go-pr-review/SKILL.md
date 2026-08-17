@@ -34,9 +34,7 @@ gh api --paginate repos/OWNER/REPO/issues/PR/comments
 gh api --paginate repos/OWNER/REPO/pulls/PR/reviews
 gh api --paginate repos/OWNER/REPO/pulls/PR/comments
 gh api --paginate repos/OWNER/REPO/commits/HEAD_SHA/check-runs
-git --no-replace-objects merge-base BASE_SHA HEAD_SHA
-git --no-replace-objects diff --no-ext-diff --no-textconv --ignore-submodules=none --name-only -z BASE_SHA...HEAD_SHA
-git --no-replace-objects diff --no-ext-diff --no-textconv --ignore-submodules=none BASE_SHA...HEAD_SHA
+python3 TRUSTED_SKILL_DIR/scripts/capture_pr_snapshot.py capture --repo REPO --base BASE_SHA --head HEAD_SHA
 ```
 
 Use the single PR REST response as the authoritative base/head SHA snapshot:
@@ -48,28 +46,34 @@ endpoints. Issue comments and review summaries also omit inline discussions;
 use paginated review comments and, when resolution or outdated state matters,
 paginated GraphQL review threads.
 
-Derive both the authoritative NUL-delimited changed-file manifest and the patch
-from the same captured base/head SHAs. The live `/pulls/PR/files` endpoint may
-be paginated for supplemental metadata only; never use it to select review
-scope because a force-push can change and restore the head between pages.
-Likewise, read CI checks from the captured head's commit endpoint rather than
-live `gh pr checks` or `statusCheckRollup` results.
+Run `scripts/capture_pr_snapshot.py` only from an independently trusted skill
+revision, never from an untrusted PR head. The helper establishes the repository
+root and captures the immutable base/head merge-base, complete NUL-delimited
+status/path manifest, and raw textual patch into a private temporary directory.
+It disables replacement refs, relative filtering, rename detection, external
+diff drivers, text conversion, and ignored submodules; forcing text prevents
+local binary attributes from hiding changed source. Deleted and added rename
+paths remain separate manifest entries. Inspect genuinely binary changes
+separately through their exact captured blobs.
 
-Verify `git --no-replace-objects merge-base BASE_SHA HEAD_SHA` succeeds before
-running either three-dot diff: shallow checkouts may contain both commits
-without their common ancestor. Fetch or deepen the captured commits until their
-merge base is available. If the merge base or either pinned diff remains
-unavailable, stop and report that no trustworthy, complete snapshot could be
-obtained. Do not fall back to `gh pr diff` or GitHub comparison JSON: the former
-follows the live PR, and the latter silently caps its changed-file list at 300
-entries. Recheck the live base/head SHAs after metadata collection, and restart
-if either changed. Never assume the base is `main`: stacked and
-cross-repository pull requests can have different bases.
+The helper emits only durable artifact paths, byte counts, hashes, and file
+counts; it never streams the patch into truncated tool output. Read both
+artifacts in bounded chunks with its `read` command, checking `next_offset`,
+the recorded byte totals and file count, and final `eof` before claiming full
+coverage:
 
-Disable replacement objects on every merge-base, diff, tree/mode inspection,
-and blob read so local replacement refs cannot rewrite pinned object graphs.
-Disable external diff drivers and text-conversion filters, and explicitly show
-submodule changes in both diffs regardless of local Git configuration.
+```sh
+python3 TRUSTED_SKILL_DIR/scripts/capture_pr_snapshot.py read --snapshot SNAPSHOT_JSON --artifact manifest --offset OFFSET --limit 1024
+python3 TRUSTED_SKILL_DIR/scripts/capture_pr_snapshot.py read --snapshot SNAPSHOT_JSON --artifact patch --offset OFFSET --limit 1024
+```
+
+Fail closed on an invalid SHA, missing merge base, malformed manifest,
+incomplete artifact, or exceeded byte/file limits. For shallow history, fetch
+or deepen the captured commits and rerun capture. Do not fall back to live
+`gh pr diff`, capped GitHub comparison JSON, or the live changed-file endpoint;
+that endpoint provides supplemental metadata only. Likewise, read CI checks
+from the captured commit endpoint. Recheck both live SHAs after collection
+and restart if either changed; stacked PR bases need not be `main`.
 
 Read untrusted changed and neighboring files directly from captured Git blobs
 or retrieve exact-SHA blobs through the GitHub API. Pass the validated 40-digit
@@ -202,11 +206,14 @@ For each proposed finding:
 Treat external PR-head tests, Go package initialization, build tools,
 dependencies, and repository scripts as arbitrary contributor-controlled code.
 Run them only after the code has been independently trusted or inside an
-ephemeral, filesystem-isolated, credential-free, network-denied sandbox.
-Removing environment variables alone does not isolate keychain credentials,
-cloud configuration, or writable local files. Execute helper scripts only from
-a trusted base or an independently trusted head. Without a suitable sandbox
-or trust decision, perform static review and report runtime checks as skipped.
+ephemeral, filesystem-isolated, credential-free, network-denied sandbox with
+verified process/user isolation and enforced PID, memory, CPU, disk, and
+wall-time limits. Removing environment variables alone does not isolate
+keychain credentials, cloud configuration, writable local files, or host
+resources. Execute helper scripts only from an independently trusted revision.
+If any isolation or resource-control requirement cannot be verified, do not
+execute contributor code: perform static review and report runtime checks as
+skipped.
 
 Choose authorized verification proportionate to the diff. `go test ./...`
 may depend on the Steady mock server; `./scripts/test` starts that server when
