@@ -150,7 +150,7 @@ func configureX509Request(
 	}
 
 	var authorizationMiddleware Middleware
-	if r.Security.BearerAuth {
+	if r.BearerAuthenticationPreferred() {
 		wia, err := cache.get(configuredHTTPDoer, config)
 		if err != nil {
 			return err
@@ -242,36 +242,50 @@ func isProviderOwnedX509Hostname(hostname string) bool {
 	}
 
 	parts := strings.Split(hostname, ".")
-	if isBedrockPrivateLinkX509Hostname(parts) {
+	if isBedrockPrivateLinkX509Hostname(parts) || isBedrockAgentCoreGatewayX509Hostname(parts) {
 		return true
 	}
 	if len(parts) < 3 || parts[1] == "" {
 		return false
 	}
-	switch parts[0] {
-	case "bedrock-mantle":
-		return strings.Join(parts[2:], ".") == "api.aws"
-	case "bedrock-runtime", "bedrock-runtime-fips":
-		suffix := strings.Join(parts[2:], ".")
-		for _, providerSuffix := range []string{
-			"amazonaws.com",
-			"api.aws",
-			"amazonaws.com.cn",
-			"api.amazonwebservices.com.cn",
-			"amazonaws.eu",
-			"api.amazonwebservices.eu",
-			"c2s.ic.gov",
-			"api.aws.ic.gov",
-			"sc2s.sgov.gov",
-			"api.aws.scloud",
-			"cloud.adc-e.uk",
-			"api.cloud-aws.adc-e.uk",
-			"csp.hci.ic.gov",
-			"api.aws.hci.ic.gov",
-		} {
-			if suffix == providerSuffix {
-				return true
-			}
+	return isBedrockServiceX509Label(parts[0]) && isBedrockProviderX509Suffix(strings.Join(parts[2:], "."))
+}
+
+func isBedrockServiceX509Label(label string) bool {
+	switch label {
+	case "bedrock", "bedrock-fips",
+		"bedrock-runtime", "bedrock-runtime-fips",
+		"bedrock-agent", "bedrock-agent-fips",
+		"bedrock-agent-runtime", "bedrock-agent-runtime-fips",
+		"bedrock-mantle",
+		"bedrock-data-automation", "bedrock-data-automation-fips",
+		"bedrock-data-automation-runtime", "bedrock-data-automation-runtime-fips",
+		"bedrock-agentcore", "bedrock-agentcore-control":
+		return true
+	default:
+		return false
+	}
+}
+
+func isBedrockProviderX509Suffix(suffix string) bool {
+	for _, providerSuffix := range []string{
+		"amazonaws.com",
+		"api.aws",
+		"amazonaws.com.cn",
+		"api.amazonwebservices.com.cn",
+		"amazonaws.eu",
+		"api.amazonwebservices.eu",
+		"c2s.ic.gov",
+		"api.aws.ic.gov",
+		"sc2s.sgov.gov",
+		"api.aws.scloud",
+		"cloud.adc-e.uk",
+		"api.cloud-aws.adc-e.uk",
+		"csp.hci.ic.gov",
+		"api.aws.hci.ic.gov",
+	} {
+		if suffix == providerSuffix {
+			return true
 		}
 	}
 	return false
@@ -282,12 +296,13 @@ func isBedrockPrivateLinkX509Hostname(parts []string) bool {
 		strings.Join(parts[3:], ".") != "vpce.amazonaws.com" {
 		return false
 	}
-	switch parts[1] {
-	case "bedrock-mantle", "bedrock-runtime", "bedrock-runtime-fips":
-		return true
-	default:
-		return false
-	}
+	return isBedrockServiceX509Label(parts[1])
+}
+
+func isBedrockAgentCoreGatewayX509Hostname(parts []string) bool {
+	return len(parts) >= 6 && parts[0] != "" && parts[1] == "gateway" &&
+		parts[2] == "bedrock-agentcore" && parts[3] != "" &&
+		isBedrockProviderX509Suffix(strings.Join(parts[4:], "."))
 }
 
 func (origin x509APIOrigin) validate(value *url.URL) error {

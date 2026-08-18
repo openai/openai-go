@@ -115,8 +115,14 @@ func (s x509CredentialSource) exchange(
 				if parseErr == nil || !shouldRetryTokenExchange(resp, nil) || retry >= tokenExchangeMaxRetries {
 					return token, noRetryX509TokenExchangeError(parseErr)
 				}
-			} else if retry >= tokenExchangeMaxRetries {
-				return exchangedToken{}, noRetryX509TokenExchangeError(readErr)
+			} else {
+				if resp.StatusCode != http.StatusOK && !shouldRetryTokenExchange(resp, nil) {
+					_, statusErr := parseX509TokenExchangeResponse(resp.StatusCode, nil)
+					return exchangedToken{}, noRetryX509TokenExchangeError(statusErr)
+				}
+				if retry >= tokenExchangeMaxRetries {
+					return exchangedToken{}, noRetryX509TokenExchangeError(readErr)
+				}
 			}
 		} else if retry >= tokenExchangeMaxRetries {
 			return exchangedToken{}, noRetryX509TokenExchangeError(exchangeErr)

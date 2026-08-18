@@ -71,3 +71,32 @@ func TestX509TokenExchangeResponseReadRetriesAreBounded(t *testing.T) {
 		t.Fatalf("exchange calls = %d, want %d", got, want)
 	}
 }
+
+func TestX509TokenExchangeDoesNotRetryDefinitiveStatusReadFailure(t *testing.T) {
+	for _, statusCode := range []int{
+		http.StatusBadRequest,
+		http.StatusUnauthorized,
+		http.StatusForbidden,
+	} {
+		t.Run(http.StatusText(statusCode), func(t *testing.T) {
+			var calls atomic.Int32
+			doer := &internalHTTPDoer{do: func(*http.Request) (*http.Response, error) {
+				calls.Add(1)
+				return &http.Response{
+					StatusCode: statusCode,
+					Header:     http.Header{"Retry-After": []string{"0"}},
+					Body:       &failingTokenResponseBody{},
+				}, nil
+			}}
+
+			_, err := (x509CredentialSource{}).exchange(t.Context(), doer, "idp-test", "svc-test")
+			var oauthErr *OAuthError
+			if !errors.As(err, &oauthErr) || oauthErr.StatusCode != statusCode {
+				t.Fatalf("exchange() error = %v, want OAuthError status %d", err, statusCode)
+			}
+			if got, want := calls.Load(), int32(1); got != want {
+				t.Fatalf("exchange calls = %d, want %d", got, want)
+			}
+		})
+	}
+}

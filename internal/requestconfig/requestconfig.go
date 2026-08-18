@@ -926,27 +926,37 @@ func WithBearerAuthPreference() RequestOption {
 	})
 }
 
+func (r RequestConfig) preferredAuthentication(hasBearerCredential bool) authCredentialPreference {
+	if r.authPreference == authCredentialPreferenceBearer && r.Security.BearerAuth && hasBearerCredential {
+		return authCredentialPreferenceBearer
+	}
+	if r.authPreference == authCredentialPreferenceAdmin && r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
+		return authCredentialPreferenceAdmin
+	}
+	if r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
+		return authCredentialPreferenceAdmin
+	}
+	if r.Security.BearerAuth && hasBearerCredential {
+		return authCredentialPreferenceBearer
+	}
+	return authCredentialPreferenceNone
+}
+
+// BearerAuthenticationPreferred reports whether bearer authentication is the
+// effective scheme when workload identity supplies the bearer credential.
+func (r RequestConfig) BearerAuthenticationPreferred() bool {
+	return r.preferredAuthentication(true) == authCredentialPreferenceBearer
+}
+
 func ApplySecurity(r RequestConfig) {
 	if r.authHeaderOverride {
 		return
 	}
 
-	if r.authPreference == authCredentialPreferenceBearer && r.Security.BearerAuth && r.APIKey != "" {
+	switch r.preferredAuthentication(r.APIKey != "") {
+	case authCredentialPreferenceBearer:
 		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
-		return
-	}
-
-	if r.authPreference == authCredentialPreferenceAdmin && r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
+	case authCredentialPreferenceAdmin:
 		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.AdminAPIKey))
-		return
-	}
-
-	if r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
-		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.AdminAPIKey))
-		return
-	}
-
-	if r.Security.BearerAuth && r.APIKey != "" {
-		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
 	}
 }

@@ -103,6 +103,16 @@ func TestClientX509WorkloadIdentityRejectsProviderOwnedBaseURLBeforeExchange(t *
 		{name: "Azure Foundry", baseURL: "https://resource.services.ai.azure.com/openai/v1"},
 		{name: "Azure API Management", baseURL: "https://resource.azure-api.net/openai/v1"},
 		{name: "Bedrock runtime", baseURL: "https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1"},
+		{name: "Bedrock control plane", baseURL: "https://bedrock.us-east-1.amazonaws.com/openai/v1"},
+		{name: "Bedrock control plane FIPS", baseURL: "https://bedrock-fips.us-east-1.amazonaws.com/openai/v1"},
+		{name: "Bedrock agent", baseURL: "https://bedrock-agent.us-east-1.amazonaws.com/openai/v1"},
+		{name: "Bedrock agent FIPS", baseURL: "https://bedrock-agent-fips.us-east-1.amazonaws.com/openai/v1"},
+		{name: "Bedrock agent runtime", baseURL: "https://bedrock-agent-runtime.us-east-1.amazonaws.com/openai/v1"},
+		{name: "Bedrock agent runtime FIPS", baseURL: "https://bedrock-agent-runtime-fips.us-east-1.amazonaws.com/openai/v1"},
+		{name: "Bedrock data automation", baseURL: "https://bedrock-data-automation.us-east-1.amazonaws.com/openai/v1"},
+		{name: "Bedrock data automation runtime FIPS", baseURL: "https://bedrock-data-automation-runtime-fips.us-east-1.api.aws/openai/v1"},
+		{name: "Bedrock AgentCore control", baseURL: "https://bedrock-agentcore-control.us-east-1.amazonaws.com/openai/v1"},
+		{name: "Bedrock AgentCore gateway", baseURL: "https://gateway-id.gateway.bedrock-agentcore.us-east-1.amazonaws.com/openai/v1"},
 		{name: "Bedrock China", baseURL: "https://bedrock-runtime.cn-north-1.amazonaws.com.cn/openai/v1"},
 		{name: "Bedrock EU sovereign", baseURL: "https://bedrock-runtime.eusc-de-east-1.amazonaws.eu/openai/v1"},
 		{name: "Bedrock mantle", baseURL: "https://bedrock-mantle.us-east-1.api.aws/openai/v1"},
@@ -605,6 +615,52 @@ func TestClientX509WorkloadIdentityPreservesEndpointAuthorizationProvenance(t *t
 			t.Fatalf("Authorization = %q, want empty", *authorization)
 		}
 	})
+}
+
+func TestClientX509WorkloadIdentityHonorsMethodAdminCredentialPreference(t *testing.T) {
+	var exchangeCalls atomic.Int32
+	var apiCalls atomic.Int32
+	var authorization string
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		if req.URL.Hostname() == "mtls.auth.openai.com" {
+			exchangeCalls.Add(1)
+			return nil, errors.New("token exchange must not be attempted")
+		}
+		apiCalls.Add(1)
+		authorization = req.Header.Get("Authorization")
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{"Content-Type": []string{"application/json"}},
+			Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+		}, nil
+	})
+	client := openai.NewClient(
+		option.WithBaseURL("https://trusted.example/v1"),
+		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+		option.WithHTTPClient(httpClient),
+	)
+
+	var result map[string]any
+	err := client.Execute(
+		t.Context(),
+		http.MethodGet,
+		"organization/audit_logs",
+		nil,
+		&result,
+		option.WithAdminAPIKey("method-admin-secret"),
+	)
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if got := exchangeCalls.Load(); got != 0 {
+		t.Fatalf("token exchange calls = %d, want 0", got)
+	}
+	if got := apiCalls.Load(); got != 1 {
+		t.Fatalf("API calls = %d, want 1", got)
+	}
+	if got, want := authorization, "Bearer method-admin-secret"; got != want {
+		t.Fatalf("Authorization = %q, want %q", got, want)
+	}
 }
 
 func TestClientRejectsAzureAuthenticationWithX509BeforeExchange(t *testing.T) {
