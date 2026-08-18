@@ -7,7 +7,8 @@ type ChatCompletionAccumulator struct {
 	// The up-to-date accumulation of model's responses
 	ChatCompletion
 	choiceChatCompletionStates []chatCompletionResponseState
-	justFinished               []chatCompletionResponseState
+	justFinished               chatCompletionResponseState
+	justFinishedByChoice       []chatCompletionResponseState
 }
 
 type FinishedChatCompletionToolCall struct {
@@ -37,17 +38,21 @@ const (
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
-	acc.justFinished = acc.justFinished[:0]
+	acc.justFinished = chatCompletionResponseState{}
+	acc.justFinishedByChoice = acc.justFinishedByChoice[:0]
 	if !acc.accumulateDelta(chunk) {
 		return false
 	}
 
-	for _, choice := range chunk.Choices {
+	for i, choice := range chunk.Choices {
 		choiceIndex := int(choice.Index)
 		acc.choiceChatCompletionStates = expandToFit(acc.choiceChatCompletionStates, choiceIndex)
 		justFinished := acc.choiceChatCompletionStates[choiceIndex].update(choice)
+		if i == 0 {
+			acc.justFinished = justFinished
+		}
 		if justFinished.state != emptyResponseState {
-			acc.justFinished = append(acc.justFinished, justFinished)
+			acc.justFinishedByChoice = append(acc.justFinishedByChoice, justFinished)
 		}
 	}
 	return true
@@ -56,11 +61,22 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 // JustFinishedContent retrieves the chat completion content when it is known to have just been completed.
 // The content is "just completed" when the last added chunk no longer contains a content
 // delta. If the content is just completed, the content is returned and the boolean is true. Otherwise,
-// an empty string is returned and the boolean will be false. If multiple choices finish content
-// in the same chunk, the first matching choice in the chunk is returned.
+// an empty string is returned and the boolean will be false.
+//
+// This method preserves the legacy behavior of reporting events only for the first choice in the
+// most recently added chunk. Use [ChatCompletionAccumulator.JustFinishedContentForChoice] to inspect
+// another choice.
 func (acc *ChatCompletionAccumulator) JustFinishedContent() (content string, ok bool) {
-	for _, justFinished := range acc.justFinished {
-		if justFinished.state == contentResponseState {
+	if acc.justFinished.state == contentResponseState {
+		return acc.Choices[acc.justFinished.choiceIndex].Message.Content, true
+	}
+	return "", false
+}
+
+// JustFinishedContentForChoice retrieves content that was just completed for the given choice.
+func (acc *ChatCompletionAccumulator) JustFinishedContentForChoice(choiceIndex int) (content string, ok bool) {
+	for _, justFinished := range acc.justFinishedByChoice {
+		if justFinished.choiceIndex == choiceIndex && justFinished.state == contentResponseState {
 			return acc.Choices[justFinished.choiceIndex].Message.Content, true
 		}
 	}
@@ -70,11 +86,22 @@ func (acc *ChatCompletionAccumulator) JustFinishedContent() (content string, ok 
 // JustFinishedRefusal retrieves the chat completion refusal when it is known to have just been completed.
 // The refusal is "just completed" when the last added chunk no longer contains a refusal
 // delta. If the refusal is just completed, the refusal is returned and the boolean is true. Otherwise,
-// an empty string is returned and the boolean will be false. If multiple choices finish refusals
-// in the same chunk, the first matching choice in the chunk is returned.
+// an empty string is returned and the boolean will be false.
+//
+// This method preserves the legacy behavior of reporting events only for the first choice in the
+// most recently added chunk. Use [ChatCompletionAccumulator.JustFinishedRefusalForChoice] to inspect
+// another choice.
 func (acc *ChatCompletionAccumulator) JustFinishedRefusal() (refusal string, ok bool) {
-	for _, justFinished := range acc.justFinished {
-		if justFinished.state == refusalResponseState {
+	if acc.justFinished.state == refusalResponseState {
+		return acc.Choices[acc.justFinished.choiceIndex].Message.Refusal, true
+	}
+	return "", false
+}
+
+// JustFinishedRefusalForChoice retrieves a refusal that was just completed for the given choice.
+func (acc *ChatCompletionAccumulator) JustFinishedRefusalForChoice(choiceIndex int) (refusal string, ok bool) {
+	for _, justFinished := range acc.justFinishedByChoice {
+		if justFinished.choiceIndex == choiceIndex && justFinished.state == refusalResponseState {
 			return acc.Choices[justFinished.choiceIndex].Message.Refusal, true
 		}
 	}
@@ -85,25 +112,42 @@ func (acc *ChatCompletionAccumulator) JustFinishedRefusal() (refusal string, ok 
 // A tool call is "just completed" when the last added chunk no longer contains a tool call
 // delta or contains a delta for a different tool call. If the tool call is just completed,
 // a FinishedChatCompletionToolCall is returned and the boolean is true. Otherwise, an empty
-// tool call is returned and the boolean will be false. If multiple choices finish tool calls
-// in the same chunk, the first matching choice in the chunk is returned.
+// tool call is returned and the boolean will be false.
 //
 // You cannot rely on this with a stream that has ParallelToolCalls enabled.
+//
+// This method preserves the legacy behavior of reporting events only for the first choice in the
+// most recently added chunk. Use [ChatCompletionAccumulator.JustFinishedToolCallForChoice] to inspect
+// another choice.
 func (acc *ChatCompletionAccumulator) JustFinishedToolCall() (toolcall FinishedChatCompletionToolCall, ok bool) {
-	for _, justFinished := range acc.justFinished {
-		if justFinished.state == toolResponseState {
-			toolCall := acc.Choices[justFinished.choiceIndex].Message.ToolCalls[justFinished.toolCallIndex]
-			return FinishedChatCompletionToolCall{
-				ID:    toolCall.ID,
-				Index: justFinished.toolCallIndex,
-				ChatCompletionMessageFunctionToolCallFunction: ChatCompletionMessageFunctionToolCallFunction{
-					Name:      toolCall.Function.Name,
-					Arguments: toolCall.Function.Arguments,
-				},
-			}, true
+	if acc.justFinished.state != toolResponseState {
+		return FinishedChatCompletionToolCall{}, false
+	}
+	return acc.finishedToolCall(acc.justFinished), true
+}
+
+// JustFinishedToolCallForChoice retrieves a tool call that was just completed for the given choice.
+//
+// You cannot rely on this with a stream that has ParallelToolCalls enabled.
+func (acc *ChatCompletionAccumulator) JustFinishedToolCallForChoice(choiceIndex int) (toolcall FinishedChatCompletionToolCall, ok bool) {
+	for _, justFinished := range acc.justFinishedByChoice {
+		if justFinished.choiceIndex == choiceIndex && justFinished.state == toolResponseState {
+			return acc.finishedToolCall(justFinished), true
 		}
 	}
 	return FinishedChatCompletionToolCall{}, false
+}
+
+func (acc *ChatCompletionAccumulator) finishedToolCall(justFinished chatCompletionResponseState) FinishedChatCompletionToolCall {
+	toolCall := acc.Choices[justFinished.choiceIndex].Message.ToolCalls[justFinished.toolCallIndex]
+	return FinishedChatCompletionToolCall{
+		ID:    toolCall.ID,
+		Index: justFinished.toolCallIndex,
+		ChatCompletionMessageFunctionToolCallFunction: ChatCompletionMessageFunctionToolCallFunction{
+			Name:      toolCall.Function.Name,
+			Arguments: toolCall.Function.Arguments,
+		},
+	}
 }
 
 // Concatenates a ChatCompletionChunk onto a ChatCompletion. Returns false and

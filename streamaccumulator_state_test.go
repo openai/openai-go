@@ -74,7 +74,10 @@ func TestAccumulatorTracksFinishedEventsForEveryChoice(t *testing.T) {
 		t.Fatalf("JustFinishedContent returned unexpected content: %q", content)
 	}
 
-	refusal, ok := acc.JustFinishedRefusal()
+	if refusal, ok := acc.JustFinishedRefusal(); ok {
+		t.Fatalf("JustFinishedRefusal returned alternate choice refusal: %q", refusal)
+	}
+	refusal, ok := acc.JustFinishedRefusalForChoice(1)
 	if !ok {
 		t.Fatal("JustFinishedRefusal did not return the completed refusal")
 	}
@@ -82,7 +85,10 @@ func TestAccumulatorTracksFinishedEventsForEveryChoice(t *testing.T) {
 		t.Fatalf("refusal: expected %q, got %q", "choice one refusal", refusal)
 	}
 
-	toolCall, ok := acc.JustFinishedToolCall()
+	if toolCall, toolCallOK := acc.JustFinishedToolCall(); toolCallOK {
+		t.Fatalf("JustFinishedToolCall returned alternate choice tool call: %+v", toolCall)
+	}
+	toolCall, ok := acc.JustFinishedToolCallForChoice(2)
 	if !ok {
 		t.Fatal("JustFinishedToolCall did not return the completed tool call")
 	}
@@ -108,15 +114,54 @@ func TestAccumulatorTracksFinishedEventsForEveryChoice(t *testing.T) {
 	if content != "choice zero continues" {
 		t.Fatalf("content: expected %q, got %q", "choice zero continues", content)
 	}
-	if refusal, ok := acc.JustFinishedRefusal(); ok {
+	if refusal, ok := acc.JustFinishedRefusalForChoice(1); ok {
 		t.Fatalf("JustFinishedRefusal returned repeated refusal: %q", refusal)
 	}
-	if toolCall, ok := acc.JustFinishedToolCall(); ok {
+	if toolCall, ok := acc.JustFinishedToolCallForChoice(2); ok {
 		t.Fatalf("JustFinishedToolCall returned repeated tool call: %+v", toolCall)
 	}
 }
 
-func TestAccumulatorReturnsFirstMatchingFinishedChoice(t *testing.T) {
+func TestAccumulatorSingularFinishedEventsUseFirstWireChoice(t *testing.T) {
+	var acc openai.ChatCompletionAccumulator
+
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":0,"delta":{"content":"selected"}},{"index":1,"delta":{"tool_calls":[{"index":0,"id":"alternate_tool","type":"function","function":{"name":"mutate","arguments":"{}"}}]}},{"index":2,"delta":{"refusal":"alternate refusal"}}]}`)
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":0,"delta":{"content":" response"}},{"index":1,"delta":{},"finish_reason":"tool_calls"},{"index":2,"delta":{},"finish_reason":"stop"}]}`)
+
+	if toolCall, ok := acc.JustFinishedToolCall(); ok {
+		t.Errorf("JustFinishedToolCall returned alternate choice tool call: %+v", toolCall)
+	}
+	if refusal, ok := acc.JustFinishedRefusal(); ok {
+		t.Errorf("JustFinishedRefusal returned alternate choice refusal: %q", refusal)
+	}
+	if content, ok := acc.JustFinishedContent(); ok {
+		t.Errorf("JustFinishedContent returned unfinished first choice content: %q", content)
+	}
+
+	finish := `{"id":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"},{"index":1,"delta":{},"finish_reason":"tool_calls"},{"index":2,"delta":{},"finish_reason":"stop"}]}`
+	pr688AddChunk(t, &acc, finish)
+
+	content, ok := acc.JustFinishedContent()
+	if !ok {
+		t.Fatal("JustFinishedContent did not return completed first choice content")
+	}
+	if content != "selected response" {
+		t.Fatalf("content: expected %q, got %q", "selected response", content)
+	}
+	if toolCall, ok := acc.JustFinishedToolCall(); ok {
+		t.Errorf("JustFinishedToolCall repeated alternate choice tool call: %+v", toolCall)
+	}
+	if refusal, ok := acc.JustFinishedRefusal(); ok {
+		t.Errorf("JustFinishedRefusal repeated alternate choice refusal: %q", refusal)
+	}
+
+	pr688AddChunk(t, &acc, finish)
+	if content, ok := acc.JustFinishedContent(); ok {
+		t.Errorf("JustFinishedContent repeated completed first choice content: %q", content)
+	}
+}
+
+func TestAccumulatorSingularContentUsesFirstWireChoice(t *testing.T) {
 	var acc openai.ChatCompletionAccumulator
 
 	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":2,"delta":{"content":"choice two"}},{"index":1,"delta":{"content":"choice one"}}]}`)
@@ -128,6 +173,14 @@ func TestAccumulatorReturnsFirstMatchingFinishedChoice(t *testing.T) {
 	}
 	if content != "choice two" {
 		t.Fatalf("content: expected %q, got %q", "choice two", content)
+	}
+
+	content, ok = acc.JustFinishedContentForChoice(1)
+	if !ok {
+		t.Fatal("JustFinishedContentForChoice did not return second choice content")
+	}
+	if content != "choice one" {
+		t.Fatalf("choice 1 content: expected %q, got %q", "choice one", content)
 	}
 }
 
