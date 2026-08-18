@@ -27582,6 +27582,7 @@ const (
 // [BetaResponseShellCallCommandAddedEvent],
 // [BetaResponseShellCallCommandDeltaEvent],
 // [BetaResponseShellCallCommandDoneEvent],
+// [BetaResponseShellCallOutputContentDeltaEvent],
 // [BetaResponseShellCallOutputContentDoneEvent], [BetaResponseInProgressEvent],
 // [BetaResponseFailedEvent], [BetaResponseIncompleteEvent],
 // [BetaResponseOutputItemAddedEvent], [BetaResponseOutputItemDoneEvent],
@@ -27816,6 +27817,7 @@ func (BetaResponseFunctionCallArgumentsDoneEvent) implBetaResponseStreamEventUni
 func (BetaResponseShellCallCommandAddedEvent) implBetaResponseStreamEventUnion()           {}
 func (BetaResponseShellCallCommandDeltaEvent) implBetaResponseStreamEventUnion()           {}
 func (BetaResponseShellCallCommandDoneEvent) implBetaResponseStreamEventUnion()            {}
+func (BetaResponseShellCallOutputContentDeltaEvent) implBetaResponseStreamEventUnion()     {}
 func (BetaResponseShellCallOutputContentDoneEvent) implBetaResponseStreamEventUnion()      {}
 func (BetaResponseInProgressEvent) implBetaResponseStreamEventUnion()                      {}
 func (BetaResponseFailedEvent) implBetaResponseStreamEventUnion()                          {}
@@ -27877,6 +27879,7 @@ func (BetaResponseCustomToolCallInputDoneEvent) implBetaResponseStreamEventUnion
 //	case openai.BetaResponseShellCallCommandAddedEvent:
 //	case openai.BetaResponseShellCallCommandDeltaEvent:
 //	case openai.BetaResponseShellCallCommandDoneEvent:
+//	case openai.BetaResponseShellCallOutputContentDeltaEvent:
 //	case openai.BetaResponseShellCallOutputContentDoneEvent:
 //	case openai.BetaResponseInProgressEvent:
 //	case openai.BetaResponseFailedEvent:
@@ -27961,6 +27964,8 @@ func (u BetaResponseStreamEventUnion) AsAny() anyBetaResponseStreamEvent {
 		return u.AsResponseShellCallCommandDelta()
 	case "response.shell_call_command.done":
 		return u.AsResponseShellCallCommandDone()
+	case "response.shell_call_output_content.delta":
+		return u.AsResponseShellCallOutputContentDelta()
 	case "response.shell_call_output_content.done":
 		return u.AsResponseShellCallOutputContentDone()
 	case "response.in_progress":
@@ -28141,6 +28146,11 @@ func (u BetaResponseStreamEventUnion) AsResponseShellCallCommandDelta() (v BetaR
 }
 
 func (u BetaResponseStreamEventUnion) AsResponseShellCallCommandDone() (v BetaResponseShellCallCommandDoneEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponseStreamEventUnion) AsResponseShellCallOutputContentDelta() (v BetaResponseShellCallOutputContentDeltaEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }

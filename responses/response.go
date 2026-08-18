@@ -21966,6 +21966,7 @@ const (
 // [ResponseFunctionCallArgumentsDeltaEvent],
 // [ResponseFunctionCallArgumentsDoneEvent], [ResponseShellCallCommandAddedEvent],
 // [ResponseShellCallCommandDeltaEvent], [ResponseShellCallCommandDoneEvent],
+// [ResponseShellCallOutputContentDeltaEvent],
 // [ResponseShellCallOutputContentDoneEvent], [ResponseInProgressEvent],
 // [ResponseFailedEvent], [ResponseIncompleteEvent],
 // [ResponseOutputItemAddedEvent], [ResponseOutputItemDoneEvent],
@@ -22144,6 +22145,7 @@ func (ResponseFunctionCallArgumentsDoneEvent) implResponseStreamEventUnion()    
 func (ResponseShellCallCommandAddedEvent) implResponseStreamEventUnion()           {}
 func (ResponseShellCallCommandDeltaEvent) implResponseStreamEventUnion()           {}
 func (ResponseShellCallCommandDoneEvent) implResponseStreamEventUnion()            {}
+func (ResponseShellCallOutputContentDeltaEvent) implResponseStreamEventUnion()     {}
 func (ResponseShellCallOutputContentDoneEvent) implResponseStreamEventUnion()      {}
 func (ResponseInProgressEvent) implResponseStreamEventUnion()                      {}
 func (ResponseFailedEvent) implResponseStreamEventUnion()                          {}
@@ -22205,6 +22207,7 @@ func (ResponseCustomToolCallInputDoneEvent) implResponseStreamEventUnion()      
 //	case responses.ResponseShellCallCommandAddedEvent:
 //	case responses.ResponseShellCallCommandDeltaEvent:
 //	case responses.ResponseShellCallCommandDoneEvent:
+//	case responses.ResponseShellCallOutputContentDeltaEvent:
 //	case responses.ResponseShellCallOutputContentDoneEvent:
 //	case responses.ResponseInProgressEvent:
 //	case responses.ResponseFailedEvent:
@@ -22289,6 +22292,8 @@ func (u ResponseStreamEventUnion) AsAny() anyResponseStreamEvent {
 		return u.AsResponseShellCallCommandDelta()
 	case "response.shell_call_command.done":
 		return u.AsResponseShellCallCommandDone()
+	case "response.shell_call_output_content.delta":
+		return u.AsResponseShellCallOutputContentDelta()
 	case "response.shell_call_output_content.done":
 		return u.AsResponseShellCallOutputContentDone()
 	case "response.in_progress":
@@ -22469,6 +22474,11 @@ func (u ResponseStreamEventUnion) AsResponseShellCallCommandDelta() (v ResponseS
 }
 
 func (u ResponseStreamEventUnion) AsResponseShellCallCommandDone() (v ResponseShellCallCommandDoneEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseStreamEventUnion) AsResponseShellCallOutputContentDelta() (v ResponseShellCallOutputContentDeltaEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
