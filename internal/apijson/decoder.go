@@ -6,6 +6,7 @@ package apijson
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/openai/openai-go/v3/packages/param"
 	"reflect"
@@ -423,8 +424,9 @@ func (d *decoderBuilder) newStructTypeDecoder(t reflect.Type, isRoot bool) decod
 		// unions and may legitimately decode from scalar or array values.
 		if isRoot && len(inlineDecoders) == 0 && !node.IsObject() && node.Type != gjson.Null {
 			var object struct{}
-			if err := json.Unmarshal([]byte(node.Raw), &object); err != nil {
-				if typeErr, ok := err.(*json.UnmarshalTypeError); ok {
+			if decodeErr := json.Unmarshal([]byte(node.Raw), &object); decodeErr != nil {
+				var typeErr *json.UnmarshalTypeError
+				if errors.As(decodeErr, &typeErr) {
 					typeErr.Type = t
 					return typeErr
 				}
