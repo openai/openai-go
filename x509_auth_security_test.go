@@ -106,6 +106,8 @@ func TestClientX509WorkloadIdentityRejectsProviderOwnedBaseURLBeforeExchange(t *
 		{name: "Bedrock China", baseURL: "https://bedrock-runtime.cn-north-1.amazonaws.com.cn/openai/v1"},
 		{name: "Bedrock EU sovereign", baseURL: "https://bedrock-runtime.eusc-de-east-1.amazonaws.eu/openai/v1"},
 		{name: "Bedrock mantle", baseURL: "https://bedrock-mantle.us-east-1.api.aws/openai/v1"},
+		{name: "Bedrock PrivateLink runtime", baseURL: "https://vpce-0123456789abcdef0.bedrock-runtime.us-east-1.vpce.amazonaws.com/openai/v1"},
+		{name: "Bedrock PrivateLink mantle", baseURL: "https://vpce-0123456789abcdef0.bedrock-mantle.us-east-1.vpce.amazonaws.com/openai/v1"},
 		{name: "environment provider URL", baseURL: "https://resource.openai.azure.com/openai/v1", fromEnv: true},
 	}
 
@@ -138,34 +140,75 @@ func TestClientX509WorkloadIdentityRejectsProviderOwnedBaseURLBeforeExchange(t *
 }
 
 func TestClientX509WorkloadIdentityAllowsProviderSuffixLookalikeGateway(t *testing.T) {
-	var exchangeCalls atomic.Int32
-	var apiCalls atomic.Int32
+	testCases := []struct {
+		name    string
+		baseURL string
+	}{
+		{name: "Azure suffix", baseURL: "https://resource.openai.azure.com.example/v1"},
+		{name: "Bedrock PrivateLink suffix", baseURL: "https://vpce-0123456789abcdef0.bedrock-runtime.us-east-1.vpce.amazonaws.com.example/v1"},
+		{name: "Bedrock PrivateLink service", baseURL: "https://vpce-0123456789abcdef0.bedrock-runtime-gateway.us-east-1.vpce.amazonaws.com/v1"},
+		{name: "Bedrock PrivateLink endpoint ID", baseURL: "https://gateway.bedrock-runtime.us-east-1.vpce.amazonaws.com/v1"},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var exchangeCalls atomic.Int32
+			var apiCalls atomic.Int32
+			httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
+				if req.URL.Hostname() == "mtls.auth.openai.com" {
+					exchangeCalls.Add(1)
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     http.Header{"Content-Type": []string{"application/json"}},
+						Body:       io.NopCloser(strings.NewReader(`{"access_token":"x509-token","expires_in":3600}`)),
+					}, nil
+				}
+				apiCalls.Add(1)
+				return modelsListResponse(), nil
+			})
+			client := openai.NewClient(
+				option.WithBaseURL(testCase.baseURL),
+				option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+				option.WithHTTPClient(httpClient),
+			)
+
+			if _, err := client.Models.List(t.Context()); err != nil {
+				t.Fatalf("Models.List() error = %v", err)
+			}
+			if got, want := exchangeCalls.Load(), int32(1); got != want {
+				t.Fatalf("exchange calls = %d, want %d", got, want)
+			}
+			if got, want := apiCalls.Load(), int32(1); got != want {
+				t.Fatalf("API calls = %d, want %d", got, want)
+			}
+		})
+	}
+}
+
+func TestClientX509WorkloadIdentityRejectsBedrockPrivateLinkBeforeExchange(t *testing.T) {
+	var calls atomic.Int32
 	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		calls.Add(1)
 		if req.URL.Hostname() == "mtls.auth.openai.com" {
-			exchangeCalls.Add(1)
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Header:     http.Header{"Content-Type": []string{"application/json"}},
 				Body:       io.NopCloser(strings.NewReader(`{"access_token":"x509-token","expires_in":3600}`)),
 			}, nil
 		}
-		apiCalls.Add(1)
 		return modelsListResponse(), nil
 	})
 	client := openai.NewClient(
-		option.WithBaseURL("https://resource.openai.azure.com.example/v1"),
+		option.WithBaseURL("https://vpce-0123456789abcdef0.bedrock-runtime.us-east-1.vpce.amazonaws.com/openai/v1"),
 		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
 		option.WithHTTPClient(httpClient),
 	)
 
-	if _, err := client.Models.List(t.Context()); err != nil {
-		t.Fatalf("Models.List() error = %v", err)
+	if _, err := client.Models.List(t.Context()); err == nil || !strings.Contains(err.Error(), "provider-owned") {
+		t.Errorf("Models.List() error = %v, want provider-owned URL rejection", err)
 	}
-	if got, want := exchangeCalls.Load(), int32(1); got != want {
-		t.Fatalf("exchange calls = %d, want %d", got, want)
-	}
-	if got, want := apiCalls.Load(), int32(1); got != want {
-		t.Fatalf("API calls = %d, want %d", got, want)
+	if got := calls.Load(); got != 0 {
+		t.Fatalf("HTTP calls = %d, want 0", got)
 	}
 }
 

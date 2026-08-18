@@ -242,6 +242,9 @@ func isProviderOwnedX509Hostname(hostname string) bool {
 	}
 
 	parts := strings.Split(hostname, ".")
+	if isBedrockPrivateLinkX509Hostname(parts) {
+		return true
+	}
 	if len(parts) < 3 || parts[1] == "" {
 		return false
 	}
@@ -272,6 +275,19 @@ func isProviderOwnedX509Hostname(hostname string) bool {
 		}
 	}
 	return false
+}
+
+func isBedrockPrivateLinkX509Hostname(parts []string) bool {
+	if len(parts) != 6 || !strings.HasPrefix(parts[0], "vpce-") || parts[0] == "vpce-" || parts[2] == "" ||
+		strings.Join(parts[3:], ".") != "vpce.amazonaws.com" {
+		return false
+	}
+	switch parts[1] {
+	case "bedrock-mantle", "bedrock-runtime", "bedrock-runtime-fips":
+		return true
+	default:
+		return false
+	}
 }
 
 func (origin x509APIOrigin) validate(value *url.URL) error {
