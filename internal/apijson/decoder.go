@@ -48,9 +48,10 @@ type decoderBuilder struct {
 
 // decoderState contains the 'run-time' state of the decoder.
 type decoderState struct {
-	strict    bool
-	exactness exactness
-	validator *validationEntry
+	strict                            bool
+	exactness                         exactness
+	validator                         *validationEntry
+	preserveUnknownDiscriminatedUnion bool
 }
 
 // Exactness refers to how close to the type the result was if deserialization
@@ -170,6 +171,14 @@ func unmarshalerDecoder(n gjson.Result, v reflect.Value, state *decoderState) er
 	return v.Interface().(json.Unmarshaler).UnmarshalJSON([]byte(n.Raw))
 }
 
+func isRegisteredStructUnionSlice(t reflect.Type) bool {
+	if t.Kind() != reflect.Slice {
+		return false
+	}
+	_, registered := unionRegistry[t.Elem()]
+	return registered && isStructUnion(t.Elem())
+}
+
 func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 	if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
 		return d.newTimeTypeDecoder(t)
@@ -177,6 +186,13 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 
 	if t.Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
 		return d.newOptTypeDecoder(t)
+	}
+
+	// Named union-list roots need UnmarshalJSON for encoding/json, but nested
+	// apijson decodes must retain the parent state for exactness selection.
+	if isRegisteredStructUnionSlice(t) {
+		d.root = false
+		return d.newArrayTypeDecoder(t)
 	}
 
 	if !d.root && t.Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {
@@ -288,7 +304,13 @@ func (d *decoderBuilder) newMapDecoder(t reflect.Type) decoderFunc {
 }
 
 func (d *decoderBuilder) newArrayTypeDecoder(t reflect.Type) decoderFunc {
-	itemDecoder := d.typeDecoder(t.Elem())
+	itemType := t.Elem()
+	itemDecoder := d.typeDecoder(itemType)
+	preserveUnknownUnion := false
+	if _, registered := unionRegistry[itemType]; registered && isStructUnion(itemType) {
+		itemDecoder = d.newStructUnionDecoder(itemType)
+		preserveUnknownUnion = true
+	}
 
 	return func(node gjson.Result, value reflect.Value, state *decoderState) (err error) {
 		if !node.IsArray() {
@@ -299,9 +321,18 @@ func (d *decoderBuilder) newArrayTypeDecoder(t reflect.Type) decoderFunc {
 
 		arrayValue := reflect.MakeSlice(reflect.SliceOf(t.Elem()), len(arrayNode), len(arrayNode))
 		for i, itemNode := range arrayNode {
-			err = itemDecoder(itemNode, arrayValue.Index(i), state)
+			itemState := state
+			if preserveUnknownUnion {
+				copy := *state
+				copy.preserveUnknownDiscriminatedUnion = true
+				itemState = &copy
+			}
+			err = itemDecoder(itemNode, arrayValue.Index(i), itemState)
 			if err != nil {
 				return err
+			}
+			if itemState.exactness < state.exactness {
+				state.exactness = itemState.exactness
 			}
 		}
 

@@ -2,13 +2,26 @@ package apijson
 
 import (
 	"errors"
-	"github.com/openai/openai-go/v3/packages/param"
 	"reflect"
 
 	"github.com/tidwall/gjson"
+
+	"github.com/openai/openai-go/v3/packages/param"
 )
 
 var apiUnionType = reflect.TypeOf(param.APIUnion{})
+
+// param.SetJSON accepts an unexported setter interface. The decoder only has a
+// runtime reflect.Value, so invoke it reflectively after verifying the pointer.
+var setParamJSON = reflect.ValueOf(param.SetJSON)
+
+func preserveUnknownParamUnion(v reflect.Value, raw string) bool {
+	if !v.CanAddr() || !v.Addr().Type().Implements(setParamJSON.Type().In(1)) {
+		return false
+	}
+	setParamJSON.Call([]reflect.Value{reflect.ValueOf([]byte(raw)), v.Addr()})
+	return true
+}
 
 func isStructUnion(t reflect.Type) bool {
 	if t.Kind() != reflect.Struct {
@@ -78,12 +91,26 @@ func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 
 	return func(n gjson.Result, v reflect.Value, state *decoderState) error {
 		if discriminated && n.Type == gjson.JSON && len(unionEntry.discriminatorKey) != 0 {
-			discriminator := n.Get(EscapeSJSONKey(unionEntry.discriminatorKey)).Value()
+			discriminatorNode := n.Get(EscapeSJSONKey(unionEntry.discriminatorKey))
+			discriminator := discriminatorNode.Value()
+			compatibleDiscriminatorType := false
 			for _, decoder := range discriminatedDecoders {
+				if reflect.TypeOf(discriminator) == reflect.TypeOf(decoder.discriminator) {
+					compatibleDiscriminatorType = true
+				}
 				if discriminator == decoder.discriminator {
 					inner := v.FieldByIndex(decoder.field.Index)
-					return decoder.decoder(n, inner, state)
+					// Preservation only applies to the union that is itself an array
+					// element. Nested arrays will opt their own elements in.
+					preserveUnknown := state.preserveUnknownDiscriminatedUnion
+					state.preserveUnknownDiscriminatedUnion = false
+					err := decoder.decoder(n, inner, state)
+					state.preserveUnknownDiscriminatedUnion = preserveUnknown
+					return err
 				}
+			}
+			if state.preserveUnknownDiscriminatedUnion && discriminatorNode.Exists() && compatibleDiscriminatorType && preserveUnknownParamUnion(v, n.Raw) {
+				return nil
 			}
 			return errors.New("apijson: was not able to find discriminated union variant")
 		}
