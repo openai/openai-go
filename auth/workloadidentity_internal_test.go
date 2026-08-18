@@ -2,14 +2,41 @@ package auth
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
-	"io"
 	"net/http"
-	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 )
+
+type x509RefreshGenerationSource struct {
+	calls         atomic.Int32
+	firstStarted  chan struct{}
+	firstCanceled chan struct{}
+}
+
+func (s *x509RefreshGenerationSource) exchange(ctx context.Context, _ HTTPDoer, _, _ string) (exchangedToken, error) {
+	if s.calls.Add(1) == 1 {
+		close(s.firstStarted)
+		<-ctx.Done()
+		close(s.firstCanceled)
+		return exchangedToken{}, ctx.Err()
+	}
+	return exchangedToken{accessToken: "replacement-token", expiresIn: time.Hour}, nil
+}
+
+func (*x509RefreshGenerationSource) refreshBuffer(time.Duration) time.Duration {
+	return time.Minute
+}
+
+func (*x509RefreshGenerationSource) refreshTimeout() time.Duration {
+	return time.Minute
+}
+
+func (*x509RefreshGenerationSource) kind() workloadIdentityCredentialSourceKind {
+	return workloadIdentityCredentialSourceX509
+}
 
 type internalHTTPDoer struct {
 	do func(*http.Request) (*http.Response, error)
@@ -17,6 +44,32 @@ type internalHTTPDoer struct {
 
 func (d *internalHTTPDoer) Do(req *http.Request) (*http.Response, error) {
 	return d.do(req)
+}
+
+type internalX509CredentialSource struct {
+	exchangeFunc func(context.Context) (exchangedToken, error)
+}
+
+func (s *internalX509CredentialSource) exchange(ctx context.Context, _ HTTPDoer, _, _ string) (exchangedToken, error) {
+	return s.exchangeFunc(ctx)
+}
+
+func (*internalX509CredentialSource) refreshBuffer(time.Duration) time.Duration {
+	return time.Minute
+}
+
+func (*internalX509CredentialSource) refreshTimeout() time.Duration {
+	return time.Minute
+}
+
+func (*internalX509CredentialSource) kind() workloadIdentityCredentialSourceKind {
+	return workloadIdentityCredentialSourceX509
+}
+
+func internalNativeX509HTTPClient() *http.Client {
+	return &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{
+		Certificates: []tls.Certificate{{Certificate: [][]byte{{1}}}},
+	}}}
 }
 
 func TestTokenExchangeRetryDelayHonorsRetryAfter(t *testing.T) {
@@ -88,27 +141,18 @@ func TestX509CanceledLeaderDoesNotCancelSharedRefresh(t *testing.T) {
 	exchangeStarted := make(chan struct{})
 	releaseExchange := make(chan struct{})
 	var calls atomic.Int32
-	httpClient := &internalHTTPDoer{do: func(req *http.Request) (*http.Response, error) {
+	source := &internalX509CredentialSource{exchangeFunc: func(ctx context.Context) (exchangedToken, error) {
 		calls.Add(1)
 		close(exchangeStarted)
 		select {
 		case <-releaseExchange:
-			return &http.Response{
-				StatusCode: http.StatusOK,
-				Header:     http.Header{"Content-Type": []string{"application/json"}},
-				Body:       io.NopCloser(strings.NewReader(`{"access_token":"shared-token","expires_in":60}`)),
-			}, nil
-		case <-req.Context().Done():
-			return nil, req.Context().Err()
+			return exchangedToken{accessToken: "shared-token", expiresIn: time.Minute}, nil
+		case <-ctx.Done():
+			return exchangedToken{}, ctx.Err()
 		}
 	}}
-	wia, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
-		IdentityProviderID: "idp-test",
-		ServiceAccountID:   "svc-test",
-	})
-	if err != nil {
-		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
-	}
+	httpClient := internalNativeX509HTTPClient()
+	wia := newWorkloadIdentityAuth("idp-test", "svc-test", source)
 	leaderCtx, cancelLeader := context.WithCancel(t.Context())
 	leaderDone := make(chan error, 1)
 	go func() {
@@ -163,30 +207,45 @@ func TestX509CanceledLeaderDoesNotCancelSharedRefresh(t *testing.T) {
 	}
 }
 
+func TestX509CanceledOnlyWaiterCancelsSharedRefresh(t *testing.T) {
+	exchangeStarted := make(chan struct{})
+	exchangeCanceled := make(chan struct{})
+	source := &internalX509CredentialSource{exchangeFunc: func(ctx context.Context) (exchangedToken, error) {
+		close(exchangeStarted)
+		<-ctx.Done()
+		close(exchangeCanceled)
+		return exchangedToken{}, ctx.Err()
+	}}
+	wia := newWorkloadIdentityAuth("idp-test", "svc-test", source)
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan error, 1)
+	go func() {
+		_, getTokenErr := wia.GetToken(ctx, internalNativeX509HTTPClient())
+		done <- getTokenErr
+	}()
+	<-exchangeStarted
+	cancel()
+	if err := <-done; !errors.Is(err, context.Canceled) {
+		t.Errorf("GetToken() error = %v, want context.Canceled", err)
+	}
+	select {
+	case <-exchangeCanceled:
+	case <-time.After(time.Second):
+		t.Fatal("shared exchange context was not canceled")
+	}
+}
+
 func TestX509SharedRefreshPreservesInitiatorContextValues(t *testing.T) {
 	type tenantContextKey struct{}
 	const tenant = "tenant-a"
-	httpClient := &internalHTTPDoer{do: func(req *http.Request) (*http.Response, error) {
-		if got := req.Context().Value(tenantContextKey{}); got != tenant {
-			return &http.Response{
-				StatusCode: http.StatusBadRequest,
-				Header:     make(http.Header),
-				Body:       io.NopCloser(strings.NewReader(`{"error":"missing_tenant"}`)),
-			}, nil
+	source := &internalX509CredentialSource{exchangeFunc: func(ctx context.Context) (exchangedToken, error) {
+		if got := ctx.Value(tenantContextKey{}); got != tenant {
+			return exchangedToken{}, errors.New("missing tenant context")
 		}
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Header:     http.Header{"Content-Type": []string{"application/json"}},
-			Body:       io.NopCloser(strings.NewReader(`{"access_token":"tenant-token","expires_in":60}`)),
-		}, nil
+		return exchangedToken{accessToken: "tenant-token", expiresIn: time.Minute}, nil
 	}}
-	wia, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
-		IdentityProviderID: "idp-test",
-		ServiceAccountID:   "svc-test",
-	})
-	if err != nil {
-		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
-	}
+	httpClient := internalNativeX509HTTPClient()
+	wia := newWorkloadIdentityAuth("idp-test", "svc-test", source)
 	ctx := context.WithValue(t.Context(), tenantContextKey{}, tenant)
 
 	token, err := wia.GetToken(ctx, httpClient)
@@ -195,5 +254,48 @@ func TestX509SharedRefreshPreservesInitiatorContextValues(t *testing.T) {
 	}
 	if got, want := token, "tenant-token"; got != want {
 		t.Fatalf("GetToken() = %q, want %q", got, want)
+	}
+}
+
+func TestX509InvalidationCancelsObsoleteProactiveRefresh(t *testing.T) {
+	source := &x509RefreshGenerationSource{
+		firstStarted:  make(chan struct{}),
+		firstCanceled: make(chan struct{}),
+	}
+	wia := newWorkloadIdentityAuth("idp-test", "svc-test", source)
+	wia.cachedToken = "stale-token"
+	wia.tokenExpiry = time.Now().Add(time.Hour)
+	wia.tokenRefreshAt = time.Now().Add(-time.Second)
+	wia.tokenGeneration = 1
+	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{
+		Certificates: []tls.Certificate{{Certificate: [][]byte{{1}}}},
+	}}}
+
+	token, err := wia.GetToken(t.Context(), httpClient)
+	if err != nil {
+		t.Fatalf("proactive GetToken() error = %v", err)
+	}
+	if token != "stale-token" {
+		t.Fatalf("proactive GetToken() = %q, want stale-token", token)
+	}
+	<-source.firstStarted
+
+	wia.invalidateToken("stale-token")
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
+	defer cancel()
+	token, err = wia.GetToken(ctx, httpClient)
+	if err != nil {
+		t.Fatalf("forced GetToken() error = %v", err)
+	}
+	if token != "replacement-token" {
+		t.Fatalf("forced GetToken() = %q, want replacement-token", token)
+	}
+	select {
+	case <-source.firstCanceled:
+	case <-time.After(time.Second):
+		t.Fatal("obsolete proactive refresh was not canceled")
+	}
+	if got, want := source.calls.Load(), int32(2); got != want {
+		t.Fatalf("exchange calls = %d, want %d", got, want)
 	}
 }

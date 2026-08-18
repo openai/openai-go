@@ -1091,22 +1091,24 @@ this X.509 mode defaults to `https://mtls.api.openai.com/v1`. Token exchange is
 always an exact `POST https://mtls.auth.openai.com/oauth/token`, refuses HTTP
 redirects, and structurally omits `subject_token`. The configured HTTP client
 must therefore be suitable for both mTLS hosts. A custom exchange URL is not
-supported. The SDK disables redirects on a native `*http.Client`; custom
-`option.HTTPClient` implementations must also refuse redirects internally.
+supported. X.509 mode requires a native `*http.Client` and `*http.Transport` so
+the SDK can verify the transport's immutable client identity and disable
+redirects.
 An explicit API base must be an absolute HTTPS URL without userinfo. The SDK
 binds the bearer to that normalized origin before exchange and again after
 request middleware, so absolute request URLs and middleware cannot move it to
 another origin. X.509 authentication cannot be combined with Azure or Bedrock
 provider authentication.
+Known Azure and Amazon Bedrock provider-owned API hostnames are rejected even
+when supplied through a raw base-URL option or `OPENAI_BASE_URL`.
 
 Each native `*http.Transport` used for X.509 workload identity must contain
 exactly one static client certificate and must not use custom TLS dial or
-certificate-selection hooks. This keeps cached and single-flight tokens bound
-to one client identity. The static certificate's `PrivateKey` may be backed by
-an HSM through Go's `crypto.Signer` interface. Do not mutate a transport after
-use; replace the transport and client to rotate identities. A custom HTTP
-transport likewise must represent one immutable client identity per comparable
-transport instance.
+certificate-selection hooks or a client TLS session cache. This keeps cached
+and single-flight tokens bound to one client identity, including after
+rotation. The static certificate's `PrivateKey` may be backed by an HSM through
+Go's `crypto.Signer` interface. Do not mutate a transport after use; replace the
+transport and client to rotate identities.
 
 The exchange is lazy, cached against Go's monotonic clock, refreshed with a
 buffer clamped to half the returned TTL, and single-flighted across concurrent

@@ -24,6 +24,14 @@ import (
 
 type x509ClientIdentityContextKey struct{}
 
+type x509RoundTripperDecorator struct {
+	inner http.RoundTripper
+}
+
+func (d *x509RoundTripperDecorator) RoundTrip(req *http.Request) (*http.Response, error) {
+	return d.inner.RoundTrip(req)
+}
+
 func TestClientX509RejectsContextSelectedCertificatesBeforeExchange(t *testing.T) {
 	pki := newX509IdentityTestPKI(t)
 	server, requests := newX509IdentityTestServer(t, pki)
@@ -149,6 +157,93 @@ func TestClientX509UsesOneStaticCertificateForExchangeAndAPI(t *testing.T) {
 	if got := requests.mismatches.Load(); got != 0 {
 		t.Errorf("certificate/bearer mismatches = %d, want 0", got)
 	}
+}
+
+func TestClientX509RejectsStaticCertificateRotationBeforeRealMTLS(t *testing.T) {
+	pki := newX509IdentityTestPKI(t)
+	server, requests := newX509IdentityTestServer(t, pki)
+	transport := &http.Transport{
+		Proxy: nil,
+		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+			var dialer net.Dialer
+			return dialer.DialContext(ctx, "tcp", server.Listener.Addr().String())
+		},
+		TLSClientConfig: &tls.Config{
+			Certificates: []tls.Certificate{pki.clients["tenant-a"]},
+			RootCAs:      pki.roots,
+			MinVersion:   tls.VersionTLS12,
+		},
+		DisableKeepAlives: true,
+	}
+	t.Cleanup(transport.CloseIdleConnections)
+	client := openai.NewClient(
+		option.WithHTTPClient(&http.Client{Transport: transport}),
+		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+	)
+
+	if _, err := client.Models.List(t.Context()); err != nil {
+		t.Fatalf("first Models.List() error = %v", err)
+	}
+	transport.TLSClientConfig.Certificates[0] = pki.clients["tenant-b"]
+	if _, err := client.Models.List(t.Context()); err == nil {
+		t.Fatal("Models.List() after certificate rotation error = nil")
+	}
+	if got, want := requests.total.Load(), int32(2); got != want {
+		t.Fatalf("mTLS requests = %d, want %d", got, want)
+	}
+	if got := requests.mismatches.Load(); got != 0 {
+		t.Fatalf("certificate/bearer mismatches = %d, want 0", got)
+	}
+}
+
+func TestClientX509RejectsOpaqueTransportAndSessionCacheBeforeRealMTLS(t *testing.T) {
+	pki := newX509IdentityTestPKI(t)
+	server, requests := newX509IdentityTestServer(t, pki)
+	newTransport := func() *http.Transport {
+		return &http.Transport{
+			Proxy: nil,
+			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+				var dialer net.Dialer
+				return dialer.DialContext(ctx, "tcp", server.Listener.Addr().String())
+			},
+			TLSClientConfig: &tls.Config{
+				Certificates: []tls.Certificate{pki.clients["tenant-a"]},
+				RootCAs:      pki.roots,
+				MinVersion:   tls.VersionTLS12,
+			},
+		}
+	}
+
+	t.Run("opaque decorator", func(t *testing.T) {
+		transport := newTransport()
+		t.Cleanup(transport.CloseIdleConnections)
+		client := openai.NewClient(
+			option.WithHTTPClient(&http.Client{Transport: &x509RoundTripperDecorator{inner: transport}}),
+			option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+		)
+		if _, err := client.Models.List(t.Context()); err == nil {
+			t.Fatal("Models.List() error = nil")
+		}
+		if got := requests.total.Load(); got != 0 {
+			t.Fatalf("mTLS requests = %d, want 0", got)
+		}
+	})
+
+	t.Run("client session cache", func(t *testing.T) {
+		transport := newTransport()
+		transport.TLSClientConfig.ClientSessionCache = tls.NewLRUClientSessionCache(1)
+		t.Cleanup(transport.CloseIdleConnections)
+		client := openai.NewClient(
+			option.WithHTTPClient(&http.Client{Transport: transport}),
+			option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+		)
+		if _, err := client.Models.List(t.Context()); err == nil {
+			t.Fatal("Models.List() error = nil")
+		}
+		if got := requests.total.Load(); got != 0 {
+			t.Fatalf("mTLS requests = %d, want 0", got)
+		}
+	})
 }
 
 type x509IdentityTestRequestCounts struct {

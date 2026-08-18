@@ -27,9 +27,9 @@ var (
 )
 
 // WithX509WorkloadIdentity returns a RequestOption that configures X.509
-// workload identity authentication. The configured HTTP client must present
-// the client certificate for token exchange and API requests. Custom HTTPClient
-// implementations are responsible for refusing redirects internally.
+// workload identity authentication. The configured *http.Client must use a
+// native *http.Transport that presents one static client certificate for token
+// exchange and API requests.
 //
 // When no base URL is configured explicitly or through OPENAI_BASE_URL, X.509
 // workload identity clients use https://mtls.api.openai.com/v1. Explicit API
@@ -210,11 +210,68 @@ func newX509APIOrigin(value *url.URL) (x509APIOrigin, error) {
 	if hostname == "" {
 		return x509APIOrigin{}, errors.New("X.509 workload identity requires an absolute HTTPS API base URL without userinfo")
 	}
+	if isProviderOwnedX509Hostname(hostname) {
+		return x509APIOrigin{}, errors.New("X.509 workload identity cannot send OpenAI credentials to a provider-owned API URL")
+	}
 	port := value.Port()
 	if port == "" {
 		port = "443"
 	}
 	return x509APIOrigin{hostname: strings.ToLower(hostname), port: port}, nil
+}
+
+func isProviderOwnedX509Hostname(hostname string) bool {
+	hostname = strings.ToLower(strings.TrimRight(hostname, "."))
+	for _, suffix := range []string{
+		"openai.azure.com",
+		"openai.azure.us",
+		"openai.azure.cn",
+		"cognitiveservices.azure.com",
+		"cognitiveservices.azure.us",
+		"cognitiveservices.azure.cn",
+		"services.ai.azure.com",
+		"services.ai.azure.us",
+		"services.ai.azure.cn",
+		"azure-api.net",
+		"azure-api.us",
+		"azure-api.cn",
+	} {
+		if hostname == suffix || strings.HasSuffix(hostname, "."+suffix) {
+			return true
+		}
+	}
+
+	parts := strings.Split(hostname, ".")
+	if len(parts) < 3 || parts[1] == "" {
+		return false
+	}
+	switch parts[0] {
+	case "bedrock-mantle":
+		return strings.Join(parts[2:], ".") == "api.aws"
+	case "bedrock-runtime", "bedrock-runtime-fips":
+		suffix := strings.Join(parts[2:], ".")
+		for _, providerSuffix := range []string{
+			"amazonaws.com",
+			"api.aws",
+			"amazonaws.com.cn",
+			"api.amazonwebservices.com.cn",
+			"amazonaws.eu",
+			"api.amazonwebservices.eu",
+			"c2s.ic.gov",
+			"api.aws.ic.gov",
+			"sc2s.sgov.gov",
+			"api.aws.scloud",
+			"cloud.adc-e.uk",
+			"api.cloud-aws.adc-e.uk",
+			"csp.hci.ic.gov",
+			"api.aws.hci.ic.gov",
+		} {
+			if suffix == providerSuffix {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (origin x509APIOrigin) validate(value *url.URL) error {

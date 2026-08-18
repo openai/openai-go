@@ -2,10 +2,11 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"sync"
 	"time"
 
@@ -35,15 +36,18 @@ type WorkloadIdentityAuth struct {
 	serviceAccountID   string
 	source             workloadIdentityCredentialSource
 
-	// Protects boundHTTPDoer, boundHTTPTransport, cachedToken, tokenExpiry,
-	// tokenRefreshAt, and refreshInFlight.
-	mu                 sync.Mutex
-	boundHTTPDoer      HTTPDoer
-	boundHTTPTransport http.RoundTripper
-	cachedToken        string
-	tokenExpiry        time.Time
-	tokenRefreshAt     time.Time
-	refreshInFlight    *tokenRefreshState
+	// Protects boundHTTPDoer, boundHTTPTransport, boundCertificateFingerprint,
+	// cachedToken, tokenExpiry, tokenRefreshAt, tokenGeneration, and
+	// refreshInFlight.
+	mu                          sync.Mutex
+	boundHTTPDoer               *http.Client
+	boundHTTPTransport          *http.Transport
+	boundCertificateFingerprint [sha256.Size]byte
+	cachedToken                 string
+	tokenExpiry                 time.Time
+	tokenRefreshAt              time.Time
+	tokenGeneration             uint64
+	refreshInFlight             *tokenRefreshState
 }
 
 type tokenRefreshResult struct {
@@ -56,11 +60,14 @@ type tokenRefreshResult struct {
 // Coordinates concurrent access to a single in-flight refresh operation
 // done channel signals completion to all waiting goroutines
 type tokenRefreshState struct {
-	done    chan struct{}
-	result  tokenRefreshResult
-	cancel  context.CancelFunc
-	waiters int
+	done                 chan struct{}
+	result               tokenRefreshResult
+	cancel               context.CancelFunc
+	waiters              int
+	refreshForGeneration uint64
 }
+
+var errTokenRefreshInvalidated = errors.New("workload identity token refresh was invalidated")
 
 type subjectTokenExchangeRequest struct {
 	GrantType          string `json:"grant_type"`
@@ -215,7 +222,11 @@ func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer
 
 	// Proactive background refresh: start if within refresh window and no refresh active
 	if !now.Before(w.tokenRefreshAt) && w.refreshInFlight == nil {
-		state := w.beginRefreshLocked()
+		refreshForGeneration := uint64(0)
+		if w.source.kind() == workloadIdentityCredentialSourceX509 {
+			refreshForGeneration = w.tokenGeneration
+		}
+		state := w.beginRefreshLocked(refreshForGeneration)
 		w.startSharedRefresh(ctx, state, httpClient)
 	}
 
@@ -227,7 +238,7 @@ func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer
 // Single-flight pattern: ensures only one refresh runs, others wait for result
 func (w *WorkloadIdentityAuth) handleLockedRefresh(ctx context.Context, httpClient HTTPDoer) (string, error) {
 	if w.refreshInFlight == nil {
-		state := w.beginRefreshLocked()
+		state := w.beginRefreshLocked(0)
 		if w.source.kind() == workloadIdentityCredentialSourceX509 {
 			w.startSharedRefresh(ctx, state, httpClient)
 			return w.waitForLockedRefresh(ctx, state)
@@ -257,26 +268,32 @@ func (w *WorkloadIdentityAuth) bindHTTPDoerLocked(httpClient HTTPDoer) error {
 	if w.source.kind() != workloadIdentityCredentialSourceX509 {
 		return nil
 	}
-	if !reflect.ValueOf(httpClient).Comparable() {
-		return fmt.Errorf("X.509 workload identity requires a comparable HTTP client")
+	nativeHTTPClient, ok := httpClient.(*http.Client)
+	if !ok {
+		return errX509NativeHTTPTransport
 	}
-	httpTransport := internal.NativeHTTPTransport(httpClient)
-	if httpTransport != nil && !reflect.ValueOf(httpTransport).Comparable() {
-		return fmt.Errorf("X.509 workload identity requires a comparable HTTP transport")
+	httpTransport, ok := internal.NativeHTTPTransport(nativeHTTPClient).(*http.Transport)
+	if !ok {
+		return errX509NativeHTTPTransport
 	}
-	if err := validateX509HTTPTransportIdentity(httpTransport); err != nil {
+	certificateFingerprint, err := x509HTTPTransportIdentity(httpTransport)
+	if err != nil {
 		return err
 	}
 	if w.boundHTTPDoer == nil {
-		w.boundHTTPDoer = httpClient
+		w.boundHTTPDoer = nativeHTTPClient
 		w.boundHTTPTransport = httpTransport
+		w.boundCertificateFingerprint = certificateFingerprint
 		return nil
 	}
-	if w.boundHTTPDoer != httpClient {
+	if w.boundHTTPDoer != nativeHTTPClient {
 		return fmt.Errorf("X.509 workload identity auth cannot change HTTP clients")
 	}
 	if w.boundHTTPTransport != httpTransport {
 		return fmt.Errorf("X.509 workload identity auth cannot change HTTP transports")
+	}
+	if w.boundCertificateFingerprint != certificateFingerprint {
+		return fmt.Errorf("X.509 workload identity auth cannot change client certificates")
 	}
 	return nil
 }
@@ -290,10 +307,22 @@ func (w *WorkloadIdentityAuth) invalidateToken(token string) {
 	w.cachedToken = ""
 	w.tokenExpiry = time.Time{}
 	w.tokenRefreshAt = time.Time{}
+	if state := w.refreshInFlight; state != nil &&
+		state.refreshForGeneration != 0 && state.refreshForGeneration == w.tokenGeneration {
+		w.refreshInFlight = nil
+		state.result.err = errTokenRefreshInvalidated
+		if state.cancel != nil {
+			state.cancel()
+		}
+		close(state.done)
+	}
 }
 
-func (w *WorkloadIdentityAuth) beginRefreshLocked() *tokenRefreshState {
-	w.refreshInFlight = &tokenRefreshState{done: make(chan struct{})}
+func (w *WorkloadIdentityAuth) beginRefreshLocked(refreshForGeneration uint64) *tokenRefreshState {
+	w.refreshInFlight = &tokenRefreshState{
+		done:                 make(chan struct{}),
+		refreshForGeneration: refreshForGeneration,
+	}
 	return w.refreshInFlight
 }
 
@@ -318,6 +347,12 @@ func (w *WorkloadIdentityAuth) finishRefresh(state *tokenRefreshState, result to
 		w.cachedToken = result.token
 		w.tokenExpiry = result.expiresAt
 		w.tokenRefreshAt = result.refreshAt
+		if w.source.kind() == workloadIdentityCredentialSourceX509 {
+			w.tokenGeneration++
+			if w.tokenGeneration == 0 {
+				w.tokenGeneration++
+			}
+		}
 	}
 	close(state.done) // Broadcasts completion to all waiters
 	w.refreshInFlight = nil

@@ -13,6 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	"github.com/openai/openai-go/v3/auth"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -145,6 +146,35 @@ func TestSkipAuthAllowsExplicitGatewayCredentials(t *testing.T) {
 				t.Fatalf("Authorization = %q, want %q", got, test.authorization)
 			}
 		})
+	}
+}
+
+func TestSkipAuthRejectsX509WorkloadIdentityBeforeExchange(t *testing.T) {
+	var transportCalls int
+	client, err := NewClient(context.Background(), Config{
+		SkipAuth: true,
+		BaseURL:  "https://private-bedrock-gateway.example/openai/v1",
+	},
+		option.WithX509WorkloadIdentity(auth.X509WorkloadIdentity{
+			IdentityProviderID: "idp-test",
+			ServiceAccountID:   "svc-test",
+		}),
+		option.WithHTTPClient(httpDoerFunc(func(req *http.Request) (*http.Response, error) {
+			transportCalls++
+			return successfulResponse(req), nil
+		})),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var response *http.Response
+	err = client.Get(context.Background(), "/models", nil, &response)
+	if err == nil || !strings.Contains(err.Error(), "Bedrock provider authentication") {
+		t.Fatalf("error = %v, want Bedrock/X.509 incompatibility", err)
+	}
+	if transportCalls != 0 {
+		t.Fatalf("transport calls = %d, want 0", transportCalls)
 	}
 }
 

@@ -32,8 +32,9 @@ type WorkloadIdentity struct {
 
 // X509WorkloadIdentity configures X.509 workload identity federation. Client
 // certificate and TLS configuration remain the responsibility of the HTTP
-// transport supplied to the OpenAI client. A native *http.Transport must use
-// exactly one static client certificate per transport instance.
+// transport supplied to the OpenAI client. The client must use a native
+// *http.Transport with exactly one static client certificate and no client TLS
+// session cache.
 type X509WorkloadIdentity struct {
 	IdentityProviderID string
 	ServiceAccountID   string

@@ -58,7 +58,7 @@ func TestClientX509WorkloadIdentityDefaultsMTLSAndReusesHTTPClient(t *testing.T)
 	t.Setenv("OPENAI_API_KEY", "api-key-must-not-be-used")
 	var mu sync.Mutex
 	requests := make([]*http.Request, 0, 2)
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		mu.Lock()
 		requests = append(requests, req.Clone(req.Context()))
 		mu.Unlock()
@@ -70,7 +70,7 @@ func TestClientX509WorkloadIdentityDefaultsMTLSAndReusesHTTPClient(t *testing.T)
 			}, nil
 		}
 		return modelsListResponse(), nil
-	}}}
+	})
 
 	client := openai.NewClient(
 		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
@@ -173,7 +173,7 @@ func TestClientX509WorkloadIdentityBaseURLPrecedence(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			var apiURL string
-			httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+			httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 				if req.URL.Host == "mtls.auth.openai.com" {
 					return &http.Response{
 						StatusCode: http.StatusOK,
@@ -183,7 +183,7 @@ func TestClientX509WorkloadIdentityBaseURLPrecedence(t *testing.T) {
 				}
 				apiURL = req.URL.String()
 				return modelsListResponse(), nil
-			}}}
+			})
 			client := openai.NewClient(testCase.opts(httpClient)...)
 			if _, err := client.Models.List(t.Context()); err != nil {
 				t.Fatalf("Models.List() error = %v", err)
@@ -199,7 +199,7 @@ func TestClientX509WorkloadIdentityBaseURLPrecedence(t *testing.T) {
 func TestClientX509WorkloadIdentityEnvironmentBaseURLWins(t *testing.T) {
 	t.Setenv("OPENAI_BASE_URL", "https://environment.example/v1")
 	var apiURL string
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		if req.URL.Host == "mtls.auth.openai.com" {
 			return &http.Response{
 				StatusCode: http.StatusOK,
@@ -209,7 +209,7 @@ func TestClientX509WorkloadIdentityEnvironmentBaseURLWins(t *testing.T) {
 		}
 		apiURL = req.URL.String()
 		return modelsListResponse(), nil
-	}}}
+	})
 	client := openai.NewClient(
 		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
 		option.WithHTTPClient(httpClient),
@@ -241,27 +241,25 @@ func TestClientX509WorkloadIdentityRefusesAPIRedirects(t *testing.T) {
 	}))
 	t.Cleanup(redirectTarget.Close)
 
-	httpClient := &http.Client{
-		Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
-			if req.URL.Host == "mtls.auth.openai.com" {
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Header:     http.Header{"Content-Type": []string{"application/json"}},
-					Body:       io.NopCloser(strings.NewReader(`{"access_token":"x509-token","expires_in":3600}`)),
-				}, nil
-			}
-			if req.URL.Host == "api.example" {
-				apiRequests.Add(1)
-				return &http.Response{
-					StatusCode: http.StatusFound,
-					Header:     http.Header{"Location": []string{redirectTarget.URL}},
-					Body:       io.NopCloser(strings.NewReader("redirect")),
-				}, nil
-			}
-			return http.DefaultTransport.RoundTrip(req)
-		}},
-		CheckRedirect: func(*http.Request, []*http.Request) error { return nil },
-	}
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		if req.URL.Host == "mtls.auth.openai.com" {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				Body:       io.NopCloser(strings.NewReader(`{"access_token":"x509-token","expires_in":3600}`)),
+			}, nil
+		}
+		if req.URL.Host == "api.example" {
+			apiRequests.Add(1)
+			return &http.Response{
+				StatusCode: http.StatusFound,
+				Header:     http.Header{"Location": []string{redirectTarget.URL}},
+				Body:       io.NopCloser(strings.NewReader("redirect")),
+			}, nil
+		}
+		return http.DefaultTransport.RoundTrip(req)
+	})
+	httpClient.CheckRedirect = func(*http.Request, []*http.Request) error { return nil }
 	client := openai.NewClient(
 		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
 		option.WithBaseURL("https://api.example/v1"),
@@ -282,7 +280,7 @@ func TestClientX509WorkloadIdentityScopesTokenCacheToHTTPDoer(t *testing.T) {
 	exchangeCalls := map[string]int{}
 	apiAuth := map[string][]string{}
 	newHTTPClient := func(name string) *http.Client {
-		return &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+		return nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 			if req.URL.Host == "mtls.auth.openai.com" {
 				exchangeCalls[name]++
 				return &http.Response{
@@ -293,7 +291,7 @@ func TestClientX509WorkloadIdentityScopesTokenCacheToHTTPDoer(t *testing.T) {
 			}
 			apiAuth[name] = append(apiAuth[name], req.Header.Get("Authorization"))
 			return modelsListResponse(), nil
-		}}}
+		})
 	}
 
 	httpClientA := newHTTPClient("a")
@@ -333,7 +331,7 @@ func TestClientX509WorkloadIdentityScopesTokenCacheToNativeTransport(t *testing.
 		authorizations []string
 	}
 	newTransport := func(name string, capture *transportCapture) http.RoundTripper {
-		return &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+		return nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 			if req.URL.Hostname() == "mtls.auth.openai.com" {
 				capture.exchangeCalls++
 				return &http.Response{
@@ -347,7 +345,7 @@ func TestClientX509WorkloadIdentityScopesTokenCacheToNativeTransport(t *testing.
 			}
 			capture.authorizations = append(capture.authorizations, req.Header.Get("Authorization"))
 			return modelsListResponse(), nil
-		}}
+		}).Transport
 	}
 
 	var transportA, transportB transportCapture
@@ -376,129 +374,29 @@ func TestClientX509WorkloadIdentityScopesTokenCacheToNativeTransport(t *testing.
 	}
 }
 
-func TestClientX509WorkloadIdentityCachesNonComparableHTTPDoer(t *testing.T) {
-	var exchangeCalls atomic.Int32
-	var apiCalls atomic.Int32
-	httpDoer := nonComparableHTTPDoer{do: func(req *http.Request) (*http.Response, error) {
-		if req.URL.Host == "mtls.auth.openai.com" {
-			exchangeCalls.Add(1)
-			return &http.Response{
-				StatusCode: http.StatusOK,
-				Header:     http.Header{"Content-Type": []string{"application/json"}},
-				Body:       io.NopCloser(strings.NewReader(`{"access_token":"x509-token","expires_in":3600}`)),
-			}, nil
-		}
-		apiCalls.Add(1)
+func TestClientX509WorkloadIdentityRejectsCustomHTTPDoerBeforeExchange(t *testing.T) {
+	var calls atomic.Int32
+	httpDoer := &nonComparableHTTPDoer{do: func(*http.Request) (*http.Response, error) {
+		calls.Add(1)
 		return modelsListResponse(), nil
 	}}
-	const requestCount = 16
-	var ready sync.WaitGroup
-	ready.Add(requestCount)
-	releaseRequests := make(chan struct{})
-	client := openai.NewClient(
-		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
-		option.WithHTTPClient(httpDoer),
-		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
-			ready.Done()
-			<-releaseRequests
-			return next(req)
-		}),
-	)
-
-	errs := make(chan error, requestCount)
-	var requests sync.WaitGroup
-	requests.Add(requestCount)
-	for range requestCount {
-		go func() {
-			defer requests.Done()
-			_, err := client.Models.List(t.Context())
-			errs <- err
-		}()
-	}
-	ready.Wait()
-	close(releaseRequests)
-	requests.Wait()
-	close(errs)
-	for err := range errs {
-		if err != nil {
-			t.Fatalf("Models.List() error = %v", err)
-		}
-	}
-	if got, want := exchangeCalls.Load(), int32(1); got != want {
-		t.Errorf("token exchange calls = %d, want %d", got, want)
-	}
-	if got, want := apiCalls.Load(), int32(requestCount); got != want {
-		t.Errorf("API calls = %d, want %d", got, want)
-	}
-}
-
-func TestClientX509WorkloadIdentityCachesDynamicallyNonComparableHTTPDoer(t *testing.T) {
-	var exchangeCalls atomic.Int32
-	httpDoer := dynamicallyNonComparableHTTPDoer{
-		state: []string{"not-comparable"},
-		doer: nonComparableHTTPDoer{do: func(req *http.Request) (*http.Response, error) {
-			if req.URL.Host == "mtls.auth.openai.com" {
-				exchangeCalls.Add(1)
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Header:     http.Header{"Content-Type": []string{"application/json"}},
-					Body:       io.NopCloser(strings.NewReader(`{"access_token":"x509-token","expires_in":3600}`)),
-				}, nil
-			}
-			return modelsListResponse(), nil
-		}},
-	}
 	client := openai.NewClient(
 		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
 		option.WithHTTPClient(httpDoer),
 	)
 
-	for range 2 {
-		if _, err := client.Models.List(t.Context()); err != nil {
-			t.Fatalf("Models.List() error = %v", err)
-		}
+	if _, err := client.Models.List(t.Context()); err == nil || !strings.Contains(err.Error(), "native *http.Transport") {
+		t.Fatalf("Models.List() error = %v, want custom transport rejection", err)
 	}
-	if got, want := exchangeCalls.Load(), int32(1); got != want {
-		t.Errorf("token exchange calls = %d, want %d", got, want)
-	}
-}
-
-func TestClientX509WorkloadIdentityCachesComparableHTTPDoerAcrossOptions(t *testing.T) {
-	var exchangeCalls atomic.Int32
-	var apiCalls atomic.Int32
-	httpDoer := &nonComparableHTTPDoer{do: func(req *http.Request) (*http.Response, error) {
-		if req.URL.Host == "mtls.auth.openai.com" {
-			exchangeCalls.Add(1)
-			return &http.Response{
-				StatusCode: http.StatusOK,
-				Header:     http.Header{"Content-Type": []string{"application/json"}},
-				Body:       io.NopCloser(strings.NewReader(`{"access_token":"x509-token","expires_in":3600}`)),
-			}, nil
-		}
-		apiCalls.Add(1)
-		return modelsListResponse(), nil
-	}}
-	client := openai.NewClient(option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()))
-
-	if _, err := client.Models.List(t.Context(), option.WithHTTPClient(httpDoer)); err != nil {
-		t.Fatalf("first Models.List() error = %v", err)
-	}
-	if _, err := client.Models.List(t.Context(), option.WithHTTPClient(httpDoer)); err != nil {
-		t.Fatalf("second Models.List() error = %v", err)
-	}
-
-	if got, want := exchangeCalls.Load(), int32(1); got != want {
-		t.Errorf("token exchange calls = %d, want %d", got, want)
-	}
-	if got, want := apiCalls.Load(), int32(2); got != want {
-		t.Errorf("API calls = %d, want %d", got, want)
+	if got := calls.Load(); got != 0 {
+		t.Fatalf("HTTP calls = %d, want 0", got)
 	}
 }
 
 func TestClientX509WorkloadIdentityLaterOptionReplacesCredential(t *testing.T) {
 	var exchangedServiceAccounts []string
 	var apiAuthorization string
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		if req.URL.Host == "mtls.auth.openai.com" {
 			var body struct {
 				ServiceAccountID string `json:"service_account_id"`
@@ -518,7 +416,7 @@ func TestClientX509WorkloadIdentityLaterOptionReplacesCredential(t *testing.T) {
 		}
 		apiAuthorization = req.Header.Get("Authorization")
 		return modelsListResponse(), nil
-	}}}
+	})
 	first := clientX509WorkloadIdentity()
 	first.ServiceAccountID = "svc-first"
 	second := clientX509WorkloadIdentity()
@@ -542,7 +440,7 @@ func TestClientX509WorkloadIdentityLaterOptionReplacesCredential(t *testing.T) {
 func TestClientX509WorkloadIdentitySnapshotsConfigurationAndSupportsClientCopies(t *testing.T) {
 	var exchangedServiceAccounts []string
 	var exchangeCalls int
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		if req.URL.Hostname() == "mtls.auth.openai.com" {
 			exchangeCalls++
 			var body struct {
@@ -559,7 +457,7 @@ func TestClientX509WorkloadIdentitySnapshotsConfigurationAndSupportsClientCopies
 			}, nil
 		}
 		return modelsListResponse(), nil
-	}}}
+	})
 	config := clientX509WorkloadIdentity()
 	config.ServiceAccountID = "svc-original"
 	x509Option := option.WithX509WorkloadIdentity(config)
@@ -599,7 +497,7 @@ func TestClientX509WorkloadIdentityExchangeFailureDoesNotEnterAPIRetryLoop(t *te
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			exchangeCalls := 0
-			httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+			httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 				if req.URL.Host != "mtls.auth.openai.com" {
 					t.Fatalf("unexpected API request %s", req.URL)
 				}
@@ -609,7 +507,7 @@ func TestClientX509WorkloadIdentityExchangeFailureDoesNotEnterAPIRetryLoop(t *te
 					Header:     http.Header{"Retry-After": []string{"0"}},
 					Body:       io.NopCloser(strings.NewReader(`{"error":"exchange_failed"}`)),
 				}, nil
-			}}}
+			})
 			client := openai.NewClient(
 				option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
 				option.WithHTTPClient(httpClient),
@@ -636,7 +534,7 @@ func TestClientX509WorkloadIdentity401ReplaysReplayableBodyOnce(t *testing.T) {
 	var exchangeCalls int
 	var apiBodies []string
 	var apiAuth []string
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		if req.URL.Host == "mtls.auth.openai.com" {
 			exchangeCalls++
 			return &http.Response{
@@ -662,7 +560,7 @@ func TestClientX509WorkloadIdentity401ReplaysReplayableBodyOnce(t *testing.T) {
 			Header:     http.Header{"Content-Type": []string{"application/json"}},
 			Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
 		}, nil
-	}}}
+	})
 	client := openai.NewClient(
 		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
 		option.WithBaseURL("https://api.example/v1"),
@@ -699,7 +597,7 @@ func TestClientX509WorkloadIdentity401ReappliesBodyMiddleware(t *testing.T) {
 	var exchangeCalls int
 	var middlewareCalls int
 	var apiBodies []string
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		if req.URL.Host == "mtls.auth.openai.com" {
 			exchangeCalls++
 			return &http.Response{
@@ -734,7 +632,7 @@ func TestClientX509WorkloadIdentity401ReappliesBodyMiddleware(t *testing.T) {
 			Header:     http.Header{"Content-Type": []string{"application/json"}},
 			Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
 		}, nil
-	}}}
+	})
 	client := openai.NewClient(
 		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
 		option.WithBaseURL("https://api.example/v1"),
@@ -790,7 +688,7 @@ func TestClientX509WorkloadIdentity401ReplaysFromPreMiddlewareState(t *testing.T
 	var middlewareCalls int
 	var queryValueCounts []int
 	var signatureCounts []int
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		if req.URL.Host == "mtls.auth.openai.com" {
 			exchangeCalls++
 			return &http.Response{
@@ -808,7 +706,7 @@ func TestClientX509WorkloadIdentity401ReplaysFromPreMiddlewareState(t *testing.T
 			return &http.Response{StatusCode: http.StatusUnauthorized, Header: make(http.Header), Body: http.NoBody}, nil
 		}
 		return modelsListResponse(), nil
-	}}}
+	})
 	client := openai.NewClient(
 		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
 		option.WithHTTPClient(httpClient),
@@ -842,7 +740,7 @@ func TestClientX509WorkloadIdentity401ReplaysFromPreMiddlewareState(t *testing.T
 func TestClientX509WorkloadIdentity401DoesNotReplayStreamingBody(t *testing.T) {
 	var exchangeCalls int
 	var apiCalls int
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		if req.URL.Host == "mtls.auth.openai.com" {
 			exchangeCalls++
 			return &http.Response{
@@ -853,7 +751,7 @@ func TestClientX509WorkloadIdentity401DoesNotReplayStreamingBody(t *testing.T) {
 		}
 		apiCalls++
 		return &http.Response{StatusCode: http.StatusUnauthorized, Header: make(http.Header), Body: http.NoBody}, nil
-	}}}
+	})
 	client := openai.NewClient(
 		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
 		option.WithBaseURL("https://api.example/v1"),

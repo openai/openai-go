@@ -57,18 +57,14 @@ func (t *closureTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	return t.fn(req)
 }
 
-func mockOAuthServer(responseBody string, statusCode int) *http.Client {
-	return &http.Client{
-		Transport: &closureTransport{
-			fn: func(req *http.Request) (*http.Response, error) {
-				return &http.Response{
-					StatusCode: statusCode,
-					Body:       io.NopCloser(strings.NewReader(responseBody)),
-					Header:     make(http.Header),
-				}, nil
-			},
-		},
-	}
+func mockOAuthServer(t *testing.T, responseBody string, statusCode int) *http.Client {
+	return nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: statusCode,
+			Body:       io.NopCloser(strings.NewReader(responseBody)),
+			Header:     make(http.Header),
+		}, nil
+	})
 }
 
 func TestWorkloadIdentityClientIDOptional(t *testing.T) {
@@ -175,7 +171,7 @@ func TestTokenCaching(t *testing.T) {
 	}
 
 	responseBody := `{"access_token": "exchanged-token-123", "expires_in": 3600}`
-	httpClient := mockOAuthServer(responseBody, 200)
+	httpClient := mockOAuthServer(t, responseBody, 200)
 
 	config := auth.WorkloadIdentity{ClientID: "client-id", IdentityProviderID: "idp-id", ServiceAccountID: "sa-id", Provider: provider}
 	wa, err := auth.NewWorkloadIdentityAuth(config)
@@ -431,7 +427,7 @@ func TestOAuthErrorHandling(t *testing.T) {
 
 	for _, tc := range testCases {
 		errorBody := `{"error": "invalid_grant", "error_description": "Token exchange failed"}`
-		httpClient := mockOAuthServer(errorBody, tc.statusCode)
+		httpClient := mockOAuthServer(t, errorBody, tc.statusCode)
 
 		config := auth.WorkloadIdentity{ClientID: "client-id", IdentityProviderID: "idp-id", ServiceAccountID: "sa-id", Provider: provider}
 		wa, err := auth.NewWorkloadIdentityAuth(config)
@@ -473,7 +469,7 @@ func TestDefaultValues(t *testing.T) {
 	}
 
 	responseBody := `{"access_token": "test-token"}`
-	httpClient := mockOAuthServer(responseBody, 200)
+	httpClient := mockOAuthServer(t, responseBody, 200)
 
 	config := auth.WorkloadIdentity{ClientID: "client-id", IdentityProviderID: "idp-id", ServiceAccountID: "sa-id", Provider: provider}
 	wa, err := auth.NewWorkloadIdentityAuth(config)

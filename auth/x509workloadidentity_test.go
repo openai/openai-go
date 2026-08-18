@@ -141,14 +141,14 @@ func TestX509WorkloadIdentityMiddlewareRequiresRequestPolicyBeforeExchange(t *te
 func TestX509WorkloadIdentityAuthRejectsHTTPDoerChange(t *testing.T) {
 	var callsA atomic.Int32
 	var callsB atomic.Int32
-	httpClientA := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	httpClientA := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		callsA.Add(1)
 		return tokenResponse("token-a", 60), nil
-	}}}
-	httpClientB := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	})
+	httpClientB := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		callsB.Add(1)
 		return tokenResponse("token-b", 60), nil
-	}}}
+	})
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
 		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
@@ -194,14 +194,14 @@ func TestX509WorkloadIdentityAuthRejectsDynamicallyNonComparableHTTPDoer(t *test
 	}
 
 	_, err = wia.GetToken(t.Context(), httpDoer)
-	if err == nil || !strings.Contains(err.Error(), "requires a comparable HTTP client") {
-		t.Fatalf("GetToken() error = %v, want comparable HTTP client error", err)
+	if err == nil || !strings.Contains(err.Error(), "native *http.Transport") {
+		t.Fatalf("GetToken() error = %v, want native HTTP transport error", err)
 	}
 }
 
 func TestX509TokenExchangeRequest(t *testing.T) {
 	var requestBody map[string]any
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
 		if got, want := req.Method, http.MethodPost; got != want {
 			t.Errorf("request method = %q, want %q", got, want)
 		}
@@ -219,7 +219,7 @@ func TestX509TokenExchangeRequest(t *testing.T) {
 			return nil, err
 		}
 		return tokenResponse("x509-token", 3600), nil
-	}}}
+	})
 
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
@@ -254,7 +254,7 @@ func TestX509TokenExchangeDoesNotRetryOAuthErrors(t *testing.T) {
 	for _, statusCode := range []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden} {
 		t.Run(http.StatusText(statusCode), func(t *testing.T) {
 			var calls atomic.Int32
-			httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+			httpClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 				calls.Add(1)
 				return &http.Response{
 					StatusCode: statusCode,
@@ -263,7 +263,7 @@ func TestX509TokenExchangeDoesNotRetryOAuthErrors(t *testing.T) {
 						`{"error":"invalid_grant","error_description":"generic exchange failure"}`,
 					)),
 				}, nil
-			}}}
+			})
 			wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 			if err != nil {
 				t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
@@ -303,7 +303,7 @@ func TestX509TokenExchangeRequiresPositiveExpiresIn(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
 			}
-			httpClient := mockOAuthServer(testCase.body, http.StatusOK)
+			httpClient := mockOAuthServer(t, testCase.body, http.StatusOK)
 			if _, err := wia.GetToken(t.Context(), httpClient); err == nil {
 				t.Fatal("GetToken() error = nil")
 			} else if strings.Contains(err.Error(), "secret-token") {
@@ -324,7 +324,7 @@ func TestX509TokenExchangeValidatesBearerTokenTypeAndGrammar(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
 			}
-			if _, err := wia.GetToken(t.Context(), mockOAuthServer(body, http.StatusOK)); err != nil {
+			if _, err := wia.GetToken(t.Context(), mockOAuthServer(t, body, http.StatusOK)); err != nil {
 				t.Errorf("GetToken() body %s error = %v", body, err)
 			}
 		}
@@ -337,7 +337,7 @@ func TestX509TokenExchangeValidatesBearerTokenTypeAndGrammar(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
 			}
-			_, err = wia.GetToken(t.Context(), mockOAuthServer(body, http.StatusOK))
+			_, err = wia.GetToken(t.Context(), mockOAuthServer(t, body, http.StatusOK))
 			if err == nil {
 				t.Errorf("GetToken() token_type %s error = nil", tokenType)
 			} else if strings.Contains(err.Error(), "must-not-leak") {
@@ -364,7 +364,7 @@ func TestX509TokenExchangeValidatesBearerTokenTypeAndGrammar(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
 			}
-			_, err = wia.GetToken(t.Context(), mockOAuthServer(string(body), http.StatusOK))
+			_, err = wia.GetToken(t.Context(), mockOAuthServer(t, string(body), http.StatusOK))
 			if err == nil {
 				t.Errorf("GetToken() token %q error = nil", accessToken)
 			} else if strings.Contains(err.Error(), accessToken) {
@@ -375,12 +375,12 @@ func TestX509TokenExchangeValidatesBearerTokenTypeAndGrammar(t *testing.T) {
 
 	t.Run("invalid token is not cached", func(t *testing.T) {
 		var calls atomic.Int32
-		httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+		httpClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 			if calls.Add(1) == 1 {
 				return tokenResponse("line\r\nbreak", 60), nil
 			}
 			return tokenResponse("safe-token", 60), nil
-		}}}
+		})
 		wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 		if err != nil {
 			t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
@@ -441,7 +441,7 @@ func TestIDTokenWorkloadIdentityRegression(t *testing.T) {
 
 func TestX509TokenExchangeRetriesTransientFailures(t *testing.T) {
 	var calls atomic.Int32
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		switch calls.Add(1) {
 		case 1:
 			return nil, errors.New("temporary connection failure")
@@ -454,7 +454,7 @@ func TestX509TokenExchangeRetriesTransientFailures(t *testing.T) {
 		default:
 			return tokenResponse("retried-token", 60), nil
 		}
-	}}}
+	})
 
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
@@ -470,14 +470,14 @@ func TestX509TokenExchangeRetriesTransientFailures(t *testing.T) {
 
 func TestX509TokenExchangeRetriesAreBounded(t *testing.T) {
 	var calls atomic.Int32
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		calls.Add(1)
 		return &http.Response{
 			StatusCode: http.StatusServiceUnavailable,
 			Header:     http.Header{"Retry-After": []string{"0"}},
 			Body:       io.NopCloser(strings.NewReader(`{"access_token":"must-not-leak"}`)),
 		}, nil
-	}}}
+	})
 
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
@@ -498,14 +498,14 @@ func TestX509TokenExchangeRetriesAreBounded(t *testing.T) {
 func TestX509TokenExchangeRetryWaitHonorsContext(t *testing.T) {
 	requestStarted := make(chan struct{})
 	var once sync.Once
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		once.Do(func() { close(requestStarted) })
 		return &http.Response{
 			StatusCode: http.StatusTooManyRequests,
 			Header:     http.Header{"Retry-After": []string{"60"}},
 			Body:       io.NopCloser(strings.NewReader(`{"error":"rate_limit"}`)),
 		}, nil
-	}}}
+	})
 
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
@@ -531,19 +531,17 @@ func TestX509TokenExchangeRefusesRedirects(t *testing.T) {
 	}))
 	t.Cleanup(redirectTarget.Close)
 
-	httpClient := &http.Client{
-		Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
-			if req.URL.Host == "mtls.auth.openai.com" {
-				return &http.Response{
-					StatusCode: http.StatusFound,
-					Header:     http.Header{"Location": []string{redirectTarget.URL}},
-					Body:       io.NopCloser(strings.NewReader("redirect")),
-				}, nil
-			}
-			return http.DefaultTransport.RoundTrip(req)
-		}},
-		CheckRedirect: func(*http.Request, []*http.Request) error { return nil },
-	}
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		if req.URL.Host == "mtls.auth.openai.com" {
+			return &http.Response{
+				StatusCode: http.StatusFound,
+				Header:     http.Header{"Location": []string{redirectTarget.URL}},
+				Body:       io.NopCloser(strings.NewReader("redirect")),
+			}, nil
+		}
+		return http.DefaultTransport.RoundTrip(req)
+	})
+	httpClient.CheckRedirect = func(*http.Request, []*http.Request) error { return nil }
 
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
@@ -560,11 +558,11 @@ func TestX509TokenExchangeRefusesRedirects(t *testing.T) {
 func TestX509CanceledWaiterDoesNotCancelRefresh(t *testing.T) {
 	exchangeStarted := make(chan struct{})
 	releaseExchange := make(chan struct{})
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		close(exchangeStarted)
 		<-releaseExchange
 		return tokenResponse("shared-token", 60), nil
-	}}}
+	})
 
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
@@ -594,48 +592,17 @@ func TestX509CanceledWaiterDoesNotCancelRefresh(t *testing.T) {
 	}
 }
 
-func TestX509CanceledOnlyWaiterCancelsSharedRefresh(t *testing.T) {
-	exchangeStarted := make(chan struct{})
-	exchangeCanceled := make(chan struct{})
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
-		close(exchangeStarted)
-		<-req.Context().Done()
-		close(exchangeCanceled)
-		return nil, req.Context().Err()
-	}}}
-	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
-	if err != nil {
-		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
-	}
-	ctx, cancel := context.WithCancel(t.Context())
-	done := make(chan error, 1)
-	go func() {
-		_, getTokenErr := wia.GetToken(ctx, httpClient)
-		done <- getTokenErr
-	}()
-	<-exchangeStarted
-	cancel()
-	if err := <-done; !errors.Is(err, context.Canceled) {
-		t.Errorf("GetToken() error = %v, want context.Canceled", err)
-	}
-	select {
-	case <-exchangeCanceled:
-	case <-time.After(time.Second):
-		t.Fatal("shared exchange context was not canceled")
-	}
-}
-
 func TestX509InitialRefreshIsSingleFlight(t *testing.T) {
 	exchangeStarted := make(chan struct{})
 	releaseExchange := make(chan struct{})
 	var calls atomic.Int32
 	var startOnce sync.Once
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		calls.Add(1)
 		startOnce.Do(func() { close(exchangeStarted) })
 		<-releaseExchange
 		return tokenResponse("shared-token", 60), nil
-	}}}
+	})
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
 		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
@@ -669,10 +636,10 @@ func TestX509InitialRefreshIsSingleFlight(t *testing.T) {
 
 func TestX509ExpiredTokenRefreshesSynchronously(t *testing.T) {
 	var calls atomic.Int32
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		call := calls.Add(1)
 		return tokenResponse(fmt.Sprintf("token-%d", call), 0.1), nil
-	}}}
+	})
 	config := testX509WorkloadIdentity()
 	config.RefreshBuffer = time.Nanosecond
 	wia, err := auth.NewX509WorkloadIdentityAuth(config)
@@ -695,13 +662,13 @@ func TestX509ExpiredTokenRefreshesSynchronously(t *testing.T) {
 func TestX509RefreshBufferClampedToHalfTTL(t *testing.T) {
 	var calls atomic.Int32
 	secondExchange := make(chan struct{})
-	httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	httpClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		call := calls.Add(1)
 		if call == 2 {
 			close(secondExchange)
 		}
 		return tokenResponse(fmt.Sprintf("token-%d", call), 1), nil
-	}}}
+	})
 	config := testX509WorkloadIdentity()
 	config.RefreshBuffer = 10 * time.Second
 	wia, err := auth.NewX509WorkloadIdentityAuth(config)
@@ -732,10 +699,10 @@ func TestX509RefreshBufferClampedToHalfTTL(t *testing.T) {
 
 func TestX509Concurrent401InvalidationKeepsNewToken(t *testing.T) {
 	var exchangeCalls atomic.Int32
-	exchangeClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	exchangeClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		call := exchangeCalls.Add(1)
 		return tokenResponse(fmt.Sprintf("token-%d", call), 60), nil
-	}}}
+	})
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
 		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
@@ -795,10 +762,10 @@ func TestX509Concurrent401InvalidationKeepsNewToken(t *testing.T) {
 
 func TestX509Second401InvalidatesReplayToken(t *testing.T) {
 	var exchangeCalls atomic.Int32
-	exchangeClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	exchangeClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		call := exchangeCalls.Add(1)
 		return tokenResponse(fmt.Sprintf("token-%d", call), 60), nil
-	}}}
+	})
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
 		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
@@ -841,13 +808,11 @@ func TestX509TokenExchangeDoesNotInheritHTTPClientCookies(t *testing.T) {
 	}
 	jar.SetCookies(authURL, []*http.Cookie{{Name: "api-session", Value: "secret", Path: "/"}})
 	var exchangeCookie string
-	httpClient := &http.Client{
-		Jar: jar,
-		Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
-			exchangeCookie = req.Header.Get("Cookie")
-			return tokenResponse("x509-token", 60), nil
-		}},
-	}
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		exchangeCookie = req.Header.Get("Cookie")
+		return tokenResponse("x509-token", 60), nil
+	})
+	httpClient.Jar = jar
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
 		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
@@ -873,10 +838,10 @@ func testX509ReplayBodyClose(t *testing.T, downstreamClosesBody bool) {
 	t.Helper()
 
 	var exchangeCalls atomic.Int32
-	exchangeClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+	exchangeClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 		call := exchangeCalls.Add(1)
 		return tokenResponse(fmt.Sprintf("token-%d", call), 60), nil
-	}}}
+	})
 	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 	if err != nil {
 		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)

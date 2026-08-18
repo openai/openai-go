@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"testing"
 
@@ -16,15 +17,15 @@ func TestX509WorkloadIdentityAuthRejectsHTTPTransportChange(t *testing.T) {
 	t.Run("explicit transport", func(t *testing.T) {
 		var callsA atomic.Int32
 		var callsB atomic.Int32
-		transportA := &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+		clientA := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 			callsA.Add(1)
 			return tokenResponse("token-a", 60), nil
-		}}
-		transportB := &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+		})
+		clientB := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 			callsB.Add(1)
 			return tokenResponse("token-b", 60), nil
-		}}
-		httpClient := &http.Client{Transport: transportA}
+		})
+		httpClient := &http.Client{Transport: clientA.Transport}
 		wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 		if err != nil {
 			t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
@@ -45,7 +46,7 @@ func TestX509WorkloadIdentityAuthRejectsHTTPTransportChange(t *testing.T) {
 			t.Fatalf("cached GetToken() = %q, want token-a", token)
 		}
 
-		httpClient.Transport = transportB
+		httpClient.Transport = clientB.Transport
 		ctx := t.Context()
 		const callers = 16
 		errs := make(chan error, callers)
@@ -76,10 +77,11 @@ func TestX509WorkloadIdentityAuthRejectsHTTPTransportChange(t *testing.T) {
 
 		var callsA atomic.Int32
 		var callsB atomic.Int32
-		http.DefaultTransport = &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+		clientA := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 			callsA.Add(1)
 			return tokenResponse("token-a", 60), nil
-		}}
+		})
+		http.DefaultTransport = clientA.Transport
 		httpClient := &http.Client{}
 		wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
 		if err != nil {
@@ -89,10 +91,11 @@ func TestX509WorkloadIdentityAuthRejectsHTTPTransportChange(t *testing.T) {
 			t.Fatalf("first GetToken() error = %v", err)
 		}
 
-		http.DefaultTransport = &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+		clientB := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
 			callsB.Add(1)
 			return tokenResponse("token-b", 60), nil
-		}}
+		})
+		http.DefaultTransport = clientB.Transport
 		if _, err := wia.GetToken(t.Context(), httpClient); err == nil {
 			t.Fatal("GetToken() after default HTTP transport change error = nil")
 		}
@@ -157,5 +160,73 @@ func TestX509WorkloadIdentityAuthRequiresImmutableNativeTransportIdentity(t *tes
 				t.Fatal("GetToken() error = nil")
 			}
 		})
+	}
+}
+
+func TestX509WorkloadIdentityAuthRejectsClientSessionCacheBeforeExchange(t *testing.T) {
+	var dialCalls atomic.Int32
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			Certificates:       []tls.Certificate{{Certificate: [][]byte{{1}}}},
+			ClientSessionCache: tls.NewLRUClientSessionCache(1),
+		},
+		DialContext: func(context.Context, string, string) (net.Conn, error) {
+			dialCalls.Add(1)
+			return nil, errors.New("must not dial")
+		},
+	}
+	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+	if err != nil {
+		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+	}
+
+	if _, err := wia.GetToken(t.Context(), &http.Client{Transport: transport}); err == nil || !strings.Contains(err.Error(), "session caching") {
+		t.Fatalf("GetToken() error = %v, want client session cache rejection", err)
+	}
+	if got := dialCalls.Load(); got != 0 {
+		t.Fatalf("dial calls = %d, want 0", got)
+	}
+}
+
+func TestX509WorkloadIdentityAuthRejectsStaticCertificateMutation(t *testing.T) {
+	var calls atomic.Int32
+	httpClient := nativeX509HTTPClient(t, func(*http.Request) (*http.Response, error) {
+		calls.Add(1)
+		return tokenResponse("token-a", 60), nil
+	})
+	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+	if err != nil {
+		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+	}
+	if _, err := wia.GetToken(t.Context(), httpClient); err != nil {
+		t.Fatalf("first GetToken() error = %v", err)
+	}
+
+	transport := httpClient.Transport.(*http.Transport)
+	transport.TLSClientConfig.Certificates[0].Certificate[0] = []byte{2}
+	if _, err := wia.GetToken(t.Context(), httpClient); err == nil || !strings.Contains(err.Error(), "cannot change client certificates") {
+		t.Fatalf("GetToken() after certificate mutation error = %v, want identity rejection", err)
+	}
+	if got, want := calls.Load(), int32(1); got != want {
+		t.Fatalf("token exchange calls = %d, want %d", got, want)
+	}
+}
+
+func TestX509WorkloadIdentityAuthRejectsOpaqueRoundTripperBeforeExchange(t *testing.T) {
+	var calls atomic.Int32
+	httpClient := &http.Client{Transport: &closureTransport{fn: func(*http.Request) (*http.Response, error) {
+		calls.Add(1)
+		return tokenResponse("must-not-be-used", 60), nil
+	}}}
+	wia, err := auth.NewX509WorkloadIdentityAuth(testX509WorkloadIdentity())
+	if err != nil {
+		t.Fatalf("NewX509WorkloadIdentityAuth() error = %v", err)
+	}
+
+	if _, err := wia.GetToken(t.Context(), httpClient); err == nil || !strings.Contains(err.Error(), "native *http.Transport") {
+		t.Fatalf("GetToken() error = %v, want opaque transport rejection", err)
+	}
+	if got := calls.Load(); got != 0 {
+		t.Fatalf("token exchange calls = %d, want 0", got)
 	}
 }
