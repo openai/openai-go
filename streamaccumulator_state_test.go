@@ -161,6 +161,64 @@ func TestAccumulatorSingularFinishedEventsUseFirstWireChoice(t *testing.T) {
 	}
 }
 
+func TestAccumulatorSingularToolCallIgnoresAlternateChoiceWhenFirstChoiceIsOmitted(t *testing.T) {
+	var acc openai.ChatCompletionAccumulator
+
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":0,"delta":{"content":"selected"}},{"index":1,"delta":{"tool_calls":[{"index":0,"id":"alternate_call","type":"function","function":{"name":"lookup","arguments":"{\"id\":\"example\"}"}}]}}]}`)
+	pr688AssertNoFinishedToolCall(t, &acc)
+
+	finishAlternate := `{"id":"test","choices":[{"index":1,"delta":{},"finish_reason":"tool_calls"}]}`
+	pr688AddChunk(t, &acc, finishAlternate)
+	pr688AssertNoFinishedToolCall(t, &acc)
+
+	toolCall, ok := acc.JustFinishedToolCallForChoice(1)
+	if !ok {
+		t.Fatal("JustFinishedToolCallForChoice did not return the alternate choice tool call")
+	}
+	if toolCall.ID != "alternate_call" || toolCall.Name != "lookup" {
+		t.Fatalf("alternate choice tool call: got ID %q and name %q", toolCall.ID, toolCall.Name)
+	}
+
+	pr688AddChunk(t, &acc, finishAlternate)
+	pr688AssertNoFinishedToolCall(t, &acc)
+	if toolCall, ok := acc.JustFinishedToolCallForChoice(1); ok {
+		t.Fatalf("JustFinishedToolCallForChoice returned repeated tool call: %+v", toolCall)
+	}
+}
+
+func TestAccumulatorSingularToolCallKeepsIndependentLegacyChoiceState(t *testing.T) {
+	var acc openai.ChatCompletionAccumulator
+
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"selected_call","type":"function","function":{"name":"selected_tool","arguments":"{}"}}]}},{"index":1,"delta":{"content":"other"}}]}`)
+	pr688AssertNoFinishedToolCall(t, &acc)
+
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":1,"delta":{"content":" continues"}},{"index":0,"delta":{"tool_calls":null}}]}`)
+	pr688AssertNoFinishedToolCall(t, &acc)
+	choiceToolCall, ok := acc.JustFinishedToolCallForChoice(0)
+	if !ok {
+		t.Fatal("JustFinishedToolCallForChoice did not return the selected choice tool call")
+	}
+	if choiceToolCall.ID != "selected_call" || choiceToolCall.Name != "selected_tool" {
+		t.Fatalf("choice-aware tool call: got ID %q and name %q", choiceToolCall.ID, choiceToolCall.Name)
+	}
+
+	finishSelected := `{"id":"test","choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}`
+	pr688AddChunk(t, &acc, finishSelected)
+	legacyToolCall, ok := acc.JustFinishedToolCall()
+	if !ok {
+		t.Fatal("JustFinishedToolCall did not return the selected choice tool call")
+	}
+	if legacyToolCall.ID != "selected_call" || legacyToolCall.Name != "selected_tool" {
+		t.Fatalf("legacy tool call: got ID %q and name %q", legacyToolCall.ID, legacyToolCall.Name)
+	}
+	if toolCall, ok := acc.JustFinishedToolCallForChoice(0); ok {
+		t.Fatalf("JustFinishedToolCallForChoice returned repeated tool call: %+v", toolCall)
+	}
+
+	pr688AddChunk(t, &acc, finishSelected)
+	pr688AssertNoFinishedToolCall(t, &acc)
+}
+
 func TestAccumulatorSingularContentUsesFirstWireChoice(t *testing.T) {
 	var acc openai.ChatCompletionAccumulator
 

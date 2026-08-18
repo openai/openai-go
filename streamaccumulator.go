@@ -6,9 +6,10 @@ import "github.com/openai/openai-go/v3/shared/constant"
 type ChatCompletionAccumulator struct {
 	// The up-to-date accumulation of model's responses
 	ChatCompletion
-	choiceChatCompletionStates []chatCompletionResponseState
-	justFinished               chatCompletionResponseState
-	justFinishedByChoice       []chatCompletionResponseState
+	choiceChatCompletionStates       []chatCompletionResponseState
+	legacyChoiceChatCompletionStates []chatCompletionResponseState
+	justFinished                     chatCompletionResponseState
+	justFinishedByChoice             []chatCompletionResponseState
 }
 
 type FinishedChatCompletionToolCall struct {
@@ -44,13 +45,17 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 		return false
 	}
 
-	for i, choice := range chunk.Choices {
+	if len(chunk.Choices) > 0 {
+		firstChoice := chunk.Choices[0]
+		choiceIndex := int(firstChoice.Index)
+		acc.legacyChoiceChatCompletionStates = expandToFit(acc.legacyChoiceChatCompletionStates, choiceIndex)
+		acc.justFinished = acc.legacyChoiceChatCompletionStates[choiceIndex].update(firstChoice)
+	}
+
+	for _, choice := range chunk.Choices {
 		choiceIndex := int(choice.Index)
 		acc.choiceChatCompletionStates = expandToFit(acc.choiceChatCompletionStates, choiceIndex)
 		justFinished := acc.choiceChatCompletionStates[choiceIndex].update(choice)
-		if i == 0 {
-			acc.justFinished = justFinished
-		}
 		if justFinished.state != emptyResponseState {
 			acc.justFinishedByChoice = append(acc.justFinishedByChoice, justFinished)
 		}
