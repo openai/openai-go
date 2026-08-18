@@ -171,6 +171,14 @@ func unmarshalerDecoder(n gjson.Result, v reflect.Value, state *decoderState) er
 	return v.Interface().(json.Unmarshaler).UnmarshalJSON([]byte(n.Raw))
 }
 
+func isRegisteredStructUnionSlice(t reflect.Type) bool {
+	if t.Kind() != reflect.Slice {
+		return false
+	}
+	_, registered := unionRegistry[t.Elem()]
+	return registered && isStructUnion(t.Elem())
+}
+
 func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 	if t.ConvertibleTo(reflect.TypeOf(time.Time{})) {
 		return d.newTimeTypeDecoder(t)
@@ -178,6 +186,13 @@ func (d *decoderBuilder) newTypeDecoder(t reflect.Type) decoderFunc {
 
 	if t.Implements(reflect.TypeOf((*param.Optional)(nil)).Elem()) {
 		return d.newOptTypeDecoder(t)
+	}
+
+	// Named union-list roots need UnmarshalJSON for encoding/json, but nested
+	// apijson decodes must retain the parent state for exactness selection.
+	if isRegisteredStructUnionSlice(t) {
+		d.root = false
+		return d.newArrayTypeDecoder(t)
 	}
 
 	if !d.root && t.Implements(reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()) {

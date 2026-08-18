@@ -26,8 +26,14 @@ type arrayDiscriminatedRefusal struct {
 	Refusal string `json:"refusal"`
 }
 
+type arrayDiscriminatedList []arrayDiscriminatedUnion
+
+func (r *arrayDiscriminatedList) UnmarshalJSON(data []byte) error {
+	return UnmarshalRoot(data, r)
+}
+
 type arrayDiscriminatedHolder struct {
-	Parts []arrayDiscriminatedUnion `json:"parts"`
+	Parts arrayDiscriminatedList `json:"parts"`
 }
 
 type arrayNestedDiscriminatedUnion struct {
