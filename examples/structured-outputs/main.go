@@ -41,9 +41,15 @@ func GenerateSchema[T any]() (map[string]any, error) {
 	if err != nil {
 		return nil, fmt.Errorf("marshal JSON schema: %w", err)
 	}
-	var result map[string]any
-	if err := json.Unmarshal(data, &result); err != nil {
+	// Preserve schema values as raw JSON so integer constraints are not rounded
+	// through float64 before the SDK serializes the request.
+	var rawSchema map[string]json.RawMessage
+	if err := json.Unmarshal(data, &rawSchema); err != nil {
 		return nil, fmt.Errorf("decode JSON schema: %w", err)
+	}
+	result := make(map[string]any, len(rawSchema))
+	for key, value := range rawSchema {
+		result[key] = value
 	}
 	return result, nil
 }
