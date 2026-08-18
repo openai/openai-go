@@ -31,7 +31,7 @@ type AdminOrganizationProjectHostedToolPermissionService struct {
 // options.
 func NewAdminOrganizationProjectHostedToolPermissionService(opts ...option.RequestOption) (r AdminOrganizationProjectHostedToolPermissionService) {
 	r = AdminOrganizationProjectHostedToolPermissionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

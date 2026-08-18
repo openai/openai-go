@@ -32,7 +32,7 @@ type FineTuningAlphaGraderService struct {
 // options (if there is one), and before any request-specific options.
 func NewFineTuningAlphaGraderService(opts ...option.RequestOption) (r FineTuningAlphaGraderService) {
 	r = FineTuningAlphaGraderService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

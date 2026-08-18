@@ -3,6 +3,7 @@
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -23,7 +24,7 @@ type FineTuningAlphaService struct {
 // there is one), and before any request-specific options.
 func NewFineTuningAlphaService(opts ...option.RequestOption) (r FineTuningAlphaService) {
 	r = FineTuningAlphaService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Graders = NewFineTuningAlphaGraderService(opts...)
 	return
 }

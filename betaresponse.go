@@ -39,7 +39,7 @@ type BetaResponseService struct {
 // there is one), and before any request-specific options.
 func NewBetaResponseService(opts ...option.RequestOption) (r BetaResponseService) {
 	r = BetaResponseService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.InputItems = NewBetaResponseInputItemService(opts...)
 	r.InputTokens = NewBetaResponseInputTokenService(opts...)
 	return

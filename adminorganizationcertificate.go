@@ -34,7 +34,7 @@ type AdminOrganizationCertificateService struct {
 // client's options (if there is one), and before any request-specific options.
 func NewAdminOrganizationCertificateService(opts ...option.RequestOption) (r AdminOrganizationCertificateService) {
 	r = AdminOrganizationCertificateService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

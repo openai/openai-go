@@ -33,7 +33,7 @@ type AdminOrganizationUsageService struct {
 // options (if there is one), and before any request-specific options.
 func NewAdminOrganizationUsageService(opts ...option.RequestOption) (r AdminOrganizationUsageService) {
 	r = AdminOrganizationUsageService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

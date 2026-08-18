@@ -30,7 +30,7 @@ type AdminOrganizationDataRetentionService struct {
 // client's options (if there is one), and before any request-specific options.
 func NewAdminOrganizationDataRetentionService(opts ...option.RequestOption) (r AdminOrganizationDataRetentionService) {
 	r = AdminOrganizationDataRetentionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

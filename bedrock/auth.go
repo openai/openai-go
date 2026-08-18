@@ -69,6 +69,10 @@ func newClientOptions(
 		return nil, errors.New("bedrock: nil context")
 	}
 
+	if err := requestconfig.ValidateEndpointOptions("Bedrock", userOpts...); err != nil {
+		return nil, err
+	}
+
 	resolved, err := resolveConfig(ctx, cfg, now)
 	if err != nil {
 		return nil, err
@@ -76,6 +80,7 @@ func newClientOptions(
 
 	opts := []option.RequestOption{
 		requestconfig.WithEnvironmentDefaultsDisabled(),
+		requestconfig.WithEndpointProvider("Bedrock"),
 		option.WithBaseURL(resolved.baseURL.String()),
 	}
 	opts = append(opts, userOpts...)

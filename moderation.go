@@ -33,7 +33,7 @@ type ModerationService struct {
 // there is one), and before any request-specific options.
 func NewModerationService(opts ...option.RequestOption) (r ModerationService) {
 	r = ModerationService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

@@ -34,7 +34,7 @@ type AdminOrganizationInviteService struct {
 // options (if there is one), and before any request-specific options.
 func NewAdminOrganizationInviteService(opts ...option.RequestOption) (r AdminOrganizationInviteService) {
 	r = AdminOrganizationInviteService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

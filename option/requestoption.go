@@ -24,6 +24,7 @@ type RequestOption = requestconfig.RequestOption
 
 // WithBaseURL returns a RequestOption that sets the BaseURL for the client.
 //
+// It cannot be combined with WithDataResidency in the same configuration call.
 // For security reasons, ensure that the base URL is trusted.
 func WithBaseURL(base string) RequestOption {
 	u, err := url.Parse(base)
@@ -31,14 +32,10 @@ func WithBaseURL(base string) RequestOption {
 		u.Path += "/"
 	}
 
-	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
-		if err != nil {
-			return fmt.Errorf("requestoption: WithBaseURL failed to parse url %s", err)
-		}
-
-		r.BaseURL = u
-		return nil
-	})
+	if err != nil {
+		err = fmt.Errorf("requestoption: WithBaseURL failed to parse url %s", err)
+	}
+	return requestconfig.WithEndpointSelection("base_url", u, err)
 }
 
 // HTTPClient is primarily used to describe an [*http.Client], but also

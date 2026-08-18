@@ -27,7 +27,7 @@ type SkillVersionContentService struct {
 // options (if there is one), and before any request-specific options.
 func NewSkillVersionContentService(opts ...option.RequestOption) (r SkillVersionContentService) {
 	r = SkillVersionContentService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

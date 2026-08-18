@@ -41,7 +41,7 @@ type FileService struct {
 // is one), and before any request-specific options.
 func NewFileService(opts ...option.RequestOption) (r FileService) {
 	r = FileService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

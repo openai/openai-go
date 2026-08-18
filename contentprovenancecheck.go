@@ -34,7 +34,7 @@ type ContentProvenanceCheckService struct {
 // options (if there is one), and before any request-specific options.
 func NewContentProvenanceCheckService(opts ...option.RequestOption) (r ContentProvenanceCheckService) {
 	r = ContentProvenanceCheckService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

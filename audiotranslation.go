@@ -35,7 +35,7 @@ type AudioTranslationService struct {
 // options (if there is one), and before any request-specific options.
 func NewAudioTranslationService(opts ...option.RequestOption) (r AudioTranslationService) {
 	r = AudioTranslationService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

@@ -3,6 +3,7 @@
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -23,7 +24,7 @@ type FineTuningCheckpointService struct {
 // options (if there is one), and before any request-specific options.
 func NewFineTuningCheckpointService(opts ...option.RequestOption) (r FineTuningCheckpointService) {
 	r = FineTuningCheckpointService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Permissions = NewFineTuningCheckpointPermissionService(opts...)
 	return
 }

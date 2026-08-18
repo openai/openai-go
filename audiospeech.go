@@ -30,7 +30,7 @@ type AudioSpeechService struct {
 // there is one), and before any request-specific options.
 func NewAudioSpeechService(opts ...option.RequestOption) (r AudioSpeechService) {
 	r = AudioSpeechService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

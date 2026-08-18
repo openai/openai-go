@@ -35,7 +35,7 @@ type VectorStoreFileService struct {
 // there is one), and before any request-specific options.
 func NewVectorStoreFileService(opts ...option.RequestOption) (r VectorStoreFileService) {
 	r = VectorStoreFileService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

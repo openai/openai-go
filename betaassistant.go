@@ -38,7 +38,7 @@ type BetaAssistantService struct {
 // there is one), and before any request-specific options.
 func NewBetaAssistantService(opts ...option.RequestOption) (r BetaAssistantService) {
 	r = BetaAssistantService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

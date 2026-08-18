@@ -30,7 +30,7 @@ type CallService struct {
 // is one), and before any request-specific options.
 func NewCallService(opts ...option.RequestOption) (r CallService) {
 	r = CallService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

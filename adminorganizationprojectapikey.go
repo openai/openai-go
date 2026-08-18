@@ -34,7 +34,7 @@ type AdminOrganizationProjectAPIKeyService struct {
 // client's options (if there is one), and before any request-specific options.
 func NewAdminOrganizationProjectAPIKeyService(opts ...option.RequestOption) (r AdminOrganizationProjectAPIKeyService) {
 	r = AdminOrganizationProjectAPIKeyService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

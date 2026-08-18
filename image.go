@@ -38,7 +38,7 @@ type ImageService struct {
 // is one), and before any request-specific options.
 func NewImageService(opts ...option.RequestOption) (r ImageService) {
 	r = ImageService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

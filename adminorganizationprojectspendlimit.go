@@ -32,7 +32,7 @@ type AdminOrganizationProjectSpendLimitService struct {
 // options.
 func NewAdminOrganizationProjectSpendLimitService(opts ...option.RequestOption) (r AdminOrganizationProjectSpendLimitService) {
 	r = AdminOrganizationProjectSpendLimitService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

@@ -54702,6 +54702,8 @@ components:
       - $ref: '#/components/schemas/ResponseShellCallCommandDeltaStreamingEvent'
       - $ref: '#/components/schemas/ResponseShellCallCommandDoneStreamingEvent'
       - $ref: '#/components/schemas/ResponseShellCallOutputContentDeltaStreamingEvent'
+        x-stainless-skip:
+        - go
       - $ref: '#/components/schemas/ResponseShellCallOutputContentDoneStreamingEvent'
       - $ref: '#/components/schemas/ResponseInProgressEvent'
       - $ref: '#/components/schemas/ResponseFailedEvent'
@@ -55391,6 +55393,8 @@ components:
         description: A streaming event that indicated shell call output was incrementally added.
         allOf:
         - $ref: '#/components/schemas/ResponseShellCallOutputContentDeltaStreamingEvent'
+          x-stainless-skip:
+          - go
         - type: object
           properties:
             stream_id:
@@ -55863,6 +55867,8 @@ components:
         - $ref: '#/components/schemas/ResponseShellCallCommandDeltaStreamingEvent'
         - $ref: '#/components/schemas/ResponseShellCallCommandDoneStreamingEvent'
         - $ref: '#/components/schemas/ResponseShellCallOutputContentDeltaStreamingEvent'
+          x-stainless-skip:
+          - go
         - $ref: '#/components/schemas/ResponseShellCallOutputContentDoneStreamingEvent'
         - $ref: '#/components/schemas/ResponseInProgressEvent'
         - $ref: '#/components/schemas/ResponseFailedEvent'
@@ -77721,6 +77727,8 @@ components:
         description: A streaming event that indicated shell call output was incrementally added.
         allOf:
         - $ref: '#/components/schemas/BetaResponseShellCallOutputContentDeltaStreamingEvent'
+          x-stainless-skip:
+          - go
         - type: object
           properties:
             stream_id:
@@ -78383,6 +78391,8 @@ components:
         - $ref: '#/components/schemas/BetaResponseShellCallCommandDeltaStreamingEvent'
         - $ref: '#/components/schemas/BetaResponseShellCallCommandDoneStreamingEvent'
         - $ref: '#/components/schemas/BetaResponseShellCallOutputContentDeltaStreamingEvent'
+          x-stainless-skip:
+          - go
         - $ref: '#/components/schemas/BetaResponseShellCallOutputContentDoneStreamingEvent'
         - $ref: '#/components/schemas/BetaResponseInProgressEvent'
         - $ref: '#/components/schemas/BetaResponseFailedEvent'
@@ -78763,6 +78773,8 @@ components:
       - $ref: '#/components/schemas/BetaResponseShellCallCommandDeltaStreamingEvent'
       - $ref: '#/components/schemas/BetaResponseShellCallCommandDoneStreamingEvent'
       - $ref: '#/components/schemas/BetaResponseShellCallOutputContentDeltaStreamingEvent'
+        x-stainless-skip:
+        - go
       - $ref: '#/components/schemas/BetaResponseShellCallOutputContentDoneStreamingEvent'
       - $ref: '#/components/schemas/BetaResponseInProgressEvent'
       - $ref: '#/components/schemas/BetaResponseFailedEvent'

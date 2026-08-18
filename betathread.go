@@ -46,7 +46,7 @@ type BetaThreadService struct {
 // there is one), and before any request-specific options.
 func NewBetaThreadService(opts ...option.RequestOption) (r BetaThreadService) {
 	r = BetaThreadService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Runs = NewBetaThreadRunService(opts...)
 	r.Messages = NewBetaThreadMessageService(opts...)
 	return

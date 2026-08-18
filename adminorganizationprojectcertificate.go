@@ -35,7 +35,7 @@ type AdminOrganizationProjectCertificateService struct {
 // options.
 func NewAdminOrganizationProjectCertificateService(opts ...option.RequestOption) (r AdminOrganizationProjectCertificateService) {
 	r = AdminOrganizationProjectCertificateService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

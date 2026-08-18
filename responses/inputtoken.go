@@ -31,7 +31,7 @@ type InputTokenService struct {
 // there is one), and before any request-specific options.
 func NewInputTokenService(opts ...option.RequestOption) (r InputTokenService) {
 	r = InputTokenService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

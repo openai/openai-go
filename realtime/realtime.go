@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
@@ -30,7 +31,7 @@ type RealtimeService struct {
 // there is one), and before any request-specific options.
 func NewRealtimeService(opts ...option.RequestOption) (r RealtimeService) {
 	r = RealtimeService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.ClientSecrets = NewClientSecretService(opts...)
 	r.Calls = NewCallService(opts...)
 	return

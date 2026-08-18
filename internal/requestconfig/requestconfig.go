@@ -173,8 +173,13 @@ func WithEnvironmentDefaultsDisabled() RequestOption {
 // provider marker returned by WithEnvironmentDefaultsDisabled.
 func EnvironmentDefaultsDisabled(opts ...RequestOption) bool {
 	for _, opt := range opts {
-		if _, ok := opt.(environmentDefaultsDisabledOption); ok {
+		switch opt := opt.(type) {
+		case environmentDefaultsDisabledOption:
 			return true
+		case optionLayer:
+			if EnvironmentDefaultsDisabled(opt...) {
+				return true
+			}
 		}
 	}
 	return false
@@ -318,11 +323,14 @@ type HTTPDoer interface {
 // Editing the variables inside RequestConfig directly is unstable api. Prefer
 // composing the RequestOption instead if possible.
 type RequestConfig struct {
-	MaxRetries     int
-	RequestTimeout time.Duration
-	Context        context.Context
-	Request        *http.Request
-	BaseURL        *url.URL
+	MaxRetries            int
+	RequestTimeout        time.Duration
+	Context               context.Context
+	Request               *http.Request
+	BaseURL               *url.URL
+	endpointSelector      string
+	endpointProvider      string
+	dataResidencyEndpoint bool
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL     *url.URL
@@ -804,15 +812,24 @@ func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
 // Only request option functions of type [PreRequestOptionFunc] are applied.
 func PreRequestOptions(opts ...RequestOption) (RequestConfig, error) {
 	cfg := RequestConfig{}
+	err := applyPreRequestOptions(&cfg, opts)
+	return cfg, err
+}
+
+func applyPreRequestOptions(cfg *RequestConfig, opts []RequestOption) error {
 	for _, opt := range opts {
-		if opt, ok := opt.(PreRequestOptionFunc); ok {
-			err := opt.Apply(&cfg)
-			if err != nil {
-				return cfg, err
+		switch opt := opt.(type) {
+		case PreRequestOptionFunc:
+			if err := opt.Apply(cfg); err != nil {
+				return err
+			}
+		case optionLayer:
+			if err := applyPreRequestOptions(cfg, opt); err != nil {
+				return err
 			}
 		}
 	}
-	return cfg, nil
+	return nil
 }
 
 // WithDefaultBaseURL returns a RequestOption that sets the client's default Base URL.

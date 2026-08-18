@@ -32,7 +32,7 @@ type AdminOrganizationProjectDataRetentionService struct {
 // options.
 func NewAdminOrganizationProjectDataRetentionService(opts ...option.RequestOption) (r AdminOrganizationProjectDataRetentionService) {
 	r = AdminOrganizationProjectDataRetentionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

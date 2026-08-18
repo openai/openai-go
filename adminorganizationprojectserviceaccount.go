@@ -36,7 +36,7 @@ type AdminOrganizationProjectServiceAccountService struct {
 // options.
 func NewAdminOrganizationProjectServiceAccountService(opts ...option.RequestOption) (r AdminOrganizationProjectServiceAccountService) {
 	r = AdminOrganizationProjectServiceAccountService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.APIKeys = NewAdminOrganizationProjectServiceAccountAPIKeyService(opts...)
 	return
 }

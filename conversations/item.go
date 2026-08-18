@@ -38,7 +38,7 @@ type ItemService struct {
 // is one), and before any request-specific options.
 func NewItemService(opts ...option.RequestOption) (r ItemService) {
 	r = ItemService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

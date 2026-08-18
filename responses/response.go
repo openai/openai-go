@@ -40,7 +40,7 @@ type ResponseService struct {
 // there is one), and before any request-specific options.
 func NewResponseService(opts ...option.RequestOption) (r ResponseService) {
 	r = ResponseService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.InputItems = NewInputItemService(opts...)
 	r.InputTokens = NewInputTokenService(opts...)
 	return

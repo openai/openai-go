@@ -93,7 +93,7 @@ func DefaultClientOptions() []option.RequestOption {
 			}
 		}
 	}
-	return defaults
+	return requestconfig.InheritedOptions(defaults...)
 }
 
 func defaultClientOptionsWithoutEnvironment() []option.RequestOption {
@@ -108,9 +108,9 @@ func defaultClientOptionsWithoutEnvironment() []option.RequestOption {
 func NewClient(opts ...option.RequestOption) (r Client) {
 	defaults := DefaultClientOptions()
 	if requestconfig.EnvironmentDefaultsDisabled(opts...) {
-		defaults = defaultClientOptionsWithoutEnvironment()
+		defaults = requestconfig.InheritedOptions(defaultClientOptionsWithoutEnvironment()...)
 	}
-	opts = append(defaults, opts...)
+	opts = requestconfig.InheritedOptions(append(defaults, opts...)...)
 
 	r = Client{Options: opts}
 

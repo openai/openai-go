@@ -30,7 +30,7 @@ type AdminOrganizationSpendLimitService struct {
 // client's options (if there is one), and before any request-specific options.
 func NewAdminOrganizationSpendLimitService(opts ...option.RequestOption) (r AdminOrganizationSpendLimitService) {
 	r = AdminOrganizationSpendLimitService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
@@ -29,7 +30,7 @@ type GraderGraderModelService struct {
 // options (if there is one), and before any request-specific options.
 func NewGraderGraderModelService(opts ...option.RequestOption) (r GraderGraderModelService) {
 	r = GraderGraderModelService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

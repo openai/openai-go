@@ -43,7 +43,7 @@ type ChatCompletionService struct {
 // there is one), and before any request-specific options.
 func NewChatCompletionService(opts ...option.RequestOption) (r ChatCompletionService) {
 	r = ChatCompletionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Messages = NewChatCompletionMessageService(opts...)
 	return
 }

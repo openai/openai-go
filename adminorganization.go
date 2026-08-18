@@ -3,6 +3,7 @@
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -34,7 +35,7 @@ type AdminOrganizationService struct {
 // options (if there is one), and before any request-specific options.
 func NewAdminOrganizationService(opts ...option.RequestOption) (r AdminOrganizationService) {
 	r = AdminOrganizationService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.AuditLogs = NewAdminOrganizationAuditLogService(opts...)
 	r.AdminAPIKeys = NewAdminOrganizationAdminAPIKeyService(opts...)
 	r.Usage = NewAdminOrganizationUsageService(opts...)
