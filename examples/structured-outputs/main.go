@@ -7,6 +7,7 @@ import (
 
 	"github.com/invopop/jsonschema"
 	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/responses"
 )
 
 // A struct that will be converted to a Structured Outputs response schema.
@@ -27,7 +28,7 @@ type Origin struct {
 	Organization string `json:"organization" jsonschema_description:"The organization that was in charge of its development"`
 }
 
-func GenerateSchema[T any]() interface{} {
+func GenerateSchema[T any]() (map[string]any, error) {
 	// Structured Outputs uses a subset of JSON schema
 	// These flags are necessary to comply with the subset
 	reflector := jsonschema.Reflector{
@@ -36,11 +37,35 @@ func GenerateSchema[T any]() interface{} {
 	}
 	var v T
 	schema := reflector.Reflect(v)
-	return schema
+	data, err := json.Marshal(schema)
+	if err != nil {
+		return nil, fmt.Errorf("marshal JSON schema: %w", err)
+	}
+	var result map[string]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, fmt.Errorf("decode JSON schema: %w", err)
+	}
+	return result, nil
 }
 
-// Generate the JSON schema at initialization time
-var HistoricalComputerResponseSchema = GenerateSchema[HistoricalComputer]()
+func historicalComputerParams(question string, schema map[string]any) responses.ResponseNewParams {
+	return responses.ResponseNewParams{
+		Model: openai.ChatModelGPT5_2,
+		Input: responses.ResponseNewParamsInputUnion{
+			OfString: openai.String(question),
+		},
+		Text: responses.ResponseTextConfigParam{
+			Format: responses.ResponseFormatTextConfigUnionParam{
+				OfJSONSchema: &responses.ResponseFormatTextJSONSchemaConfigParam{
+					Name:        "historical_computer",
+					Description: openai.String("Notable information about a computer"),
+					Schema:      schema,
+					Strict:      openai.Bool(true),
+				},
+			},
+		},
+	}
+}
 
 func main() {
 	client := openai.NewClient()
@@ -51,34 +76,21 @@ func main() {
 	print("> ")
 	println(question)
 
-	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
-		Name:        "historical_computer",
-		Description: openai.String("Notable information about a computer"),
-		Schema:      HistoricalComputerResponseSchema,
-		Strict:      openai.Bool(true),
+	schema, err := GenerateSchema[HistoricalComputer]()
+	if err != nil {
+		panic(err)
 	}
 
-	// Query the Chat Completions API
-	chat, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Messages: []openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage(question),
-		},
-		ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
-			OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{JSONSchema: schemaParam},
-		},
-		// Only certain models can perform structured outputs
-		Model: openai.ChatModelGPT4o2024_08_06,
-	})
-
+	response, err := client.Responses.New(ctx, historicalComputerParams(question, schema))
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
 	// The model responds with a JSON string, so parse it into a struct
 	var historicalComputer HistoricalComputer
-	err = json.Unmarshal([]byte(chat.Choices[0].Message.Content), &historicalComputer)
+	err = json.Unmarshal([]byte(response.OutputText()), &historicalComputer)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
 	// Use the model's structured response with a native Go struct

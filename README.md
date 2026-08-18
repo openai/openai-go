@@ -282,7 +282,7 @@ type Origin struct {
 
 // Structured Outputs uses a subset of JSON schema
 // These flags are necessary to comply with the subset
-func GenerateSchema[T any]() map[string]any {
+func GenerateSchema[T any]() (map[string]any, error) {
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
 		DoNotReference:            true,
@@ -290,18 +290,24 @@ func GenerateSchema[T any]() map[string]any {
 	var v T
 	schema := reflector.Reflect(v)
 
-	data, _ := json.Marshal(schema)
+	data, err := json.Marshal(schema)
+	if err != nil {
+		return nil, err
+	}
 	var result map[string]any
-	json.Unmarshal(data, &result)
-	return result
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
-
-// Generate the JSON schema at initialization time
-var HistoricalComputerSchema = GenerateSchema[HistoricalComputer]()
 
 func main() {
 	client := openai.NewClient()
 	ctx := context.Background()
+	schema, err := GenerateSchema[HistoricalComputer]()
+	if err != nil {
+		panic(err)
+	}
 
 	response, err := client.Responses.New(ctx, responses.ResponseNewParams{
 		Model: openai.ChatModelGPT5_2,
@@ -309,10 +315,14 @@ func main() {
 			OfString: openai.String("What computer ran the first neural network?"),
 		},
 		Text: responses.ResponseTextConfigParam{
-			Format: responses.ResponseFormatTextConfigParamOfJSONSchema(
-				"historical_computer",
-				HistoricalComputerSchema,
-			),
+			Format: responses.ResponseFormatTextConfigUnionParam{
+				OfJSONSchema: &responses.ResponseFormatTextJSONSchemaConfigParam{
+					Name:        "historical_computer",
+					Description: openai.String("Notable information about a computer"),
+					Schema:      schema,
+					Strict:      openai.Bool(true),
+				},
+			},
 		},
 	})
 	if err != nil {
@@ -321,7 +331,9 @@ func main() {
 
 	// extract into a well-typed struct
 	var historicalComputer HistoricalComputer
-	_ = json.Unmarshal([]byte(response.OutputText()), &historicalComputer)
+	if err := json.Unmarshal([]byte(response.OutputText()), &historicalComputer); err != nil {
+		panic(err)
+	}
 
 	historicalComputer.Name
 	historicalComputer.Origin.YearBuilt
@@ -332,7 +344,7 @@ func main() {
 }
 ```
 
-> See the [full structured outputs example](./examples/responses-structured-outputs/main.go)
+> See the [full structured outputs example](./examples/structured-outputs/main.go)
 
 </details>
 
