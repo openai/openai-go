@@ -100,7 +100,13 @@ func (d *decoderBuilder) newStructUnionDecoder(t reflect.Type) decoderFunc {
 				}
 				if discriminator == decoder.discriminator {
 					inner := v.FieldByIndex(decoder.field.Index)
-					return decoder.decoder(n, inner, state)
+					// Preservation only applies to the union that is itself an array
+					// element. Nested arrays will opt their own elements in.
+					preserveUnknown := state.preserveUnknownDiscriminatedUnion
+					state.preserveUnknownDiscriminatedUnion = false
+					err := decoder.decoder(n, inner, state)
+					state.preserveUnknownDiscriminatedUnion = preserveUnknown
+					return err
 				}
 			}
 			if state.preserveUnknownDiscriminatedUnion && discriminatorNode.Exists() && compatibleDiscriminatorType && preserveUnknownParamUnion(v, n.Raw) {

@@ -15,8 +15,10 @@ type arrayDiscriminatedUnion struct {
 }
 
 type arrayDiscriminatedText struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
+	Type        string                          `json:"type"`
+	Text        string                          `json:"text"`
+	Nested      arrayNestedDiscriminatedUnion   `json:"nested"`
+	NestedParts []arrayNestedDiscriminatedUnion `json:"nested_parts"`
 }
 
 type arrayDiscriminatedRefusal struct {
@@ -28,11 +30,24 @@ type arrayDiscriminatedHolder struct {
 	Parts []arrayDiscriminatedUnion `json:"parts"`
 }
 
+type arrayNestedDiscriminatedUnion struct {
+	OfKnown *arrayNestedDiscriminatedKnown `json:",omitzero,inline"`
+	param.APIUnion
+}
+
+type arrayNestedDiscriminatedKnown struct {
+	Type string `json:"type"`
+}
+
 func init() {
 	RegisterUnion[arrayDiscriminatedUnion](
 		"type",
 		Discriminator[arrayDiscriminatedText]("text"),
 		Discriminator[arrayDiscriminatedRefusal]("refusal"),
+	)
+	RegisterUnion[arrayNestedDiscriminatedUnion](
+		"type",
+		Discriminator[arrayNestedDiscriminatedKnown]("known"),
 	)
 }
 
@@ -90,6 +105,34 @@ func TestUnknownDiscriminatedUnionStillErrorsOutsideArray(t *testing.T) {
 	var got arrayDiscriminatedUnion
 	if err := Unmarshal([]byte(`{"type":"extension","text":"unknown"}`), &got); err == nil {
 		t.Fatal("unknown discriminated union unexpectedly decoded without an error")
+	}
+}
+
+func TestArrayDecoderDoesNotPreserveNestedUnknownDiscriminatedUnion(t *testing.T) {
+	var got arrayDiscriminatedHolder
+	err := Unmarshal([]byte(`{"parts":[{"type":"text","text":"kept","nested":{"type":"extension"}}]}`), &got)
+	if err != nil {
+		t.Fatalf("Unmarshal returned error: %v", err)
+	}
+	if len(got.Parts) != 1 || got.Parts[0].OfText == nil {
+		t.Fatalf("known array element was not decoded: %#v", got.Parts)
+	}
+	if _, ok := got.Parts[0].OfText.Nested.Overrides(); ok {
+		t.Fatal("nested unknown union was unexpectedly preserved")
+	}
+}
+
+func TestArrayDecoderPreservesUnknownNestedArrayElement(t *testing.T) {
+	var got arrayDiscriminatedHolder
+	err := Unmarshal([]byte(`{"parts":[{"type":"text","text":"kept","nested_parts":[{"type":"extension"}]}]}`), &got)
+	if err != nil {
+		t.Fatalf("Unmarshal returned error: %v", err)
+	}
+	if len(got.Parts) != 1 || got.Parts[0].OfText == nil || len(got.Parts[0].OfText.NestedParts) != 1 {
+		t.Fatalf("nested array element was not decoded: %#v", got.Parts)
+	}
+	if _, ok := got.Parts[0].OfText.NestedParts[0].Overrides(); !ok {
+		t.Fatal("unknown nested array element was not preserved")
 	}
 }
 
