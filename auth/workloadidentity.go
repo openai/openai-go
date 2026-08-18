@@ -238,6 +238,12 @@ func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer
 // Single-flight pattern: ensures only one refresh runs, others wait for result
 func (w *WorkloadIdentityAuth) handleLockedRefresh(ctx context.Context, httpClient HTTPDoer) (string, error) {
 	if w.refreshInFlight == nil {
+		if w.source.kind() == workloadIdentityCredentialSourceX509 {
+			if err := ctx.Err(); err != nil {
+				w.mu.Unlock()
+				return "", err
+			}
+		}
 		state := w.beginRefreshLocked(0)
 		if w.source.kind() == workloadIdentityCredentialSourceX509 {
 			w.startSharedRefresh(ctx, state, httpClient)

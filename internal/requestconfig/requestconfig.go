@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -114,28 +113,6 @@ type requestFinalizer func(*RequestConfig) error
 
 type requestFinalizerOption struct {
 	finalize func(*RequestConfig) error
-}
-
-// noRetryError marks deterministic request setup or policy failures that
-// cannot be fixed by replaying the same request. It deliberately remains an
-// internal implementation detail so public error strings and wrapping stay
-// unchanged.
-type noRetryError struct {
-	err error
-}
-
-func (e *noRetryError) Error() string { return e.err.Error() }
-func (e *noRetryError) Unwrap() error { return e.err }
-func (e *noRetryError) NoRetry()      {}
-
-// WithNoRetryError marks err as deterministic for the generic request retry
-// loop while preserving its message and unwrap chain. This function is
-// internal API and may change without notice.
-func WithNoRetryError(err error) error {
-	if err == nil {
-		return nil
-	}
-	return &noRetryError{err: err}
 }
 
 func (o requestFinalizerOption) Apply(cfg *RequestConfig) error {
@@ -393,8 +370,7 @@ func shouldRetry(req *http.Request, res *http.Response, err error) bool {
 		return false
 	}
 
-	var deterministic interface{ NoRetry() }
-	if errors.As(err, &deterministic) {
+	if internal.IsNoRetryError(err) {
 		return false
 	}
 
@@ -927,6 +903,9 @@ func WithBearerAuthPreference() RequestOption {
 }
 
 func (r RequestConfig) preferredAuthentication(hasBearerCredential bool) authCredentialPreference {
+	if r.authHeaderOverride {
+		return authCredentialPreferenceNone
+	}
 	if r.authPreference == authCredentialPreferenceBearer && r.Security.BearerAuth && hasBearerCredential {
 		return authCredentialPreferenceBearer
 	}
@@ -949,10 +928,6 @@ func (r RequestConfig) BearerAuthenticationPreferred() bool {
 }
 
 func ApplySecurity(r RequestConfig) {
-	if r.authHeaderOverride {
-		return
-	}
-
 	switch r.preferredAuthentication(r.APIKey != "") {
 	case authCredentialPreferenceBearer:
 		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))

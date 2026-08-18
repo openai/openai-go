@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/openai/openai-go/v3/internal"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
@@ -467,10 +468,10 @@ func verifyAWSCredentials(ctx context.Context, awsCfg aws.Config, explicitAWS bo
 func bearerMiddleware(baseURL *url.URL, provider TokenProvider) option.Middleware {
 	return func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 		if err := validateProviderRequest(req, baseURL); err != nil {
-			return nil, requestconfig.WithNoRetryError(err)
+			return nil, internal.WithNoRetryError(err)
 		}
 		if req.Header.Get("Authorization") != "" {
-			return nil, requestconfig.WithNoRetryError(errors.New("bedrock: provider authentication cannot be combined with a custom `Authorization` header"))
+			return nil, internal.WithNoRetryError(errors.New("bedrock: provider authentication cannot be combined with a custom `Authorization` header"))
 		}
 
 		token, err := provider(req.Context())
@@ -479,7 +480,7 @@ func bearerMiddleware(baseURL *url.URL, provider TokenProvider) option.Middlewar
 		}
 		token = strings.TrimSpace(token)
 		if token == "" {
-			return nil, requestconfig.WithNoRetryError(errors.New("bedrock: bearer credential provider must return a non-empty string"))
+			return nil, internal.WithNoRetryError(errors.New("bedrock: bearer credential provider must return a non-empty string"))
 		}
 		req.Header.Set("Authorization", "Bearer "+token)
 		return next(req)
@@ -501,25 +502,25 @@ func endpointSigV4Middleware(baseURL *url.URL, cfg aws.Config, signer httpSigner
 	}
 	return func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 		if err := validateProviderRequest(req, baseURL); err != nil {
-			return nil, requestconfig.WithNoRetryError(err)
+			return nil, internal.WithNoRetryError(err)
 		}
 		if req.Header.Get("Authorization") != "" {
-			return nil, requestconfig.WithNoRetryError(errors.New("bedrock: provider authentication cannot be combined with a custom `Authorization` header"))
+			return nil, internal.WithNoRetryError(errors.New("bedrock: provider authentication cannot be combined with a custom `Authorization` header"))
 		}
 		if _, err := reconcileEndpointRegion(req.URL, cfg.Region); err != nil {
-			return nil, requestconfig.WithNoRetryError(err)
+			return nil, internal.WithNoRetryError(err)
 		}
 
 		body, err := materializeReplayableBody(req)
 		if err != nil {
-			return nil, requestconfig.WithNoRetryError(err)
+			return nil, internal.WithNoRetryError(err)
 		}
 		credentials, err := cfg.Credentials.Retrieve(req.Context())
 		if err != nil {
 			return nil, &safeError{message: credentialResolutionMessage, cause: err}
 		}
 		if strings.TrimSpace(credentials.AccessKeyID) == "" || strings.TrimSpace(credentials.SecretAccessKey) == "" {
-			return nil, requestconfig.WithNoRetryError(errors.New(credentialResolutionMessage))
+			return nil, internal.WithNoRetryError(errors.New(credentialResolutionMessage))
 		}
 
 		req.Method = strings.ToUpper(req.Method)

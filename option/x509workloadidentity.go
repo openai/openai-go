@@ -157,7 +157,7 @@ func configureX509Request(
 		}
 		authorizationMiddleware = func(req *http.Request, next MiddlewareNext) (*http.Response, error) {
 			if err := apiOrigin.validateRequest(req); err != nil {
-				return nil, requestconfig.WithNoRetryError(err)
+				return nil, internal.WithNoRetryError(err)
 			}
 			return auth.WorkloadIdentityMiddleware(wia, configuredHTTPDoer, internal.WithX509RequestPolicy(req), next)
 		}
@@ -168,10 +168,10 @@ func configureX509Request(
 		}
 		authorizationMiddleware = func(req *http.Request, next MiddlewareNext) (*http.Response, error) {
 			if err := apiOrigin.validateRequest(req); err != nil {
-				return nil, requestconfig.WithNoRetryError(err)
+				return nil, internal.WithNoRetryError(err)
 			}
 			if !hasExactX509Authorization(req.Header, expectedAuthorization) {
-				return nil, requestconfig.WithNoRetryError(errX509AuthorizationProvenance)
+				return nil, internal.WithNoRetryError(errX509AuthorizationProvenance)
 			}
 			return next(internal.WithExpectedAuthorization(req, expectedAuthorization))
 		}
@@ -179,17 +179,17 @@ func configureX509Request(
 	r.Middlewares = append([]Middleware{authorizationMiddleware}, r.Middlewares...)
 	r.Middlewares = append(r.Middlewares, func(req *http.Request, next MiddlewareNext) (*http.Response, error) {
 		if err := apiOrigin.validateRequest(req); err != nil {
-			return nil, requestconfig.WithNoRetryError(err)
+			return nil, internal.WithNoRetryError(err)
 		}
 		if hasConflictingX509CredentialHeaders(req.Header) {
-			return nil, requestconfig.WithNoRetryError(errX509RequestCredentialConflict)
+			return nil, internal.WithNoRetryError(errX509RequestCredentialConflict)
 		}
 		expectedAuthorization, ok := internal.ExpectedAuthorization(req)
 		if !ok {
-			return nil, requestconfig.WithNoRetryError(errors.New("X.509 workload identity authorization state is missing"))
+			return nil, internal.WithNoRetryError(errors.New("X.509 workload identity authorization state is missing"))
 		}
 		if !hasExactX509Authorization(req.Header, expectedAuthorization) {
-			return nil, requestconfig.WithNoRetryError(errX509AuthorizationProvenance)
+			return nil, internal.WithNoRetryError(errX509AuthorizationProvenance)
 		}
 		return next(req)
 	})

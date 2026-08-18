@@ -663,6 +663,52 @@ func TestClientX509WorkloadIdentityHonorsMethodAdminCredentialPreference(t *test
 	}
 }
 
+func TestClientX509WorkloadIdentityHonorsExplicitAuthorizationDeletion(t *testing.T) {
+	var exchangeCalls atomic.Int32
+	var apiCalls atomic.Int32
+	var authorization string
+	httpClient := nativeX509HTTPClient(t, func(req *http.Request) (*http.Response, error) {
+		if req.URL.Hostname() == "mtls.auth.openai.com" {
+			exchangeCalls.Add(1)
+			return nil, errors.New("token exchange must not be attempted")
+		}
+		apiCalls.Add(1)
+		authorization = req.Header.Get("Authorization")
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{"Content-Type": []string{"application/json"}},
+			Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+		}, nil
+	})
+	client := openai.NewClient(
+		option.WithBaseURL("https://trusted.example/v1"),
+		option.WithX509WorkloadIdentity(clientX509WorkloadIdentity()),
+		option.WithHTTPClient(httpClient),
+	)
+
+	var result map[string]any
+	err := client.Execute(
+		t.Context(),
+		http.MethodGet,
+		"models",
+		nil,
+		&result,
+		option.WithHeaderDel("Authorization"),
+	)
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if got := exchangeCalls.Load(); got != 0 {
+		t.Fatalf("token exchange calls = %d, want 0", got)
+	}
+	if got := apiCalls.Load(); got != 1 {
+		t.Fatalf("API calls = %d, want 1", got)
+	}
+	if authorization != "" {
+		t.Fatalf("Authorization = %q, want empty", authorization)
+	}
+}
+
 func TestClientRejectsAzureAuthenticationWithX509BeforeExchange(t *testing.T) {
 	credential := &countingAzureTokenCredential{}
 	testCases := []struct {

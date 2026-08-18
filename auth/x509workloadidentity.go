@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/openai/openai-go/v3/internal"
 )
 
 const (
@@ -37,23 +39,6 @@ type x509CredentialSource struct {
 }
 
 var errX509NativeHTTPTransport = errors.New("X.509 workload identity requires an *http.Client with a native *http.Transport so its client identity can be verified")
-
-// x509TokenExchangeError prevents the generic API request loop from repeating
-// an exchange that has already exhausted the X.509 exchange retry policy.
-type x509TokenExchangeError struct {
-	err error
-}
-
-func (e *x509TokenExchangeError) Error() string { return e.err.Error() }
-func (e *x509TokenExchangeError) Unwrap() error { return e.err }
-func (e *x509TokenExchangeError) NoRetry()      {}
-
-func noRetryX509TokenExchangeError(err error) error {
-	if err == nil {
-		return nil
-	}
-	return &x509TokenExchangeError{err: err}
-}
 
 // NewX509WorkloadIdentityAuth creates the HTTP authentication state for an
 // X.509 workload identity. Token exchange remains lazy until GetToken is called.
@@ -102,7 +87,7 @@ func (s x509CredentialSource) exchange(
 		ServiceAccountID:   serviceAccountID,
 	})
 	if err != nil {
-		return exchangedToken{}, noRetryX509TokenExchangeError(fmt.Errorf("failed to marshal token exchange request: %w", err))
+		return exchangedToken{}, internal.WithNoRetryError(fmt.Errorf("failed to marshal token exchange request: %w", err))
 	}
 	httpClient = withoutRedirects(httpClient)
 	for retry := 0; ; retry++ {
@@ -113,23 +98,23 @@ func (s x509CredentialSource) exchange(
 			if readErr == nil {
 				token, parseErr := parseX509TokenExchangeResponse(resp.StatusCode, responseBody)
 				if parseErr == nil || !shouldRetryTokenExchange(resp, nil) || retry >= tokenExchangeMaxRetries {
-					return token, noRetryX509TokenExchangeError(parseErr)
+					return token, internal.WithNoRetryError(parseErr)
 				}
 			} else {
 				if resp.StatusCode != http.StatusOK && !shouldRetryTokenExchange(resp, nil) {
 					_, statusErr := parseX509TokenExchangeResponse(resp.StatusCode, nil)
-					return exchangedToken{}, noRetryX509TokenExchangeError(statusErr)
+					return exchangedToken{}, internal.WithNoRetryError(statusErr)
 				}
 				if retry >= tokenExchangeMaxRetries {
-					return exchangedToken{}, noRetryX509TokenExchangeError(readErr)
+					return exchangedToken{}, internal.WithNoRetryError(readErr)
 				}
 			}
 		} else if retry >= tokenExchangeMaxRetries {
-			return exchangedToken{}, noRetryX509TokenExchangeError(exchangeErr)
+			return exchangedToken{}, internal.WithNoRetryError(exchangeErr)
 		}
 
 		if err := waitForTokenExchangeRetry(ctx, tokenExchangeRetryDelay(resp, retry)); err != nil {
-			return exchangedToken{}, noRetryX509TokenExchangeError(err)
+			return exchangedToken{}, internal.WithNoRetryError(err)
 		}
 	}
 }

@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"os"
 	"testing"
+
+	"github.com/openai/openai-go/v3/internal"
 )
 
 type closeTrackingReadCloser struct {
@@ -25,6 +27,11 @@ type httpDoerFunc func(*http.Request) (*http.Response, error)
 func (f httpDoerFunc) Do(req *http.Request) (*http.Response, error) {
 	return f(req)
 }
+
+type callerNoRetryError struct{}
+
+func (callerNoRetryError) Error() string { return "caller error" }
+func (callerNoRetryError) NoRetry()      {}
 
 func newTrackedFileBody(t *testing.T) *closeTrackingReadCloser {
 	t.Helper()
@@ -238,7 +245,7 @@ func TestExecuteClosesAttemptBodyOnHandlerError(t *testing.T) {
 		attempts := 0
 		cfg.Middlewares = []middleware{func(*http.Request, middlewareNext) (*http.Response, error) {
 			attempts++
-			return nil, WithNoRetryError(errors.New("blocked"))
+			return nil, internal.WithNoRetryError(errors.New("blocked"))
 		}}
 
 		err := cfg.Execute()
@@ -312,4 +319,27 @@ func TestExecuteClosesAttemptBodyOnHandlerError(t *testing.T) {
 			t.Fatalf("body closes = %d, want 1", body.closes)
 		}
 	})
+}
+
+func TestExecuteRetriesCallerErrorWithUnrelatedNoRetryMethod(t *testing.T) {
+	cfg := newBodyCloseRequestConfig(t, nil)
+	cfg.MaxRetries = 1
+	attempts := 0
+	cfg.Middlewares = []middleware{func(*http.Request, middlewareNext) (*http.Response, error) {
+		attempts++
+		return &http.Response{
+			StatusCode: http.StatusInternalServerError,
+			Header:     http.Header{"Retry-After-Ms": {"0"}},
+			Body:       http.NoBody,
+		}, callerNoRetryError{}
+	}}
+
+	err := cfg.Execute()
+	var callerErr callerNoRetryError
+	if !errors.As(err, &callerErr) {
+		t.Fatalf("Execute() error = %v, want callerNoRetryError", err)
+	}
+	if attempts != 2 {
+		t.Fatalf("attempts = %d, want 2", attempts)
+	}
 }

@@ -235,6 +235,28 @@ func TestX509CanceledOnlyWaiterCancelsSharedRefresh(t *testing.T) {
 	}
 }
 
+func TestX509PreCanceledContextDoesNotStartRefresh(t *testing.T) {
+	exchangeStarted := make(chan struct{}, 1)
+	source := &internalX509CredentialSource{exchangeFunc: func(ctx context.Context) (exchangedToken, error) {
+		exchangeStarted <- struct{}{}
+		<-ctx.Done()
+		return exchangedToken{}, ctx.Err()
+	}}
+	wia := newWorkloadIdentityAuth("idp-test", "svc-test", source)
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	_, err := wia.GetToken(ctx, internalNativeX509HTTPClient())
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("GetToken() error = %v, want context.Canceled", err)
+	}
+	select {
+	case <-exchangeStarted:
+		t.Fatal("token exchange started for an already-canceled context")
+	case <-time.After(100 * time.Millisecond):
+	}
+}
+
 func TestX509SharedRefreshPreservesInitiatorContextValues(t *testing.T) {
 	type tenantContextKey struct{}
 	const tenant = "tenant-a"
