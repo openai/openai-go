@@ -64,6 +64,88 @@ func TestAccumulatorEmptyAndNullToolCallStateTransitions(t *testing.T) {
 	}
 }
 
+func TestAccumulatorJustFinishedContentUsesChoiceIndex(t *testing.T) {
+	var acc openai.ChatCompletionAccumulator
+
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":0,"delta":{"content":"choice zero"}},{"index":1,"delta":{"content":"choice one"}}]}`)
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":0,"delta":{"content":" continues"}},{"index":1,"delta":{},"finish_reason":"stop"}]}`)
+
+	content, ok := acc.JustFinishedContent()
+	if !ok {
+		t.Fatal("JustFinishedContent did not return the completed content")
+	}
+	if content != "choice one" {
+		t.Fatalf("content: expected %q, got %q", "choice one", content)
+	}
+}
+
+func TestAccumulatorJustFinishedContentReturnsFirstMatchingChoice(t *testing.T) {
+	var acc openai.ChatCompletionAccumulator
+
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":2,"delta":{"content":"choice two"}},{"index":1,"delta":{"content":"choice one"}}]}`)
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":2,"delta":{},"finish_reason":"stop"},{"index":1,"delta":{},"finish_reason":"stop"}]}`)
+
+	content, ok := acc.JustFinishedContent()
+	if !ok {
+		t.Fatal("JustFinishedContent did not return the completed content")
+	}
+	if content != "choice two" {
+		t.Fatalf("content: expected %q, got %q", "choice two", content)
+	}
+}
+
+func TestAccumulatorPreservesFinishedEventsFromMultipleChoices(t *testing.T) {
+	var acc openai.ChatCompletionAccumulator
+
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":0,"delta":{"content":"choice zero"}},{"index":1,"delta":{"refusal":"choice one refusal"}},{"index":2,"delta":{"tool_calls":[{"index":1,"id":"call_choice_two","type":"function","function":{"name":"choice_two_tool","arguments":"{\"value\":2}"}}]}}]}`)
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":0,"delta":{"content":" continues"}},{"index":1,"delta":{},"finish_reason":"stop"},{"index":2,"delta":{},"finish_reason":"tool_calls"}]}`)
+
+	if content, ok := acc.JustFinishedContent(); ok {
+		t.Fatalf("JustFinishedContent returned unexpected content: %q", content)
+	}
+
+	refusal, ok := acc.JustFinishedRefusal()
+	if !ok {
+		t.Fatal("JustFinishedRefusal did not return the completed refusal")
+	}
+	if refusal != "choice one refusal" {
+		t.Fatalf("refusal: expected %q, got %q", "choice one refusal", refusal)
+	}
+
+	toolCall, ok := acc.JustFinishedToolCall()
+	if !ok {
+		t.Fatal("JustFinishedToolCall did not return the completed tool call")
+	}
+	if toolCall.Index != 1 {
+		t.Fatalf("tool call index: expected 1, got %d", toolCall.Index)
+	}
+	if toolCall.ID != "call_choice_two" {
+		t.Fatalf("tool call ID: expected %q, got %q", "call_choice_two", toolCall.ID)
+	}
+	if toolCall.Name != "choice_two_tool" {
+		t.Fatalf("tool call name: expected %q, got %q", "choice_two_tool", toolCall.Name)
+	}
+	if toolCall.Arguments != `{"value":2}` {
+		t.Fatalf("tool call arguments: expected %q, got %q", `{"value":2}`, toolCall.Arguments)
+	}
+
+	pr688AddChunk(t, &acc, `{"id":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"},{"index":1,"delta":{},"finish_reason":"stop"},{"index":2,"delta":{},"finish_reason":"tool_calls"}]}`)
+
+	content, ok := acc.JustFinishedContent()
+	if !ok {
+		t.Fatal("JustFinishedContent did not return the completed content")
+	}
+	if content != "choice zero continues" {
+		t.Fatalf("content: expected %q, got %q", "choice zero continues", content)
+	}
+	if refusal, ok := acc.JustFinishedRefusal(); ok {
+		t.Fatalf("JustFinishedRefusal returned repeated refusal: %q", refusal)
+	}
+	if toolCall, ok := acc.JustFinishedToolCall(); ok {
+		t.Fatalf("JustFinishedToolCall returned repeated tool call: %+v", toolCall)
+	}
+}
+
 func pr688AddChunk(t *testing.T, acc *openai.ChatCompletionAccumulator, raw string) {
 	t.Helper()
 
