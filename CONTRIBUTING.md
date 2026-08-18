@@ -31,13 +31,15 @@ modify the contents of the `lib/` and `examples/` directories.
   variables such as `OPENAI_API_KEY`; use synthetic values and payloads in
   examples, tests, and fixtures. Prefer `httptest` or the existing local mock
   server over requests to live services.
-- Always redact all credential-bearing request and response headers and other
+- Redact all credential-bearing request and response headers and other
   metadata, including `Authorization`, `Cookie`, `Set-Cookie`, `Api-Key`,
   `X-Api-Key`, and `X-Amz-Security-Token`; credentials in URLs or query
-  parameters; and webhook secrets. Redact real or sensitive request or response
-  bodies from default or uncontrolled logs, errors, fixtures, recordings, and CI
-  output. Preserve safe synthetic payloads and intentional public API error or
-  opt-in debug diagnostics; sanitize sensitive bodies before sharing them.
+  parameters; webhook secrets; and sensitive request or response bodies before
+  logging, recording, forwarding, or disclosure. `Error.DumpRequest`,
+  `Error.DumpResponse`, and `Error.Error` are intentionally raw, opt-in
+  diagnostics and may include credentials, URLs, headers, or bodies; sanitize
+  them before sharing or sending them to an untrusted sink. Preserve safe
+  synthetic payloads and intentional public API error or debug diagnostics.
 - Review direct and transitive dependency changes in `go.mod` and `go.sum`
   across the root, `examples`, `api_reference`, `internal/testdata/consumer`,
   and `tools` modules. Review new `replace` directives, dependency origins,

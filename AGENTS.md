@@ -14,12 +14,14 @@ explicitly requires it.
   credentials from environment variables, such as `OPENAI_API_KEY`; use fake
   values, synthetic fixtures, `t.Setenv`, and `httptest` or local mock servers
   in tests.
-- Always redact all credential-bearing request and response headers and other
+- Redact all credential-bearing request and response headers and other
   metadata, including `Authorization`, `Cookie`, `Set-Cookie`, `Api-Key`,
   `X-Api-Key`, and `X-Amz-Security-Token`; credentials in URLs or query
-  parameters; and webhook material. Redact sensitive request or response bodies
-  from default or uncontrolled logs, errors, traces, test recordings, and CI
-  output; sanitize intentional diagnostics before sharing them.
+  parameters; webhook material; and sensitive request or response bodies before
+  logging, recording, forwarding, or disclosure. `Error.DumpRequest`,
+  `Error.DumpResponse`, and `Error.Error` intentionally expose raw, opt-in
+  diagnostics that may include these values; sanitize their output before it
+  reaches logs, test recordings, CI output, or any other untrusted sink.
 - Require SDK CODEOWNER review for changes to authentication, Azure or AWS
   credentials, webhook verification, custom endpoints, redirects, proxies, TLS,
   file handling, uploads, JSON or event-stream decoding, code generation, CI,
