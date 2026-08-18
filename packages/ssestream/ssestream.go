@@ -26,14 +26,14 @@ func NewDecoder(res *http.Response) Decoder {
 		return nil
 	}
 
-	contentType := strings.ToLower(res.Header.Get("content-type"))
+	contentType, mediaType := normalizeContentType(res.Header.Get("content-type"))
 	if t, ok := decoderTypes[contentType]; ok {
 		return t(res.Body)
 	}
 
 	// Preserve parameter-specific registrations while allowing a bare media
 	// type registration to match standard Content-Type parameters.
-	if mediaType, _, err := mime.ParseMediaType(contentType); err == nil {
+	if mediaType != "" {
 		if t, ok := decoderTypes[mediaType]; ok {
 			return t(res.Body)
 		}
@@ -47,7 +47,16 @@ func NewDecoder(res *http.Response) Decoder {
 var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
 
 func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
-	decoderTypes[strings.ToLower(contentType)] = decoder
+	contentType, _ = normalizeContentType(contentType)
+	decoderTypes[contentType] = decoder
+}
+
+func normalizeContentType(contentType string) (string, string) {
+	mediaType, params, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return strings.ToLower(contentType), ""
+	}
+	return mime.FormatMediaType(mediaType, params), mediaType
 }
 
 type Event struct {

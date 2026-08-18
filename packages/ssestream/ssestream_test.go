@@ -124,9 +124,10 @@ func TestNewDecoderPreservesRegisteredContentTypeParameters(t *testing.T) {
 		return wantV2
 	})
 	t.Cleanup(func() {
-		delete(decoderTypes, mediaType)
-		delete(decoderTypes, profileV1)
-		delete(decoderTypes, profileV2)
+		for _, contentType := range []string{mediaType, profileV1, profileV2} {
+			key, _ := normalizeContentType(contentType)
+			delete(decoderTypes, key)
+		}
 	})
 
 	for name, test := range map[string]struct {
@@ -134,16 +135,65 @@ func TestNewDecoderPreservesRegisteredContentTypeParameters(t *testing.T) {
 		want        Decoder
 	}{
 		"profile v1": {
-			contentType: "Application/X-OpenAI-Go-Test-Parameters; Profile=V1",
+			contentType: "Application/X-OpenAI-Go-Test-Parameters; Profile=v1",
 			want:        wantV1,
 		},
 		"profile v2": {
-			contentType: "Application/X-OpenAI-Go-Test-Parameters; Profile=V2",
+			contentType: "Application/X-OpenAI-Go-Test-Parameters; Profile=v2",
 			want:        wantV2,
 		},
 		"unregistered profile": {
-			contentType: "Application/X-OpenAI-Go-Test-Parameters; Profile=V3",
+			contentType: "Application/X-OpenAI-Go-Test-Parameters; Profile=v3",
 			want:        wantDefault,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			decoder := NewDecoder(&http.Response{
+				Header: http.Header{
+					"Content-Type": {test.contentType},
+				},
+				Body: io.NopCloser(strings.NewReader("")),
+			})
+
+			if decoder != test.want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
+func TestNewDecoderPreservesCaseSensitiveContentTypeParameterValues(t *testing.T) {
+	const (
+		mediaType = "application/x-openai-go-test-profile"
+		profileV1 = mediaType + "; profile=\"https://example.com/V1\""
+		profilev1 = mediaType + "; profile=\"https://example.com/v1\""
+	)
+	wantV1 := &testDecoder{}
+	wantv1 := &testDecoder{}
+	RegisterDecoder(profileV1, func(io.ReadCloser) Decoder {
+		return wantV1
+	})
+	RegisterDecoder(profilev1, func(io.ReadCloser) Decoder {
+		return wantv1
+	})
+	t.Cleanup(func() {
+		for _, contentType := range []string{profileV1, profilev1} {
+			key, _ := normalizeContentType(contentType)
+			delete(decoderTypes, key)
+		}
+	})
+
+	for name, test := range map[string]struct {
+		contentType string
+		want        Decoder
+	}{
+		"uppercase value": {
+			contentType: "Application/X-OpenAI-Go-Test-Profile; Profile=\"https://example.com/V1\"",
+			want:        wantV1,
+		},
+		"lowercase value": {
+			contentType: "Application/X-OpenAI-Go-Test-Profile; Profile=\"https://example.com/v1\"",
+			want:        wantv1,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
