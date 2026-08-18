@@ -39,7 +39,7 @@ type ContainerFileService struct {
 // there is one), and before any request-specific options.
 func NewContainerFileService(opts ...option.RequestOption) (r ContainerFileService) {
 	r = ContainerFileService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Content = NewContainerFileContentService(opts...)
 	return
 }

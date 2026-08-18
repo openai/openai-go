@@ -75,6 +75,10 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 			return errors.New("apiVersion is an empty string, but needs to be set. See https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning for details.")
 		}
 
+		if err := requestconfig.WithEndpointProvider("Azure").Apply(rc); err != nil {
+			return err
+		}
+
 		if err := withQueryAdd.Apply(rc); err != nil {
 			return err
 		}
@@ -113,6 +117,9 @@ func WithTokenCredentialScopes(scopes []string) func(*tokenCredentialConfig) err
 // [Azure Identity]: https://pkg.go.dev/github.com/Azure/azure-sdk-for-go/sdk/azidentity
 func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...TokenCredentialOption) option.RequestOption {
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		if err := requestconfig.WithEndpointProvider("Azure").Apply(rc); err != nil {
+			return err
+		}
 		tc := &tokenCredentialConfig{
 			Scopes: []string{"https://cognitiveservices.azure.com/.default"},
 		}
@@ -156,6 +163,7 @@ func WithAPIKey(apiKey string) option.RequestOption {
 	// automatically injecting environment-derived client credentials.
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
 		return rc.Apply(
+			requestconfig.WithEndpointProvider("Azure"),
 			option.WithHeaderDel("Authorization"),
 			option.WithHeader("Api-Key", apiKey),
 		)

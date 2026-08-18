@@ -35,7 +35,7 @@ type AdminOrganizationProjectSpendAlertService struct {
 // options.
 func NewAdminOrganizationProjectSpendAlertService(opts ...option.RequestOption) (r AdminOrganizationProjectSpendAlertService) {
 	r = AdminOrganizationProjectSpendAlertService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

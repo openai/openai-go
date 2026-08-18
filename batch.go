@@ -37,7 +37,7 @@ type BatchService struct {
 // is one), and before any request-specific options.
 func NewBatchService(opts ...option.RequestOption) (r BatchService) {
 	r = BatchService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

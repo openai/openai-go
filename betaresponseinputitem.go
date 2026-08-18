@@ -35,7 +35,7 @@ type BetaResponseInputItemService struct {
 // options (if there is one), and before any request-specific options.
 func NewBetaResponseInputItemService(opts ...option.RequestOption) (r BetaResponseInputItemService) {
 	r = BetaResponseInputItemService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

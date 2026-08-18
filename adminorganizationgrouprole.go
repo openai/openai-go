@@ -34,7 +34,7 @@ type AdminOrganizationGroupRoleService struct {
 // client's options (if there is one), and before any request-specific options.
 func NewAdminOrganizationGroupRoleService(opts ...option.RequestOption) (r AdminOrganizationGroupRoleService) {
 	r = AdminOrganizationGroupRoleService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

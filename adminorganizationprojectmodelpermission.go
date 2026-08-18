@@ -32,7 +32,7 @@ type AdminOrganizationProjectModelPermissionService struct {
 // options.
 func NewAdminOrganizationProjectModelPermissionService(opts ...option.RequestOption) (r AdminOrganizationProjectModelPermissionService) {
 	r = AdminOrganizationProjectModelPermissionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

@@ -34,7 +34,7 @@ type ModelService struct {
 // is one), and before any request-specific options.
 func NewModelService(opts ...option.RequestOption) (r ModelService) {
 	r = ModelService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

@@ -44,7 +44,7 @@ type VideoService struct {
 // 2026.
 func NewVideoService(opts ...option.RequestOption) (r VideoService) {
 	r = VideoService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

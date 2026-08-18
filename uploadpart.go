@@ -36,7 +36,7 @@ type UploadPartService struct {
 // there is one), and before any request-specific options.
 func NewUploadPartService(opts ...option.RequestOption) (r UploadPartService) {
 	r = UploadPartService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

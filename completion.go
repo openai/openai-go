@@ -34,7 +34,7 @@ type CompletionService struct {
 // there is one), and before any request-specific options.
 func NewCompletionService(opts ...option.RequestOption) (r CompletionService) {
 	r = CompletionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

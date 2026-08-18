@@ -35,7 +35,7 @@ type AdminOrganizationProjectUserService struct {
 // client's options (if there is one), and before any request-specific options.
 func NewAdminOrganizationProjectUserService(opts ...option.RequestOption) (r AdminOrganizationProjectUserService) {
 	r = AdminOrganizationProjectUserService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Roles = NewAdminOrganizationProjectUserRoleService(opts...)
 	return
 }

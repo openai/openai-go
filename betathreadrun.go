@@ -44,7 +44,7 @@ type BetaThreadRunService struct {
 // there is one), and before any request-specific options.
 func NewBetaThreadRunService(opts ...option.RequestOption) (r BetaThreadRunService) {
 	r = BetaThreadRunService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Steps = NewBetaThreadRunStepService(opts...)
 	return
 }

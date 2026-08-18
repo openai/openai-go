@@ -40,7 +40,7 @@ type BetaThreadMessageService struct {
 // options (if there is one), and before any request-specific options.
 func NewBetaThreadMessageService(opts ...option.RequestOption) (r BetaThreadMessageService) {
 	r = BetaThreadMessageService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

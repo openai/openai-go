@@ -38,7 +38,7 @@ type ConversationService struct {
 // there is one), and before any request-specific options.
 func NewConversationService(opts ...option.RequestOption) (r ConversationService) {
 	r = ConversationService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Items = NewItemService(opts...)
 	return
 }

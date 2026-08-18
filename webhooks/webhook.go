@@ -37,7 +37,7 @@ type WebhookService struct {
 // is one), and before any request-specific options.
 func NewWebhookService(opts ...option.RequestOption) (r WebhookService) {
 	r = WebhookService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

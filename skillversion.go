@@ -39,7 +39,7 @@ type SkillVersionService struct {
 // there is one), and before any request-specific options.
 func NewSkillVersionService(opts ...option.RequestOption) (r SkillVersionService) {
 	r = SkillVersionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Content = NewSkillVersionContentService(opts...)
 	return
 }

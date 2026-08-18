@@ -33,7 +33,7 @@ type EmbeddingService struct {
 // there is one), and before any request-specific options.
 func NewEmbeddingService(opts ...option.RequestOption) (r EmbeddingService) {
 	r = EmbeddingService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/packages/respjson"
 )
@@ -27,7 +28,7 @@ type BetaChatKitService struct {
 // there is one), and before any request-specific options.
 func NewBetaChatKitService(opts ...option.RequestOption) (r BetaChatKitService) {
 	r = BetaChatKitService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Sessions = NewBetaChatKitSessionService(opts...)
 	r.Threads = NewBetaChatKitThreadService(opts...)
 	return

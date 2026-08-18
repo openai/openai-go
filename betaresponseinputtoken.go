@@ -31,7 +31,7 @@ type BetaResponseInputTokenService struct {
 // options (if there is one), and before any request-specific options.
 func NewBetaResponseInputTokenService(opts ...option.RequestOption) (r BetaResponseInputTokenService) {
 	r = BetaResponseInputTokenService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

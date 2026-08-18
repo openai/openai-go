@@ -35,7 +35,7 @@ type BetaChatKitThreadService struct {
 // options (if there is one), and before any request-specific options.
 func NewBetaChatKitThreadService(opts ...option.RequestOption) (r BetaChatKitThreadService) {
 	r = BetaChatKitThreadService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

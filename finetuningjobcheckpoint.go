@@ -36,7 +36,7 @@ type FineTuningJobCheckpointService struct {
 // options (if there is one), and before any request-specific options.
 func NewFineTuningJobCheckpointService(opts ...option.RequestOption) (r FineTuningJobCheckpointService) {
 	r = FineTuningJobCheckpointService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

@@ -36,7 +36,7 @@ type FineTuningCheckpointPermissionService struct {
 // client's options (if there is one), and before any request-specific options.
 func NewFineTuningCheckpointPermissionService(opts ...option.RequestOption) (r FineTuningCheckpointPermissionService) {
 	r = FineTuningCheckpointPermissionService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

@@ -3,6 +3,7 @@
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -27,7 +28,7 @@ type AudioService struct {
 // is one), and before any request-specific options.
 func NewAudioService(opts ...option.RequestOption) (r AudioService) {
 	r = AudioService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Transcriptions = NewAudioTranscriptionService(opts...)
 	r.Translations = NewAudioTranslationService(opts...)
 	r.Speech = NewAudioSpeechService(opts...)

@@ -40,7 +40,7 @@ type SkillService struct {
 // is one), and before any request-specific options.
 func NewSkillService(opts ...option.RequestOption) (r SkillService) {
 	r = SkillService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Content = NewSkillContentService(opts...)
 	r.Versions = NewSkillVersionService(opts...)
 	return

@@ -32,7 +32,7 @@ type ClientSecretService struct {
 // there is one), and before any request-specific options.
 func NewClientSecretService(opts ...option.RequestOption) (r ClientSecretService) {
 	r = ClientSecretService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

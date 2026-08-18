@@ -34,7 +34,7 @@ type AdminOrganizationAuditLogService struct {
 // client's options (if there is one), and before any request-specific options.
 func NewAdminOrganizationAuditLogService(opts ...option.RequestOption) (r AdminOrganizationAuditLogService) {
 	r = AdminOrganizationAuditLogService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

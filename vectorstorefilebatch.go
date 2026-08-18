@@ -35,7 +35,7 @@ type VectorStoreFileBatchService struct {
 // options (if there is one), and before any request-specific options.
 func NewVectorStoreFileBatchService(opts ...option.RequestOption) (r VectorStoreFileBatchService) {
 	r = VectorStoreFileBatchService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 

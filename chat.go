@@ -3,6 +3,7 @@
 package openai
 
 import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -24,7 +25,7 @@ type ChatService struct {
 // is one), and before any request-specific options.
 func NewChatService(opts ...option.RequestOption) (r ChatService) {
 	r = ChatService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	r.Completions = NewChatCompletionService(opts...)
 	return
 }

@@ -34,7 +34,7 @@ type InputItemService struct {
 // there is one), and before any request-specific options.
 func NewInputItemService(opts ...option.RequestOption) (r InputItemService) {
 	r = InputItemService{}
-	r.Options = opts
+	r.Options = requestconfig.InheritedOptions(opts...)
 	return
 }
 
