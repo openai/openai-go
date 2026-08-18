@@ -26,7 +26,7 @@ func NewDecoder(res *http.Response) Decoder {
 		return nil
 	}
 
-	contentType, mediaType := normalizeContentType(res.Header.Get("content-type"))
+	contentType, mediaType := decoderContentTypes(res.Header.Get("content-type"))
 	if t, ok := decoderTypes[contentType]; ok {
 		return t(res.Body)
 	}
@@ -47,32 +47,18 @@ func NewDecoder(res *http.Response) Decoder {
 var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
 
 func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
-	contentType, _ = normalizeContentType(contentType)
-	decoderTypes[contentType] = decoder
+	decoderTypes[strings.ToLower(contentType)] = decoder
 }
 
-func normalizeContentType(contentType string) (string, string) {
-	mediaType, params, err := mime.ParseMediaType(contentType)
+func decoderContentTypes(contentType string) (string, string) {
+	base, _, _ := strings.Cut(contentType, ";")
+	exactType := strings.ToLower(base) + contentType[len(base):]
+
+	mediaType, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
-		return strings.ToLower(contentType), ""
+		return exactType, ""
 	}
-
-	// ParseMediaType silently drops RFC 2231 values with unsupported
-	// encodings. Keep their raw parameter segment so they cannot collapse
-	// into the bare media type registration.
-	if strings.Contains(contentType, "*=") {
-		_, rawParams, _ := strings.Cut(contentType, ";")
-		return mediaType + ";" + rawParams, mediaType
-	}
-
-	if charset, ok := params["charset"]; ok {
-		params["charset"] = strings.ToLower(charset)
-	}
-	normalized := mime.FormatMediaType(mediaType, params)
-	if normalized == "" {
-		return strings.ToLower(contentType), mediaType
-	}
-	return normalized, mediaType
+	return exactType, mediaType
 }
 
 type Event struct {

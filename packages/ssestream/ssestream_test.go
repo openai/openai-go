@@ -124,10 +124,9 @@ func TestNewDecoderPreservesRegisteredContentTypeParameters(t *testing.T) {
 		return wantV2
 	})
 	t.Cleanup(func() {
-		for _, contentType := range []string{mediaType, profileV1, profileV2} {
-			key, _ := normalizeContentType(contentType)
-			delete(decoderTypes, key)
-		}
+		delete(decoderTypes, mediaType)
+		delete(decoderTypes, profileV1)
+		delete(decoderTypes, profileV2)
 	})
 
 	for name, test := range map[string]struct {
@@ -135,15 +134,15 @@ func TestNewDecoderPreservesRegisteredContentTypeParameters(t *testing.T) {
 		want        Decoder
 	}{
 		"profile v1": {
-			contentType: "Application/X-OpenAI-Go-Test-Parameters; Profile=v1",
+			contentType: "Application/X-OpenAI-Go-Test-Parameters; profile=v1",
 			want:        wantV1,
 		},
 		"profile v2": {
-			contentType: "Application/X-OpenAI-Go-Test-Parameters; Profile=v2",
+			contentType: "Application/X-OpenAI-Go-Test-Parameters; profile=v2",
 			want:        wantV2,
 		},
 		"unregistered profile": {
-			contentType: "Application/X-OpenAI-Go-Test-Parameters; Profile=v3",
+			contentType: "Application/X-OpenAI-Go-Test-Parameters; profile=v3",
 			want:        wantDefault,
 		},
 	} {
@@ -162,38 +161,35 @@ func TestNewDecoderPreservesRegisteredContentTypeParameters(t *testing.T) {
 	}
 }
 
-func TestNewDecoderPreservesCaseSensitiveContentTypeParameterValues(t *testing.T) {
+func TestNewDecoderDoesNotLowercaseContentTypeParameterValues(t *testing.T) {
 	const (
-		mediaType = "application/x-openai-go-test-profile"
-		profileV1 = mediaType + "; profile=\"https://example.com/V1\""
-		profilev1 = mediaType + "; profile=\"https://example.com/v1\""
+		mediaType   = "application/x-openai-go-test-profile"
+		contentType = mediaType + "; profile=\"https://example.com/v1\""
 	)
-	wantV1 := &testDecoder{}
-	wantv1 := &testDecoder{}
-	RegisterDecoder(profileV1, func(io.ReadCloser) Decoder {
-		return wantV1
+	wantDefault := &testDecoder{}
+	wantProfile := &testDecoder{}
+	RegisterDecoder(mediaType, func(io.ReadCloser) Decoder {
+		return wantDefault
 	})
-	RegisterDecoder(profilev1, func(io.ReadCloser) Decoder {
-		return wantv1
+	RegisterDecoder(contentType, func(io.ReadCloser) Decoder {
+		return wantProfile
 	})
 	t.Cleanup(func() {
-		for _, contentType := range []string{profileV1, profilev1} {
-			key, _ := normalizeContentType(contentType)
-			delete(decoderTypes, key)
-		}
+		delete(decoderTypes, mediaType)
+		delete(decoderTypes, contentType)
 	})
 
 	for name, test := range map[string]struct {
 		contentType string
 		want        Decoder
 	}{
-		"uppercase value": {
-			contentType: "Application/X-OpenAI-Go-Test-Profile; Profile=\"https://example.com/V1\"",
-			want:        wantV1,
-		},
 		"lowercase value": {
-			contentType: "Application/X-OpenAI-Go-Test-Profile; Profile=\"https://example.com/v1\"",
-			want:        wantv1,
+			contentType: "Application/X-OpenAI-Go-Test-Profile; profile=\"https://example.com/v1\"",
+			want:        wantProfile,
+		},
+		"distinct uppercase value": {
+			contentType: "Application/X-OpenAI-Go-Test-Profile; profile=\"https://example.com/V1\"",
+			want:        wantDefault,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -211,20 +207,19 @@ func TestNewDecoderPreservesCaseSensitiveContentTypeParameterValues(t *testing.T
 	}
 }
 
-func TestNewDecoderNormalizesCharsetParameterValues(t *testing.T) {
+func TestNewDecoderPreservesExistingCharsetParameterMatching(t *testing.T) {
 	const contentType = "application/x-openai-go-test-charset; charset=UTF-8"
 	want := &testDecoder{}
 	RegisterDecoder(contentType, func(io.ReadCloser) Decoder {
 		return want
 	})
 	t.Cleanup(func() {
-		key, _ := normalizeContentType(contentType)
-		delete(decoderTypes, key)
+		delete(decoderTypes, strings.ToLower(contentType))
 	})
 
 	decoder := NewDecoder(&http.Response{
 		Header: http.Header{
-			"Content-Type": {"Application/X-OpenAI-Go-Test-Charset; Charset=utf-8"},
+			"Content-Type": {"Application/X-OpenAI-Go-Test-Charset; charset=utf-8"},
 		},
 		Body: io.NopCloser(strings.NewReader("")),
 	})
@@ -248,10 +243,8 @@ func TestNewDecoderDoesNotCollapseUnsupportedExtendedParameters(t *testing.T) {
 		return wantExtended
 	})
 	t.Cleanup(func() {
-		for _, contentType := range []string{mediaType, extendedKey} {
-			key, _ := normalizeContentType(contentType)
-			delete(decoderTypes, key)
-		}
+		delete(decoderTypes, mediaType)
+		delete(decoderTypes, strings.ToLower(extendedKey))
 	})
 
 	for name, test := range map[string]struct {
@@ -263,7 +256,7 @@ func TestNewDecoderDoesNotCollapseUnsupportedExtendedParameters(t *testing.T) {
 			want:        wantDefault,
 		},
 		"extended parameter": {
-			contentType: "Application/X-OpenAI-Go-Test-Extended; variant*=iso-8859-1''caf%E9",
+			contentType: "Application/X-OpenAI-Go-Test-Extended; variant*=iso-8859-1''caf%e9",
 			want:        wantExtended,
 		},
 	} {
