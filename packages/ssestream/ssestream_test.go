@@ -211,6 +211,77 @@ func TestNewDecoderPreservesCaseSensitiveContentTypeParameterValues(t *testing.T
 	}
 }
 
+func TestNewDecoderNormalizesCharsetParameterValues(t *testing.T) {
+	const contentType = "application/x-openai-go-test-charset; charset=UTF-8"
+	want := &testDecoder{}
+	RegisterDecoder(contentType, func(io.ReadCloser) Decoder {
+		return want
+	})
+	t.Cleanup(func() {
+		key, _ := normalizeContentType(contentType)
+		delete(decoderTypes, key)
+	})
+
+	decoder := NewDecoder(&http.Response{
+		Header: http.Header{
+			"Content-Type": {"Application/X-OpenAI-Go-Test-Charset; Charset=utf-8"},
+		},
+		Body: io.NopCloser(strings.NewReader("")),
+	})
+
+	if decoder != want {
+		t.Fatalf("decoder = %T, want registered decoder", decoder)
+	}
+}
+
+func TestNewDecoderDoesNotCollapseUnsupportedExtendedParameters(t *testing.T) {
+	const (
+		mediaType   = "application/x-openai-go-test-extended"
+		extendedKey = mediaType + "; variant*=iso-8859-1''caf%E9"
+	)
+	wantDefault := &testDecoder{}
+	wantExtended := &testDecoder{}
+	RegisterDecoder(mediaType, func(io.ReadCloser) Decoder {
+		return wantDefault
+	})
+	RegisterDecoder(extendedKey, func(io.ReadCloser) Decoder {
+		return wantExtended
+	})
+	t.Cleanup(func() {
+		for _, contentType := range []string{mediaType, extendedKey} {
+			key, _ := normalizeContentType(contentType)
+			delete(decoderTypes, key)
+		}
+	})
+
+	for name, test := range map[string]struct {
+		contentType string
+		want        Decoder
+	}{
+		"bare media type": {
+			contentType: mediaType,
+			want:        wantDefault,
+		},
+		"extended parameter": {
+			contentType: "Application/X-OpenAI-Go-Test-Extended; variant*=iso-8859-1''caf%E9",
+			want:        wantExtended,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			decoder := NewDecoder(&http.Response{
+				Header: http.Header{
+					"Content-Type": {test.contentType},
+				},
+				Body: io.NopCloser(strings.NewReader("")),
+			})
+
+			if decoder != test.want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
 type testDecoder struct {
 	events  []Event
 	current Event

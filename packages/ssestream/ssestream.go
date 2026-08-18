@@ -56,7 +56,23 @@ func normalizeContentType(contentType string) (string, string) {
 	if err != nil {
 		return strings.ToLower(contentType), ""
 	}
-	return mime.FormatMediaType(mediaType, params), mediaType
+
+	// ParseMediaType silently drops RFC 2231 values with unsupported
+	// encodings. Keep their raw parameter segment so they cannot collapse
+	// into the bare media type registration.
+	if strings.Contains(contentType, "*=") {
+		_, rawParams, _ := strings.Cut(contentType, ";")
+		return mediaType + ";" + rawParams, mediaType
+	}
+
+	if charset, ok := params["charset"]; ok {
+		params["charset"] = strings.ToLower(charset)
+	}
+	normalized := mime.FormatMediaType(mediaType, params)
+	if normalized == "" {
+		return strings.ToLower(contentType), mediaType
+	}
+	return normalized, mediaType
 }
 
 type Event struct {
