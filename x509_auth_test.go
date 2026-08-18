@@ -28,17 +28,6 @@ func (d nonComparableHTTPDoer) Do(req *http.Request) (*http.Response, error) {
 	return d.do(req)
 }
 
-// dynamicallyNonComparableHTTPDoer has a comparable Go type, but values are
-// not comparable when state contains a slice, map, or function.
-type dynamicallyNonComparableHTTPDoer struct {
-	state any
-	doer  auth.HTTPDoer
-}
-
-func (d dynamicallyNonComparableHTTPDoer) Do(req *http.Request) (*http.Response, error) {
-	return d.doer.Do(req)
-}
-
 func clientX509WorkloadIdentity() auth.X509WorkloadIdentity {
 	return auth.X509WorkloadIdentity{
 		IdentityProviderID: "idp-test",
