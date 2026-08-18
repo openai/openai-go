@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
@@ -101,14 +102,17 @@ type Model struct {
 	Object constant.Model `json:"object" default:"model"`
 	// The organization that owns the model.
 	OwnedBy string `json:"owned_by" api:"required"`
+	// The date when the model will shut down, or null if not announced.
+	ShutdownDate time.Time `json:"shutdown_date" api:"nullable" format:"date"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Created     respjson.Field
-		Object      respjson.Field
-		OwnedBy     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		ID           respjson.Field
+		Created      respjson.Field
+		Object       respjson.Field
+		OwnedBy      respjson.Field
+		ShutdownDate respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 

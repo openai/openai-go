@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package openai_test
 
 import (
@@ -70,7 +68,10 @@ func TestClientWorkloadIdentityInitialization(t *testing.T) {
 						"access_token": "exchanged-token-123",
 						"expires_in":   3600,
 					}
-					body, _ := json.Marshal(tokenResp)
+					body, err := json.Marshal(tokenResp)
+					if err != nil {
+						return nil, fmt.Errorf("marshal OAuth token response: %w", err)
+					}
 					headers := make(http.Header)
 					headers.Set("Content-Type", "application/json")
 					return &http.Response{
@@ -148,7 +149,10 @@ func TestWorkloadIdentity401Retry(t *testing.T) {
 						"access_token": tokenID,
 						"expires_in":   3600,
 					}
-					body, _ := json.Marshal(tokenResp)
+					body, err := json.Marshal(tokenResp)
+					if err != nil {
+						return nil, fmt.Errorf("marshal OAuth token response: %w", err)
+					}
 					return &http.Response{
 						StatusCode: 200,
 						Body:       io.NopCloser(strings.NewReader(string(body))),
@@ -227,7 +231,10 @@ func TestWorkloadIdentitySingleRetry(t *testing.T) {
 						"access_token": "test-token",
 						"expires_in":   3600,
 					}
-					body, _ := json.Marshal(tokenResp)
+					body, err := json.Marshal(tokenResp)
+					if err != nil {
+						return nil, fmt.Errorf("marshal OAuth token response: %w", err)
+					}
 					return &http.Response{
 						StatusCode: 200,
 						Body:       io.NopCloser(strings.NewReader(string(body))),
@@ -292,7 +299,10 @@ func TestWorkloadIdentityTokenInjection(t *testing.T) {
 						"access_token": "exchanged-token-789",
 						"expires_in":   3600,
 					}
-					body, _ := json.Marshal(tokenResp)
+					body, err := json.Marshal(tokenResp)
+					if err != nil {
+						return nil, fmt.Errorf("marshal OAuth token response: %w", err)
+					}
 					return &http.Response{
 						StatusCode: 200,
 						Body:       io.NopCloser(strings.NewReader(string(body))),

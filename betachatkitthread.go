@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -436,17 +436,6 @@ func (u *ChatSessionWorkflowParamStateVariableUnion) UnmarshalJSON(data []byte) 
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ChatSessionWorkflowParamStateVariableUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfBool) {
-		return &u.OfBool.Value
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
-}
-
 // Optional tracing overrides for the workflow invocation. When omitted, tracing is
 // enabled by default.
 type ChatSessionWorkflowParamTracing struct {
@@ -577,12 +566,12 @@ func (u ChatKitResponseOutputTextAnnotationUnion) AsAny() anyChatKitResponseOutp
 }
 
 func (u ChatKitResponseOutputTextAnnotationUnion) AsFile() (v ChatKitResponseOutputTextAnnotationFile) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitResponseOutputTextAnnotationUnion) AsURL() (v ChatKitResponseOutputTextAnnotationURL) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -787,17 +776,17 @@ func (u ChatKitThreadStatusUnion) AsAny() anyChatKitThreadStatus {
 }
 
 func (u ChatKitThreadStatusUnion) AsActive() (v ChatKitThreadStatusActive) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadStatusUnion) AsLocked() (v ChatKitThreadStatusLocked) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadStatusUnion) AsClosed() (v ChatKitThreadStatusClosed) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1044,32 +1033,32 @@ func (u ChatKitThreadItemListDataUnion) AsAny() anyChatKitThreadItemListData {
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitUserMessage() (v ChatKitThreadUserMessageItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitAssistantMessage() (v ChatKitThreadAssistantMessageItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitWidget() (v ChatKitWidgetItem) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitClientToolCall() (v ChatKitThreadItemListDataChatKitClientToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitTask() (v ChatKitThreadItemListDataChatKitTask) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadItemListDataUnion) AsChatKitTaskGroup() (v ChatKitThreadItemListDataChatKitTaskGroup) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1342,12 +1331,12 @@ func (u ChatKitThreadUserMessageItemContentUnion) AsAny() anyChatKitThreadUserMe
 }
 
 func (u ChatKitThreadUserMessageItemContentUnion) AsInputText() (v ChatKitThreadUserMessageItemContentInputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ChatKitThreadUserMessageItemContentUnion) AsQuotedText() (v ChatKitThreadUserMessageItemContentQuotedText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 

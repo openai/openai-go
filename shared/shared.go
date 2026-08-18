@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package shared
 
@@ -29,10 +29,15 @@ const (
 	AllModelsO4MiniDeepResearch2025_06_26 AllModels = "o4-mini-deep-research-2025-06-26"
 	AllModelsComputerUsePreview           AllModels = "computer-use-preview"
 	AllModelsComputerUsePreview2025_03_11 AllModels = "computer-use-preview-2025-03-11"
+	AllModelsGPT5_5Pro                    AllModels = "gpt-5.5-pro"
+	AllModelsGPT5_5Pro2026_04_23          AllModels = "gpt-5.5-pro-2026-04-23"
 	AllModelsGPT5Codex                    AllModels = "gpt-5-codex"
 	AllModelsGPT5Pro                      AllModels = "gpt-5-pro"
 	AllModelsGPT5Pro2025_10_06            AllModels = "gpt-5-pro-2025-10-06"
 	AllModelsGPT5_1CodexMax               AllModels = "gpt-5.1-codex-max"
+	AllModelsGPTDaybreakBlueLatest        AllModels = "gpt-daybreak-blue-latest"
+	AllModelsGPTDaybreakRedLatest         AllModels = "gpt-daybreak-red-latest"
+	AllModelsGPT5_6Cyber                  AllModels = "gpt-5.6-cyber"
 	// Or some ...[ChatModel]
 )
 
@@ -42,6 +47,11 @@ type ResponsesModel = string
 // aliased to make [param.APIObject] private when embedding
 
 const (
+	ChatModelGPT5_6Sol                        ChatModel = "gpt-5.6-sol"
+	ChatModelGPT5_6Terra                      ChatModel = "gpt-5.6-terra"
+	ChatModelGPT5_6Luna                       ChatModel = "gpt-5.6-luna"
+	ChatModelGPT5_5                           ChatModel = "gpt-5.5"
+	ChatModelGPT5_5_2026_04_23                ChatModel = "gpt-5.5-2026-04-23"
 	ChatModelGPT5_4                           ChatModel = "gpt-5.4"
 	ChatModelGPT5_4Mini                       ChatModel = "gpt-5.4-mini"
 	ChatModelGPT5_4Nano                       ChatModel = "gpt-5.4-nano"
@@ -220,22 +230,22 @@ type ComparisonFilterValueUnion struct {
 }
 
 func (u ComparisonFilterValueUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ComparisonFilterValueUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ComparisonFilterValueUnion) AsBool() (v bool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ComparisonFilterValueUnion) AsComparisonFilterValueArray() (v []ComparisonFilterValueArrayItemUnion) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -266,12 +276,12 @@ type ComparisonFilterValueArrayItemUnion struct {
 }
 
 func (u ComparisonFilterValueArrayItemUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ComparisonFilterValueArrayItemUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -335,19 +345,6 @@ func (u *ComparisonFilterValueUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ComparisonFilterValueUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	} else if !param.IsOmitted(u.OfBool) {
-		return &u.OfBool.Value
-	} else if !param.IsOmitted(u.OfComparisonFilterValueArray) {
-		return &u.OfComparisonFilterValueArray
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -362,15 +359,6 @@ func (u ComparisonFilterValueArrayItemUnionParam) MarshalJSON() ([]byte, error) 
 }
 func (u *ComparisonFilterValueArrayItemUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ComparisonFilterValueArrayItemUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
 }
 
 // Combine multiple filters using `and` or `or`.
@@ -483,12 +471,12 @@ func (u CustomToolInputFormatUnion) AsAny() anyCustomToolInputFormat {
 }
 
 func (u CustomToolInputFormatUnion) AsText() (v CustomToolInputFormatText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u CustomToolInputFormatUnion) AsGrammar() (v CustomToolInputFormatGrammar) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -578,15 +566,6 @@ func (u CustomToolInputFormatUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *CustomToolInputFormatUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *CustomToolInputFormatUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	} else if !param.IsOmitted(u.OfGrammar) {
-		return u.OfGrammar
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -796,27 +775,23 @@ const (
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type Reasoning struct {
-	// Controls which reasoning items are rendered back to the model on later turns.
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
 	// When returned on a response, this is the effective reasoning context mode used
 	// for the response.
 	//
 	// Any of "auto", "current_turn", "all_turns".
 	Context ReasoningContext `json:"context" api:"nullable"`
-	// Constrains effort on reasoning for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-	// Reducing reasoning effort can result in faster responses and fewer tokens used
-	// on reasoning in a response.
+	// Constrains effort on reasoning for reasoning models. Currently supported values
+	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response. Not all reasoning models support every value. See the
+	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// model-specific support.
 	//
-	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-	//     calls are supported for all reasoning values in gpt-5.1.
-	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-	//     support `none`.
-	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-	//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
-	//
-	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
 	Effort ReasoningEffort `json:"effort" api:"nullable"`
 	// **Deprecated:** use `summary` instead.
 	//
@@ -828,6 +803,10 @@ type Reasoning struct {
 	//
 	// Deprecated: deprecated
 	GenerateSummary ReasoningGenerateSummary `json:"generate_summary" api:"nullable"`
+	// Controls the reasoning execution mode for the request.
+	//
+	// When returned on a response, this is the effective execution mode.
+	Mode ReasoningMode `json:"mode"`
 	// A summary of the reasoning performed by the model. This can be useful for
 	// debugging and understanding the model's reasoning process. One of `auto`,
 	// `concise`, or `detailed`.
@@ -842,6 +821,7 @@ type Reasoning struct {
 		Context         respjson.Field
 		Effort          respjson.Field
 		GenerateSummary respjson.Field
+		Mode            respjson.Field
 		Summary         respjson.Field
 		ExtraFields     map[string]respjson.Field
 		raw             string
@@ -863,7 +843,10 @@ func (r Reasoning) ToParam() ReasoningParam {
 	return param.Override[ReasoningParam](json.RawMessage(r.RawJSON()))
 }
 
-// Controls which reasoning items are rendered back to the model on later turns.
+// Controls which reasoning items are rendered back to the model on later turns. If
+// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+// model family defaults to `all_turns`; earlier models default to `current_turn`.
+//
 // When returned on a response, this is the effective reasoning context mode used
 // for the response.
 type ReasoningContext string
@@ -887,6 +870,16 @@ const (
 	ReasoningGenerateSummaryDetailed ReasoningGenerateSummary = "detailed"
 )
 
+// Controls the reasoning execution mode for the request.
+//
+// When returned on a response, this is the effective execution mode.
+type ReasoningMode string
+
+const (
+	ReasoningModeStandard ReasoningMode = "standard"
+	ReasoningModePro      ReasoningMode = "pro"
+)
+
 // A summary of the reasoning performed by the model. This can be useful for
 // debugging and understanding the model's reasoning process. One of `auto`,
 // `concise`, or `detailed`.
@@ -906,27 +899,23 @@ const (
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type ReasoningParam struct {
-	// Controls which reasoning items are rendered back to the model on later turns.
+	// Controls which reasoning items are rendered back to the model on later turns. If
+	// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+	// model family defaults to `all_turns`; earlier models default to `current_turn`.
+	//
 	// When returned on a response, this is the effective reasoning context mode used
 	// for the response.
 	//
 	// Any of "auto", "current_turn", "all_turns".
 	Context ReasoningContext `json:"context,omitzero"`
-	// Constrains effort on reasoning for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-	// Reducing reasoning effort can result in faster responses and fewer tokens used
-	// on reasoning in a response.
+	// Constrains effort on reasoning for reasoning models. Currently supported values
+	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response. Not all reasoning models support every value. See the
+	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// model-specific support.
 	//
-	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-	//     calls are supported for all reasoning values in gpt-5.1.
-	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-	//     support `none`.
-	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-	//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
-	//
-	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
 	Effort ReasoningEffort `json:"effort,omitzero"`
 	// **Deprecated:** use `summary` instead.
 	//
@@ -947,6 +936,10 @@ type ReasoningParam struct {
 	//
 	// Any of "auto", "concise", "detailed".
 	Summary ReasoningSummary `json:"summary,omitzero"`
+	// Controls the reasoning execution mode for the request.
+	//
+	// When returned on a response, this is the effective execution mode.
+	Mode ReasoningMode `json:"mode,omitzero"`
 	paramObj
 }
 
@@ -958,19 +951,12 @@ func (r *ReasoningParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Constrains effort on reasoning for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-// Reducing reasoning effort can result in faster responses and fewer tokens used
-// on reasoning in a response.
-//
-//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-//     calls are supported for all reasoning values in gpt-5.1.
-//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-//     support `none`.
-//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
+// Constrains effort on reasoning for reasoning models. Currently supported values
+// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+// reasoning effort can result in faster responses and fewer tokens used on
+// reasoning in a response. Not all reasoning models support every value. See the
+// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+// model-specific support.
 type ReasoningEffort string
 
 const (
@@ -980,6 +966,7 @@ const (
 	ReasoningEffortMedium  ReasoningEffort = "medium"
 	ReasoningEffortHigh    ReasoningEffort = "high"
 	ReasoningEffortXhigh   ReasoningEffort = "xhigh"
+	ReasoningEffortMax     ReasoningEffort = "max"
 )
 
 // JSON object response format. An older method of generating JSON responses. Using
@@ -1226,9 +1213,14 @@ const (
 	ResponsesModelO4MiniDeepResearch2025_06_26 ResponsesModel = "o4-mini-deep-research-2025-06-26"
 	ResponsesModelComputerUsePreview           ResponsesModel = "computer-use-preview"
 	ResponsesModelComputerUsePreview2025_03_11 ResponsesModel = "computer-use-preview-2025-03-11"
+	ResponsesModelGPT5_5Pro                    ResponsesModel = "gpt-5.5-pro"
+	ResponsesModelGPT5_5Pro2026_04_23          ResponsesModel = "gpt-5.5-pro-2026-04-23"
 	ResponsesModelGPT5Codex                    ResponsesModel = "gpt-5-codex"
 	ResponsesModelGPT5Pro                      ResponsesModel = "gpt-5-pro"
 	ResponsesModelGPT5Pro2025_10_06            ResponsesModel = "gpt-5-pro-2025-10-06"
 	ResponsesModelGPT5_1CodexMax               ResponsesModel = "gpt-5.1-codex-max"
+	ResponsesModelGPTDaybreakBlueLatest        ResponsesModel = "gpt-daybreak-blue-latest"
+	ResponsesModelGPTDaybreakRedLatest         ResponsesModel = "gpt-daybreak-red-latest"
+	ResponsesModelGPT5_6Cyber                  ResponsesModel = "gpt-5.6-cyber"
 	// Or some ...[ChatModel]
 )

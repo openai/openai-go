@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package responses_test
 
@@ -44,6 +44,7 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 			Context:         shared.ReasoningContextAuto,
 			Effort:          shared.ReasoningEffortNone,
 			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
+			Mode:            shared.ReasoningModeStandard,
 			Summary:         shared.ReasoningSummaryAuto,
 		},
 		Text: responses.InputTokenCountParamsText{
@@ -61,9 +62,13 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 				Parameters: map[string]any{
 					"foo": "bar",
 				},
-				Strict:       openai.Bool(true),
-				DeferLoading: openai.Bool(true),
-				Description:  openai.String("description"),
+				Strict:         openai.Bool(true),
+				AllowedCallers: []string{"direct"},
+				DeferLoading:   openai.Bool(true),
+				Description:    openai.String("description"),
+				OutputSchema: map[string]any{
+					"foo": "bar",
+				},
 			},
 		}},
 		Truncation: responses.InputTokenCountParamsTruncationAuto,

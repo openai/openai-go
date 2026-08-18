@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -222,7 +222,7 @@ func (r SkillVersionNewParams) MarshalMultipart() (data []byte, contentType stri
 		err = apiform.WriteExtras(writer, r.ExtraFields())
 	}
 	if err != nil {
-		writer.Close()
+		_ = writer.Close()
 		return nil, "", err
 	}
 	err = writer.Close()
@@ -246,15 +246,6 @@ func (u SkillVersionNewParamsFilesUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *SkillVersionNewParamsFilesUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *SkillVersionNewParamsFilesUnion) asAny() any {
-	if !param.IsOmitted(u.OfFileArray) {
-		return &u.OfFileArray
-	} else if !param.IsOmitted(u.OfFile) {
-		return &u.OfFile
-	}
-	return nil
 }
 
 type SkillVersionListParams struct {

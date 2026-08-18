@@ -52,7 +52,6 @@ func TestJSONRoute(t *testing.T) {
 func TestGetAudioMultipartRoute(t *testing.T) {
 	buff := &bytes.Buffer{}
 	mw := multipart.NewWriter(buff)
-	defer mw.Close()
 
 	fw, err := mw.CreateFormFile("file", "test.mp3")
 
@@ -64,12 +63,12 @@ func TestGetAudioMultipartRoute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := mw.WriteField("model", "arbitraryDeployment"); err != nil {
-		t.Fatal(err)
+	if writeErr := mw.WriteField("model", "arbitraryDeployment"); writeErr != nil {
+		t.Fatal(writeErr)
 	}
 
-	if err := mw.Close(); err != nil {
-		t.Fatal(err)
+	if closeErr := mw.Close(); closeErr != nil {
+		t.Fatal(closeErr)
 	}
 
 	req, err := http.NewRequest("POST", "/audio/transcriptions", bytes.NewReader(buff.Bytes()))
@@ -99,10 +98,64 @@ func TestAPIKeyAuthentication(t *testing.T) {
 		},
 	}
 
-	WithAPIKey("my-api-key").Apply(rc)
+	if err := WithAPIKey("my-api-key").Apply(rc); err != nil {
+		t.Fatal(err)
+	}
 
 	if got := rc.Request.Header.Get("Api-Key"); got != "my-api-key" {
 		t.Errorf("Api-Key header: got %q, expected %q", got, "my-api-key")
+	}
+}
+
+func TestAPIKeyAuthenticationSuppressesAutomaticAuthorization(t *testing.T) {
+	tests := []struct {
+		name        string
+		apiKey      string
+		adminAPIKey string
+	}{
+		{name: "OpenAI API key", apiKey: "normal-openai-key"},
+		{name: "OpenAI admin API key", adminAPIKey: "normal-admin-key"},
+		{name: "both OpenAI keys", apiKey: "normal-openai-key", adminAPIKey: "normal-admin-key"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("OPENAI_API_KEY", tt.apiKey)
+			t.Setenv("OPENAI_ADMIN_KEY", tt.adminAPIKey)
+
+			var captured *http.Request
+			client := openai.NewClient(
+				WithEndpoint("https://my-resource.openai.azure.com", "2024-10-21"),
+				WithAPIKey("azure-api-key"),
+				option.WithHTTPClient(&http.Client{
+					Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+						captured = req
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Header: http.Header{
+								"Content-Type": []string{"application/json"},
+							},
+							Body:    io.NopCloser(strings.NewReader(`{"ok":true}`)),
+							Request: req,
+						}, nil
+					}),
+				}),
+			)
+
+			var res map[string]any
+			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err != nil {
+				t.Fatalf("request failed: %s", err)
+			}
+			if captured == nil {
+				t.Fatal("request was not captured")
+			}
+			if got := captured.Header.Get("Api-Key"); got != "azure-api-key" {
+				t.Fatalf("Api-Key header = %q, want %q", got, "azure-api-key")
+			}
+			if got := captured.Header.Get("Authorization"); got != "" {
+				t.Fatalf("Authorization header = %q, want empty", got)
+			}
+		})
 	}
 }
 
@@ -326,11 +379,11 @@ func newMultipartRouteRequest(t *testing.T, route string, model string) *http.Re
 	if _, err = fw.Write([]byte("ignore me")); err != nil {
 		t.Fatal(err)
 	}
-	if err := mw.WriteField("model", model); err != nil {
-		t.Fatal(err)
+	if writeErr := mw.WriteField("model", model); writeErr != nil {
+		t.Fatal(writeErr)
 	}
-	if err := mw.Close(); err != nil {
-		t.Fatal(err)
+	if closeErr := mw.Close(); closeErr != nil {
+		t.Fatal(closeErr)
 	}
 
 	req, err := http.NewRequest("POST", route, bytes.NewReader(buff.Bytes()))

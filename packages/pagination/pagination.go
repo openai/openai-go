@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package pagination
 
 import (
@@ -12,9 +10,6 @@ import (
 	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/openai/openai-go/v3/packages/respjson"
 )
-
-// aliased to make [param.APIUnion] private when embedding
-type paramUnion = param.APIUnion
 
 // aliased to make [param.APIObject] private when embedding
 type paramObj = param.APIObject
@@ -39,28 +34,10 @@ func (r *Page[T]) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// GetNextPage returns the next page as defined by this pagination style. When
-// there is no next page, this function will return a 'nil' for the page value, but
-// will not return an error
-func (r *Page[T]) GetNextPage() (res *Page[T], err error) {
-	if len(r.Data) == 0 {
-		return nil, nil
-	}
-	// This page represents a response that isn't actually paginated at the API level
-	// so there will never be a next page.
-	cfg := (*requestconfig.RequestConfig)(nil)
-	if cfg == nil {
-		return nil, nil
-	}
-	var raw *http.Response
-	cfg.ResponseInto = &raw
-	cfg.ResponseBodyInto = &res
-	err = cfg.Execute()
-	if err != nil {
-		return nil, err
-	}
-	res.SetPageConfig(cfg, raw)
-	return res, nil
+// GetNextPage returns nil because Page represents a response that is not
+// paginated at the API level.
+func (*Page[T]) GetNextPage() (*Page[T], error) {
+	return nil, nil
 }
 
 func (r *Page[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res *http.Response) {

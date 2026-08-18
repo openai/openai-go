@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -48,6 +48,8 @@ type GraderInputUnion struct {
 	OfString string `json:",inline"`
 	Text     string `json:"text"`
 	Type     string `json:"type"`
+	// This field is from variant [responses.ResponseInputText].
+	PromptCacheBreakpoint responses.ResponseInputTextPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// This field is from variant [GraderInputInputImage].
 	ImageURL string `json:"image_url"`
 	// This field is from variant [GraderInputInputImage].
@@ -55,38 +57,39 @@ type GraderInputUnion struct {
 	// This field is from variant [responses.ResponseInputAudio].
 	InputAudio responses.ResponseInputAudioInputAudio `json:"input_audio"`
 	JSON       struct {
-		OfString   respjson.Field
-		Text       respjson.Field
-		Type       respjson.Field
-		ImageURL   respjson.Field
-		Detail     respjson.Field
-		InputAudio respjson.Field
-		raw        string
+		OfString              respjson.Field
+		Text                  respjson.Field
+		Type                  respjson.Field
+		PromptCacheBreakpoint respjson.Field
+		ImageURL              respjson.Field
+		Detail                respjson.Field
+		InputAudio            respjson.Field
+		raw                   string
 	} `json:"-"`
 }
 
 func (u GraderInputUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u GraderInputUnion) AsInputText() (v responses.ResponseInputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u GraderInputUnion) AsOutputText() (v GraderInputOutputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u GraderInputUnion) AsInputImage() (v GraderInputInputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u GraderInputUnion) AsInputAudio() (v responses.ResponseInputAudio) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -168,17 +171,10 @@ func (u *GraderInputUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *GraderInputUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfInputText) {
-		return u.OfInputText
-	} else if !param.IsOmitted(u.OfOutputText) {
-		return u.OfOutputText
-	} else if !param.IsOmitted(u.OfInputImage) {
-		return u.OfInputImage
-	} else if !param.IsOmitted(u.OfInputAudio) {
-		return u.OfInputAudio
+// Returns a pointer to the underlying variant's property, if present.
+func (u GraderInputUnionParam) GetPromptCacheBreakpoint() *responses.ResponseInputTextPromptCacheBreakpointParam {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.PromptCacheBreakpoint
 	}
 	return nil
 }
@@ -370,6 +366,8 @@ type LabelModelGraderInputContentUnion struct {
 	OfAnArrayOfInputTextOutputTextInputImageAndInputAudio GraderInputs `json:",inline"`
 	Text                                                  string       `json:"text"`
 	Type                                                  string       `json:"type"`
+	// This field is from variant [responses.ResponseInputText].
+	PromptCacheBreakpoint responses.ResponseInputTextPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// This field is from variant [LabelModelGraderInputContentInputImage].
 	ImageURL string `json:"image_url"`
 	// This field is from variant [LabelModelGraderInputContentInputImage].
@@ -381,6 +379,7 @@ type LabelModelGraderInputContentUnion struct {
 		OfAnArrayOfInputTextOutputTextInputImageAndInputAudio respjson.Field
 		Text                                                  respjson.Field
 		Type                                                  respjson.Field
+		PromptCacheBreakpoint                                 respjson.Field
 		ImageURL                                              respjson.Field
 		Detail                                                respjson.Field
 		InputAudio                                            respjson.Field
@@ -389,32 +388,32 @@ type LabelModelGraderInputContentUnion struct {
 }
 
 func (u LabelModelGraderInputContentUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u LabelModelGraderInputContentUnion) AsInputText() (v responses.ResponseInputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u LabelModelGraderInputContentUnion) AsOutputText() (v LabelModelGraderInputContentOutputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u LabelModelGraderInputContentUnion) AsInputImage() (v LabelModelGraderInputContentInputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u LabelModelGraderInputContentUnion) AsInputAudio() (v responses.ResponseInputAudio) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u LabelModelGraderInputContentUnion) AsAnArrayOfInputTextOutputTextInputImageAndInputAudio() (v GraderInputs) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -565,19 +564,10 @@ func (u *LabelModelGraderInputContentUnionParam) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *LabelModelGraderInputContentUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfInputText) {
-		return u.OfInputText
-	} else if !param.IsOmitted(u.OfOutputText) {
-		return u.OfOutputText
-	} else if !param.IsOmitted(u.OfInputImage) {
-		return u.OfInputImage
-	} else if !param.IsOmitted(u.OfInputAudio) {
-		return u.OfInputAudio
-	} else if !param.IsOmitted(u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio) {
-		return &u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio
+// Returns a pointer to the underlying variant's property, if present.
+func (u LabelModelGraderInputContentUnionParam) GetPromptCacheBreakpoint() *responses.ResponseInputTextPromptCacheBreakpointParam {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.PromptCacheBreakpoint
 	}
 	return nil
 }
@@ -761,27 +751,27 @@ type MultiGraderGradersUnion struct {
 }
 
 func (u MultiGraderGradersUnion) AsStringCheckGrader() (v StringCheckGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MultiGraderGradersUnion) AsTextSimilarityGrader() (v TextSimilarityGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MultiGraderGradersUnion) AsPythonGrader() (v PythonGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MultiGraderGradersUnion) AsScoreModelGrader() (v ScoreModelGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MultiGraderGradersUnion) AsLabelModelGrader() (v LabelModelGrader) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -871,21 +861,6 @@ func (u MultiGraderGradersUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *MultiGraderGradersUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *MultiGraderGradersUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfStringCheckGrader) {
-		return u.OfStringCheckGrader
-	} else if !param.IsOmitted(u.OfTextSimilarityGrader) {
-		return u.OfTextSimilarityGrader
-	} else if !param.IsOmitted(u.OfPythonGrader) {
-		return u.OfPythonGrader
-	} else if !param.IsOmitted(u.OfScoreModelGrader) {
-		return u.OfScoreModelGrader
-	} else if !param.IsOmitted(u.OfLabelModelGrader) {
-		return u.OfLabelModelGrader
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1191,6 +1166,8 @@ type ScoreModelGraderInputContentUnion struct {
 	OfAnArrayOfInputTextOutputTextInputImageAndInputAudio GraderInputs `json:",inline"`
 	Text                                                  string       `json:"text"`
 	Type                                                  string       `json:"type"`
+	// This field is from variant [responses.ResponseInputText].
+	PromptCacheBreakpoint responses.ResponseInputTextPromptCacheBreakpoint `json:"prompt_cache_breakpoint"`
 	// This field is from variant [ScoreModelGraderInputContentInputImage].
 	ImageURL string `json:"image_url"`
 	// This field is from variant [ScoreModelGraderInputContentInputImage].
@@ -1202,6 +1179,7 @@ type ScoreModelGraderInputContentUnion struct {
 		OfAnArrayOfInputTextOutputTextInputImageAndInputAudio respjson.Field
 		Text                                                  respjson.Field
 		Type                                                  respjson.Field
+		PromptCacheBreakpoint                                 respjson.Field
 		ImageURL                                              respjson.Field
 		Detail                                                respjson.Field
 		InputAudio                                            respjson.Field
@@ -1210,32 +1188,32 @@ type ScoreModelGraderInputContentUnion struct {
 }
 
 func (u ScoreModelGraderInputContentUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ScoreModelGraderInputContentUnion) AsInputText() (v responses.ResponseInputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ScoreModelGraderInputContentUnion) AsOutputText() (v ScoreModelGraderInputContentOutputText) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ScoreModelGraderInputContentUnion) AsInputImage() (v ScoreModelGraderInputContentInputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ScoreModelGraderInputContentUnion) AsInputAudio() (v responses.ResponseInputAudio) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ScoreModelGraderInputContentUnion) AsAnArrayOfInputTextOutputTextInputImageAndInputAudio() (v GraderInputs) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1296,21 +1274,14 @@ func (r *ScoreModelGraderInputContentInputImage) UnmarshalJSON(data []byte) erro
 type ScoreModelGraderSamplingParams struct {
 	// The maximum number of tokens the grader model may generate in its response.
 	MaxCompletionsTokens int64 `json:"max_completions_tokens" api:"nullable"`
-	// Constrains effort on reasoning for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-	// Reducing reasoning effort can result in faster responses and fewer tokens used
-	// on reasoning in a response.
+	// Constrains effort on reasoning for reasoning models. Currently supported values
+	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response. Not all reasoning models support every value. See the
+	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// model-specific support.
 	//
-	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-	//     calls are supported for all reasoning values in gpt-5.1.
-	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-	//     support `none`.
-	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-	//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
-	//
-	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort" api:"nullable"`
 	// A seed value to initialize the randomness, during sampling.
 	Seed int64 `json:"seed" api:"nullable"`
@@ -1431,19 +1402,10 @@ func (u *ScoreModelGraderInputContentUnionParam) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ScoreModelGraderInputContentUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfInputText) {
-		return u.OfInputText
-	} else if !param.IsOmitted(u.OfOutputText) {
-		return u.OfOutputText
-	} else if !param.IsOmitted(u.OfInputImage) {
-		return u.OfInputImage
-	} else if !param.IsOmitted(u.OfInputAudio) {
-		return u.OfInputAudio
-	} else if !param.IsOmitted(u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio) {
-		return &u.OfAnArrayOfInputTextOutputTextInputImageAndInputAudio
+// Returns a pointer to the underlying variant's property, if present.
+func (u ScoreModelGraderInputContentUnionParam) GetPromptCacheBreakpoint() *responses.ResponseInputTextPromptCacheBreakpointParam {
+	if vt := u.OfInputText; vt != nil {
+		return &vt.PromptCacheBreakpoint
 	}
 	return nil
 }
@@ -1551,21 +1513,14 @@ type ScoreModelGraderSamplingParamsParam struct {
 	Temperature param.Opt[float64] `json:"temperature,omitzero"`
 	// An alternative to temperature for nucleus sampling; 1.0 includes all tokens.
 	TopP param.Opt[float64] `json:"top_p,omitzero"`
-	// Constrains effort on reasoning for
-	// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-	// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-	// Reducing reasoning effort can result in faster responses and fewer tokens used
-	// on reasoning in a response.
+	// Constrains effort on reasoning for reasoning models. Currently supported values
+	// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+	// reasoning effort can result in faster responses and fewer tokens used on
+	// reasoning in a response. Not all reasoning models support every value. See the
+	// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+	// model-specific support.
 	//
-	//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-	//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-	//     calls are supported for all reasoning values in gpt-5.1.
-	//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-	//     support `none`.
-	//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-	//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
-	//
-	// Any of "none", "minimal", "low", "medium", "high", "xhigh".
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
 	ReasoningEffort shared.ReasoningEffort `json:"reasoning_effort,omitzero"`
 	paramObj
 }

@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -353,15 +353,6 @@ func (u *ModerationMultiModalInputUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *ModerationMultiModalInputUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfImageURL) {
-		return u.OfImageURL
-	} else if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u ModerationMultiModalInputUnionParam) GetImageURL() *ModerationImageURLInputImageURLParam {
 	if vt := u.OfImageURL; vt != nil {
@@ -476,15 +467,4 @@ func (u ModerationNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ModerationNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ModerationNewParamsInputUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfStringArray) {
-		return &u.OfStringArray
-	} else if !param.IsOmitted(u.OfModerationMultiModalArray) {
-		return &u.OfModerationMultiModalArray
-	}
-	return nil
 }

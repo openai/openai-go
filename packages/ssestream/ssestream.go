@@ -1,5 +1,3 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
-
 package ssestream
 
 import (
@@ -75,16 +73,20 @@ func (s *eventStreamDecoder) Next() bool {
 	}
 
 	event := ""
-	data := bytes.NewBuffer(nil)
+	var data []byte
 
 	for s.scn.Scan() {
 		txt := s.scn.Bytes()
 
 		// Dispatch event on an empty line
 		if len(txt) == 0 {
+			if len(data) == 0 {
+				event = ""
+				continue
+			}
 			s.evt = Event{
 				Type: event,
-				Data: data.Bytes(),
+				Data: data,
 			}
 			return true
 		}
@@ -104,14 +106,8 @@ func (s *eventStreamDecoder) Next() bool {
 		case "event":
 			event = string(value)
 		case "data":
-			_, s.err = data.Write(value)
-			if s.err != nil {
-				break
-			}
-			_, s.err = data.WriteRune('\n')
-			if s.err != nil {
-				break
-			}
+			data = append(data, value...)
+			data = append(data, '\n')
 		}
 	}
 

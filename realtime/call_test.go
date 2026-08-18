@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package realtime_test
 
@@ -46,10 +46,12 @@ func TestCallAcceptWithOptionalParams(t *testing.T) {
 							Type: realtime.NoiseReductionTypeNearField,
 						},
 						Transcription: realtime.AudioTranscriptionParam{
-							Delay:    realtime.AudioTranscriptionDelayMinimal,
-							Language: openai.String("language"),
-							Model:    realtime.AudioTranscriptionModelWhisper1,
-							Prompt:   openai.String("prompt"),
+							Delay:     realtime.AudioTranscriptionDelayMinimal,
+							Keywords:  []string{"string"},
+							Language:  openai.String("language"),
+							Languages: []string{"string"},
+							Model:     realtime.AudioTranscriptionModelWhisper1,
+							Prompt:    openai.String("prompt"),
 						},
 						TurnDetection: realtime.RealtimeAudioInputTurnDetectionUnionParam{
 							OfServerVad: &realtime.RealtimeAudioInputTurnDetectionServerVadParam{

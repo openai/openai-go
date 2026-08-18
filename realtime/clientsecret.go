@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package realtime
 
@@ -332,12 +332,12 @@ func (u RealtimeSessionCreateResponseAudioInputTurnDetectionUnion) AsAny() anyRe
 }
 
 func (u RealtimeSessionCreateResponseAudioInputTurnDetectionUnion) AsServerVad() (v RealtimeSessionCreateResponseAudioInputTurnDetectionServerVad) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseAudioInputTurnDetectionUnion) AsSemanticVad() (v RealtimeSessionCreateResponseAudioInputTurnDetectionSemanticVad) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -507,12 +507,12 @@ type RealtimeSessionCreateResponseMaxOutputTokensUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseMaxOutputTokensUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseMaxOutputTokensUnion) AsInf() (v constant.Inf) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -530,6 +530,8 @@ const (
 	RealtimeSessionCreateResponseModelGPTRealtime                        RealtimeSessionCreateResponseModel = "gpt-realtime"
 	RealtimeSessionCreateResponseModelGPTRealtime1_5                     RealtimeSessionCreateResponseModel = "gpt-realtime-1.5"
 	RealtimeSessionCreateResponseModelGPTRealtime2                       RealtimeSessionCreateResponseModel = "gpt-realtime-2"
+	RealtimeSessionCreateResponseModelGPTRealtime2_1                     RealtimeSessionCreateResponseModel = "gpt-realtime-2.1"
+	RealtimeSessionCreateResponseModelGPTRealtime2_1Mini                 RealtimeSessionCreateResponseModel = "gpt-realtime-2.1-mini"
 	RealtimeSessionCreateResponseModelGPTRealtime2025_08_28              RealtimeSessionCreateResponseModel = "gpt-realtime-2025-08-28"
 	RealtimeSessionCreateResponseModelGPT4oRealtimePreview               RealtimeSessionCreateResponseModel = "gpt-4o-realtime-preview"
 	RealtimeSessionCreateResponseModelGPT4oRealtimePreview2024_10_01     RealtimeSessionCreateResponseModel = "gpt-4o-realtime-preview-2024-10-01"
@@ -572,17 +574,17 @@ type RealtimeSessionCreateResponseToolChoiceUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolChoiceUnion) AsToolChoiceMode() (v responses.ToolChoiceOptions) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolChoiceUnion) AsFunctionTool() (v responses.ToolChoiceFunction) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolChoiceUnion) AsMcpTool() (v responses.ToolChoiceMcp) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -608,6 +610,8 @@ type RealtimeSessionCreateResponseToolUnion struct {
 	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
 	ServerLabel string `json:"server_label"`
 	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
+	AllowedCallers []string `json:"allowed_callers"`
+	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
 	AllowedTools RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion `json:"allowed_tools"`
 	// This field is from variant [RealtimeSessionCreateResponseToolMcpTool].
 	Authorization string `json:"authorization"`
@@ -631,6 +635,7 @@ type RealtimeSessionCreateResponseToolUnion struct {
 		Parameters        respjson.Field
 		Type              respjson.Field
 		ServerLabel       respjson.Field
+		AllowedCallers    respjson.Field
 		AllowedTools      respjson.Field
 		Authorization     respjson.Field
 		ConnectorID       respjson.Field
@@ -645,12 +650,12 @@ type RealtimeSessionCreateResponseToolUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolUnion) AsFunctionTool() (v RealtimeFunctionTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolUnion) AsMcpTool() (v RealtimeSessionCreateResponseToolMcpTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -669,6 +674,10 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 	ServerLabel string `json:"server_label" api:"required"`
 	// The type of the MCP tool. Always `mcp`.
 	Type constant.Mcp `json:"type" default:"mcp"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
 	// List of allowed tool names or a filter object.
 	AllowedTools RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion `json:"allowed_tools" api:"nullable"`
 	// An OAuth access token that can be used with a remote MCP server, either with a
@@ -714,6 +723,7 @@ type RealtimeSessionCreateResponseToolMcpTool struct {
 	JSON struct {
 		ServerLabel       respjson.Field
 		Type              respjson.Field
+		AllowedCallers    respjson.Field
 		AllowedTools      respjson.Field
 		Authorization     respjson.Field
 		ConnectorID       respjson.Field
@@ -760,12 +770,12 @@ type RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion) AsMcpAllowedTools() (v []string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolAllowedToolsUnion) AsMcpToolFilter() (v RealtimeSessionCreateResponseToolMcpToolAllowedToolsMcpToolFilter) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -831,12 +841,12 @@ type RealtimeSessionCreateResponseToolMcpToolRequireApprovalUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolRequireApprovalUnion) AsMcpToolApprovalFilter() (v RealtimeSessionCreateResponseToolMcpToolRequireApprovalMcpToolApprovalFilter) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseToolMcpToolRequireApprovalUnion) AsMcpToolApprovalSetting() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -966,12 +976,12 @@ type RealtimeSessionCreateResponseTracingUnion struct {
 }
 
 func (u RealtimeSessionCreateResponseTracingUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeSessionCreateResponseTracingUnion) AsTracingConfiguration() (v RealtimeSessionCreateResponseTracingTracingConfiguration) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1263,12 +1273,12 @@ func (u ClientSecretNewResponseSessionUnion) AsAny() anyClientSecretNewResponseS
 }
 
 func (u ClientSecretNewResponseSessionUnion) AsRealtime() (v RealtimeSessionCreateResponse) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ClientSecretNewResponseSessionUnion) AsTranscription() (v RealtimeTranscriptionSessionCreateResponse) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1459,15 +1469,6 @@ func (u ClientSecretNewParamsSessionUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *ClientSecretNewParamsSessionUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *ClientSecretNewParamsSessionUnion) asAny() any {
-	if !param.IsOmitted(u.OfRealtime) {
-		return u.OfRealtime
-	} else if !param.IsOmitted(u.OfTranscription) {
-		return u.OfTranscription
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -207,12 +207,12 @@ func (u AnnotationUnion) AsAny() anyAnnotation {
 }
 
 func (u AnnotationUnion) AsFileCitation() (v FileCitationAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AnnotationUnion) AsFilePath() (v FilePathAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -280,12 +280,12 @@ func (u AnnotationDeltaUnion) AsAny() anyAnnotationDelta {
 }
 
 func (u AnnotationDeltaUnion) AsFileCitation() (v FileCitationDeltaAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u AnnotationDeltaUnion) AsFilePath() (v FilePathDeltaAnnotation) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -941,12 +941,12 @@ type MessageAttachmentToolUnion struct {
 }
 
 func (u MessageAttachmentToolUnion) AsCodeInterpreterTool() (v CodeInterpreterTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageAttachmentToolUnion) AsFileSearchTool() (v MessageAttachmentToolFileSearchTool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1077,22 +1077,22 @@ func (u MessageContentUnion) AsAny() anyMessageContent {
 }
 
 func (u MessageContentUnion) AsImageFile() (v ImageFileContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsImageURL() (v ImageURLContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsText() (v TextContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentUnion) AsRefusal() (v RefusalContentBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1170,22 +1170,22 @@ func (u MessageContentDeltaUnion) AsAny() anyMessageContentDelta {
 }
 
 func (u MessageContentDeltaUnion) AsImageFile() (v ImageFileDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsText() (v TextDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsRefusal() (v RefusalDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u MessageContentDeltaUnion) AsImageURL() (v ImageURLDeltaBlock) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1229,17 +1229,6 @@ func (u MessageContentPartParamUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *MessageContentPartParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *MessageContentPartParamUnion) asAny() any {
-	if !param.IsOmitted(u.OfImageFile) {
-		return u.OfImageFile
-	} else if !param.IsOmitted(u.OfImageURL) {
-		return u.OfImageURL
-	} else if !param.IsOmitted(u.OfText) {
-		return u.OfText
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1556,15 +1545,6 @@ func (u *BetaThreadMessageNewParamsContentUnion) UnmarshalJSON(data []byte) erro
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *BetaThreadMessageNewParamsContentUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfContentParts) {
-		return &u.OfArrayOfContentParts
-	}
-	return nil
-}
-
 // The role of the entity that is creating the message. Allowed values include:
 //
 //   - `user`: Indicates the message is sent by an actual user and should be used in
@@ -1608,15 +1588,6 @@ func (u BetaThreadMessageNewParamsAttachmentToolUnion) MarshalJSON() ([]byte, er
 }
 func (u *BetaThreadMessageNewParamsAttachmentToolUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *BetaThreadMessageNewParamsAttachmentToolUnion) asAny() any {
-	if !param.IsOmitted(u.OfCodeInterpreter) {
-		return u.OfCodeInterpreter
-	} else if !param.IsOmitted(u.OfFileSearch) {
-		return u.OfFileSearch
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.

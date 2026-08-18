@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -270,12 +270,12 @@ func (u CodeInterpreterToolCallCodeInterpreterOutputUnion) AsAny() anyCodeInterp
 }
 
 func (u CodeInterpreterToolCallCodeInterpreterOutputUnion) AsLogs() (v CodeInterpreterToolCallCodeInterpreterOutputLogs) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u CodeInterpreterToolCallCodeInterpreterOutputUnion) AsImage() (v CodeInterpreterToolCallCodeInterpreterOutputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -449,12 +449,12 @@ func (u CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion) AsAny() anyCodeI
 }
 
 func (u CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion) AsLogs() (v CodeInterpreterLogs) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u CodeInterpreterToolCallDeltaCodeInterpreterOutputUnion) AsImage() (v CodeInterpreterOutputImage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -919,12 +919,12 @@ func (u RunStepStepDetailsUnion) AsAny() anyRunStepStepDetails {
 }
 
 func (u RunStepStepDetailsUnion) AsMessageCreation() (v MessageCreationStepDetails) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RunStepStepDetailsUnion) AsToolCalls() (v ToolCallsStepDetails) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1036,12 +1036,12 @@ func (u RunStepDeltaStepDetailsUnion) AsAny() anyRunStepDeltaStepDetails {
 }
 
 func (u RunStepDeltaStepDetailsUnion) AsMessageCreation() (v RunStepDeltaMessageDelta) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RunStepDeltaStepDetailsUnion) AsToolCalls() (v ToolCallDeltaObject) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1178,17 +1178,17 @@ func (u ToolCallUnion) AsAny() anyToolCall {
 }
 
 func (u ToolCallUnion) AsCodeInterpreter() (v CodeInterpreterToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ToolCallUnion) AsFileSearch() (v FileSearchToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ToolCallUnion) AsFunction() (v FunctionToolCall) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1260,17 +1260,17 @@ func (u ToolCallDeltaUnion) AsAny() anyToolCallDelta {
 }
 
 func (u ToolCallDeltaUnion) AsCodeInterpreter() (v CodeInterpreterToolCallDelta) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ToolCallDeltaUnion) AsFileSearch() (v FileSearchToolCallDelta) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u ToolCallDeltaUnion) AsFunction() (v FunctionToolCallDelta) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 

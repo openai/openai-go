@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -183,19 +183,6 @@ func (u EmbeddingNewParamsInputUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *EmbeddingNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *EmbeddingNewParamsInputUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfArrayOfStrings) {
-		return &u.OfArrayOfStrings
-	} else if !param.IsOmitted(u.OfArrayOfTokens) {
-		return &u.OfArrayOfTokens
-	} else if !param.IsOmitted(u.OfArrayOfTokenArrays) {
-		return &u.OfArrayOfTokenArrays
-	}
-	return nil
 }
 
 // The format to return the embeddings in. Can be either `float` or

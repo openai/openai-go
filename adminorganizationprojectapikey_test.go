@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai_test
 
@@ -57,8 +57,9 @@ func TestAdminOrganizationProjectAPIKeyListWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"project_id",
 		openai.AdminOrganizationProjectAPIKeyListParams{
-			After: openai.String("after"),
-			Limit: openai.Int(0),
+			After:              openai.String("after"),
+			Limit:              openai.Int(0),
+			OwnerProjectAccess: openai.AdminOrganizationProjectAPIKeyListParamsOwnerProjectAccessActive,
 		},
 	)
 	if err != nil {

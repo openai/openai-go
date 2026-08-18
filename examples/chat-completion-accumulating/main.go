@@ -28,6 +28,9 @@ func main() {
 		Seed:     openai.Int(0),
 		Model:    openai.ChatModelGPT4o,
 		Tools:    tools,
+		StreamOptions: openai.ChatCompletionStreamOptionsParam{
+			IncludeUsage: openai.Bool(true),
+		},
 	}
 
 	stream := client.Chat.Completions.NewStreaming(ctx, params)
@@ -104,16 +107,4 @@ var tools = []openai.ChatCompletionToolUnionParam{
 			"required": []string{"town", "nation"},
 		},
 	}),
-}
-
-// Mock function to simulate weather data retrieval
-func getWeather(location string) string {
-	// In a real implementation, this function would call a weather API
-	return "Sunny, 25°C"
-}
-
-// Mock function to simulate population data retrieval
-func getPopulation(town, nation string, rounding int) string {
-	// In a real implementation, this function would call a population API
-	return "Athens, Greece: 664,046"
 }

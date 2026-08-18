@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -33,8 +33,9 @@ type Client struct {
 	// Assistants and Fine-tuning.
 	Files FileService
 	// Given a prompt and/or an input image, the model will generate a new image.
-	Images ImageService
-	Audio  AudioService
+	Images                  ImageService
+	ContentProvenanceChecks ContentProvenanceCheckService
+	Audio                   AudioService
 	// Given text and/or image inputs, classifies if those inputs are potentially
 	// harmful.
 	Moderations ModerationService
@@ -56,14 +57,16 @@ type Client struct {
 	Conversations conversations.ConversationService
 	Containers    ContainerService
 	Skills        SkillService
-	Videos        VideoService
+	// Deprecated: The Sora API is scheduled to permanently shut down on September 24,
+	// 2026.
+	Videos VideoService
 }
 
 // DefaultClientOptions read from the environment (OPENAI_API_KEY,
 // OPENAI_ADMIN_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID, OPENAI_WEBHOOK_SECRET,
 // OPENAI_BASE_URL). This should be used to initialize new clients.
 func DefaultClientOptions() []option.RequestOption {
-	defaults := []option.RequestOption{option.WithHTTPClient(defaultHTTPClient()), option.WithEnvironmentProduction()}
+	defaults := defaultClientOptionsWithoutEnvironment()
 	if o, ok := os.LookupEnv("OPENAI_BASE_URL"); ok {
 		defaults = append(defaults, option.WithBaseURL(o))
 	}
@@ -93,13 +96,21 @@ func DefaultClientOptions() []option.RequestOption {
 	return defaults
 }
 
+func defaultClientOptionsWithoutEnvironment() []option.RequestOption {
+	return []option.RequestOption{option.WithHTTPClient(defaultHTTPClient()), option.WithEnvironmentProduction()}
+}
+
 // NewClient generates a new client with the default option read from the
 // environment (OPENAI_API_KEY, OPENAI_ADMIN_KEY, OPENAI_ORG_ID, OPENAI_PROJECT_ID,
 // OPENAI_WEBHOOK_SECRET, OPENAI_BASE_URL). The option passed in as arguments are
 // applied after these default arguments, and all option will be passed down to the
 // services and requests that this client makes.
 func NewClient(opts ...option.RequestOption) (r Client) {
-	opts = append(DefaultClientOptions(), opts...)
+	defaults := DefaultClientOptions()
+	if requestconfig.EnvironmentDefaultsDisabled(opts...) {
+		defaults = defaultClientOptionsWithoutEnvironment()
+	}
+	opts = append(defaults, opts...)
 
 	r = Client{Options: opts}
 
@@ -108,6 +119,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.Embeddings = NewEmbeddingService(opts...)
 	r.Files = NewFileService(opts...)
 	r.Images = NewImageService(opts...)
+	r.ContentProvenanceChecks = NewContentProvenanceCheckService(opts...)
 	r.Audio = NewAudioService(opts...)
 	r.Moderations = NewModerationService(opts...)
 	r.Models = NewModelService(opts...)

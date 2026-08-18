@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -334,12 +334,12 @@ type FineTuningJobHyperparametersBatchSizeUnion struct {
 }
 
 func (u FineTuningJobHyperparametersBatchSizeUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningJobHyperparametersBatchSizeUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -371,12 +371,12 @@ type FineTuningJobHyperparametersLearningRateMultiplierUnion struct {
 }
 
 func (u FineTuningJobHyperparametersLearningRateMultiplierUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningJobHyperparametersLearningRateMultiplierUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -408,12 +408,12 @@ type FineTuningJobHyperparametersNEpochsUnion struct {
 }
 
 func (u FineTuningJobHyperparametersNEpochsUnion) AsAuto() (v constant.Auto) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FineTuningJobHyperparametersNEpochsUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -706,15 +706,6 @@ func (u *FineTuningJobNewParamsHyperparametersBatchSizeUnion) UnmarshalJSON(data
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *FineTuningJobNewParamsHyperparametersBatchSizeUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -732,15 +723,6 @@ func (u *FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion) Unmar
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *FineTuningJobNewParamsHyperparametersLearningRateMultiplierUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfFloat) {
-		return &u.OfFloat.Value
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -756,15 +738,6 @@ func (u FineTuningJobNewParamsHyperparametersNEpochsUnion) MarshalJSON() ([]byte
 }
 func (u *FineTuningJobNewParamsHyperparametersNEpochsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FineTuningJobNewParamsHyperparametersNEpochsUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	}
-	return nil
 }
 
 // The properties Type, Wandb are required.

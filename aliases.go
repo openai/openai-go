@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -49,6 +49,12 @@ const AllModelsComputerUsePreview = shared.AllModelsComputerUsePreview
 // Equals "computer-use-preview-2025-03-11"
 const AllModelsComputerUsePreview2025_03_11 = shared.AllModelsComputerUsePreview2025_03_11
 
+// Equals "gpt-5.5-pro"
+const AllModelsGPT5_5Pro = shared.AllModelsGPT5_5Pro
+
+// Equals "gpt-5.5-pro-2026-04-23"
+const AllModelsGPT5_5Pro2026_04_23 = shared.AllModelsGPT5_5Pro2026_04_23
+
 // Equals "gpt-5-codex"
 const AllModelsGPT5Codex = shared.AllModelsGPT5Codex
 
@@ -61,8 +67,32 @@ const AllModelsGPT5Pro2025_10_06 = shared.AllModelsGPT5Pro2025_10_06
 // Equals "gpt-5.1-codex-max"
 const AllModelsGPT5_1CodexMax = shared.AllModelsGPT5_1CodexMax
 
+// Equals "gpt-daybreak-blue-latest"
+const AllModelsGPTDaybreakBlueLatest = shared.AllModelsGPTDaybreakBlueLatest
+
+// Equals "gpt-daybreak-red-latest"
+const AllModelsGPTDaybreakRedLatest = shared.AllModelsGPTDaybreakRedLatest
+
+// Equals "gpt-5.6-cyber"
+const AllModelsGPT5_6Cyber = shared.AllModelsGPT5_6Cyber
+
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
+
+// Equals "gpt-5.6-sol"
+const ChatModelGPT5_6Sol = shared.ChatModelGPT5_6Sol
+
+// Equals "gpt-5.6-terra"
+const ChatModelGPT5_6Terra = shared.ChatModelGPT5_6Terra
+
+// Equals "gpt-5.6-luna"
+const ChatModelGPT5_6Luna = shared.ChatModelGPT5_6Luna
+
+// Equals "gpt-5.5"
+const ChatModelGPT5_5 = shared.ChatModelGPT5_5
+
+// Equals "gpt-5.5-2026-04-23"
+const ChatModelGPT5_5_2026_04_23 = shared.ChatModelGPT5_5_2026_04_23
 
 // Equals "gpt-5.4"
 const ChatModelGPT5_4 = shared.ChatModelGPT5_4
@@ -465,7 +495,10 @@ const OAuthErrorCodeInvalidSubjectToken = shared.OAuthErrorCodeInvalidSubjectTok
 // This is an alias to an internal type.
 type Reasoning = shared.Reasoning
 
-// Controls which reasoning items are rendered back to the model on later turns.
+// Controls which reasoning items are rendered back to the model on later turns. If
+// omitted or set to `auto`, the model determines the context mode. The `gpt-5.6`
+// model family defaults to `all_turns`; earlier models default to `current_turn`.
+//
 // When returned on a response, this is the effective reasoning context mode used
 // for the response.
 //
@@ -499,6 +532,19 @@ const ReasoningGenerateSummaryConcise = shared.ReasoningGenerateSummaryConcise
 // Equals "detailed"
 const ReasoningGenerateSummaryDetailed = shared.ReasoningGenerateSummaryDetailed
 
+// Controls the reasoning execution mode for the request.
+//
+// When returned on a response, this is the effective execution mode.
+//
+// This is an alias to an internal type.
+type ReasoningMode = shared.ReasoningMode
+
+// Equals "standard"
+const ReasoningModeStandard = shared.ReasoningModeStandard
+
+// Equals "pro"
+const ReasoningModePro = shared.ReasoningModePro
+
 // A summary of the reasoning performed by the model. This can be useful for
 // debugging and understanding the model's reasoning process. One of `auto`,
 // `concise`, or `detailed`.
@@ -526,19 +572,12 @@ const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 // This is an alias to an internal type.
 type ReasoningParam = shared.ReasoningParam
 
-// Constrains effort on reasoning for
-// [reasoning models](https://platform.openai.com/docs/guides/reasoning). Currently
-// supported values are `none`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
-// Reducing reasoning effort can result in faster responses and fewer tokens used
-// on reasoning in a response.
-//
-//   - `gpt-5.1` defaults to `none`, which does not perform reasoning. The supported
-//     reasoning values for `gpt-5.1` are `none`, `low`, `medium`, and `high`. Tool
-//     calls are supported for all reasoning values in gpt-5.1.
-//   - All models before `gpt-5.1` default to `medium` reasoning effort, and do not
-//     support `none`.
-//   - The `gpt-5-pro` model defaults to (and only supports) `high` reasoning effort.
-//   - `xhigh` is supported for all models after `gpt-5.1-codex-max`.
+// Constrains effort on reasoning for reasoning models. Currently supported values
+// are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`. Reducing
+// reasoning effort can result in faster responses and fewer tokens used on
+// reasoning in a response. Not all reasoning models support every value. See the
+// [reasoning guide](https://platform.openai.com/docs/guides/reasoning) for
+// model-specific support.
 //
 // This is an alias to an internal type.
 type ReasoningEffort = shared.ReasoningEffort
@@ -560,6 +599,9 @@ const ReasoningEffortHigh = shared.ReasoningEffortHigh
 
 // Equals "xhigh"
 const ReasoningEffortXhigh = shared.ReasoningEffortXhigh
+
+// Equals "max"
+const ReasoningEffortMax = shared.ReasoningEffortMax
 
 // JSON object response format. An older method of generating JSON responses. Using
 // `json_schema` is recommended for models that support it. Note that the model
@@ -642,6 +684,12 @@ const ResponsesModelComputerUsePreview = shared.ResponsesModelComputerUsePreview
 // Equals "computer-use-preview-2025-03-11"
 const ResponsesModelComputerUsePreview2025_03_11 = shared.ResponsesModelComputerUsePreview2025_03_11
 
+// Equals "gpt-5.5-pro"
+const ResponsesModelGPT5_5Pro = shared.ResponsesModelGPT5_5Pro
+
+// Equals "gpt-5.5-pro-2026-04-23"
+const ResponsesModelGPT5_5Pro2026_04_23 = shared.ResponsesModelGPT5_5Pro2026_04_23
+
 // Equals "gpt-5-codex"
 const ResponsesModelGPT5Codex = shared.ResponsesModelGPT5Codex
 
@@ -653,3 +701,12 @@ const ResponsesModelGPT5Pro2025_10_06 = shared.ResponsesModelGPT5Pro2025_10_06
 
 // Equals "gpt-5.1-codex-max"
 const ResponsesModelGPT5_1CodexMax = shared.ResponsesModelGPT5_1CodexMax
+
+// Equals "gpt-daybreak-blue-latest"
+const ResponsesModelGPTDaybreakBlueLatest = shared.ResponsesModelGPTDaybreakBlueLatest
+
+// Equals "gpt-daybreak-red-latest"
+const ResponsesModelGPTDaybreakRedLatest = shared.ResponsesModelGPTDaybreakRedLatest
+
+// Equals "gpt-5.6-cyber"
+const ResponsesModelGPT5_6Cyber = shared.ResponsesModelGPT5_6Cyber

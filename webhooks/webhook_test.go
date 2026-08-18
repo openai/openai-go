@@ -256,11 +256,11 @@ func TestWebhookService_UnwrapWithToleranceAndTime(t *testing.T) {
 	fixedTime := time.Unix(testTimestamp, 0)
 	webhookEvent, err := client.Webhooks.UnwrapWithToleranceAndTime([]byte(testPayload), createTestHeaders(), 5*time.Minute, fixedTime)
 	if err != nil {
-		t.Errorf("UnwrapWithToleranceAndTime should have succeeded with valid signature: %v", err)
+		t.Fatalf("UnwrapWithToleranceAndTime should have succeeded with valid signature: %v", err)
 	}
 
 	if webhookEvent == nil {
-		t.Error("UnwrapWithToleranceAndTime should return parsed event")
+		t.Fatal("UnwrapWithToleranceAndTime should return parsed event")
 	}
 
 	parsed := webhookEvent.AsResponseCompleted()

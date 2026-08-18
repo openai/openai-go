@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -36,6 +36,7 @@ type AdminOrganizationProjectService struct {
 	Groups                AdminOrganizationProjectGroupService
 	Roles                 AdminOrganizationProjectRoleService
 	DataRetention         AdminOrganizationProjectDataRetentionService
+	SpendLimit            AdminOrganizationProjectSpendLimitService
 	SpendAlerts           AdminOrganizationProjectSpendAlertService
 	Certificates          AdminOrganizationProjectCertificateService
 }
@@ -55,6 +56,7 @@ func NewAdminOrganizationProjectService(opts ...option.RequestOption) (r AdminOr
 	r.Groups = NewAdminOrganizationProjectGroupService(opts...)
 	r.Roles = NewAdminOrganizationProjectRoleService(opts...)
 	r.DataRetention = NewAdminOrganizationProjectDataRetentionService(opts...)
+	r.SpendLimit = NewAdminOrganizationProjectSpendLimitService(opts...)
 	r.SpendAlerts = NewAdminOrganizationProjectSpendAlertService(opts...)
 	r.Certificates = NewAdminOrganizationProjectCertificateService(opts...)
 	return

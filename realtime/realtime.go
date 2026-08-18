@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package realtime
 
@@ -43,14 +43,22 @@ type AudioTranscription struct {
 	//
 	// Any of "minimal", "low", "medium", "high", "xhigh".
 	Delay AudioTranscriptionDelay `json:"delay"`
+	// Words or phrases to guide transcription of the input audio. Supported by
+	// `gpt-transcribe` and `gpt-live-transcribe`.
+	Keywords []string `json:"keywords"`
 	// The language of the input audio. Supplying the input language in
 	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) (e.g. `en`)
 	// format will improve accuracy and latency.
 	Language string `json:"language"`
+	// Possible languages of the input audio, in
+	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) format.
+	// Supported by `gpt-transcribe` and `gpt-live-transcribe`.
+	Languages []string `json:"languages"`
 	// The model to use for transcription. Current options are `whisper-1`,
-	// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
-	// `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`.
-	// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
+	// `gpt-transcribe`, `gpt-live-transcribe`, `gpt-4o-mini-transcribe`,
+	// `gpt-4o-mini-transcribe-2025-12-15`, `gpt-4o-transcribe`,
+	// `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`. Use
+	// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 	Model AudioTranscriptionModel `json:"model"`
 	// An optional text to guide the model's style or continue a previous audio
 	// segment. For `whisper-1`, the
@@ -62,7 +70,9 @@ type AudioTranscription struct {
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Delay       respjson.Field
+		Keywords    respjson.Field
 		Language    respjson.Field
+		Languages   respjson.Field
 		Model       respjson.Field
 		Prompt      respjson.Field
 		ExtraFields map[string]respjson.Field
@@ -99,13 +109,16 @@ const (
 )
 
 // The model to use for transcription. Current options are `whisper-1`,
-// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
-// `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`.
-// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
+// `gpt-transcribe`, `gpt-live-transcribe`, `gpt-4o-mini-transcribe`,
+// `gpt-4o-mini-transcribe-2025-12-15`, `gpt-4o-transcribe`,
+// `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`. Use
+// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 type AudioTranscriptionModel string
 
 const (
 	AudioTranscriptionModelWhisper1                      AudioTranscriptionModel = "whisper-1"
+	AudioTranscriptionModelGPTTranscribe                 AudioTranscriptionModel = "gpt-transcribe"
+	AudioTranscriptionModelGPTLiveTranscribe             AudioTranscriptionModel = "gpt-live-transcribe"
 	AudioTranscriptionModelGPT4oMiniTranscribe           AudioTranscriptionModel = "gpt-4o-mini-transcribe"
 	AudioTranscriptionModelGPT4oMiniTranscribe2025_12_15 AudioTranscriptionModel = "gpt-4o-mini-transcribe-2025-12-15"
 	AudioTranscriptionModelGPT4oTranscribe               AudioTranscriptionModel = "gpt-4o-transcribe"
@@ -131,10 +144,18 @@ type AudioTranscriptionParam struct {
 	//
 	// Any of "minimal", "low", "medium", "high", "xhigh".
 	Delay AudioTranscriptionDelay `json:"delay,omitzero"`
+	// Words or phrases to guide transcription of the input audio. Supported by
+	// `gpt-transcribe` and `gpt-live-transcribe`.
+	Keywords []string `json:"keywords,omitzero"`
+	// Possible languages of the input audio, in
+	// [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) format.
+	// Supported by `gpt-transcribe` and `gpt-live-transcribe`.
+	Languages []string `json:"languages,omitzero"`
 	// The model to use for transcription. Current options are `whisper-1`,
-	// `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-12-15`,
-	// `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`.
-	// Use `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
+	// `gpt-transcribe`, `gpt-live-transcribe`, `gpt-4o-mini-transcribe`,
+	// `gpt-4o-mini-transcribe-2025-12-15`, `gpt-4o-transcribe`,
+	// `gpt-4o-transcribe-diarize`, and `gpt-realtime-whisper`. Use
+	// `gpt-4o-transcribe-diarize` when you need diarization with speaker labels.
 	Model AudioTranscriptionModel `json:"model,omitzero"`
 	paramObj
 }
@@ -289,17 +310,6 @@ func (u *RealtimeAudioConfigOutputVoiceUnionParam) UnmarshalJSON(data []byte) er
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *RealtimeAudioConfigOutputVoiceUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfRealtimeAudioConfigOutputVoiceString2) {
-		return &u.OfRealtimeAudioConfigOutputVoiceString2
-	} else if !param.IsOmitted(u.OfRealtimeAudioConfigOutputVoiceID) {
-		return u.OfRealtimeAudioConfigOutputVoiceID
-	}
-	return nil
-}
-
 type RealtimeAudioConfigOutputVoiceString2 string
 
 const (
@@ -384,17 +394,17 @@ func (u RealtimeAudioFormatsUnion) AsAny() anyRealtimeAudioFormats {
 }
 
 func (u RealtimeAudioFormatsUnion) AsAudioPCM() (v RealtimeAudioFormatsAudioPCM) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeAudioFormatsUnion) AsAudioPCMU() (v RealtimeAudioFormatsAudioPCMU) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeAudioFormatsUnion) AsAudioPCMA() (v RealtimeAudioFormatsAudioPCMA) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -495,17 +505,6 @@ func (u RealtimeAudioFormatsUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *RealtimeAudioFormatsUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeAudioFormatsUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfAudioPCM) {
-		return u.OfAudioPCM
-	} else if !param.IsOmitted(u.OfAudioPCMU) {
-		return u.OfAudioPCMU
-	} else if !param.IsOmitted(u.OfAudioPCMA) {
-		return u.OfAudioPCMA
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -627,15 +626,6 @@ func (u RealtimeAudioInputTurnDetectionUnionParam) MarshalJSON() ([]byte, error)
 }
 func (u *RealtimeAudioInputTurnDetectionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeAudioInputTurnDetectionUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfServerVad) {
-		return u.OfServerVad
-	} else if !param.IsOmitted(u.OfSemanticVad) {
-		return u.OfSemanticVad
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1053,15 +1043,6 @@ func (u *RealtimeSessionCreateRequestMaxOutputTokensUnionParam) UnmarshalJSON(da
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *RealtimeSessionCreateRequestMaxOutputTokensUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfInt) {
-		return &u.OfInt.Value
-	} else if !param.IsOmitted(u.OfInf) {
-		return &u.OfInf
-	}
-	return nil
-}
-
 // The Realtime model used for this session.
 type RealtimeSessionCreateRequestModel = string
 
@@ -1069,6 +1050,8 @@ const (
 	RealtimeSessionCreateRequestModelGPTRealtime                        RealtimeSessionCreateRequestModel = "gpt-realtime"
 	RealtimeSessionCreateRequestModelGPTRealtime1_5                     RealtimeSessionCreateRequestModel = "gpt-realtime-1.5"
 	RealtimeSessionCreateRequestModelGPTRealtime2                       RealtimeSessionCreateRequestModel = "gpt-realtime-2"
+	RealtimeSessionCreateRequestModelGPTRealtime2_1                     RealtimeSessionCreateRequestModel = "gpt-realtime-2.1"
+	RealtimeSessionCreateRequestModelGPTRealtime2_1Mini                 RealtimeSessionCreateRequestModel = "gpt-realtime-2.1-mini"
 	RealtimeSessionCreateRequestModelGPTRealtime2025_08_28              RealtimeSessionCreateRequestModel = "gpt-realtime-2025-08-28"
 	RealtimeSessionCreateRequestModelGPT4oRealtimePreview               RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview"
 	RealtimeSessionCreateRequestModelGPT4oRealtimePreview2024_10_01     RealtimeSessionCreateRequestModel = "gpt-4o-realtime-preview-2024-10-01"
@@ -1113,17 +1096,6 @@ func (u RealtimeToolChoiceConfigUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *RealtimeToolChoiceConfigUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeToolChoiceConfigUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfToolChoiceMode) {
-		return &u.OfToolChoiceMode
-	} else if !param.IsOmitted(u.OfFunctionTool) {
-		return u.OfFunctionTool
-	} else if !param.IsOmitted(u.OfMcpTool) {
-		return u.OfMcpTool
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1178,15 +1150,6 @@ func (u *RealtimeToolsConfigUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *RealtimeToolsConfigUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfFunction) {
-		return u.OfFunction
-	} else if !param.IsOmitted(u.OfMcp) {
-		return u.OfMcp
-	}
-	return nil
-}
-
 // Returns a pointer to the underlying variant's property, if present.
 func (u RealtimeToolsConfigUnionParam) GetDescription() *string {
 	if vt := u.OfFunction; vt != nil && vt.Description.Valid() {
@@ -1215,6 +1178,14 @@ func (u RealtimeToolsConfigUnionParam) GetParameters() *any {
 func (u RealtimeToolsConfigUnionParam) GetServerLabel() *string {
 	if vt := u.OfMcp; vt != nil {
 		return &vt.ServerLabel
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u RealtimeToolsConfigUnionParam) GetAllowedCallers() []string {
+	if vt := u.OfMcp; vt != nil {
+		return vt.AllowedCallers
 	}
 	return nil
 }
@@ -1331,6 +1302,10 @@ type RealtimeToolsConfigUnionMcpParam struct {
 	// The Secure MCP Tunnel ID to use instead of a direct server URL. One of
 	// `server_url`, `connector_id`, or `tunnel_id` must be provided.
 	TunnelID param.Opt[string] `json:"tunnel_id,omitzero"`
+	// The tool invocation context(s).
+	//
+	// Any of "direct", "programmatic".
+	AllowedCallers []string `json:"allowed_callers,omitzero"`
 	// List of allowed tool names or a filter object.
 	AllowedTools RealtimeToolsConfigUnionMcpAllowedToolsParam `json:"allowed_tools,omitzero"`
 	// Optional HTTP headers to send to the MCP server. Use for authentication or other
@@ -1395,15 +1370,6 @@ func (u *RealtimeToolsConfigUnionMcpAllowedToolsParam) UnmarshalJSON(data []byte
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *RealtimeToolsConfigUnionMcpAllowedToolsParam) asAny() any {
-	if !param.IsOmitted(u.OfMcpAllowedTools) {
-		return &u.OfMcpAllowedTools
-	} else if !param.IsOmitted(u.OfMcpToolFilter) {
-		return u.OfMcpToolFilter
-	}
-	return nil
-}
-
 // A filter object to specify which tools are allowed.
 type RealtimeToolsConfigUnionMcpAllowedToolsMcpToolFilterParam struct {
 	// Indicates whether or not a tool modifies data or is read-only. If an MCP server
@@ -1440,15 +1406,6 @@ func (u RealtimeToolsConfigUnionMcpRequireApprovalParam) MarshalJSON() ([]byte, 
 }
 func (u *RealtimeToolsConfigUnionMcpRequireApprovalParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeToolsConfigUnionMcpRequireApprovalParam) asAny() any {
-	if !param.IsOmitted(u.OfMcpToolApprovalFilter) {
-		return u.OfMcpToolApprovalFilter
-	} else if !param.IsOmitted(u.OfMcpToolApprovalSetting) {
-		return &u.OfMcpToolApprovalSetting
-	}
-	return nil
 }
 
 // Specify which of the MCP server's tools require approval. Can be `always`,
@@ -1538,15 +1495,6 @@ func (u RealtimeTracingConfigUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *RealtimeTracingConfigUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeTracingConfigUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return &u.OfAuto
-	} else if !param.IsOmitted(u.OfTracingConfiguration) {
-		return u.OfTracingConfiguration
-	}
-	return nil
 }
 
 // Granular configuration for tracing.
@@ -1668,15 +1616,6 @@ func (u RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) MarshalJS
 }
 func (u *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeTranscriptionSessionAudioInputTurnDetectionUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfServerVad) {
-		return u.OfServerVad
-	} else if !param.IsOmitted(u.OfSemanticVad) {
-		return u.OfSemanticVad
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -1911,12 +1850,12 @@ type RealtimeTruncationUnion struct {
 }
 
 func (u RealtimeTruncationUnion) AsRealtimeTruncationStrategy() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u RealtimeTruncationUnion) AsRetentionRatioTruncation() (v RealtimeTruncationRetentionRatio) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -1968,15 +1907,6 @@ func (u RealtimeTruncationUnionParam) MarshalJSON() ([]byte, error) {
 }
 func (u *RealtimeTruncationUnionParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *RealtimeTruncationUnionParam) asAny() any {
-	if !param.IsOmitted(u.OfRealtimeTruncationStrategy) {
-		return &u.OfRealtimeTruncationStrategy
-	} else if !param.IsOmitted(u.OfRetentionRatioTruncation) {
-		return u.OfRetentionRatioTruncation
-	}
-	return nil
 }
 
 // Retain a fraction of the conversation tokens when the conversation exceeds the

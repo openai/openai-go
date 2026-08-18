@@ -211,7 +211,7 @@ func (w *WorkloadIdentityAuth) refreshToken(ctx context.Context, httpClient HTTP
 	if err != nil {
 		return "", fmt.Errorf("failed to exchange token: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

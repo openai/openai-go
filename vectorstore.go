@@ -1,4 +1,4 @@
-// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 package openai
 
@@ -222,12 +222,12 @@ func (u FileChunkingStrategyUnion) AsAny() anyFileChunkingStrategy {
 }
 
 func (u FileChunkingStrategyUnion) AsStatic() (v StaticFileChunkingStrategyObject) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u FileChunkingStrategyUnion) AsOther() (v OtherFileChunkingStrategyObject) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -258,15 +258,6 @@ func (u FileChunkingStrategyParamUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *FileChunkingStrategyParamUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *FileChunkingStrategyParamUnion) asAny() any {
-	if !param.IsOmitted(u.OfAuto) {
-		return u.OfAuto
-	} else if !param.IsOmitted(u.OfStatic) {
-		return u.OfStatic
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
@@ -602,17 +593,17 @@ type VectorStoreSearchResponseAttributeUnion struct {
 }
 
 func (u VectorStoreSearchResponseAttributeUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u VectorStoreSearchResponseAttributeUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
 func (u VectorStoreSearchResponseAttributeUnion) AsBool() (v bool) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
 
@@ -823,15 +814,6 @@ func (u *VectorStoreSearchParamsQueryUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-func (u *VectorStoreSearchParamsQueryUnion) asAny() any {
-	if !param.IsOmitted(u.OfString) {
-		return &u.OfString.Value
-	} else if !param.IsOmitted(u.OfStringArray) {
-		return &u.OfStringArray
-	}
-	return nil
-}
-
 // Only one field can be non-zero.
 //
 // Use [param.IsOmitted] to confirm if a field is set.
@@ -846,15 +828,6 @@ func (u VectorStoreSearchParamsFiltersUnion) MarshalJSON() ([]byte, error) {
 }
 func (u *VectorStoreSearchParamsFiltersUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
-}
-
-func (u *VectorStoreSearchParamsFiltersUnion) asAny() any {
-	if !param.IsOmitted(u.OfComparisonFilter) {
-		return u.OfComparisonFilter
-	} else if !param.IsOmitted(u.OfCompoundFilter) {
-		return u.OfCompoundFilter
-	}
-	return nil
 }
 
 // Returns a pointer to the underlying variant's property, if present.
