@@ -1,0 +1,39 @@
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
+
+package openai
+
+import (
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+)
+
+// BetaService contains methods and other services that help with interacting with
+// the openai API.
+//
+// Note, unlike clients, this service does not read variables from the environment
+// automatically. You should not instantiate this service directly, and instead use
+// the [NewBetaService] method instead.
+type BetaService struct {
+	Options   []option.RequestOption
+	Responses BetaResponseService
+	ChatKit   BetaChatKitService
+	// Build Assistants that can call models and use tools.
+	Assistants BetaAssistantService
+	// Build Assistants that can call models and use tools.
+	//
+	// Deprecated: The Assistants API is deprecated in favor of the Responses API
+	Threads BetaThreadService
+}
+
+// NewBetaService generates a new service that applies the given options to each
+// request. These options are applied after the parent client's options (if there
+// is one), and before any request-specific options.
+func NewBetaService(opts ...option.RequestOption) (r BetaService) {
+	r = BetaService{}
+	r.Options = requestconfig.InheritedOptions(opts...)
+	r.Responses = NewBetaResponseService(opts...)
+	r.ChatKit = NewBetaChatKitService(opts...)
+	r.Assistants = NewBetaAssistantService(opts...)
+	r.Threads = NewBetaThreadService(opts...)
+	return
+}

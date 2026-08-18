@@ -1,0 +1,240 @@
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
+
+package openai
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"slices"
+
+	"github.com/openai/openai-go/v3/internal/apijson"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/param"
+	"github.com/openai/openai-go/v3/packages/respjson"
+	"github.com/openai/openai-go/v3/shared/constant"
+)
+
+// Use Uploads to upload large files in multiple parts.
+//
+// UploadService contains methods and other services that help with interacting
+// with the openai API.
+//
+// Note, unlike clients, this service does not read variables from the environment
+// automatically. You should not instantiate this service directly, and instead use
+// the [NewUploadService] method instead.
+type UploadService struct {
+	Options []option.RequestOption
+	// Use Uploads to upload large files in multiple parts.
+	Parts UploadPartService
+}
+
+// NewUploadService generates a new service that applies the given options to each
+// request. These options are applied after the parent client's options (if there
+// is one), and before any request-specific options.
+func NewUploadService(opts ...option.RequestOption) (r UploadService) {
+	r = UploadService{}
+	r.Options = requestconfig.InheritedOptions(opts...)
+	r.Parts = NewUploadPartService(opts...)
+	return
+}
+
+// Creates an intermediate
+// [Upload](https://platform.openai.com/docs/api-reference/uploads/object) object
+// that you can add
+// [Parts](https://platform.openai.com/docs/api-reference/uploads/part-object) to.
+// Currently, an Upload can accept at most 8 GB in total and expires after an hour
+// after you create it.
+//
+// Once you complete the Upload, we will create a
+// [File](https://platform.openai.com/docs/api-reference/files/object) object that
+// contains all the parts you uploaded. This File is usable in the rest of our
+// platform as a regular File object.
+//
+// For certain `purpose` values, the correct `mime_type` must be specified. Please
+// refer to documentation for the
+// [supported MIME types for your use case](https://platform.openai.com/docs/assistants/tools/file-search#supported-files).
+//
+// For guidance on the proper filename extensions for each purpose, please follow
+// the documentation on
+// [creating a File](https://platform.openai.com/docs/api-reference/files/create).
+//
+// Returns the Upload object with status `pending`.
+func (r *UploadService) New(ctx context.Context, body UploadNewParams, opts ...option.RequestOption) (res *Upload, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	path := "uploads"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
+// Cancels the Upload. No Parts may be added after an Upload is cancelled.
+//
+// Returns the Upload object with status `cancelled`.
+func (r *UploadService) Cancel(ctx context.Context, uploadID string, opts ...option.RequestOption) (res *Upload, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if uploadID == "" {
+		err = errors.New("missing required upload_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("uploads/%s/cancel", uploadID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
+	return res, err
+}
+
+// Completes the
+// [Upload](https://platform.openai.com/docs/api-reference/uploads/object).
+//
+// Within the returned Upload object, there is a nested
+// [File](https://platform.openai.com/docs/api-reference/files/object) object that
+// is ready to use in the rest of the platform.
+//
+// You can specify the order of the Parts by passing in an ordered list of the Part
+// IDs.
+//
+// The number of bytes uploaded upon completion must match the number of bytes
+// initially specified when creating the Upload object. No Parts may be added after
+// an Upload is completed. Returns the Upload object with status `completed`,
+// including an additional `file` property containing the created usable File
+// object.
+func (r *UploadService) Complete(ctx context.Context, uploadID string, body UploadCompleteParams, opts ...option.RequestOption) (res *Upload, err error) {
+	var preClientOpts = []option.RequestOption{requestconfig.WithBearerAuthSecurity()}
+	opts = slices.Concat(preClientOpts, r.Options, opts)
+	if uploadID == "" {
+		err = errors.New("missing required upload_id parameter")
+		return nil, err
+	}
+	path := requestconfig.FormatPath("uploads/%s/complete", uploadID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	return res, err
+}
+
+// The Upload object can accept byte chunks in the form of Parts.
+type Upload struct {
+	// The Upload unique identifier, which can be referenced in API endpoints.
+	ID string `json:"id" api:"required"`
+	// The intended number of bytes to be uploaded.
+	Bytes int64 `json:"bytes" api:"required"`
+	// The Unix timestamp (in seconds) for when the Upload was created.
+	CreatedAt int64 `json:"created_at" api:"required" format:"unixtime"`
+	// The Unix timestamp (in seconds) for when the Upload will expire.
+	ExpiresAt int64 `json:"expires_at" api:"required" format:"unixtime"`
+	// The name of the file to be uploaded.
+	Filename string `json:"filename" api:"required"`
+	// The object type, which is always "upload".
+	Object constant.Upload `json:"object" default:"upload"`
+	// The intended purpose of the file.
+	// [Please refer here](https://platform.openai.com/docs/api-reference/files/object#files/object-purpose)
+	// for acceptable values.
+	Purpose string `json:"purpose" api:"required"`
+	// The status of the Upload.
+	//
+	// Any of "pending", "completed", "cancelled", "expired".
+	Status UploadStatus `json:"status" api:"required"`
+	// The `File` object represents a document that has been uploaded to OpenAI.
+	File FileObject `json:"file" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Bytes       respjson.Field
+		CreatedAt   respjson.Field
+		ExpiresAt   respjson.Field
+		Filename    respjson.Field
+		Object      respjson.Field
+		Purpose     respjson.Field
+		Status      respjson.Field
+		File        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r Upload) RawJSON() string { return r.JSON.raw }
+func (r *Upload) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The status of the Upload.
+type UploadStatus string
+
+const (
+	UploadStatusPending   UploadStatus = "pending"
+	UploadStatusCompleted UploadStatus = "completed"
+	UploadStatusCancelled UploadStatus = "cancelled"
+	UploadStatusExpired   UploadStatus = "expired"
+)
+
+type UploadNewParams struct {
+	// The number of bytes in the file you are uploading.
+	Bytes int64 `json:"bytes" api:"required"`
+	// The name of the file to upload.
+	Filename string `json:"filename" api:"required"`
+	// The MIME type of the file.
+	//
+	// This must fall within the supported MIME types for your file purpose. See the
+	// supported MIME types for assistants and vision.
+	MimeType string `json:"mime_type" api:"required"`
+	// The intended purpose of the uploaded file.
+	//
+	// See the
+	// [documentation on File purposes](https://platform.openai.com/docs/api-reference/files/create#files-create-purpose).
+	//
+	// Any of "assistants", "batch", "fine-tune", "vision", "user_data", "evals".
+	Purpose FilePurpose `json:"purpose,omitzero" api:"required"`
+	// The expiration policy for a file. By default, files with `purpose=batch` expire
+	// after 30 days and all other files are persisted until they are manually deleted.
+	ExpiresAfter UploadNewParamsExpiresAfter `json:"expires_after,omitzero"`
+	paramObj
+}
+
+func (r UploadNewParams) MarshalJSON() (data []byte, err error) {
+	type shadow UploadNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *UploadNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// The expiration policy for a file. By default, files with `purpose=batch` expire
+// after 30 days and all other files are persisted until they are manually deleted.
+//
+// The properties Anchor, Seconds are required.
+type UploadNewParamsExpiresAfter struct {
+	// The number of seconds after the anchor time that the file will expire. Must be
+	// between 3600 (1 hour) and 2592000 (30 days).
+	Seconds int64 `json:"seconds" api:"required"`
+	// Anchor timestamp after which the expiration policy applies. Supported anchors:
+	// `created_at`.
+	//
+	// This field can be elided, and will marshal its zero value as "created_at".
+	Anchor constant.CreatedAt `json:"anchor" default:"created_at"`
+	paramObj
+}
+
+func (r UploadNewParamsExpiresAfter) MarshalJSON() (data []byte, err error) {
+	type shadow UploadNewParamsExpiresAfter
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *UploadNewParamsExpiresAfter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type UploadCompleteParams struct {
+	// The ordered list of Part IDs.
+	PartIDs []string `json:"part_ids,omitzero" api:"required"`
+	// The optional md5 checksum for the file contents to verify if the bytes uploaded
+	// matches what you expect.
+	Md5 param.Opt[string] `json:"md5,omitzero"`
+	paramObj
+}
+
+func (r UploadCompleteParams) MarshalJSON() (data []byte, err error) {
+	type shadow UploadCompleteParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *UploadCompleteParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
