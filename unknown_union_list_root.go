@@ -1,8 +1,9 @@
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
+
 package openai
 
 import (
 	"bytes"
-
 	"github.com/openai/openai-go/v3/internal/apijson"
 )
 
