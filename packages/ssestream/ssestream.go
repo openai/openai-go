@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"strings"
 
@@ -25,22 +26,39 @@ func NewDecoder(res *http.Response) Decoder {
 		return nil
 	}
 
-	var decoder Decoder
-	contentType := res.Header.Get("content-type")
+	contentType, mediaType := decoderContentTypes(res.Header.Get("content-type"))
 	if t, ok := decoderTypes[contentType]; ok {
-		decoder = t(res.Body)
-	} else {
-		scn := bufio.NewScanner(res.Body)
-		scn.Buffer(nil, bufio.MaxScanTokenSize<<9)
-		decoder = &eventStreamDecoder{rc: res.Body, scn: scn}
+		return t(res.Body)
 	}
-	return decoder
+
+	// Preserve parameter-specific registrations while allowing a bare media
+	// type registration to match standard Content-Type parameters.
+	if mediaType != "" {
+		if t, ok := decoderTypes[mediaType]; ok {
+			return t(res.Body)
+		}
+	}
+
+	scn := bufio.NewScanner(res.Body)
+	scn.Buffer(nil, bufio.MaxScanTokenSize<<9)
+	return &eventStreamDecoder{rc: res.Body, scn: scn}
 }
 
 var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
 
 func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
 	decoderTypes[strings.ToLower(contentType)] = decoder
+}
+
+func decoderContentTypes(contentType string) (string, string) {
+	base, _, _ := strings.Cut(contentType, ";")
+	exactType := strings.ToLower(base) + contentType[len(base):]
+
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return exactType, ""
+	}
+	return exactType, mediaType
 }
 
 type Event struct {
