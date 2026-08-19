@@ -59,6 +59,91 @@ fi
 "$native" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Mock server rejected and replaced tampered existing native executable bytes"
 
+printf '#!/bin/sh\nprintf "%%s" "$STEADY_TEST_SECRET" >"$STEADY_TEST_MARKER"\n' >"$native"
+chmod +x "$native"
+if ! STEADY_TEST_MARKER="$marker" STEADY_TEST_SECRET=synthetic-dry-run-credential \
+  npm_config_offline=true npm_config_dry_run=true ./scripts/steady/install >"$temporary/output" 2>&1; then
+  echo "Steady installation did not override inherited npm dry-run mode" >&2
+  exit 1
+fi
+if [[ -e "$marker" ]]; then
+  echo "Inherited npm dry-run executed a forged existing native with developer credentials" >&2
+  exit 1
+fi
+"$native" --version | grep -Fx "steady $expected_version" >/dev/null
+echo "Inherited npm dry-run cannot skip authenticated native installation"
+
+printf 'dry-run=true\npackage-lock-only=true\nglobal=true\npackage-lock=false\nomit=optional\nignore-scripts=false\n' \
+  >"$temporary/hostile.npmrc"
+printf '#!/bin/sh\nprintf "%%s" "$STEADY_TEST_SECRET" >"$STEADY_TEST_MARKER"\n' >"$native"
+chmod +x "$native"
+if ! STEADY_TEST_MARKER="$marker" STEADY_TEST_SECRET=synthetic-userconfig-credential \
+  npm_config_offline=true npm_config_global=true npm_config_package_lock=false \
+  npm_config_prefix="$temporary/untrusted-prefix" npm_config_userconfig="$temporary/hostile.npmrc" \
+  ./scripts/steady/install >"$temporary/output" 2>&1; then
+  echo "Steady installation did not override hostile inherited npm configuration" >&2
+  exit 1
+fi
+if [[ -e "$marker" ]]; then
+  echo "Hostile npm user configuration executed a forged existing native" >&2
+  exit 1
+fi
+if [[ -e "$temporary/untrusted-prefix" ]]; then
+  echo "Hostile npm configuration redirected the authenticated installation prefix" >&2
+  exit 1
+fi
+"$native" --version | grep -Fx "steady $expected_version" >/dev/null
+echo "Hostile npm user configuration cannot disable authenticated installation"
+
+platform="$(node -p 'process.platform + "-" + process.arch')"
+native_name="$(node -p 'process.platform === "win32" ? "steady.exe" : "steady"')"
+forged_package="$temporary/forged-native/package"
+mkdir -p "$forged_package/bin"
+printf '{"name":"@stdy/cli-%s","version":"%s"}\n' "$platform" "$expected_version" >"$forged_package/package.json"
+printf '#!/bin/sh\nprintf "%%s" "$STEADY_TEST_SECRET" >"$STEADY_TEST_MARKER"\nprintf "steady %s\\n"\n' \
+  "$expected_version" >"$forged_package/bin/$native_name"
+chmod +x "$forged_package/bin/$native_name"
+tar -czf "$temporary/forged-native.tgz" -C "$temporary/forged-native" package
+
+malicious_shrinkwrap="$temporary/malicious-shrinkwrap.json"
+node -e '
+  const fs = require("fs");
+  const crypto = require("crypto");
+  const lock = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  const archive = process.argv[2];
+  const native = lock.packages[`node_modules/@stdy/cli-${process.platform}-${process.arch}`];
+  native.resolved = `file:${archive}`;
+  native.integrity = `sha512-${crypto.createHash("sha512").update(fs.readFileSync(archive)).digest("base64")}`;
+  fs.writeFileSync(process.argv[3], JSON.stringify(lock, null, 2));
+' scripts/steady/package-lock.json "$temporary/forged-native.tgz" "$malicious_shrinkwrap"
+
+for shrinkwrap_kind in regular symlink dangling-symlink; do
+  shrinkwrap_fixture="$temporary/shrinkwrap-$shrinkwrap_kind"
+  mkdir -p "$shrinkwrap_fixture/scripts/steady"
+  cp scripts/steady/install scripts/steady/package.json scripts/steady/package-lock.json "$shrinkwrap_fixture/scripts/steady/"
+  if [[ "$shrinkwrap_kind" == regular ]]; then
+    cp "$malicious_shrinkwrap" "$shrinkwrap_fixture/scripts/steady/npm-shrinkwrap.json"
+  elif [[ "$shrinkwrap_kind" == symlink ]]; then
+    ln -s "$malicious_shrinkwrap" "$shrinkwrap_fixture/scripts/steady/npm-shrinkwrap.json"
+  else
+    ln -s "$temporary/nonexistent-shrinkwrap.json" "$shrinkwrap_fixture/scripts/steady/npm-shrinkwrap.json"
+  fi
+  printf 'dry-run=true\npackage-lock-only=true\nglobal=true\n' >"$shrinkwrap_fixture/scripts/steady/.npmrc"
+
+  if ! STEADY_TEST_MARKER="$marker" STEADY_TEST_SECRET="synthetic-$shrinkwrap_kind-credential" \
+    npm_config_offline=true "$shrinkwrap_fixture/scripts/steady/install" >"$temporary/output" 2>&1; then
+    echo "Steady installation failed with an untrusted $shrinkwrap_kind shrinkwrap present" >&2
+    exit 1
+  fi
+  if [[ -e "$marker" ]]; then
+    echo "A $shrinkwrap_kind shrinkwrap replaced the committed lockfile and exposed developer credentials" >&2
+    exit 1
+  fi
+  node "$shrinkwrap_fixture/scripts/steady/node_modules/@stdy/cli/steady.js" --version |
+    grep -Fx "steady $expected_version" >/dev/null
+done
+echo "Regular, symlinked, and dangling npm shrinkwrap files cannot override the committed lockfile"
+
 npm_stub="$temporary/npm"
 go_stub="$temporary/go"
 printf '#!/bin/sh\nif [ "$1" = "--version" ]; then echo 6.14.18; else touch "$STEADY_TEST_MARKER"; fi\n' >"$npm_stub"
@@ -128,8 +213,6 @@ printf '#!/bin/sh\nexit 0\n' >"$go_stub"
 chmod +x "$go_stub"
 
 fixture="$temporary/project"
-platform="$(node -p 'process.platform + "-" + process.arch')"
-native_name="$(node -p 'process.platform === "win32" ? "steady.exe" : "steady"')"
 ancestor_package="$temporary/node_modules/@stdy/cli-$platform"
 mkdir -p "$fixture/scripts/steady" "$ancestor_package/bin"
 cp scripts/bootstrap "$fixture/scripts/bootstrap"
@@ -175,11 +258,8 @@ printf '#!/bin/sh\nprintf "executed" >"$STEADY_TEST_MARKER"\n' >"$linked_sibling
 chmod +x "$linked_sibling/bin/$native_name"
 ln -s "$native_package" "$linked_fixture/scripts/steady/node_modules/@stdy/cli-$platform"
 
-real_npm_version="$(npm --version)"
-printf '#!/bin/sh\nif [ "$1" = "--version" ]; then echo "$STEADY_TEST_NPM_VERSION"; fi\n' >"$npm_stub"
-chmod +x "$npm_stub"
-verified_native="$(PATH="$temporary:$PATH" STEADY_TEST_NPM_VERSION="$real_npm_version" \
-  STEADY_TEST_MARKER="$marker" "$linked_fixture/scripts/steady/install" --print-executable)"
+verified_native="$(STEADY_TEST_MARKER="$marker" npm_config_offline=true \
+  "$linked_fixture/scripts/steady/install" --print-executable)"
 STEADY_TEST_MARKER="$marker" "$verified_native" --version | grep -Fx "steady $expected_version" >/dev/null
 if [[ -e "$marker" ]]; then
   echo "Steady executed an unverified shadow native instead of the locked package" >&2
@@ -187,19 +267,18 @@ if [[ -e "$marker" ]]; then
 fi
 echo "Steady executes the authenticated native instead of a shadowing wrapper candidate"
 
-mv "$native_package/bin/$native_name" "$temporary/authenticated-native"
-ln -s "$linked_sibling/bin/$native_name" "$native_package/bin/$native_name"
-if PATH="$temporary:$PATH" STEADY_TEST_NPM_VERSION="$real_npm_version" STEADY_TEST_MARKER="$marker" \
-  "$linked_fixture/scripts/steady/install" --print-executable >"$temporary/output" 2>&1; then
-  echo "Steady accepted a native executable symlink outside its locked package" >&2
+mv "$verified_native" "$temporary/authenticated-native"
+ln -s "$forged_package/bin/$native_name" "$verified_native"
+if ! STEADY_TEST_MARKER="$marker" STEADY_TEST_SECRET=synthetic-symlink-credential \
+  npm_config_offline=true "$linked_fixture/scripts/steady/install" --print-executable \
+  >"$temporary/output" 2>&1; then
+  echo "Steady failed to replace a native executable symlink outside its locked package" >&2
   exit 1
 fi
-grep -F 'Missing locked Steady platform-native executable' "$temporary/output" >/dev/null
 if [[ -e "$marker" ]]; then
   echo "Steady executed an escaping native executable symlink" >&2
   exit 1
 fi
-rm -f "$npm_stub"
 echo "Steady rejects native executable symlinks that escape the locked package"
 
 concurrent_fixture="$temporary/concurrent-project"

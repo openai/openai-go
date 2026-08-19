@@ -22,12 +22,19 @@ if [[ "${npm_version%%.*}" -lt 7 ]]; then
   exit 1
 fi
 
-npm ci --prefix scripts/steady --ignore-scripts --include=optional --no-audit --no-fund >&2
+installation="$(mktemp -d scripts/steady/.install.XXXXXXXX)"
+trap 'rm -rf "$installation"' EXIT
+installation="$(cd "$installation" && pwd -P)"
+cp scripts/steady/package.json scripts/steady/package-lock.json "$installation/"
 
-executable="$(node -e '
+npm ci --prefix "$installation" --no-dry-run --no-package-lock-only --package-lock --no-global \
+  --ignore-scripts --include=optional --no-audit --no-fund >&2
+
+verify_installation() {
+  node -e '
   const fs = require("fs");
   const path = require("path");
-  const root = fs.realpathSync("scripts/steady");
+  const root = fs.realpathSync(process.argv[1]);
   const modules = path.join(root, "node_modules");
   const packageName = `@stdy/cli-${process.platform}-${process.arch}`;
   const binaryName = process.platform === "win32" ? "steady.exe" : "steady";
@@ -57,7 +64,17 @@ executable="$(node -e '
     console.error(`Missing locked Steady platform-native executable: ${executable}`);
     process.exit(1);
   }
-')"
+' "$1"
+}
+
+staged_executable="$(verify_installation "$installation")"
+"$staged_executable" --version >/dev/null
+
+rm -rf scripts/steady/node_modules
+node -e 'require("fs").renameSync(process.argv[1], process.argv[2])' \
+  "$installation/node_modules" "$(pwd -P)/scripts/steady/node_modules"
+
+executable="$(verify_installation "$(pwd -P)/scripts/steady")"
 "$executable" --version >/dev/null
 
 if [[ "${1:-}" == "--print-executable" ]]; then
