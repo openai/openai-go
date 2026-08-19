@@ -14,7 +14,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-printf 'require("node:fs").writeFileSync(process.env.STEADY_TEST_MARKER, "executed")\n' >"$wrapper"
+printf 'require("fs").writeFileSync(process.env.STEADY_TEST_MARKER, "executed")\n' >"$wrapper"
 
 if STEADY_TEST_MARKER="$marker" npm_config_offline=true ./scripts/mock /nonexistent-openapi-spec.yml >/dev/null 2>&1; then
   status=0
@@ -35,6 +35,29 @@ fi
 expected_version="$(node -p 'require("./scripts/steady/package.json").dependencies["@stdy/cli"]')"
 node "$wrapper" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Mock server rejected tampered existing Steady bytes"
+
+native="$(node -e '
+  const path = require("path");
+  const name = `@stdy/cli-${process.platform}-${process.arch}`;
+  const manifest = require.resolve(`${name}/package.json`, {
+    paths: [path.resolve("scripts/steady/node_modules/@stdy/cli")],
+  });
+  process.stdout.write(path.join(path.dirname(manifest), "bin", process.platform === "win32" ? "steady.exe" : "steady"));
+')"
+printf '#!/bin/sh\nprintf "executed" >"$STEADY_TEST_MARKER"\n' >"$native"
+chmod +x "$native"
+
+if STEADY_TEST_MARKER="$marker" npm_config_offline=true ./scripts/mock /nonexistent-openapi-spec.yml >/dev/null 2>&1; then
+  status=0
+else
+  status=$?
+fi
+if [[ -e "$marker" || "$status" -eq 0 ]]; then
+  echo "Mock server executed an unverified existing Steady native executable" >&2
+  exit 1
+fi
+"$native" --version | grep -Fx "steady $expected_version" >/dev/null
+echo "Mock server rejected and replaced tampered existing native executable bytes"
 
 npm_stub="$temporary/npm"
 go_stub="$temporary/go"
@@ -57,9 +80,30 @@ for script in bootstrap mock; do
 done
 echo "Bootstrap and mock rejected unsupported npm 6 before installation"
 
-rm -f "$npm_stub" "$go_stub"
 real_node="$(command -v node)"
 node_stub="$temporary/node"
+cat >"$node_stub" <<'EOF'
+#!/bin/sh
+if [ "$1" = "--version" ]; then
+  echo v14.0.0
+elif [ "$1" = "-e" ] && printf '%s' "$2" | grep -q 'node:'; then
+  echo "Error: Cannot find node:-prefixed built-in modules on Node.js 14.0" >&2
+  exit 1
+else
+  exec "$STEADY_REAL_NODE" "$@"
+fi
+EOF
+chmod +x "$node_stub"
+
+if PATH="$temporary:$PATH" STEADY_REAL_NODE="$real_node" STEADY_TEST_MARKER="$marker" \
+  ./scripts/mock --daemon >"$temporary/output" 2>&1; then
+  echo "Mock server accepted npm 6 while checking the Node.js 14 minimum" >&2
+  exit 1
+fi
+grep -F 'npm 7 or later is required' "$temporary/output" >/dev/null
+echo "Default mock specification verification supports Node.js 14.0"
+
+rm -f "$npm_stub" "$go_stub"
 printf '#!/bin/sh\nif [ "$1" = "--version" ]; then echo v13.14.0; else exec "$STEADY_REAL_NODE" "$@"; fi\n' >"$node_stub"
 printf '#!/bin/sh\ntouch "$STEADY_TEST_MARKER"\n' >"$go_stub"
 chmod +x "$node_stub" "$go_stub"
@@ -106,3 +150,70 @@ if [[ -e "$marker" ]]; then
   exit 1
 fi
 echo "Bootstrap rejected a real npm installation missing its native package without executing an ancestor binary"
+
+linked_fixture="$temporary/linked-project"
+mkdir -p "$linked_fixture/scripts/steady"
+cp scripts/steady/install scripts/steady/package.json scripts/steady/package-lock.json "$linked_fixture/scripts/steady/"
+chmod +x "$linked_fixture/scripts/steady/install"
+npm_config_offline=true npm_config_install_strategy=linked "$linked_fixture/scripts/steady/install" >"$temporary/output" 2>&1
+node "$linked_fixture/scripts/steady/node_modules/@stdy/cli/steady.js" --version | grep -Fx "steady $expected_version" >/dev/null
+echo "Locked Steady installation supports npm's linked package layout"
+
+linked_wrapper="$(node -e '
+  process.stdout.write(require("fs").realpathSync(process.argv[1]));
+' "$linked_fixture/scripts/steady/node_modules/@stdy/cli/steady.js")"
+native_package="$(node -e '
+  const path = require("path");
+  const name = `@stdy/cli-${process.platform}-${process.arch}`;
+  const manifest = require.resolve(`${name}/package.json`, { paths: [path.dirname(process.argv[1])] });
+  process.stdout.write(path.dirname(manifest));
+' "$linked_wrapper")"
+linked_sibling="$(dirname "$linked_wrapper")/../cli-$platform"
+mv "$linked_sibling" "$temporary/original-linked-sibling"
+mkdir -p "$linked_sibling/bin"
+printf '#!/bin/sh\nprintf "executed" >"$STEADY_TEST_MARKER"\n' >"$linked_sibling/bin/$native_name"
+chmod +x "$linked_sibling/bin/$native_name"
+ln -s "$native_package" "$linked_fixture/scripts/steady/node_modules/@stdy/cli-$platform"
+
+real_npm_version="$(npm --version)"
+printf '#!/bin/sh\nif [ "$1" = "--version" ]; then echo "$STEADY_TEST_NPM_VERSION"; fi\n' >"$npm_stub"
+chmod +x "$npm_stub"
+verified_native="$(PATH="$temporary:$PATH" STEADY_TEST_NPM_VERSION="$real_npm_version" \
+  STEADY_TEST_MARKER="$marker" "$linked_fixture/scripts/steady/install" --print-executable)"
+STEADY_TEST_MARKER="$marker" "$verified_native" --version | grep -Fx "steady $expected_version" >/dev/null
+if [[ -e "$marker" ]]; then
+  echo "Steady executed an unverified shadow native instead of the locked package" >&2
+  exit 1
+fi
+echo "Steady executes the authenticated native instead of a shadowing wrapper candidate"
+
+mv "$native_package/bin/$native_name" "$temporary/authenticated-native"
+ln -s "$linked_sibling/bin/$native_name" "$native_package/bin/$native_name"
+if PATH="$temporary:$PATH" STEADY_TEST_NPM_VERSION="$real_npm_version" STEADY_TEST_MARKER="$marker" \
+  "$linked_fixture/scripts/steady/install" --print-executable >"$temporary/output" 2>&1; then
+  echo "Steady accepted a native executable symlink outside its locked package" >&2
+  exit 1
+fi
+grep -F 'Missing locked Steady platform-native executable' "$temporary/output" >/dev/null
+if [[ -e "$marker" ]]; then
+  echo "Steady executed an escaping native executable symlink" >&2
+  exit 1
+fi
+rm -f "$npm_stub"
+echo "Steady rejects native executable symlinks that escape the locked package"
+
+concurrent_fixture="$temporary/concurrent-project"
+mkdir -p "$concurrent_fixture/scripts/steady"
+cp scripts/steady/install scripts/steady/package.json scripts/steady/package-lock.json "$concurrent_fixture/scripts/steady/"
+chmod +x "$concurrent_fixture/scripts/steady/install"
+processes=()
+for index in 1 2 3 4; do
+  npm_config_offline=true "$concurrent_fixture/scripts/steady/install" >"$temporary/concurrent-$index" 2>&1 &
+  processes+=("$!")
+done
+for process in "${processes[@]}"; do
+  wait "$process" || true
+done
+npm_config_offline=true "$concurrent_fixture/scripts/steady/install" >"$temporary/output" 2>&1
+node "$concurrent_fixture/scripts/steady/node_modules/@stdy/cli/steady.js" --version | grep -Fx "steady $expected_version" >/dev/null
+echo "Interrupted concurrent installations recover through the normal locked npm installation"

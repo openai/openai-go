@@ -22,28 +22,44 @@ if [[ "${npm_version%%.*}" -lt 7 ]]; then
   exit 1
 fi
 
-npm ci --prefix scripts/steady --ignore-scripts --include=optional --no-audit --no-fund
+npm ci --prefix scripts/steady --ignore-scripts --include=optional --no-audit --no-fund >&2
 
-node -e '
+executable="$(node -e '
   const fs = require("fs");
   const path = require("path");
   const root = fs.realpathSync("scripts/steady");
   const modules = path.join(root, "node_modules");
   const packageName = `@stdy/cli-${process.platform}-${process.arch}`;
-  const packageDirectory = path.join(modules, packageName);
-  const executable = path.join(packageDirectory, "bin", process.platform === "win32" ? "steady.exe" : "steady");
+  const binaryName = process.platform === "win32" ? "steady.exe" : "steady";
+  let executable = path.join(modules, packageName, "bin", binaryName);
+  const contains = (directory, file) => {
+    const relative = path.relative(directory, file);
+    return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+  };
 
   try {
     const lock = require(path.join(root, "package-lock.json"));
-    const metadata = require(path.join(packageDirectory, "package.json"));
     const locked = lock.packages[`node_modules/${packageName}`];
-    if (!locked || metadata.version !== locked.version || fs.realpathSync(modules) !== modules || fs.realpathSync(executable) !== executable) {
+    const wrapper = fs.realpathSync(path.join(modules, "@stdy", "cli", "steady.js"));
+    const manifest = fs.realpathSync(require.resolve(`${packageName}/package.json`, { paths: [path.dirname(wrapper)] }));
+    const packageDirectory = path.dirname(manifest);
+    const metadata = require(manifest);
+    executable = path.join(packageDirectory, "bin", binaryName);
+    if (!locked || metadata.name !== packageName || metadata.version !== locked.version ||
+        fs.realpathSync(modules) !== modules || !contains(modules, wrapper) ||
+        !contains(modules, manifest) || fs.realpathSync(executable) !== executable ||
+        !contains(packageDirectory, executable)) {
       throw new Error("unexpected package version or executable location");
     }
     fs.accessSync(executable, fs.constants.X_OK);
+    process.stdout.write(executable);
   } catch (error) {
     console.error(`Missing locked Steady platform-native executable: ${executable}`);
     process.exit(1);
   }
-'
-node scripts/steady/node_modules/@stdy/cli/steady.js --version >/dev/null
+')"
+"$executable" --version >/dev/null
+
+if [[ "${1:-}" == "--print-executable" ]]; then
+  printf '%s\n' "$executable"
+fi
