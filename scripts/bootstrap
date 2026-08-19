@@ -19,6 +19,11 @@ if [ -f "Brewfile" ] && [ "$(uname -s)" = "Darwin" ] && [ "${SKIP_BREW:-}" != "1
   }
 fi
 
+if ! command -v node >/dev/null || ! command -v npm >/dev/null; then
+  echo "Error: Node.js and npm are required; install them manually or with brew bundle" >&2
+  exit 1
+fi
+
 echo "==> Installing Go dependencies…"
 
 go mod tidy -e

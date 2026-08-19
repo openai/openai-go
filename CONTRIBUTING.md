@@ -13,7 +13,9 @@ $ ./scripts/lint
 
 This will install all the required dependencies and build the SDK.
 
-You can also [install Go 1.25 or later manually](https://go.dev/doc/install).
+Contributors need [Go 1.25 or later](https://go.dev/doc/install) and
+[Node.js with npm](https://nodejs.org/). Homebrew can install both from the
+repository's `Brewfile`; they can also be installed manually.
 CI tests every supported Go release line with `GOTOOLCHAIN=local`, so
 contributors should not rely on automatic toolchain downloads to satisfy the
 repository's minimum version.
@@ -109,9 +111,9 @@ Most tests require you to [set up a mock server](https://github.com/dgellow/stea
 `./scripts/bootstrap` installs the exact Steady release recorded in
 `scripts/steady/package.json`. Its committed npm lockfile verifies the exact
 packages for each supported platform, and installation disables npm lifecycle
-scripts. `./scripts/mock` installs the locked dependency automatically when
-needed; later runs reuse the local installation. Dependabot proposes Steady
-updates separately from Go dependencies.
+scripts. Before every launch, `./scripts/mock` reinstalls Steady from that
+lockfile so stale or modified local executables are never trusted. Dependabot
+proposes Steady updates separately from Go dependencies.
 
 ```sh
 $ ./scripts/mock

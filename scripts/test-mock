@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+marker="$(mktemp -d)/executed"
+wrapper="scripts/steady/node_modules/@stdy/cli/steady.js"
+
+cleanup() {
+  rm -rf "$(dirname "$marker")"
+  npm ci --prefix scripts/steady --offline --ignore-scripts --include=optional --no-audit --no-fund >/dev/null
+}
+trap cleanup EXIT
+
+printf 'require("node:fs").writeFileSync(process.env.STEADY_TEST_MARKER, "executed")\n' >"$wrapper"
+
+if STEADY_TEST_MARKER="$marker" npm_config_offline=true ./scripts/mock /nonexistent-openapi-spec.yml >/dev/null 2>&1; then
+  status=0
+else
+  status=$?
+fi
+
+if [[ -e "$marker" ]]; then
+  echo "Mock server executed an unverified existing Steady installation" >&2
+  exit 1
+fi
+
+if [[ "$status" -eq 0 ]]; then
+  echo "Mock server accepted an invalid OpenAPI specification" >&2
+  exit 1
+fi
+
+expected_version="$(node -p 'require("./scripts/steady/package.json").dependencies["@stdy/cli"]')"
+node "$wrapper" --version | grep -Fx "steady $expected_version" >/dev/null
+echo "Mock server rejected tampered existing Steady bytes"
