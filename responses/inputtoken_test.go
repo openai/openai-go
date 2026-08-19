@@ -1,0 +1,83 @@
+// File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
+
+package responses_test
+
+import (
+	"context"
+	"errors"
+	"os"
+	"testing"
+
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/internal/testutil"
+	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/responses"
+	"github.com/openai/openai-go/v3/shared"
+)
+
+func TestInputTokenCountWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+		option.WithAdminAPIKey("My Admin API Key"),
+	)
+	_, err := client.Responses.InputTokens.Count(context.TODO(), responses.InputTokenCountParams{
+		Conversation: responses.InputTokenCountParamsConversationUnion{
+			OfString: openai.String("string"),
+		},
+		Input: responses.InputTokenCountParamsInputUnion{
+			OfString: openai.String("string"),
+		},
+		Instructions:       openai.String("instructions"),
+		Model:              openai.String("model"),
+		ParallelToolCalls:  openai.Bool(true),
+		Personality:        responses.InputTokenCountParamsPersonalityFriendly,
+		PreviousResponseID: openai.String("resp_123"),
+		Reasoning: shared.ReasoningParam{
+			Context:         shared.ReasoningContextAuto,
+			Effort:          shared.ReasoningEffortNone,
+			GenerateSummary: shared.ReasoningGenerateSummaryAuto,
+			Mode:            shared.ReasoningModeStandard,
+			Summary:         shared.ReasoningSummaryAuto,
+		},
+		Text: responses.InputTokenCountParamsText{
+			Format: responses.ResponseFormatTextConfigUnionParam{
+				OfText: &shared.ResponseFormatTextParam{},
+			},
+			Verbosity: "low",
+		},
+		ToolChoice: responses.InputTokenCountParamsToolChoiceUnion{
+			OfToolChoiceMode: openai.Opt(responses.ToolChoiceOptionsNone),
+		},
+		Tools: []responses.ToolUnionParam{{
+			OfFunction: &responses.FunctionToolParam{
+				Name: "name",
+				Parameters: map[string]any{
+					"foo": "bar",
+				},
+				Strict:         openai.Bool(true),
+				AllowedCallers: []string{"direct"},
+				DeferLoading:   openai.Bool(true),
+				Description:    openai.String("description"),
+				OutputSchema: map[string]any{
+					"foo": "bar",
+				},
+			},
+		}},
+		Truncation: responses.InputTokenCountParamsTruncationAuto,
+	})
+	if err != nil {
+		var apierr *openai.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
