@@ -7,6 +7,40 @@ changing generated files. Handwritten policy, automation, tests, and examples
 should remain small and should not alter exported SDK APIs unless the change
 explicitly requires it.
 
+## Security requirements
+
+- Never commit, print, or upload API keys, bearer tokens, cloud credentials,
+  private keys, webhook secrets, `.env` files, or customer data. Read local
+  credentials from environment variables, such as `OPENAI_API_KEY`; use fake
+  values, synthetic fixtures, `t.Setenv`, and `httptest` or local mock servers
+  in tests.
+- Redact all credential-bearing request and response headers and other
+  metadata, including `Authorization`, `Cookie`, `Set-Cookie`, `Api-Key`,
+  `X-Api-Key`, and `X-Amz-Security-Token`; credentials in URLs or query
+  parameters; webhook material; and sensitive request or response bodies before
+  logging, recording, forwarding, or disclosure. `Error.DumpRequest`,
+  `Error.DumpResponse`, and `Error.Error` intentionally expose raw, opt-in
+  diagnostics that may include these values; sanitize their output before it
+  reaches logs, test recordings, CI output, or any other untrusted sink.
+- Require SDK CODEOWNER review for changes to authentication, Azure or AWS
+  credentials, webhook verification, custom endpoints, redirects, proxies, TLS,
+  file handling, uploads, JSON or event-stream decoding, code generation, CI,
+  and releases. Add focused public-entrypoint security or regression tests for
+  executable behavior changes, including malformed or attacker-controlled input
+  where relevant. For docs, dependency, generated, CI, release, or policy-only
+  changes, use artifact-appropriate validation.
+- Review the purpose, provenance, versions, and transitive effects of every
+  dependency change across the root, `examples`, `api_reference`,
+  `internal/testdata/consumer`, and `tools` modules. Inspect `go.mod`, `go.sum`,
+  `replace` directives, bootstrap or install scripts, code generators, and
+  npm-based mock tooling; do not bypass Go module checksum verification.
+- Pin third-party GitHub Actions to full commit SHAs and review action updates.
+  Keep CI permissions minimal, retain `persist-credentials: false`, and protect
+  release credentials in approved environments. Grant only the required scopes
+  to short-lived publishing tokens; never expose secrets to untrusted code.
+- Report suspected vulnerabilities privately as described in `SECURITY.md`;
+  never disclose them in public issues, pull requests, or discussions.
+
 ## Code Review Rules
 
 - Use `$openai-go-pr-review` for an exhaustive review of a pull request,

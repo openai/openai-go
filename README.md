@@ -645,6 +645,12 @@ When the API returns a non-success status code, we return an error with type
 
 To handle errors, we recommend that you use the `errors.As` pattern:
 
+> [!WARNING]
+> `Error.DumpRequest`, `Error.DumpResponse`, and `Error.Error` expose raw
+> diagnostics that may include authorization headers, credentials in URLs, and
+> sensitive request or response bodies. The dump `body` option does not redact
+> headers. Sanitize this output before logging, sharing, or storing it.
+
 ```go
 _, err := client.FineTuning.Jobs.New(context.TODO(), openai.FineTuningJobNewParams{
 	Model:        openai.FineTuningJobNewParamsModel("gpt-4o"),
@@ -653,10 +659,9 @@ _, err := client.FineTuning.Jobs.New(context.TODO(), openai.FineTuningJobNewPara
 if err != nil {
 	var apierr *openai.Error
 	if errors.As(err, &apierr) {
-		println(string(apierr.DumpRequest(true)))  // Prints the serialized HTTP request
-		println(string(apierr.DumpResponse(true))) // Prints the serialized HTTP response
+		fmt.Printf("OpenAI API error (status: %d)\n", apierr.StatusCode)
 	}
-	panic(err.Error()) // GET "/fine_tuning/jobs": 400 Bad Request { ... }
+	panic("OpenAI request failed")
 }
 ```
 
