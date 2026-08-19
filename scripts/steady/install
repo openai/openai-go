@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+set -e
+
+cd "$(dirname "$0")/../.."
+
+if ! command -v node >/dev/null || ! command -v npm >/dev/null; then
+  echo "Error: Node.js and npm are required; install them manually or with brew bundle" >&2
+  exit 1
+fi
+
+node_version="$(node --version)"
+node_major="${node_version#v}"
+if [[ "${node_major%%.*}" -lt 14 ]]; then
+  echo "Error: Node.js 14 or later is required for the Steady mock server (found $node_version)" >&2
+  exit 1
+fi
+
+npm_version="$(npm --version)"
+if [[ "${npm_version%%.*}" -lt 7 ]]; then
+  echo "Error: npm 7 or later is required for the locked Steady mock server (found $npm_version)" >&2
+  exit 1
+fi
+
+npm ci --prefix scripts/steady --ignore-scripts --include=optional --no-audit --no-fund
+
+node -e '
+  const fs = require("fs");
+  const path = require("path");
+  const root = fs.realpathSync("scripts/steady");
+  const modules = path.join(root, "node_modules");
+  const packageName = `@stdy/cli-${process.platform}-${process.arch}`;
+  const packageDirectory = path.join(modules, packageName);
+  const executable = path.join(packageDirectory, "bin", process.platform === "win32" ? "steady.exe" : "steady");
+
+  try {
+    const lock = require(path.join(root, "package-lock.json"));
+    const metadata = require(path.join(packageDirectory, "package.json"));
+    const locked = lock.packages[`node_modules/${packageName}`];
+    if (!locked || metadata.version !== locked.version || fs.realpathSync(modules) !== modules || fs.realpathSync(executable) !== executable) {
+      throw new Error("unexpected package version or executable location");
+    }
+    fs.accessSync(executable, fs.constants.X_OK);
+  } catch (error) {
+    console.error(`Missing locked Steady platform-native executable: ${executable}`);
+    process.exit(1);
+  }
+'
+node scripts/steady/node_modules/@stdy/cli/steady.js --version >/dev/null

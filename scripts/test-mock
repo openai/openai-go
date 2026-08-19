@@ -56,3 +56,53 @@ for script in bootstrap mock; do
   fi
 done
 echo "Bootstrap and mock rejected unsupported npm 6 before installation"
+
+rm -f "$npm_stub" "$go_stub"
+real_node="$(command -v node)"
+node_stub="$temporary/node"
+printf '#!/bin/sh\nif [ "$1" = "--version" ]; then echo v13.14.0; else exec "$STEADY_REAL_NODE" "$@"; fi\n' >"$node_stub"
+printf '#!/bin/sh\ntouch "$STEADY_TEST_MARKER"\n' >"$go_stub"
+chmod +x "$node_stub" "$go_stub"
+
+for script in bootstrap mock; do
+  if PATH="$temporary:$PATH" STEADY_REAL_NODE="$real_node" STEADY_TEST_MARKER="$marker" SKIP_BREW=1 \
+    npm_config_offline=true "./scripts/$script" /nonexistent-openapi-spec.yml >"$temporary/output" 2>&1; then
+    echo "$script accepted Node.js 13 below Steady's supported minimum" >&2
+    exit 1
+  fi
+
+  grep -F 'Node.js 14 or later is required' "$temporary/output" >/dev/null
+  if [[ -e "$marker" ]]; then
+    echo "$script modified Go dependencies before rejecting unsupported Node.js" >&2
+    exit 1
+  fi
+done
+echo "Bootstrap and mock rejected unsupported Node.js 13 before installation"
+
+rm -f "$node_stub" "$go_stub"
+printf '#!/bin/sh\nexit 0\n' >"$go_stub"
+chmod +x "$go_stub"
+
+fixture="$temporary/project"
+platform="$(node -p 'process.platform + "-" + process.arch')"
+native_name="$(node -p 'process.platform === "win32" ? "steady.exe" : "steady"')"
+ancestor_package="$temporary/node_modules/@stdy/cli-$platform"
+mkdir -p "$fixture/scripts/steady" "$ancestor_package/bin"
+cp scripts/bootstrap "$fixture/scripts/bootstrap"
+cp scripts/steady/install scripts/steady/package.json scripts/steady/package-lock.json "$fixture/scripts/steady/"
+printf '{"name":"@stdy/cli-%s","version":"%s"}\n' "$platform" "$expected_version" >"$ancestor_package/package.json"
+printf '#!/bin/sh\nprintf "%%s" "$STEADY_TEST_SECRET" >"$STEADY_TEST_MARKER"\n' >"$ancestor_package/bin/$native_name"
+chmod +x "$fixture/scripts/bootstrap" "$fixture/scripts/steady/install" "$ancestor_package/bin/$native_name"
+
+if PATH="$temporary:$PATH" STEADY_TEST_MARKER="$marker" STEADY_TEST_SECRET=synthetic-credential \
+  SKIP_BREW=1 npm_config_offline=true npm_config_cpu=ia32 \
+  "$fixture/scripts/bootstrap" >"$temporary/output" 2>&1; then
+  echo "Bootstrap accepted an installation without Steady's active platform-native package" >&2
+  exit 1
+fi
+grep -F 'Missing locked Steady platform-native executable' "$temporary/output" >/dev/null
+if [[ -e "$marker" ]]; then
+  echo "Bootstrap executed an unpinned ancestor-native package and exposed a credential" >&2
+  exit 1
+fi
+echo "Bootstrap rejected a real npm installation missing its native package without executing an ancestor binary"

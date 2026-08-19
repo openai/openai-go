@@ -19,20 +19,9 @@ if [ -f "Brewfile" ] && [ "$(uname -s)" = "Darwin" ] && [ "${SKIP_BREW:-}" != "1
   }
 fi
 
-if ! command -v node >/dev/null || ! command -v npm >/dev/null; then
-  echo "Error: Node.js and npm are required; install them manually or with brew bundle" >&2
-  exit 1
-fi
-
-npm_version="$(npm --version)"
-if [[ "${npm_version%%.*}" -lt 7 ]]; then
-  echo "Error: npm 7 or later is required for the locked Steady mock server (found $npm_version)" >&2
-  exit 1
-fi
+echo "==> Installing the locked Steady mock server…"
+./scripts/steady/install
 
 echo "==> Installing Go dependencies…"
 
 go mod tidy -e
-
-echo "==> Installing the locked Steady mock server…"
-npm ci --prefix scripts/steady --ignore-scripts --include=optional --no-audit --no-fund

@@ -113,9 +113,11 @@ Most tests require you to [set up a mock server](https://github.com/dgellow/stea
 `./scripts/bootstrap` installs the exact Steady release recorded in
 `scripts/steady/package.json`. Its committed npm lockfile verifies the exact
 packages for each supported platform, and installation disables npm lifecycle
-scripts. Before every launch, `./scripts/mock` reinstalls Steady from that
-lockfile so stale or modified local executables are never trusted. Dependabot
-proposes Steady updates separately from Go dependencies.
+scripts. Bootstrap and `./scripts/mock` share the same installation checks,
+including the required Node.js/npm versions and a real invocation of Steady's
+platform-native executable. Before every launch, `./scripts/mock` reinstalls
+Steady from the lockfile so stale or modified local executables are never
+trusted. Dependabot proposes Steady updates separately from Go dependencies.
 
 ```sh
 $ ./scripts/mock
