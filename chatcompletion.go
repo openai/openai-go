@@ -1005,6 +1005,10 @@ type ChatCompletionChunk struct {
 	// Moderation results for the request input and generated output. Present on the
 	// moderation chunk when moderated completions are requested.
 	Moderation ChatCompletionChunkModeration `json:"moderation" api:"nullable"`
+	// An obfuscation string added to normalize the size of streamed chunks as a
+	// mitigation to certain side-channel attacks. The field is included by default and
+	// omitted when `stream_options.include_obfuscation` is `false`.
+	Obfuscation string `json:"obfuscation"`
 	// Specifies the processing type used for serving the request.
 	//
 	//   - If set to 'auto', then the request will be processed with the service tier
@@ -1050,6 +1054,7 @@ type ChatCompletionChunk struct {
 		Model             respjson.Field
 		Object            respjson.Field
 		Moderation        respjson.Field
+		Obfuscation       respjson.Field
 		ServiceTier       respjson.Field
 		SystemFingerprint respjson.Field
 		Usage             respjson.Field
