@@ -34,7 +34,16 @@ const cliDirectory = path.join(modules, "@stdy", "cli");
 fs.mkdirSync(path.join(modules, ".bin"), { recursive: true });
 fs.mkdirSync(cliDirectory, { recursive: true });
 fs.writeFileSync(path.join(cliDirectory, "steady.js"), "#!/bin/sh\\nexit 0\\n", { mode: 0o755 });
-fs.symlinkSync("../@stdy/cli/steady.js", path.join(modules, ".bin", "steady"));
+const launcher = path.join(modules, ".bin", "steady");
+if (process.env.STEADY_WINDOWS_SHIMS) {
+  fs.writeFileSync(launcher,
+    '#!/bin/sh\\nbasedir=$(dirname "$0")\\nexec node "$basedir/../@stdy/cli/steady.js" "$@"\\n',
+    { mode: 0o755 });
+  fs.writeFileSync(launcher + ".cmd", "@ECHO off\\r\\nnode %~dp0\\\\..\\\\@stdy\\\\cli\\\\steady.js %*\\r\\n");
+  fs.writeFileSync(launcher + ".ps1", '& node "$PSScriptRoot/../@stdy/cli/steady.js" $args\\n');
+} else {
+  fs.symlinkSync("../@stdy/cli/steady.js", launcher);
+}
 if (process.env.STEADY_FAIL_AFTER_PARTIAL_INSTALL) process.exit(92);
 
 const expected = require(path.join(root, "package.json")).dependencies["@stdy/cli"];
@@ -184,6 +193,58 @@ async function main() {
       assert.strictEqual(npmCalls(project).length, 1);
     }));
 
+  await test("accepts npm's generated Windows launcher shims without trusting them", () =>
+    withFixture((project) => {
+      expectSuccess(install(project, { STEADY_WINDOWS_SHIMS: "1" }));
+      const modules = path.join(project.directory, "node_modules");
+      const launcher = path.join(modules, ".bin", "steady");
+      const wrapper = path.join(modules, "@stdy", "cli", "steady.js");
+
+      assert.ok(fs.lstatSync(launcher).isFile());
+      assert.ok(fs.statSync(`${launcher}.cmd`).isFile());
+      assert.ok(fs.statSync(`${launcher}.ps1`).isFile());
+      assert.notStrictEqual(fs.realpathSync(launcher), fs.realpathSync(wrapper));
+      fs.rmSync(path.join(modules, ".bin"), { recursive: true });
+      expectSuccess(install(project, { STEADY_FAIL_AFTER_PARTIAL_INSTALL: "1" }));
+      assert.strictEqual(npmCalls(project).length, 1);
+    }));
+
+  await test("runs the verified wrapper directly instead of an untrusted npm launcher", () =>
+    withFixture((project) => {
+      const repository = path.join(project.directory, "repository");
+      const scripts = path.join(repository, "scripts");
+      const steady = path.join(scripts, "steady");
+      const modules = path.join(steady, "node_modules");
+      const wrapper = path.join(modules, "@stdy", "cli", "steady.js");
+      const launcher = path.join(modules, ".bin", "steady");
+      const launched = path.join(project.directory, "verified-wrapper-ran");
+      const substituted = path.join(project.directory, "untrusted-launcher-ran");
+      fs.mkdirSync(path.dirname(wrapper), { recursive: true });
+      fs.mkdirSync(path.dirname(launcher), { recursive: true });
+      fs.copyFileSync(path.join(toolDirectory, "..", "mock"), path.join(scripts, "mock"));
+      fs.writeFileSync(path.join(steady, "install"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
+      fs.writeFileSync(wrapper,
+        'require("fs").writeFileSync(process.env.STEADY_WRAPPER_RAN, '
+          + 'JSON.stringify(process.argv.slice(2)));\n');
+      fs.writeFileSync(launcher, '#!/bin/sh\ntouch "$STEADY_LAUNCHER_RAN"\n',
+        { mode: 0o755 });
+
+      const result = childProcess.spawnSync("bash", [path.join(scripts, "mock"),
+        "spec path with spaces.yml"], {
+        cwd: repository,
+        encoding: "utf8",
+        env: {
+          ...project.environment,
+          STEADY_WRAPPER_RAN: launched,
+          STEADY_LAUNCHER_RAN: substituted,
+        },
+      });
+      expectSuccess(result);
+      assert.ok(!fs.existsSync(substituted));
+      assert.deepStrictEqual(JSON.parse(fs.readFileSync(launched, "utf8")).slice(-1),
+        ["spec path with spaces.yml"]);
+    }));
+
   await test("rejects mismatched package metadata until explicitly removed", () =>
     withFixture((project) => {
       expectSuccess(install(project));
@@ -208,7 +269,7 @@ async function main() {
       assert.strictEqual(npmCalls(project).length, 3);
     }));
 
-  await test("rejects native, wrapper, launcher, and forged-cache substitutions", () =>
+  await test("rejects native, wrapper, wrapper-symlink, and forged-cache substitutions", () =>
     withFixture((project) => {
       expectSuccess(install(project));
       const modules = path.join(project.directory, "node_modules");
@@ -229,12 +290,25 @@ async function main() {
       const external = path.join(project.directory, "external-steady");
       const launcher = path.join(modules, ".bin", "steady");
       fs.writeFileSync(external, "#!/bin/sh\necho substituted-launcher\n", { mode: 0o755 });
-      fs.unlinkSync(launcher);
-      fs.symlinkSync(external, launcher);
+      const relocated = path.join(modules, "relocated", "steady.js");
+      fs.mkdirSync(path.dirname(relocated), { recursive: true });
+      fs.copyFileSync(wrapper, relocated);
+      fs.unlinkSync(wrapper);
+      fs.symlinkSync(relocated, wrapper);
       assert.notStrictEqual(install(project).status, 0);
       fs.rmSync(modules, { recursive: true, force: true });
       expectSuccess(install(project));
-      assert.strictEqual(npmCalls(project).length, 4);
+
+      fs.unlinkSync(wrapper);
+      fs.symlinkSync(external, wrapper);
+      assert.notStrictEqual(install(project).status, 0);
+      fs.rmSync(modules, { recursive: true, force: true });
+      expectSuccess(install(project));
+
+      fs.unlinkSync(launcher);
+      fs.symlinkSync(external, launcher);
+      expectSuccess(install(project));
+      assert.strictEqual(npmCalls(project).length, 5);
     }));
 
   await test("an abandoned partial staging directory never blocks a later install", () =>

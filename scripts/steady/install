@@ -26,12 +26,11 @@ validate_installation() {
     }
 
     const filename = process.platform === "win32" ? "steady.exe" : "steady";
-    const launcher = fs.realpathSync(path.join(modules, ".bin", "steady"));
     const wrapper = fs.realpathSync(path.join(modules, "@stdy", "cli", "steady.js"));
     const executable = fs.realpathSync(path.join(nativeDirectory, "bin", filename));
 
-    if (modules !== path.join(root, "node_modules") || launcher !== wrapper ||
-        !wrapper.startsWith(modules + path.sep) ||
+    if (modules !== path.join(root, "node_modules") ||
+        wrapper !== path.join(modules, "@stdy", "cli", "steady.js") ||
         !nativeDirectory.startsWith(modules + path.sep) ||
         !executable.startsWith(nativeDirectory + path.sep)) {
       throw new Error("Steady executable resolves outside its locked package");
@@ -48,7 +47,7 @@ validate_installation() {
 }
 
 installation_is_current() {
-  [[ -x "$tool_directory/node_modules/.bin/steady" ]] &&
+  [[ -f "$tool_directory/node_modules/@stdy/cli/steady.js" ]] &&
     validate_installation "$tool_directory" >/dev/null 2>&1
 }
 

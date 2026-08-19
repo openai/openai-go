@@ -34,7 +34,7 @@ echo "==> Starting mock server with URL ${URL}"
 
 ./scripts/steady/install
 
-STEADY="${PWD}/scripts/steady/node_modules/.bin/steady"
+STEADY="${PWD}/scripts/steady/node_modules/@stdy/cli/steady.js"
 STEADY_ARGS=(
   --host 127.0.0.1
   -p 4010
@@ -47,7 +47,7 @@ STEADY_ARGS=(
 
 # Run the repository-local Steady mock on the given spec.
 if [ "$1" == "--daemon" ]; then
-  "$STEADY" "${STEADY_ARGS[@]}" &> .stdy.log &
+  node "$STEADY" "${STEADY_ARGS[@]}" &> .stdy.log &
 
   # Wait for server to come online via health endpoint (max 30s)
   echo -n "Waiting for server"
@@ -71,5 +71,5 @@ if [ "$1" == "--daemon" ]; then
 
   echo
 else
-  exec "$STEADY" "${STEADY_ARGS[@]}"
+  exec node "$STEADY" "${STEADY_ARGS[@]}"
 fi
