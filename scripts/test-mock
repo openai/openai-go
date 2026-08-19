@@ -4,11 +4,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-marker="$(mktemp -d)/executed"
+temporary="$(mktemp -d)"
+marker="$temporary/executed"
 wrapper="scripts/steady/node_modules/@stdy/cli/steady.js"
 
 cleanup() {
-  rm -rf "$(dirname "$marker")"
+  rm -rf "$temporary"
   npm ci --prefix scripts/steady --offline --ignore-scripts --include=optional --no-audit --no-fund >/dev/null
 }
 trap cleanup EXIT
@@ -34,3 +35,24 @@ fi
 expected_version="$(node -p 'require("./scripts/steady/package.json").dependencies["@stdy/cli"]')"
 node "$wrapper" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Mock server rejected tampered existing Steady bytes"
+
+npm_stub="$temporary/npm"
+go_stub="$temporary/go"
+printf '#!/bin/sh\nif [ "$1" = "--version" ]; then echo 6.14.18; else touch "$STEADY_TEST_MARKER"; fi\n' >"$npm_stub"
+printf '#!/bin/sh\ntouch "$STEADY_TEST_MARKER"\n' >"$go_stub"
+chmod +x "$npm_stub" "$go_stub"
+
+for script in bootstrap mock; do
+  if PATH="$temporary:$PATH" STEADY_TEST_MARKER="$marker" SKIP_BREW=1 \
+    "./scripts/$script" /nonexistent-openapi-spec.yml >"$temporary/output" 2>&1; then
+    echo "$script accepted npm 6 for a version 3 lockfile" >&2
+    exit 1
+  fi
+
+  grep -F 'npm 7 or later is required' "$temporary/output" >/dev/null
+  if [[ -e "$marker" ]]; then
+    echo "$script invoked npm before rejecting its unsupported version" >&2
+    exit 1
+  fi
+done
+echo "Bootstrap and mock rejected unsupported npm 6 before installation"

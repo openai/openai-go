@@ -14,8 +14,10 @@ $ ./scripts/lint
 This will install all the required dependencies and build the SDK.
 
 Contributors need [Go 1.25 or later](https://go.dev/doc/install) and
-[Node.js with npm](https://nodejs.org/). Homebrew can install both from the
-repository's `Brewfile`; they can also be installed manually.
+[Node.js 14 or later with npm 7 or later](https://nodejs.org/). Homebrew can
+install both from the repository's `Brewfile`; they can also be installed
+manually. npm 7 is the minimum version compatible with the committed Steady
+lockfile.
 CI tests every supported Go release line with `GOTOOLCHAIN=local`, so
 contributors should not rely on automatic toolchain downloads to satisfy the
 repository's minimum version.

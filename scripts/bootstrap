@@ -24,6 +24,12 @@ if ! command -v node >/dev/null || ! command -v npm >/dev/null; then
   exit 1
 fi
 
+npm_version="$(npm --version)"
+if [[ "${npm_version%%.*}" -lt 7 ]]; then
+  echo "Error: npm 7 or later is required for the locked Steady mock server (found $npm_version)" >&2
+  exit 1
+fi
+
 echo "==> Installing Go dependencies…"
 
 go mod tidy -e
