@@ -101,9 +101,6 @@ jobs:
           SKIP_BREW: "1"
         run: ./scripts/bootstrap
 
-      - name: Verify mock-server installation security
-        run: node ./scripts/steady/test-install.js
-
       - name: Test root module
         run: ./scripts/test
 

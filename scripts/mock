@@ -32,9 +32,11 @@ fi
 
 echo "==> Starting mock server with URL ${URL}"
 
-./scripts/steady/install
-
 STEADY="${PWD}/scripts/steady/node_modules/@stdy/cli/steady.js"
+if [[ ! -f "$STEADY" ]]; then
+  npm ci --prefix scripts/steady --ignore-scripts --include=optional --no-audit --no-fund
+fi
+
 STEADY_ARGS=(
   --host 127.0.0.1
   -p 4010

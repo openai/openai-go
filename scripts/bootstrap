@@ -24,4 +24,4 @@ echo "==> Installing Go dependencies…"
 go mod tidy -e
 
 echo "==> Installing the locked Steady mock server…"
-./scripts/steady/install
+npm ci --prefix scripts/steady --ignore-scripts --include=optional --no-audit --no-fund
