@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
@@ -156,6 +157,70 @@ func TestAPIKeyAuthenticationSuppressesAutomaticAuthorization(t *testing.T) {
 				t.Fatalf("Authorization header = %q, want empty", got)
 			}
 		})
+	}
+}
+
+func TestTokenCredentialAuthentication(t *testing.T) {
+	tests := []struct {
+		name    string
+		options []TokenCredentialOption
+	}{
+		{name: "default scopes"},
+		{
+			name:    "custom scopes",
+			options: []TokenCredentialOption{WithTokenCredentialScopes([]string{"your-custom-scope"})},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("OPENAI_API_KEY", "normal-openai-key")
+			t.Setenv("OPENAI_ADMIN_KEY", "normal-admin-key")
+
+			var captured *http.Request
+			client := openai.NewClient(
+				WithEndpoint("https://my-resource.openai.azure.com", "2024-10-21"),
+				WithTokenCredential(&fake.TokenCredential{}, tt.options...),
+				option.WithHTTPClient(&http.Client{
+					Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+						captured = req
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Header:     http.Header{"Content-Type": []string{"application/json"}},
+							Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+							Request:    req,
+						}, nil
+					}),
+				}),
+			)
+
+			var response map[string]any
+			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &response); err != nil {
+				t.Fatalf("request failed: %s", err)
+			}
+			if captured == nil {
+				t.Fatal("request was not captured")
+			}
+			if got := captured.Header.Get("Authorization"); got != "Bearer fake_token" {
+				t.Fatalf("Authorization header = %q, want %q", got, "Bearer fake_token")
+			}
+			if got := captured.Header.Get("Api-Key"); got != "" {
+				t.Fatalf("Api-Key header = %q, want empty", got)
+			}
+		})
+	}
+}
+
+func TestTokenCredentialScopes(t *testing.T) {
+	configuration := &tokenCredentialConfig{
+		Scopes: []string{"https://cognitiveservices.azure.com/.default"},
+	}
+
+	if err := WithTokenCredentialScopes([]string{"your-custom-scope"})(configuration); err != nil {
+		t.Fatalf("applying token credential scopes failed: %s", err)
+	}
+	if len(configuration.Scopes) != 1 || configuration.Scopes[0] != "your-custom-scope" {
+		t.Fatalf("token credential scopes = %v, want [your-custom-scope]", configuration.Scopes)
 	}
 }
 

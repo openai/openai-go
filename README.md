@@ -1256,6 +1256,24 @@ func main() {
 }
 ```
 
+Azure Identity is an optional application dependency. Install its current
+release explicitly when authenticating with Microsoft Entra ID:
+
+```sh
+go get github.com/Azure/azure-sdk-for-go/sdk/azidentity@latest
+```
+
+See [`examples/azure-identity`](examples/azure-identity) for a complete runnable
+example. To override the default Cognitive Services token scope, configure the
+credential with `azure.WithTokenCredentialScopes`:
+
+```go
+azure.WithTokenCredential(
+	tokenCredential,
+	azure.WithTokenCredentialScopes([]string{"your-custom-scope"}),
+)
+```
+
 ## Semantic versioning
 
 This package generally follows [SemVer](https://semver.org/spec/v2.0.0.html) conventions, though certain backwards-incompatible changes may be released as minor versions:
