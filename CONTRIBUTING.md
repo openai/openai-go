@@ -106,6 +106,30 @@ $ go mod edit -replace github.com/openai/openai-go=/path/to/openai-go
 
 Most tests require you to [set up a mock server](https://github.com/dgellow/steady) against the OpenAPI spec to run the tests.
 
+`./scripts/bootstrap` installs the exact Steady release recorded in
+`scripts/steady/package.json`. Its committed lockfile includes SHA-512
+integrity hashes for every supported platform's npm package. The manifest also
+records SHA-256 hashes for the CLI wrapper and each extracted native executable;
+every launch checks those trusted hashes before using installed files.
+Installation always disables npm lifecycle scripts. `./scripts/mock` installs
+the same locked dependency automatically when necessary; subsequent runs reuse
+the verified local installation without accessing the npm registry.
+
+Dependabot proposes Steady updates separately from Go dependencies. Review the
+CLI and every platform package's exact version, license, integrity hash, and
+available provenance before accepting an update. Amend the Dependabot branch
+with the following command, which verifies every package archive against its
+locked SHA-512 before refreshing the wrapper and native executable SHA-256
+values:
+
+```sh
+$ ./scripts/steady/update "$(node -p 'require("./scripts/steady/package.json").dependencies["@stdy/cli"]')"
+```
+
+Keep lifecycle scripts disabled and verify the real OpenAPI mock on Linux and
+macOS. The updater removes the previous local installation so the next
+bootstrap installs the newly verified release.
+
 ```sh
 $ ./scripts/mock
 ```

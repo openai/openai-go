@@ -1,0 +1,18 @@
+{
+  "name": "openai-go-steady-mock",
+  "private": true,
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@stdy/cli": "0.22.2"
+  },
+  "steadyIntegrity": {
+    "wrapperSha256": "c6f271af33425da73865bc2d1e573091edb73af3a63ba72567089a6b0370b69a",
+    "nativeBinarySha256": {
+      "darwin-arm64": "bbea9a6e5e39516958cebc3bafd97abce1a4b192d8a8d4e18725d3eee8ef444c",
+      "darwin-x64": "79b2f73925accd5c20999330b93a02b56d3d750c425d815c66fea39b866212f3",
+      "linux-arm64": "bfb5dc0426e446334956acc0c5df610e28bd8bfb31b3c5cead7a17820c4b68ef",
+      "linux-x64": "9716bb192746f093b86a280c5e30f87b5461fcefde4c275648357273b468bc8b",
+      "win32-x64": "f61a8733b07d8fe6746543e8c602a0f583cd9baa591a94d63ea59c2349a7ef85"
+    }
+  }
+}

@@ -22,3 +22,6 @@ fi
 echo "==> Installing Go dependencies…"
 
 go mod tidy -e
+
+echo "==> Installing the locked Steady mock server…"
+./scripts/steady/install

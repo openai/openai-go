@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+cd "$(dirname "$0")"
+tool_directory="$(pwd -P)"
+
+validate_installation() {
+  node -e '
+    const crypto = require("crypto");
+    const fs = require("fs");
+    const path = require("path");
+    const root = fs.realpathSync(process.argv[1]);
+    const modules = fs.realpathSync(path.join(root, "node_modules"));
+    const manifest = require(path.join(root, "package.json"));
+    const expected = manifest.dependencies["@stdy/cli"];
+    const cli = require(path.join(root, "node_modules/@stdy/cli/package.json"));
+    const platform = `${process.platform}-${process.arch}`;
+    const nativeName = `@stdy/cli-${platform}`;
+    const nativeDirectory = fs.realpathSync(path.join(root, "node_modules", nativeName));
+    const native = require(path.join(nativeDirectory, "package.json"));
+
+    if (cli.version !== expected || native.version !== expected ||
+        cli.optionalDependencies[nativeName] !== expected) {
+      throw new Error(`Steady installation does not match locked version ${expected}`);
+    }
+
+    const filename = process.platform === "win32" ? "steady.exe" : "steady";
+    const launcher = fs.realpathSync(path.join(modules, ".bin", "steady"));
+    const wrapper = fs.realpathSync(path.join(modules, "@stdy", "cli", "steady.js"));
+    const executable = fs.realpathSync(path.join(nativeDirectory, "bin", filename));
+
+    if (modules !== path.join(root, "node_modules") || launcher !== wrapper ||
+        !wrapper.startsWith(modules + path.sep) ||
+        !nativeDirectory.startsWith(modules + path.sep) ||
+        !executable.startsWith(nativeDirectory + path.sep)) {
+      throw new Error("Steady executable resolves outside its locked package");
+    }
+
+    fs.accessSync(executable, fs.constants.X_OK);
+    const digest = (file) => crypto.createHash("sha256")
+      .update(fs.readFileSync(file)).digest("hex");
+    if (digest(wrapper) !== manifest.steadyIntegrity.wrapperSha256 ||
+        digest(executable) !== manifest.steadyIntegrity.nativeBinarySha256[platform]) {
+      throw new Error("Steady executable does not match its committed SHA-256 digest");
+    }
+  ' "$1"
+}
+
+installation_is_current() {
+  [[ -x "$tool_directory/node_modules/.bin/steady" ]] &&
+    validate_installation "$tool_directory" >/dev/null 2>&1
+}
+
+if installation_is_current; then
+  exit 0
+fi
+
+if [[ -e "$tool_directory/node_modules" || -L "$tool_directory/node_modules" ]]; then
+  if installation_is_current; then
+    exit 0
+  fi
+  echo "Existing Steady installation failed integrity verification; remove $tool_directory/node_modules and retry" >&2
+  exit 1
+fi
+
+staging_directory="$(mktemp -d "$tool_directory/.install.XXXXXXXX")"
+trap 'rm -rf "$staging_directory"' EXIT
+
+cp "$tool_directory/package.json" "$tool_directory/package-lock.json" \
+  "$tool_directory/.npmrc" "$staging_directory/"
+npm ci --ignore-scripts --include=optional --no-audit --no-fund --prefix "$staging_directory"
+validate_installation "$staging_directory"
+
+publish_installation() {
+  node -e '
+    const fs = require("fs");
+    try {
+      fs.renameSync(process.argv[1], process.argv[2]);
+    } catch (error) {
+      if (error.code === "EEXIST" || error.code === "ENOTEMPTY") process.exit(1);
+      throw error;
+    }
+  ' "$staging_directory/node_modules" "$tool_directory/node_modules"
+}
+
+if publish_installation || installation_is_current; then
+  exit 0
+fi
+
+echo "Concurrent Steady installation failed integrity verification" >&2
+exit 1
