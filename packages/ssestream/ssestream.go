@@ -85,40 +85,14 @@ func NewDecoderWithOptions(res *http.Response, options DecoderOptions) Decoder {
 	}
 	scn := bufio.NewScanner(res.Body)
 	scn.Buffer(nil, maxScanTokenBytes)
-	scn.Split(scanLinesWithMaxBytes(options.MaxEventBytes))
-	return &eventStreamDecoder{
+	decoder := &eventStreamDecoder{
 		rc:            res.Body,
-		scn:           scn,
 		maxEventBytes: options.MaxEventBytes,
 		maxEventLines: options.MaxEventLines,
 	}
-}
-
-func scanLinesWithMaxBytes(maxBytes int) bufio.SplitFunc {
-	errLineTooLarge := fmt.Errorf("%w: maximum event line size is %d bytes", ErrEventTooLarge, maxBytes)
-	return func(data []byte, atEOF bool) (advance int, token []byte, err error) {
-		line := data
-		newline := bytes.IndexByte(data, '\n')
-		if newline >= 0 {
-			line = data[:newline]
-		}
-		if !logicalLineFits(line, maxBytes) {
-			return 0, nil, errLineTooLarge
-		}
-		if newline >= 0 || atEOF {
-			return bufio.ScanLines(data, atEOF)
-		}
-		return 0, nil, nil
-	}
-}
-
-// logicalLineFits counts either an omitted LF or a trailing CR as one logical
-// line ending, matching bufio.ScanLines normalization and event accounting.
-func logicalLineFits(line []byte, maxBytes int) bool {
-	if len(line) > 0 && line[len(line)-1] == '\r' {
-		return len(line) <= maxBytes
-	}
-	return len(line) < maxBytes
+	scn.Split(decoder.scanLines)
+	decoder.scn = scn
+	return decoder
 }
 
 var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
@@ -156,12 +130,52 @@ func (e *StreamError) Error() string {
 
 // A base implementation of a Decoder for text/event-stream.
 type eventStreamDecoder struct {
-	evt           Event
-	rc            io.ReadCloser
-	scn           *bufio.Scanner
-	err           error
-	maxEventBytes int
-	maxEventLines int
+	evt            Event
+	rc             io.ReadCloser
+	scn            *bufio.Scanner
+	err            error
+	maxEventBytes  int
+	maxEventLines  int
+	remainingBytes int
+}
+
+func (s *eventStreamDecoder) scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if newline := bytes.IndexByte(data, '\n'); newline >= 0 {
+		line := data[:newline]
+		if !isEventDelimiter(line) && !logicalLineFits(line, s.remainingBytes) {
+			return 0, nil, s.eventTooLargeError()
+		}
+		return bufio.ScanLines(data, atEOF)
+	}
+
+	if atEOF {
+		if len(data) > s.remainingBytes {
+			return 0, nil, s.eventTooLargeError()
+		}
+		return len(data), nil, nil
+	}
+
+	if len(data) > s.remainingBytes && !(s.remainingBytes == 0 && isEventDelimiter(data)) {
+		return 0, nil, s.eventTooLargeError()
+	}
+	return 0, nil, nil
+}
+
+func (s *eventStreamDecoder) eventTooLargeError() error {
+	return fmt.Errorf("%w: maximum event size is %d bytes", ErrEventTooLarge, s.maxEventBytes)
+}
+
+func isEventDelimiter(line []byte) bool {
+	return len(line) == 0 || len(line) == 1 && line[0] == '\r'
+}
+
+// logicalLineFits counts either an omitted LF or a trailing CR as one logical
+// line ending, matching bufio.ScanLines normalization and event accounting.
+func logicalLineFits(line []byte, maxBytes int) bool {
+	if len(line) > 0 && line[len(line)-1] == '\r' {
+		return len(line) <= maxBytes
+	}
+	return len(line) < maxBytes
 }
 
 func (s *eventStreamDecoder) Next() bool {
@@ -169,9 +183,9 @@ func (s *eventStreamDecoder) Next() bool {
 		return false
 	}
 
+	s.remainingBytes = s.maxEventBytes
 	event := ""
 	var data []byte
-	eventBytes := 0
 	eventLines := 0
 
 	for s.scn.Scan() {
@@ -181,7 +195,7 @@ func (s *eventStreamDecoder) Next() bool {
 		if len(txt) == 0 {
 			if len(data) == 0 {
 				event = ""
-				eventBytes = 0
+				s.remainingBytes = s.maxEventBytes
 				eventLines = 0
 				continue
 			}
@@ -199,11 +213,11 @@ func (s *eventStreamDecoder) Next() bool {
 		}
 
 		lineBytes := len(txt) + 1
-		if lineBytes > s.maxEventBytes-eventBytes {
-			s.err = fmt.Errorf("%w: maximum event size is %d bytes", ErrEventTooLarge, s.maxEventBytes)
+		if lineBytes > s.remainingBytes {
+			s.err = s.eventTooLargeError()
 			return false
 		}
-		eventBytes += lineBytes
+		s.remainingBytes -= lineBytes
 
 		// Split a string like "event: bar" into name="event" and value=" bar".
 		name, value, _ := bytes.Cut(txt, []byte(":"))
