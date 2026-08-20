@@ -17,7 +17,8 @@ const defaultResponseHeaderTimeout = 10 * time.Minute
 // is set so stuck connections fail fast instead of compounding across retries.
 // If [http.DefaultTransport] has been wrapped (for example by otelhttp for
 // distributed tracing), the wrapping is preserved and the header timeout is
-// skipped.
+// skipped. The shared executor separately enforces non-streaming response-body
+// size and read-duration policies so raw streaming responses remain unaffected.
 func defaultHTTPClient() *http.Client {
 	if t, ok := http.DefaultTransport.(*http.Transport); ok {
 		t = t.Clone()

@@ -9,7 +9,6 @@ import (
 	"io"
 	"math"
 	"math/rand"
-	"mime"
 	"net/http"
 	"net/url"
 	"runtime"
@@ -19,10 +18,8 @@ import (
 	"time"
 
 	"github.com/openai/openai-go/v3/internal"
-	"github.com/openai/openai-go/v3/internal/apierror"
 	"github.com/openai/openai-go/v3/internal/apiform"
 	"github.com/openai/openai-go/v3/internal/apiquery"
-	"github.com/tidwall/gjson"
 )
 
 func getDefaultHeaders() map[string]string {
@@ -271,11 +268,14 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 		req.Header.Add(k, v)
 	}
 	cfg := RequestConfig{
-		MaxRetries: 2,
-		Context:    ctx,
-		Request:    req,
-		HTTPClient: http.DefaultClient,
-		Body:       reader,
+		MaxRetries:                2,
+		MaxResponseBodyBytes:      defaultMaxResponseBodyBytes,
+		MaxErrorResponseBodyBytes: defaultMaxErrorResponseBodyBytes,
+		ResponseBodyTimeout:       defaultResponseBodyTimeout,
+		Context:                   ctx,
+		Request:                   req,
+		HTTPClient:                http.DefaultClient,
+		Body:                      reader,
 	}
 	cfg.ResponseBodyInto = dst
 	cfg.Security = Security{
@@ -323,14 +323,17 @@ type HTTPDoer interface {
 // Editing the variables inside RequestConfig directly is unstable api. Prefer
 // composing the RequestOption instead if possible.
 type RequestConfig struct {
-	MaxRetries            int
-	RequestTimeout        time.Duration
-	Context               context.Context
-	Request               *http.Request
-	BaseURL               *url.URL
-	endpointSelector      string
-	endpointProvider      string
-	dataResidencyEndpoint bool
+	MaxRetries                int
+	RequestTimeout            time.Duration
+	MaxResponseBodyBytes      int64
+	MaxErrorResponseBodyBytes int64
+	ResponseBodyTimeout       time.Duration
+	Context                   context.Context
+	Request                   *http.Request
+	BaseURL                   *url.URL
+	endpointSelector          string
+	endpointProvider          string
+	dataResidencyEndpoint     bool
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL     *url.URL
@@ -649,24 +652,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	}
 
 	if res.StatusCode >= 400 {
-		contents, readErr := io.ReadAll(res.Body)
-		_ = res.Body.Close()
-		if readErr != nil {
-			return readErr
-		}
-
-		// If there is an APIError, re-populate the response body so that debugging
-		// utilities can conveniently dump the response without issue.
-		res.Body = io.NopCloser(bytes.NewBuffer(contents))
-
-		// Load the contents into the error format if it is provided.
-		aerr := apierror.Error{Request: cfg.Request, Response: res, StatusCode: res.StatusCode}
-		unwrapped := gjson.GetBytes(contents, "error").Raw
-		err = aerr.UnmarshalJSON([]byte(unwrapped))
-		if err != nil {
-			return err
-		}
-		return &aerr
+		return cfg.handleErrorResponse(res)
 	}
 
 	_, intoCustomResponseBody := cfg.ResponseBodyInto.(**http.Response)
@@ -681,43 +667,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 		return nil
 	}
 
-	contents, err := io.ReadAll(res.Body)
-	_ = res.Body.Close()
-	if err != nil {
-		return fmt.Errorf("error reading response body: %w", err)
-	}
-
-	// If we are not json, return plaintext
-	contentType := res.Header.Get("content-type")
-	mediaType, _, _ := mime.ParseMediaType(contentType)
-	isJSON := strings.Contains(mediaType, "application/json") || strings.HasSuffix(mediaType, "+json")
-	if !isJSON {
-		switch dst := cfg.ResponseBodyInto.(type) {
-		case *string:
-			*dst = string(contents)
-		case **string:
-			tmp := string(contents)
-			*dst = &tmp
-		case *[]byte:
-			*dst = contents
-		default:
-			return fmt.Errorf("expected destination type of 'string' or '[]byte' for responses with content-type '%s' that is not 'application/json'", contentType)
-		}
-		return nil
-	}
-
-	switch dst := cfg.ResponseBodyInto.(type) {
-	// If the response happens to be a byte array, deserialize the body as-is.
-	case *[]byte:
-		*dst = contents
-	default:
-		err = json.NewDecoder(bytes.NewReader(contents)).Decode(cfg.ResponseBodyInto)
-		if err != nil {
-			return fmt.Errorf("error parsing response json: %w", err)
-		}
-	}
-
-	return nil
+	return cfg.handleSuccessResponse(res)
 }
 
 func ExecuteNewRequest(ctx context.Context, method string, u string, body any, dst any, opts ...RequestOption) error {
