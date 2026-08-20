@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	maxChatCompletionAccumulatorChunks    = 100_000
-	maxChatCompletionAccumulatorTextBytes = 16 << 20
+	maxChatCompletionAccumulatorChunks          = 100_000
+	maxChatCompletionAccumulatorStructuralSlots = 1_024
+	maxChatCompletionAccumulatorTextBytes       = 16 << 20
 )
 
 // Helper to accumulate chunks from a stream
@@ -68,9 +69,10 @@ const (
 
 // AddChunk incorporates a chunk into the accumulation. Chunks must be added in order.
 // Returns false if the chunk could not be successfully accumulated. To bound work and
-// memory for untrusted streams, an accumulator accepts at most 100,000 chunks and 16 MiB
-// of combined content, refusal, tool name, and tool argument text currently stored in
-// the accumulator and the incoming chunk. A rejected chunk does not modify the accumulator.
+// memory for untrusted streams, an accumulator accepts at most 100,000 chunks, 1,024
+// combined choice and tool-call slots, and 16 MiB of combined content, refusal, tool
+// name, and tool argument text currently stored in the accumulator and the incoming
+// chunk. A rejected chunk does not modify the accumulator.
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
@@ -108,13 +110,20 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	if acc.ID != "" && acc.ID != chunk.ID {
 		return false
 	}
+	if !chatCompletionStructuralSlotsWithinLimit(&acc.ChatCompletion, chunk) {
+		return false
+	}
 
 	textBytes, ok := addChatCompletionTextBytes(0, &acc.ChatCompletion)
 	if !ok {
 		return false
 	}
-	_, ok = addChatCompletionChunkTextBytes(textBytes, chunk)
-	return ok
+	if _, ok = addChatCompletionChunkTextBytes(textBytes, chunk); !ok {
+		return false
+	}
+
+	acc.reconcilePublicState()
+	return true
 }
 
 // JustFinishedContent retrieves the chat completion content when it is known to have just been completed.
@@ -284,6 +293,71 @@ func (acc *chatCompletionAccumulatorStringState) choice(index int) *chatCompleti
 	return acc.choices[index]
 }
 
+func (acc *ChatCompletionAccumulator) reconcilePublicState() {
+	completion := &acc.ChatCompletion
+	stringState := &acc.stringState
+
+	previousChoiceCount := len(stringState.choices)
+	completion.Choices = detachTruncatedTail(completion.Choices, previousChoiceCount)
+	for i := range completion.Choices {
+		message := &completion.Choices[i].Message
+		previousToolCallCount := 0
+		if i < previousChoiceCount && stringState.choices[i] != nil {
+			previousToolCallCount = len(stringState.choices[i].toolCalls)
+		}
+		message.ToolCalls = detachTruncatedTail(message.ToolCalls, previousToolCallCount)
+	}
+
+	choiceCount := min(len(stringState.choices), len(completion.Choices))
+	for i := range choiceCount {
+		choiceState := stringState.choices[i]
+		if choiceState == nil {
+			continue
+		}
+
+		message := &completion.Choices[i].Message
+		choiceState.content.reconcile(&message.Content)
+		choiceState.refusal.reconcile(&message.Refusal)
+
+		toolCallCount := min(len(choiceState.toolCalls), len(message.ToolCalls))
+		if toolCallCount < len(choiceState.toolCalls) {
+			invalidateRemovedToolCallState(acc.legacyChoiceChatCompletionStates, i, toolCallCount)
+			invalidateRemovedToolCallState(acc.choiceChatCompletionStates, i, toolCallCount)
+		}
+		for j := range toolCallCount {
+			toolCallState := choiceState.toolCalls[j]
+			if toolCallState == nil {
+				continue
+			}
+			function := &message.ToolCalls[j].Function
+			toolCallState.name.reconcile(&function.Name)
+			toolCallState.arguments.reconcile(&function.Arguments)
+		}
+		clear(choiceState.toolCalls[toolCallCount:])
+		choiceState.toolCalls = choiceState.toolCalls[:toolCallCount]
+	}
+	clear(stringState.choices[choiceCount:])
+	stringState.choices = stringState.choices[:choiceCount]
+	acc.legacyChoiceChatCompletionStates = truncateResponseStates(acc.legacyChoiceChatCompletionStates, choiceCount)
+	acc.choiceChatCompletionStates = truncateResponseStates(acc.choiceChatCompletionStates, choiceCount)
+}
+
+func invalidateRemovedToolCallState(states []chatCompletionResponseState, choiceIndex int, toolCallCount int) {
+	if choiceIndex >= len(states) {
+		return
+	}
+	state := &states[choiceIndex]
+	if state.state == toolResponseState && state.toolCallIndex >= toolCallCount {
+		*state = chatCompletionResponseState{}
+	}
+}
+
+func truncateResponseStates(states []chatCompletionResponseState, choiceCount int) []chatCompletionResponseState {
+	choiceCount = min(len(states), choiceCount)
+	clear(states[choiceCount:])
+	return states[:choiceCount]
+}
+
 func (choice *chatCompletionChoiceStringState) toolCall(index int) *chatCompletionToolCallStringState {
 	choice.toolCalls = expandToFit(choice.toolCalls, index)
 	if choice.toolCalls[index] == nil {
@@ -296,13 +370,91 @@ func (acc *chatCompletionString) append(current *string, fragment string) {
 	if fragment == "" {
 		return
 	}
-	if *current != acc.published {
-		acc.builder.Reset()
-		_, _ = acc.builder.WriteString(*current)
-	}
+	acc.reconcile(current)
 	_, _ = acc.builder.WriteString(fragment)
 	acc.published = acc.builder.String()
 	*current = acc.published
+}
+
+func (acc *chatCompletionString) reconcile(current *string) {
+	if *current == acc.published {
+		*current = acc.published
+		return
+	}
+
+	replacement := *current
+	acc.published = ""
+	acc.builder.Reset()
+	_, _ = acc.builder.WriteString(replacement)
+	acc.published = acc.builder.String()
+	*current = acc.published
+}
+
+func chatCompletionStructuralSlotsWithinLimit(completion *ChatCompletion, chunk *ChatCompletionChunk) bool {
+	choiceCount := len(completion.Choices)
+	if choiceCount > maxChatCompletionAccumulatorStructuralSlots {
+		return false
+	}
+
+	structuralSlots := choiceCount
+	// This fixed-size projection keeps duplicate choice deltas exact without a
+	// per-chunk map allocation. The aggregate slot limit bounds its stack cost.
+	var toolCallCounts [maxChatCompletionAccumulatorStructuralSlots]int
+	for i := range completion.Choices {
+		toolCallCount := len(completion.Choices[i].Message.ToolCalls)
+		if toolCallCount > maxChatCompletionAccumulatorStructuralSlots-structuralSlots {
+			return false
+		}
+		structuralSlots += toolCallCount
+		toolCallCounts[i] = toolCallCount
+	}
+
+	chunkEntries := len(chunk.Choices)
+	if chunkEntries > maxChatCompletionAccumulatorStructuralSlots {
+		return false
+	}
+	for i := range chunk.Choices {
+		toolCallCount := len(chunk.Choices[i].Delta.ToolCalls)
+		if toolCallCount > maxChatCompletionAccumulatorStructuralSlots-chunkEntries {
+			return false
+		}
+		chunkEntries += toolCallCount
+	}
+
+	for i := range chunk.Choices {
+		delta := &chunk.Choices[i]
+		if delta.Index < 0 || delta.Index >= maxChatCompletionAccumulatorStructuralSlots {
+			return false
+		}
+		choiceIndex := int(delta.Index)
+		if newChoiceCount := choiceIndex + 1; newChoiceCount > choiceCount {
+			additionalChoices := newChoiceCount - choiceCount
+			if additionalChoices > maxChatCompletionAccumulatorStructuralSlots-structuralSlots {
+				return false
+			}
+			structuralSlots += additionalChoices
+			choiceCount = newChoiceCount
+		}
+
+		for j := range delta.Delta.ToolCalls {
+			toolIndex64 := delta.Delta.ToolCalls[j].Index
+			if toolIndex64 >= maxChatCompletionAccumulatorStructuralSlots {
+				return false
+			}
+			toolIndex := clampToZero(toolIndex64)
+			newToolCallCount := toolIndex + 1
+			if newToolCallCount <= toolCallCounts[choiceIndex] {
+				continue
+			}
+			additionalToolCalls := newToolCallCount - toolCallCounts[choiceIndex]
+			if additionalToolCalls > maxChatCompletionAccumulatorStructuralSlots-structuralSlots {
+				return false
+			}
+			structuralSlots += additionalToolCalls
+			toolCallCounts[choiceIndex] = newToolCallCount
+		}
+	}
+	return true
 }
 
 func addChatCompletionTextBytes(total int, completion *ChatCompletion) (int, bool) {
@@ -395,4 +547,14 @@ func expandToFit[T any](slice []T, index int) []T {
 	newSlice := make([]T, index+1)
 	copy(newSlice, slice)
 	return newSlice
+}
+
+func detachTruncatedTail[T any](slice []T, previousLength int) []T {
+	// A full slice expression can hide a retained tail while reporting len == cap.
+	if slice == nil || (len(slice) == cap(slice) && len(slice) >= previousLength) {
+		return slice
+	}
+	detached := make([]T, len(slice))
+	copy(detached, slice)
+	return detached
 }
