@@ -649,9 +649,15 @@ func (cfg *RequestConfig) Execute() (err error) {
 			req.Header.Set("X-Stainless-Retry-Count", strconv.Itoa(retryCount))
 		}
 
+		attemptBody := req.Body
 		res, err = handler(req)
-		if err != nil && req.Body != nil {
-			_ = req.Body.Close()
+		if err != nil {
+			if req.Body != nil {
+				_ = req.Body.Close()
+			}
+			if attemptBody != nil {
+				_ = attemptBody.Close()
+			}
 		}
 		if ctx != nil && ctx.Err() != nil {
 			return ctx.Err()
