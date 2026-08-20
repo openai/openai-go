@@ -130,7 +130,7 @@ Keep these components independently constrained:
   integration-tree digest, check name, conclusion, details URL, idempotency key,
   and current epoch, then attaches that result to `published_sha` with a
   one-operation token. It stores the check-run ID and a stable external ID or
-  status-context lookup key for idempotent recovery and later invalidation.
+  status-context lookup key for idempotent recovery while the lease is held.
 - **Slack writer:** accepts only the allowlisted channel, pull-request URL,
   target message or thread, payload, idempotency key, and current epoch. It gets
   a short-lived credential inside one brokered, tracked mutation.
@@ -156,7 +156,7 @@ test for infrastructure the repository does not own.
 | No implicit execution | Publishing a branch or pull request can trigger candidate execution before brokered dispatch | Credential event semantics and trigger filters prove publication creates no workflow run; every check starts explicitly through the trusted wrapper |
 | Trusted review instructions | Candidate content can supply or modify a mandatory review skill | Review receipts identify a trusted pre-candidate skill snapshot and immutable candidate blobs |
 | Isolated Git metadata | Model-writable Git state shares refs, config, hooks, objects, alternates, promisor storage, or hardlinked inodes with a trusted or reusable checkout | Filesystem and resolved-config proof confines an independent no-local/no-hardlinks clone and all Git inputs to the per-run sandbox |
-| Target-bound status | A successful candidate check names a stale `target_head_sha`, cannot be found idempotently, or remains green after target drift | Reporter rechecks the target immediately before success, binds the target in its mutation, stores the remote check identity, and supersedes success with non-success on drift |
+| Target-bound status | A successful candidate check names a stale `target_head_sha` or cannot be found idempotently during recovery | Reporter rechecks the target immediately before success, binds the target in its mutation, stores the remote check identity, and relies on strict up-to-date protection or a merge queue after release |
 | Review-ready | Required checks are absent, stale, pending, unexpectedly skipped, for another revision, or not attached to the candidate | Strict up-to-date protection or a merge queue gates integration; the reporter attaches every validated result to `published_sha`, the current target integration tree is green, and no actionable feedback remains |
 
 ## Validate and publish
@@ -228,13 +228,13 @@ re-read the target branch immediately before attaching a successful check run or
 commit status to `published_sha`, not the wrapper revision. Bind
 `target_head_sha`, the stored check-run ID and external ID or stable status
 context, and the payload digest in the authenticated mutation. If the target
-differs, do not write success. If it moves later, use the stored remote identity
-to supersede that same candidate check with a non-success stale conclusion
-before restarting with a new work order. Require strict up-to-date branch
-protection or a merge queue for any required reporter check; otherwise use an
-informational check name that cannot satisfy the merge gate. Treat wrapper
-checks that exist only on the trusted wrapper revision as execution receipts,
-never candidate status.
+differs, do not write success. Re-read it again before lifecycle finalization and
+restart with a new work order if it moved while the lease was held. Require
+strict up-to-date branch protection or a merge queue for any required reporter
+check; that merge gate, not a post-release automation writer, invalidates
+eligibility after later target drift. Otherwise use an informational check name
+that cannot satisfy the merge gate. Treat wrapper checks that exist only on the
+trusted wrapper revision as execution receipts, never candidate status.
 
 Validate each review concern against `published_sha`. After publishing a real
 fix, reply with individualized exact-head evidence. Resolve only that addressed
