@@ -103,6 +103,43 @@ func TestFormatPathEscapesPathParams(t *testing.T) {
 	}
 }
 
+func TestSameOrigin(t *testing.T) {
+	tests := []struct {
+		name  string
+		left  string
+		right string
+		want  bool
+	}{
+		{name: "identical", left: "https://example.com/path", right: "https://example.com/other", want: true},
+		{name: "case insensitive scheme and host", left: "HTTPS://EXAMPLE.COM/path", right: "https://example.com/other", want: true},
+		{name: "default HTTP port", left: "http://example.com/path", right: "http://example.com:80/other", want: true},
+		{name: "default HTTPS port", left: "https://example.com/path", right: "https://example.com:443/other", want: true},
+		{name: "different scheme", left: "http://example.com/path", right: "https://example.com/path", want: false},
+		{name: "different host", left: "https://example.com/path", right: "https://other.example/path", want: false},
+		{name: "different port", left: "https://example.com:444/path", right: "https://example.com/path", want: false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			left, err := url.Parse(test.left)
+			if err != nil {
+				t.Fatal(err)
+			}
+			right, err := url.Parse(test.right)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := SameOrigin(left, right); got != test.want {
+				t.Fatalf("SameOrigin(%q, %q) = %v, want %v", test.left, test.right, got, test.want)
+			}
+		})
+	}
+
+	if SameOrigin(nil, nil) {
+		t.Fatal("SameOrigin(nil, nil) = true, want false")
+	}
+}
+
 func TestNormalizeOS(t *testing.T) {
 	tests := map[string]string{
 		"android": "Android",

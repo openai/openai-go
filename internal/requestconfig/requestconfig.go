@@ -50,6 +50,49 @@ func FormatPath(format string, params ...string) string {
 	return fmt.Sprintf(format, args...)
 }
 
+func validateRequestReference(value string) error {
+	reference, err := url.Parse(value)
+	if err != nil {
+		return err
+	}
+	if reference.IsAbs() || reference.Host != "" {
+		return errors.New("requestconfig: request path must be a relative URL reference")
+	}
+	return nil
+}
+
+// SameOrigin reports whether two URLs have the same scheme, host, and effective
+// port. It is internal API shared by the generic request pipeline and provider
+// authentication middleware.
+func SameOrigin(left, right *url.URL) bool {
+	if left == nil || right == nil || !strings.EqualFold(left.Scheme, right.Scheme) || !strings.EqualFold(left.Hostname(), right.Hostname()) {
+		return false
+	}
+	return effectivePort(left) == effectivePort(right)
+}
+
+func effectivePort(value *url.URL) string {
+	if port := value.Port(); port != "" {
+		return port
+	}
+	if strings.EqualFold(value.Scheme, "https") {
+		return "443"
+	}
+	if strings.EqualFold(value.Scheme, "http") {
+		return "80"
+	}
+	return ""
+}
+
+func enforceRequestOrigin(origin *url.URL, next middlewareNext) middlewareNext {
+	return func(req *http.Request) (*http.Response, error) {
+		if req == nil || !SameOrigin(req.URL, origin) {
+			return nil, WithNoRetryError(errors.New("requestconfig: request URL origin must match the configured base URL"))
+		}
+		return next(req)
+	}
+}
+
 func getNormalizedOS() string {
 	return normalizeOS(runtime.GOOS)
 }
@@ -189,6 +232,10 @@ func (s RequestOptionFunc) Apply(r *RequestConfig) error    { return s(r) }
 func (s PreRequestOptionFunc) Apply(r *RequestConfig) error { return s(r) }
 
 func NewRequestConfig(ctx context.Context, method string, u string, body any, dst any, opts ...RequestOption) (*RequestConfig, error) {
+	if err := validateRequestReference(u); err != nil {
+		return nil, err
+	}
+
 	var reader io.Reader
 
 	contentType := "application/json"
@@ -567,6 +614,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	if cfg.CustomHTTPDoer != nil {
 		handler = cfg.CustomHTTPDoer.Do
 	}
+	handler = enforceRequestOrigin(cfg.BaseURL, handler)
 	for i := len(cfg.Middlewares) - 1; i >= 0; i -= 1 {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
 	}
