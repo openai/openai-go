@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -214,22 +215,29 @@ func setEscapedPath(u *url.URL, escapedPath string) error {
 }
 
 func getJSONRoute(req *http.Request) (string, error) {
+	if req.Body == nil {
+		return "", errors.New("azure: deployment routing requires a JSON request body")
+	}
+
 	// we need to deserialize the body, partly, in order to read out the model field.
 	jsonBytes, err := io.ReadAll(req.Body)
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("azure: could not read JSON request body for deployment routing: %w", err)
 	}
 
 	// make sure we restore the body so it can be used in later middlewares.
 	req.Body = io.NopCloser(bytes.NewReader(jsonBytes))
 
-	var v *struct {
+	var v struct {
 		Model string `json:"model"`
 	}
 
 	if err := json.Unmarshal(jsonBytes, &v); err != nil {
-		return "", err
+		return "", fmt.Errorf("azure: could not parse JSON request body for deployment routing: %w", err)
+	}
+	if v.Model == "" {
+		return "", errors.New("azure: deployment routing requires a non-empty model field")
 	}
 
 	// Convert path from /chat/completions to /openai/deployments/{deployment-id}/chat/completions
