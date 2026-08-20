@@ -425,43 +425,56 @@ func TestAzureTokenCredentialIgnoresAzcoreRetryOverride(t *testing.T) {
 func TestCustomHTTPDoerOriginRejectionClosesReplacementBody(t *testing.T) {
 	clearOriginTestEnvironment(t)
 
-	var doerCalls, replacementBodyCloses atomic.Int64
-	client := openai.NewClient(
-		option.WithBaseURL("https://trusted.example/v1"),
-		option.WithAPIKey("api-key"),
-		option.WithHTTPClient(originTestHTTPDoer(func(*http.Request) (*http.Response, error) {
-			doerCalls.Add(1)
-			return nil, errors.New("custom doer must not be called")
-		})),
-		option.WithMaxRetries(0),
-	)
 	target, err := url.Parse("https://other.example/capture")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = client.Post(
-		context.Background(),
-		"responses",
-		strings.NewReader("original body"),
-		nil,
-		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
-			clone := req.Clone(req.Context())
-			clone.URL = target
-			clone.Body = originTestCloseTrackingBody{
-				ReadCloser: io.NopCloser(strings.NewReader("replacement body")),
-				closes:     &replacementBodyCloses,
+
+	for _, test := range []struct {
+		name         string
+		cloneRequest bool
+	}{
+		{name: "in-place replacement"},
+		{name: "cloned replacement", cloneRequest: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var doerCalls, replacementBodyCloses atomic.Int64
+			client := openai.NewClient(
+				option.WithBaseURL("https://trusted.example/v1"),
+				option.WithAPIKey("api-key"),
+				option.WithHTTPClient(originTestHTTPDoer(func(*http.Request) (*http.Response, error) {
+					doerCalls.Add(1)
+					return nil, errors.New("custom doer must not be called")
+				})),
+				option.WithMaxRetries(0),
+			)
+			err := client.Post(
+				context.Background(),
+				"responses",
+				strings.NewReader("original body"),
+				nil,
+				option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+					if test.cloneRequest {
+						req = req.Clone(req.Context())
+					}
+					req.URL = target
+					req.Body = originTestCloseTrackingBody{
+						ReadCloser: io.NopCloser(strings.NewReader("replacement body")),
+						closes:     &replacementBodyCloses,
+					}
+					return next(req)
+				}),
+			)
+			if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
+				t.Fatalf("Post() error = %v, want configured-origin error", err)
 			}
-			return next(clone)
-		}),
-	)
-	if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
-		t.Fatalf("Post() error = %v, want configured-origin error", err)
-	}
-	if got := doerCalls.Load(); got != 0 {
-		t.Fatalf("custom doer calls = %d, want 0", got)
-	}
-	if got := replacementBodyCloses.Load(); got != 1 {
-		t.Fatalf("replacement body closes = %d, want 1", got)
+			if got := doerCalls.Load(); got != 0 {
+				t.Fatalf("custom doer calls = %d, want 0", got)
+			}
+			if got := replacementBodyCloses.Load(); got != 1 {
+				t.Fatalf("replacement body closes = %d, want 1", got)
+			}
+		})
 	}
 }
 
