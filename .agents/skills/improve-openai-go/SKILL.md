@@ -200,6 +200,14 @@ completed or the evidence remains ambiguous, do not open the pull request.
 
 ## Open and steward the pull request
 
+Configure the recurring task so only one invocation can enter the pull-request
+creation gate at a time. Immediately before creating a pull request, while
+holding that concurrency gate, repeat the trusted-provenance count and the
+duplicate and overlap search. If five skill-owned pull requests are now open or
+overlapping work appeared, do not create the pull request; service or report the
+existing work instead. If reliable serialization is unavailable, stop and ask
+a maintainer rather than risk exceeding the budget.
+
 Open one focused pull request containing the marker and describe:
 
 - the demonstrated problem and why it matters;
