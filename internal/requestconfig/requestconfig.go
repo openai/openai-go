@@ -51,6 +51,20 @@ func FormatPath(format string, params ...string) string {
 }
 
 func validateRequestReference(value string) error {
+	if strings.HasPrefix(value, "//") {
+		return errors.New("requestconfig: request path must be a relative URL reference")
+	}
+	if err := validateRelativeRequestReference(value); err != nil {
+		return err
+	}
+	normalized := strings.TrimPrefix(value, "/")
+	if normalized == value {
+		return nil
+	}
+	return validateRelativeRequestReference(normalized)
+}
+
+func validateRelativeRequestReference(value string) error {
 	reference, err := url.Parse(value)
 	if err != nil {
 		return err
@@ -84,10 +98,26 @@ func effectivePort(value *url.URL) string {
 	return ""
 }
 
+type originTransport struct {
+	origin *url.URL
+	next   http.RoundTripper
+}
+
+func (t originTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req == nil || !SameOrigin(req.URL, t.origin) {
+		return nil, requestOriginError()
+	}
+	return t.next.RoundTrip(req)
+}
+
+func requestOriginError() error {
+	return WithNoRetryError(errors.New("requestconfig: request URL origin must match the configured base URL"))
+}
+
 func enforceRequestOrigin(origin *url.URL, next middlewareNext) middlewareNext {
 	return func(req *http.Request) (*http.Response, error) {
 		if req == nil || !SameOrigin(req.URL, origin) {
-			return nil, WithNoRetryError(errors.New("requestconfig: request URL origin must match the configured base URL"))
+			return nil, requestOriginError()
 		}
 		return next(req)
 	}
@@ -610,11 +640,16 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 	}
 
-	handler := cfg.HTTPClient.Do
-	if cfg.CustomHTTPDoer != nil {
-		handler = cfg.CustomHTTPDoer.Do
+	client := *cfg.HTTPClient
+	transport := client.Transport
+	if transport == nil {
+		transport = http.DefaultTransport
 	}
-	handler = enforceRequestOrigin(cfg.BaseURL, handler)
+	client.Transport = originTransport{origin: cfg.BaseURL, next: transport}
+	handler := client.Do
+	if cfg.CustomHTTPDoer != nil {
+		handler = enforceRequestOrigin(cfg.BaseURL, cfg.CustomHTTPDoer.Do)
+	}
 	for i := len(cfg.Middlewares) - 1; i >= 0; i -= 1 {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
 	}
