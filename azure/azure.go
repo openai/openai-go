@@ -268,14 +268,55 @@ func nonEmptyHeaderValues(header http.Header, name string) int {
 
 func withAzureCredentialMiddleware(authenticate option.Middleware) option.RequestOption {
 	return requestconfig.WithRequestFinalizer(func(rc *requestconfig.RequestConfig) error {
+		// Redirects run inside http.Client.Do and don't re-enter SDK middleware.
+		// Clone the selected client so every redirect reaches this guard without
+		// mutating the caller's client or replacing its CheckRedirect policy.
+		if rc.CustomHTTPDoer == nil {
+			client := *rc.HTTPClient
+			transport := client.Transport
+			if transport == nil {
+				transport = http.DefaultTransport
+			}
+			client.Transport = azureCredentialTransport{base: transport}
+			rc.HTTPClient = &client
+		}
+
 		return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
-			if !strings.EqualFold(req.URL.Scheme, "https") && !azureCredentialHTTPAllowed(req) {
-				return nil, requestconfig.WithNoRetryError(errors.New("azure: authenticated requests require HTTPS; WithUnsafeAllowHTTP permits HTTP only for local development on loopback endpoints"))
+			if err := validateAzureCredentialTransport(req); err != nil {
+				return nil, err
 			}
 			return authenticate(req, next)
 		}).Apply(rc)
 	})
 }
+
+type azureCredentialTransport struct {
+	base http.RoundTripper
+}
+
+func (t azureCredentialTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if err := validateAzureCredentialTransport(req); err != nil {
+		return nil, err
+	}
+	return t.base.RoundTrip(req)
+}
+
+func validateAzureCredentialTransport(req *http.Request) error {
+	if strings.EqualFold(req.URL.Scheme, "https") || azureCredentialHTTPAllowed(req) {
+		return nil
+	}
+	return requestconfig.WithNoRetryError(&azureCredentialTransportError{})
+}
+
+type azureCredentialTransportError struct{}
+
+func (*azureCredentialTransportError) Error() string {
+	return "azure: authenticated requests require HTTPS; WithUnsafeAllowHTTP permits HTTP only for local development on loopback endpoints"
+}
+
+// NonRetriable implements the marker understood by the Azure pipeline's retry
+// policy. The outer requestconfig marker independently stops SDK retries.
+func (*azureCredentialTransportError) NonRetriable() {}
 
 func azureCredentialHTTPAllowed(req *http.Request) bool {
 	if !strings.EqualFold(req.URL.Scheme, "http") {

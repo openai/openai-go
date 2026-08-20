@@ -7,6 +7,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strconv"
 	"strings"
@@ -457,6 +458,166 @@ func TestAzureCredentialTransportSecurity(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_ADMIN_KEY", "")
+
+	authOptions := map[string]struct {
+		option      func() option.RequestOption
+		header      string
+		headerValue string
+	}{
+		"API key": {
+			option:      func() option.RequestOption { return WithAPIKey("azure-api-key") },
+			header:      "Api-Key",
+			headerValue: "azure-api-key",
+		},
+		"token": {
+			option:      func() option.RequestOption { return WithTokenCredential(&fake.TokenCredential{}) },
+			header:      "Authorization",
+			headerValue: "Bearer fake_token",
+		},
+	}
+
+	for authName, auth := range authOptions {
+		t.Run(authName+"/rejects HTTPS downgrade", func(t *testing.T) {
+			redirectedCredential := ""
+			insecureTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				redirectedCredential = req.Header.Get(auth.header)
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"ok":true}`))
+			}))
+			t.Cleanup(insecureTarget.Close)
+
+			sourceRequests := 0
+			secureSource := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				sourceRequests++
+				if req.URL.Path != "/hop" {
+					http.Redirect(w, req, "/hop", http.StatusTemporaryRedirect)
+					return
+				}
+				http.Redirect(w, req, insecureTarget.URL+"/final", http.StatusTemporaryRedirect)
+			}))
+			t.Cleanup(secureSource.Close)
+
+			client := openai.NewClient(
+				WithEndpoint(secureSource.URL, "2024-10-21"),
+				auth.option(),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(secureSource.Client()),
+			)
+
+			var res map[string]any
+			err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res)
+			if err == nil || !strings.Contains(err.Error(), "azure: authenticated requests require HTTPS") {
+				t.Fatalf("expected HTTPS requirement error, got %v", err)
+			}
+			if redirectedCredential != "" {
+				t.Fatalf("credential reached insecure redirect target: %q", redirectedCredential)
+			}
+			if sourceRequests != 2 {
+				t.Fatalf("secure source requests = %d, want 2", sourceRequests)
+			}
+		})
+
+		t.Run(authName+"/preserves HTTPS redirect", func(t *testing.T) {
+			redirectedCredential := ""
+			secureServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				if req.URL.Path != "/final" {
+					http.Redirect(w, req, "/final", http.StatusTemporaryRedirect)
+					return
+				}
+				redirectedCredential = req.Header.Get(auth.header)
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"ok":true}`))
+			}))
+			t.Cleanup(secureServer.Close)
+
+			client := openai.NewClient(
+				WithEndpoint(secureServer.URL, "2024-10-21"),
+				auth.option(),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(secureServer.Client()),
+			)
+
+			var res map[string]any
+			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
+			if redirectedCredential != auth.headerValue {
+				t.Fatalf("redirected credential = %q, want %q", redirectedCredential, auth.headerValue)
+			}
+		})
+
+		t.Run(authName+"/preserves unsafe loopback redirect", func(t *testing.T) {
+			redirectedCredential := ""
+			target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				redirectedCredential = req.Header.Get(auth.header)
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"ok":true}`))
+			}))
+			t.Cleanup(target.Close)
+
+			source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				http.Redirect(w, req, target.URL+"/final", http.StatusTemporaryRedirect)
+			}))
+			t.Cleanup(source.Close)
+
+			client := openai.NewClient(
+				WithEndpoint(source.URL, "2024-10-21"),
+				auth.option(),
+				WithUnsafeAllowHTTP(),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(source.Client()),
+			)
+
+			var res map[string]any
+			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
+			if redirectedCredential != auth.headerValue {
+				t.Fatalf("redirected credential = %q, want %q", redirectedCredential, auth.headerValue)
+			}
+		})
+
+		t.Run(authName+"/preserves caller redirect policy", func(t *testing.T) {
+			finalReached := false
+			secureServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				if req.URL.Path != "/final" {
+					http.Redirect(w, req, "/final", http.StatusTemporaryRedirect)
+					return
+				}
+				finalReached = true
+			}))
+			t.Cleanup(secureServer.Close)
+
+			redirectPolicyCalled := false
+			httpClient := secureServer.Client()
+			httpClient.CheckRedirect = func(*http.Request, []*http.Request) error {
+				redirectPolicyCalled = true
+				return http.ErrUseLastResponse
+			}
+			client := openai.NewClient(
+				WithEndpoint(secureServer.URL, "2024-10-21"),
+				auth.option(),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(httpClient),
+			)
+
+			var res map[string]any
+			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err == nil {
+				t.Fatal("expected redirect response error")
+			}
+			if !redirectPolicyCalled {
+				t.Fatal("caller redirect policy was not invoked")
+			}
+			if finalReached {
+				t.Fatal("redirect target was reached despite caller policy")
+			}
+		})
 	}
 }
 
