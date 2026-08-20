@@ -368,12 +368,29 @@ func (e encoder) newInterfaceEncoder() encoderFunc {
 
 func validateMultipartDispositionValue(kind, value string) error {
 	if strings.IndexFunc(value, func(r rune) bool {
-		// FileContentDisposition safely percent-encodes CR and LF.
+		// multipartFileContentDisposition safely percent-encodes CR and LF.
 		return unicode.IsControl(r) && r != '\r' && r != '\n'
 	}) >= 0 {
 		return fmt.Errorf("apiform: invalid multipart %s: contains control character", kind)
 	}
 	return nil
+}
+
+var multipartDispositionEscaper = strings.NewReplacer(
+	"\\", "\\\\",
+	`"`, `\"`,
+	"\r", "%0D",
+	"\n", "%0A",
+)
+
+func multipartFileContentDisposition(fieldName, filename string) string {
+	// Mirror multipart.FileContentDisposition's hardened escaping consistently
+	// across all supported Go versions.
+	return fmt.Sprintf(
+		`form-data; name="%s"; filename="%s"`,
+		multipartDispositionEscaper.Replace(fieldName),
+		multipartDispositionEscaper.Replace(filename),
+	)
 }
 
 func validateMultipartContentType(contentType string) error {
@@ -402,7 +419,7 @@ func multipartFileHeader(fieldName, filename, contentType string) (textproto.MIM
 	}
 
 	header := make(textproto.MIMEHeader)
-	header.Set("Content-Disposition", multipart.FileContentDisposition(fieldName, filename))
+	header.Set("Content-Disposition", multipartFileContentDisposition(fieldName, filename))
 	header.Set("Content-Type", contentType)
 	return header, nil
 }
