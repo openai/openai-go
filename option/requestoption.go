@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"strings"
@@ -254,6 +255,54 @@ func WithResponseBodyInto(dst any) RequestOption {
 func WithResponseInto(dst **http.Response) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		r.ResponseInto = dst
+		return nil
+	})
+}
+
+// WithMaxResponseBodyBytes returns a RequestOption that limits the number of
+// bytes buffered or decoded for a successful non-streaming response. The
+// default is 64 MiB. Raw *http.Response bodies are not subject to this limit.
+//
+// WithMaxResponseBodyBytes panics unless maxBytes is between 1 and
+// [math.MaxInt64] - 1.
+func WithMaxResponseBodyBytes(maxBytes int64) RequestOption {
+	if maxBytes <= 0 || maxBytes == math.MaxInt64 {
+		panic("option: max response body bytes must be between 1 and math.MaxInt64 - 1")
+	}
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.MaxResponseBodyBytes = maxBytes
+		return nil
+	})
+}
+
+// WithMaxErrorResponseBodyBytes returns a RequestOption that limits the number
+// of response-body bytes retained when the server returns an HTTP error. The
+// default is 64 KiB.
+//
+// WithMaxErrorResponseBodyBytes panics unless maxBytes is between 1 and
+// [math.MaxInt64] - 1.
+func WithMaxErrorResponseBodyBytes(maxBytes int64) RequestOption {
+	if maxBytes <= 0 || maxBytes == math.MaxInt64 {
+		panic("option: max error response body bytes must be between 1 and math.MaxInt64 - 1")
+	}
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.MaxErrorResponseBodyBytes = maxBytes
+		return nil
+	})
+}
+
+// WithResponseBodyTimeout returns a RequestOption that bounds how long the
+// client spends reading a non-streaming response body after receiving response
+// headers. The default is 10 minutes. A zero duration disables this timeout.
+// Raw *http.Response bodies are not subject to this timeout.
+//
+// WithResponseBodyTimeout panics when dur is negative.
+func WithResponseBodyTimeout(dur time.Duration) RequestOption {
+	if dur < 0 {
+		panic("option: response body timeout cannot be negative")
+	}
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.ResponseBodyTimeout = dur
 		return nil
 	})
 }

@@ -292,6 +292,40 @@ func TestWaitForDelayObservesCancellation(t *testing.T) {
 	}
 }
 
+func TestNewRequestConfigSetsAndClonesResponsePolicies(t *testing.T) {
+	cfg, err := NewRequestConfig(context.Background(), http.MethodGet, "/models", nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.MaxResponseBodyBytes != defaultMaxResponseBodyBytes {
+		t.Fatalf("MaxResponseBodyBytes = %d, want %d", cfg.MaxResponseBodyBytes, defaultMaxResponseBodyBytes)
+	}
+	if cfg.MaxErrorResponseBodyBytes != defaultMaxErrorResponseBodyBytes {
+		t.Fatalf("MaxErrorResponseBodyBytes = %d, want %d", cfg.MaxErrorResponseBodyBytes, defaultMaxErrorResponseBodyBytes)
+	}
+	if cfg.ResponseBodyTimeout != defaultResponseBodyTimeout {
+		t.Fatalf("ResponseBodyTimeout = %s, want %s", cfg.ResponseBodyTimeout, defaultResponseBodyTimeout)
+	}
+
+	cloned := cfg.Clone(context.Background())
+	if cloned == nil {
+		t.Fatal("Clone() = nil")
+	}
+	if cloned.MaxResponseBodyBytes != cfg.MaxResponseBodyBytes ||
+		cloned.MaxErrorResponseBodyBytes != cfg.MaxErrorResponseBodyBytes ||
+		cloned.ResponseBodyTimeout != cfg.ResponseBodyTimeout {
+		t.Fatalf(
+			"cloned response policies = (%d, %d, %s), want (%d, %d, %s)",
+			cloned.MaxResponseBodyBytes,
+			cloned.MaxErrorResponseBodyBytes,
+			cloned.ResponseBodyTimeout,
+			cfg.MaxResponseBodyBytes,
+			cfg.MaxErrorResponseBodyBytes,
+			cfg.ResponseBodyTimeout,
+		)
+	}
+}
+
 func TestExecuteClosesAttemptBodyOnHandlerError(t *testing.T) {
 	t.Run("no retry", func(t *testing.T) {
 		body := newTrackedFileBody(t)
