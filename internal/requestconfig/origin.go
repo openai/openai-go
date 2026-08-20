@@ -69,6 +69,9 @@ func (t originTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 func rejectRequestOrigin(req *http.Request) (*http.Response, error) {
 	if req != nil && req.Body != nil {
+		if _, ok := req.Body.(*closeOnceReadCloser); !ok {
+			req.Body = &closeOnceReadCloser{ReadCloser: req.Body}
+		}
 		_ = req.Body.Close()
 	}
 	return nil, requestOriginError()
