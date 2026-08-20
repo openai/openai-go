@@ -438,7 +438,7 @@ func TestCustomHTTPDoerOriginRejectionClosesReplacementBody(t *testing.T) {
 		{name: "cloned replacement", cloneRequest: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			var doerCalls, replacementBodyCloses atomic.Int64
+			var doerCalls, originalBodyCloses, replacementBodyCloses atomic.Int64
 			client := openai.NewClient(
 				option.WithBaseURL("https://trusted.example/v1"),
 				option.WithAPIKey("api-key"),
@@ -451,7 +451,10 @@ func TestCustomHTTPDoerOriginRejectionClosesReplacementBody(t *testing.T) {
 			err := client.Post(
 				context.Background(),
 				"responses",
-				strings.NewReader("original body"),
+				originTestCloseTrackingBody{
+					ReadCloser: io.NopCloser(strings.NewReader("original body")),
+					closes:     &originalBodyCloses,
+				},
 				nil,
 				option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 					if test.cloneRequest {
@@ -470,6 +473,9 @@ func TestCustomHTTPDoerOriginRejectionClosesReplacementBody(t *testing.T) {
 			}
 			if got := doerCalls.Load(); got != 0 {
 				t.Fatalf("custom doer calls = %d, want 0", got)
+			}
+			if got := originalBodyCloses.Load(); got != 1 {
+				t.Fatalf("original body closes = %d, want 1", got)
 			}
 			if got := replacementBodyCloses.Load(); got != 1 {
 				t.Fatalf("replacement body closes = %d, want 1", got)
