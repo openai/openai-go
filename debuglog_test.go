@@ -17,7 +17,26 @@ import (
 	"github.com/openai/openai-go/v3/option"
 )
 
+func clearOpenAIEnvironment(t *testing.T) {
+	t.Helper()
+	for _, key := range []string{
+		"OPENAI_API_KEY",
+		"OPENAI_ADMIN_KEY",
+		"OPENAI_BASE_URL",
+		"OPENAI_CUSTOM_HEADERS",
+		"OPENAI_ORG_ID",
+		"OPENAI_PROJECT_ID",
+		"OPENAI_WEBHOOK_SECRET",
+	} {
+		t.Setenv(key, "")
+	}
+}
+
 func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
+	// Prove this public-path regression does not inherit supported ambient headers.
+	t.Setenv("OPENAI_CUSTOM_HEADERS", "Proxy-Authorization: ambient-proxy-secret")
+	clearOpenAIEnvironment(t)
+
 	const requestBody = "request-body-secret"
 	const responseBody = "response-body-secret"
 
@@ -83,7 +102,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 		option.WithResponseInto(&rawResponse),
 	)
 	if err != nil {
-		t.Fatalf("Post() error = %v", err)
+		t.Fatal("Post() returned an error")
 	}
 
 	gotRequest := <-received
@@ -91,31 +110,31 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 		t.Fatalf("read request body: %v", gotRequest.err)
 	}
 	if gotRequest.body != requestBody {
-		t.Fatalf("request body = %q, want %q", gotRequest.body, requestBody)
+		t.Fatal("request body did not reach the server unchanged")
 	}
 	if got, want := gotRequest.escapedPath, "/debug/path-token-secret"; got != want {
-		t.Fatalf("request path = %q, want %q", got, want)
+		t.Fatal("request path did not reach the server unchanged")
 	}
 	if got, want := gotRequest.host, baseURL.Host; got != want {
-		t.Fatalf("request host = %q, want %q", got, want)
+		t.Fatal("request host did not reach the server unchanged")
 	}
 	const wantRawQuery = "api_key=query-secret&access_token=access-token-secret&sig=signature-secret"
 	if gotRequest.rawQuery != wantRawQuery {
-		t.Fatalf("request query = %q, want %q", gotRequest.rawQuery, wantRawQuery)
+		t.Fatal("request query did not reach the server unchanged")
 	}
 	wantProxyAuthorization := []string{"first-proxy-secret", "second-proxy-secret"}
 	if !reflect.DeepEqual(gotRequest.proxyAuthorization, wantProxyAuthorization) {
-		t.Fatalf("Proxy-Authorization = %#v, want %#v", gotRequest.proxyAuthorization, wantProxyAuthorization)
+		t.Fatal("Proxy-Authorization headers did not match the isolated fixture")
 	}
 	if got := string(response); got != responseBody {
-		t.Fatalf("response body = %q, want %q", got, responseBody)
+		t.Fatal("response body did not reach the caller unchanged")
 	}
 	if got := rawResponse.Header.Values("Set-Cookie"); !reflect.DeepEqual(got, []string{"first=response-secret", "second=response-secret"}) {
-		t.Fatalf("Set-Cookie = %#v", got)
+		t.Fatal("Set-Cookie headers did not reach the caller unchanged")
 	}
 
 	logOutput := output.String()
-	for _, secret := range []string{
+	for index, secret := range []string{
 		credentialBearingHostname,
 		"url-user",
 		"url-password",
@@ -136,7 +155,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 		"request-id-value",
 	} {
 		if strings.Contains(logOutput, secret) {
-			t.Errorf("debug log contains sensitive value %q: %s", secret, logOutput)
+			t.Errorf("debug log contains synthetic sensitive marker %d", index)
 		}
 	}
 	for _, metadata := range []string{
@@ -147,15 +166,17 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 		`"Set-Cookie":["***","***"]`,
 	} {
 		if !strings.Contains(logOutput, metadata) {
-			t.Errorf("debug log missing %q: %s", metadata, logOutput)
+			t.Errorf("debug log missing %q", metadata)
 		}
 	}
 	if strings.Contains(logOutput, `"url":`) {
-		t.Errorf("debug log contains URL metadata: %s", logOutput)
+		t.Error("debug log contains URL metadata")
 	}
 }
 
 func TestWithDebugLogOmitsResponseStatusText(t *testing.T) {
+	clearOpenAIEnvironment(t)
+
 	const responseStatus = "200 response-status-secret"
 
 	var output bytes.Buffer
@@ -186,22 +207,24 @@ func TestWithDebugLogOmitsResponseStatusText(t *testing.T) {
 		&response,
 		option.WithResponseInto(&rawResponse),
 	); err != nil {
-		t.Fatalf("Get() error = %v", err)
+		t.Fatal("Get() returned an error")
 	}
 	if rawResponse.Status != responseStatus {
-		t.Fatalf("response status = %q, want %q", rawResponse.Status, responseStatus)
+		t.Fatal("response status did not reach the caller unchanged")
 	}
 
 	logOutput := output.String()
 	if strings.Contains(logOutput, responseStatus) {
-		t.Fatalf("debug log contains response status text: %s", logOutput)
+		t.Fatal("debug log contains response status text")
 	}
 	if !strings.Contains(logOutput, `"status_code":200`) {
-		t.Fatalf("debug log missing numeric status code: %s", logOutput)
+		t.Fatal("debug log missing numeric status code")
 	}
 }
 
 func TestWithDebugLogRedactsUnrecognizedMethod(t *testing.T) {
+	clearOpenAIEnvironment(t)
+
 	const requestMethod = "CUSTOM-METHOD-SECRET"
 
 	receivedMethod := make(chan string, 1)
@@ -218,17 +241,17 @@ func TestWithDebugLogRedactsUnrecognizedMethod(t *testing.T) {
 		option.WithDebugLog(log.New(&output, "", 0)),
 	)
 	if err := client.Execute(context.Background(), requestMethod, "debug", nil, nil); err != nil {
-		t.Fatalf("Execute() error = %v", err)
+		t.Fatal("Execute() returned an error")
 	}
 	if got := <-receivedMethod; got != requestMethod {
-		t.Fatalf("request method = %q, want %q", got, requestMethod)
+		t.Fatal("request method did not reach the server unchanged")
 	}
 
 	logOutput := output.String()
 	if strings.Contains(logOutput, requestMethod) {
-		t.Fatalf("debug log contains unrecognized request method: %s", logOutput)
+		t.Fatal("debug log contains unrecognized request method")
 	}
 	if !strings.Contains(logOutput, `"method":"***"`) {
-		t.Fatalf("debug log missing method placeholder: %s", logOutput)
+		t.Fatal("debug log missing method placeholder")
 	}
 }
