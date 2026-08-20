@@ -15,7 +15,6 @@ func TestDebugLogHeaders(t *testing.T) {
 		"X-Custom-Secret":      {"custom-secret"},
 	}
 	want := http.Header{
-		"Content-Type":         {"application/json"},
 		"Proxy-Authorization":  {"***", "***"},
 		"X-Amz-Security-Token": {"***"},
 	}
@@ -39,7 +38,7 @@ func TestDebugLogURL(t *testing.T) {
 		Opaque:   "opaque-secret",
 	}
 
-	if got, want := debugLogURL(u), "https://example.com/v1/responses"; got != want {
+	if got, want := debugLogURL(u), "https://example.com"; got != want {
 		t.Fatalf("debugLogURL() = %q, want %q", got, want)
 	}
 }

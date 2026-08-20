@@ -16,7 +16,6 @@ type debugRequestMetadata struct {
 }
 
 type debugResponseMetadata struct {
-	Status        string      `json:"status"`
 	StatusCode    int         `json:"status_code"`
 	ContentLength int64       `json:"content_length"`
 	Headers       http.Header `json:"headers"`
@@ -25,9 +24,10 @@ type debugResponseMetadata struct {
 // WithDebugLog logs allowlisted HTTP request and response metadata.
 // If the logger parameter is nil, it uses the default logger.
 //
-// Request and response bodies, URL user information and query strings, and
-// headers outside the allowlist are omitted. Credential-bearing headers are
-// represented by a placeholder for each original value.
+// Request and response bodies, URL path, user information, query strings and
+// fragments, and all original header values are omitted. Recognized
+// credential-bearing header names are represented by a placeholder for each
+// original value.
 //
 // WithDebugLog is for debugging and development purposes only.
 // It should not be used in production code. The behavior and interface
@@ -55,7 +55,6 @@ func WithDebugLog(logger *log.Logger) RequestOption {
 
 		if resp != nil {
 			responseMetadata, responseMarshalErr := json.Marshal(debugResponseMetadata{
-				Status:        resp.Status,
 				StatusCode:    resp.StatusCode,
 				ContentLength: resp.ContentLength,
 				Headers:       debugLogHeaders(resp.Header),
@@ -74,26 +73,35 @@ func debugLogURL(original *url.URL) string {
 		return ""
 	}
 	return (&url.URL{
-		Scheme:  original.Scheme,
-		Host:    original.Host,
-		Path:    original.Path,
-		RawPath: original.RawPath,
+		Scheme: original.Scheme,
+		Host:   original.Host,
 	}).String()
 }
 
 func debugLogHeaders(headers http.Header) http.Header {
 	result := make(http.Header)
 	for name, values := range headers {
-		canonicalName := http.CanonicalHeaderKey(name)
+		var redactedName string
 		switch strings.ToLower(name) {
-		case "authorization", "proxy-authorization", "api-key", "x-api-key", "x-amz-security-token", "cookie", "set-cookie":
-			for range values {
-				result.Add(canonicalName, "***")
-			}
-		case "accept", "content-length", "content-type", "openai-processing-ms", "openai-version", "request-id", "retry-after", "user-agent", "x-request-id", "x-stainless-retry-count", "x-stainless-timeout":
-			for _, value := range values {
-				result.Add(canonicalName, value)
-			}
+		case "authorization":
+			redactedName = "Authorization"
+		case "proxy-authorization":
+			redactedName = "Proxy-Authorization"
+		case "api-key":
+			redactedName = "Api-Key"
+		case "x-api-key":
+			redactedName = "X-Api-Key"
+		case "x-amz-security-token":
+			redactedName = "X-Amz-Security-Token"
+		case "cookie":
+			redactedName = "Cookie"
+		case "set-cookie":
+			redactedName = "Set-Cookie"
+		default:
+			continue
+		}
+		for range values {
+			result.Add(redactedName, "***")
 		}
 	}
 	return result

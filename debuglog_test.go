@@ -22,6 +22,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 
 	type receivedRequest struct {
 		body               string
+		escapedPath        string
 		proxyAuthorization []string
 		rawQuery           string
 		err                error
@@ -31,6 +32,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 		body, readErr := io.ReadAll(r.Body)
 		received <- receivedRequest{
 			body:               string(body),
+			escapedPath:        r.URL.EscapedPath(),
 			proxyAuthorization: r.Header.Values("Proxy-Authorization"),
 			rawQuery:           r.URL.RawQuery,
 			err:                readErr,
@@ -61,7 +63,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 	)
 	err = client.Post(
 		context.Background(),
-		"debug?api_key=query-secret&access_token=access-token-secret&sig=signature-secret",
+		"debug/path-token-secret?api_key=query-secret&access_token=access-token-secret&sig=signature-secret",
 		[]byte(requestBody),
 		&response,
 		option.WithResponseInto(&rawResponse),
@@ -76,6 +78,9 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 	}
 	if gotRequest.body != requestBody {
 		t.Fatalf("request body = %q, want %q", gotRequest.body, requestBody)
+	}
+	if got, want := gotRequest.escapedPath, "/debug/path-token-secret"; got != want {
+		t.Fatalf("request path = %q, want %q", got, want)
 	}
 	const wantRawQuery = "api_key=query-secret&access_token=access-token-secret&sig=signature-secret"
 	if gotRequest.rawQuery != wantRawQuery {
@@ -96,6 +101,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 	for _, secret := range []string{
 		"url-user",
 		"url-password",
+		"path-token-secret",
 		"api_key",
 		"query-secret",
 		"access_token",
@@ -109,6 +115,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 		responseBody,
 		"first=response-secret",
 		"second=response-secret",
+		"request-id-value",
 	} {
 		if strings.Contains(logOutput, secret) {
 			t.Errorf("debug log contains sensitive value %q: %s", secret, logOutput)
@@ -116,15 +123,60 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 	}
 	for _, metadata := range []string{
 		`"method":"POST"`,
-		`"url":"` + server.URL + `/debug"`,
+		`"url":"` + server.URL + `"`,
 		`"Authorization":["***"]`,
 		`"Proxy-Authorization":["***","***"]`,
 		`"status_code":200`,
 		`"Set-Cookie":["***","***"]`,
-		`"X-Request-Id":["request-id-value"]`,
 	} {
 		if !strings.Contains(logOutput, metadata) {
 			t.Errorf("debug log missing %q: %s", metadata, logOutput)
 		}
+	}
+}
+
+func TestWithDebugLogOmitsResponseStatusText(t *testing.T) {
+	const responseStatus = "200 response-status-secret"
+
+	var output bytes.Buffer
+	client := openai.NewClient(
+		option.WithAPIKey("api-key-secret"),
+		option.WithHTTPClient(&http.Client{
+			Transport: &closureTransport{
+				fn: func(req *http.Request) (*http.Response, error) {
+					return &http.Response{
+						Status:     responseStatus,
+						StatusCode: http.StatusOK,
+						Header:     make(http.Header),
+						Body:       io.NopCloser(strings.NewReader("response-body-secret")),
+						Request:    req,
+					}, nil
+				},
+			},
+		}),
+		option.WithDebugLog(log.New(&output, "", 0)),
+	)
+
+	var response []byte
+	var rawResponse *http.Response
+	if err := client.Get(
+		context.Background(),
+		"debug",
+		nil,
+		&response,
+		option.WithResponseInto(&rawResponse),
+	); err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+	if rawResponse.Status != responseStatus {
+		t.Fatalf("response status = %q, want %q", rawResponse.Status, responseStatus)
+	}
+
+	logOutput := output.String()
+	if strings.Contains(logOutput, responseStatus) {
+		t.Fatalf("debug log contains response status text: %s", logOutput)
+	}
+	if !strings.Contains(logOutput, `"status_code":200`) {
+		t.Fatalf("debug log missing numeric status code: %s", logOutput)
 	}
 }
