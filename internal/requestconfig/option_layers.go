@@ -11,9 +11,14 @@ import (
 type optionLayer []RequestOption
 
 func (opts optionLayer) Apply(cfg *RequestConfig) error {
-	previous := cfg.endpointSelector
+	previousEndpoint := cfg.endpointSelector
+	previousAuth := cfg.providerAuthLayer
 	cfg.endpointSelector = ""
-	defer func() { cfg.endpointSelector = previous }()
+	cfg.providerAuthLayer = nil
+	defer func() {
+		cfg.endpointSelector = previousEndpoint
+		cfg.providerAuthLayer = previousAuth
+	}()
 	return cfg.Apply(opts...)
 }
 
@@ -94,4 +99,67 @@ func WithEndpointProvider(provider string) RequestOption {
 		cfg.endpointProvider = provider
 		return nil
 	})
+}
+
+// WithProviderEndpoint marks the provider that owns the selected request
+// endpoint. Authentication options can still use WithEndpointProvider to retain
+// provider conflict checks without claiming that routing was configured.
+func WithProviderEndpoint(provider string) RequestOption {
+	return RequestOptionFunc(func(cfg *RequestConfig) error {
+		if err := WithEndpointProvider(provider).Apply(cfg); err != nil {
+			return err
+		}
+		cfg.providerEndpoint = provider
+		return nil
+	})
+}
+
+// ProviderEndpointIs reports whether provider owns the selected request
+// endpoint. This is internal API for provider packages that fail closed before
+// transport.
+func (cfg *RequestConfig) ProviderEndpointIs(provider string) bool {
+	return cfg.providerEndpoint == provider
+}
+
+// ProviderAuthOption identifies one provider authentication mode. Instances are
+// immutable and can be shared across concurrent requests.
+type ProviderAuthOption struct {
+	provider string
+	selector string
+}
+
+// NewProviderAuthOption constructs an inspectable provider authentication
+// option. Different authentication selectors in one option layer are rejected;
+// a later inherited or request layer may explicitly replace an earlier mode.
+func NewProviderAuthOption(provider string, selector string) *ProviderAuthOption {
+	return &ProviderAuthOption{provider: provider, selector: selector}
+}
+
+func (opt *ProviderAuthOption) Apply(cfg *RequestConfig) error {
+	if previous := cfg.providerAuthLayer; previous != nil &&
+		(previous.provider != opt.provider || previous.selector != opt.selector) {
+		return fmt.Errorf(
+			"requestconfig: %s authentication is ambiguous; %s and %s cannot be combined in the same configuration call",
+			opt.provider,
+			previous.selector,
+			opt.selector,
+		)
+	}
+	cfg.providerAuthLayer = opt
+	cfg.providerAuth = opt
+	return nil
+}
+
+// Selected reports whether this authentication option won after every option
+// layer was applied to cfg.
+func (opt *ProviderAuthOption) Selected(cfg *RequestConfig) bool {
+	return cfg.providerAuth == opt
+}
+
+// ProviderAuth reports the selected authentication mode for provider.
+func (cfg *RequestConfig) ProviderAuth(provider string) (string, bool) {
+	if cfg.providerAuth == nil || cfg.providerAuth.provider != provider {
+		return "", false
+	}
+	return cfg.providerAuth.selector, true
 }

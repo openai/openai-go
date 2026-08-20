@@ -154,10 +154,10 @@ func WithRequestFinalizer(finalize func(*RequestConfig) error) RequestOption {
 	return requestFinalizerOption{finalize: finalize}
 }
 
-type environmentDefaultsDisabledOption struct{}
+type environmentDefaultsDisabledOption []RequestOption
 
-func (environmentDefaultsDisabledOption) Apply(*RequestConfig) error {
-	return nil
+func (opts environmentDefaultsDisabledOption) Apply(cfg *RequestConfig) error {
+	return cfg.Apply(opts...)
 }
 
 // WithEnvironmentDefaultsDisabled marks a provider-owned client that must not
@@ -165,8 +165,8 @@ func (environmentDefaultsDisabledOption) Apply(*RequestConfig) error {
 // apply.
 //
 // This function is internal API and may change without notice.
-func WithEnvironmentDefaultsDisabled() RequestOption {
-	return environmentDefaultsDisabledOption{}
+func WithEnvironmentDefaultsDisabled(opts ...RequestOption) RequestOption {
+	return environmentDefaultsDisabledOption(append([]RequestOption(nil), opts...))
 }
 
 // EnvironmentDefaultsDisabled reports whether opts contains the internal
@@ -330,7 +330,10 @@ type RequestConfig struct {
 	BaseURL               *url.URL
 	endpointSelector      string
 	endpointProvider      string
+	providerEndpoint      string
 	dataResidencyEndpoint bool
+	providerAuthLayer     *ProviderAuthOption
+	providerAuth          *ProviderAuthOption
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL     *url.URL
@@ -741,21 +744,25 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		return nil
 	}
 	new := &RequestConfig{
-		MaxRetries:         cfg.MaxRetries,
-		RequestTimeout:     cfg.RequestTimeout,
-		Context:            ctx,
-		Request:            req,
-		BaseURL:            cfg.BaseURL,
-		HTTPClient:         cfg.HTTPClient,
-		Middlewares:        cfg.Middlewares,
-		APIKey:             cfg.APIKey,
-		AdminAPIKey:        cfg.AdminAPIKey,
-		Organization:       cfg.Organization,
-		Project:            cfg.Project,
-		WebhookSecret:      cfg.WebhookSecret,
-		finalizers:         append([]requestFinalizer(nil), cfg.finalizers...),
-		authHeaderOverride: cfg.authHeaderOverride,
-		authPreference:     cfg.authPreference,
+		MaxRetries:            cfg.MaxRetries,
+		RequestTimeout:        cfg.RequestTimeout,
+		Context:               ctx,
+		Request:               req,
+		BaseURL:               cfg.BaseURL,
+		endpointProvider:      cfg.endpointProvider,
+		providerEndpoint:      cfg.providerEndpoint,
+		dataResidencyEndpoint: cfg.dataResidencyEndpoint,
+		providerAuth:          cfg.providerAuth,
+		HTTPClient:            cfg.HTTPClient,
+		Middlewares:           cfg.Middlewares,
+		APIKey:                cfg.APIKey,
+		AdminAPIKey:           cfg.AdminAPIKey,
+		Organization:          cfg.Organization,
+		Project:               cfg.Project,
+		WebhookSecret:         cfg.WebhookSecret,
+		finalizers:            append([]requestFinalizer(nil), cfg.finalizers...),
+		authHeaderOverride:    cfg.authHeaderOverride,
+		authPreference:        cfg.authPreference,
 	}
 
 	return new
@@ -824,6 +831,10 @@ func applyPreRequestOptions(cfg *RequestConfig, opts []RequestOption) error {
 				return err
 			}
 		case optionLayer:
+			if err := applyPreRequestOptions(cfg, opt); err != nil {
+				return err
+			}
+		case environmentDefaultsDisabledOption:
 			if err := applyPreRequestOptions(cfg, opt); err != nil {
 				return err
 			}

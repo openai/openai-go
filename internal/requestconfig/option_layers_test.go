@@ -1,7 +1,9 @@
 package requestconfig
 
 import (
+	"context"
 	"errors"
+	"net/http"
 	"net/url"
 	"reflect"
 	"testing"
@@ -56,5 +58,109 @@ func TestInheritedOptionsRestoreOuterLayer(t *testing.T) {
 	opts = append(opts, residency)
 	if err := cfg.Apply(opts...); err == nil {
 		t.Fatal("nested layer concealed an outer conflict")
+	}
+}
+
+func TestEnvironmentDefaultsDisabledWrapperPreservesOptionBehavior(t *testing.T) {
+	applied := false
+	preApplied := false
+	wrapped := WithEnvironmentDefaultsDisabled(
+		RequestOptionFunc(func(*RequestConfig) error {
+			applied = true
+			return nil
+		}),
+		PreRequestOptionFunc(func(*RequestConfig) error {
+			preApplied = true
+			return nil
+		}),
+	)
+	if !EnvironmentDefaultsDisabled(InheritedOptions(wrapped)...) {
+		t.Fatal("wrapped environment marker was not detected")
+	}
+	cfg := RequestConfig{}
+	if err := cfg.Apply(wrapped); err != nil {
+		t.Fatal(err)
+	}
+	if !applied {
+		t.Fatal("wrapped request option was not applied")
+	}
+	if _, err := PreRequestOptions(wrapped); err != nil {
+		t.Fatal(err)
+	}
+	if !preApplied {
+		t.Fatal("wrapped pre-request option was not applied")
+	}
+}
+
+func TestProviderAuthOptionsPreserveConfigurationLayers(t *testing.T) {
+	apiKey := NewProviderAuthOption("Azure", "azure.WithAPIKey")
+	secondAPIKey := NewProviderAuthOption("Azure", "azure.WithAPIKey")
+	token := NewProviderAuthOption("Azure", "azure.WithTokenCredential")
+
+	t.Run("same mode uses the last option", func(t *testing.T) {
+		cfg := RequestConfig{}
+		if err := cfg.Apply(apiKey, secondAPIKey); err != nil {
+			t.Fatal(err)
+		}
+		if !secondAPIKey.Selected(&cfg) {
+			t.Fatal("last same-mode option was not selected")
+		}
+	})
+
+	t.Run("different modes in one layer are rejected", func(t *testing.T) {
+		cfg := RequestConfig{}
+		err := cfg.Apply(apiKey, token)
+		if err == nil {
+			t.Fatal("expected ambiguous authentication error")
+		}
+	})
+
+	t.Run("later layer replaces inherited mode", func(t *testing.T) {
+		cfg := RequestConfig{}
+		opts := append(InheritedOptions(apiKey), token)
+		if err := cfg.Apply(opts...); err != nil {
+			t.Fatal(err)
+		}
+		if !token.Selected(&cfg) {
+			t.Fatal("request-layer authentication did not replace inherited mode")
+		}
+		if got, ok := cfg.ProviderAuth("Azure"); !ok || got != "azure.WithTokenCredential" {
+			t.Fatalf("selected authentication = %q, %t", got, ok)
+		}
+	})
+
+	t.Run("nested layer does not obscure the outer selection", func(t *testing.T) {
+		cfg := RequestConfig{}
+		opts := append([]RequestOption{apiKey}, InheritedOptions(token)...)
+		opts = append(opts, secondAPIKey)
+		if err := cfg.Apply(opts...); err != nil {
+			t.Fatal(err)
+		}
+		if !secondAPIKey.Selected(&cfg) {
+			t.Fatal("last outer-layer option was not selected")
+		}
+	})
+}
+
+func TestProviderSelectionIsPreservedByClone(t *testing.T) {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://example.com", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	auth := NewProviderAuthOption("Azure", "azure.WithAPIKey")
+	cfg := RequestConfig{Request: req}
+	if err := cfg.Apply(WithProviderEndpoint("Azure"), auth); err != nil {
+		t.Fatal(err)
+	}
+
+	clone := cfg.Clone(context.Background())
+	if clone == nil {
+		t.Fatal("request config clone is nil")
+	}
+	if !clone.ProviderEndpointIs("Azure") {
+		t.Fatal("provider endpoint was not preserved")
+	}
+	if got, ok := clone.ProviderAuth("Azure"); !ok || got != "azure.WithAPIKey" {
+		t.Fatalf("cloned authentication = %q, %t", got, ok)
 	}
 }
