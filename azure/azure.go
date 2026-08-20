@@ -54,17 +54,34 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 		endpoint += "/"
 	}
 
+	endpointURL, _ := url.Parse(endpoint)
+	endpointPathPrefix := strings.TrimRight(endpointURL.EscapedPath(), "/")
+
 	withQueryAdd := option.WithQueryAdd("api-version", apiVersion)
 	withEndpoint := option.WithBaseURL(endpoint)
 
 	withModelMiddleware := option.WithMiddleware(func(r *http.Request, mn option.MiddlewareNext) (*http.Response, error) {
+		pathWithoutEndpointPrefix := strings.TrimPrefix(r.URL.EscapedPath(), endpointPathPrefix)
+		if pathWithoutEndpointPrefix == "" {
+			pathWithoutEndpointPrefix = "/"
+		}
+
+		originalPath := r.URL.Path
+		originalRawPath := r.URL.RawPath
+		if err := setEscapedPath(r.URL, pathWithoutEndpointPrefix); err != nil {
+			return nil, err
+		}
+
 		replacementPath, err := getReplacementPathWithDeployment(r)
+
+		r.URL.Path = originalPath
+		r.URL.RawPath = originalRawPath
 
 		if err != nil {
 			return nil, err
 		}
 
-		if err := setEscapedPath(r.URL, replacementPath); err != nil {
+		if err := setEscapedPath(r.URL, endpointPathPrefix+replacementPath); err != nil {
 			return nil, err
 		}
 		return mn(r)
