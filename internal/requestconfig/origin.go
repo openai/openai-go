@@ -62,6 +62,9 @@ type originTransport struct {
 
 func (t originTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req == nil || !SameOrigin(req.URL, t.origin) {
+		if req != nil && req.Body != nil {
+			_ = req.Body.Close()
+		}
 		return nil, requestOriginError()
 	}
 	return t.next.RoundTrip(req)

@@ -26,6 +26,16 @@ func (f originTestRoundTripper) RoundTrip(req *http.Request) (*http.Response, er
 	return f(req)
 }
 
+type originTestCloseTrackingBody struct {
+	io.ReadCloser
+	closes *atomic.Int64
+}
+
+func (b originTestCloseTrackingBody) Close() error {
+	b.closes.Add(1)
+	return b.ReadCloser.Close()
+}
+
 type originTestSubjectTokenProvider struct{}
 
 func (originTestSubjectTokenProvider) TokenType() auth.SubjectTokenType {
@@ -303,7 +313,25 @@ func TestClientEnforcesCredentialOriginAfterRouting(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				err = client.Post(context.Background(), "responses", map[string]string{"input": "private payload"}, nil)
+				var redirectBodies, redirectBodyCloses atomic.Int64
+				err = client.Post(
+					context.Background(),
+					"responses",
+					map[string]string{"input": "private payload"},
+					nil,
+					option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+						getBody := req.GetBody
+						req.GetBody = func() (io.ReadCloser, error) {
+							body, getBodyErr := getBody()
+							if getBodyErr != nil {
+								return nil, getBodyErr
+							}
+							redirectBodies.Add(1)
+							return originTestCloseTrackingBody{ReadCloser: body, closes: &redirectBodyCloses}, nil
+						}
+						return next(req)
+					}),
+				)
 				if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
 					t.Fatalf("Post() error = %v, want configured-origin error", err)
 				}
@@ -312,6 +340,12 @@ func TestClientEnforcesCredentialOriginAfterRouting(t *testing.T) {
 				}
 				if got := otherOriginCalls.Load(); got != 0 {
 					t.Fatalf("other-origin calls = %d, want 0", got)
+				}
+				if got := redirectBodies.Load(); got == 0 {
+					t.Fatal("redirect did not create a replay body")
+				}
+				if got, want := redirectBodyCloses.Load(), redirectBodies.Load(); got != want {
+					t.Fatalf("redirect body closes = %d, want %d", got, want)
 				}
 			})
 		})
