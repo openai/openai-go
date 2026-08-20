@@ -100,6 +100,92 @@ func TestAccumulatorPublishesStringsAfterEveryChunk(t *testing.T) {
 	)
 }
 
+func TestAccumulatorBudgetsPublicStringReplacements(t *testing.T) {
+	atLimit := strings.Repeat("x", testAccumulatorMaxTextBytes)
+	tests := []struct {
+		name  string
+		chunk func(string) openai.ChatCompletionChunk
+		value func(*openai.ChatCompletionAccumulator) *string
+	}{
+		{
+			name: "content",
+			chunk: func(text string) openai.ChatCompletionChunk {
+				return accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: text})
+			},
+			value: func(acc *openai.ChatCompletionAccumulator) *string {
+				return &acc.Choices[0].Message.Content
+			},
+		},
+		{
+			name: "refusal",
+			chunk: func(text string) openai.ChatCompletionChunk {
+				return accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Refusal: text})
+			},
+			value: func(acc *openai.ChatCompletionAccumulator) *string {
+				return &acc.Choices[0].Message.Refusal
+			},
+		},
+		{
+			name: "tool_name",
+			chunk: func(text string) openai.ChatCompletionChunk {
+				return accumulatorToolStringChunk(text, "")
+			},
+			value: func(acc *openai.ChatCompletionAccumulator) *string {
+				return &acc.Choices[0].Message.ToolCalls[0].Function.Name
+			},
+		},
+		{
+			name: "tool_arguments",
+			chunk: func(text string) openai.ChatCompletionChunk {
+				return accumulatorToolStringChunk("", text)
+			},
+			value: func(acc *openai.ChatCompletionAccumulator) *string {
+				return &acc.Choices[0].Message.ToolCalls[0].Function.Arguments
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name+"/replacement_is_rejected", func(t *testing.T) {
+			var acc openai.ChatCompletionAccumulator
+			chunk := test.chunk("x")
+			chunk.Model = "accepted-model"
+			if !acc.AddChunk(chunk) {
+				t.Fatal("AddChunk rejected the initial chunk")
+			}
+
+			*test.value(&acc) = atLimit
+			chunk = test.chunk("x")
+			chunk.Model = "rejected-model"
+			if acc.AddChunk(chunk) {
+				t.Fatal("AddChunk accepted text beyond the live public-string budget")
+			}
+			if acc.Model != "accepted-model" || *test.value(&acc) != atLimit {
+				t.Fatal("AddChunk mutated the accumulator after rejecting the chunk")
+			}
+		})
+
+		t.Run(test.name+"/clearing_recovers_budget", func(t *testing.T) {
+			var acc openai.ChatCompletionAccumulator
+			chunk := test.chunk(atLimit)
+			chunk.Model = "initial-model"
+			if !acc.AddChunk(chunk) {
+				t.Fatal("AddChunk rejected text at the documented aggregate budget")
+			}
+
+			*test.value(&acc) = ""
+			chunk = test.chunk("x")
+			chunk.Model = "recovered-model"
+			if !acc.AddChunk(chunk) {
+				t.Fatal("AddChunk did not recover budget after the public string was cleared")
+			}
+			if acc.Model != "recovered-model" || *test.value(&acc) != "x" {
+				t.Fatal("AddChunk did not accumulate the accepted chunk after budget recovery")
+			}
+		})
+	}
+}
+
 func TestAccumulatorRejectsTextBeyondBudgetWithoutMutation(t *testing.T) {
 	var acc openai.ChatCompletionAccumulator
 	chunk := openai.ChatCompletionChunk{
@@ -165,6 +251,27 @@ func BenchmarkAccumulatorOneByteChunks(b *testing.B) {
 			}
 		})
 	}
+}
+
+func accumulatorStringChunk(delta openai.ChatCompletionChunkChoiceDelta) openai.ChatCompletionChunk {
+	return openai.ChatCompletionChunk{
+		ID: "chatcmpl-public-string-budget",
+		Choices: []openai.ChatCompletionChunkChoice{{
+			Delta: delta,
+		}},
+	}
+}
+
+func accumulatorToolStringChunk(name, arguments string) openai.ChatCompletionChunk {
+	return accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{
+		ToolCalls: []openai.ChatCompletionChunkChoiceDeltaToolCall{{
+			Index: 0,
+			Function: openai.ChatCompletionChunkChoiceDeltaToolCallFunction{
+				Name:      name,
+				Arguments: arguments,
+			},
+		}},
+	})
 }
 
 func assertAccumulatorStrings(t *testing.T, acc *openai.ChatCompletionAccumulator, content, refusal, name, arguments string) {

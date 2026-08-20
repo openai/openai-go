@@ -21,7 +21,6 @@ type ChatCompletionAccumulator struct {
 	justFinishedByChoice             []chatCompletionResponseState
 	stringState                      chatCompletionAccumulatorStringState
 	chunkCount                       int
-	textBytes                        int
 }
 
 type FinishedChatCompletionToolCall struct {
@@ -70,13 +69,12 @@ const (
 // AddChunk incorporates a chunk into the accumulation. Chunks must be added in order.
 // Returns false if the chunk could not be successfully accumulated. To bound work and
 // memory for untrusted streams, an accumulator accepts at most 100,000 chunks and 16 MiB
-// of combined content, refusal, tool name, and tool argument text from those chunks. A
-// rejected chunk does not modify the accumulator.
+// of combined content, refusal, tool name, and tool argument text currently stored in
+// the accumulator and the incoming chunk. A rejected chunk does not modify the accumulator.
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
-	nextTextBytes, ok := acc.preflightChunk(&chunk)
-	if !ok {
+	if !acc.preflightChunk(&chunk) {
 		return false
 	}
 
@@ -84,7 +82,6 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 	acc.justFinishedByChoice = acc.justFinishedByChoice[:0]
 	acc.accumulateDelta(&chunk)
 	acc.chunkCount++
-	acc.textBytes = nextTextBytes
 
 	if len(chunk.Choices) > 0 {
 		firstChoice := chunk.Choices[0]
@@ -104,23 +101,20 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 	return true
 }
 
-func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk) (int, bool) {
+func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk) bool {
 	if acc.chunkCount >= maxChatCompletionAccumulatorChunks {
-		return 0, false
+		return false
 	}
 	if acc.ID != "" && acc.ID != chunk.ID {
-		return 0, false
+		return false
 	}
 
-	textBytes := acc.textBytes
-	var ok bool
-	if acc.chunkCount == 0 {
-		textBytes, ok = addChatCompletionTextBytes(0, &acc.ChatCompletion)
-		if !ok {
-			return 0, false
-		}
+	textBytes, ok := addChatCompletionTextBytes(0, &acc.ChatCompletion)
+	if !ok {
+		return false
 	}
-	return addChatCompletionChunkTextBytes(textBytes, chunk)
+	_, ok = addChatCompletionChunkTextBytes(textBytes, chunk)
+	return ok
 }
 
 // JustFinishedContent retrieves the chat completion content when it is known to have just been completed.
