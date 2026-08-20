@@ -87,6 +87,167 @@ func TestDecoderSkipsBlocksWithoutData(t *testing.T) {
 	}
 }
 
+func TestDecoderEnforcesAggregateEventLimits(t *testing.T) {
+	tests := map[string]struct {
+		body    string
+		options DecoderOptions
+	}{
+		"bytes across data lines": {
+			body: strings.Repeat("data: x\n", 4) + "\n",
+			options: DecoderOptions{
+				MaxEventBytes: 3 * len("data: x\n"),
+				MaxEventLines: 10,
+			},
+		},
+		"lines without data": {
+			body: strings.Repeat(": keep-alive\n", 3) + "\n",
+			options: DecoderOptions{
+				MaxEventBytes: 1024,
+				MaxEventLines: 2,
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			decoder := NewDecoderWithOptions(&http.Response{
+				Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+				Body:   io.NopCloser(strings.NewReader(test.body)),
+			}, test.options)
+
+			if decoder.Next() {
+				t.Fatalf("oversized event unexpectedly decoded: %+v", decoder.Event())
+			}
+			if !errors.Is(decoder.Err(), ErrEventTooLarge) {
+				t.Fatalf("decoder error = %v, want %v", decoder.Err(), ErrEventTooLarge)
+			}
+		})
+	}
+}
+
+func TestDecoderEnforcesByteLimitDuringLineScan(t *testing.T) {
+	const maxEventBytes = 1024
+	body := &testRepeatingReadCloser{remaining: maxEventBytes * 1024}
+	decoder := NewDecoderWithOptions(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body:   body,
+	}, DecoderOptions{MaxEventBytes: maxEventBytes})
+
+	if decoder.Next() {
+		t.Fatalf("oversized event unexpectedly decoded: %+v", decoder.Event())
+	}
+	if !errors.Is(decoder.Err(), ErrEventTooLarge) {
+		t.Fatalf("decoder error = %v, want %v", decoder.Err(), ErrEventTooLarge)
+	}
+	if body.read > maxEventBytes+1 {
+		t.Fatalf("decoder read %d bytes, want at most configured limit plus CRLF lookahead %d", body.read, maxEventBytes+1)
+	}
+}
+
+func TestDecoderReportsDefaultLineLimit(t *testing.T) {
+	body := &testRepeatingReadCloser{remaining: DefaultMaxEventBytes}
+	decoder := NewDecoder(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body:   body,
+	})
+
+	if decoder.Next() {
+		t.Fatalf("oversized event unexpectedly decoded: %+v", decoder.Event())
+	}
+	if !errors.Is(decoder.Err(), ErrEventTooLarge) {
+		t.Fatalf("decoder error = %v, want %v", decoder.Err(), ErrEventTooLarge)
+	}
+}
+
+func TestDecoderAllowsLineAtByteLimit(t *testing.T) {
+	for name, body := range map[string]string{
+		"LF":   "data: x\n\n",
+		"CRLF": "data: x\r\n\r\n",
+	} {
+		t.Run(name, func(t *testing.T) {
+			decoder := NewDecoderWithOptions(&http.Response{
+				Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+				Body:   io.NopCloser(strings.NewReader(body)),
+			}, DecoderOptions{MaxEventBytes: len("data: x\n")})
+
+			if !decoder.Next() {
+				t.Fatalf("decoder stopped before boundary-sized event: %v", decoder.Err())
+			}
+			if got, want := string(decoder.Event().Data), "x\n"; got != want {
+				t.Fatalf("event data = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestDecoderRejectsLineOverByteLimit(t *testing.T) {
+	for name, body := range map[string]string{
+		"LF":   "data: xx\n\n",
+		"CRLF": "data: xx\r\n\r\n",
+	} {
+		t.Run(name, func(t *testing.T) {
+			decoder := NewDecoderWithOptions(&http.Response{
+				Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+				Body:   io.NopCloser(strings.NewReader(body)),
+			}, DecoderOptions{MaxEventBytes: len("data: x\n")})
+
+			if decoder.Next() {
+				t.Fatalf("oversized event unexpectedly decoded: %+v", decoder.Event())
+			}
+			if !errors.Is(decoder.Err(), ErrEventTooLarge) {
+				t.Fatalf("decoder error = %v, want %v", decoder.Err(), ErrEventTooLarge)
+			}
+		})
+	}
+}
+
+func TestDecoderOptionsAllowMultilineEventWithinLimits(t *testing.T) {
+	const (
+		dataBlock = "data: first\ndata: second\n"
+		body      = ": one\n: two\n\n" + dataBlock + "\n"
+	)
+	decoder := NewDecoderWithOptions(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body:   io.NopCloser(strings.NewReader(body)),
+	}, DecoderOptions{
+		MaxEventBytes: len(dataBlock),
+		MaxEventLines: 2,
+	})
+
+	if !decoder.Next() {
+		t.Fatalf("decoder stopped before valid event: %v", decoder.Err())
+	}
+	if got, want := string(decoder.Event().Data), "first\nsecond\n"; got != want {
+		t.Fatalf("event data = %q, want %q", got, want)
+	}
+	if decoder.Next() {
+		t.Fatalf("unexpected additional event: %+v", decoder.Event())
+	}
+	if err := decoder.Err(); err != nil {
+		t.Fatalf("decoder ended with error: %v", err)
+	}
+}
+
+func TestStreamPropagatesEventLimitError(t *testing.T) {
+	decoder := NewDecoderWithOptions(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body: io.NopCloser(strings.NewReader(
+			"data: {\"value\":\ndata: \"too large\"}\n\n",
+		)),
+	}, DecoderOptions{
+		MaxEventBytes: len("data: {\"value\":\n"),
+		MaxEventLines: 10,
+	})
+	stream := NewStream[map[string]any](decoder, nil)
+
+	if stream.Next() {
+		t.Fatalf("oversized event unexpectedly decoded: %+v", stream.Current())
+	}
+	if !errors.Is(stream.Err(), ErrEventTooLarge) {
+		t.Fatalf("stream error = %v, want %v", stream.Err(), ErrEventTooLarge)
+	}
+}
+
 func TestNewDecoderMatchesRegisteredMediaTypeWithCaseAndParameters(t *testing.T) {
 	const contentType = "application/x-openai-go-test"
 	want := &testDecoder{}
@@ -97,12 +258,12 @@ func TestNewDecoderMatchesRegisteredMediaTypeWithCaseAndParameters(t *testing.T)
 		delete(decoderTypes, contentType)
 	})
 
-	decoder := NewDecoder(&http.Response{
+	decoder := NewDecoderWithOptions(&http.Response{
 		Header: http.Header{
 			"Content-Type": {"Application/X-OpenAI-Go-Test; charset=utf-8"},
 		},
 		Body: io.NopCloser(strings.NewReader("")),
-	})
+	}, DecoderOptions{MaxEventBytes: 1, MaxEventLines: 1})
 
 	if decoder != want {
 		t.Fatalf("decoder = %T, want registered decoder", decoder)
@@ -601,6 +762,28 @@ func (r *testErrorReadCloser) Read(p []byte) (int, error) {
 }
 
 func (r *testErrorReadCloser) Close() error { return nil }
+
+type testRepeatingReadCloser struct {
+	remaining int
+	read      int
+}
+
+func (r *testRepeatingReadCloser) Read(p []byte) (int, error) {
+	if r.remaining == 0 {
+		return 0, io.EOF
+	}
+	if len(p) > r.remaining {
+		p = p[:r.remaining]
+	}
+	for i := range p {
+		p[i] = 'x'
+	}
+	r.remaining -= len(p)
+	r.read += len(p)
+	return len(p), nil
+}
+
+func (r *testRepeatingReadCloser) Close() error { return nil }
 
 func TestStreamPreservesReaderErrorAfterBlockWithoutData(t *testing.T) {
 	stream := NewStream[map[string]any](NewDecoder(&http.Response{

@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"math"
 	"mime"
 	"net/http"
 	"strings"
@@ -16,6 +18,30 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+const (
+	// DefaultMaxEventBytes is the maximum aggregate size of a built-in SSE
+	// event, including its parsed fields and logical line endings.
+	DefaultMaxEventBytes = bufio.MaxScanTokenSize << 9
+	// DefaultMaxEventLines is the maximum number of non-empty lines in a
+	// built-in SSE event.
+	DefaultMaxEventLines = 4096
+)
+
+// ErrEventTooLarge is returned when a built-in SSE event exceeds its
+// configured aggregate byte or line limit.
+var ErrEventTooLarge = errors.New("ssestream: event exceeds configured limit")
+
+// DecoderOptions configures the built-in SSE decoder. Non-positive limits use
+// their corresponding defaults. Registered custom decoders manage their own
+// limits and ignore these options.
+type DecoderOptions struct {
+	// MaxEventBytes is the maximum aggregate size of a parsed SSE event.
+	MaxEventBytes int
+	// MaxEventLines is the maximum number of non-empty lines in a parsed SSE
+	// event.
+	MaxEventLines int
+}
+
 type Decoder interface {
 	Event() Event
 	Next() bool
@@ -24,6 +50,12 @@ type Decoder interface {
 }
 
 func NewDecoder(res *http.Response) Decoder {
+	return NewDecoderWithOptions(res, DecoderOptions{})
+}
+
+// NewDecoderWithOptions returns a decoder with limits applied to the built-in
+// SSE parser. Registered custom decoders retain their existing behavior.
+func NewDecoderWithOptions(res *http.Response, options DecoderOptions) Decoder {
 	if res == nil || res.Body == nil {
 		return nil
 	}
@@ -41,9 +73,52 @@ func NewDecoder(res *http.Response) Decoder {
 		}
 	}
 
+	if options.MaxEventBytes <= 0 {
+		options.MaxEventBytes = DefaultMaxEventBytes
+	}
+	if options.MaxEventLines <= 0 {
+		options.MaxEventLines = DefaultMaxEventLines
+	}
+	maxScanTokenBytes := options.MaxEventBytes
+	if maxScanTokenBytes < math.MaxInt {
+		maxScanTokenBytes++
+	}
 	scn := bufio.NewScanner(res.Body)
-	scn.Buffer(nil, bufio.MaxScanTokenSize<<9)
-	return &eventStreamDecoder{rc: res.Body, scn: scn}
+	scn.Buffer(nil, maxScanTokenBytes)
+	scn.Split(scanLinesWithMaxBytes(options.MaxEventBytes))
+	return &eventStreamDecoder{
+		rc:            res.Body,
+		scn:           scn,
+		maxEventBytes: options.MaxEventBytes,
+		maxEventLines: options.MaxEventLines,
+	}
+}
+
+func scanLinesWithMaxBytes(maxBytes int) bufio.SplitFunc {
+	errLineTooLarge := fmt.Errorf("%w: maximum event line size is %d bytes", ErrEventTooLarge, maxBytes)
+	return func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		line := data
+		newline := bytes.IndexByte(data, '\n')
+		if newline >= 0 {
+			line = data[:newline]
+		}
+		if !logicalLineFits(line, maxBytes) {
+			return 0, nil, errLineTooLarge
+		}
+		if newline >= 0 || atEOF {
+			return bufio.ScanLines(data, atEOF)
+		}
+		return 0, nil, nil
+	}
+}
+
+// logicalLineFits counts either an omitted LF or a trailing CR as one logical
+// line ending, matching bufio.ScanLines normalization and event accounting.
+func logicalLineFits(line []byte, maxBytes int) bool {
+	if len(line) > 0 && line[len(line)-1] == '\r' {
+		return len(line) <= maxBytes
+	}
+	return len(line) < maxBytes
 }
 
 var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
@@ -81,10 +156,12 @@ func (e *StreamError) Error() string {
 
 // A base implementation of a Decoder for text/event-stream.
 type eventStreamDecoder struct {
-	evt Event
-	rc  io.ReadCloser
-	scn *bufio.Scanner
-	err error
+	evt           Event
+	rc            io.ReadCloser
+	scn           *bufio.Scanner
+	err           error
+	maxEventBytes int
+	maxEventLines int
 }
 
 func (s *eventStreamDecoder) Next() bool {
@@ -94,6 +171,8 @@ func (s *eventStreamDecoder) Next() bool {
 
 	event := ""
 	var data []byte
+	eventBytes := 0
+	eventLines := 0
 
 	for s.scn.Scan() {
 		txt := s.scn.Bytes()
@@ -102,6 +181,8 @@ func (s *eventStreamDecoder) Next() bool {
 		if len(txt) == 0 {
 			if len(data) == 0 {
 				event = ""
+				eventBytes = 0
+				eventLines = 0
 				continue
 			}
 			s.evt = Event{
@@ -110,6 +191,19 @@ func (s *eventStreamDecoder) Next() bool {
 			}
 			return true
 		}
+
+		eventLines++
+		if eventLines > s.maxEventLines {
+			s.err = fmt.Errorf("%w: maximum event line count is %d", ErrEventTooLarge, s.maxEventLines)
+			return false
+		}
+
+		lineBytes := len(txt) + 1
+		if lineBytes > s.maxEventBytes-eventBytes {
+			s.err = fmt.Errorf("%w: maximum event size is %d bytes", ErrEventTooLarge, s.maxEventBytes)
+			return false
+		}
+		eventBytes += lineBytes
 
 		// Split a string like "event: bar" into name="event" and value=" bar".
 		name, value, _ := bytes.Cut(txt, []byte(":"))
