@@ -335,20 +335,53 @@ func TestClientEnforcesCredentialOriginAfterRouting(t *testing.T) {
 				if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
 					t.Fatalf("Post() error = %v, want configured-origin error", err)
 				}
-				if got := trustedCalls.Load(); got == 0 {
-					t.Fatal("trusted origin did not receive the initial request")
+				if got := trustedCalls.Load(); got != 1 {
+					t.Fatalf("trusted-origin calls = %d, want 1", got)
 				}
 				if got := otherOriginCalls.Load(); got != 0 {
 					t.Fatalf("other-origin calls = %d, want 0", got)
 				}
-				if got := redirectBodies.Load(); got == 0 {
-					t.Fatal("redirect did not create a replay body")
+				if got := redirectBodies.Load(); got != 1 {
+					t.Fatalf("redirect bodies = %d, want 1", got)
 				}
-				if got, want := redirectBodyCloses.Load(), redirectBodies.Load(); got != want {
-					t.Fatalf("redirect body closes = %d, want %d", got, want)
+				if got := redirectBodyCloses.Load(); got != 1 {
+					t.Fatalf("redirect body closes = %d, want 1", got)
 				}
 			})
 		})
+	}
+}
+
+func TestAzureTokenCredentialPreservesSDKRetries(t *testing.T) {
+	clearOriginTestEnvironment(t)
+
+	var calls atomic.Int64
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if req.Header.Get("Authorization") == "" {
+			t.Error("Authorization header is empty")
+		}
+		if calls.Add(1) == 1 {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = io.WriteString(w, `{}`)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{}`)
+	}))
+	defer server.Close()
+
+	client := openai.NewClient(
+		azure.WithEndpoint(server.URL, "2026-08-01"),
+		azure.WithTokenCredential(originTestAzureCredential{}),
+		option.WithHTTPClient(server.Client()),
+		option.WithMaxRetries(1),
+	)
+	var response map[string]any
+	if err := client.Get(context.Background(), "models", nil, &response); err != nil {
+		t.Fatal(err)
+	}
+	if got := calls.Load(); got != 2 {
+		t.Fatalf("transport calls = %d, want 2", got)
 	}
 }
 

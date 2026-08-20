@@ -136,6 +136,10 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 		middlewareOption := option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 			pipeline := runtime.NewPipeline("azopenai-extensions", version, runtime.PipelineOptions{}, &policy.ClientOptions{
 				InsecureAllowCredentialWithHTTP: true, // allow for plain HTTP proxies, etc..
+				// The shared request pipeline owns retries and request-body replay.
+				// Disable azcore's nested retry loop so deterministic SDK errors and
+				// the caller's configured retry limit remain authoritative.
+				Retry: policy.RetryOptions{MaxRetries: -1},
 				PerRetryPolicies: []policy.Policy{
 					bearerTokenPolicy,
 					policyAdapter(next),
