@@ -157,6 +157,24 @@ func TestRequestFinalizerComposesThroughApply(t *testing.T) {
 	}
 }
 
+func TestCloneDoesNotAliasMiddlewareSlice(t *testing.T) {
+	cfg, err := NewRequestConfig(context.Background(), http.MethodGet, "/models", nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.Middlewares = []middleware{func(*http.Request, middlewareNext) (*http.Response, error) {
+		return nil, nil
+	}}
+
+	clone := cfg.Clone(context.Background())
+	if clone == nil {
+		t.Fatal("Clone() = nil")
+	}
+	if &clone.Middlewares[0] == &cfg.Middlewares[0] {
+		t.Fatal("clone middleware aliases the original configuration")
+	}
+}
+
 func TestExecuteClosesAttemptBodyOnHandlerError(t *testing.T) {
 	t.Run("no retry", func(t *testing.T) {
 		body := newTrackedFileBody(t)
