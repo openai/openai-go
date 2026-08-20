@@ -24,13 +24,21 @@ finalization. Every external writer must verify the epoch immediately before
 credential issuance and again immediately before mutation. Lease loss must
 invalidate in-flight broker authority, and a broker must reject every later
 mutation from the stale epoch, including after a newer run reacquires the lease.
+Each external writer must retain its credential inside the brokered operation
+and keep that operation registered until the remote outcome is terminal.
+Do not issue a newer epoch while an earlier remote operation is in flight or has
+an unknown outcome. Enter a draining state, prevent new writes, and reconcile
+each operation to a terminal result before lease reassignment.
 
 Persist every transition in trusted durable storage outside model-writable
 paths. Before an external write, record an idempotency key, repository, exact
 target, expected state, and epoch; afterward record the returned object and
 observed state. On restart, reconcile remote branches, pull requests, workflow
 runs, review threads, and Slack messages before continuing. Never blindly retry
-an operation with an unknown result.
+an operation with an unknown result. Use the remote system's resource-specific
+compare-and-swap or idempotency control where available. Otherwise serialize
+the brokered request, retain the lease until its outcome is observed, and block
+epoch reassignment while that outcome is unknown.
 
 If the lease is unavailable, ambiguous, expired, or lost, stop without writing.
 Finalize a terminal record, release the lease, and then report the result.
@@ -86,13 +94,15 @@ Keep these components independently constrained:
   publishing credential. It independently retrieves the authenticated work
   order and validates the artifact in a fresh, secret-free checkout without
   persistent caches, command network, or elevated privilege. Only its final
-  step may receive a short-lived token scoped to one branch and pull request.
+  brokered step may use a short-lived token scoped to one branch and pull
+  request. The broker retains the token and synchronously performs the one
+  allowlisted request; it never returns reusable credentials to the publisher.
   It has no Actions-dispatch permission.
 - **Dispatcher:** has Actions-dispatch permission but no repository-content or
   pull-request write permission.
 - **Slack writer:** accepts only the allowlisted channel, pull-request URL,
   target message or thread, payload, idempotency key, and current epoch. It gets
-  a short-lived credential for one verified mutation.
+  a short-lived credential inside one brokered, tracked mutation.
 
 ## Fail-first host assertions
 
@@ -103,7 +113,7 @@ test for infrastructure the repository does not own.
 
 | Assertion | Reject or stop when | Required passing proof |
 | --- | --- | --- |
-| Fenced lifecycle | Lease is held elsewhere, epoch is stale, or ownership is lost | Adversarial tests reject stale epochs at credential issuance and mutation, including after reacquisition |
+| Fenced lifecycle | Lease is held elsewhere, epoch is stale, ownership is lost, or an earlier write is in flight or outcome-unknown | Adversarial tests reject stale epochs at credential issuance and mutation, drain unknown operations, and prohibit reassignment until terminal reconciliation |
 | Uncredentialed model | Model or subprocess can reach a secret, helper, agent, external mutation tool, command network, or write broker | Environment/tool inspection is clean and the broker rejects model identity |
 | Authenticated allowlist | Artifact differs from the trusted work order in revisions, paths, kinds, modes, contract, or digest | Independent validation records both digests, epoch, and all accepted allowlist items before token issuance |
 | Authenticated ancestry | Candidate is not the approved linear descendant | Merge-base and no-unapproved-merge assertions pass |
