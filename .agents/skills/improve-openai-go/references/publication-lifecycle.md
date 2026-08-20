@@ -85,11 +85,18 @@ Keep these components independently constrained:
 - **Authenticated work order:** is signed by the coordinator or kept in trusted
   immutable storage outside model-writable paths. It fixes the run ID, mode,
   revision record, epoch, allowed paths and change kinds, and validation
-  contract before implementation.
+  contract before implementation. It also limits the external operation types
+  and targets the run may later request.
+- **Authenticated mutation envelope:** is a separately coordinator-signed,
+  append-only record for each external write. It binds the allowed method,
+  normalized payload digest, repository and resource target, expected head,
+  idempotency key, and epoch. Generate it only after secret and sensitive-
+  disclosure checks pass; the broker rejects a different payload or operation.
 - **Artifact:** is a content-addressed credential-free bundle containing the
   patch, manifest, work-order identity and digest, revision record, epoch,
   allowlist, validation contract, and receipts. Model output cannot widen the
-  work order.
+  work order. Treat the bundle as untrusted structured input, not an archive to
+  extract directly into a checkout.
 - **Validator/publisher:** receives no model API credential and initially no
   publishing credential. It independently retrieves the authenticated work
   order and validates the artifact in a fresh, secret-free checkout without
@@ -99,7 +106,10 @@ Keep these components independently constrained:
   allowlisted request; it never returns reusable credentials to the publisher.
   It has no Actions-dispatch permission.
 - **Dispatcher:** has Actions-dispatch permission but no repository-content or
-  pull-request write permission.
+  pull-request write permission. Its broker retains a short-lived token scoped
+  to one allowlisted wrapper workflow, immutable target revision, exact inputs,
+  and epoch; it records the returned run ID, and the dispatcher never receives
+  a reusable credential.
 - **Slack writer:** accepts only the allowlisted channel, pull-request URL,
   target message or thread, payload, idempotency key, and current epoch. It gets
   a short-lived credential inside one brokered, tracked mutation.
@@ -120,7 +130,7 @@ test for infrastructure the repository does not own.
 | Appropriate proof | Executable behavior lacks a base-failing regression, or a non-executable artifact lacks suitable validation | Proof distinguishes base from head and matches the artifact |
 | Complete intended diff | Manifest differs from staged, worktree, untracked, or committed paths, or whitespace coverage is incomplete | Exact path reconciliation, staged check, and final range check pass |
 | Honest resolution | Concern is disputed, blocked, informational, unvalidated, or not fixed on the published head | Exact-head evidence exists before resolving only that thread |
-| Separate dispatch | Publisher can dispatch, ref moved, or PR-only checks did not start for the published revision | Dispatcher records run IDs and accepts only runs whose `head_sha` equals `published_sha` |
+| Separate dispatch | Publisher can dispatch, a mutable candidate ref selects executable workflow code, or PR-only checks did not analyze the published revision | Dispatcher records run IDs, authenticates the trusted wrapper revision, and accepts its signed checkout receipt only when it names `published_sha` |
 | Review-ready | Required checks are absent, stale, pending, unexpectedly skipped, or for another revision | All required push and PR-only checks are green on `published_sha` with no unresolved actionable feedback |
 
 ## Validate and publish
@@ -129,6 +139,12 @@ Before commit, reconcile the complete intended-path manifest with staged,
 unstaged, and untracked paths. Stage intended paths explicitly and run
 `git diff --cached --check`. After commit, require the committed path set to
 equal the manifest and run the final range checks defined above.
+
+Before materializing model output, parse it with explicit byte, file-count, and
+expansion limits. Require unique canonical repository-relative paths and reject
+absolute paths, parent traversal, case or Unicode collisions, links, devices,
+special files, and nested or decompression-bomb archives. Apply validated file
+content to the fresh checkout without following filesystem links.
 
 The validator/publisher must reject unapproved creates, deletes, renames,
 symlinks, executable bits, workflows, dependencies, generated source, file
@@ -144,17 +160,26 @@ a non-force compare-and-swap and abort on mismatch. Discard the token and record
 
 ## Dispatch and steward the exact published head
 
-GitHub workflow dispatch uses a mutable ref. Immediately before each dispatch,
-verify the epoch and atomically confirm the ref still equals `published_sha`.
-Dispatch every required PR-only workflow with the separate dispatcher and
-record each workflow-run ID. Accept a run only if its recorded `head_sha`
-equals `published_sha`; a moved ref or mismatch requires a fresh lifecycle.
+Do not dispatch workflow code selected by the mutable candidate branch: the ref
+can move between verification and dispatch. Use a reviewed wrapper workflow from
+a protected trusted revision. Pass `published_sha` as an immutable input and
+make the wrapper explicitly fetch and check out that SHA for analysis without
+exposing secrets or write credentials to candidate code. An equivalently
+protected immutable ref is acceptable. The current repository CI and CodeQL
+workflows accept only mutable refs and therefore do not satisfy this protocol
+without such a wrapper.
+
+Verify the epoch and authenticated mutation envelope before the broker performs
+each dispatch. Record the workflow-run ID, authenticate the trusted wrapper's
+own `head_sha`, and require its signed receipt to name `published_sha` as the
+analyzed checkout. A mismatch is unusable and requires a fresh lifecycle.
 
 Validate each review concern against `published_sha`. After publishing a real
 fix, reply with individualized exact-head evidence. Resolve only that addressed
 thread. Bind each reply or resolution to repository, pull-request number,
-GraphQL thread ID, `published_sha`, and current epoch. Leave disputed, blocked,
-informational, unvalidated, and unfixed concerns open.
+GraphQL thread ID, operation type, normalized payload digest, `published_sha`,
+idempotency key, and current epoch in its authenticated mutation envelope.
+Leave disputed, blocked, informational, unvalidated, and unfixed concerns open.
 
 Do not claim green or review-ready until every required push and dispatched
 PR-only check succeeds on `published_sha` and no actionable feedback remains.
