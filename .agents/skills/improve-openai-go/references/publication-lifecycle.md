@@ -104,7 +104,8 @@ Keep these components independently constrained:
   brokered step may use a short-lived token scoped to one branch and pull
   request. The broker retains the token and synchronously performs the one
   allowlisted request; it never returns reusable credentials to the publisher.
-  It has no Actions-dispatch permission.
+  Its credential and event semantics must suppress every implicit push- or
+  pull-request-triggered workflow, and it has no Actions-dispatch permission.
 - **Dispatcher:** has Actions-dispatch permission but no repository-content or
   pull-request write permission. Its broker retains a short-lived token scoped
   to one allowlisted wrapper workflow, immutable target revision, exact inputs,
@@ -131,6 +132,7 @@ test for infrastructure the repository does not own.
 | Complete intended diff | Manifest differs from staged, worktree, untracked, or committed paths, or whitespace coverage is incomplete | Exact path reconciliation, staged check, and final range check pass |
 | Honest resolution | Concern is disputed, blocked, informational, unvalidated, or not fixed on the published head | Exact-head evidence exists before resolving only that thread |
 | Separate dispatch | Publisher can dispatch, a mutable candidate ref selects executable workflow code, or PR-only checks did not analyze the published revision | Dispatcher records run IDs, authenticates the trusted wrapper revision, and accepts its signed checkout receipt only when it names `published_sha` |
+| No implicit execution | Publishing a branch or pull request can trigger candidate execution before brokered dispatch | Credential event semantics and trigger filters prove publication creates no workflow run; every check starts explicitly through the trusted wrapper |
 | Review-ready | Required checks are absent, stale, pending, unexpectedly skipped, or for another revision | All required push and PR-only checks are green on `published_sha` with no unresolved actionable feedback |
 
 ## Validate and publish
@@ -155,8 +157,11 @@ Immediately before publication, recount skill-owned pull requests and repeat
 duplicate and overlap searches. Abort if the budget or selection rules no
 longer permit publication. For a new branch require the remote ref to remain
 absent; for service mode require it to equal `expected_remote_sha`. Publish with
-a non-force compare-and-swap and abort on mismatch. Discard the token and record
-`published_sha`, artifact digest, and compare-and-swap result.
+a non-force compare-and-swap and abort on mismatch. Independently prove that the
+chosen credential's event semantics and repository trigger filters cannot start
+any workflow from this push or pull-request mutation. If publication could
+implicitly execute candidate content, stop instead. Discard the token and
+record `published_sha`, artifact digest, and compare-and-swap result.
 
 ## Dispatch and steward the exact published head
 
@@ -168,6 +173,13 @@ exposing secrets or write credentials to candidate code. An equivalently
 protected immutable ref is acceptable. The current repository CI and CodeQL
 workflows accept only mutable refs and therefore do not satisfy this protocol
 without such a wrapper.
+
+Run candidate-controlled build, test, analysis, and scripts in a fresh
+disposable job with no command network, secrets, write token, persistent cache
+restore or write capability, or receipt-signing authority. Warm reviewed
+dependencies in a separate trusted stage. After the candidate job exits, have a
+separate trusted job or service verify its identity, outputs, and analyzed SHA
+before signing the checkout and result receipt.
 
 Verify the epoch and authenticated mutation envelope before the broker performs
 each dispatch. Record the workflow-run ID, authenticate the trusted wrapper's
