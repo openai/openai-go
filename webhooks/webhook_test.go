@@ -42,6 +42,41 @@ func TestWebhookService_VerifySignature_ValidSignature(t *testing.T) {
 	}
 }
 
+func TestWebhookService_VerifySignature_MethodLevelSecret(t *testing.T) {
+	client := openai.NewClient(option.WithAPIKey("test-key"))
+
+	fixedTime := time.Unix(testTimestamp, 0)
+	err := client.Webhooks.VerifySignatureWithToleranceAndTime(
+		[]byte(testPayload),
+		createTestHeaders(),
+		5*time.Minute,
+		fixedTime,
+		option.WithWebhookSecret(testSecret),
+	)
+	if err != nil {
+		t.Errorf("VerifySignatureWithToleranceAndTime should have succeeded with a method-level secret: %v", err)
+	}
+}
+
+func TestWebhookService_VerifySignature_MethodLevelSecretOverridesClientSecret(t *testing.T) {
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithWebhookSecret("wrong-secret"),
+	)
+
+	fixedTime := time.Unix(testTimestamp, 0)
+	err := client.Webhooks.VerifySignatureWithToleranceAndTime(
+		[]byte(testPayload),
+		createTestHeaders(),
+		5*time.Minute,
+		fixedTime,
+		option.WithWebhookSecret(testSecret),
+	)
+	if err != nil {
+		t.Errorf("VerifySignatureWithToleranceAndTime should have preferred the method-level secret: %v", err)
+	}
+}
+
 func TestWebhookService_VerifySignature_InvalidSignature(t *testing.T) {
 	client := openai.NewClient(
 		option.WithAPIKey("test-key"),
