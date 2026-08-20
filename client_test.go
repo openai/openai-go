@@ -217,6 +217,48 @@ func TestRetryAfterMs(t *testing.T) {
 	}
 }
 
+func TestRetryAfterClampsToConfiguredMaximum(t *testing.T) {
+	attempts := 0
+	client := openai.NewClient(
+		option.WithAPIKey("My API Key"),
+		option.WithMaxRetries(1),
+		option.WithMaxRetryDelay(10*time.Millisecond),
+		option.WithHTTPClient(&http.Client{
+			Transport: &closureTransport{
+				fn: func(req *http.Request) (*http.Response, error) {
+					attempts++
+					return &http.Response{
+						StatusCode: http.StatusTooManyRequests,
+						Header: http.Header{
+							http.CanonicalHeaderKey("Retry-After"): []string{"31536000"},
+						},
+						Body: http.NoBody,
+					}, nil
+				},
+			},
+		}),
+	)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	_, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		Messages: []openai.ChatCompletionMessageParamUnion{{
+			OfUser: &openai.ChatCompletionUserMessageParam{
+				Content: openai.ChatCompletionUserMessageParamContentUnion{
+					OfString: openai.String("Say this is a test"),
+				},
+			},
+		}},
+		Model: shared.ChatModelGPT4o,
+	})
+	if err == nil {
+		t.Fatal("expected retry response to return an error")
+	}
+	if attempts != 2 {
+		t.Fatalf("attempts = %d, want 2", attempts)
+	}
+}
+
 func TestContextCancel(t *testing.T) {
 	client := openai.NewClient(
 		option.WithAPIKey("My API Key"),
