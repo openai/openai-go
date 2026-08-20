@@ -199,6 +199,10 @@ func TestClientRejectsNonRelativeRequestReferences(t *testing.T) {
 		{name: "cross-origin absolute", path: "https://other.example/v1/responses"},
 		{name: "same-origin absolute", path: server.URL + "/v1/responses"},
 		{name: "network path", path: "//" + serverURL.Host + "/v1/responses"},
+		{name: "network path with user info", path: "//user@" + serverURL.Host + "/v1/responses"},
+		{name: "network path without authority", path: "//"},
+		{name: "single-slash-prefixed absolute", path: "/https://other.example/v1/responses"},
+		{name: "slash-prefixed absolute", path: "///https://other.example/v1/responses"},
 		{name: "opaque absolute", path: "https:responses"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -219,62 +223,97 @@ func TestClientEnforcesCredentialOriginAfterRouting(t *testing.T) {
 
 	for _, test := range originTestClientFactories() {
 		t.Run(test.name, func(t *testing.T) {
-			var trustedCalls atomic.Int64
-			trusted := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				trustedCalls.Add(1)
-				w.Header().Set("Content-Type", "application/json")
-				_, _ = io.WriteString(w, `{}`)
-			}))
-			defer trusted.Close()
+			t.Run("middleware reroute", func(t *testing.T) {
+				var trustedCalls atomic.Int64
+				trusted := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					trustedCalls.Add(1)
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = io.WriteString(w, `{}`)
+				}))
+				defer trusted.Close()
 
-			var otherOriginCalls atomic.Int64
-			otherOrigin := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				otherOriginCalls.Add(1)
-				_, _ = io.Copy(io.Discard, req.Body)
-				w.Header().Set("Content-Type", "application/json")
-				_, _ = io.WriteString(w, `{}`)
-			}))
-			defer otherOrigin.Close()
+				var otherOriginCalls atomic.Int64
+				otherOrigin := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					otherOriginCalls.Add(1)
+					_, _ = io.Copy(io.Discard, req.Body)
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = io.WriteString(w, `{}`)
+				}))
+				defer otherOrigin.Close()
 
-			client, err := test.newClient(trusted.URL, originTestHTTPClient(trusted.Client().Transport))
-			if err != nil {
-				t.Fatal(err)
-			}
-			target, err := url.Parse(otherOrigin.URL + "/capture")
-			if err != nil {
-				t.Fatal(err)
-			}
+				client, err := test.newClient(trusted.URL, originTestHTTPClient(trusted.Client().Transport))
+				if err != nil {
+					t.Fatal(err)
+				}
+				target, err := url.Parse(otherOrigin.URL + "/capture")
+				if err != nil {
+					t.Fatal(err)
+				}
 
-			var sawCredential bool
-			var sawBody bool
-			err = client.Post(
-				context.Background(),
-				"responses",
-				strings.NewReader("private payload"),
-				nil,
-				option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
-					sawCredential = req.Header.Get(test.credentialHeader) != ""
-					sawBody = req.Body != nil
-					targetCopy := *target
-					req.URL = &targetCopy
-					return next(req)
-				}),
-			)
-			if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
-				t.Fatalf("Post() error = %v, want configured-origin error", err)
-			}
-			if !sawCredential {
-				t.Fatalf("%s was not present before the transport origin check", test.credentialHeader)
-			}
-			if !sawBody {
-				t.Fatal("request body was not present before the transport origin check")
-			}
-			if got := trustedCalls.Load(); got != 0 {
-				t.Fatalf("trusted-origin calls = %d, want 0", got)
-			}
-			if got := otherOriginCalls.Load(); got != 0 {
-				t.Fatalf("other-origin calls = %d, want 0", got)
-			}
+				var sawCredential bool
+				var sawBody bool
+				err = client.Post(
+					context.Background(),
+					"responses",
+					strings.NewReader("private payload"),
+					nil,
+					option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+						sawCredential = req.Header.Get(test.credentialHeader) != ""
+						sawBody = req.Body != nil
+						targetCopy := *target
+						req.URL = &targetCopy
+						return next(req)
+					}),
+				)
+				if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
+					t.Fatalf("Post() error = %v, want configured-origin error", err)
+				}
+				if !sawCredential {
+					t.Fatalf("%s was not present before the transport origin check", test.credentialHeader)
+				}
+				if !sawBody {
+					t.Fatal("request body was not present before the transport origin check")
+				}
+				if got := trustedCalls.Load(); got != 0 {
+					t.Fatalf("trusted-origin calls = %d, want 0", got)
+				}
+				if got := otherOriginCalls.Load(); got != 0 {
+					t.Fatalf("other-origin calls = %d, want 0", got)
+				}
+			})
+
+			t.Run("redirect", func(t *testing.T) {
+				var otherOriginCalls atomic.Int64
+				otherOrigin := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					otherOriginCalls.Add(1)
+					_, _ = io.Copy(io.Discard, req.Body)
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = io.WriteString(w, `{}`)
+				}))
+				defer otherOrigin.Close()
+
+				var trustedCalls atomic.Int64
+				trusted := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					trustedCalls.Add(1)
+					http.Redirect(w, req, otherOrigin.URL+"/capture", http.StatusTemporaryRedirect)
+				}))
+				defer trusted.Close()
+
+				client, err := test.newClient(trusted.URL, originTestHTTPClient(trusted.Client().Transport))
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = client.Post(context.Background(), "responses", map[string]string{"input": "private payload"}, nil)
+				if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
+					t.Fatalf("Post() error = %v, want configured-origin error", err)
+				}
+				if got := trustedCalls.Load(); got == 0 {
+					t.Fatal("trusted origin did not receive the initial request")
+				}
+				if got := otherOriginCalls.Load(); got != 0 {
+					t.Fatalf("other-origin calls = %d, want 0", got)
+				}
+			})
 		})
 	}
 }
