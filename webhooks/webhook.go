@@ -119,6 +119,10 @@ func (r *WebhookService) VerifySignatureWithToleranceAndTime(body []byte, header
 	if webhookSecret == "" {
 		return errors.New("webhook secret must be provided either in the method call or configured on the client")
 	}
+	decodedSecret, err := decodeWebhookSecret(webhookSecret)
+	if err != nil {
+		return err
+	}
 
 	if headers == nil {
 		return errors.New("headers are required for webhook verification")
@@ -167,17 +171,6 @@ func (r *WebhookService) VerifySignatureWithToleranceAndTime(body []byte, header
 		} else {
 			signatures = append(signatures, part)
 		}
-	}
-
-	// Decode the secret if it starts with whsec_
-	var decodedSecret []byte
-	if strings.HasPrefix(webhookSecret, "whsec_") {
-		decodedSecret, err = base64.StdEncoding.DecodeString(webhookSecret[6:])
-		if err != nil {
-			return fmt.Errorf("invalid webhook secret format: %v", err)
-		}
-	} else {
-		decodedSecret = []byte(webhookSecret)
 	}
 
 	// Create the signed payload: {webhook_id}.{timestamp}.{payload}
