@@ -394,7 +394,11 @@ func multipartFileContentDisposition(fieldName, filename string) string {
 }
 
 func validateMultipartContentType(contentType string) error {
-	if strings.IndexFunc(contentType, unicode.IsControl) >= 0 {
+	if strings.IndexFunc(contentType, func(r rune) bool {
+		// MIME permits horizontal tab as whitespace. ParseMediaType validates
+		// whether it appears in a legal position.
+		return unicode.IsControl(r) && r != '\t'
+	}) >= 0 {
 		return errors.New("apiform: invalid content type: contains control character")
 	}
 	mediaType, _, err := mime.ParseMediaType(contentType)

@@ -248,6 +248,14 @@ func TestMultipartContentTypeMetadata(t *testing.T) {
 			},
 			contentType: "Text/Plain; charset=utf-8",
 		},
+		{
+			name: "horizontal tab whitespace",
+			file: multipartContentTypeReader{
+				Reader:      strings.NewReader("contents"),
+				contentType: "text/plain;\tcharset=utf-8",
+			},
+			contentType: "text/plain;\tcharset=utf-8",
+		},
 	}
 
 	for _, test := range tests {
@@ -270,9 +278,9 @@ func TestMultipartContentTypeRejectsInvalidValues(t *testing.T) {
 		{name: "CRLF", contentType: "text/plain\r\nInjected: yes"},
 		{name: "blank line", contentType: "text/plain\r\nInjected: yes\r\n\r\nbody"},
 		{name: "nul", contentType: "text/plain\x00"},
-		{name: "tab", contentType: "text/plain\t"},
 		{name: "delete", contentType: "text/plain\x7f"},
 		{name: "unicode control", contentType: "text/plain\u0085"},
+		{name: "invalid tab placement", contentType: "text/\tplain"},
 		{name: "missing slash", contentType: "text"},
 		{name: "missing subtype", contentType: "text/"},
 		{name: "invalid parameter", contentType: "text/plain; charset"},
