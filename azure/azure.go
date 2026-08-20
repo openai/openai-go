@@ -19,12 +19,14 @@ package azure
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"mime"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -47,6 +49,9 @@ const (
 //
 //   - endpoint - the Azure OpenAI endpoint to connect to. Ex: https://<azure-openai-resource>.openai.azure.com
 //   - apiVersion - the Azure OpenAI API version to target (ex: 2024-06-01). See [Azure OpenAI apiversions] for current API versions. This value cannot be empty.
+//
+// Authenticated endpoints must use HTTPS unless [WithUnsafeAllowHTTP] is also
+// configured for a loopback-only local development endpoint.
 //
 // This function should be paired with a call to authenticate, like [azure.WithAPIKey] or [azure.WithTokenCredential], similar to this:
 //
@@ -95,6 +100,19 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 	return requestconfig.WithEnvironmentDefaultsDisabled(endpointOption)
 }
 
+type unsafeAllowHTTPContextKey struct{}
+
+// WithUnsafeAllowHTTP permits Azure credentials to be sent over plaintext HTTP
+// only when the final request destination is localhost or a loopback IP address.
+// This option is intended exclusively for local development and testing. It
+// should never be used in production.
+func WithUnsafeAllowHTTP() option.RequestOption {
+	return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+		ctx := context.WithValue(req.Context(), unsafeAllowHTTPContextKey{}, true)
+		return next(req.WithContext(ctx))
+	})
+}
+
 type tokenCredentialConfig struct {
 	Scopes []string
 }
@@ -136,17 +154,23 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 		}
 
 		bearerTokenPolicy := runtime.NewBearerTokenPolicy(tokenCredential, tc.Scopes, nil)
+		unsafeBearerTokenPolicy := runtime.NewBearerTokenPolicy(tokenCredential, tc.Scopes, &policy.BearerTokenOptions{
+			InsecureAllowCredentialWithHTTP: true,
+		})
 
 		// add in a middleware that uses the bearer token generated from the token credential
-		middlewareOption := option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+		middlewareOption := withAzureCredentialMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 			if !auth.Selected(rc) {
 				return next(req)
 			}
 
+			tokenPolicy := bearerTokenPolicy
+			if azureCredentialHTTPAllowed(req) {
+				tokenPolicy = unsafeBearerTokenPolicy
+			}
 			pipeline := runtime.NewPipeline("azopenai-extensions", version, runtime.PipelineOptions{}, &policy.ClientOptions{
-				InsecureAllowCredentialWithHTTP: true, // allow for plain HTTP proxies, etc..
 				PerRetryPolicies: []policy.Policy{
-					bearerTokenPolicy,
+					tokenPolicy,
 					policyAdapter(next),
 				},
 			})
@@ -194,6 +218,9 @@ func WithAPIKey(apiKey string) option.RequestOption {
 		return rc.Apply(
 			option.WithHeader("Api-Key", apiKey),
 			requestconfig.WithRequestFinalizer(finalizeAzureProvider),
+			withAzureCredentialMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+				return next(req)
+			}),
 		)
 	})
 }
@@ -237,6 +264,34 @@ func nonEmptyHeaderValues(header http.Header, name string) int {
 		}
 	}
 	return count
+}
+
+func withAzureCredentialMiddleware(authenticate option.Middleware) option.RequestOption {
+	return requestconfig.WithRequestFinalizer(func(rc *requestconfig.RequestConfig) error {
+		return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			if !strings.EqualFold(req.URL.Scheme, "https") && !azureCredentialHTTPAllowed(req) {
+				return nil, requestconfig.WithNoRetryError(errors.New("azure: authenticated requests require HTTPS; WithUnsafeAllowHTTP permits HTTP only for local development on loopback endpoints"))
+			}
+			return authenticate(req, next)
+		}).Apply(rc)
+	})
+}
+
+func azureCredentialHTTPAllowed(req *http.Request) bool {
+	if !strings.EqualFold(req.URL.Scheme, "http") {
+		return false
+	}
+	allowed, _ := req.Context().Value(unsafeAllowHTTPContextKey{}).(bool)
+	if !allowed {
+		return false
+	}
+
+	host := strings.TrimSuffix(req.URL.Hostname(), ".")
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
 // jsonRoutes have JSON payloads - we'll deserialize looking for a .model field in there

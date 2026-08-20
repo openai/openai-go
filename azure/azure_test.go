@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/requestconfig"
@@ -317,6 +318,145 @@ func TestAPIKeyAuthenticationSuppressesAutomaticAuthorization(t *testing.T) {
 				t.Fatalf("Authorization header = %q, want empty", got)
 			}
 		})
+	}
+}
+
+func TestAzureCredentialTransportSecurity(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_ADMIN_KEY", "")
+
+	tests := map[string]struct {
+		endpoint        string
+		unsafe          bool
+		requestBaseURL  string
+		rewriteToRemote bool
+		wantRequest     bool
+	}{
+		"HTTPS": {
+			endpoint:    "https://my-resource.openai.azure.com",
+			wantRequest: true,
+		},
+		"remote HTTP": {
+			endpoint: "http://my-resource.openai.azure.com",
+		},
+		"mixed-case remote HTTP": {
+			endpoint: "HtTp://my-resource.openai.azure.com",
+		},
+		"non-HTTP scheme": {
+			endpoint: "ftp://my-resource.openai.azure.com",
+		},
+		"request-level remote HTTP override": {
+			endpoint:       "https://my-resource.openai.azure.com",
+			requestBaseURL: "http://request.example",
+		},
+		"middleware remote HTTP rewrite": {
+			endpoint:        "https://my-resource.openai.azure.com",
+			rewriteToRemote: true,
+		},
+		"unsafe localhost HTTP": {
+			endpoint:    "http://localhost:8080",
+			unsafe:      true,
+			wantRequest: true,
+		},
+		"unsafe IPv4 loopback HTTP": {
+			endpoint:    "http://127.0.0.2:8080",
+			unsafe:      true,
+			wantRequest: true,
+		},
+		"unsafe IPv6 loopback HTTP": {
+			endpoint:    "http://[::1]:8080",
+			unsafe:      true,
+			wantRequest: true,
+		},
+		"unsafe remote HTTP": {
+			endpoint: "http://my-resource.openai.azure.com",
+			unsafe:   true,
+		},
+		"unsafe loopback rewritten to remote HTTP": {
+			endpoint:        "http://127.0.0.1:8080",
+			unsafe:          true,
+			rewriteToRemote: true,
+		},
+	}
+
+	authOptions := map[string]struct {
+		option      func() option.RequestOption
+		header      string
+		headerValue string
+	}{
+		"API key": {
+			option:      func() option.RequestOption { return WithAPIKey("azure-api-key") },
+			header:      "Api-Key",
+			headerValue: "azure-api-key",
+		},
+		"token": {
+			option:      func() option.RequestOption { return WithTokenCredential(&fake.TokenCredential{}) },
+			header:      "Authorization",
+			headerValue: "Bearer fake_token",
+		},
+	}
+
+	for authName, auth := range authOptions {
+		for testName, test := range tests {
+			t.Run(authName+"/"+testName, func(t *testing.T) {
+				var captured *http.Request
+				opts := []option.RequestOption{
+					WithEndpoint(test.endpoint, "2024-10-21"),
+					auth.option(),
+				}
+				if test.unsafe {
+					opts = append(opts, WithUnsafeAllowHTTP())
+				}
+				if test.rewriteToRemote {
+					opts = append(opts, option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+						req.URL.Scheme = "http"
+						req.URL.Host = "middleware.example"
+						return next(req)
+					}))
+				}
+				opts = append(opts,
+					option.WithMaxRetries(0),
+					option.WithHTTPClient(&http.Client{
+						Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+							captured = req
+							return &http.Response{
+								StatusCode: http.StatusOK,
+								Header:     http.Header{"Content-Type": []string{"application/json"}},
+								Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+								Request:    req,
+							}, nil
+						}),
+					}),
+				)
+				client := openai.NewClient(opts...)
+
+				var requestOptions []option.RequestOption
+				if test.requestBaseURL != "" {
+					requestOptions = append(requestOptions, option.WithBaseURL(test.requestBaseURL))
+				}
+				var res map[string]any
+				err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res, requestOptions...)
+				if test.wantRequest {
+					if err != nil {
+						t.Fatalf("request failed: %v", err)
+					}
+					if captured == nil {
+						t.Fatal("request did not reach the transport")
+					}
+					if got := captured.Header.Get(auth.header); got != auth.headerValue {
+						t.Fatalf("%s header = %q, want %q", auth.header, got, auth.headerValue)
+					}
+					return
+				}
+
+				if err == nil || !strings.Contains(err.Error(), "azure: authenticated requests require HTTPS") {
+					t.Fatalf("expected HTTPS requirement error, got %v", err)
+				}
+				if captured != nil {
+					t.Fatal("insecure credential transport reached the network")
+				}
+			})
+		}
 	}
 }
 
