@@ -1,6 +1,9 @@
 package webhooks_test
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"net/http"
 	"strconv"
 	"testing"
@@ -25,6 +28,92 @@ func createTestHeaders() http.Header {
 		"Webhook-Signature": []string{testSignature},
 		"Webhook-Timestamp": []string{strconv.FormatInt(testTimestamp, 10)},
 		"Webhook-Id":        []string{testWebhookID},
+	}
+}
+
+func createSignedTestHeaders(secret string, timestamp int64) http.Header {
+	timestampString := strconv.FormatInt(timestamp, 10)
+	h := hmac.New(sha256.New, []byte(secret))
+	h.Write([]byte(testWebhookID + "." + timestampString + "." + testPayload))
+	return http.Header{
+		"Webhook-Signature": []string{"v1," + base64.StdEncoding.EncodeToString(h.Sum(nil))},
+		"Webhook-Timestamp": []string{timestampString},
+		"Webhook-Id":        []string{testWebhookID},
+	}
+}
+
+func TestWebhookService_RequestOptionsOverrideClientOptions(t *testing.T) {
+	t.Setenv("OPENAI_WEBHOOK_SECRET", "")
+
+	const (
+		clientSecret  = "client-secret"
+		requestSecret = "request-secret"
+	)
+	timestamp := time.Now().Unix()
+	now := time.Unix(timestamp, 0)
+	clientHeaders := createSignedTestHeaders(clientSecret, timestamp)
+	requestHeaders := createSignedTestHeaders(requestSecret, timestamp)
+	client := openai.NewClient(option.WithWebhookSecret(clientSecret))
+	clientWithoutSecret := openai.NewClient()
+
+	tests := []struct {
+		name string
+		call func(*openai.Client, http.Header, ...option.RequestOption) error
+	}{
+		{
+			name: "VerifySignature",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				return client.Webhooks.VerifySignature([]byte(testPayload), headers, opts...)
+			},
+		},
+		{
+			name: "VerifySignatureWithTolerance",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				return client.Webhooks.VerifySignatureWithTolerance([]byte(testPayload), headers, 5*time.Minute, opts...)
+			},
+		},
+		{
+			name: "VerifySignatureWithToleranceAndTime",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				return client.Webhooks.VerifySignatureWithToleranceAndTime([]byte(testPayload), headers, 5*time.Minute, now, opts...)
+			},
+		},
+		{
+			name: "Unwrap",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				_, err := client.Webhooks.Unwrap([]byte(testPayload), headers, opts...)
+				return err
+			},
+		},
+		{
+			name: "UnwrapWithTolerance",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				_, err := client.Webhooks.UnwrapWithTolerance([]byte(testPayload), headers, 5*time.Minute, opts...)
+				return err
+			},
+		},
+		{
+			name: "UnwrapWithToleranceAndTime",
+			call: func(client *openai.Client, headers http.Header, opts ...option.RequestOption) error {
+				_, err := client.Webhooks.UnwrapWithToleranceAndTime([]byte(testPayload), headers, 5*time.Minute, now, opts...)
+				return err
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			requestOption := option.WithWebhookSecret(requestSecret)
+			if err := test.call(&client, requestHeaders, requestOption); err != nil {
+				t.Fatalf("request option should override client option: %v", err)
+			}
+			if err := test.call(&client, clientHeaders, requestOption); err == nil {
+				t.Fatal("client option should not remain active when a request option is provided")
+			}
+			if err := test.call(&clientWithoutSecret, requestHeaders, requestOption); err != nil {
+				t.Fatalf("request option should work without a client option: %v", err)
+			}
+		})
 	}
 }
 
