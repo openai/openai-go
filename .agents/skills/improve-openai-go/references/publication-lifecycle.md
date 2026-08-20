@@ -131,7 +131,7 @@ test for infrastructure the repository does not own.
 | Appropriate proof | Executable behavior lacks a base-failing regression, or a non-executable artifact lacks suitable validation | Proof distinguishes base from head and matches the artifact |
 | Complete intended diff | Manifest differs from staged, worktree, untracked, or committed paths, or whitespace coverage is incomplete | Exact path reconciliation, staged check, and final range check pass |
 | Honest resolution | Concern is disputed, blocked, informational, unvalidated, or not fixed on the published head | Exact-head evidence exists before resolving only that thread |
-| Separate dispatch | Publisher can dispatch, a mutable candidate ref selects executable workflow code, or PR-only checks did not analyze the published revision | Dispatcher records run IDs, authenticates the trusted wrapper revision, and accepts its signed checkout receipt only when it names `published_sha` |
+| Separate dispatch | Publisher can dispatch, a mutable candidate ref selects executable workflow code, or PR-only checks did not analyze the published tree | Dispatcher records run IDs, authenticates the trusted wrapper revision, and accepts its signed receipt only when the platform-measured input tree matches `published_sha` |
 | No implicit execution | Publishing a branch or pull request can trigger candidate execution before brokered dispatch | Credential event semantics and trigger filters prove publication creates no workflow run; every check starts explicitly through the trusted wrapper |
 | Review-ready | Required checks are absent, stale, pending, unexpectedly skipped, or for another revision | All required push and PR-only checks are green on `published_sha` with no unresolved actionable feedback |
 
@@ -176,15 +176,23 @@ without such a wrapper.
 
 Run candidate-controlled build, test, analysis, and scripts in a fresh
 disposable job with no command network, secrets, write token, persistent cache
-restore or write capability, or receipt-signing authority. Warm reviewed
-dependencies in a separate trusted stage. After the candidate job exits, have a
-separate trusted job or service verify its identity, outputs, and analyzed SHA
-before signing the checkout and result receipt.
+restore or write capability, or receipt-signing authority. A trusted stage must
+measure the input tree and mount source, toolchain, analyzers, and warmed
+dependencies read-only; confine candidate writes to fresh scratch storage. Use
+a fixed trusted harness to invoke reviewed analyzers against that immutable
+snapshot.
+
+After the candidate job exits, have a separate trusted job or service obtain
+job identity, exit status, measured input-tree digest, and bounded canonical
+non-executable results from a platform-attested channel, never candidate output.
+Before signing, verify that digest against the tree for `published_sha`. Bind the
+trusted wrapper revision, tool and analyzer identities, measured tree digest,
+and result into the receipt.
 
 Verify the epoch and authenticated mutation envelope before the broker performs
 each dispatch. Record the workflow-run ID, authenticate the trusted wrapper's
-own `head_sha`, and require its signed receipt to name `published_sha` as the
-analyzed checkout. A mismatch is unusable and requires a fresh lifecycle.
+own `head_sha`, and require its signed receipt to bind the measured tree for
+`published_sha`. A mismatch is unusable and requires a fresh lifecycle.
 
 Validate each review concern against `published_sha`. After publishing a real
 fix, reply with individualized exact-head evidence. Resolve only that addressed
