@@ -12,7 +12,7 @@ Unless an approved host proves every boundary below, use audit/report-only mode.
 
 A trusted coordinator, not the model worker, owns this state machine:
 
-`claim -> authorize -> implement -> validate -> publish -> dispatch -> steward -> finalize -> release`
+`claim -> authorize -> implement -> validate -> publish -> dispatch -> attest -> report-status -> steward -> finalize -> release`
 
 After release, emit a read-only run report from the finalized durable record.
 Reporting is not part of the mutation lifecycle.
@@ -48,11 +48,15 @@ Finalize a terminal record, release the lease, and then report the result.
 Use these names everywhere:
 
 - `target_base_sha`: target-branch comparison base for the complete pull request.
+- `target_head_sha`: authenticated target-branch tip used to construct the
+  candidate integration tree.
 - `source_head_sha`: trusted starting head for this run's candidate artifact.
 - `expected_remote_sha`: absent for a new branch; exact current remote head for
   a service run.
 - `candidate_sha`: locally committed result produced by implementation.
 - `published_sha`: head returned by the publisher after its compare-and-swap.
+- `integration_tree_digest`: independently measured tree produced by combining
+  `target_head_sha` and the candidate or published head without executing either.
 
 Require `source_head_sha` to be an ancestor of `candidate_sha`, its merge base to
 equal `source_head_sha`, and the range to contain no merge commit unless the
@@ -64,7 +68,8 @@ Bind validation to these exact ranges:
 | --- | --- |
 | Artifact manifest, intended-path reconciliation, whitespace, focused regression | `source_head_sha...candidate_sha` |
 | Full PR compatibility, security diff scan, `$openai-go-pr-review`, breaking-change input | `target_base_sha...candidate_sha`, then repeat or verify against `target_base_sha...published_sha` |
-| Hosted CI, CodeQL, review replies and resolutions, review-ready state | `published_sha` only |
+| Integration build, tests, compatibility, and security | Measured merge tree from `target_head_sha` plus `candidate_sha`, then `published_sha` |
+| Hosted CI, CodeQL, external check results, review replies and resolutions, review-ready state | `published_sha` plus its authenticated `integration_tree_digest` |
 
 Pass `target_base_sha` as the breaking-change dispatch's base input. Never call
 the service-run source head the PR base.
@@ -78,10 +83,13 @@ Keep these components independently constrained:
   trusted read-only stage.
 - **Model worker:** receives no ambient repository, pull-request, Actions,
   Slack, cloud, SSH-agent, credential-helper, or broker credential. It may read
-  and edit only its disposable workspace after authorization. Deny command
-  network and every external mutation tool or write-network route. Require the
-  broker to reject the model identity even if a brokered app is visible. Warm
-  reviewed dependencies in a separate trusted step before model execution.
+  and edit only its disposable workspace after authorization. Use a standalone
+  disposable clone, or keep a linked worktree and its entire Git common
+  directory inside the same per-run sandbox; never expose shared refs, config,
+  hooks, or objects. Deny command network and every external mutation tool or
+  write-network route. Require the broker to reject the model identity even if
+  a brokered app is visible. Warm reviewed dependencies in a separate trusted
+  step before model execution.
 - **Authenticated work order:** is signed by the coordinator or kept in trusted
   immutable storage outside model-writable paths. It fixes the run ID, mode,
   revision record, epoch, allowed paths and change kinds, and validation
@@ -111,6 +119,11 @@ Keep these components independently constrained:
   to one allowlisted wrapper workflow, immutable target revision, exact inputs,
   and epoch; it records the returned run ID, and the dispatcher never receives
   a reusable credential.
+- **Status reporter:** has checks/status write permission but no repository,
+  pull-request, workflow-dispatch, or Slack write permission. Its broker accepts
+  only a validated signed receipt, `published_sha`, integration-tree digest,
+  check name, conclusion, details URL, idempotency key, and current epoch, then
+  attaches that result to `published_sha` with a one-operation token.
 - **Slack writer:** accepts only the allowlisted channel, pull-request URL,
   target message or thread, payload, idempotency key, and current epoch. It gets
   a short-lived credential inside one brokered, tracked mutation.
@@ -128,12 +141,15 @@ test for infrastructure the repository does not own.
 | Uncredentialed model | Model or subprocess can reach a secret, helper, agent, external mutation tool, command network, or write broker | Environment/tool inspection is clean and the broker rejects model identity |
 | Authenticated allowlist | Artifact differs from the trusted work order in revisions, paths, kinds, modes, contract, or digest | Independent validation records both digests, epoch, and all accepted allowlist items before token issuance |
 | Authenticated ancestry | Candidate is not the approved linear descendant | Merge-base and no-unapproved-merge assertions pass |
+| Current target integration | Target tip changed or its measured merge tree was not validated | Work order restarts on target drift; candidate and published integration-tree receipts bind the current `target_head_sha` and measured digest |
 | Appropriate proof | Executable behavior lacks a base-failing regression, or a non-executable artifact lacks suitable validation | Proof distinguishes base from head and matches the artifact |
 | Complete intended diff | Manifest differs from staged, worktree, untracked, or committed paths, or whitespace coverage is incomplete | Exact path reconciliation, staged check, and final range check pass |
 | Honest resolution | Concern is disputed, blocked, informational, unvalidated, or not fixed on the published head | Exact-head evidence exists before resolving only that thread |
 | Separate dispatch | Publisher can dispatch, a mutable candidate ref selects executable workflow code, or PR-only checks did not analyze the published tree | Dispatcher records run IDs, authenticates the trusted wrapper revision, and accepts its signed receipt only when the platform-measured input tree matches `published_sha` |
 | No implicit execution | Publishing a branch or pull request can trigger candidate execution before brokered dispatch | Credential event semantics and trigger filters prove publication creates no workflow run; every check starts explicitly through the trusted wrapper |
-| Review-ready | Required checks are absent, stale, pending, unexpectedly skipped, or for another revision | All required push and PR-only checks are green on `published_sha` with no unresolved actionable feedback |
+| Trusted review instructions | Candidate content can supply or modify a mandatory review skill | Review receipts identify a trusted pre-candidate skill snapshot and immutable candidate blobs |
+| Isolated Git metadata | Model-writable Git state shares a common directory with a trusted or reusable checkout | Filesystem proof confines the standalone clone or complete linked-worktree common directory to the per-run sandbox |
+| Review-ready | Required checks are absent, stale, pending, unexpectedly skipped, for another revision, or not attached to the candidate | The status reporter attaches every validated result to `published_sha`; the current target integration tree is green and no actionable feedback remains |
 
 ## Validate and publish
 
@@ -155,9 +171,14 @@ artifact-appropriate check required by the work order before obtaining a token.
 
 Immediately before publication, recount skill-owned pull requests and repeat
 duplicate and overlap searches. Abort if the budget or selection rules no
-longer permit publication. For a new branch require the remote ref to remain
-absent; for service mode require it to equal `expected_remote_sha`. Publish with
-a non-force compare-and-swap and abort on mismatch. Independently prove that the
+longer permit publication. Fetch the live target-branch tip and require it to
+equal `target_head_sha`; if it moved, discard the candidate authorization and
+restart with a new work order. In a trusted checkout, construct and measure the
+integration tree without executing candidate code, reject merge conflicts, and
+run the contract's integration checks against that exact tree. For a new branch
+require the remote ref to remain absent; for service mode require it to equal
+`expected_remote_sha`. Publish with a non-force compare-and-swap and abort on
+mismatch. Independently prove that the
 chosen credential's event semantics and repository trigger filters cannot start
 any workflow from this push or pull-request mutation. If publication could
 implicitly execute candidate content, stop instead. Discard the token and
@@ -187,12 +208,19 @@ job identity, exit status, measured input-tree digest, and bounded canonical
 non-executable results from a platform-attested channel, never candidate output.
 Before signing, verify that digest against the tree for `published_sha`. Bind the
 trusted wrapper revision, tool and analyzer identities, measured tree digest,
-and result into the receipt.
+current `target_head_sha`, integration-tree digest, and result into the receipt.
 
 Verify the epoch and authenticated mutation envelope before the broker performs
 each dispatch. Record the workflow-run ID, authenticate the trusted wrapper's
 own `head_sha`, and require its signed receipt to bind the measured tree for
 `published_sha`. A mismatch is unusable and requires a fresh lifecycle.
+
+The separately authorized status reporter must validate the signed receipt and
+attach the resulting check run or commit status to `published_sha`, not the
+wrapper revision. Immediately before reporting review-ready state, re-read the
+target branch. If it differs from `target_head_sha`, invalidate the integration
+receipt and restart with a new work order. Treat wrapper checks that exist only
+on the trusted wrapper revision as execution receipts, never candidate status.
 
 Validate each review concern against `published_sha`. After publishing a real
 fix, reply with individualized exact-head evidence. Resolve only that addressed
