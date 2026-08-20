@@ -1,6 +1,15 @@
 package openai
 
-import "github.com/openai/openai-go/v3/shared/constant"
+import (
+	"strings"
+
+	"github.com/openai/openai-go/v3/shared/constant"
+)
+
+const (
+	maxChatCompletionAccumulatorChunks    = 100_000
+	maxChatCompletionAccumulatorTextBytes = 16 << 20
+)
 
 // Helper to accumulate chunks from a stream
 type ChatCompletionAccumulator struct {
@@ -10,6 +19,9 @@ type ChatCompletionAccumulator struct {
 	legacyChoiceChatCompletionStates []chatCompletionResponseState
 	justFinished                     chatCompletionResponseState
 	justFinishedByChoice             []chatCompletionResponseState
+	stringState                      chatCompletionAccumulatorStringState
+	chunkCount                       int
+	textBytes                        int
 }
 
 type FinishedChatCompletionToolCall struct {
@@ -24,6 +36,27 @@ type chatCompletionResponseState struct {
 	toolCallIndex int
 }
 
+type chatCompletionAccumulatorStringState struct {
+	// Keep builders behind pointers because a non-zero strings.Builder must not be copied.
+	choices []*chatCompletionChoiceStringState
+}
+
+type chatCompletionChoiceStringState struct {
+	content   chatCompletionString
+	refusal   chatCompletionString
+	toolCalls []*chatCompletionToolCallStringState
+}
+
+type chatCompletionToolCallStringState struct {
+	name      chatCompletionString
+	arguments chatCompletionString
+}
+
+type chatCompletionString struct {
+	builder   strings.Builder
+	published string
+}
+
 type chatCompletionResponseStateEnum int
 
 const (
@@ -35,15 +68,23 @@ const (
 )
 
 // AddChunk incorporates a chunk into the accumulation. Chunks must be added in order.
-// Returns false if the chunk could not be successfully accumulated.
+// Returns false if the chunk could not be successfully accumulated. To bound work and
+// memory for untrusted streams, an accumulator accepts at most 100,000 chunks and 16 MiB
+// of combined content, refusal, tool name, and tool argument text from those chunks. A
+// rejected chunk does not modify the accumulator.
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
-	acc.justFinished = chatCompletionResponseState{}
-	acc.justFinishedByChoice = acc.justFinishedByChoice[:0]
-	if !acc.accumulateDelta(chunk) {
+	nextTextBytes, ok := acc.preflightChunk(&chunk)
+	if !ok {
 		return false
 	}
+
+	acc.justFinished = chatCompletionResponseState{}
+	acc.justFinishedByChoice = acc.justFinishedByChoice[:0]
+	acc.accumulateDelta(&chunk)
+	acc.chunkCount++
+	acc.textBytes = nextTextBytes
 
 	if len(chunk.Choices) > 0 {
 		firstChoice := chunk.Choices[0]
@@ -61,6 +102,25 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 		}
 	}
 	return true
+}
+
+func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk) (int, bool) {
+	if acc.chunkCount >= maxChatCompletionAccumulatorChunks {
+		return 0, false
+	}
+	if acc.ID != "" && acc.ID != chunk.ID {
+		return 0, false
+	}
+
+	textBytes := acc.textBytes
+	var ok bool
+	if acc.chunkCount == 0 {
+		textBytes, ok = addChatCompletionTextBytes(0, &acc.ChatCompletion)
+		if !ok {
+			return 0, false
+		}
+	}
+	return addChatCompletionChunkTextBytes(textBytes, chunk)
 }
 
 // JustFinishedContent retrieves the chat completion content when it is known to have just been completed.
@@ -155,15 +215,12 @@ func (acc *ChatCompletionAccumulator) finishedToolCall(justFinished chatCompleti
 	}
 }
 
-// Concatenates a ChatCompletionChunk onto a ChatCompletion. Returns false and
-// does nothing if a mismatch is detected.
-//
-// Ignores the JSON field
-func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
+// Concatenates a preflighted ChatCompletionChunk onto a ChatCompletion.
+// Ignores the JSON field.
+func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk) {
+	cc := &acc.ChatCompletion
 	if len(cc.ID) == 0 {
 		cc.ID = chunk.ID
-	} else if cc.ID != chunk.ID {
-		return false
 	}
 
 	for _, delta := range chunk.Choices {
@@ -177,8 +234,9 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 			choice.Message.Role = constant.Assistant(delta.Delta.Role)
 		}
 
-		choice.Message.Content += delta.Delta.Content
-		choice.Message.Refusal += delta.Delta.Refusal
+		choiceStrings := acc.stringState.choice(int(delta.Index))
+		choiceStrings.content.append(&choice.Message.Content, delta.Delta.Content)
+		choiceStrings.refusal.append(&choice.Message.Refusal, delta.Delta.Refusal)
 
 		for j := range delta.Delta.ToolCalls {
 			deltaTool := &delta.Delta.ToolCalls[j]
@@ -194,8 +252,9 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 			if deltaTool.Type != "" {
 				tool.Type = deltaTool.Type
 			}
-			tool.Function.Name += deltaTool.Function.Name
-			tool.Function.Arguments += deltaTool.Function.Arguments
+			toolStrings := choiceStrings.toolCall(toolIndex)
+			toolStrings.name.append(&tool.Function.Name, deltaTool.Function.Name)
+			toolStrings.arguments.append(&tool.Function.Arguments, deltaTool.Function.Arguments)
 		}
 
 		choice.Logprobs.Content = append(choice.Logprobs.Content, delta.Logprobs.Content...)
@@ -221,7 +280,78 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 	if chunk.Object == chunk.Object.Default() {
 		cc.Object = cc.Object.Default()
 	}
+}
 
+func (acc *chatCompletionAccumulatorStringState) choice(index int) *chatCompletionChoiceStringState {
+	acc.choices = expandToFit(acc.choices, index)
+	if acc.choices[index] == nil {
+		acc.choices[index] = &chatCompletionChoiceStringState{}
+	}
+	return acc.choices[index]
+}
+
+func (choice *chatCompletionChoiceStringState) toolCall(index int) *chatCompletionToolCallStringState {
+	choice.toolCalls = expandToFit(choice.toolCalls, index)
+	if choice.toolCalls[index] == nil {
+		choice.toolCalls[index] = &chatCompletionToolCallStringState{}
+	}
+	return choice.toolCalls[index]
+}
+
+func (acc *chatCompletionString) append(current *string, fragment string) {
+	if fragment == "" {
+		return
+	}
+	if *current != acc.published {
+		acc.builder.Reset()
+		_, _ = acc.builder.WriteString(*current)
+	}
+	_, _ = acc.builder.WriteString(fragment)
+	acc.published = acc.builder.String()
+	*current = acc.published
+}
+
+func addChatCompletionTextBytes(total int, completion *ChatCompletion) (int, bool) {
+	for i := range completion.Choices {
+		message := &completion.Choices[i].Message
+		if !addAccumulatorTextBytes(&total, message.Content) ||
+			!addAccumulatorTextBytes(&total, message.Refusal) {
+			return 0, false
+		}
+		for j := range message.ToolCalls {
+			function := &message.ToolCalls[j].Function
+			if !addAccumulatorTextBytes(&total, function.Name) ||
+				!addAccumulatorTextBytes(&total, function.Arguments) {
+				return 0, false
+			}
+		}
+	}
+	return total, true
+}
+
+func addChatCompletionChunkTextBytes(total int, chunk *ChatCompletionChunk) (int, bool) {
+	for i := range chunk.Choices {
+		delta := &chunk.Choices[i].Delta
+		if !addAccumulatorTextBytes(&total, delta.Content) ||
+			!addAccumulatorTextBytes(&total, delta.Refusal) {
+			return 0, false
+		}
+		for j := range delta.ToolCalls {
+			function := &delta.ToolCalls[j].Function
+			if !addAccumulatorTextBytes(&total, function.Name) ||
+				!addAccumulatorTextBytes(&total, function.Arguments) {
+				return 0, false
+			}
+		}
+	}
+	return total, true
+}
+
+func addAccumulatorTextBytes(total *int, text string) bool {
+	if len(text) > maxChatCompletionAccumulatorTextBytes-*total {
+		return false
+	}
+	*total += len(text)
 	return true
 }
 
