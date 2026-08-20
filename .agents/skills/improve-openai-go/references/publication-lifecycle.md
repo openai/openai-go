@@ -34,11 +34,13 @@ Persist every transition in trusted durable storage outside model-writable
 paths. Before an external write, record an idempotency key, repository, exact
 target, expected state, and epoch; afterward record the returned object and
 observed state. On restart, reconcile remote branches, pull requests, workflow
-runs, review threads, and Slack messages before continuing. Never blindly retry
-an operation with an unknown result. Use the remote system's resource-specific
-compare-and-swap or idempotency control where available. Otherwise serialize
-the brokered request, retain the lease until its outcome is observed, and block
-epoch reassignment while that outcome is unknown.
+runs, check runs and commit statuses, review threads, and Slack messages before
+continuing. Store check-run IDs and external IDs, or an equivalent stable
+status-context lookup key, so recovery can identify the existing remote write.
+Never blindly retry an operation with an unknown result. Use the remote
+system's resource-specific compare-and-swap or idempotency control where
+available. Otherwise serialize the brokered request, retain the lease until its
+outcome is observed, and block epoch reassignment while that outcome is unknown.
 
 If the lease is unavailable, ambiguous, expired, or lost, stop without writing.
 Finalize a terminal record, release the lease, and then report the result.
@@ -84,12 +86,15 @@ Keep these components independently constrained:
 - **Model worker:** receives no ambient repository, pull-request, Actions,
   Slack, cloud, SSH-agent, credential-helper, or broker credential. It may read
   and edit only its disposable workspace after authorization. Use a standalone
-  disposable clone, or keep a linked worktree and its entire Git common
-  directory inside the same per-run sandbox; never expose shared refs, config,
-  hooks, or objects. Deny command network and every external mutation tool or
-  write-network route. Require the broker to reject the model identity even if
-  a brokered app is visible. Warm reviewed dependencies in a separate trusted
-  step before model execution.
+  `--no-local`/`--no-hardlinks` disposable clone, or keep a linked worktree and
+  its entire Git common directory inside the same per-run sandbox. Reject Git
+  alternates, promisor or shared object directories, cross-boundary hardlinked
+  objects, external config/includes, credential helpers, and external hooks;
+  verify object inodes and resolved configuration before model access. Never
+  expose shared refs, config, hooks, or objects. Deny command network and every
+  external mutation tool or write-network route. Require the broker to reject
+  the model identity even if a brokered app is visible. Warm reviewed
+  dependencies in a separate trusted step before model execution.
 - **Authenticated work order:** is signed by the coordinator or kept in trusted
   immutable storage outside model-writable paths. It fixes the run ID, mode,
   revision record, epoch, allowed paths and change kinds, and validation
@@ -121,9 +126,11 @@ Keep these components independently constrained:
   a reusable credential.
 - **Status reporter:** has checks/status write permission but no repository,
   pull-request, workflow-dispatch, or Slack write permission. Its broker accepts
-  only a validated signed receipt, `published_sha`, integration-tree digest,
-  check name, conclusion, details URL, idempotency key, and current epoch, then
-  attaches that result to `published_sha` with a one-operation token.
+  only a validated signed receipt, `published_sha`, `target_head_sha`,
+  integration-tree digest, check name, conclusion, details URL, idempotency key,
+  and current epoch, then attaches that result to `published_sha` with a
+  one-operation token. It stores the check-run ID and a stable external ID or
+  status-context lookup key for idempotent recovery and later invalidation.
 - **Slack writer:** accepts only the allowlisted channel, pull-request URL,
   target message or thread, payload, idempotency key, and current epoch. It gets
   a short-lived credential inside one brokered, tracked mutation.
@@ -148,8 +155,9 @@ test for infrastructure the repository does not own.
 | Separate dispatch | Publisher can dispatch, a mutable candidate ref selects executable workflow code, or PR-only checks did not analyze the published tree | Dispatcher records run IDs, authenticates the trusted wrapper revision, and accepts its signed receipt only when the platform-measured input tree matches `published_sha` |
 | No implicit execution | Publishing a branch or pull request can trigger candidate execution before brokered dispatch | Credential event semantics and trigger filters prove publication creates no workflow run; every check starts explicitly through the trusted wrapper |
 | Trusted review instructions | Candidate content can supply or modify a mandatory review skill | Review receipts identify a trusted pre-candidate skill snapshot and immutable candidate blobs |
-| Isolated Git metadata | Model-writable Git state shares a common directory with a trusted or reusable checkout | Filesystem proof confines the standalone clone or complete linked-worktree common directory to the per-run sandbox |
-| Review-ready | Required checks are absent, stale, pending, unexpectedly skipped, for another revision, or not attached to the candidate | The status reporter attaches every validated result to `published_sha`; the current target integration tree is green and no actionable feedback remains |
+| Isolated Git metadata | Model-writable Git state shares refs, config, hooks, objects, alternates, promisor storage, or hardlinked inodes with a trusted or reusable checkout | Filesystem and resolved-config proof confines an independent no-local/no-hardlinks clone and all Git inputs to the per-run sandbox |
+| Target-bound status | A successful candidate check names a stale `target_head_sha`, cannot be found idempotently, or remains green after target drift | Reporter rechecks the target immediately before success, binds the target in its mutation, stores the remote check identity, and supersedes success with non-success on drift |
+| Review-ready | Required checks are absent, stale, pending, unexpectedly skipped, for another revision, or not attached to the candidate | Strict up-to-date protection or a merge queue gates integration; the reporter attaches every validated result to `published_sha`, the current target integration tree is green, and no actionable feedback remains |
 
 ## Validate and publish
 
@@ -216,11 +224,17 @@ own `head_sha`, and require its signed receipt to bind the measured tree for
 `published_sha`. A mismatch is unusable and requires a fresh lifecycle.
 
 The separately authorized status reporter must validate the signed receipt and
-attach the resulting check run or commit status to `published_sha`, not the
-wrapper revision. Immediately before reporting review-ready state, re-read the
-target branch. If it differs from `target_head_sha`, invalidate the integration
-receipt and restart with a new work order. Treat wrapper checks that exist only
-on the trusted wrapper revision as execution receipts, never candidate status.
+re-read the target branch immediately before attaching a successful check run or
+commit status to `published_sha`, not the wrapper revision. Bind
+`target_head_sha`, the stored check-run ID and external ID or stable status
+context, and the payload digest in the authenticated mutation. If the target
+differs, do not write success. If it moves later, use the stored remote identity
+to supersede that same candidate check with a non-success stale conclusion
+before restarting with a new work order. Require strict up-to-date branch
+protection or a merge queue for any required reporter check; otherwise use an
+informational check name that cannot satisfy the merge gate. Treat wrapper
+checks that exist only on the trusted wrapper revision as execution receipts,
+never candidate status.
 
 Validate each review concern against `published_sha`. After publishing a real
 fix, reply with individualized exact-head evidence. Resolve only that addressed
