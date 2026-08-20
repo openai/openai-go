@@ -182,17 +182,19 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 			if azureCredentialHTTPAllowed(req) {
 				tokenPolicy = unsafeBearerTokenPolicy
 			}
+			// The shared request pipeline owns retries and request-body replay.
+			// Apply this both to the pipeline and the request context because azcore
+			// permits a context value to override the pipeline's retry options.
+			retryOptions := policy.RetryOptions{MaxRetries: -1}
 			pipeline := runtime.NewPipeline("azopenai-extensions", version, runtime.PipelineOptions{}, &policy.ClientOptions{
-				// The shared request pipeline owns retries and request-body replay.
-				// Disable azcore's nested retry loop so deterministic SDK errors and
-				// the caller's configured retry limit remain authoritative.
-				Retry: policy.RetryOptions{MaxRetries: -1},
+				Retry: retryOptions,
 				PerRetryPolicies: []policy.Policy{
 					tokenPolicy,
 					policyAdapter(next),
 				},
 			})
 
+			req = req.WithContext(policy.WithRetryOptions(req.Context(), retryOptions))
 			req2, err := runtime.NewRequestFromRequest(req)
 
 			if err != nil {

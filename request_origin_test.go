@@ -2,6 +2,7 @@ package openai_test
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -23,6 +24,12 @@ import (
 type originTestRoundTripper func(*http.Request) (*http.Response, error)
 
 func (f originTestRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+type originTestHTTPDoer func(*http.Request) (*http.Response, error)
+
+func (f originTestHTTPDoer) Do(req *http.Request) (*http.Response, error) {
 	return f(req)
 }
 
@@ -382,6 +389,79 @@ func TestAzureTokenCredentialPreservesSDKRetries(t *testing.T) {
 	}
 	if got := calls.Load(); got != 2 {
 		t.Fatalf("transport calls = %d, want 2", got)
+	}
+}
+
+func TestAzureTokenCredentialIgnoresAzcoreRetryOverride(t *testing.T) {
+	clearOriginTestEnvironment(t)
+
+	var calls atomic.Int64
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		calls.Add(1)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, `{}`)
+	}))
+	defer server.Close()
+
+	client := openai.NewClient(
+		azure.WithEndpoint(server.URL, "2026-08-01"),
+		azure.WithTokenCredential(originTestAzureCredential{}),
+		option.WithHTTPClient(server.Client()),
+		option.WithMaxRetries(0),
+	)
+	ctx := azpolicy.WithRetryOptions(context.Background(), azpolicy.RetryOptions{
+		MaxRetries: 1,
+		RetryDelay: -1,
+	})
+	var response map[string]any
+	if err := client.Get(ctx, "models", nil, &response); err == nil {
+		t.Fatal("Get() error = nil, want server error")
+	}
+	if got := calls.Load(); got != 1 {
+		t.Fatalf("transport calls = %d, want 1", got)
+	}
+}
+
+func TestCustomHTTPDoerOriginRejectionClosesReplacementBody(t *testing.T) {
+	clearOriginTestEnvironment(t)
+
+	var doerCalls, replacementBodyCloses atomic.Int64
+	client := openai.NewClient(
+		option.WithBaseURL("https://trusted.example/v1"),
+		option.WithAPIKey("api-key"),
+		option.WithHTTPClient(originTestHTTPDoer(func(*http.Request) (*http.Response, error) {
+			doerCalls.Add(1)
+			return nil, errors.New("custom doer must not be called")
+		})),
+		option.WithMaxRetries(0),
+	)
+	target, err := url.Parse("https://other.example/capture")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = client.Post(
+		context.Background(),
+		"responses",
+		strings.NewReader("original body"),
+		nil,
+		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			clone := req.Clone(req.Context())
+			clone.URL = target
+			clone.Body = originTestCloseTrackingBody{
+				ReadCloser: io.NopCloser(strings.NewReader("replacement body")),
+				closes:     &replacementBodyCloses,
+			}
+			return next(clone)
+		}),
+	)
+	if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
+		t.Fatalf("Post() error = %v, want configured-origin error", err)
+	}
+	if got := doerCalls.Load(); got != 0 {
+		t.Fatalf("custom doer calls = %d, want 0", got)
+	}
+	if got := replacementBodyCloses.Load(); got != 1 {
+		t.Fatalf("replacement body closes = %d, want 1", got)
 	}
 }
 
