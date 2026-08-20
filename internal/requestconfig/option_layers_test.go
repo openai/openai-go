@@ -142,6 +142,41 @@ func TestProviderAuthOptionsPreserveConfigurationLayers(t *testing.T) {
 	})
 }
 
+func TestClearInheritedOpenAICredentialsPreservesLayerConflicts(t *testing.T) {
+	t.Run("inherited credentials are cleared", func(t *testing.T) {
+		cfg := RequestConfig{}
+		credentials := RequestOptionFunc(func(cfg *RequestConfig) error {
+			cfg.SetAPIKey("openai-api-key")
+			cfg.SetAdminAPIKey("openai-admin-key")
+			return nil
+		})
+		if err := cfg.Apply(InheritedOptions(credentials)...); err != nil {
+			t.Fatal(err)
+		}
+		cfg.ClearInheritedOpenAICredentials()
+		if cfg.APIKey != "" || cfg.AdminAPIKey != "" {
+			t.Fatal("credentials were not cleared")
+		}
+	})
+
+	for _, test := range []struct {
+		name string
+		set  func(*RequestConfig)
+	}{
+		{name: "API key", set: func(cfg *RequestConfig) { cfg.SetAPIKey("openai-api-key") }},
+		{name: "admin API key", set: func(cfg *RequestConfig) { cfg.SetAdminAPIKey("openai-admin-key") }},
+	} {
+		t.Run(test.name+" in the current layer is preserved", func(t *testing.T) {
+			cfg := RequestConfig{}
+			test.set(&cfg)
+			cfg.ClearInheritedOpenAICredentials()
+			if cfg.APIKey == "" && cfg.AdminAPIKey == "" {
+				t.Fatal("same-layer credential was cleared")
+			}
+		})
+	}
+}
+
 func TestProviderSelectionIsPreservedByClone(t *testing.T) {
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://example.com", nil)
 	if err != nil {
@@ -149,7 +184,7 @@ func TestProviderSelectionIsPreservedByClone(t *testing.T) {
 	}
 	auth := NewProviderAuthOption("Azure", "azure.WithAPIKey")
 	cfg := RequestConfig{Request: req}
-	if err := cfg.Apply(WithProviderEndpoint("Azure"), auth); err != nil {
+	if err := cfg.Apply(WithProviderEndpointConfigured("Azure"), auth); err != nil {
 		t.Fatal(err)
 	}
 
@@ -157,10 +192,29 @@ func TestProviderSelectionIsPreservedByClone(t *testing.T) {
 	if clone == nil {
 		t.Fatal("request config clone is nil")
 	}
-	if !clone.ProviderEndpointIs("Azure") {
+	if !clone.ProviderEndpointConfigured("Azure") {
 		t.Fatal("provider endpoint was not preserved")
 	}
 	if got, ok := clone.ProviderAuth("Azure"); !ok || got != "azure.WithAPIKey" {
 		t.Fatalf("cloned authentication = %q, %t", got, ok)
+	}
+}
+
+func TestCloneTreatsOpenAICredentialsAsInherited(t *testing.T) {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://example.com", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg := RequestConfig{Request: req}
+	cfg.SetAPIKey("openai-api-key")
+	cfg.SetAdminAPIKey("openai-admin-key")
+
+	clone := cfg.Clone(context.Background())
+	if clone == nil {
+		t.Fatal("request config clone is nil")
+	}
+	clone.ClearInheritedOpenAICredentials()
+	if clone.APIKey != "" || clone.AdminAPIKey != "" {
+		t.Fatal("cloned credentials were not cleared")
 	}
 }

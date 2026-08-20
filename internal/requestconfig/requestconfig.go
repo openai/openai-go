@@ -323,17 +323,20 @@ type HTTPDoer interface {
 // Editing the variables inside RequestConfig directly is unstable api. Prefer
 // composing the RequestOption instead if possible.
 type RequestConfig struct {
-	MaxRetries            int
-	RequestTimeout        time.Duration
-	Context               context.Context
-	Request               *http.Request
-	BaseURL               *url.URL
-	endpointSelector      string
-	endpointProvider      string
-	providerEndpoint      string
-	dataResidencyEndpoint bool
-	providerAuthLayer     *ProviderAuthOption
-	providerAuth          *ProviderAuthOption
+	MaxRetries                 int
+	RequestTimeout             time.Duration
+	Context                    context.Context
+	Request                    *http.Request
+	BaseURL                    *url.URL
+	endpointSelector           string
+	endpointProvider           string
+	configuredProviderEndpoint string
+	dataResidencyEndpoint      bool
+	optionLayer                *optionLayerIdentity
+	providerAuthLayer          *ProviderAuthOption
+	providerAuth               *ProviderAuthOption
+	apiKeyLayer                *optionLayerIdentity
+	adminAPIKeyLayer           *optionLayerIdentity
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL     *url.URL
@@ -743,26 +746,38 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 	if err != nil {
 		return nil
 	}
+	var apiKeyLayer, adminAPIKeyLayer *optionLayerIdentity
+	if cfg.APIKey != "" || cfg.AdminAPIKey != "" {
+		inheritedLayer := new(optionLayerIdentity)
+		if cfg.APIKey != "" {
+			apiKeyLayer = inheritedLayer
+		}
+		if cfg.AdminAPIKey != "" {
+			adminAPIKeyLayer = inheritedLayer
+		}
+	}
 	new := &RequestConfig{
-		MaxRetries:            cfg.MaxRetries,
-		RequestTimeout:        cfg.RequestTimeout,
-		Context:               ctx,
-		Request:               req,
-		BaseURL:               cfg.BaseURL,
-		endpointProvider:      cfg.endpointProvider,
-		providerEndpoint:      cfg.providerEndpoint,
-		dataResidencyEndpoint: cfg.dataResidencyEndpoint,
-		providerAuth:          cfg.providerAuth,
-		HTTPClient:            cfg.HTTPClient,
-		Middlewares:           cfg.Middlewares,
-		APIKey:                cfg.APIKey,
-		AdminAPIKey:           cfg.AdminAPIKey,
-		Organization:          cfg.Organization,
-		Project:               cfg.Project,
-		WebhookSecret:         cfg.WebhookSecret,
-		finalizers:            append([]requestFinalizer(nil), cfg.finalizers...),
-		authHeaderOverride:    cfg.authHeaderOverride,
-		authPreference:        cfg.authPreference,
+		MaxRetries:                 cfg.MaxRetries,
+		RequestTimeout:             cfg.RequestTimeout,
+		Context:                    ctx,
+		Request:                    req,
+		BaseURL:                    cfg.BaseURL,
+		endpointProvider:           cfg.endpointProvider,
+		configuredProviderEndpoint: cfg.configuredProviderEndpoint,
+		dataResidencyEndpoint:      cfg.dataResidencyEndpoint,
+		providerAuth:               cfg.providerAuth,
+		apiKeyLayer:                apiKeyLayer,
+		adminAPIKeyLayer:           adminAPIKeyLayer,
+		HTTPClient:                 cfg.HTTPClient,
+		Middlewares:                cfg.Middlewares,
+		APIKey:                     cfg.APIKey,
+		AdminAPIKey:                cfg.AdminAPIKey,
+		Organization:               cfg.Organization,
+		Project:                    cfg.Project,
+		WebhookSecret:              cfg.WebhookSecret,
+		finalizers:                 append([]requestFinalizer(nil), cfg.finalizers...),
+		authHeaderOverride:         cfg.authHeaderOverride,
+		authPreference:             cfg.authPreference,
 	}
 
 	return new
@@ -791,12 +806,14 @@ func (cfg *RequestConfig) DelHeader(key string) {
 
 func (cfg *RequestConfig) SetAPIKey(value string) {
 	cfg.APIKey = value
+	cfg.apiKeyLayer = cfg.optionLayer
 	cfg.authHeaderOverride = false
 	cfg.authPreference = authCredentialPreferenceBearer
 }
 
 func (cfg *RequestConfig) SetAdminAPIKey(value string) {
 	cfg.AdminAPIKey = value
+	cfg.adminAPIKeyLayer = cfg.optionLayer
 	cfg.authHeaderOverride = false
 	cfg.authPreference = authCredentialPreferenceAdmin
 }

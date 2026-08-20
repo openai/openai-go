@@ -10,14 +10,19 @@ import (
 // concatenate inherited and request options. Its contents remain immutable.
 type optionLayer []RequestOption
 
+type optionLayerIdentity byte
+
 func (opts optionLayer) Apply(cfg *RequestConfig) error {
 	previousEndpoint := cfg.endpointSelector
 	previousAuth := cfg.providerAuthLayer
+	previousLayer := cfg.optionLayer
 	cfg.endpointSelector = ""
 	cfg.providerAuthLayer = nil
+	cfg.optionLayer = new(optionLayerIdentity)
 	defer func() {
 		cfg.endpointSelector = previousEndpoint
 		cfg.providerAuthLayer = previousAuth
+		cfg.optionLayer = previousLayer
 	}()
 	return cfg.Apply(opts...)
 }
@@ -101,24 +106,25 @@ func WithEndpointProvider(provider string) RequestOption {
 	})
 }
 
-// WithProviderEndpoint marks the provider that owns the selected request
-// endpoint. Authentication options can still use WithEndpointProvider to retain
-// provider conflict checks without claiming that routing was configured.
-func WithProviderEndpoint(provider string) RequestOption {
+// WithProviderEndpointConfigured records that a provider-specific endpoint
+// option was applied. Authentication options can still use WithEndpointProvider
+// to retain provider conflict checks without claiming that routing was
+// configured.
+func WithProviderEndpointConfigured(provider string) RequestOption {
 	return RequestOptionFunc(func(cfg *RequestConfig) error {
 		if err := WithEndpointProvider(provider).Apply(cfg); err != nil {
 			return err
 		}
-		cfg.providerEndpoint = provider
+		cfg.configuredProviderEndpoint = provider
 		return nil
 	})
 }
 
-// ProviderEndpointIs reports whether provider owns the selected request
-// endpoint. This is internal API for provider packages that fail closed before
-// transport.
-func (cfg *RequestConfig) ProviderEndpointIs(provider string) bool {
-	return cfg.providerEndpoint == provider
+// ProviderEndpointConfigured reports whether the provider-specific endpoint
+// option was applied. It does not validate the effective request origin after
+// other routing options or redirects.
+func (cfg *RequestConfig) ProviderEndpointConfigured(provider string) bool {
+	return cfg.configuredProviderEndpoint == provider
 }
 
 // ProviderAuthOption identifies one provider authentication mode. Instances are
@@ -162,4 +168,21 @@ func (cfg *RequestConfig) ProviderAuth(provider string) (string, bool) {
 		return "", false
 	}
 	return cfg.providerAuth.selector, true
+}
+
+// ClearInheritedOpenAICredentials removes OpenAI API credentials selected by
+// an earlier option layer. Credentials selected in the current layer remain so
+// a provider finalizer can reject the ambiguity after all options are applied.
+func (cfg *RequestConfig) ClearInheritedOpenAICredentials() {
+	if cfg.APIKey != "" && cfg.apiKeyLayer != cfg.optionLayer {
+		cfg.APIKey = ""
+		cfg.apiKeyLayer = nil
+	}
+	if cfg.AdminAPIKey != "" && cfg.adminAPIKeyLayer != cfg.optionLayer {
+		cfg.AdminAPIKey = ""
+		cfg.adminAPIKeyLayer = nil
+	}
+	if cfg.APIKey == "" && cfg.AdminAPIKey == "" {
+		cfg.authPreference = authCredentialPreferenceNone
+	}
 }

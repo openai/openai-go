@@ -26,6 +26,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -82,7 +83,7 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 		}
 
 		return rc.Apply(
-			requestconfig.WithProviderEndpoint(azureProvider),
+			requestconfig.WithProviderEndpointConfigured(azureProvider),
 			withQueryAdd,
 			withEndpoint,
 			withModelMiddleware,
@@ -114,11 +115,15 @@ func WithTokenCredentialScopes(scopes []string) func(*tokenCredentialConfig) err
 //
 // [Azure Identity]: https://pkg.go.dev/github.com/Azure/azure-sdk-for-go/sdk/azidentity
 func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...TokenCredentialOption) option.RequestOption {
-	auth := requestconfig.NewProviderAuthOption(azureProvider, azureTokenCredentialAuth)
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		if isNilTokenCredential(tokenCredential) {
+			return errors.New("azure: token credential must not be nil")
+		}
+		auth := requestconfig.NewProviderAuthOption(azureProvider, azureTokenCredentialAuth)
 		if err := rc.Apply(requestconfig.WithEndpointProvider(azureProvider), auth); err != nil {
 			return err
 		}
+		rc.ClearInheritedOpenAICredentials()
 		tc := &tokenCredentialConfig{
 			Scopes: []string{"https://cognitiveservices.azure.com/.default"},
 		}
@@ -162,17 +167,31 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 	})
 }
 
+func isNilTokenCredential(tokenCredential azcore.TokenCredential) bool {
+	if tokenCredential == nil {
+		return true
+	}
+	value := reflect.ValueOf(tokenCredential)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		return value.IsNil()
+	default:
+		return false
+	}
+}
+
 // WithAPIKey configures this client to authenticate using an API key.
 // This function should be paired with a call to [WithEndpoint] to point to your Azure OpenAI instance.
 func WithAPIKey(apiKey string) option.RequestOption {
-	auth := requestconfig.NewProviderAuthOption(azureProvider, azureAPIKeyAuth)
 	// NOTE: option.WithAPIKey() uses the Authorization header. Azure expects
 	// Api-Key instead. Deleting Authorization also prevents request security from
 	// automatically injecting environment-derived client credentials.
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
+		auth := requestconfig.NewProviderAuthOption(azureProvider, azureAPIKeyAuth)
 		if err := rc.Apply(requestconfig.WithEndpointProvider(azureProvider), auth); err != nil {
 			return err
 		}
+		rc.ClearInheritedOpenAICredentials()
 		return rc.Apply(
 			option.WithHeaderDel("Authorization"),
 			option.WithHeader("Api-Key", apiKey),
@@ -182,7 +201,7 @@ func WithAPIKey(apiKey string) option.RequestOption {
 }
 
 func finalizeAzureProvider(rc *requestconfig.RequestConfig) error {
-	if !rc.ProviderEndpointIs(azureProvider) {
+	if !rc.ProviderEndpointConfigured(azureProvider) {
 		return errors.New("azure: authentication requires azure.WithEndpoint")
 	}
 	if rc.APIKey != "" || rc.AdminAPIKey != "" {
@@ -193,23 +212,33 @@ func finalizeAzureProvider(rc *requestconfig.RequestConfig) error {
 	if !ok {
 		return errors.New("azure: authentication is required; configure exactly one of azure.WithAPIKey or azure.WithTokenCredential")
 	}
-	if rc.Request.Header.Get("Authorization") != "" {
+	if nonEmptyHeaderValues(rc.Request.Header, "Authorization") != 0 {
 		return errors.New("azure: Azure authentication cannot be combined with a custom Authorization header")
 	}
 
 	switch auth {
 	case azureAPIKeyAuth:
-		if strings.TrimSpace(rc.Request.Header.Get("Api-Key")) == "" {
-			return errors.New("azure: API key must not be empty")
+		if nonEmptyHeaderValues(rc.Request.Header, "Api-Key") != 1 {
+			return errors.New("azure: exactly one non-empty API key is required")
 		}
 	case azureTokenCredentialAuth:
-		if rc.Request.Header.Get("Api-Key") != "" {
+		if nonEmptyHeaderValues(rc.Request.Header, "Api-Key") != 0 {
 			return errors.New("azure: token credential authentication cannot be combined with an Api-Key header")
 		}
 	default:
 		return errors.New("azure: invalid authentication mode")
 	}
 	return nil
+}
+
+func nonEmptyHeaderValues(header http.Header, name string) int {
+	count := 0
+	for _, value := range header.Values(name) {
+		if strings.TrimSpace(value) != "" {
+			count++
+		}
+	}
+	return count
 }
 
 // jsonRoutes have JSON payloads - we'll deserialize looking for a .model field in there
