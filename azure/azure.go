@@ -62,11 +62,11 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 		replacementPath, err := getReplacementPathWithDeployment(r)
 
 		if err != nil {
-			return nil, err
+			return nil, requestconfig.WithNoRetryError(err)
 		}
 
 		if err := setEscapedPath(r.URL, replacementPath); err != nil {
-			return nil, err
+			return nil, requestconfig.WithNoRetryError(err)
 		}
 		return mn(r)
 	})

@@ -115,10 +115,14 @@ func TestAzureJSONRoutesRejectInvalidBodiesBeforeTransport(t *testing.T) {
 	}
 
 	transportCalls := 0
+	routingAttempts := 0
 	client := openai.NewClient(
+		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			routingAttempts++
+			return next(req)
+		}),
 		WithEndpoint("https://my-resource.openai.azure.com", "2024-10-21"),
 		WithAPIKey("azure-api-key"),
-		option.WithMaxRetries(0),
 		option.WithHTTPClient(&http.Client{
 			Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
 				transportCalls++
@@ -127,9 +131,11 @@ func TestAzureJSONRoutesRejectInvalidBodiesBeforeTransport(t *testing.T) {
 		}),
 	)
 
+	wantRoutingAttempts := 0
 	for _, route := range routes {
 		for _, tc := range invalidJSONRouteBodies {
 			t.Run(route+"/"+tc.name, func(t *testing.T) {
+				wantRoutingAttempts++
 				var body any
 				if tc.body != nil {
 					body = tc.body
@@ -144,6 +150,9 @@ func TestAzureJSONRoutesRejectInvalidBodiesBeforeTransport(t *testing.T) {
 				}
 				if transportCalls != 0 {
 					t.Fatalf("transport called %d times, want 0", transportCalls)
+				}
+				if routingAttempts != wantRoutingAttempts {
+					t.Fatalf("routing attempted %d times, want %d", routingAttempts, wantRoutingAttempts)
 				}
 			})
 		}
