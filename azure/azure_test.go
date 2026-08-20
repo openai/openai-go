@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -618,6 +619,147 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 				t.Fatal("redirect target was reached despite caller policy")
 			}
 		})
+	}
+}
+
+func TestAzureUnsafeHTTPMatchesProxyBypass(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_ADMIN_KEY", "")
+	t.Setenv("NO_PROXY", "")
+	t.Setenv("no_proxy", "")
+
+	type requestObservation struct {
+		host          string
+		apiKey        string
+		authorization string
+	}
+	proxyRequests := make(chan requestObservation, 1)
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		proxyRequests <- requestObservation{
+			host:          req.URL.Hostname(),
+			apiKey:        req.Header.Get("Api-Key"),
+			authorization: req.Header.Get("Authorization"),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	t.Cleanup(proxy.Close)
+	t.Setenv("HTTP_PROXY", proxy.URL)
+	t.Setenv("http_proxy", proxy.URL)
+
+	proxyURL, err := url.Parse(proxy.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hosts := map[string]struct {
+		host        string
+		wantAllowed bool
+	}{
+		"localhost":           {host: "localhost", wantAllowed: true},
+		"uppercase localhost": {host: "LOCALHOST"},
+		"localhost dot":       {host: "localhost."},
+		"IPv4 loopback":       {host: "127.0.0.1", wantAllowed: true},
+		"IPv6 loopback":       {host: "[::1]", wantAllowed: true},
+	}
+	authOptions := map[string]struct {
+		option      func() option.RequestOption
+		header      string
+		headerValue string
+	}{
+		"API key": {
+			option:      func() option.RequestOption { return WithAPIKey("azure-api-key") },
+			header:      "Api-Key",
+			headerValue: "azure-api-key",
+		},
+		"token": {
+			option:      func() option.RequestOption { return WithTokenCredential(&fake.TokenCredential{}) },
+			header:      "Authorization",
+			headerValue: "Bearer fake_token",
+		},
+	}
+
+	for authName, auth := range authOptions {
+		for hostName, host := range hosts {
+			t.Run(authName+"/"+hostName, func(t *testing.T) {
+				select {
+				case <-proxyRequests:
+					t.Fatal("unexpected stale proxy request")
+				default:
+				}
+
+				originRequests := make(chan requestObservation, 1)
+				origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					originRequests <- requestObservation{
+						host:          req.URL.Hostname(),
+						apiKey:        req.Header.Get("Api-Key"),
+						authorization: req.Header.Get("Authorization"),
+					}
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = w.Write([]byte(`{"ok":true}`))
+				}))
+				t.Cleanup(origin.Close)
+				originURL, parseErr := url.Parse(origin.URL)
+				if parseErr != nil {
+					t.Fatal(parseErr)
+				}
+
+				transport := http.DefaultTransport.(*http.Transport).Clone()
+				transport.Proxy = http.ProxyFromEnvironment
+				dialer := &net.Dialer{}
+				transport.DialContext = func(ctx context.Context, network string, address string) (net.Conn, error) {
+					if address == proxyURL.Host {
+						return dialer.DialContext(ctx, network, proxyURL.Host)
+					}
+					return dialer.DialContext(ctx, network, originURL.Host)
+				}
+
+				endpoint := "http://" + host.host + ":" + originURL.Port()
+				client := openai.NewClient(
+					WithEndpoint(endpoint, "2024-10-21"),
+					auth.option(),
+					WithUnsafeAllowHTTP(),
+					option.WithMaxRetries(0),
+					option.WithHTTPClient(&http.Client{Transport: transport}),
+				)
+
+				var res map[string]any
+				requestErr := client.Execute(context.Background(), http.MethodGet, "models", nil, &res)
+				if !host.wantAllowed {
+					if requestErr == nil || !strings.Contains(requestErr.Error(), "azure: authenticated requests require HTTPS") {
+						t.Errorf("expected HTTPS requirement error, got %v", requestErr)
+					}
+					select {
+					case got := <-proxyRequests:
+						t.Errorf("rejected hostname reached proxy: %q", got.host)
+					default:
+					}
+					select {
+					case got := <-originRequests:
+						t.Errorf("rejected hostname reached origin: %q", got.host)
+					default:
+					}
+					return
+				}
+
+				if requestErr != nil {
+					t.Fatalf("request failed: %v", requestErr)
+				}
+				select {
+				case got := <-proxyRequests:
+					t.Fatalf("loopback request reached proxy: %q", got.host)
+				default:
+				}
+				select {
+				case got := <-originRequests:
+					if credential := map[string]string{"Api-Key": got.apiKey, "Authorization": got.authorization}[auth.header]; credential != auth.headerValue {
+						t.Fatalf("%s header = %q, want %q", auth.header, credential, auth.headerValue)
+					}
+				default:
+					t.Fatal("allowed loopback request did not reach origin")
+				}
+			})
+		}
 	}
 }
 

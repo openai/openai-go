@@ -327,8 +327,10 @@ func azureCredentialHTTPAllowed(req *http.Request) bool {
 		return false
 	}
 
-	host := strings.TrimSuffix(req.URL.Hostname(), ".")
-	if strings.EqualFold(host, "localhost") {
+	// Keep this allowlist aligned with net/http's ProxyFromEnvironment bypass.
+	// Other localhost spellings can resolve to loopback but still reach HTTP_PROXY.
+	host := req.URL.Hostname()
+	if host == "localhost" {
 		return true
 	}
 	ip := net.ParseIP(host)
