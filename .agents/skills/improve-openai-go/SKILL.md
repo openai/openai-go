@@ -64,8 +64,10 @@ At the start of every run:
 3. If five or more skill-owned pull requests are open, do not start another.
    Service the oldest actionable skill-owned pull request by addressing CI or
    review feedback. If none is actionable, report that state and stop.
-4. If fewer than five are open, service any failing or reviewed skill-owned
-   pull request before considering new work.
+4. If fewer than five are open, service any skill-owned pull request with
+   failing CI or unresolved actionable review feedback before considering new
+   work. An approved pull request that only awaits maintainer action is not
+   actionable.
 5. A run that enters service mode must service exactly one existing pull
    request at its trusted head, complete stewardship and reporting, and stop.
    It must not continue into new-improvement selection or creation.
@@ -201,17 +203,18 @@ range has no validated findings and all required checks pass.
 
 Do not weaken tests, linters, analysis, or security controls to make a change
 pass. Do not claim a check ran when it did not. If required validation cannot be
-completed or the evidence remains ambiguous, do not open the pull request.
+completed or the evidence remains ambiguous, do not open, push, or otherwise
+update a pull request.
 
 ## Open and steward the pull request
 
 Configure the recurring task so only one invocation can enter the pull-request
 creation gate at a time. Immediately before creating a pull request, while
 holding that concurrency gate, repeat the trusted-provenance count and the
-duplicate and overlap search. If five skill-owned pull requests are now open or
-overlapping work appeared, do not create the pull request; service or report the
-existing work instead. If reliable serialization is unavailable, stop and ask
-a maintainer rather than risk exceeding the budget.
+duplicate and overlap search. If five or more skill-owned pull requests are now
+open or overlapping work appeared, do not create the pull request; report the
+existing work and stop without switching modes. If reliable serialization is
+unavailable, stop and ask a maintainer rather than risk exceeding the budget.
 
 In new-improvement mode, open one focused pull request containing the marker
 and describe:
@@ -228,12 +231,15 @@ After every push, monitor all CI to completion. Automatically fix failures that
 the change caused, rerun the required local review before pushing again, and
 never dismiss an unexplained failure as flaky. For each review comment, reply
 with how it was addressed after pushing and then resolve the thread. Once CI and
-feedback are clear, search `#sdk-reviews` for the pull-request URL. Reuse its
-existing review thread when found. Otherwise create exactly one top-level
-message for the pull request, start its thread, and record the message permalink
-or thread identifier in retained run history. Put every follow-up request in
-that same thread and never create a second top-level review request for the same
-pull request. Never merge automatically.
+feedback are clear, first use a trusted retained `#sdk-reviews` thread reference
+when one exists; otherwise successfully search the channel for the pull-request
+URL. Reuse the existing review thread when found. Create exactly one top-level
+message and start its thread only after a successful search conclusively finds
+no match, then record the message permalink or thread identifier in retained
+run history. If search is unavailable, fails, or is ambiguous, stop and ask a
+maintainer instead of risking a duplicate. Put every follow-up request in the
+same thread and never create a second top-level review request for the same pull
+request. Never merge automatically.
 
 ## Report the run
 
