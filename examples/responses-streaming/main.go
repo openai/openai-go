@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/responses"
@@ -21,13 +22,14 @@ func main() {
 	var completeText string
 
 	for stream.Next() {
-		data := stream.Current()
-		print(data.Delta)
-		if data.JSON.Text.Valid() {
+		event := stream.Current()
+		switch data := event.AsAny().(type) {
+		case responses.ResponseTextDeltaEvent:
+			print(data.Delta)
+		case responses.ResponseTextDoneEvent:
 			println()
-			println("Finished Content")
+			fmt.Println("Finished content")
 			completeText = data.Text
-			break
 		}
 	}
 
