@@ -200,3 +200,35 @@ func TestWithDebugLogOmitsResponseStatusText(t *testing.T) {
 		t.Fatalf("debug log missing numeric status code: %s", logOutput)
 	}
 }
+
+func TestWithDebugLogRedactsUnrecognizedMethod(t *testing.T) {
+	const requestMethod = "CUSTOM-METHOD-SECRET"
+
+	receivedMethod := make(chan string, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedMethod <- r.Method
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	t.Cleanup(server.Close)
+
+	var output bytes.Buffer
+	client := openai.NewClient(
+		option.WithBaseURL(server.URL),
+		option.WithAPIKey("api-key-secret"),
+		option.WithDebugLog(log.New(&output, "", 0)),
+	)
+	if err := client.Execute(context.Background(), requestMethod, "debug", nil, nil); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if got := <-receivedMethod; got != requestMethod {
+		t.Fatalf("request method = %q, want %q", got, requestMethod)
+	}
+
+	logOutput := output.String()
+	if strings.Contains(logOutput, requestMethod) {
+		t.Fatalf("debug log contains unrecognized request method: %s", logOutput)
+	}
+	if !strings.Contains(logOutput, `"method":"***"`) {
+		t.Fatalf("debug log missing method placeholder: %s", logOutput)
+	}
+}

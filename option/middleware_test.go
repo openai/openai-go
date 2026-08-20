@@ -6,6 +6,28 @@ import (
 	"testing"
 )
 
+func TestDebugLogMethod(t *testing.T) {
+	for _, method := range []string{
+		http.MethodConnect,
+		http.MethodDelete,
+		http.MethodGet,
+		http.MethodHead,
+		http.MethodOptions,
+		http.MethodPatch,
+		http.MethodPost,
+		http.MethodPut,
+		http.MethodTrace,
+	} {
+		if got := debugLogMethod(method); got != method {
+			t.Errorf("debugLogMethod(%q) = %q, want unchanged", method, got)
+		}
+	}
+
+	if got := debugLogMethod("CUSTOM-METHOD-SECRET"); got != debugLogRedacted {
+		t.Errorf("debugLogMethod() = %q, want %q", got, debugLogRedacted)
+	}
+}
+
 func TestDebugLogHeaders(t *testing.T) {
 	headers := http.Header{
 		"Content-Type":         {"application/json"},

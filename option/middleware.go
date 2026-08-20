@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+const debugLogRedacted = "***"
+
 type debugRequestMetadata struct {
 	Method        string      `json:"method"`
 	ContentLength int64       `json:"content_length"`
@@ -23,8 +25,9 @@ type debugResponseMetadata struct {
 // If the logger parameter is nil, it uses the default logger.
 //
 // Request and response bodies, URLs, free-form response status text, and all
-// original header values are omitted. Recognized credential-bearing header
-// names are represented by a placeholder for each original value.
+// original header values are omitted. Unrecognized request methods and values
+// for recognized credential-bearing header names are represented by a
+// placeholder.
 //
 // WithDebugLog is for debugging and development purposes only.
 // It should not be used in production code. The behavior and interface
@@ -36,7 +39,7 @@ func WithDebugLog(logger *log.Logger) RequestOption {
 
 	return WithMiddleware(func(req *http.Request, nxt MiddlewareNext) (*http.Response, error) {
 		requestMetadata, marshalErr := json.Marshal(debugRequestMetadata{
-			Method:        req.Method,
+			Method:        debugLogMethod(req.Method),
 			ContentLength: req.ContentLength,
 			Headers:       debugLogHeaders(req.Header),
 		})
@@ -64,6 +67,23 @@ func WithDebugLog(logger *log.Logger) RequestOption {
 	})
 }
 
+func debugLogMethod(method string) string {
+	switch method {
+	case http.MethodConnect,
+		http.MethodDelete,
+		http.MethodGet,
+		http.MethodHead,
+		http.MethodOptions,
+		http.MethodPatch,
+		http.MethodPost,
+		http.MethodPut,
+		http.MethodTrace:
+		return method
+	default:
+		return debugLogRedacted
+	}
+}
+
 func debugLogHeaders(headers http.Header) http.Header {
 	result := make(http.Header)
 	for name, values := range headers {
@@ -87,7 +107,7 @@ func debugLogHeaders(headers http.Header) http.Header {
 			continue
 		}
 		for range values {
-			result.Add(redactedName, "***")
+			result.Add(redactedName, debugLogRedacted)
 		}
 	}
 	return result
