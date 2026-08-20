@@ -738,20 +738,29 @@ For most use cases, you will likely want to verify the webhook and parse the pay
 
 Note that the `body` parameter should be the raw JSON bytes sent from the server (do not parse it first). The `Unwrap()` method will parse this JSON for you into an event object after verifying the webhook was sent from OpenAI.
 
+Webhook payloads are unauthenticated until signature verification succeeds. The
+example below limits each request to 1 MiB before buffering it and configures
+server read timeouts. Enforce the same or a smaller limit at your reverse proxy
+as defense in depth.
+
 ```go
 package main
 
 import (
+	"errors"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 	"github.com/openai/openai-go/v3/webhooks"
 )
+
+const maxWebhookBodySize = 1 << 20 // 1 MiB
 
 func main() {
 	client := openai.NewClient(
@@ -761,12 +770,19 @@ func main() {
 	r := gin.Default()
 
 	r.POST("/webhook", func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxWebhookBodySize)
+		defer func() { _ = c.Request.Body.Close() }()
+
 		body, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
+			var maxBytesError *http.MaxBytesError
+			if errors.As(err, &maxBytesError) {
+				c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "request body too large"})
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": "error reading request body"})
 			return
 		}
-		defer c.Request.Body.Close()
 
 		webhookEvent, err := client.Webhooks.Unwrap(body, c.Request.Header)
 		if err != nil {
@@ -787,7 +803,15 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "ok"})
 	})
 
-	r.Run(":8000")
+	server := &http.Server{
+		Addr:              ":8000",
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	log.Fatal(server.ListenAndServe())
 }
 ```
 
@@ -797,20 +821,26 @@ In some cases, you may want to verify the webhook separately from parsing the pa
 
 Note that the `body` parameter should be the raw JSON bytes sent from the server (do not parse it first). You will then need to parse the body after verifying the signature.
 
+As above, bound the unauthenticated request body before reading it and configure
+server read timeouts. This example also uses a 1 MiB maximum.
+
 ```go
 package main
 
 import (
-	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
 )
+
+const maxWebhookBodySize = 1 << 20 // 1 MiB
 
 func main() {
 	client := openai.NewClient(
@@ -820,12 +850,19 @@ func main() {
 	r := gin.Default()
 
 	r.POST("/webhook", func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxWebhookBodySize)
+		defer func() { _ = c.Request.Body.Close() }()
+
 		body, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
+			var maxBytesError *http.MaxBytesError
+			if errors.As(err, &maxBytesError) {
+				c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "request body too large"})
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": "error reading request body"})
 			return
 		}
-		defer c.Request.Body.Close()
 
 		err = client.Webhooks.VerifySignature(body, c.Request.Header)
 		if err != nil {
@@ -837,7 +874,15 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "ok"})
 	})
 
-	r.Run(":8000")
+	server := &http.Server{
+		Addr:              ":8000",
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	log.Fatal(server.ListenAndServe())
 }
 ```
 
