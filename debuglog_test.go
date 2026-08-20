@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -23,6 +24,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 	type receivedRequest struct {
 		body               string
 		escapedPath        string
+		host               string
 		proxyAuthorization []string
 		rawQuery           string
 		err                error
@@ -33,6 +35,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 		received <- receivedRequest{
 			body:               string(body),
 			escapedPath:        r.URL.EscapedPath(),
+			host:               r.Host,
 			proxyAuthorization: r.Header.Values("Proxy-Authorization"),
 			rawQuery:           r.URL.RawQuery,
 			err:                readErr,
@@ -48,7 +51,17 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse server URL: %v", err)
 	}
+	const credentialBearingHostname = "customer-credential-host-secret.example.test"
+	baseURL.Host = net.JoinHostPort(credentialBearingHostname, baseURL.Port())
 	baseURL.User = url.UserPassword("url-user", "url-password")
+
+	dialer := &net.Dialer{}
+	transport := &http.Transport{
+		DialContext: func(ctx context.Context, network string, _ string) (net.Conn, error) {
+			return dialer.DialContext(ctx, network, server.Listener.Addr().String())
+		},
+	}
+	t.Cleanup(transport.CloseIdleConnections)
 
 	var output bytes.Buffer
 	var response []byte
@@ -56,6 +69,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 	client := openai.NewClient(
 		option.WithBaseURL(baseURL.String()),
 		option.WithAPIKey("api-key-secret"),
+		option.WithHTTPClient(&http.Client{Transport: transport}),
 		option.WithHeaderAdd("Proxy-Authorization", "first-proxy-secret"),
 		option.WithHeaderAdd("Proxy-Authorization", "second-proxy-secret"),
 		option.WithHeader("X-Custom-Secret", "custom-header-secret"),
@@ -82,6 +96,9 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 	if got, want := gotRequest.escapedPath, "/debug/path-token-secret"; got != want {
 		t.Fatalf("request path = %q, want %q", got, want)
 	}
+	if got, want := gotRequest.host, baseURL.Host; got != want {
+		t.Fatalf("request host = %q, want %q", got, want)
+	}
 	const wantRawQuery = "api_key=query-secret&access_token=access-token-secret&sig=signature-secret"
 	if gotRequest.rawQuery != wantRawQuery {
 		t.Fatalf("request query = %q, want %q", gotRequest.rawQuery, wantRawQuery)
@@ -99,6 +116,7 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 
 	logOutput := output.String()
 	for _, secret := range []string{
+		credentialBearingHostname,
 		"url-user",
 		"url-password",
 		"path-token-secret",
@@ -123,7 +141,6 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 	}
 	for _, metadata := range []string{
 		`"method":"POST"`,
-		`"url":"` + server.URL + `"`,
 		`"Authorization":["***"]`,
 		`"Proxy-Authorization":["***","***"]`,
 		`"status_code":200`,
@@ -132,6 +149,9 @@ func TestWithDebugLogEmitsOnlyRedactedMetadata(t *testing.T) {
 		if !strings.Contains(logOutput, metadata) {
 			t.Errorf("debug log missing %q: %s", metadata, logOutput)
 		}
+	}
+	if strings.Contains(logOutput, `"url":`) {
+		t.Errorf("debug log contains URL metadata: %s", logOutput)
 	}
 }
 

@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
 type debugRequestMetadata struct {
 	Method        string      `json:"method"`
-	URL           string      `json:"url"`
 	ContentLength int64       `json:"content_length"`
 	Headers       http.Header `json:"headers"`
 }
@@ -24,10 +22,9 @@ type debugResponseMetadata struct {
 // WithDebugLog logs allowlisted HTTP request and response metadata.
 // If the logger parameter is nil, it uses the default logger.
 //
-// Request and response bodies, URL path, user information, query strings and
-// fragments, and all original header values are omitted. Recognized
-// credential-bearing header names are represented by a placeholder for each
-// original value.
+// Request and response bodies, URLs, free-form response status text, and all
+// original header values are omitted. Recognized credential-bearing header
+// names are represented by a placeholder for each original value.
 //
 // WithDebugLog is for debugging and development purposes only.
 // It should not be used in production code. The behavior and interface
@@ -40,7 +37,6 @@ func WithDebugLog(logger *log.Logger) RequestOption {
 	return WithMiddleware(func(req *http.Request, nxt MiddlewareNext) (*http.Response, error) {
 		requestMetadata, marshalErr := json.Marshal(debugRequestMetadata{
 			Method:        req.Method,
-			URL:           debugLogURL(req.URL),
 			ContentLength: req.ContentLength,
 			Headers:       debugLogHeaders(req.Header),
 		})
@@ -66,16 +62,6 @@ func WithDebugLog(logger *log.Logger) RequestOption {
 
 		return resp, err
 	})
-}
-
-func debugLogURL(original *url.URL) string {
-	if original == nil {
-		return ""
-	}
-	return (&url.URL{
-		Scheme: original.Scheme,
-		Host:   original.Host,
-	}).String()
 }
 
 func debugLogHeaders(headers http.Header) http.Header {

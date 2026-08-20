@@ -2,7 +2,6 @@ package option
 
 import (
 	"net/http"
-	"net/url"
 	"reflect"
 	"testing"
 )
@@ -24,21 +23,5 @@ func TestDebugLogHeaders(t *testing.T) {
 	}
 	if got := headers.Values("Proxy-Authorization"); !reflect.DeepEqual(got, []string{"first-secret", "second-secret"}) {
 		t.Fatalf("original headers were modified: %#v", got)
-	}
-}
-
-func TestDebugLogURL(t *testing.T) {
-	u := &url.URL{
-		Scheme:   "https",
-		User:     url.UserPassword("url-user", "url-password"),
-		Host:     "example.com",
-		Path:     "/v1/responses",
-		RawQuery: "api_key=query-secret&access_token=token-secret",
-		Fragment: "fragment-secret",
-		Opaque:   "opaque-secret",
-	}
-
-	if got, want := debugLogURL(u), "https://example.com"; got != want {
-		t.Fatalf("debugLogURL() = %q, want %q", got, want)
 	}
 }
