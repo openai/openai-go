@@ -34,11 +34,24 @@ const (
 	finishedResponseState
 )
 
+// maxStreamAccumulatorIndex limits zero-based protocol positions to 128 choices
+// or tool calls. Stream indices are expected to be small and dense; bounding them
+// prevents response data from controlling sparse allocation sizes and guarantees
+// that the subsequent conversion fits in int on every Go architecture.
+const maxStreamAccumulatorIndex int64 = 127
+
 // AddChunk incorporates a chunk into the accumulation. Chunks must be added in order.
 // Returns false if the chunk could not be successfully accumulated.
+// Choice and tool-call indices must be between 0 and 127. For compatibility with
+// providers that use -1 for a single tool call, that value is treated as index 0.
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
+	if !validChatCompletionChunkIndices(chunk) {
+		return false
+	}
+	// All conversions below consume values checked by the full preflight above.
+
 	acc.justFinished = chatCompletionResponseState{}
 	acc.justFinishedByChoice = acc.justFinishedByChoice[:0]
 	if !acc.accumulateDelta(chunk) {
@@ -47,13 +60,13 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 
 	if len(chunk.Choices) > 0 {
 		firstChoice := chunk.Choices[0]
-		choiceIndex := int(firstChoice.Index)
+		choiceIndex, _ := checkedStreamAccumulatorIndex(firstChoice.Index)
 		acc.legacyChoiceChatCompletionStates = expandToFit(acc.legacyChoiceChatCompletionStates, choiceIndex)
 		acc.justFinished = acc.legacyChoiceChatCompletionStates[choiceIndex].update(firstChoice)
 	}
 
 	for _, choice := range chunk.Choices {
-		choiceIndex := int(choice.Index)
+		choiceIndex, _ := checkedStreamAccumulatorIndex(choice.Index)
 		acc.choiceChatCompletionStates = expandToFit(acc.choiceChatCompletionStates, choiceIndex)
 		justFinished := acc.choiceChatCompletionStates[choiceIndex].update(choice)
 		if justFinished.state != emptyResponseState {
@@ -167,8 +180,9 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 	}
 
 	for _, delta := range chunk.Choices {
-		cc.Choices = expandToFit(cc.Choices, int(delta.Index))
-		choice := &cc.Choices[delta.Index]
+		choiceIndex, _ := checkedStreamAccumulatorIndex(delta.Index)
+		cc.Choices = expandToFit(cc.Choices, choiceIndex)
+		choice := &cc.Choices[choiceIndex]
 
 		choice.Index = delta.Index
 		choice.FinishReason = delta.FinishReason
@@ -182,8 +196,7 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 
 		for j := range delta.Delta.ToolCalls {
 			deltaTool := &delta.Delta.ToolCalls[j]
-			// Clamp negative indices to 0 since the API may send -1 for single tool calls
-			toolIndex := clampToZero(deltaTool.Index)
+			toolIndex, _ := checkedToolCallIndex(deltaTool.Index)
 
 			choice.Message.ToolCalls = expandToFit(choice.Message.ToolCalls, toolIndex)
 			tool := &choice.Message.ToolCalls[toolIndex]
@@ -229,18 +242,19 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 // the state changed. This ensures that JustFinished events only fire once.
 func (prev *chatCompletionResponseState) update(choice ChatCompletionChunkChoice) (justFinished chatCompletionResponseState) {
 	delta := choice.Delta
-	new := chatCompletionResponseState{choiceIndex: int(choice.Index)}
+	choiceIndex, _ := checkedStreamAccumulatorIndex(choice.Index)
+	new := chatCompletionResponseState{choiceIndex: choiceIndex}
 	switch {
 	case len(delta.ToolCalls) > 0 && delta.Content == "":
 		new.state = toolResponseState
-		new.toolCallIndex = clampToZero(delta.ToolCalls[0].Index)
+		new.toolCallIndex, _ = checkedToolCallIndex(delta.ToolCalls[0].Index)
 	case delta.JSON.Content.Valid():
 		new.state = contentResponseState
 	case delta.JSON.Refusal.Valid():
 		new.state = refusalResponseState
 	case len(delta.ToolCalls) > 0:
 		new.state = toolResponseState
-		new.toolCallIndex = clampToZero(delta.ToolCalls[0].Index)
+		new.toolCallIndex, _ = checkedToolCallIndex(delta.ToolCalls[0].Index)
 	default:
 		new.state = finishedResponseState
 	}
@@ -253,12 +267,34 @@ func (prev *chatCompletionResponseState) update(choice ChatCompletionChunkChoice
 	return
 }
 
-// clampToZero handles providers like AWS Bedrock that return tool call index -1.
-func clampToZero(index int64) int {
-	if index < 0 {
-		return 0
+func validChatCompletionChunkIndices(chunk ChatCompletionChunk) bool {
+	for _, choice := range chunk.Choices {
+		if _, ok := checkedStreamAccumulatorIndex(choice.Index); !ok {
+			return false
+		}
+		for _, toolCall := range choice.Delta.ToolCalls {
+			if _, ok := checkedToolCallIndex(toolCall.Index); !ok {
+				return false
+			}
+		}
 	}
-	return int(index)
+	return true
+}
+
+func checkedStreamAccumulatorIndex(index int64) (int, bool) {
+	if index < 0 || index > maxStreamAccumulatorIndex {
+		return 0, false
+	}
+	return int(index), true
+}
+
+// checkedToolCallIndex handles providers like AWS Bedrock that return -1 for a
+// single tool call while rejecting all other values outside the shared bound.
+func checkedToolCallIndex(index int64) (int, bool) {
+	if index == -1 {
+		return 0, true
+	}
+	return checkedStreamAccumulatorIndex(index)
 }
 
 func expandToFit[T any](slice []T, index int) []T {
