@@ -30127,8 +30127,8 @@ type BetaToolImageGeneration struct {
 	// `file_id` (string, optional).
 	InputImageMask BetaToolImageGenerationInputImageMask `json:"input_image_mask"`
 	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, or `gpt-image-2-2026-04-21`. Default:
-	// `gpt-image-1`.
+	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`, or
+	// `chatgpt-image-latest`. Default: `gpt-image-1`.
 	Model string `json:"model"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
@@ -31382,8 +31382,8 @@ type BetaToolImageGenerationParam struct {
 	// `file_id` (string, optional).
 	InputImageMask BetaToolImageGenerationInputImageMaskParam `json:"input_image_mask,omitzero"`
 	// The image generation model to use. One of `gpt-image-1`, `gpt-image-1-mini`,
-	// `gpt-image-1.5`, `gpt-image-2`, or `gpt-image-2-2026-04-21`. Default:
-	// `gpt-image-1`.
+	// `gpt-image-1.5`, `gpt-image-2`, `gpt-image-2-2026-04-21`, or
+	// `chatgpt-image-latest`. Default: `gpt-image-1`.
 	Model string `json:"model,omitzero"`
 	// Moderation level for the generated image. Default: `auto`.
 	//
