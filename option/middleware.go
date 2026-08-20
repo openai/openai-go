@@ -1,36 +1,51 @@
 package option
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
-	"net/http/httputil"
+	"net/url"
+	"strings"
 )
 
-// sensitiveLogHeaders are redacted before request and response content is
-// written to the debug logger.
-var sensitiveLogHeaders = []string{
-	"authorization",
-	"api-key",
-	"x-api-key",
-	"x-amz-security-token",
-	"cookie",
-	"set-cookie",
+type debugRequestMetadata struct {
+	Method        string      `json:"method"`
+	URL           string      `json:"url"`
+	ContentLength int64       `json:"content_length"`
+	Headers       http.Header `json:"headers"`
 }
 
-// WithDebugLog logs the HTTP request and response content.
+type debugResponseMetadata struct {
+	Status        string      `json:"status"`
+	StatusCode    int         `json:"status_code"`
+	ContentLength int64       `json:"content_length"`
+	Headers       http.Header `json:"headers"`
+}
+
+// WithDebugLog logs allowlisted HTTP request and response metadata.
 // If the logger parameter is nil, it uses the default logger.
+//
+// Request and response bodies, URL user information and query strings, and
+// headers outside the allowlist are omitted. Credential-bearing headers are
+// represented by a placeholder for each original value.
 //
 // WithDebugLog is for debugging and development purposes only.
 // It should not be used in production code. The behavior and interface
 // of WithDebugLog is not guaranteed to be stable.
 func WithDebugLog(logger *log.Logger) RequestOption {
-	return WithMiddleware(func(req *http.Request, nxt MiddlewareNext) (*http.Response, error) {
-		if logger == nil {
-			logger = log.Default()
-		}
+	if logger == nil {
+		logger = log.Default()
+	}
 
-		if reqBytes, err := dumpRedactedRequest(req); err == nil {
-			logger.Printf("Request Content:\n%s\n", reqBytes)
+	return WithMiddleware(func(req *http.Request, nxt MiddlewareNext) (*http.Response, error) {
+		requestMetadata, marshalErr := json.Marshal(debugRequestMetadata{
+			Method:        req.Method,
+			URL:           debugLogURL(req.URL),
+			ContentLength: req.ContentLength,
+			Headers:       debugLogHeaders(req.Header),
+		})
+		if marshalErr == nil {
+			logger.Printf("Request Metadata: %s\n", requestMetadata)
 		}
 
 		resp, err := nxt(req)
@@ -38,48 +53,48 @@ func WithDebugLog(logger *log.Logger) RequestOption {
 			return resp, err
 		}
 
-		if respBytes, dumpErr := dumpRedactedResponse(resp); dumpErr == nil {
-			logger.Printf("Response Content:\n%s\n", respBytes)
+		if resp != nil {
+			responseMetadata, responseMarshalErr := json.Marshal(debugResponseMetadata{
+				Status:        resp.Status,
+				StatusCode:    resp.StatusCode,
+				ContentLength: resp.ContentLength,
+				Headers:       debugLogHeaders(resp.Header),
+			})
+			if responseMarshalErr == nil {
+				logger.Printf("Response Metadata: %s\n", responseMetadata)
+			}
 		}
 
 		return resp, err
 	})
 }
 
-// dumpRedactedRequest dumps req with sensitive headers replaced. The
-// original headers are restored via defer so a panic in DumpRequest cannot
-// leak the placeholder map into the live request sent downstream.
-func dumpRedactedRequest(req *http.Request) ([]byte, error) {
-	origHeaders := req.Header
-	req.Header = redactDebugHeaders(origHeaders)
-	defer func() { req.Header = origHeaders }()
-	return httputil.DumpRequest(req, true)
+func debugLogURL(original *url.URL) string {
+	if original == nil {
+		return ""
+	}
+	return (&url.URL{
+		Scheme:  original.Scheme,
+		Host:    original.Host,
+		Path:    original.Path,
+		RawPath: original.RawPath,
+	}).String()
 }
 
-func dumpRedactedResponse(resp *http.Response) ([]byte, error) {
-	origHeaders := resp.Header
-	resp.Header = redactDebugHeaders(origHeaders)
-	defer func() { resp.Header = origHeaders }()
-	return httputil.DumpResponse(resp, true)
-}
-
-func redactDebugHeaders(headers http.Header) http.Header {
-	var redacted http.Header
-	for _, name := range sensitiveLogHeaders {
-		values := headers.Values(name)
-		if len(values) == 0 {
-			continue
-		}
-		if redacted == nil {
-			redacted = headers.Clone()
-		}
-		redacted.Del(name)
-		for range values {
-			redacted.Add(name, "***")
+func debugLogHeaders(headers http.Header) http.Header {
+	result := make(http.Header)
+	for name, values := range headers {
+		canonicalName := http.CanonicalHeaderKey(name)
+		switch strings.ToLower(name) {
+		case "authorization", "proxy-authorization", "api-key", "x-api-key", "x-amz-security-token", "cookie", "set-cookie":
+			for range values {
+				result.Add(canonicalName, "***")
+			}
+		case "accept", "content-length", "content-type", "openai-processing-ms", "openai-version", "request-id", "retry-after", "user-agent", "x-request-id", "x-stainless-retry-count", "x-stainless-timeout":
+			for _, value := range values {
+				result.Add(canonicalName, value)
+			}
 		}
 	}
-	if redacted == nil {
-		return headers
-	}
-	return redacted
+	return result
 }
