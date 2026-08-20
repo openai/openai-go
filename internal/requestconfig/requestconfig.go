@@ -457,16 +457,13 @@ func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (time.Du
 			continue
 		}
 		if retryAfter, err := strconv.ParseFloat(v, 64); err == nil {
-			delay := retryAfter * float64(retry.units)
-			if math.IsNaN(delay) || math.IsInf(delay, 0) || delay <= 0 {
+			if math.IsNaN(retryAfter) || math.IsInf(retryAfter, 0) || retryAfter < 0 {
 				continue
 			}
-			if delay >= float64(maxDelay) {
+			if retryAfter >= float64(maxDelay)/float64(retry.units) {
 				return maxDelay, true
 			}
-			if delay := time.Duration(delay); delay > 0 {
-				return delay, true
-			}
+			return time.Duration(retryAfter * float64(retry.units)), true
 		}
 		if d, ok := retry.custom(v); ok {
 			if d <= 0 {

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -197,6 +198,11 @@ func TestParseRetryAfterHeaderBoundsRemoteDelays(t *testing.T) {
 			want:   DefaultMaxServerDelay,
 			ok:     true,
 		},
+		"finite scaling overflow": {
+			header: http.Header{"Retry-After": {"2" + strings.Repeat("0", 299)}},
+			want:   DefaultMaxServerDelay,
+			ok:     true,
+		},
 		"far future date": {
 			header: http.Header{"Retry-After": {time.Now().Add(time.Hour).UTC().Format(time.RFC1123)}},
 			want:   DefaultMaxServerDelay,
@@ -209,6 +215,11 @@ func TestParseRetryAfterHeaderBoundsRemoteDelays(t *testing.T) {
 		},
 		"zero": {
 			header: http.Header{"Retry-After": {"0"}},
+			ok:     true,
+		},
+		"zero milliseconds": {
+			header: http.Header{"Retry-After-Ms": {"0"}},
+			ok:     true,
 		},
 		"negative": {
 			header: http.Header{"Retry-After-Ms": {"-100"}},
