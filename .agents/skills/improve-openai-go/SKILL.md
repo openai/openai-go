@@ -61,14 +61,18 @@ At the start of every run:
    for duplicate or overlapping changes, even when they were created manually.
    Before selecting a candidate, search open work and the previous ninety days
    for the same symptom, subsystem, and files.
-3. If five skill-owned pull requests are open, do not start another. Service
-   the oldest actionable skill-owned pull request by addressing CI or review
-   feedback.
-   If all five only await human action, report that state and stop.
+3. If five or more skill-owned pull requests are open, do not start another.
+   Service the oldest actionable skill-owned pull request by addressing CI or
+   review feedback. If none is actionable, report that state and stop.
 4. If fewer than five are open, service any failing or reviewed skill-owned
    pull request before considering new work.
-5. Create no more than one new pull request in a run. Never split one idea into
-   several pull requests to evade the limit.
+5. A run that enters service mode must service exactly one existing pull
+   request at its trusted head, complete stewardship and reporting, and stop.
+   It must not continue into new-improvement selection or creation.
+6. Enter new-improvement mode only when no existing skill-owned pull request
+   requires service and fewer than five are open. Create no more than one new
+   pull request in that run. Never split one idea into several pull requests to
+   evade the limit.
 
 Count skill-owned pull requests whether draft or ready. Continue inspecting all
 other pull requests for duplication and overlap, but never count or service
@@ -151,8 +155,9 @@ none clears this bar, report the reviewed scope and open no pull request.
 
 ## Implement conservatively
 
-1. Create a narrowly named `codex/` branch from current `origin/main` in the
-   linked worktree.
+1. In new-improvement mode, create a narrowly named `codex/` branch from current
+   `origin/main` in the linked worktree. In service mode, remain at the existing
+   pull request's exact trusted head.
 2. Add a focused regression test first when practical and confirm that it fails
    for the expected reason. For an optimization, preserve a benchmark or other
    repeatable measurement when it will remain useful.
@@ -208,7 +213,8 @@ overlapping work appeared, do not create the pull request; service or report the
 existing work instead. If reliable serialization is unavailable, stop and ask
 a maintainer rather than risk exceeding the budget.
 
-Open one focused pull request containing the marker and describe:
+In new-improvement mode, open one focused pull request containing the marker
+and describe:
 
 - the demonstrated problem and why it matters;
 - the ownership boundary and root-cause fix;
@@ -222,19 +228,24 @@ After every push, monitor all CI to completion. Automatically fix failures that
 the change caused, rerun the required local review before pushing again, and
 never dismiss an unexplained failure as flaky. For each review comment, reply
 with how it was addressed after pushing and then resolve the thread. Once CI and
-feedback are clear, ask for review in `#sdk-reviews`, create a Slack thread, and
-put all follow-up requests in that thread. Never merge automatically.
+feedback are clear, search `#sdk-reviews` for the pull-request URL. Reuse its
+existing review thread when found. Otherwise create exactly one top-level
+message for the pull request, start its thread, and record the message permalink
+or thread identifier in retained run history. Put every follow-up request in
+that same thread and never create a second top-level review request for the same
+pull request. Never merge automatically.
 
 ## Report the run
 
 Return a concise run record even when no change is made:
 
 - UTC run date;
-- marked open pull-request count and whether existing work was serviced;
+- skill-owned open pull-request count and whether existing work was serviced;
 - paths and review lenses inspected, including important coverage gaps;
 - whether a standard security scan or architecture review completed;
 - candidate and supporting evidence, or why no candidate qualified;
 - files changed and compatibility assessment;
 - validation, security, and review results actually obtained;
-- pull-request URL and state, if one exists; and
+- pull-request URL and state, plus its `#sdk-reviews` thread reference, if one
+  exists; and
 - the best next area for the following run.
