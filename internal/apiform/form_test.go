@@ -675,15 +675,59 @@ func TestReaderFieldNameMetadata(t *testing.T) {
 }
 
 func TestReaderFieldNameRejectsOtherControlCharacters(t *testing.T) {
-	writer := multipart.NewWriter(io.Discard)
-	err := MarshalRoot(
-		map[string]io.Reader{"extra\x00": strings.NewReader("extra contents")},
-		writer,
-	)
-	if err == nil {
-		t.Fatal("MarshalRoot() error = nil, want invalid field name error")
+	tests := []struct {
+		name      string
+		fieldName string
+	}{
+		{name: "nul", fieldName: "extra\x00"},
+		{name: "unit separator", fieldName: "extra\x1f"},
+		{name: "delete", fieldName: "extra\x7f"},
+		{name: "unicode control", fieldName: "extra\u0085"},
 	}
-	if !strings.Contains(err.Error(), "invalid multipart field name") {
-		t.Errorf("MarshalRoot() error = %q, want invalid field name", err)
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			writer := multipart.NewWriter(io.Discard)
+			err := MarshalRoot(
+				map[string]io.Reader{test.fieldName: strings.NewReader("extra contents")},
+				writer,
+			)
+			if err == nil {
+				t.Fatal("MarshalRoot() error = nil, want invalid field name error")
+			}
+			if !strings.Contains(err.Error(), "invalid multipart field name") {
+				t.Errorf("MarshalRoot() error = %q, want invalid field name", err)
+			}
+		})
+	}
+}
+
+func TestReaderFieldNameAllowsHorizontalTab(t *testing.T) {
+	var buffer bytes.Buffer
+	writer := multipart.NewWriter(&buffer)
+	if err := writer.SetBoundary("test"); err != nil {
+		t.Fatalf("SetBoundary() error = %v", err)
+	}
+	if err := MarshalRoot(
+		map[string]io.Reader{
+			"extra\tname": strings.NewReader("extra contents"),
+		},
+		writer,
+	); err != nil {
+		t.Fatalf("MarshalRoot() error = %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+
+	part, err := multipart.NewReader(&buffer, "test").NextPart()
+	if err != nil {
+		t.Fatalf("NextPart() error = %v", err)
+	}
+	if got := part.FormName(); got != "extra\tname" {
+		t.Errorf("FormName() = %q, want field name with horizontal tab", got)
+	}
+	if err := part.Close(); err != nil {
+		t.Fatalf("Close() part error = %v", err)
 	}
 }

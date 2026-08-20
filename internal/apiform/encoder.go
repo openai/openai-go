@@ -368,8 +368,9 @@ func (e encoder) newInterfaceEncoder() encoderFunc {
 
 func validateMultipartDispositionValue(kind, value string) error {
 	if strings.IndexFunc(value, func(r rune) bool {
+		// Quoted MIME parameters permit horizontal tab, and
 		// multipartFileContentDisposition safely percent-encodes CR and LF.
-		return unicode.IsControl(r) && r != '\r' && r != '\n'
+		return unicode.IsControl(r) && r != '\t' && r != '\r' && r != '\n'
 	}) >= 0 {
 		return fmt.Errorf("apiform: invalid multipart %s: contains control character", kind)
 	}

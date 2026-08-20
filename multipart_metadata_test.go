@@ -118,6 +118,12 @@ func TestMultipartFilenameMetadata(t *testing.T) {
 			wantRaw:      `filename="report%0D.csv"`,
 		},
 		{
+			name:         "openai.File horizontal tab",
+			file:         openai.File(strings.NewReader("contents"), "report\t.csv", "text/csv"),
+			wantFilename: "report\t.csv",
+			wantRaw:      "filename=\"report\t.csv\"",
+		},
+		{
 			name: "Name line feed",
 			file: multipartNamedReader{
 				Reader: strings.NewReader("contents"),
