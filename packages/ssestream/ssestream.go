@@ -138,6 +138,7 @@ type eventStreamDecoder struct {
 	maxEventLines     int
 	remainingBytes    int
 	bufferedLineBytes int
+	limitErr          error
 }
 
 // Read prevents Scanner from fetching beyond the current line's share of the
@@ -186,7 +187,10 @@ func (s *eventStreamDecoder) scanLines(data []byte, atEOF bool) (advance int, to
 }
 
 func (s *eventStreamDecoder) eventTooLargeError() error {
-	return fmt.Errorf("%w: maximum event size is %d bytes", ErrEventTooLarge, s.maxEventBytes)
+	if s.limitErr == nil {
+		s.limitErr = fmt.Errorf("%w: maximum event size is %d bytes", ErrEventTooLarge, s.maxEventBytes)
+	}
+	return s.limitErr
 }
 
 func isEventDelimiter(line []byte) bool {
@@ -263,8 +267,11 @@ func (s *eventStreamDecoder) Next() bool {
 		}
 	}
 
-	if s.scn.Err() != nil {
-		s.err = s.scn.Err()
+	if scanErr := s.scn.Err(); scanErr != nil {
+		s.err = scanErr
+		if s.limitErr != nil && !errors.Is(scanErr, ErrEventTooLarge) {
+			s.err = errors.Join(s.limitErr, scanErr)
+		}
 	}
 
 	return false

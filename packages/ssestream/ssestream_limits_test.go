@@ -161,6 +161,27 @@ func TestDecoderHandlesIncompleteLineAtByteLimit(t *testing.T) {
 	}
 }
 
+func TestDecoderPreservesLimitErrorWithConcurrentReaderError(t *testing.T) {
+	const maxEventBytes = 8
+	decoder := NewDecoderWithOptions(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body: &testDataErrorReadCloser{
+			data: strings.Repeat("x", maxEventBytes+1),
+			err:  io.ErrUnexpectedEOF,
+		},
+	}, DecoderOptions{MaxEventBytes: maxEventBytes})
+
+	if decoder.Next() {
+		t.Fatalf("oversized event unexpectedly decoded: %+v", decoder.Event())
+	}
+	if !errors.Is(decoder.Err(), ErrEventTooLarge) {
+		t.Fatalf("decoder error = %v, want %v", decoder.Err(), ErrEventTooLarge)
+	}
+	if !errors.Is(decoder.Err(), io.ErrUnexpectedEOF) {
+		t.Fatalf("decoder error = %v, want underlying %v", decoder.Err(), io.ErrUnexpectedEOF)
+	}
+}
+
 func TestDecoderReportsDefaultByteLimit(t *testing.T) {
 	body := &testRepeatingReadCloser{remaining: DefaultMaxEventBytes + 1}
 	decoder := NewDecoder(&http.Response{
@@ -367,3 +388,19 @@ func (r *testStagedReadCloser) Read(p []byte) (int, error) {
 }
 
 func (r *testStagedReadCloser) Close() error { return nil }
+
+type testDataErrorReadCloser struct {
+	data string
+	err  error
+	done bool
+}
+
+func (r *testDataErrorReadCloser) Read(p []byte) (int, error) {
+	if r.done {
+		return 0, io.EOF
+	}
+	r.done = true
+	return copy(p, r.data), r.err
+}
+
+func (r *testDataErrorReadCloser) Close() error { return nil }
