@@ -312,9 +312,16 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 	var initErr error
 
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		workloadIdentityAuth := requestconfig.NewProviderAuthOption("OpenAI", "option.WithWorkloadIdentity")
+		if err := workloadIdentityAuth.Apply(r); err != nil {
+			return err
+		}
 		r.SetAPIKey("")
 
 		r.Middlewares = append(r.Middlewares, func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
+			if !workloadIdentityAuth.Selected(r) {
+				return next(req)
+			}
 			initOnce.Do(func() {
 				wia, initErr = auth.NewWorkloadIdentityAuth(config)
 			})

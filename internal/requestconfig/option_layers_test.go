@@ -214,6 +214,40 @@ func TestClearInheritedAuthenticationHandlesAuthorizationHeaderLayers(t *testing
 	})
 }
 
+func TestClearInheritedAuthenticationHandlesAPIKeyHeaderLayers(t *testing.T) {
+	newConfig := func(t *testing.T) RequestConfig {
+		t.Helper()
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://example.com", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return RequestConfig{Request: req}
+	}
+
+	t.Run("inherited header is cleared", func(t *testing.T) {
+		cfg := newConfig(t)
+		if err := cfg.Apply(InheritedOptions(RequestOptionFunc(func(cfg *RequestConfig) error {
+			cfg.SetHeader("Api-Key", "inherited-key")
+			return nil
+		}))...); err != nil {
+			t.Fatal(err)
+		}
+		cfg.ClearInheritedAuthentication()
+		if got := cfg.Request.Header.Values("Api-Key"); len(got) != 0 {
+			t.Fatalf("Api-Key values = %q, want none", got)
+		}
+	})
+
+	t.Run("current layer header is preserved", func(t *testing.T) {
+		cfg := newConfig(t)
+		cfg.SetHeader("Api-Key", "current-key")
+		cfg.ClearInheritedAuthentication()
+		if got := cfg.Request.Header.Get("Api-Key"); got != "current-key" {
+			t.Fatalf("Api-Key = %q", got)
+		}
+	})
+}
+
 func TestProviderSelectionIsPreservedByClone(t *testing.T) {
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://example.com", nil)
 	if err != nil {
@@ -271,5 +305,23 @@ func TestCloneTreatsAuthorizationHeaderAsInherited(t *testing.T) {
 	clone.ClearInheritedAuthentication()
 	if got := clone.Request.Header.Values("Authorization"); len(got) != 0 {
 		t.Fatalf("Authorization values = %q, want none", got)
+	}
+}
+
+func TestCloneTreatsAPIKeyHeaderAsInherited(t *testing.T) {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://example.com", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg := RequestConfig{Request: req}
+	cfg.SetHeader("Api-Key", "custom-key")
+
+	clone := cfg.Clone(context.Background())
+	if clone == nil {
+		t.Fatal("request config clone is nil")
+	}
+	clone.ClearInheritedAuthentication()
+	if got := clone.Request.Header.Values("Api-Key"); len(got) != 0 {
+		t.Fatalf("Api-Key values = %q, want none", got)
 	}
 }

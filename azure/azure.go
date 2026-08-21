@@ -160,7 +160,6 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 		})
 
 		return rc.Apply(
-			option.WithHeaderDel("Api-Key"),
 			middlewareOption,
 			requestconfig.WithRequestFinalizer(finalizeAzureProvider),
 		)

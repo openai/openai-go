@@ -191,4 +191,8 @@ func (cfg *RequestConfig) ClearInheritedAuthentication() {
 		cfg.authorizationHeaderLayer = nil
 		cfg.authHeaderOverride = false
 	}
+	if cfg.apiKeyHeaderLayer != cfg.optionLayer {
+		cfg.Request.Header.Del("Api-Key")
+		cfg.apiKeyHeaderLayer = nil
+	}
 }

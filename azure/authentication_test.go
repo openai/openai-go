@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/openai/openai-go/v3"
+	openaiauth "github.com/openai/openai-go/v3/auth"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -235,17 +236,25 @@ func TestAzureAuthenticationIsolatesOpenAIEnvironment(t *testing.T) {
 	}
 }
 
-func TestAzureAuthenticationReplacesInheritedOpenAICredentials(t *testing.T) {
+func TestAzureAuthenticationReplacesInheritedOpenAIAuthentication(t *testing.T) {
 	t.Setenv("OPENAI_API_KEY", "")
 	t.Setenv("OPENAI_ADMIN_KEY", "")
 	credentials := []struct {
 		name   string
-		option func() option.RequestOption
+		option func() (option.RequestOption, *countingSubjectTokenProvider)
 	}{
-		{name: "OpenAI API key", option: func() option.RequestOption { return option.WithAPIKey("openai-api-key") }},
-		{name: "OpenAI admin API key", option: func() option.RequestOption { return option.WithAdminAPIKey("openai-admin-key") }},
-		{name: "custom Authorization header", option: func() option.RequestOption {
-			return option.WithHeader("Authorization", "Bearer custom-token")
+		{name: "OpenAI API key", option: func() (option.RequestOption, *countingSubjectTokenProvider) {
+			return option.WithAPIKey("openai-api-key"), nil
+		}},
+		{name: "OpenAI admin API key", option: func() (option.RequestOption, *countingSubjectTokenProvider) {
+			return option.WithAdminAPIKey("openai-admin-key"), nil
+		}},
+		{name: "custom Authorization header", option: func() (option.RequestOption, *countingSubjectTokenProvider) {
+			return option.WithHeader("Authorization", "Bearer custom-token"), nil
+		}},
+		{name: "OpenAI workload identity", option: func() (option.RequestOption, *countingSubjectTokenProvider) {
+			provider := &countingSubjectTokenProvider{}
+			return withWorkloadIdentity(provider), provider
 		}},
 	}
 	authModes := []struct {
@@ -271,11 +280,12 @@ func TestAzureAuthenticationReplacesInheritedOpenAICredentials(t *testing.T) {
 		for _, authMode := range authModes {
 			for _, entrypoint := range entrypoints {
 				t.Run(credential.name+"/"+authMode.name+"/"+entrypoint, func(t *testing.T) {
+					credentialOption, subjectTokenProvider := credential.option()
 					var middlewareAuthorization string
 					var transportAuthorization string
 					var transportAPIKey string
 					base := openai.NewClient(
-						credential.option(),
+						credentialOption,
 						option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 							middlewareAuthorization = req.Header.Get("Authorization")
 							return next(req)
@@ -311,6 +321,9 @@ func TestAzureAuthenticationReplacesInheritedOpenAICredentials(t *testing.T) {
 					}
 					if transportAPIKey != authMode.wantAPIKey {
 						t.Fatalf("transport Api-Key = %q, want %q", transportAPIKey, authMode.wantAPIKey)
+					}
+					if subjectTokenProvider != nil && subjectTokenProvider.calls.Load() != 0 {
+						t.Fatalf("subject token calls = %d, want 0", subjectTokenProvider.calls.Load())
 					}
 				})
 			}
@@ -352,6 +365,11 @@ func TestAzureRejectsAmbiguousCredentialsBeforeMiddleware(t *testing.T) {
 		{
 			name:    "Azure token credential and Api-Key header",
 			options: []option.RequestOption{WithTokenCredential(&fake.TokenCredential{}), option.WithHeader("Api-Key", "other-azure-key")},
+			message: "cannot be combined",
+		},
+		{
+			name:    "Api-Key header and Azure token credential",
+			options: []option.RequestOption{option.WithHeader("Api-Key", "other-azure-key"), WithTokenCredential(&fake.TokenCredential{})},
 			message: "cannot be combined",
 		},
 		{
@@ -431,6 +449,63 @@ func TestAzureRejectsAmbiguousCredentialsBeforeMiddleware(t *testing.T) {
 	}
 }
 
+func TestAzureRejectsWorkloadIdentityBeforeMiddleware(t *testing.T) {
+	authModes := []struct {
+		name   string
+		option func() option.RequestOption
+	}{
+		{name: "Azure API key", option: func() option.RequestOption { return WithAPIKey("azure-api-key") }},
+		{name: "Azure token credential", option: func() option.RequestOption {
+			return WithTokenCredential(&fake.TokenCredential{})
+		}},
+	}
+
+	for _, authMode := range authModes {
+		for _, workloadIdentityFirst := range []bool{false, true} {
+			order := "Azure auth first"
+			if workloadIdentityFirst {
+				order = "workload identity first"
+			}
+			t.Run(authMode.name+"/"+order, func(t *testing.T) {
+				provider := &countingSubjectTokenProvider{}
+				workloadIdentity := withWorkloadIdentity(provider)
+				authOptions := []option.RequestOption{authMode.option(), workloadIdentity}
+				if workloadIdentityFirst {
+					authOptions[0], authOptions[1] = authOptions[1], authOptions[0]
+				}
+
+				middlewareCalls := 0
+				transportCalls := 0
+				opts := []option.RequestOption{WithEndpoint("https://my-resource.openai.azure.com", "2024-10-21")}
+				opts = append(opts, authOptions...)
+				opts = append(opts,
+					option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+						middlewareCalls++
+						return next(req)
+					}),
+					option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+						transportCalls++
+						return successfulAzureResponse(req), nil
+					})}),
+				)
+
+				client := openai.NewClient(opts...)
+				var res map[string]any
+				err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res)
+				if err == nil || !strings.Contains(err.Error(), "authentication is ambiguous") {
+					t.Fatalf("error = %v", err)
+				}
+				if provider.calls.Load() != 0 || middlewareCalls != 0 || transportCalls != 0 {
+					t.Fatalf(
+						"subject token calls = %d, middleware calls = %d, transport calls = %d",
+						provider.calls.Load(), middlewareCalls, transportCalls,
+					)
+				}
+			})
+		}
+	}
+}
+
 func TestAzureAuthenticationRequestOptionOverridesInheritedMode(t *testing.T) {
 	tests := []struct {
 		name              string
@@ -492,6 +567,27 @@ func successfulAzureResponse(req *http.Request) *http.Response {
 
 type countingTokenCredential struct {
 	calls atomic.Int32
+}
+
+type countingSubjectTokenProvider struct {
+	calls atomic.Int32
+}
+
+func (c *countingSubjectTokenProvider) TokenType() openaiauth.SubjectTokenType {
+	return openaiauth.SubjectTokenTypeJWT
+}
+
+func (c *countingSubjectTokenProvider) GetToken(context.Context, openaiauth.HTTPDoer) (string, error) {
+	c.calls.Add(1)
+	return "subject-token", nil
+}
+
+func withWorkloadIdentity(provider *countingSubjectTokenProvider) option.RequestOption {
+	return option.WithWorkloadIdentity(openaiauth.WorkloadIdentity{
+		IdentityProviderID: "test-idp-id",
+		ServiceAccountID:   "test-service-account-id",
+		Provider:           provider,
+	})
 }
 
 func (c *countingTokenCredential) GetToken(context.Context, policy.TokenRequestOptions) (azcore.AccessToken, error) {
