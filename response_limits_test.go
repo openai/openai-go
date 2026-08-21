@@ -1,6 +1,8 @@
 package openai_test
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"errors"
 	"io"
@@ -19,6 +21,12 @@ import (
 type responseDoerFunc func(*http.Request) (*http.Response, error)
 
 func (f responseDoerFunc) Do(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+type responseRoundTripperFunc func(*http.Request) (*http.Response, error)
+
+func (f responseRoundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req)
 }
 
@@ -79,6 +87,40 @@ func (b *blockingResponseBody) closeCount() int {
 	return b.closes
 }
 
+type contextResponseBody struct {
+	ctx context.Context
+	mu  sync.Mutex
+
+	closes int
+}
+
+func (b *contextResponseBody) Read([]byte) (int, error) {
+	<-b.ctx.Done()
+	return 0, b.ctx.Err()
+}
+
+func (b *contextResponseBody) Close() error {
+	b.mu.Lock()
+	b.closes++
+	b.mu.Unlock()
+	return nil
+}
+
+func (b *contextResponseBody) closeCount() int {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.closes
+}
+
+type repeatedByteReader byte
+
+func (b repeatedByteReader) Read(p []byte) (int, error) {
+	for i := range p {
+		p[i] = byte(b)
+	}
+	return len(p), nil
+}
+
 func newResponseLimitClient(body io.ReadCloser, status int, contentType string, opts ...option.RequestOption) openai.Client {
 	opts = append([]option.RequestOption{
 		option.WithAPIKey("test-key"),
@@ -118,6 +160,59 @@ func TestExecuteBoundsTypedSuccessResponse(t *testing.T) {
 	}
 	if !body.closed {
 		t.Fatal("response body was not closed")
+	}
+}
+
+func TestExecuteBoundsCompressedWireResponse(t *testing.T) {
+	const wireLimit = 64
+	var compressed bytes.Buffer
+	for i := 0; i < 32; i++ {
+		zw := gzip.NewWriter(&compressed)
+		if i == 0 {
+			if _, err := io.WriteString(zw, "{}"); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := zw.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if compressed.Len() <= wireLimit {
+		t.Fatalf("compressed fixture length = %d, want more than wire limit", compressed.Len())
+	}
+
+	for _, status := range []int{http.StatusOK, http.StatusBadRequest} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if got := r.Header.Get("Accept-Encoding"); got != "gzip" {
+					t.Errorf("Accept-Encoding = %q, want gzip", got)
+				}
+				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Content-Encoding", "gzip")
+				w.WriteHeader(status)
+				_, _ = w.Write(compressed.Bytes())
+			}))
+			defer server.Close()
+
+			client := openai.NewClient(
+				option.WithAPIKey("test-key"),
+				option.WithBaseURL(server.URL+"/"),
+				option.WithMaxRetries(0),
+				option.WithMaxResponseBodyBytes(wireLimit),
+				option.WithMaxErrorResponseBodyBytes(wireLimit),
+			)
+			var response map[string]any
+			err := client.Get(context.Background(), "compressed", nil, &response)
+			if err == nil || !strings.Contains(err.Error(), "compressed response body exceeded configured limit of 64 bytes") {
+				t.Fatalf("Get() error = %v, want compressed response body limit error", err)
+			}
+			if status >= http.StatusBadRequest {
+				var apiErr *openai.Error
+				if !errors.As(err, &apiErr) {
+					t.Fatalf("errors.As(%T, *openai.Error) = false", err)
+				}
+			}
+		})
 	}
 }
 
@@ -239,6 +334,89 @@ func TestExecuteLeavesRawSuccessResponseStreaming(t *testing.T) {
 	}
 }
 
+func TestExecutePreservesTransparentGzipForRawResponse(t *testing.T) {
+	var compressed bytes.Buffer
+	zw := gzip.NewWriter(&compressed)
+	if _, err := io.WriteString(zw, `{"ok":true}`); err != nil {
+		t.Fatal(err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Encoding", "gzip")
+		_, _ = w.Write(compressed.Bytes())
+	}))
+	defer server.Close()
+
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithBaseURL(server.URL+"/"),
+		option.WithMaxRetries(0),
+		option.WithMaxResponseBodyBytes(1),
+	)
+	var raw *http.Response
+	if err := client.Get(context.Background(), "compressed", nil, &raw); err != nil {
+		t.Fatal(err)
+	}
+	if !raw.Uncompressed {
+		t.Fatal("raw response was not marked as transparently decompressed")
+	}
+	if got := raw.Header.Get("Content-Encoding"); got != "" {
+		t.Fatalf("Content-Encoding = %q, want removed after transparent decompression", got)
+	}
+	if raw.ContentLength != -1 {
+		t.Fatalf("ContentLength = %d, want -1 after transparent decompression", raw.ContentLength)
+	}
+	contents, err := io.ReadAll(raw.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := string(contents), `{"ok":true}`; got != want {
+		t.Fatalf("raw body = %q, want %q", got, want)
+	}
+	if err := raw.Body.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExecuteRawResponseOwnsAttemptContextLifecycle(t *testing.T) {
+	var attemptCtx context.Context
+	body := &countingResponseBody{reader: strings.NewReader("{}")}
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithMaxRetries(0),
+		option.WithHTTPClient(responseDoerFunc(func(req *http.Request) (*http.Response, error) {
+			attemptCtx = req.Context()
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": {"application/json"}},
+				Body:       body,
+				Request:    req,
+			}, nil
+		})),
+	)
+	var raw *http.Response
+	if err := client.Get(context.Background(), "test", nil, &raw); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-attemptCtx.Done():
+		t.Fatal("attempt context canceled before raw response ownership ended")
+	default:
+	}
+	if err := raw.Body.Close(); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-attemptCtx.Done():
+	case <-time.After(time.Second):
+		t.Fatal("raw response close did not end the attempt context lifecycle")
+	}
+}
+
 func TestExecuteTimesOutNonStreamingResponseBodies(t *testing.T) {
 	for _, status := range []int{http.StatusOK, http.StatusBadRequest} {
 		t.Run(http.StatusText(status), func(t *testing.T) {
@@ -266,6 +444,52 @@ func TestExecuteTimesOutNonStreamingResponseBodies(t *testing.T) {
 			case <-time.After(time.Second):
 				_ = body.Close()
 				t.Fatal("Execute() did not enforce the response body timeout")
+			}
+		})
+	}
+}
+
+func TestExecuteBodyTimeoutCancelsCustomTransportContext(t *testing.T) {
+	for _, status := range []int{http.StatusOK, http.StatusBadRequest} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			callerCtx, cancelCaller := context.WithCancel(context.Background())
+			defer cancelCaller()
+
+			var body *contextResponseBody
+			client := openai.NewClient(
+				option.WithAPIKey("test-key"),
+				option.WithMaxRetries(0),
+				option.WithResponseBodyTimeout(10*time.Millisecond),
+				option.WithHTTPClient(&http.Client{
+					Transport: responseRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+						body = &contextResponseBody{ctx: req.Context()}
+						return &http.Response{
+							StatusCode: status,
+							Header:     http.Header{"Content-Type": {"application/json"}},
+							Body:       body,
+							Request:    req,
+						}, nil
+					}),
+				}),
+			)
+			var response map[string]any
+			done := make(chan error, 1)
+			go func() {
+				done <- client.Get(callerCtx, "test", nil, &response)
+			}()
+
+			select {
+			case err := <-done:
+				if !errors.Is(err, context.DeadlineExceeded) {
+					t.Fatalf("Get() error = %v, want context deadline exceeded", err)
+				}
+				if body.closeCount() != 1 {
+					t.Fatalf("response body close count = %d, want 1", body.closeCount())
+				}
+			case <-time.After(250 * time.Millisecond):
+				cancelCaller()
+				<-done
+				t.Fatal("response body timeout did not cancel the custom transport request context")
 			}
 		})
 	}
@@ -315,5 +539,84 @@ func TestExecuteTimeoutInterruptsSlowHTTPResponse(t *testing.T) {
 		release()
 		<-done
 		t.Fatal("response body timeout did not interrupt a stalled standard HTTP response")
+	}
+}
+
+func TestImagesGenerateAllowsDocumented4KBase64Response(t *testing.T) {
+	const (
+		imageCount     = 3
+		rawImageBytes  = int64(3840 * 2160 * 3)
+		base64Bytes    = 4 * ((rawImageBytes + 2) / 3)
+		responseHeader = `{"created":0,"data":[`
+		imagePrefix    = `{"b64_json":"`
+		imageSuffix    = `"}`
+		responseFooter = `]}`
+	)
+
+	parts := []io.Reader{strings.NewReader(responseHeader)}
+	expectedBytes := int64(len(responseHeader) + len(responseFooter))
+	for i := 0; i < imageCount; i++ {
+		if i != 0 {
+			parts = append(parts, strings.NewReader(","))
+			expectedBytes++
+		}
+		parts = append(
+			parts,
+			strings.NewReader(imagePrefix),
+			io.LimitReader(repeatedByteReader('A'), base64Bytes),
+			strings.NewReader(imageSuffix),
+		)
+		expectedBytes += int64(len(imagePrefix)+len(imageSuffix)) + base64Bytes
+	}
+	parts = append(parts, strings.NewReader(responseFooter))
+
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithMaxRetries(0),
+		option.WithHTTPClient(responseDoerFunc(func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": {"application/json"}},
+				Body:       io.NopCloser(io.MultiReader(parts...)),
+				Request:    req,
+			}, nil
+		})),
+	)
+	var rawResponse []byte
+	_, err := client.Images.Generate(
+		context.Background(),
+		openai.ImageGenerateParams{
+			Prompt: "synthetic compatibility fixture",
+			Model:  openai.ImageModelGPTImage2,
+			N:      openai.Int(imageCount),
+			Size:   openai.ImageGenerateParamsSize("3840x2160"),
+		},
+		option.WithResponseBodyInto(&rawResponse),
+	)
+	if err != nil {
+		t.Fatalf("Images.Generate() error = %v, want documented multi-image response to fit the endpoint policy", err)
+	}
+	if int64(len(rawResponse)) != expectedBytes {
+		t.Fatalf("response bytes = %d, want %d", len(rawResponse), expectedBytes)
+	}
+}
+
+func TestImagesGenerateRespectsClientResponseLimitOverride(t *testing.T) {
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithMaxRetries(0),
+		option.WithMaxResponseBodyBytes(4),
+		option.WithHTTPClient(responseDoerFunc(func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": {"application/json"}},
+				Body:       io.NopCloser(strings.NewReader(`{"data":[]}`)),
+				Request:    req,
+			}, nil
+		})),
+	)
+	_, err := client.Images.Generate(context.Background(), openai.ImageGenerateParams{Prompt: "test"})
+	if err == nil || !strings.Contains(err.Error(), "configured limit of 4 bytes") {
+		t.Fatalf("Images.Generate() error = %v, want client response limit override", err)
 	}
 }

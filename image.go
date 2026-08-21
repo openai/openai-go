@@ -33,12 +33,19 @@ type ImageService struct {
 	Options []option.RequestOption
 }
 
+// maxImageResponseBodyBytes accommodates the documented maximum batch of
+// base64-encoded 4K images while retaining a finite response bound.
+const maxImageResponseBodyBytes int64 = 512 << 20
+
 // NewImageService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
 func NewImageService(opts ...option.RequestOption) (r ImageService) {
 	r = ImageService{}
-	r.Options = requestconfig.InheritedOptions(opts...)
+	r.Options = requestconfig.InheritedOptions(slices.Concat(
+		[]option.RequestOption{option.WithMaxResponseBodyBytes(maxImageResponseBodyBytes)},
+		opts,
+	)...)
 	return
 }
 
