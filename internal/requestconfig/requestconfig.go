@@ -9,7 +9,6 @@ import (
 	"io"
 	"math"
 	"math/rand"
-	"mime"
 	"net/http"
 	"net/url"
 	"runtime"
@@ -19,10 +18,8 @@ import (
 	"time"
 
 	"github.com/openai/openai-go/v3/internal"
-	"github.com/openai/openai-go/v3/internal/apierror"
 	"github.com/openai/openai-go/v3/internal/apiform"
 	"github.com/openai/openai-go/v3/internal/apiquery"
-	"github.com/tidwall/gjson"
 )
 
 // DefaultMaxServerDelay bounds server-directed retry and polling waits unless
@@ -275,12 +272,15 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 		req.Header.Add(k, v)
 	}
 	cfg := RequestConfig{
-		MaxRetries:    2,
-		MaxRetryDelay: DefaultMaxServerDelay,
-		Context:       ctx,
-		Request:       req,
-		HTTPClient:    http.DefaultClient,
-		Body:          reader,
+		MaxRetries:                2,
+		MaxRetryDelay:             DefaultMaxServerDelay,
+		MaxResponseBodyBytes:      defaultMaxResponseBodyBytes,
+		MaxErrorResponseBodyBytes: defaultMaxErrorResponseBodyBytes,
+		ResponseBodyTimeout:       defaultResponseBodyTimeout,
+		Context:                   ctx,
+		Request:                   req,
+		HTTPClient:                http.DefaultClient,
+		Body:                      reader,
 	}
 	cfg.ResponseBodyInto = dst
 	cfg.Security = Security{
@@ -331,6 +331,9 @@ type RequestConfig struct {
 	MaxRetries                 int
 	MaxRetryDelay              time.Duration
 	RequestTimeout             time.Duration
+	MaxResponseBodyBytes       int64
+	MaxErrorResponseBodyBytes  int64
+	ResponseBodyTimeout        time.Duration
 	Context                    context.Context
 	Request                    *http.Request
 	BaseURL                    *url.URL
@@ -487,30 +490,6 @@ func isBeforeContextDeadline(t time.Time, ctx context.Context) bool {
 	return t.Before(d)
 }
 
-// bodyWithTimeout is an io.ReadCloser which can observe a context's cancel func
-// to handle timeouts etc. It wraps an existing io.ReadCloser.
-type bodyWithTimeout struct {
-	stop func() // stops the time.Timer waiting to cancel the request
-	rc   io.ReadCloser
-}
-
-func (b *bodyWithTimeout) Read(p []byte) (n int, err error) {
-	n, err = b.rc.Read(p)
-	if err == nil {
-		return n, nil
-	}
-	if err == io.EOF {
-		return n, err
-	}
-	return n, err
-}
-
-func (b *bodyWithTimeout) Close() error {
-	err := b.rc.Close()
-	b.stop()
-	return err
-}
-
 // closeOnceReadCloser lets Execute clean up bodies when middleware returns an
 // error before reaching the transport, without double-closing bodies that a
 // transport has already closed.
@@ -610,6 +589,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	if cfg.CustomHTTPDoer != nil {
 		handler = cfg.CustomHTTPDoer.Do
 	}
+	handler = cfg.withManagedGzip(handler)
 	for i := len(cfg.Middlewares) - 1; i >= 0; i -= 1 {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
 	}
@@ -623,12 +603,11 @@ func (cfg *RequestConfig) Execute() (err error) {
 		ctx := cfg.Request.Context()
 		if cfg.RequestTimeout != time.Duration(0) && isBeforeContextDeadline(time.Now().Add(cfg.RequestTimeout), ctx) {
 			ctx, cancel = context.WithTimeout(ctx, cfg.RequestTimeout)
-			defer func() {
-				// The cancel function is nil if it was handed off to be handled in a different scope.
-				if cancel != nil {
-					cancel()
-				}
-			}()
+		} else {
+			// Every attempt gets a cancellable lifecycle. Non-streaming response
+			// policy can then interrupt supported custom transports through the
+			// same request context used by net/http.
+			ctx, cancel = context.WithCancel(ctx)
 		}
 
 		req := cfg.Request.Clone(ctx)
@@ -643,8 +622,13 @@ func (cfg *RequestConfig) Execute() (err error) {
 		if err != nil && req.Body != nil {
 			_ = req.Body.Close()
 		}
-		if ctx != nil && ctx.Err() != nil {
-			return ctx.Err()
+		if ctx.Err() != nil {
+			if res != nil && res.Body != nil {
+				_ = res.Body.Close()
+			}
+			ctxErr := ctx.Err()
+			cancel()
+			return ctxErr
 		}
 		if !shouldRetry(cfg.Request, res, err) || retryCount >= cfg.MaxRetries {
 			break
@@ -654,6 +638,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 		if cfg.Request.GetBody != nil {
 			cfg.Request.Body, err = cfg.Request.GetBody()
 			if err != nil {
+				cancel()
 				return err
 			}
 		}
@@ -669,8 +654,10 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 
 		if waitErr := WaitForDelay(ctx, retryDelay(res, retryCount, cfg.MaxRetryDelay)); waitErr != nil {
+			cancel()
 			return waitErr
 		}
+		cancel()
 	}
 
 	// Save *http.Response if it is requested to, even if there was an error making the request. This is
@@ -686,78 +673,28 @@ func (cfg *RequestConfig) Execute() (err error) {
 	// If there was a connection error in the final request or any other transport error,
 	// return that early without trying to coerce into an APIError.
 	if err != nil {
+		cancel()
 		return err
 	}
 
+	lifecycle := newResponseBodyLifecycle(res.Body, cancel)
 	if res.StatusCode >= 400 {
-		contents, readErr := io.ReadAll(res.Body)
-		_ = res.Body.Close()
-		if readErr != nil {
-			return readErr
-		}
-
-		// If there is an APIError, re-populate the response body so that debugging
-		// utilities can conveniently dump the response without issue.
-		res.Body = io.NopCloser(bytes.NewBuffer(contents))
-
-		// Load the contents into the error format if it is provided.
-		aerr := apierror.Error{Request: cfg.Request, Response: res, StatusCode: res.StatusCode}
-		unwrapped := gjson.GetBytes(contents, "error").Raw
-		err = aerr.UnmarshalJSON([]byte(unwrapped))
-		if err != nil {
-			return err
-		}
-		return &aerr
+		return cfg.handleErrorResponse(res, lifecycle)
 	}
 
 	_, intoCustomResponseBody := cfg.ResponseBodyInto.(**http.Response)
-	if cfg.ResponseBodyInto == nil || intoCustomResponseBody {
-		// We aren't reading the response body in this scope, but whoever is will need the
-		// cancel func from the context to observe request timeouts.
-		// Put the cancel function in the response body so it can be handled elsewhere.
-		if cancel != nil {
-			res.Body = &bodyWithTimeout{rc: res.Body, stop: cancel}
-			cancel = nil
-		}
+	if cfg.ResponseBodyInto != nil && !intoCustomResponseBody {
+		return cfg.handleSuccessResponse(res, lifecycle)
+	}
+
+	if cfg.ResponseInto == nil && !intoCustomResponseBody {
+		_ = lifecycle.Close()
 		return nil
 	}
 
-	contents, err := io.ReadAll(res.Body)
-	_ = res.Body.Close()
-	if err != nil {
-		return fmt.Errorf("error reading response body: %w", err)
-	}
-
-	// If we are not json, return plaintext
-	contentType := res.Header.Get("content-type")
-	mediaType, _, _ := mime.ParseMediaType(contentType)
-	isJSON := strings.Contains(mediaType, "application/json") || strings.HasSuffix(mediaType, "+json")
-	if !isJSON {
-		switch dst := cfg.ResponseBodyInto.(type) {
-		case *string:
-			*dst = string(contents)
-		case **string:
-			tmp := string(contents)
-			*dst = &tmp
-		case *[]byte:
-			*dst = contents
-		default:
-			return fmt.Errorf("expected destination type of 'string' or '[]byte' for responses with content-type '%s' that is not 'application/json'", contentType)
-		}
-		return nil
-	}
-
-	switch dst := cfg.ResponseBodyInto.(type) {
-	// If the response happens to be a byte array, deserialize the body as-is.
-	case *[]byte:
-		*dst = contents
-	default:
-		err = json.NewDecoder(bytes.NewReader(contents)).Decode(cfg.ResponseBodyInto)
-		if err != nil {
-			return fmt.Errorf("error parsing response json: %w", err)
-		}
-	}
-
+	// The caller owns this raw response. Keep its attempt context alive until
+	// Close releases the underlying body.
+	res.Body = lifecycle
 	return nil
 }
 
