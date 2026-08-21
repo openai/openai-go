@@ -125,9 +125,6 @@ func (r *CursorPage[T]) GetNextPage() (res *CursorPage[T], err error) {
 		return nil, nil
 	}
 	items := r.Data
-	if items == nil || len(items) == 0 {
-		return nil, nil
-	}
 	cfg := r.cfg.Clone(r.cfg.Context)
 	value := reflect.ValueOf(items[len(items)-1])
 	field := value.FieldByName("ID")
