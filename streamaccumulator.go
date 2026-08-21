@@ -12,8 +12,10 @@ const (
 	maxChatCompletionAccumulatorChunks          = 100_000
 	maxChatCompletionAccumulatorStructuralSlots = 1_024
 	maxChatCompletionAccumulatorTextBytes       = 16 << 20
+	maxChatCompletionAccumulatorMetadataBytes   = 16 << 20
 	maxChatCompletionAccumulatorLogprobBytes    = 16 << 20
-	chatCompletionAccumulatorMapOverheadBytes   = 512
+	// Conservatively covers a non-empty map header and its first backing bucket.
+	chatCompletionAccumulatorMapOverheadBytes = 512
 )
 
 // Helper to accumulate chunks from a stream
@@ -25,8 +27,8 @@ type ChatCompletionAccumulator struct {
 	justFinished                     chatCompletionResponseState
 	justFinishedByChoice             []chatCompletionResponseState
 	stringState                      chatCompletionAccumulatorStringState
+	logprobState                     chatCompletionAccumulatorLogprobState
 	chunkCount                       int
-	logprobBytes                     int
 }
 
 type FinishedChatCompletionToolCall struct {
@@ -62,6 +64,31 @@ type chatCompletionString struct {
 	published string
 }
 
+type chatCompletionAccumulatorLogprobState struct {
+	choices []chatCompletionChoiceLogprobState
+	bytes   int
+}
+
+type chatCompletionChoiceLogprobState struct {
+	content chatCompletionLogprobSliceState
+	refusal chatCompletionLogprobSliceState
+}
+
+type chatCompletionLogprobSliceState struct {
+	// A uintptr fingerprints published storage without keeping cleared backing alive.
+	data     uintptr
+	length   int
+	capacity int
+	bytes    int
+}
+
+type chatCompletionLogprobProjection struct {
+	contentCount int
+	contentBytes int
+	refusalCount int
+	refusalBytes int
+}
+
 type chatCompletionResponseStateEnum int
 
 const (
@@ -75,23 +102,21 @@ const (
 // AddChunk incorporates a chunk into the accumulation. Chunks must be added in order.
 // Returns false if the chunk could not be successfully accumulated. To bound work and
 // memory for untrusted streams, an accumulator accepts at most 100,000 chunks, 1,024
-// combined choice and tool-call slots, 16 MiB of combined content, refusal, tool name,
-// and tool argument text currently stored in the accumulator and the incoming chunk,
-// and 16 MiB of aggregate retained log probability data. A rejected chunk does not
-// modify the accumulator.
+// combined choice and tool-call slots, 16 MiB each of combined content and tool
+// function text, other retained string metadata, and aggregate retained log
+// probability data. A rejected chunk does not modify the accumulator.
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
-	logprobBytes, ok := acc.preflightChunk(&chunk)
-	if !ok {
+	if !acc.preflightChunk(&chunk) {
 		return false
 	}
 
 	acc.justFinished = chatCompletionResponseState{}
 	acc.justFinishedByChoice = acc.justFinishedByChoice[:0]
 	acc.accumulateDelta(&chunk)
+	acc.logprobState.acceptChunk(&acc.ChatCompletion, &chunk)
 	acc.chunkCount++
-	acc.logprobBytes = logprobBytes
 
 	if len(chunk.Choices) > 0 {
 		firstChoice := chunk.Choices[0]
@@ -111,31 +136,37 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 	return true
 }
 
-func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk) (int, bool) {
+func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk) bool {
 	if acc.chunkCount >= maxChatCompletionAccumulatorChunks {
-		return 0, false
+		return false
 	}
 	if acc.ID != "" && acc.ID != chunk.ID {
-		return 0, false
+		return false
 	}
 	if !chatCompletionStructuralSlotsWithinLimit(&acc.ChatCompletion, chunk) {
-		return 0, false
+		return false
 	}
 
 	textBytes, ok := addChatCompletionTextBytes(0, &acc.ChatCompletion)
 	if !ok {
-		return 0, false
+		return false
 	}
 	if _, ok = addChatCompletionChunkTextBytes(textBytes, chunk); !ok {
-		return 0, false
+		return false
 	}
-	logprobBytes, ok := addChatCompletionChunkLogprobBytes(acc.logprobBytes, chunk)
+	metadataBytes, ok := addChatCompletionMetadataBytes(0, &acc.ChatCompletion)
 	if !ok {
-		return 0, false
+		return false
+	}
+	if _, ok = addChatCompletionChunkMetadataBytes(metadataBytes, &acc.ChatCompletion, chunk); !ok {
+		return false
+	}
+	if !acc.reconcileLogprobState() || !acc.logprobState.chunkWithinLimit(chunk) {
+		return false
 	}
 
 	acc.reconcilePublicState()
-	return logprobBytes, true
+	return true
 }
 
 // JustFinishedContent retrieves the chat completion content when it is known to have just been completed.
@@ -272,8 +303,8 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 			toolStrings.arguments.append(&tool.Function.Arguments, deltaTool.Function.Arguments)
 		}
 
-		choice.Logprobs.Content = append(choice.Logprobs.Content, delta.Logprobs.Content...)
-		choice.Logprobs.Refusal = append(choice.Logprobs.Refusal, delta.Logprobs.Refusal...)
+		choice.Logprobs.Content = appendChatCompletionLogprobs(choice.Logprobs.Content, delta.Logprobs.Content)
+		choice.Logprobs.Refusal = appendChatCompletionLogprobs(choice.Logprobs.Refusal, delta.Logprobs.Refusal)
 	}
 
 	cc.Usage.CompletionTokens += chunk.Usage.CompletionTokens
@@ -505,6 +536,58 @@ func addChatCompletionChunkTextBytes(total int, chunk *ChatCompletionChunk) (int
 	return total, true
 }
 
+func addChatCompletionMetadataBytes(total int, completion *ChatCompletion) (int, bool) {
+	if !addAccumulatorMetadataBytes(&total, completion.ID) ||
+		!addAccumulatorMetadataBytes(&total, completion.Model) ||
+		!addAccumulatorMetadataBytes(&total, completion.SystemFingerprint) ||
+		!addAccumulatorMetadataBytes(&total, string(completion.Object)) ||
+		!addAccumulatorMetadataBytes(&total, string(completion.ServiceTier)) {
+		return 0, false
+	}
+	for i := range completion.Choices {
+		choice := &completion.Choices[i]
+		if !addAccumulatorMetadataBytes(&total, choice.FinishReason) ||
+			!addAccumulatorMetadataBytes(&total, string(choice.Message.Role)) {
+			return 0, false
+		}
+		for j := range choice.Message.ToolCalls {
+			toolCall := &choice.Message.ToolCalls[j]
+			if !addAccumulatorMetadataBytes(&total, toolCall.ID) ||
+				!addAccumulatorMetadataBytes(&total, toolCall.Type) {
+				return 0, false
+			}
+		}
+	}
+	return total, true
+}
+
+func addChatCompletionChunkMetadataBytes(total int, completion *ChatCompletion, chunk *ChatCompletionChunk) (int, bool) {
+	if completion.ID == "" && !addAccumulatorMetadataBytes(&total, chunk.ID) {
+		return 0, false
+	}
+	if !addAccumulatorMetadataBytes(&total, chunk.Model) ||
+		!addAccumulatorMetadataBytes(&total, chunk.SystemFingerprint) ||
+		!addAccumulatorMetadataBytes(&total, string(chunk.Object)) ||
+		!addAccumulatorMetadataBytes(&total, string(chunk.ServiceTier)) {
+		return 0, false
+	}
+	for i := range chunk.Choices {
+		choice := &chunk.Choices[i]
+		if !addAccumulatorMetadataBytes(&total, choice.FinishReason) ||
+			!addAccumulatorMetadataBytes(&total, choice.Delta.Role) {
+			return 0, false
+		}
+		for j := range choice.Delta.ToolCalls {
+			toolCall := &choice.Delta.ToolCalls[j]
+			if !addAccumulatorMetadataBytes(&total, toolCall.ID) ||
+				!addAccumulatorMetadataBytes(&total, toolCall.Type) {
+				return 0, false
+			}
+		}
+	}
+	return total, true
+}
+
 func addAccumulatorTextBytes(total *int, text string) bool {
 	if len(text) > maxChatCompletionAccumulatorTextBytes-*total {
 		return false
@@ -513,35 +596,218 @@ func addAccumulatorTextBytes(total *int, text string) bool {
 	return true
 }
 
-func addChatCompletionChunkLogprobBytes(total int, chunk *ChatCompletionChunk) (int, bool) {
-	chunkBytes := 0
+func addAccumulatorMetadataBytes(total *int, text string) bool {
+	if len(text) > maxChatCompletionAccumulatorMetadataBytes-*total {
+		return false
+	}
+	*total += len(text)
+	return true
+}
+
+func (acc *ChatCompletionAccumulator) reconcileLogprobState() bool {
+	state := &acc.logprobState
+	choiceCount := len(acc.Choices)
+	if choiceCount < len(state.choices) {
+		for i := choiceCount; i < len(state.choices); i++ {
+			state.bytes -= state.choices[i].content.bytes + state.choices[i].refusal.bytes
+		}
+		clear(state.choices[choiceCount:])
+		state.choices = state.choices[:choiceCount]
+	}
+	for i := range acc.Choices {
+		logprobs := &acc.Choices[i].Logprobs
+		if i >= len(state.choices) {
+			if cap(logprobs.Content) == 0 && cap(logprobs.Refusal) == 0 {
+				continue
+			}
+			state.choices = expandToFit(state.choices, i)
+		}
+		choiceState := &state.choices[i]
+		if !state.reconcileSlice(&choiceState.content, logprobs.Content) ||
+			!state.reconcileSlice(&choiceState.refusal, logprobs.Refusal) {
+			return false
+		}
+	}
+	return true
+}
+
+func (state *chatCompletionAccumulatorLogprobState) reconcileSlice(current *chatCompletionLogprobSliceState, logprobs []ChatCompletionTokenLogprob) bool {
+	header := chatCompletionLogprobHeader(logprobs)
+	if current.data == header.data && current.length == header.length && current.capacity == header.capacity {
+		return true
+	}
+
+	bytes := 0
+	if !addAccumulatorLogprobStorage(&bytes, cap(logprobs), int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))) ||
+		!addChatCompletionLogprobData(&bytes, logprobs[:cap(logprobs)]) {
+		return false
+	}
+	projected := state.bytes - current.bytes
+	if !addAccumulatorLogprobBytes(&projected, bytes) {
+		return false
+	}
+	header.bytes = bytes
+	*current = header
+	state.bytes = projected
+	return true
+}
+
+func (state *chatCompletionAccumulatorLogprobState) chunkWithinLimit(chunk *ChatCompletionChunk) bool {
 	for i := range chunk.Choices {
 		logprobs := &chunk.Choices[i].Logprobs
-		if !addChatCompletionLogprobs(&chunkBytes, logprobs.Content) ||
-			!addChatCompletionLogprobs(&chunkBytes, logprobs.Refusal) {
-			return 0, false
+		if len(logprobs.Content) > 0 || len(logprobs.Refusal) > 0 {
+			return state.nonEmptyChunkWithinLimit(chunk)
+		}
+	}
+	return true
+}
+
+func (state *chatCompletionAccumulatorLogprobState) nonEmptyChunkWithinLimit(chunk *ChatCompletionChunk) bool {
+	var projections [maxChatCompletionAccumulatorStructuralSlots]chatCompletionLogprobProjection
+	var touched [maxChatCompletionAccumulatorStructuralSlots]int
+	touchedCount := 0
+	for i := range chunk.Choices {
+		choice := &chunk.Choices[i]
+		projection := &projections[choice.Index]
+		wasEmpty := projection.contentCount == 0 && projection.refusalCount == 0
+		if !addChatCompletionLogprobProjection(&projection.contentCount, &projection.contentBytes, choice.Logprobs.Content) ||
+			!addChatCompletionLogprobProjection(&projection.refusalCount, &projection.refusalBytes, choice.Logprobs.Refusal) {
+			return false
+		}
+		if wasEmpty && (projection.contentCount > 0 || projection.refusalCount > 0) {
+			touched[touchedCount] = int(choice.Index)
+			touchedCount++
 		}
 	}
 
-	if chunkBytes == 0 {
-		return total, true
+	total := state.bytes
+	logprobSize := int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
+	for _, i := range touched[:touchedCount] {
+		projection := &projections[i]
+		var current chatCompletionChoiceLogprobState
+		if i < len(state.choices) {
+			current = state.choices[i]
+		}
+		if !addProjectedLogprobSliceBytes(&total, current.content, projection.contentCount, projection.contentBytes, logprobSize) ||
+			!addProjectedLogprobSliceBytes(&total, current.refusal, projection.refusalCount, projection.refusalBytes, logprobSize) {
+			return false
+		}
 	}
-	if !addAccumulatorLogprobBytes(&total, chunkBytes) {
-		return 0, false
-	}
-	return total, true
+	return true
 }
 
-func addChatCompletionLogprobs(total *int, logprobs []ChatCompletionTokenLogprob) bool {
-	// Appending can reserve more backing storage than the current length. Twice the
-	// element storage is a conservative bound for the accumulator-owned slice.
+func addChatCompletionLogprobProjection(count *int, bytes *int, logprobs []ChatCompletionTokenLogprob) bool {
+	maxLogprobs := maxChatCompletionAccumulatorLogprobBytes / int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
+	if len(logprobs) > maxLogprobs-*count {
+		return false
+	}
+	*count += len(logprobs)
+	return addChatCompletionLogprobData(bytes, logprobs)
+}
+
+func addProjectedLogprobSliceBytes(total *int, current chatCompletionLogprobSliceState, count int, dataBytes int, logprobSize int) bool {
+	maxLogprobs := maxChatCompletionAccumulatorLogprobBytes / logprobSize
+	if count > maxLogprobs-current.length {
+		return false
+	}
+	capacity := projectedLogprobCapacity(current.capacity, current.length+count, maxLogprobs)
+	if !addAccumulatorLogprobStorage(total, capacity-current.capacity, logprobSize) {
+		return false
+	}
+	return addAccumulatorLogprobBytes(total, dataBytes)
+}
+
+func (state *chatCompletionAccumulatorLogprobState) acceptChunk(completion *ChatCompletion, chunk *ChatCompletionChunk) {
+	hasLogprobs := false
+	for i := range chunk.Choices {
+		logprobs := &chunk.Choices[i].Logprobs
+		if len(logprobs.Content) > 0 || len(logprobs.Refusal) > 0 {
+			hasLogprobs = true
+			break
+		}
+	}
+	if !hasLogprobs {
+		return
+	}
+	if len(completion.Choices) > len(state.choices) {
+		state.choices = expandToFit(state.choices, len(completion.Choices)-1)
+	}
 	logprobSize := int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
-	if !addAccumulatorLogprobStorage(total, len(logprobs), logprobSize) {
-		return false
+	maxLogprobs := maxChatCompletionAccumulatorLogprobBytes / logprobSize
+	for i := range chunk.Choices {
+		choice := &chunk.Choices[i]
+		choiceState := &state.choices[choice.Index]
+		state.acceptSlice(&choiceState.content, choice.Logprobs.Content, logprobSize, maxLogprobs)
+		state.acceptSlice(&choiceState.refusal, choice.Logprobs.Refusal, logprobSize, maxLogprobs)
 	}
-	if !addAccumulatorLogprobStorage(total, len(logprobs), logprobSize) {
-		return false
+	for i := range chunk.Choices {
+		choiceIndex := int(chunk.Choices[i].Index)
+		logprobs := &completion.Choices[choiceIndex].Logprobs
+		setChatCompletionLogprobHeader(&state.choices[choiceIndex].content, logprobs.Content)
+		setChatCompletionLogprobHeader(&state.choices[choiceIndex].refusal, logprobs.Refusal)
 	}
+}
+
+func (state *chatCompletionAccumulatorLogprobState) acceptSlice(current *chatCompletionLogprobSliceState, logprobs []ChatCompletionTokenLogprob, logprobSize int, maxLogprobs int) {
+	if len(logprobs) == 0 {
+		return
+	}
+	dataBytes := 0
+	// preflightChunk ran this same bounded calculation before accumulation.
+	_ = addChatCompletionLogprobData(&dataBytes, logprobs)
+	capacity := projectedLogprobCapacity(current.capacity, current.length+len(logprobs), maxLogprobs)
+	current.bytes += (capacity-current.capacity)*logprobSize + dataBytes
+	state.bytes += (capacity-current.capacity)*logprobSize + dataBytes
+	current.length += len(logprobs)
+	current.capacity = capacity
+}
+
+func appendChatCompletionLogprobs(dst []ChatCompletionTokenLogprob, src []ChatCompletionTokenLogprob) []ChatCompletionTokenLogprob {
+	if len(src) == 0 {
+		return dst
+	}
+	required := len(dst) + len(src)
+	if required > cap(dst) {
+		maxLogprobs := maxChatCompletionAccumulatorLogprobBytes / int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
+		capacity := projectedLogprobCapacity(cap(dst), required, maxLogprobs)
+		grown := make([]ChatCompletionTokenLogprob, len(dst), capacity)
+		copy(grown, dst)
+		dst = grown
+	}
+	return append(dst, src...)
+}
+
+func projectedLogprobCapacity(current int, required int, maximum int) int {
+	if required <= current {
+		return current
+	}
+	capacity := max(1, current)
+	// Deterministic doubling keeps append amortized-linear while making the
+	// retained logical capacity exactly predictable during preflight.
+	for capacity < required {
+		if capacity > maximum/2 {
+			return required
+		}
+		capacity *= 2
+	}
+	return capacity
+}
+
+func chatCompletionLogprobHeader(logprobs []ChatCompletionTokenLogprob) chatCompletionLogprobSliceState {
+	return chatCompletionLogprobSliceState{
+		data:     uintptr(unsafe.Pointer(unsafe.SliceData(logprobs))),
+		length:   len(logprobs),
+		capacity: cap(logprobs),
+	}
+}
+
+func setChatCompletionLogprobHeader(state *chatCompletionLogprobSliceState, logprobs []ChatCompletionTokenLogprob) {
+	state.data = uintptr(unsafe.Pointer(unsafe.SliceData(logprobs)))
+	state.length = len(logprobs)
+	state.capacity = cap(logprobs)
+}
+
+func addChatCompletionLogprobData(total *int, logprobs []ChatCompletionTokenLogprob) bool {
 	for i := range logprobs {
 		logprob := &logprobs[i]
 		if !addAccumulatorLogprobBytes(total, len(logprob.Token)) ||
