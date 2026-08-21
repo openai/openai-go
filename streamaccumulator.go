@@ -1,6 +1,10 @@
 package openai
 
-import "github.com/openai/openai-go/v3/shared/constant"
+import (
+	"slices"
+
+	"github.com/openai/openai-go/v3/shared/constant"
+)
 
 // Helper to accumulate chunks from a stream
 type ChatCompletionAccumulator struct {
@@ -34,28 +38,51 @@ const (
 	finishedResponseState
 )
 
+// maxStreamAccumulatorChoiceIndex limits zero-based protocol positions to the
+// maximum 128 choices supported by the API. The bound also guarantees that the
+// subsequent conversion fits in int on every Go architecture.
+const maxStreamAccumulatorChoiceIndex = 127
+
+// maxStreamAccumulatorToolCallGrowth preserves support for sparse provider
+// indices while limiting one received tool-call entry to 128 newly allocated
+// positions. The limit applies to growth, not the total number of tool calls,
+// so dense streams can exceed 128 calls without allowing one sparse index to
+// trigger an unbounded allocation.
+const maxStreamAccumulatorToolCallGrowth = 128
+
 // AddChunk incorporates a chunk into the accumulation. Chunks must be added in order.
 // Returns false if the chunk could not be successfully accumulated.
+// Choice indices must be between 0 and 127. A tool-call index may grow its
+// choice's accumulation by at most 128 positions; dense sequences can contain
+// more than 128 total calls. For compatibility with providers that use -1 for a
+// single tool call, that value is treated as index 0.
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 	acc.justFinished = chatCompletionResponseState{}
 	acc.justFinishedByChoice = acc.justFinishedByChoice[:0]
+	if !acc.validChatCompletionChunkIndices(chunk) {
+		return false
+	}
+	// All conversions below consume values checked by the full preflight above.
+
 	if !acc.accumulateDelta(chunk) {
 		return false
 	}
 
 	if len(chunk.Choices) > 0 {
 		firstChoice := chunk.Choices[0]
-		choiceIndex := int(firstChoice.Index)
+		choiceIndex, _ := checkedStreamAccumulatorChoiceIndex(firstChoice.Index)
 		acc.legacyChoiceChatCompletionStates = expandToFit(acc.legacyChoiceChatCompletionStates, choiceIndex)
-		acc.justFinished = acc.legacyChoiceChatCompletionStates[choiceIndex].update(firstChoice)
+		toolCallCount := len(acc.Choices[choiceIndex].Message.ToolCalls)
+		acc.justFinished = acc.legacyChoiceChatCompletionStates[choiceIndex].update(firstChoice, toolCallCount)
 	}
 
 	for _, choice := range chunk.Choices {
-		choiceIndex := int(choice.Index)
+		choiceIndex, _ := checkedStreamAccumulatorChoiceIndex(choice.Index)
 		acc.choiceChatCompletionStates = expandToFit(acc.choiceChatCompletionStates, choiceIndex)
-		justFinished := acc.choiceChatCompletionStates[choiceIndex].update(choice)
+		toolCallCount := len(acc.Choices[choiceIndex].Message.ToolCalls)
+		justFinished := acc.choiceChatCompletionStates[choiceIndex].update(choice, toolCallCount)
 		if justFinished.state != emptyResponseState {
 			acc.justFinishedByChoice = append(acc.justFinishedByChoice, justFinished)
 		}
@@ -167,8 +194,9 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 	}
 
 	for _, delta := range chunk.Choices {
-		cc.Choices = expandToFit(cc.Choices, int(delta.Index))
-		choice := &cc.Choices[delta.Index]
+		choiceIndex, _ := checkedStreamAccumulatorChoiceIndex(delta.Index)
+		cc.Choices = expandToFit(cc.Choices, choiceIndex)
+		choice := &cc.Choices[choiceIndex]
 
 		choice.Index = delta.Index
 		choice.FinishReason = delta.FinishReason
@@ -180,12 +208,20 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 		choice.Message.Content += delta.Delta.Content
 		choice.Message.Refusal += delta.Delta.Refusal
 
+		toolCallCount := len(choice.Message.ToolCalls)
+		for _, deltaTool := range delta.Delta.ToolCalls {
+			toolIndex, _ := checkedToolCallIndex(deltaTool.Index, toolCallCount)
+			if toolIndex >= toolCallCount {
+				toolCallCount = toolIndex + 1
+			}
+		}
+		if toolCallCount > len(choice.Message.ToolCalls) {
+			choice.Message.ToolCalls = expandToFit(choice.Message.ToolCalls, toolCallCount-1)
+		}
+
 		for j := range delta.Delta.ToolCalls {
 			deltaTool := &delta.Delta.ToolCalls[j]
-			// Clamp negative indices to 0 since the API may send -1 for single tool calls
-			toolIndex := clampToZero(deltaTool.Index)
-
-			choice.Message.ToolCalls = expandToFit(choice.Message.ToolCalls, toolIndex)
+			toolIndex, _ := checkedToolCallIndex(deltaTool.Index, len(choice.Message.ToolCalls))
 			tool := &choice.Message.ToolCalls[toolIndex]
 
 			if deltaTool.ID != "" {
@@ -227,20 +263,21 @@ func (cc *ChatCompletion) accumulateDelta(chunk ChatCompletionChunk) bool {
 
 // Updates the internal response state and returns the previous state if
 // the state changed. This ensures that JustFinished events only fire once.
-func (prev *chatCompletionResponseState) update(choice ChatCompletionChunkChoice) (justFinished chatCompletionResponseState) {
+func (prev *chatCompletionResponseState) update(choice ChatCompletionChunkChoice, toolCallCount int) (justFinished chatCompletionResponseState) {
 	delta := choice.Delta
-	new := chatCompletionResponseState{choiceIndex: int(choice.Index)}
+	choiceIndex, _ := checkedStreamAccumulatorChoiceIndex(choice.Index)
+	new := chatCompletionResponseState{choiceIndex: choiceIndex}
 	switch {
 	case len(delta.ToolCalls) > 0 && delta.Content == "":
 		new.state = toolResponseState
-		new.toolCallIndex = clampToZero(delta.ToolCalls[0].Index)
+		new.toolCallIndex, _ = checkedToolCallIndex(delta.ToolCalls[0].Index, toolCallCount)
 	case delta.JSON.Content.Valid():
 		new.state = contentResponseState
 	case delta.JSON.Refusal.Valid():
 		new.state = refusalResponseState
 	case len(delta.ToolCalls) > 0:
 		new.state = toolResponseState
-		new.toolCallIndex = clampToZero(delta.ToolCalls[0].Index)
+		new.toolCallIndex, _ = checkedToolCallIndex(delta.ToolCalls[0].Index, toolCallCount)
 	default:
 		new.state = finishedResponseState
 	}
@@ -253,22 +290,61 @@ func (prev *chatCompletionResponseState) update(choice ChatCompletionChunkChoice
 	return
 }
 
-// clampToZero handles providers like AWS Bedrock that return tool call index -1.
-func clampToZero(index int64) int {
-	if index < 0 {
-		return 0
+func (acc *ChatCompletionAccumulator) validChatCompletionChunkIndices(chunk ChatCompletionChunk) bool {
+	var toolCallCounts [maxStreamAccumulatorChoiceIndex + 1]int
+	var initializedToolCallCounts [maxStreamAccumulatorChoiceIndex + 1]bool
+
+	for _, choice := range chunk.Choices {
+		choiceIndex, ok := checkedStreamAccumulatorChoiceIndex(choice.Index)
+		if !ok {
+			return false
+		}
+		if !initializedToolCallCounts[choiceIndex] {
+			if choiceIndex < len(acc.Choices) {
+				toolCallCounts[choiceIndex] = len(acc.Choices[choiceIndex].Message.ToolCalls)
+			}
+			initializedToolCallCounts[choiceIndex] = true
+		}
+		for _, toolCall := range choice.Delta.ToolCalls {
+			toolIndex, ok := checkedToolCallIndex(toolCall.Index, toolCallCounts[choiceIndex])
+			if !ok {
+				return false
+			}
+			if toolIndex >= toolCallCounts[choiceIndex] {
+				toolCallCounts[choiceIndex] = toolIndex + 1
+			}
+		}
 	}
-	return int(index)
+	return true
+}
+
+func checkedStreamAccumulatorChoiceIndex(index int64) (int, bool) {
+	if index < 0 || index > maxStreamAccumulatorChoiceIndex {
+		return 0, false
+	}
+	return int(index), true
+}
+
+// checkedToolCallIndex handles providers like AWS Bedrock that return -1 for a
+// single tool call. Tool calls have no protocol maximum, so the bound applies
+// only to the growth caused by this index instead of the accumulated count.
+func checkedToolCallIndex(index int64, toolCallCount int) (int, bool) {
+	if index == -1 {
+		index = 0
+	}
+	// The maximum int value cannot be used because slice growth needs index+1.
+	if index < 0 || index >= int64(^uint(0)>>1) {
+		return 0, false
+	}
+	if index >= int64(toolCallCount) && index-int64(toolCallCount) >= maxStreamAccumulatorToolCallGrowth {
+		return 0, false
+	}
+	return int(index), true
 }
 
 func expandToFit[T any](slice []T, index int) []T {
 	if index < len(slice) {
 		return slice
 	}
-	if index < cap(slice) {
-		return slice[:index+1]
-	}
-	newSlice := make([]T, index+1)
-	copy(newSlice, slice)
-	return newSlice
+	return slices.Grow(slice, index+1-len(slice))[:index+1]
 }

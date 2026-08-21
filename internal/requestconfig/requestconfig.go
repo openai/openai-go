@@ -158,10 +158,10 @@ func WithRequestFinalizer(finalize func(*RequestConfig) error) RequestOption {
 	return requestFinalizerOption{finalize: finalize}
 }
 
-type environmentDefaultsDisabledOption struct{}
+type environmentDefaultsDisabledOption []RequestOption
 
-func (environmentDefaultsDisabledOption) Apply(*RequestConfig) error {
-	return nil
+func (opts environmentDefaultsDisabledOption) Apply(cfg *RequestConfig) error {
+	return cfg.Apply(opts...)
 }
 
 // WithEnvironmentDefaultsDisabled marks a provider-owned client that must not
@@ -169,8 +169,8 @@ func (environmentDefaultsDisabledOption) Apply(*RequestConfig) error {
 // apply.
 //
 // This function is internal API and may change without notice.
-func WithEnvironmentDefaultsDisabled() RequestOption {
-	return environmentDefaultsDisabledOption{}
+func WithEnvironmentDefaultsDisabled(opts ...RequestOption) RequestOption {
+	return environmentDefaultsDisabledOption(append([]RequestOption(nil), opts...))
 }
 
 // EnvironmentDefaultsDisabled reports whether opts contains the internal
@@ -328,29 +328,29 @@ type HTTPDoer interface {
 // Editing the variables inside RequestConfig directly is unstable api. Prefer
 // composing the RequestOption instead if possible.
 type RequestConfig struct {
-	MaxRetries            int
-	MaxRetryDelay         time.Duration
-	RequestTimeout        time.Duration
-	Context               context.Context
-	Request               *http.Request
-	BaseURL               *url.URL
-	endpointSelector      string
-	endpointProvider      string
-	dataResidencyEndpoint bool
+	MaxRetries                 int
+	MaxRetryDelay              time.Duration
+	RequestTimeout             time.Duration
+	Context                    context.Context
+	Request                    *http.Request
+	BaseURL                    *url.URL
+	endpointSelector           string
+	endpointProvider           string
+	configuredProviderEndpoint string
+	dataResidencyEndpoint      bool
+	authentication             authenticationState
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
-	DefaultBaseURL     *url.URL
-	CustomHTTPDoer     HTTPDoer
-	HTTPClient         *http.Client
-	Middlewares        []middleware
-	APIKey             string
-	AdminAPIKey        string
-	Organization       string
-	Project            string
-	WebhookSecret      string
-	finalizers         []requestFinalizer
-	authHeaderOverride bool
-	authPreference     authCredentialPreference
+	DefaultBaseURL *url.URL
+	CustomHTTPDoer HTTPDoer
+	HTTPClient     *http.Client
+	Middlewares    []middleware
+	APIKey         string
+	AdminAPIKey    string
+	Organization   string
+	Project        string
+	WebhookSecret  string
+	finalizers     []requestFinalizer
 	// Configure which security scheme(s) should be enabled for this request
 	Security Security
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
@@ -786,41 +786,34 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 	clone.Request = req
 	clone.Middlewares = append([]middleware(nil), cfg.Middlewares...)
 	clone.finalizers = append([]requestFinalizer(nil), cfg.finalizers...)
+	clone.authentication = cfg.authentication.cloneAsInherited(&clone)
 
 	return &clone
 }
 
 func (cfg *RequestConfig) SetHeader(key, value string) {
 	cfg.Request.Header.Set(key, value)
-	if strings.EqualFold(key, "Authorization") {
-		cfg.authHeaderOverride = true
-	}
+	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) AddHeader(key, value string) {
 	cfg.Request.Header.Add(key, value)
-	if strings.EqualFold(key, "Authorization") {
-		cfg.authHeaderOverride = true
-	}
+	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) DelHeader(key string) {
 	cfg.Request.Header.Del(key)
-	if strings.EqualFold(key, "Authorization") {
-		cfg.authHeaderOverride = true
-	}
+	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) SetAPIKey(value string) {
 	cfg.APIKey = value
-	cfg.authHeaderOverride = false
-	cfg.authPreference = authCredentialPreferenceBearer
+	cfg.authentication.recordAPIKey()
 }
 
 func (cfg *RequestConfig) SetAdminAPIKey(value string) {
 	cfg.AdminAPIKey = value
-	cfg.authHeaderOverride = false
-	cfg.authPreference = authCredentialPreferenceAdmin
+	cfg.authentication.recordAdminAPIKey()
 }
 
 func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
@@ -853,6 +846,10 @@ func applyPreRequestOptions(cfg *RequestConfig, opts []RequestOption) error {
 				return err
 			}
 		case optionLayer:
+			if err := applyPreRequestOptions(cfg, opt); err != nil {
+				return err
+			}
+		case environmentDefaultsDisabledOption:
 			if err := applyPreRequestOptions(cfg, opt); err != nil {
 				return err
 			}
@@ -923,22 +920,22 @@ func WithAdminAPIKeyAuthSecurity() RequestOption {
 // auth schemes and has no endpoint-specific security preference.
 func WithBearerAuthPreference() RequestOption {
 	return RequestOptionFunc(func(r *RequestConfig) error {
-		r.authPreference = authCredentialPreferenceBearer
+		r.authentication.preference = authCredentialPreferenceBearer
 		return nil
 	})
 }
 
 func ApplySecurity(r RequestConfig) {
-	if r.authHeaderOverride {
+	if r.authentication.headerOverride {
 		return
 	}
 
-	if r.authPreference == authCredentialPreferenceBearer && r.Security.BearerAuth && r.APIKey != "" {
+	if r.authentication.preference == authCredentialPreferenceBearer && r.Security.BearerAuth && r.APIKey != "" {
 		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
 		return
 	}
 
-	if r.authPreference == authCredentialPreferenceAdmin && r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
+	if r.authentication.preference == authCredentialPreferenceAdmin && r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
 		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.AdminAPIKey))
 		return
 	}
