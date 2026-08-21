@@ -1,12 +1,16 @@
 package ssestream
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"reflect"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestStreamSkipsEventsWithoutData(t *testing.T) {
@@ -276,9 +280,12 @@ func TestNewDecoderDoesNotCollapseUnsupportedExtendedParameters(t *testing.T) {
 }
 
 type testDecoder struct {
-	events  []Event
-	current Event
-	next    int
+	events     []Event
+	current    Event
+	next       int
+	err        error
+	closeErr   error
+	closeCalls int
 }
 
 func (d *testDecoder) Next() bool {
@@ -291,8 +298,262 @@ func (d *testDecoder) Next() bool {
 }
 
 func (d *testDecoder) Event() Event { return d.current }
-func (d *testDecoder) Close() error { return nil }
-func (d *testDecoder) Err() error   { return nil }
+func (d *testDecoder) Close() error {
+	d.closeCalls++
+	return d.closeErr
+}
+func (d *testDecoder) Err() error { return d.err }
+
+type terminalDecoder struct {
+	continued  chan struct{}
+	release    chan struct{}
+	nextCalls  int
+	closeCalls int
+}
+
+func newTerminalDecoder() *terminalDecoder {
+	return &terminalDecoder{
+		continued: make(chan struct{}),
+		release:   make(chan struct{}),
+	}
+}
+
+func (d *terminalDecoder) Next() bool {
+	d.nextCalls++
+	if d.nextCalls == 1 {
+		return true
+	}
+	close(d.continued)
+	<-d.release
+	return false
+}
+
+func (d *terminalDecoder) Event() Event { return Event{Data: []byte("[DONE]\n")} }
+func (d *terminalDecoder) Close() error {
+	d.closeCalls++
+	return nil
+}
+func (d *terminalDecoder) Err() error { return nil }
+
+func TestStreamStopsAndClosesAtDoneWithoutWaitingForEOF(t *testing.T) {
+	decoder := newTerminalDecoder()
+	stream := NewStream[map[string]any](decoder, nil)
+	result := make(chan bool, 1)
+
+	go func() {
+		result <- stream.Next()
+	}()
+
+	select {
+	case got := <-result:
+		if got {
+			t.Fatal("terminal event unexpectedly produced a stream value")
+		}
+	case <-decoder.continued:
+		close(decoder.release)
+		<-result
+		t.Fatal("stream continued reading after the terminal event")
+	}
+
+	if decoder.nextCalls != 1 {
+		t.Fatalf("decoder.Next called %d times, want 1", decoder.nextCalls)
+	}
+	if decoder.closeCalls != 1 {
+		t.Fatalf("decoder.Close called %d times, want 1", decoder.closeCalls)
+	}
+	if err := stream.Err(); err != nil {
+		t.Fatalf("stream ended with error: %v", err)
+	}
+}
+
+type closeTrackingReadCloser struct {
+	io.Reader
+	closeCalls int
+}
+
+func (r *closeTrackingReadCloser) Close() error {
+	r.closeCalls++
+	return nil
+}
+
+func TestStreamClosesResponseBodyAtDone(t *testing.T) {
+	body := &closeTrackingReadCloser{
+		Reader: strings.NewReader("data: [DONE]\n\n"),
+	}
+	stream := NewStream[map[string]any](NewDecoder(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body:   body,
+	}), nil)
+
+	if stream.Next() {
+		t.Fatal("terminal event unexpectedly produced a stream value")
+	}
+	if body.closeCalls != 1 {
+		t.Fatalf("response body Close called %d times, want 1", body.closeCalls)
+	}
+	if err := stream.Close(); err != nil {
+		t.Fatalf("second stream.Close returned error: %v", err)
+	}
+	if body.closeCalls != 1 {
+		t.Fatalf("response body Close called %d times after repeated close, want 1", body.closeCalls)
+	}
+}
+
+func TestStreamClosesOnUnrecoverableErrorsAndEOF(t *testing.T) {
+	tests := map[string]struct {
+		decoder    *testDecoder
+		initialErr error
+		checkErr   func(*testing.T, error)
+	}{
+		"stream error": {
+			decoder: &testDecoder{events: []Event{{Data: []byte(`{"error":{"message":"bad"}}`)}}},
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				var streamErr *StreamError
+				if !errors.As(err, &streamErr) {
+					t.Fatalf("stream error = %v, want *StreamError", err)
+				}
+			},
+		},
+		"decode error": {
+			decoder: &testDecoder{events: []Event{{Data: []byte(`not json`)}}},
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				var syntaxErr *json.SyntaxError
+				if !errors.As(err, &syntaxErr) {
+					t.Fatalf("stream error = %v, want *json.SyntaxError", err)
+				}
+			},
+		},
+		"decoder error": {
+			decoder: &testDecoder{err: errTestReader},
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				if !errors.Is(err, errTestReader) {
+					t.Fatalf("stream error = %v, want %v", err, errTestReader)
+				}
+			},
+		},
+		"initial error": {
+			decoder:    &testDecoder{},
+			initialErr: errTestReader,
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				if !errors.Is(err, errTestReader) {
+					t.Fatalf("stream error = %v, want %v", err, errTestReader)
+				}
+			},
+		},
+		"EOF": {
+			decoder: &testDecoder{},
+			checkErr: func(t *testing.T, err error) {
+				t.Helper()
+				if err != nil {
+					t.Fatalf("stream ended with error: %v", err)
+				}
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			stream := NewStream[map[string]any](test.decoder, test.initialErr)
+
+			if stream.Next() {
+				t.Fatal("terminal stream state unexpectedly produced a value")
+			}
+			test.checkErr(t, stream.Err())
+			if test.decoder.closeCalls != 1 {
+				t.Fatalf("decoder.Close called %d times, want 1", test.decoder.closeCalls)
+			}
+		})
+	}
+}
+
+func TestStreamCloseIsIdempotent(t *testing.T) {
+	errClose := errors.New("test close error")
+	decoder := &testDecoder{closeErr: errClose}
+	stream := NewStream[map[string]any](decoder, nil)
+
+	for range 2 {
+		if err := stream.Close(); !errors.Is(err, errClose) {
+			t.Fatalf("stream.Close error = %v, want %v", err, errClose)
+		}
+	}
+	if decoder.closeCalls != 1 {
+		t.Fatalf("decoder.Close called %d times, want 1", decoder.closeCalls)
+	}
+	if stream.Next() {
+		t.Fatal("closed stream unexpectedly produced a value")
+	}
+}
+
+type blockingReadCloser struct {
+	readStarted chan struct{}
+	closed      chan struct{}
+	readOnce    sync.Once
+	closeOnce   sync.Once
+	closeCalls  atomic.Int32
+}
+
+func newBlockingReadCloser() *blockingReadCloser {
+	return &blockingReadCloser{
+		readStarted: make(chan struct{}),
+		closed:      make(chan struct{}),
+	}
+}
+
+func (r *blockingReadCloser) Read([]byte) (int, error) {
+	r.readOnce.Do(func() { close(r.readStarted) })
+	<-r.closed
+	return 0, io.ErrClosedPipe
+}
+
+func (r *blockingReadCloser) Close() error {
+	r.closeCalls.Add(1)
+	r.closeOnce.Do(func() { close(r.closed) })
+	return nil
+}
+
+func TestStreamCloseInterruptsBlockedNext(t *testing.T) {
+	body := newBlockingReadCloser()
+	stream := NewStream[map[string]any](NewDecoder(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body:   body,
+	}), nil)
+	nextResult := make(chan bool, 1)
+
+	go func() {
+		nextResult <- stream.Next()
+	}()
+
+	<-body.readStarted
+	if err := stream.Close(); err != nil {
+		t.Fatalf("stream.Close returned error: %v", err)
+	}
+
+	select {
+	case got := <-nextResult:
+		if got {
+			t.Fatal("interrupted stream unexpectedly produced a value")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("stream.Next remained blocked after Close")
+	}
+
+	if !errors.Is(stream.Err(), io.ErrClosedPipe) {
+		t.Fatalf("stream error = %v, want %v", stream.Err(), io.ErrClosedPipe)
+	}
+	if got := body.closeCalls.Load(); got != 1 {
+		t.Fatalf("response body Close called %d times, want 1", got)
+	}
+	if err := stream.Close(); err != nil {
+		t.Fatalf("second stream.Close returned error: %v", err)
+	}
+	if got := body.closeCalls.Load(); got != 1 {
+		t.Fatalf("response body Close called %d times after repeated close, want 1", got)
+	}
+}
 
 func TestSynthesizedStreamPreservesCustomEventsWithoutData(t *testing.T) {
 	decoder := &testDecoder{events: []Event{{Type: "custom.heartbeat"}}}
