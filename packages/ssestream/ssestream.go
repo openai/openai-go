@@ -9,6 +9,8 @@ import (
 	"mime"
 	"net/http"
 	"strings"
+	"sync"
+	"sync/atomic"
 
 	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 	"github.com/tidwall/gjson"
@@ -152,7 +154,9 @@ type Stream[T any] struct {
 	decoder             Decoder
 	cur                 T
 	err                 error
-	done                bool
+	closeErr            error
+	closeOnce           sync.Once
+	done                atomic.Bool
 	synthesizeEventData bool
 }
 
@@ -174,6 +178,8 @@ func NewStreamWithSynthesizeEventData[T any](decoder Decoder, err error) *Stream
 // Next returns false if the stream has ended or an error occurred.
 // Call Stream.Current() to get the current value.
 // Call Stream.Err() to get the error.
+// The stream closes automatically when it reaches a terminal event or error.
+// Call Stream.Close() if iteration stops before Next returns false.
 //
 //		for stream.Next() {
 //			data := stream.Current()
@@ -184,60 +190,53 @@ func NewStreamWithSynthesizeEventData[T any](decoder Decoder, err error) *Stream
 //	 	}
 func (s *Stream[T]) Next() bool {
 	if s.err != nil {
+		return s.finish(s.err)
+	}
+	decoder := s.decoder
+	if s.done.Load() || decoder == nil {
 		return false
 	}
 
-	for s.decoder.Next() {
-		if s.done {
-			continue
-		}
-
-		if bytes.HasPrefix(s.decoder.Event().Data, []byte("[DONE]")) {
-			// In this case we don't break because we still want to iterate through the full stream.
-			s.done = true
-			continue
-		}
-
-		ep := gjson.GetBytes(s.decoder.Event().Data, "error")
-		if ep.Exists() {
-			s.err = &StreamError{
-				Message: fmt.Sprintf("received error while streaming: %s", ep.String()),
-				Event:   s.decoder.Event(),
-			}
-			return false
-		}
-		var nxt T
-		data := s.decoder.Event().Data
-		if s.decoder.Event().Type != "" && strings.HasPrefix(s.decoder.Event().Type, "thread.") {
-			synthesized := map[string]any{
-				"event": s.decoder.Event().Type,
-				"data":  json.RawMessage(data),
-			}
-			data, s.err = shimjson.Marshal(synthesized)
-			if s.err != nil {
-				return false
-			}
-		} else if s.synthesizeEventData {
-			synthesized := map[string]any{
-				"event": s.decoder.Event().Type,
-				"data":  json.RawMessage(data),
-			}
-			data, s.err = shimjson.Marshal(synthesized)
-			if s.err != nil {
-				return false
-			}
-		}
-		s.err = json.Unmarshal(data, &nxt)
-		if s.err != nil {
-			return false
-		}
-		s.cur = nxt
-		return true
+	if !decoder.Next() {
+		// decoder.Next() may be false because of an error
+		return s.finish(decoder.Err())
 	}
 
-	// decoder.Next() may be false because of an error
-	s.err = s.decoder.Err()
+	event := decoder.Event()
+	if bytes.HasPrefix(event.Data, []byte("[DONE]")) {
+		return s.finish(nil)
+	}
 
+	ep := gjson.GetBytes(event.Data, "error")
+	if ep.Exists() {
+		return s.finish(&StreamError{
+			Message: fmt.Sprintf("received error while streaming: %s", ep.String()),
+			Event:   event,
+		})
+	}
+	var nxt T
+	data := event.Data
+	if s.synthesizeEventData || strings.HasPrefix(event.Type, "thread.") {
+		synthesized := map[string]any{
+			"event": event.Type,
+			"data":  json.RawMessage(data),
+		}
+		var err error
+		data, err = shimjson.Marshal(synthesized)
+		if err != nil {
+			return s.finish(err)
+		}
+	}
+	if err := json.Unmarshal(data, &nxt); err != nil {
+		return s.finish(err)
+	}
+	s.cur = nxt
+	return true
+}
+
+func (s *Stream[T]) finish(err error) bool {
+	s.err = err
+	_ = s.Close()
 	return false
 }
 
@@ -249,10 +248,14 @@ func (s *Stream[T]) Err() error {
 	return s.err
 }
 
+// Close releases the stream's decoder. Repeated calls return the first close
+// result without closing the decoder again.
 func (s *Stream[T]) Close() error {
-	if s.decoder == nil {
-		// already closed
-		return nil
-	}
-	return s.decoder.Close()
+	s.closeOnce.Do(func() {
+		s.done.Store(true)
+		if s.decoder != nil {
+			s.closeErr = s.decoder.Close()
+		}
+	})
+	return s.closeErr
 }

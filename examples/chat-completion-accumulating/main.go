@@ -34,6 +34,7 @@ func main() {
 	}
 
 	stream := client.Chat.Completions.NewStreaming(ctx, params)
+	defer func() { _ = stream.Close() }()
 	acc := openai.ChatCompletionAccumulator{}
 
 	for stream.Next() {

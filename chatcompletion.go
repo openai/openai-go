@@ -2847,14 +2847,7 @@ func (r *ChatCompletionMessageFunctionToolCallFunctionParam) UnmarshalJSON(data 
 }
 
 func AssistantMessage[T string | []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion](content T) ChatCompletionMessageParamUnion {
-	var assistant ChatCompletionAssistantMessageParam
-	switch v := any(content).(type) {
-	case string:
-		assistant.Content.OfString = param.NewOpt(v)
-	case []ChatCompletionAssistantMessageParamContentArrayOfContentPartUnion:
-		assistant.Content.OfArrayOfContentParts = v
-	}
-	return ChatCompletionMessageParamUnion{OfAssistant: &assistant}
+	return ChatCompletionMessageParamOfAssistant(content)
 }
 
 func DeveloperMessage[T string | []ChatCompletionContentPartTextParam](content T) ChatCompletionMessageParamUnion {

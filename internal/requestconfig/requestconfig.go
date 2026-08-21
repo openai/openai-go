@@ -25,6 +25,10 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// DefaultMaxServerDelay bounds server-directed retry and polling waits unless
+// the caller explicitly opts into a different retry limit.
+const DefaultMaxServerDelay = 8 * time.Second
+
 func getDefaultHeaders() map[string]string {
 	return map[string]string{
 		"User-Agent": fmt.Sprintf("OpenAI/Go %s", internal.PackageVersion),
@@ -271,11 +275,12 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 		req.Header.Add(k, v)
 	}
 	cfg := RequestConfig{
-		MaxRetries: 2,
-		Context:    ctx,
-		Request:    req,
-		HTTPClient: http.DefaultClient,
-		Body:       reader,
+		MaxRetries:    2,
+		MaxRetryDelay: DefaultMaxServerDelay,
+		Context:       ctx,
+		Request:       req,
+		HTTPClient:    http.DefaultClient,
+		Body:          reader,
 	}
 	cfg.ResponseBodyInto = dst
 	cfg.Security = Security{
@@ -324,6 +329,7 @@ type HTTPDoer interface {
 // composing the RequestOption instead if possible.
 type RequestConfig struct {
 	MaxRetries            int
+	MaxRetryDelay         time.Duration
 	RequestTimeout        time.Duration
 	Context               context.Context
 	Request               *http.Request
@@ -403,9 +409,12 @@ func shouldRetry(req *http.Request, res *http.Response, err error) bool {
 		res.StatusCode >= http.StatusInternalServerError
 }
 
-func parseRetryAfterHeader(resp *http.Response) (time.Duration, bool) {
+func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (time.Duration, bool) {
 	if resp == nil {
 		return 0, false
+	}
+	if maxDelay <= 0 {
+		maxDelay = DefaultMaxServerDelay
 	}
 
 	type retryData struct {
@@ -448,10 +457,19 @@ func parseRetryAfterHeader(resp *http.Response) (time.Duration, bool) {
 			continue
 		}
 		if retryAfter, err := strconv.ParseFloat(v, 64); err == nil {
+			if math.IsNaN(retryAfter) || math.IsInf(retryAfter, 0) || retryAfter < 0 {
+				continue
+			}
+			if retryAfter >= float64(maxDelay)/float64(retry.units) {
+				return maxDelay, true
+			}
 			return time.Duration(retryAfter * float64(retry.units)), true
 		}
 		if d, ok := retry.custom(v); ok {
-			return d, true
+			if d <= 0 {
+				return 0, true
+			}
+			return min(d, maxDelay), true
 		}
 	}
 
@@ -509,21 +527,46 @@ func (b *closeOnceReadCloser) Close() error {
 	return b.err
 }
 
-func retryDelay(res *http.Response, retryCount int) time.Duration {
+func retryDelay(res *http.Response, retryCount int, maxDelay time.Duration) time.Duration {
+	if maxDelay <= 0 {
+		maxDelay = DefaultMaxServerDelay
+	}
+
 	// If the backend tells us to wait a certain amount of time, use that value
-	if retryAfterDelay, ok := parseRetryAfterHeader(res); ok {
-		return max(0, retryAfterDelay)
+	if retryAfterDelay, ok := parseRetryAfterHeader(res, maxDelay); ok {
+		return retryAfterDelay
 	}
 
-	maxDelay := 8 * time.Second
-	delay := time.Duration(0.5 * float64(time.Second) * math.Pow(2, float64(retryCount)))
-	if delay > maxDelay {
+	backoff := 0.5 * float64(time.Second) * math.Pow(2, float64(retryCount))
+	var delay time.Duration
+	if math.IsInf(backoff, 0) || backoff >= float64(maxDelay) {
 		delay = maxDelay
+	} else {
+		delay = time.Duration(backoff)
 	}
 
-	jitter := rand.Int63n(int64(delay / 4))
-	delay -= time.Duration(jitter)
+	if jitterRange := int64(delay / 4); jitterRange > 0 {
+		delay -= time.Duration(rand.Int63n(jitterRange))
+	}
 	return delay
+}
+
+// WaitForDelay waits for delay to elapse or for ctx to be cancelled, whichever
+// happens first. The timer is always released before returning.
+func WaitForDelay(ctx context.Context, delay time.Duration) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }
 
 func (cfg *RequestConfig) Execute() (err error) {
@@ -625,10 +668,8 @@ func (cfg *RequestConfig) Execute() (err error) {
 			_ = res.Body.Close()
 		}
 
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(retryDelay(res, retryCount)):
+		if waitErr := WaitForDelay(ctx, retryDelay(res, retryCount, cfg.MaxRetryDelay)); waitErr != nil {
+			return waitErr
 		}
 	}
 
@@ -740,25 +781,13 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 	if err != nil {
 		return nil
 	}
-	new := &RequestConfig{
-		MaxRetries:         cfg.MaxRetries,
-		RequestTimeout:     cfg.RequestTimeout,
-		Context:            ctx,
-		Request:            req,
-		BaseURL:            cfg.BaseURL,
-		HTTPClient:         cfg.HTTPClient,
-		Middlewares:        cfg.Middlewares,
-		APIKey:             cfg.APIKey,
-		AdminAPIKey:        cfg.AdminAPIKey,
-		Organization:       cfg.Organization,
-		Project:            cfg.Project,
-		WebhookSecret:      cfg.WebhookSecret,
-		finalizers:         append([]requestFinalizer(nil), cfg.finalizers...),
-		authHeaderOverride: cfg.authHeaderOverride,
-		authPreference:     cfg.authPreference,
-	}
+	clone := *cfg
+	clone.Context = ctx
+	clone.Request = req
+	clone.Middlewares = append([]middleware(nil), cfg.Middlewares...)
+	clone.finalizers = append([]requestFinalizer(nil), cfg.finalizers...)
 
-	return new
+	return &clone
 }
 
 func (cfg *RequestConfig) SetHeader(key, value string) {
