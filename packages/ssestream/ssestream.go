@@ -20,8 +20,8 @@ import (
 
 const (
 	// DefaultMaxEventBytes is the maximum aggregate size of a built-in SSE
-	// event, including its parsed fields and logical line endings.
-	DefaultMaxEventBytes = bufio.MaxScanTokenSize << 9
+	// event, including its parsed fields and logical line endings (32 MiB).
+	DefaultMaxEventBytes = 32 << 20
 	// DefaultMaxEventLines is the maximum number of non-empty lines in a
 	// built-in SSE event.
 	DefaultMaxEventLines = 4096
@@ -130,20 +130,24 @@ func (e *StreamError) Error() string {
 
 // A base implementation of a Decoder for text/event-stream.
 type eventStreamDecoder struct {
-	evt            Event
-	rc             io.ReadCloser
-	scn            *bufio.Scanner
-	err            error
-	maxEventBytes  int
-	maxEventLines  int
-	remainingBytes int
+	evt               Event
+	rc                io.ReadCloser
+	scn               *bufio.Scanner
+	err               error
+	maxEventBytes     int
+	maxEventLines     int
+	remainingBytes    int
+	bufferedLineBytes int
 }
 
-// Read prevents Scanner from fetching another full-sized token after earlier
-// lines consume most of the current event's byte budget. The extra byte lets
-// the split function identify framing or actual overflow at the boundary.
+// Read prevents Scanner from fetching beyond the current line's share of the
+// event byte budget. The extra byte lets the split function identify framing
+// or actual overflow at the boundary.
 func (s *eventStreamDecoder) Read(p []byte) (int, error) {
-	maxRead := s.remainingBytes
+	maxRead := s.remainingBytes - s.bufferedLineBytes
+	if maxRead < 0 {
+		maxRead = 0
+	}
 	if maxRead < math.MaxInt {
 		maxRead++
 	}
@@ -155,6 +159,7 @@ func (s *eventStreamDecoder) Read(p []byte) (int, error) {
 
 func (s *eventStreamDecoder) scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if newline := bytes.IndexByte(data, '\n'); newline >= 0 {
+		s.bufferedLineBytes = 0
 		line := data[:newline]
 		if !isEventDelimiter(line) && !logicalLineFits(line, s.remainingBytes) {
 			return 0, nil, s.eventTooLargeError()
@@ -163,6 +168,7 @@ func (s *eventStreamDecoder) scanLines(data []byte, atEOF bool) (advance int, to
 	}
 
 	if atEOF {
+		s.bufferedLineBytes = 0
 		if isEventDelimiter(data) {
 			return bufio.ScanLines(data, atEOF)
 		}
@@ -175,6 +181,7 @@ func (s *eventStreamDecoder) scanLines(data []byte, atEOF bool) (advance int, to
 	if len(data) > s.remainingBytes && !(s.remainingBytes == 0 && isEventDelimiter(data)) {
 		return 0, nil, s.eventTooLargeError()
 	}
+	s.bufferedLineBytes = len(data)
 	return 0, nil, nil
 }
 
