@@ -176,10 +176,13 @@ Keep these components independently constrained:
   only a validated signed receipt that itself binds the run, work order, epoch,
   trusted wrapper and tool identities, workflow run and job, `published_sha`,
   `target_head_sha`, measured input and integration-tree digests, result schema,
-  exact check name, conclusion, and details URL. The separately authenticated
-  mutation envelope must bind that receipt's digest and every externally
-  reported field. The broker rejects a renamed, remapped, or replayed result,
-  then attaches the exact signed result to `published_sha` with a one-operation
+  unique result ID, reporting idempotency key, exact check name, conclusion, and
+  details URL. The separately authenticated mutation envelope must bind that
+  receipt's digest, result ID, reporting idempotency key, and every externally
+  reported field. The broker rejects a renamed or remapped result and atomically
+  consumes only the exact receipt-digest, result-ID, run, job, and check tuple;
+  distinct signed results may share an epoch, workflow run, or revision. It then
+  attaches the exact signed result to `published_sha` with a one-operation
   token. It stores the check-run ID and a stable external ID or status-context
   lookup key for idempotent recovery while the lease is held.
 - **PR-stewardship writer:** receives no model API credential and exposes only
@@ -347,10 +350,10 @@ non-executable results from a platform-attested channel, never candidate output.
 Before signing, verify that digest against the tree for `published_sha`. Bind the
 trusted wrapper revision, tool and analyzer identities, measured tree digest,
 current `target_head_sha`, integration-tree digest, result schema, exact check
-name, conclusion, details URL, work-order identity, run and job identities, and
-epoch into the receipt. Sign the canonical receipt as one object; never sign
-only the raw tool result and let a later component choose its public label or
-conclusion.
+name, conclusion, details URL, work-order identity, unique result ID, reporting
+idempotency key, run and job identities, and epoch into the receipt. Sign the
+canonical receipt as one object; never sign only the raw tool result and let a
+later component choose its public label or conclusion.
 
 Verify the epoch and authenticated mutation envelope before the broker performs
 each dispatch. Record the workflow-run ID, authenticate the trusted wrapper's
@@ -375,10 +378,13 @@ commit status to `published_sha`, not the wrapper revision. Bind
 the signed receipt digest, exact check name, conclusion, details URL,
 `target_head_sha`, the stored check-run ID and external ID or stable status
 context, and the payload digest in the authenticated mutation. Reject a receipt
-whose signed field differs from the requested public result, or whose run,
-epoch, revision, or idempotency identity was already consumed. If the target
-differs, do not write success. Re-read it again before lifecycle finalization
-and restart with a new work order if it moved while the lease was held. Require
+whose signed field differs from the requested public result, or whose exact
+receipt-digest, result-ID, run, job, and check tuple was already consumed under
+a different reporting idempotency key. Reconcile the stored remote identity for
+an exact idempotent replay; do not treat another check on the same run, epoch,
+or revision as a replay. If the target differs, do not write success. Re-read it
+again before lifecycle finalization and restart with a new work order if it
+moved while the lease was held. Require
 strict up-to-date branch protection or a merge queue for any required reporter
 check; that merge gate, not a post-release automation writer, invalidates
 eligibility after later target drift. Otherwise use an informational check name
