@@ -40,7 +40,9 @@ func main() {
 	for stream.Next() {
 		chunk := stream.Current()
 
-		acc.AddChunk(chunk)
+		if !acc.AddChunk(chunk) {
+			panic("failed to accumulate stream chunk")
+		}
 
 		// When this fires, the current chunk value will not contain content data
 		if _, ok := acc.JustFinishedContent(); ok {
