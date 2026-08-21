@@ -11,9 +11,9 @@ may conclude that no change is justified.
 
 ## Stay audit-only
 
-This skill has no editing, publication, or stewardship mode. It may read trusted
-repository and hosted metadata, run authorized read-only analysis against the
-trusted snapshot, and produce a report.
+This skill has no editing, publication, or stewardship mode. It may read the
+trusted repository snapshot, accept pre-ingestion-reduced hosted facts, run
+authorized read-only analysis, and produce a report.
 
 Never create or update a Git ref, commit, remote branch, pull request, issue,
 review thread, review request, workflow run, check or commit status, Slack
