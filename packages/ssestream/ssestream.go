@@ -9,6 +9,8 @@ import (
 	"mime"
 	"net/http"
 	"strings"
+	"sync"
+	"sync/atomic"
 
 	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
 	"github.com/tidwall/gjson"
@@ -153,7 +155,8 @@ type Stream[T any] struct {
 	cur                 T
 	err                 error
 	closeErr            error
-	done                bool
+	closeOnce           sync.Once
+	done                atomic.Bool
 	synthesizeEventData bool
 }
 
@@ -189,16 +192,17 @@ func (s *Stream[T]) Next() bool {
 	if s.err != nil {
 		return s.finish(s.err)
 	}
-	if s.done || s.decoder == nil {
+	decoder := s.decoder
+	if s.done.Load() || decoder == nil {
 		return false
 	}
 
-	if !s.decoder.Next() {
+	if !decoder.Next() {
 		// decoder.Next() may be false because of an error
-		return s.finish(s.decoder.Err())
+		return s.finish(decoder.Err())
 	}
 
-	event := s.decoder.Event()
+	event := decoder.Event()
 	if bytes.HasPrefix(event.Data, []byte("[DONE]")) {
 		return s.finish(nil)
 	}
@@ -247,12 +251,11 @@ func (s *Stream[T]) Err() error {
 // Close releases the stream's decoder. Repeated calls return the first close
 // result without closing the decoder again.
 func (s *Stream[T]) Close() error {
-	s.done = true
-	decoder := s.decoder
-	if decoder == nil {
-		return s.closeErr
-	}
-	s.decoder = nil
-	s.closeErr = decoder.Close()
+	s.closeOnce.Do(func() {
+		s.done.Store(true)
+		if s.decoder != nil {
+			s.closeErr = s.decoder.Close()
+		}
+	})
 	return s.closeErr
 }

@@ -7,7 +7,10 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestStreamSkipsEventsWithoutData(t *testing.T) {
@@ -482,6 +485,73 @@ func TestStreamCloseIsIdempotent(t *testing.T) {
 	}
 	if stream.Next() {
 		t.Fatal("closed stream unexpectedly produced a value")
+	}
+}
+
+type blockingReadCloser struct {
+	readStarted chan struct{}
+	closed      chan struct{}
+	readOnce    sync.Once
+	closeOnce   sync.Once
+	closeCalls  atomic.Int32
+}
+
+func newBlockingReadCloser() *blockingReadCloser {
+	return &blockingReadCloser{
+		readStarted: make(chan struct{}),
+		closed:      make(chan struct{}),
+	}
+}
+
+func (r *blockingReadCloser) Read([]byte) (int, error) {
+	r.readOnce.Do(func() { close(r.readStarted) })
+	<-r.closed
+	return 0, io.ErrClosedPipe
+}
+
+func (r *blockingReadCloser) Close() error {
+	r.closeCalls.Add(1)
+	r.closeOnce.Do(func() { close(r.closed) })
+	return nil
+}
+
+func TestStreamCloseInterruptsBlockedNext(t *testing.T) {
+	body := newBlockingReadCloser()
+	stream := NewStream[map[string]any](NewDecoder(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body:   body,
+	}), nil)
+	nextResult := make(chan bool, 1)
+
+	go func() {
+		nextResult <- stream.Next()
+	}()
+
+	<-body.readStarted
+	if err := stream.Close(); err != nil {
+		t.Fatalf("stream.Close returned error: %v", err)
+	}
+
+	select {
+	case got := <-nextResult:
+		if got {
+			t.Fatal("interrupted stream unexpectedly produced a value")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("stream.Next remained blocked after Close")
+	}
+
+	if !errors.Is(stream.Err(), io.ErrClosedPipe) {
+		t.Fatalf("stream error = %v, want %v", stream.Err(), io.ErrClosedPipe)
+	}
+	if got := body.closeCalls.Load(); got != 1 {
+		t.Fatalf("response body Close called %d times, want 1", got)
+	}
+	if err := stream.Close(); err != nil {
+		t.Fatalf("second stream.Close returned error: %v", err)
+	}
+	if got := body.closeCalls.Load(); got != 1 {
+		t.Fatalf("response body Close called %d times after repeated close, want 1", got)
 	}
 }
 
