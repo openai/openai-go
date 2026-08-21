@@ -560,6 +560,89 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 			}
 		})
 
+		crossOriginTargets := map[string]func(string) string{
+			"different port": func(targetURL string) string { return targetURL },
+			"different host": func(targetURL string) string {
+				return strings.Replace(targetURL, "127.0.0.1", "localhost", 1)
+			},
+		}
+		for targetName, redirectTarget := range crossOriginTargets {
+			t.Run(authName+"/rejects HTTPS cross-origin redirect/"+targetName, func(t *testing.T) {
+				redirectedCredential := ""
+				target := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					redirectedCredential = req.Header.Get(auth.header)
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = w.Write([]byte(`{"ok":true}`))
+				}))
+				t.Cleanup(target.Close)
+
+				sourceRequests := 0
+				source := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					sourceRequests++
+					http.Redirect(w, req, redirectTarget(target.URL)+"/final", http.StatusTemporaryRedirect)
+				}))
+				t.Cleanup(source.Close)
+
+				client := openai.NewClient(
+					WithEndpoint(source.URL, "2024-10-21"),
+					auth.option(),
+					option.WithMaxRetries(0),
+					option.WithHTTPClient(source.Client()),
+				)
+
+				var res map[string]any
+				err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res)
+				if err == nil || !strings.Contains(err.Error(), "authenticated redirects must remain on the original origin") {
+					t.Fatalf("expected origin restriction error, got %v", err)
+				}
+				if sourceRequests != 1 {
+					t.Fatalf("secure source requests = %d, want 1", sourceRequests)
+				}
+				if redirectedCredential != "" {
+					t.Fatalf("credential reached cross-origin redirect target: %q", redirectedCredential)
+				}
+			})
+		}
+
+		t.Run(authName+"/unsafe remote HTTPS cannot redirect to loopback HTTP", func(t *testing.T) {
+			targetReached := false
+			target := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+				targetReached = true
+			}))
+			t.Cleanup(target.Close)
+
+			source := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				http.Redirect(w, req, target.URL+"/final", http.StatusTemporaryRedirect)
+			}))
+			t.Cleanup(source.Close)
+			sourceURL, err := url.Parse(source.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			transport := source.Client().Transport.(*http.Transport).Clone()
+			dialer := &net.Dialer{}
+			transport.DialContext = func(ctx context.Context, network string, _ string) (net.Conn, error) {
+				return dialer.DialContext(ctx, network, sourceURL.Host)
+			}
+
+			client := openai.NewClient(
+				WithEndpoint("https://example.com:"+sourceURL.Port(), "2024-10-21"),
+				auth.option(),
+				WithUnsafeAllowHTTP(),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(&http.Client{Transport: transport}),
+			)
+
+			var res map[string]any
+			requestErr := client.Execute(context.Background(), http.MethodGet, "models", nil, &res)
+			if requestErr == nil || !strings.Contains(requestErr.Error(), "azure: authenticated requests require HTTPS") {
+				t.Fatalf("expected HTTPS requirement error, got %v", requestErr)
+			}
+			if targetReached {
+				t.Fatal("credential request reached loopback redirect target")
+			}
+		})
+
 		t.Run(authName+"/preserves HTTPS redirect", func(t *testing.T) {
 			redirectedCredential := ""
 			secureServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

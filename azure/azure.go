@@ -104,6 +104,14 @@ func WithEndpoint(endpoint string, apiVersion string) option.RequestOption {
 
 type unsafeAllowHTTPContextKey struct{}
 
+type azureCredentialOriginContextKey struct{}
+
+type azureCredentialOrigin struct {
+	scheme string
+	host   string
+	port   string
+}
+
 // WithUnsafeAllowHTTP permits Azure credentials to be sent over plaintext HTTP
 // only when the final request destination is localhost or a loopback IP address.
 // This option is intended exclusively for local development and testing. It
@@ -286,6 +294,9 @@ func withAzureCredentialMiddleware(authenticate option.Middleware) option.Reques
 		rc.HTTPClient = &client
 
 		return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			origin := azureCredentialOriginFromURL(req.URL)
+			ctx := context.WithValue(req.Context(), azureCredentialOriginContextKey{}, origin)
+			req = req.WithContext(ctx)
 			if err := validateAzureCredentialTransport(req); err != nil {
 				return nil, err
 			}
@@ -306,10 +317,51 @@ func (t azureCredentialTransport) RoundTrip(req *http.Request) (*http.Response, 
 }
 
 func validateAzureCredentialTransport(req *http.Request) error {
-	if strings.EqualFold(req.URL.Scheme, "https") || azureCredentialHTTPAllowed(req) {
+	origin, ok := req.Context().Value(azureCredentialOriginContextKey{}).(azureCredentialOrigin)
+	if !ok {
+		return requestconfig.WithNoRetryError(&azureCredentialOriginError{})
+	}
+
+	destination := azureCredentialOriginFromURL(req.URL)
+	if destination.scheme != "https" {
+		// Unsafe mode may redirect between local development servers, but it
+		// must never expand a remote credential origin to a loopback target.
+		if azureCredentialOriginIsLoopback(origin) && azureCredentialHTTPAllowed(req) {
+			return nil
+		}
+		return requestconfig.WithNoRetryError(&azureCredentialTransportError{})
+	}
+
+	if destination == origin {
 		return nil
 	}
-	return requestconfig.WithNoRetryError(&azureCredentialTransportError{})
+	return requestconfig.WithNoRetryError(&azureCredentialOriginError{})
+}
+
+func azureCredentialOriginFromURL(u *url.URL) azureCredentialOrigin {
+	scheme := strings.ToLower(u.Scheme)
+	host := strings.ToLower(u.Hostname())
+	if ip := net.ParseIP(host); ip != nil {
+		host = ip.String()
+	}
+	port := u.Port()
+	if port == "" {
+		switch scheme {
+		case "http":
+			port = "80"
+		case "https":
+			port = "443"
+		}
+	}
+	return azureCredentialOrigin{scheme: scheme, host: host, port: port}
+}
+
+func azureCredentialOriginIsLoopback(origin azureCredentialOrigin) bool {
+	if origin.host == "localhost" {
+		return true
+	}
+	ip := net.ParseIP(origin.host)
+	return ip != nil && ip.IsLoopback()
 }
 
 type azureCredentialTransportError struct{}
@@ -321,6 +373,14 @@ func (*azureCredentialTransportError) Error() string {
 // NonRetriable implements the marker understood by the Azure pipeline's retry
 // policy. The outer requestconfig marker independently stops SDK retries.
 func (*azureCredentialTransportError) NonRetriable() {}
+
+type azureCredentialOriginError struct{}
+
+func (*azureCredentialOriginError) Error() string {
+	return "azure: authenticated redirects must remain on the original origin"
+}
+
+func (*azureCredentialOriginError) NonRetriable() {}
 
 func azureCredentialHTTPAllowed(req *http.Request) bool {
 	if !strings.EqualFold(req.URL.Scheme, "http") {
