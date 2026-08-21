@@ -161,7 +161,7 @@ func TestDecoderHandlesIncompleteLineAtByteLimit(t *testing.T) {
 	}
 }
 
-func TestDecoderPreservesLimitErrorWithConcurrentReaderError(t *testing.T) {
+func TestDecoderPreservesByteLimitErrorWithConcurrentReaderError(t *testing.T) {
 	const maxEventBytes = 8
 	decoder := NewDecoderWithOptions(&http.Response{
 		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
@@ -170,6 +170,26 @@ func TestDecoderPreservesLimitErrorWithConcurrentReaderError(t *testing.T) {
 			err:  io.ErrUnexpectedEOF,
 		},
 	}, DecoderOptions{MaxEventBytes: maxEventBytes})
+
+	if decoder.Next() {
+		t.Fatalf("oversized event unexpectedly decoded: %+v", decoder.Event())
+	}
+	if !errors.Is(decoder.Err(), ErrEventTooLarge) {
+		t.Fatalf("decoder error = %v, want %v", decoder.Err(), ErrEventTooLarge)
+	}
+	if !errors.Is(decoder.Err(), io.ErrUnexpectedEOF) {
+		t.Fatalf("decoder error = %v, want underlying %v", decoder.Err(), io.ErrUnexpectedEOF)
+	}
+}
+
+func TestDecoderPreservesLineLimitErrorWithConcurrentReaderError(t *testing.T) {
+	decoder := NewDecoderWithOptions(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body: &testDataErrorReadCloser{
+			data: ": one\n: two\n\n",
+			err:  io.ErrUnexpectedEOF,
+		},
+	}, DecoderOptions{MaxEventBytes: 1024, MaxEventLines: 1})
 
 	if decoder.Next() {
 		t.Fatalf("oversized event unexpectedly decoded: %+v", decoder.Event())

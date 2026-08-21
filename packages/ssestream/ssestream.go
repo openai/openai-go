@@ -193,6 +193,15 @@ func (s *eventStreamDecoder) eventTooLargeError() error {
 	return s.limitErr
 }
 
+func (s *eventStreamDecoder) failWithLimitError(err error) bool {
+	s.limitErr = err
+	s.err = err
+	if scanErr := s.scn.Err(); scanErr != nil && !errors.Is(scanErr, ErrEventTooLarge) {
+		s.err = errors.Join(err, scanErr)
+	}
+	return false
+}
+
 func isEventDelimiter(line []byte) bool {
 	return len(line) == 0 || len(line) == 1 && line[0] == '\r'
 }
@@ -236,14 +245,14 @@ func (s *eventStreamDecoder) Next() bool {
 
 		eventLines++
 		if eventLines > s.maxEventLines {
-			s.err = fmt.Errorf("%w: maximum event line count is %d", ErrEventTooLarge, s.maxEventLines)
-			return false
+			return s.failWithLimitError(
+				fmt.Errorf("%w: maximum event line count is %d", ErrEventTooLarge, s.maxEventLines),
+			)
 		}
 
 		lineBytes := len(txt) + 1
 		if lineBytes > s.remainingBytes {
-			s.err = s.eventTooLargeError()
-			return false
+			return s.failWithLimitError(s.eventTooLargeError())
 		}
 		s.remainingBytes -= lineBytes
 
