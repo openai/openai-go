@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"unsafe"
 
 	openai "github.com/openai/openai-go/v3"
 )
@@ -12,6 +13,7 @@ const (
 	testAccumulatorMaxChunks          = 100_000
 	testAccumulatorMaxStructuralSlots = 1_024
 	testAccumulatorMaxTextBytes       = 16 << 20
+	testAccumulatorMaxLogprobBytes    = 16 << 20
 )
 
 func TestAccumulatorStringGrowthIsAmortized(t *testing.T) {
@@ -209,6 +211,51 @@ func TestAccumulatorRejectsTextBeyondBudgetWithoutMutation(t *testing.T) {
 	}
 	if acc.Model != "accepted-model" || len(acc.Choices[0].Message.Content) != testAccumulatorMaxTextBytes {
 		t.Fatalf("AddChunk mutated the accumulator after rejecting the chunk: model %q, content length %d", acc.Model, len(acc.Choices[0].Message.Content))
+	}
+}
+
+func TestAccumulatorRejectsLogprobsBeyondBudgetWithoutMutation(t *testing.T) {
+	var acc openai.ChatCompletionAccumulator
+	toolChunk := accumulatorToolStringChunk("tool", "arguments")
+	if !acc.AddChunk(toolChunk) {
+		t.Fatal("AddChunk rejected the initial tool-call chunk")
+	}
+
+	logprobOverhead := 2 * int(unsafe.Sizeof(openai.ChatCompletionTokenLogprob{}))
+	byteCount := (testAccumulatorMaxLogprobBytes - logprobOverhead) / int(unsafe.Sizeof(int64(0)))
+	remaining := testAccumulatorMaxLogprobBytes - logprobOverhead - byteCount*int(unsafe.Sizeof(int64(0)))
+	atLimit := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+	atLimit.Model = "accepted-model"
+	atLimit.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{
+		Token: strings.Repeat("x", remaining),
+		Bytes: make([]int64, byteCount),
+	}}
+	if !acc.AddChunk(atLimit) {
+		t.Fatal("AddChunk rejected logprobs at the documented aggregate budget")
+	}
+	if toolCall, ok := acc.JustFinishedToolCall(); !ok || toolCall.Name != "tool" {
+		t.Fatal("AddChunk did not publish the expected pre-rejection tool-call event")
+	}
+
+	beyondLimit := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+	beyondLimit.Model = "rejected-model"
+	beyondLimit.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "x"}}
+	if acc.AddChunk(beyondLimit) {
+		t.Fatal("AddChunk accepted logprobs beyond the documented aggregate budget")
+	}
+	if acc.Model != "accepted-model" || len(acc.Choices[0].Logprobs.Content) != 1 {
+		t.Fatal("AddChunk mutated the accumulator after rejecting excessive logprobs")
+	}
+	if toolCall, ok := acc.JustFinishedToolCall(); !ok || toolCall.Name != "tool" {
+		t.Fatal("AddChunk changed the current completion event after rejecting excessive logprobs")
+	}
+
+	afterRejection := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "-after"})
+	if !acc.AddChunk(afterRejection) {
+		t.Fatal("AddChunk consumed unrelated text or chunk budget after rejecting excessive logprobs")
+	}
+	if got := acc.Choices[0].Message.Content; got != "-after" {
+		t.Fatalf("content after rejected logprobs = %q, want %q", got, "-after")
 	}
 }
 

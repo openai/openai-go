@@ -2,7 +2,9 @@ package openai
 
 import (
 	"strings"
+	"unsafe"
 
+	"github.com/openai/openai-go/v3/packages/respjson"
 	"github.com/openai/openai-go/v3/shared/constant"
 )
 
@@ -10,6 +12,8 @@ const (
 	maxChatCompletionAccumulatorChunks          = 100_000
 	maxChatCompletionAccumulatorStructuralSlots = 1_024
 	maxChatCompletionAccumulatorTextBytes       = 16 << 20
+	maxChatCompletionAccumulatorLogprobBytes    = 16 << 20
+	chatCompletionAccumulatorMapOverheadBytes   = 512
 )
 
 // Helper to accumulate chunks from a stream
@@ -22,6 +26,7 @@ type ChatCompletionAccumulator struct {
 	justFinishedByChoice             []chatCompletionResponseState
 	stringState                      chatCompletionAccumulatorStringState
 	chunkCount                       int
+	logprobBytes                     int
 }
 
 type FinishedChatCompletionToolCall struct {
@@ -70,13 +75,15 @@ const (
 // AddChunk incorporates a chunk into the accumulation. Chunks must be added in order.
 // Returns false if the chunk could not be successfully accumulated. To bound work and
 // memory for untrusted streams, an accumulator accepts at most 100,000 chunks, 1,024
-// combined choice and tool-call slots, and 16 MiB of combined content, refusal, tool
-// name, and tool argument text currently stored in the accumulator and the incoming
-// chunk. A rejected chunk does not modify the accumulator.
+// combined choice and tool-call slots, 16 MiB of combined content, refusal, tool name,
+// and tool argument text currently stored in the accumulator and the incoming chunk,
+// and 16 MiB of aggregate retained log probability data. A rejected chunk does not
+// modify the accumulator.
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
-	if !acc.preflightChunk(&chunk) {
+	logprobBytes, ok := acc.preflightChunk(&chunk)
+	if !ok {
 		return false
 	}
 
@@ -84,6 +91,7 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 	acc.justFinishedByChoice = acc.justFinishedByChoice[:0]
 	acc.accumulateDelta(&chunk)
 	acc.chunkCount++
+	acc.logprobBytes = logprobBytes
 
 	if len(chunk.Choices) > 0 {
 		firstChoice := chunk.Choices[0]
@@ -103,27 +111,31 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 	return true
 }
 
-func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk) bool {
+func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk) (int, bool) {
 	if acc.chunkCount >= maxChatCompletionAccumulatorChunks {
-		return false
+		return 0, false
 	}
 	if acc.ID != "" && acc.ID != chunk.ID {
-		return false
+		return 0, false
 	}
 	if !chatCompletionStructuralSlotsWithinLimit(&acc.ChatCompletion, chunk) {
-		return false
+		return 0, false
 	}
 
 	textBytes, ok := addChatCompletionTextBytes(0, &acc.ChatCompletion)
 	if !ok {
-		return false
+		return 0, false
 	}
 	if _, ok = addChatCompletionChunkTextBytes(textBytes, chunk); !ok {
-		return false
+		return 0, false
+	}
+	logprobBytes, ok := addChatCompletionChunkLogprobBytes(acc.logprobBytes, chunk)
+	if !ok {
+		return 0, false
 	}
 
 	acc.reconcilePublicState()
-	return true
+	return logprobBytes, true
 }
 
 // JustFinishedContent retrieves the chat completion content when it is known to have just been completed.
@@ -498,6 +510,102 @@ func addAccumulatorTextBytes(total *int, text string) bool {
 		return false
 	}
 	*total += len(text)
+	return true
+}
+
+func addChatCompletionChunkLogprobBytes(total int, chunk *ChatCompletionChunk) (int, bool) {
+	chunkBytes := 0
+	for i := range chunk.Choices {
+		logprobs := &chunk.Choices[i].Logprobs
+		if !addChatCompletionLogprobs(&chunkBytes, logprobs.Content) ||
+			!addChatCompletionLogprobs(&chunkBytes, logprobs.Refusal) {
+			return 0, false
+		}
+	}
+
+	if chunkBytes == 0 {
+		return total, true
+	}
+	if !addAccumulatorLogprobBytes(&total, chunkBytes) {
+		return 0, false
+	}
+	return total, true
+}
+
+func addChatCompletionLogprobs(total *int, logprobs []ChatCompletionTokenLogprob) bool {
+	// Appending can reserve more backing storage than the current length. Twice the
+	// element storage is a conservative bound for the accumulator-owned slice.
+	logprobSize := int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
+	if !addAccumulatorLogprobStorage(total, len(logprobs), logprobSize) {
+		return false
+	}
+	if !addAccumulatorLogprobStorage(total, len(logprobs), logprobSize) {
+		return false
+	}
+	for i := range logprobs {
+		logprob := &logprobs[i]
+		if !addAccumulatorLogprobBytes(total, len(logprob.Token)) ||
+			!addAccumulatorLogprobStorage(total, cap(logprob.Bytes), int(unsafe.Sizeof(int64(0)))) ||
+			!addAccumulatorLogprobStorage(total, cap(logprob.TopLogprobs), int(unsafe.Sizeof(ChatCompletionTokenLogprobTopLogprob{}))) ||
+			!addChatCompletionLogprobMetadata(total, logprob.RawJSON(), logprob.JSON.ExtraFields,
+				logprob.JSON.Token, logprob.JSON.Bytes, logprob.JSON.Logprob, logprob.JSON.TopLogprobs) {
+			return false
+		}
+		topLogprobs := logprob.TopLogprobs[:cap(logprob.TopLogprobs)]
+		for j := range topLogprobs {
+			topLogprob := &topLogprobs[j]
+			if !addAccumulatorLogprobBytes(total, len(topLogprob.Token)) ||
+				!addAccumulatorLogprobStorage(total, cap(topLogprob.Bytes), int(unsafe.Sizeof(int64(0)))) ||
+				!addChatCompletionLogprobMetadata(total, topLogprob.RawJSON(), topLogprob.JSON.ExtraFields,
+					topLogprob.JSON.Token, topLogprob.JSON.Bytes, topLogprob.JSON.Logprob) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func addChatCompletionLogprobMetadata(total *int, raw string, extraFields map[string]respjson.Field, fields ...respjson.Field) bool {
+	if len(extraFields) > 0 && !addAccumulatorLogprobBytes(total, chatCompletionAccumulatorMapOverheadBytes) {
+		return false
+	}
+	entrySize := int(unsafe.Sizeof(string(""))) + int(unsafe.Sizeof(respjson.Field{}))
+	if !addAccumulatorLogprobStorage(total, len(extraFields), entrySize) {
+		return false
+	}
+	if !addAccumulatorLogprobStorage(total, len(extraFields), entrySize) {
+		return false
+	}
+	if raw != "" {
+		return addAccumulatorLogprobBytes(total, len(raw))
+	}
+	for i := range fields {
+		if !addAccumulatorLogprobBytes(total, len(fields[i].Raw())) {
+			return false
+		}
+	}
+	for name, field := range extraFields {
+		if !addAccumulatorLogprobBytes(total, len(name)) ||
+			!addAccumulatorLogprobBytes(total, len(field.Raw())) {
+			return false
+		}
+	}
+	return true
+}
+
+func addAccumulatorLogprobStorage(total *int, count int, size int) bool {
+	if count > (maxChatCompletionAccumulatorLogprobBytes-*total)/size {
+		return false
+	}
+	*total += count * size
+	return true
+}
+
+func addAccumulatorLogprobBytes(total *int, count int) bool {
+	if count > maxChatCompletionAccumulatorLogprobBytes-*total {
+		return false
+	}
+	*total += count
 	return true
 }
 
