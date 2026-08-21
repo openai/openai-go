@@ -748,51 +748,37 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 	if err != nil {
 		return nil
 	}
-	var apiKeyLayer, adminAPIKeyLayer, authorizationHeaderLayer, apiKeyHeaderLayer *optionLayerIdentity
+	clone := *cfg
+	clone.Context = ctx
+	clone.Request = req
+	clone.Middlewares = append([]middleware(nil), cfg.Middlewares...)
+	clone.finalizers = append([]requestFinalizer(nil), cfg.finalizers...)
+	clone.optionLayer = nil
+	clone.providerAuthLayer = nil
+	clone.apiKeyLayer = nil
+	clone.adminAPIKeyLayer = nil
+	clone.authorizationHeaderLayer = nil
+	clone.apiKeyHeaderLayer = nil
+
 	hasAuthorizationOverride := cfg.authHeaderOverride || len(req.Header.Values("Authorization")) != 0
 	hasAPIKeyHeader := len(req.Header.Values("Api-Key")) != 0
 	if cfg.APIKey != "" || cfg.AdminAPIKey != "" || hasAuthorizationOverride || hasAPIKeyHeader {
 		inheritedLayer := new(optionLayerIdentity)
 		if cfg.APIKey != "" {
-			apiKeyLayer = inheritedLayer
+			clone.apiKeyLayer = inheritedLayer
 		}
 		if cfg.AdminAPIKey != "" {
-			adminAPIKeyLayer = inheritedLayer
+			clone.adminAPIKeyLayer = inheritedLayer
 		}
 		if hasAuthorizationOverride {
-			authorizationHeaderLayer = inheritedLayer
+			clone.authorizationHeaderLayer = inheritedLayer
 		}
 		if hasAPIKeyHeader {
-			apiKeyHeaderLayer = inheritedLayer
+			clone.apiKeyHeaderLayer = inheritedLayer
 		}
 	}
-	new := &RequestConfig{
-		MaxRetries:                 cfg.MaxRetries,
-		RequestTimeout:             cfg.RequestTimeout,
-		Context:                    ctx,
-		Request:                    req,
-		BaseURL:                    cfg.BaseURL,
-		endpointProvider:           cfg.endpointProvider,
-		configuredProviderEndpoint: cfg.configuredProviderEndpoint,
-		dataResidencyEndpoint:      cfg.dataResidencyEndpoint,
-		providerAuth:               cfg.providerAuth,
-		apiKeyLayer:                apiKeyLayer,
-		adminAPIKeyLayer:           adminAPIKeyLayer,
-		authorizationHeaderLayer:   authorizationHeaderLayer,
-		apiKeyHeaderLayer:          apiKeyHeaderLayer,
-		HTTPClient:                 cfg.HTTPClient,
-		Middlewares:                cfg.Middlewares,
-		APIKey:                     cfg.APIKey,
-		AdminAPIKey:                cfg.AdminAPIKey,
-		Organization:               cfg.Organization,
-		Project:                    cfg.Project,
-		WebhookSecret:              cfg.WebhookSecret,
-		finalizers:                 append([]requestFinalizer(nil), cfg.finalizers...),
-		authHeaderOverride:         cfg.authHeaderOverride,
-		authPreference:             cfg.authPreference,
-	}
 
-	return new
+	return &clone
 }
 
 func (cfg *RequestConfig) SetHeader(key, value string) {

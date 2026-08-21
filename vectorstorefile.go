@@ -62,11 +62,7 @@ func (r *VectorStoreFileService) New(ctx context.Context, vectorStoreID string, 
 // Polls the API and blocks until the task is complete.
 // Default polling interval is 1 second.
 func (r *VectorStoreFileService) NewAndPoll(ctx context.Context, vectorStoreId string, body VectorStoreFileNewParams, pollIntervalMs int, opts ...option.RequestOption) (res *VectorStoreFile, err error) {
-	file, err := r.New(ctx, vectorStoreId, body, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return r.PollStatus(ctx, vectorStoreId, file.ID, pollIntervalMs, opts...)
+	return newVectorStoreFileAndPoll(r, ctx, vectorStoreId, body, pollIntervalMs, opts...)
 }
 
 // Upload a file to the `files` API and then attach it to the given vector store.
@@ -74,24 +70,13 @@ func (r *VectorStoreFileService) NewAndPoll(ctx context.Context, vectorStoreId s
 // Note the file will be asynchronously processed (you can use the alternative
 // polling helper method to wait for processing to complete).
 func (r *VectorStoreFileService) Upload(ctx context.Context, vectorStoreID string, body FileNewParams, opts ...option.RequestOption) (*VectorStoreFile, error) {
-	filesService := NewFileService(r.Options...)
-	fileObj, err := filesService.New(ctx, body, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return r.New(ctx, vectorStoreID, VectorStoreFileNewParams{
-		FileID: fileObj.ID,
-	}, opts...)
+	return uploadVectorStoreFile(r, ctx, vectorStoreID, body, opts...)
 }
 
 // Add a file to a vector store and poll until processing is complete.
 // Default polling interval is 1 second.
 func (r *VectorStoreFileService) UploadAndPoll(ctx context.Context, vectorStoreID string, body FileNewParams, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFile, error) {
-	res, err := r.Upload(ctx, vectorStoreID, body, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return r.PollStatus(ctx, vectorStoreID, res.ID, pollIntervalMs, opts...)
+	return uploadVectorStoreFileAndPoll(r, ctx, vectorStoreID, body, pollIntervalMs, opts...)
 }
 
 // Retrieves a vector store file.
