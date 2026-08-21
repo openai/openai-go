@@ -277,6 +277,11 @@ func TestRetryAfterDelayEdgeCases(t *testing.T) {
 			timeout:      250 * time.Millisecond,
 			wantAttempts: 2,
 		},
+		"elapsed HTTP date": {
+			header:       http.Header{"Retry-After": {time.Now().Add(-time.Minute).UTC().Format(time.RFC1123)}},
+			timeout:      250 * time.Millisecond,
+			wantAttempts: 2,
+		},
 		"finite scaling overflow": {
 			header:        http.Header{"Retry-After": {"2" + strings.Repeat("0", 299)}},
 			maxRetryDelay: 700 * time.Millisecond,

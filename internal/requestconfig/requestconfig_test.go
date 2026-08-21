@@ -232,6 +232,7 @@ func TestParseRetryAfterHeaderBoundsRemoteDelays(t *testing.T) {
 		},
 		"past date": {
 			header: http.Header{"Retry-After": {time.Now().Add(-time.Hour).UTC().Format(time.RFC1123)}},
+			ok:     true,
 		},
 	}
 
