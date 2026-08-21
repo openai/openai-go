@@ -6,3 +6,4 @@ Brewfile.lock.json
 /scripts/steady/node_modules/
 /scripts/steady/.install.*/
 /scripts/steady/.publication-lock/
+/scripts/steady/.versions/

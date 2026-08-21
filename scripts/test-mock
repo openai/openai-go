@@ -6,13 +6,27 @@ cd "$(dirname "$0")/.."
 
 temporary="$(mktemp -d)"
 marker="$temporary/executed"
-wrapper="scripts/steady/node_modules/@stdy/cli/steady.js"
+expected_version="$(node -p 'require("./scripts/steady/package.json").dependencies["@stdy/cli"]')"
+lock_digest="$(node -e '
+  const fs = require("fs");
+  const crypto = require("crypto");
+  process.stdout.write(crypto.createHash("sha256").update(fs.readFileSync(process.argv[1])).digest("hex"));
+' scripts/steady/package-lock.json)"
+installation_name="$expected_version-$lock_digest"
+steady_installation="scripts/steady/.versions/$installation_name"
+wrapper="$steady_installation/node_modules/@stdy/cli/steady.js"
 
 cleanup() {
+  if [[ -n "${old_daemon:-}" ]]; then
+    kill "$old_daemon" 2>/dev/null || true
+    wait "$old_daemon" 2>/dev/null || true
+  fi
   rm -rf "$temporary"
-  npm ci --prefix scripts/steady --offline --ignore-scripts --include=optional --no-audit --no-fund >/dev/null
+  npm ci --prefix "$steady_installation" --offline --ignore-scripts --include=optional --no-audit --no-fund >/dev/null
 }
 trap cleanup EXIT
+
+npm_config_offline=true ./scripts/steady/install >/dev/null
 
 printf 'require("fs").writeFileSync(process.env.STEADY_TEST_MARKER, "executed")\n' >"$wrapper"
 
@@ -32,7 +46,6 @@ if [[ "$status" -eq 0 ]]; then
   exit 1
 fi
 
-expected_version="$(node -p 'require("./scripts/steady/package.json").dependencies["@stdy/cli"]')"
 node "$wrapper" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Mock server rejected tampered existing Steady bytes"
 
@@ -40,10 +53,10 @@ native="$(node -e '
   const path = require("path");
   const name = `@stdy/cli-${process.platform}-${process.arch}`;
   const manifest = require.resolve(`${name}/package.json`, {
-    paths: [path.resolve("scripts/steady/node_modules/@stdy/cli")],
+    paths: [path.resolve(process.argv[1])],
   });
   process.stdout.write(path.join(path.dirname(manifest), "bin", process.platform === "win32" ? "steady.exe" : "steady"));
-')"
+' "$steady_installation/node_modules/@stdy/cli")"
 printf '#!/bin/sh\nprintf "executed" >"$STEADY_TEST_MARKER"\n' >"$native"
 chmod +x "$native"
 
@@ -63,9 +76,9 @@ native_manifest="$(node -e '
   const path = require("path");
   const name = `@stdy/cli-${process.platform}-${process.arch}`;
   process.stdout.write(require.resolve(`${name}/package.json`, {
-    paths: [path.resolve("scripts/steady/node_modules/@stdy/cli")],
+    paths: [path.resolve(process.argv[1])],
   }));
-')"
+' "$steady_installation/node_modules/@stdy/cli")"
 node -e '
   const fs = require("fs");
   const path = require("path");
@@ -88,6 +101,22 @@ if [[ -e "$marker" ]]; then
 fi
 "$native" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Steady package metadata stays inert when package exports are remapped"
+
+published_lock="$steady_installation/package-lock.json"
+lock_payload="$temporary/lock-payload.cjs"
+printf 'require("fs").writeFileSync(process.env.STEADY_TEST_MARKER, "executed"); module.exports = {};\n' \
+  >"$lock_payload"
+mv "$published_lock" "$temporary/original-published-lock.json"
+ln -s "$lock_payload" "$published_lock"
+if ! STEADY_TEST_MARKER="$marker" npm_config_offline=true ./scripts/steady/install >"$temporary/output" 2>&1; then
+  echo "Steady installation failed to replace untrusted published lock metadata" >&2
+  exit 1
+fi
+if [[ -e "$marker" ]]; then
+  echo "Steady installation executed an untrusted published lockfile" >&2
+  exit 1
+fi
+echo "Versioned Steady installation rejects executable or modified published lockfiles"
 
 printf '#!/bin/sh\nprintf "%%s" "$STEADY_TEST_SECRET" >"$STEADY_TEST_MARKER"\n' >"$native"
 chmod +x "$native"
@@ -169,10 +198,22 @@ for shrinkwrap_kind in regular symlink dangling-symlink; do
     echo "A $shrinkwrap_kind shrinkwrap replaced the committed lockfile and exposed developer credentials" >&2
     exit 1
   fi
-  node "$shrinkwrap_fixture/scripts/steady/node_modules/@stdy/cli/steady.js" --version |
+  node "$shrinkwrap_fixture/scripts/steady/.versions/$installation_name/node_modules/@stdy/cli/steady.js" --version |
     grep -Fx "steady $expected_version" >/dev/null
 done
 echo "Regular, symlinked, and dangling npm shrinkwrap files cannot override the committed lockfile"
+
+versions_fixture="$temporary/version-directory-symlink"
+versions_target="$temporary/untrusted-version-directory"
+mkdir -p "$versions_fixture/scripts/steady" "$versions_target"
+cp scripts/steady/install scripts/steady/package.json scripts/steady/package-lock.json "$versions_fixture/scripts/steady/"
+ln -s "$versions_target" "$versions_fixture/scripts/steady/.versions"
+if npm_config_offline=true "$versions_fixture/scripts/steady/install" >"$temporary/output" 2>&1; then
+  echo "Steady installation accepted a symlinked version directory" >&2
+  exit 1
+fi
+grep -F 'versions directory cannot be a symlink' "$temporary/output" >/dev/null
+echo "Versioned Steady installation rejects redirected installation directories"
 
 npm_stub="$temporary/npm"
 go_stub="$temporary/go"
@@ -269,12 +310,13 @@ mkdir -p "$linked_fixture/scripts/steady"
 cp scripts/steady/install scripts/steady/package.json scripts/steady/package-lock.json "$linked_fixture/scripts/steady/"
 chmod +x "$linked_fixture/scripts/steady/install"
 npm_config_offline=true npm_config_install_strategy=linked "$linked_fixture/scripts/steady/install" >"$temporary/output" 2>&1
-node "$linked_fixture/scripts/steady/node_modules/@stdy/cli/steady.js" --version | grep -Fx "steady $expected_version" >/dev/null
+linked_installation="$linked_fixture/scripts/steady/.versions/$installation_name"
+node "$linked_installation/node_modules/@stdy/cli/steady.js" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Locked Steady installation supports npm's linked package layout"
 
 linked_wrapper="$(node -e '
   process.stdout.write(require("fs").realpathSync(process.argv[1]));
-' "$linked_fixture/scripts/steady/node_modules/@stdy/cli/steady.js")"
+' "$linked_installation/node_modules/@stdy/cli/steady.js")"
 native_package="$(node -e '
   const path = require("path");
   const name = `@stdy/cli-${process.platform}-${process.arch}`;
@@ -286,7 +328,7 @@ mv "$linked_sibling" "$temporary/original-linked-sibling"
 mkdir -p "$linked_sibling/bin"
 printf '#!/bin/sh\nprintf "executed" >"$STEADY_TEST_MARKER"\n' >"$linked_sibling/bin/$native_name"
 chmod +x "$linked_sibling/bin/$native_name"
-ln -s "$native_package" "$linked_fixture/scripts/steady/node_modules/@stdy/cli-$platform"
+ln -s "$native_package" "$linked_installation/node_modules/@stdy/cli-$platform"
 
 verified_native="$(STEADY_TEST_MARKER="$marker" npm_config_offline=true \
   "$linked_fixture/scripts/steady/install" --print-executable)"
@@ -347,7 +389,7 @@ cat >"$concurrent_bin/node" <<'EOF'
 #!/usr/bin/env bash
 set -e
 
-if [[ "${1:-}" == "-e" && "${2:-}" == *renameSync* && "${4:-}" == */node_modules ]]; then
+if [[ "${1:-}" == "-e" && "${2:-}" == *renameSync* && "${4:-}" == */.versions/* ]]; then
   touch "$STEADY_CONCURRENCY_BARRIER/publishing.$$"
   for attempt in {1..60}; do
     publishers=("$STEADY_CONCURRENCY_BARRIER"/publishing.*)
@@ -382,7 +424,8 @@ if [[ "$failures" -ne 0 ]]; then
   exit 1
 fi
 
-node "$concurrent_fixture/scripts/steady/node_modules/@stdy/cli/steady.js" --version | grep -Fx "steady $expected_version" >/dev/null
+node "$concurrent_fixture/scripts/steady/.versions/$installation_name/node_modules/@stdy/cli/steady.js" --version |
+  grep -Fx "steady $expected_version" >/dev/null
 if [[ -e "$concurrent_fixture/scripts/steady/.publication-lock" ]]; then
   echo "Concurrent Steady installations left an unreleased publication lock" >&2
   exit 1
@@ -402,7 +445,7 @@ lifetime_bin="$temporary/lifetime-bin"
 mkdir "$lifetime_bin"
 cat >"$lifetime_bin/node" <<'EOF'
 #!/usr/bin/env bash
-if [[ "${1:-}" == "-e" && "${2:-}" == *renameSync* && "${4:-}" == */node_modules ]]; then
+if [[ "${1:-}" == "-e" && "${2:-}" == *renameSync* && "${4:-}" == */.versions/* ]]; then
   touch "$STEADY_PUBLICATION_GAP"
   while [[ ! -e "$STEADY_PUBLICATION_RELEASE" ]]; do
     sleep 0.025
@@ -443,3 +486,85 @@ fi
 grep -Fx "steady $expected_version" "$temporary/live-version" >/dev/null
 grep -Fx "$live_executable" "$temporary/concurrent-executable" >/dev/null
 echo "Concurrent Steady installation preserves and reuses the authenticated live executable"
+
+upgrade_fixture="$temporary/version-upgrade"
+upgrade_bin="$temporary/version-upgrade-bin"
+mkdir -p "$upgrade_fixture/scripts/steady" "$upgrade_bin"
+cp scripts/steady/install scripts/steady/package.json scripts/steady/package-lock.json "$upgrade_fixture/scripts/steady/"
+node -e '
+  const fs = require("fs");
+  const file = process.argv[1];
+  const lock = JSON.parse(fs.readFileSync(file, "utf8"));
+  lock.previousInstallationGeneration = true;
+  fs.writeFileSync(file, JSON.stringify(lock, null, 2));
+' "$upgrade_fixture/scripts/steady/package-lock.json"
+
+old_executable="$(npm_config_offline=true "$upgrade_fixture/scripts/steady/install" --print-executable)"
+"$old_executable" --host 127.0.0.1 -p 14031 api_reference/openapi.transformed.yml \
+  >"$temporary/old-daemon-output" 2>&1 &
+old_daemon=$!
+for attempt in {1..300}; do
+  if curl --silent --fail 'http://127.0.0.1:14031/_x-steady/health' >/dev/null 2>&1; then
+    break
+  fi
+  if ! kill -0 "$old_daemon" 2>/dev/null; then
+    cat "$temporary/old-daemon-output" >&2
+    echo "Steady version-upgrade regression could not start the genuine old daemon" >&2
+    exit 1
+  fi
+  sleep 0.05
+done
+
+old_manifest="$(node -e '
+  const path = require("path");
+  process.stdout.write(path.join(path.dirname(path.dirname(process.argv[1])), "package.json"));
+' "$old_executable")"
+node -e '
+  const fs = require("fs");
+  const file = process.argv[1];
+  const metadata = JSON.parse(fs.readFileSync(file, "utf8"));
+  metadata.version = "0.22.1";
+  fs.writeFileSync(file, JSON.stringify(metadata));
+' "$old_manifest"
+cp scripts/steady/package-lock.json "$upgrade_fixture/scripts/steady/package-lock.json"
+
+real_rm="$(command -v rm)"
+cat >"$upgrade_bin/rm" <<'EOF'
+#!/usr/bin/env bash
+for argument in "$@"; do
+  if [[ "$argument" == -* ]]; then
+    continue
+  fi
+  if [[ "$argument" == /* ]]; then
+    target="$argument"
+  else
+    target="$PWD/$argument"
+  fi
+  if [[ "$argument" == "scripts/steady/node_modules" || "$STEADY_WINDOWS_LOCKED_EXECUTABLE" == "$target"/* ]]; then
+    echo "rm: cannot remove loaded Windows executable: Permission denied" >&2
+    exit 1
+  fi
+done
+exec "$STEADY_REAL_RM" "$@"
+EOF
+chmod +x "$upgrade_bin/rm"
+
+if ! upgraded_executable="$(PATH="$upgrade_bin:$PATH" STEADY_REAL_RM="$real_rm" \
+  STEADY_WINDOWS_LOCKED_EXECUTABLE="$old_executable" npm_config_offline=true \
+  "$upgrade_fixture/scripts/steady/install" --print-executable 2>"$temporary/upgrade-output")"; then
+  kill "$old_daemon" 2>/dev/null || true
+  wait "$old_daemon" 2>/dev/null || true
+  cat "$temporary/upgrade-output" >&2
+  echo "A Steady version update tried to delete a loaded Windows executable" >&2
+  exit 1
+fi
+if [[ "$upgraded_executable" == "$old_executable" ]] || ! kill -0 "$old_daemon" 2>/dev/null; then
+  kill "$old_daemon" 2>/dev/null || true
+  wait "$old_daemon" 2>/dev/null || true
+  echo "A Steady version update replaced the active daemon executable" >&2
+  exit 1
+fi
+"$upgraded_executable" --version | grep -Fx "steady $expected_version" >/dev/null
+kill "$old_daemon" 2>/dev/null || true
+wait "$old_daemon" 2>/dev/null || true
+echo "Locked Steady updates publish without deleting active Windows executables"

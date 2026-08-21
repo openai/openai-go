@@ -22,6 +22,25 @@ if [[ "${npm_version%%.*}" -lt 7 ]]; then
   exit 1
 fi
 
+installation_name="$(node -e '
+  const fs = require("fs");
+  const crypto = require("crypto");
+  const contents = fs.readFileSync(process.argv[1]);
+  const lock = JSON.parse(contents);
+  const version = lock.packages["node_modules/@stdy/cli"].version;
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9.+-]*$/.test(version)) {
+    throw new Error("invalid locked Steady version");
+  }
+  process.stdout.write(`${version}-${crypto.createHash("sha256").update(contents).digest("hex")}`);
+' scripts/steady/package-lock.json)"
+versions_directory="$(pwd -P)/scripts/steady/.versions"
+published_installation="$versions_directory/$installation_name"
+mkdir -p "$versions_directory"
+if [[ "$(cd "$versions_directory" && pwd -P)" != "$versions_directory" ]]; then
+  echo "Error: Steady installation versions directory cannot be a symlink" >&2
+  exit 1
+fi
+
 installation="$(mktemp -d scripts/steady/.install.XXXXXXXX)"
 installation="$(cd "$installation" && pwd -P)"
 publication_lock="$(pwd -P)/scripts/steady/.publication-lock"
@@ -46,7 +65,8 @@ verify_installation() {
   node -e '
   const fs = require("fs");
   const path = require("path");
-  const root = fs.realpathSync(process.argv[1]);
+  const requestedRoot = path.resolve(process.argv[1]);
+  const root = fs.realpathSync(requestedRoot);
   const modules = path.join(root, "node_modules");
   const packageName = `@stdy/cli-${process.platform}-${process.arch}`;
   const binaryName = process.platform === "win32" ? "steady.exe" : "steady";
@@ -57,7 +77,15 @@ verify_installation() {
   };
 
   try {
-    const lock = require(path.join(root, "package-lock.json"));
+    if (root !== requestedRoot) {
+      throw new Error("unexpected package installation location");
+    }
+    const lockFile = path.join(root, "package-lock.json");
+    const committedLock = fs.readFileSync(path.resolve("scripts/steady/package-lock.json"));
+    if (fs.realpathSync(lockFile) !== lockFile || !fs.readFileSync(lockFile).equals(committedLock)) {
+      throw new Error("unexpected package lockfile");
+    }
+    const lock = JSON.parse(committedLock);
     const locked = lock.packages[`node_modules/${packageName}`];
     const wrapper = fs.realpathSync(path.join(modules, "@stdy", "cli", "steady.js"));
     const manifest = fs.realpathSync(require.resolve(`${packageName}/package.json`, { paths: [path.dirname(wrapper)] }));
@@ -128,13 +156,14 @@ if [[ "$publication_lock_owned" -ne 1 ]]; then
   exit 1
 fi
 
-if ! executable="$(verify_installation "$(pwd -P)/scripts/steady" 2>/dev/null)" ||
-  ! cmp -s "$installation/node_modules/@stdy/cli/steady.js" scripts/steady/node_modules/@stdy/cli/steady.js ||
+if ! executable="$(verify_installation "$published_installation" 2>/dev/null)" ||
+  ! cmp -s "$installation/node_modules/@stdy/cli/steady.js" \
+    "$published_installation/node_modules/@stdy/cli/steady.js" ||
   ! cmp -s "$staged_executable" "$executable"; then
-  rm -rf scripts/steady/node_modules
+  rm -rf "$published_installation"
   node -e 'require("fs").renameSync(process.argv[1], process.argv[2])' \
-    "$installation/node_modules" "$(pwd -P)/scripts/steady/node_modules"
-  executable="$(verify_installation "$(pwd -P)/scripts/steady")"
+    "$installation" "$published_installation"
+  executable="$(verify_installation "$published_installation")"
 fi
 
 "$executable" --version >/dev/null
