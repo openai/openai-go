@@ -23,6 +23,7 @@ func main() {
 		Size:          openai.ImageGenerateParamsSize1024x1024,
 		PartialImages: openai.Int(3),
 	})
+	defer func() { _ = stream.Close() }()
 
 	for stream.Next() {
 		event := stream.Current()

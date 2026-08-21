@@ -1,36 +1,50 @@
 package option
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
-	"net/http/httputil"
+	"strings"
 )
 
-// sensitiveLogHeaders are redacted before request and response content is
-// written to the debug logger.
-var sensitiveLogHeaders = []string{
-	"authorization",
-	"api-key",
-	"x-api-key",
-	"x-amz-security-token",
-	"cookie",
-	"set-cookie",
+const debugLogRedacted = "***"
+
+type debugRequestMetadata struct {
+	Method        string      `json:"method"`
+	ContentLength int64       `json:"content_length"`
+	Headers       http.Header `json:"headers"`
 }
 
-// WithDebugLog logs the HTTP request and response content.
+type debugResponseMetadata struct {
+	StatusCode    int         `json:"status_code"`
+	ContentLength int64       `json:"content_length"`
+	Headers       http.Header `json:"headers"`
+}
+
+// WithDebugLog logs allowlisted HTTP request and response metadata.
 // If the logger parameter is nil, it uses the default logger.
+//
+// Request and response bodies, URLs, free-form response status text, and all
+// original header values are omitted. Unrecognized request methods and values
+// for recognized credential-bearing header names are represented by a
+// placeholder.
 //
 // WithDebugLog is for debugging and development purposes only.
 // It should not be used in production code. The behavior and interface
 // of WithDebugLog is not guaranteed to be stable.
 func WithDebugLog(logger *log.Logger) RequestOption {
-	return WithMiddleware(func(req *http.Request, nxt MiddlewareNext) (*http.Response, error) {
-		if logger == nil {
-			logger = log.Default()
-		}
+	if logger == nil {
+		logger = log.Default()
+	}
 
-		if reqBytes, err := dumpRedactedRequest(req); err == nil {
-			logger.Printf("Request Content:\n%s\n", reqBytes)
+	return WithMiddleware(func(req *http.Request, nxt MiddlewareNext) (*http.Response, error) {
+		requestMetadata, marshalErr := json.Marshal(debugRequestMetadata{
+			Method:        debugLogMethod(req.Method),
+			ContentLength: req.ContentLength,
+			Headers:       debugLogHeaders(req.Header),
+		})
+		if marshalErr == nil {
+			logger.Printf("Request Metadata: %s\n", requestMetadata)
 		}
 
 		resp, err := nxt(req)
@@ -38,48 +52,63 @@ func WithDebugLog(logger *log.Logger) RequestOption {
 			return resp, err
 		}
 
-		if respBytes, dumpErr := dumpRedactedResponse(resp); dumpErr == nil {
-			logger.Printf("Response Content:\n%s\n", respBytes)
+		if resp != nil {
+			responseMetadata, responseMarshalErr := json.Marshal(debugResponseMetadata{
+				StatusCode:    resp.StatusCode,
+				ContentLength: resp.ContentLength,
+				Headers:       debugLogHeaders(resp.Header),
+			})
+			if responseMarshalErr == nil {
+				logger.Printf("Response Metadata: %s\n", responseMetadata)
+			}
 		}
 
 		return resp, err
 	})
 }
 
-// dumpRedactedRequest dumps req with sensitive headers replaced. The
-// original headers are restored via defer so a panic in DumpRequest cannot
-// leak the placeholder map into the live request sent downstream.
-func dumpRedactedRequest(req *http.Request) ([]byte, error) {
-	origHeaders := req.Header
-	req.Header = redactDebugHeaders(origHeaders)
-	defer func() { req.Header = origHeaders }()
-	return httputil.DumpRequest(req, true)
+func debugLogMethod(method string) string {
+	switch method {
+	case http.MethodConnect,
+		http.MethodDelete,
+		http.MethodGet,
+		http.MethodHead,
+		http.MethodOptions,
+		http.MethodPatch,
+		http.MethodPost,
+		http.MethodPut,
+		http.MethodTrace:
+		return method
+	default:
+		return debugLogRedacted
+	}
 }
 
-func dumpRedactedResponse(resp *http.Response) ([]byte, error) {
-	origHeaders := resp.Header
-	resp.Header = redactDebugHeaders(origHeaders)
-	defer func() { resp.Header = origHeaders }()
-	return httputil.DumpResponse(resp, true)
-}
-
-func redactDebugHeaders(headers http.Header) http.Header {
-	var redacted http.Header
-	for _, name := range sensitiveLogHeaders {
-		values := headers.Values(name)
-		if len(values) == 0 {
+func debugLogHeaders(headers http.Header) http.Header {
+	result := make(http.Header)
+	for name, values := range headers {
+		var redactedName string
+		switch strings.ToLower(name) {
+		case "authorization":
+			redactedName = "Authorization"
+		case "proxy-authorization":
+			redactedName = "Proxy-Authorization"
+		case "api-key":
+			redactedName = "Api-Key"
+		case "x-api-key":
+			redactedName = "X-Api-Key"
+		case "x-amz-security-token":
+			redactedName = "X-Amz-Security-Token"
+		case "cookie":
+			redactedName = "Cookie"
+		case "set-cookie":
+			redactedName = "Set-Cookie"
+		default:
 			continue
 		}
-		if redacted == nil {
-			redacted = headers.Clone()
-		}
-		redacted.Del(name)
 		for range values {
-			redacted.Add(name, "***")
+			result.Add(redactedName, debugLogRedacted)
 		}
 	}
-	if redacted == nil {
-		return headers
-	}
-	return redacted
+	return result
 }
