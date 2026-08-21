@@ -494,28 +494,25 @@ func isBeforeContextDeadline(t time.Time, ctx context.Context) bool {
 	return t.Before(d)
 }
 
-// bodyWithTimeout is an io.ReadCloser which can observe a context's cancel func
-// to handle timeouts etc. It wraps an existing io.ReadCloser.
-type bodyWithTimeout struct {
-	stop func() // stops the time.Timer waiting to cancel the request
+// bodyWithCancel keeps a raw response tied to its request context until the
+// caller finishes reading or closes the body.
+type bodyWithCancel struct {
+	stop func() // ends the request context lifecycle
 	rc   io.ReadCloser
+	once sync.Once
 }
 
-func (b *bodyWithTimeout) Read(p []byte) (n int, err error) {
+func (b *bodyWithCancel) Read(p []byte) (n int, err error) {
 	n, err = b.rc.Read(p)
-	if err == nil {
-		return n, nil
-	}
-	if err == io.EOF {
-		return n, err
+	if err != nil {
+		b.once.Do(b.stop)
 	}
 	return n, err
 }
 
-func (b *bodyWithTimeout) Close() error {
-	err := b.rc.Close()
-	b.stop()
-	return err
+func (b *bodyWithCancel) Close() error {
+	b.once.Do(b.stop)
+	return b.rc.Close()
 }
 
 // closeOnceReadCloser lets Execute clean up bodies when middleware returns an
@@ -630,6 +627,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	if cfg.CustomHTTPDoer != nil {
 		handler = enforceRequestOrigin(cfg.BaseURL, cfg.CustomHTTPDoer.Do)
 	}
+	handler = cfg.withManagedGzip(handler)
 	for i := len(cfg.Middlewares) - 1; i >= 0; i -= 1 {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
 	}
@@ -643,12 +641,11 @@ func (cfg *RequestConfig) Execute() (err error) {
 		ctx := cfg.Request.Context()
 		if cfg.RequestTimeout != time.Duration(0) && isBeforeContextDeadline(time.Now().Add(cfg.RequestTimeout), ctx) {
 			ctx, cancel = context.WithTimeout(ctx, cfg.RequestTimeout)
-			defer func() {
-				// The cancel function is nil if it was handed off to be handled in a different scope.
-				if cancel != nil {
-					cancel()
-				}
-			}()
+		} else {
+			// Every attempt gets a cancellable lifecycle. Non-streaming response
+			// policy can then interrupt supported custom transports through the
+			// same request context used by net/http.
+			ctx, cancel = context.WithCancel(ctx)
 		}
 
 		req := cfg.Request.Clone(ctx)
@@ -669,8 +666,13 @@ func (cfg *RequestConfig) Execute() (err error) {
 				_ = attemptBody.Close()
 			}
 		}
-		if ctx != nil && ctx.Err() != nil {
-			return ctx.Err()
+		if ctx.Err() != nil {
+			if res != nil && res.Body != nil {
+				_ = res.Body.Close()
+			}
+			ctxErr := ctx.Err()
+			cancel()
+			return ctxErr
 		}
 		if !shouldRetry(cfg.Request, res, err) || retryCount >= cfg.MaxRetries {
 			break
@@ -680,6 +682,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 		if cfg.Request.GetBody != nil {
 			cfg.Request.Body, err = cfg.Request.GetBody()
 			if err != nil {
+				cancel()
 				return err
 			}
 		}
@@ -695,8 +698,10 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 
 		if waitErr := WaitForDelay(ctx, retryDelay(res, retryCount, cfg.MaxRetryDelay)); waitErr != nil {
+			cancel()
 			return waitErr
 		}
+		cancel()
 	}
 
 	// Save *http.Response if it is requested to, even if there was an error making the request. This is
@@ -712,11 +717,12 @@ func (cfg *RequestConfig) Execute() (err error) {
 	// If there was a connection error in the final request or any other transport error,
 	// return that early without trying to coerce into an APIError.
 	if err != nil {
+		cancel()
 		return err
 	}
 
 	if res.StatusCode >= 400 {
-		return cfg.handleErrorResponse(res)
+		return cfg.handleErrorResponse(res, cancel)
 	}
 
 	_, intoCustomResponseBody := cfg.ResponseBodyInto.(**http.Response)
@@ -724,14 +730,11 @@ func (cfg *RequestConfig) Execute() (err error) {
 		// We aren't reading the response body in this scope, but whoever is will need the
 		// cancel func from the context to observe request timeouts.
 		// Put the cancel function in the response body so it can be handled elsewhere.
-		if cancel != nil {
-			res.Body = &bodyWithTimeout{rc: res.Body, stop: cancel}
-			cancel = nil
-		}
+		res.Body = &bodyWithCancel{rc: res.Body, stop: cancel}
 		return nil
 	}
 
-	return cfg.handleSuccessResponse(res)
+	return cfg.handleSuccessResponse(res, cancel)
 }
 
 func ExecuteNewRequest(ctx context.Context, method string, u string, body any, dst any, opts ...RequestOption) error {

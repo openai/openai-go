@@ -260,8 +260,12 @@ func WithResponseInto(dst **http.Response) RequestOption {
 }
 
 // WithMaxResponseBodyBytes returns a RequestOption that limits the number of
-// bytes buffered or decoded for a successful non-streaming response. The
-// default is 64 MiB. Raw *http.Response bodies are not subject to this limit.
+// bytes buffered or decoded for a successful non-streaming response. For
+// transparently decompressed gzip responses, the limit applies independently to
+// compressed wire bytes and decoded bytes. The default is 64 MiB for most
+// responses. Services documented to return larger payloads may apply a higher
+// finite default before client and request options. Raw *http.Response bodies
+// are not subject to this limit.
 //
 // WithMaxResponseBodyBytes panics unless maxBytes is between 1 and
 // [math.MaxInt64] - 1.
@@ -276,8 +280,9 @@ func WithMaxResponseBodyBytes(maxBytes int64) RequestOption {
 }
 
 // WithMaxErrorResponseBodyBytes returns a RequestOption that limits the number
-// of response-body bytes retained when the server returns an HTTP error. The
-// default is 64 KiB.
+// of response-body bytes retained when the server returns an HTTP error. For
+// transparently decompressed gzip responses, compressed wire bytes are bounded
+// by the same limit. The default is 64 KiB.
 //
 // WithMaxErrorResponseBodyBytes panics unless maxBytes is between 1 and
 // [math.MaxInt64] - 1.

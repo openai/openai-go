@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -38,10 +39,11 @@ func (e *responseBodyLimitError) Error() string {
 
 func (e *responseBodyLimitError) Unwrap() error { return e.cause }
 
-func (cfg *RequestConfig) handleErrorResponse(res *http.Response) error {
-	return cfg.withResponseBodyTimeout(res, func(body io.Reader) error {
+func (cfg *RequestConfig) handleErrorResponse(res *http.Response, cancel context.CancelFunc) error {
+	return cfg.withResponseBodyTimeout(res, cancel, func(body io.Reader) error {
 		contents, overflow, readErr := readBodyUpTo(body, cfg.MaxErrorResponseBodyBytes)
-		if readErr != nil {
+		var compressedLimitErr *compressedResponseBodyLimitError
+		if readErr != nil && !errors.As(readErr, &compressedLimitErr) {
 			return readErr
 		}
 
@@ -49,7 +51,7 @@ func (cfg *RequestConfig) handleErrorResponse(res *http.Response) error {
 		// another unbounded copy. ContentLength describes the retained body when
 		// the server response was larger than the configured limit.
 		res.Body = io.NopCloser(bytes.NewReader(contents))
-		if overflow {
+		if overflow || compressedLimitErr != nil {
 			res.ContentLength = int64(len(contents))
 		}
 
@@ -63,6 +65,12 @@ func (cfg *RequestConfig) handleErrorResponse(res *http.Response) error {
 				cause:      &aerr,
 			}
 		}
+		if compressedLimitErr != nil {
+			return &compressedResponseBodyLimitError{
+				limit: compressedLimitErr.limit,
+				cause: &aerr,
+			}
+		}
 		if parseErr != nil {
 			return parseErr
 		}
@@ -70,8 +78,8 @@ func (cfg *RequestConfig) handleErrorResponse(res *http.Response) error {
 	})
 }
 
-func (cfg *RequestConfig) handleSuccessResponse(res *http.Response) error {
-	return cfg.withResponseBodyTimeout(res, func(body io.Reader) error {
+func (cfg *RequestConfig) handleSuccessResponse(res *http.Response, cancel context.CancelFunc) error {
+	return cfg.withResponseBodyTimeout(res, cancel, func(body io.Reader) error {
 		contentType := res.Header.Get("content-type")
 		mediaType, _, _ := mime.ParseMediaType(contentType)
 		isJSON := strings.Contains(mediaType, "application/json") || strings.HasSuffix(mediaType, "+json")
@@ -119,11 +127,20 @@ func (cfg *RequestConfig) handleSuccessResponse(res *http.Response) error {
 	})
 }
 
-func (cfg *RequestConfig) withResponseBodyTimeout(res *http.Response, read func(io.Reader) error) error {
+func (cfg *RequestConfig) withResponseBodyTimeout(
+	res *http.Response,
+	cancel context.CancelFunc,
+	read func(io.Reader) error,
+) error {
 	body := res.Body
-	var closeOnce sync.Once
-	closeBody := func() {
-		closeOnce.Do(func() { _ = body.Close() })
+	var stopOnce sync.Once
+	stopRead := func() {
+		stopOnce.Do(func() {
+			if cancel != nil {
+				cancel()
+			}
+			_ = body.Close()
+		})
 	}
 	var timedOut atomic.Bool
 	var timer *time.Timer
@@ -133,7 +150,9 @@ func (cfg *RequestConfig) withResponseBodyTimeout(res *http.Response, read func(
 		timer = time.AfterFunc(cfg.ResponseBodyTimeout, func() {
 			defer close(timeoutDone)
 			timedOut.Store(true)
-			closeBody()
+			// Cancel first so supported custom transports whose Body.Close does
+			// not interrupt Read can observe the request lifecycle ending.
+			stopRead()
 		})
 	}
 
@@ -141,7 +160,7 @@ func (cfg *RequestConfig) withResponseBodyTimeout(res *http.Response, read func(
 	if timer != nil && !timer.Stop() {
 		<-timeoutDone
 	}
-	closeBody()
+	stopRead()
 	if timedOut.Load() {
 		return fmt.Errorf("response body read timed out after %s: %w", cfg.ResponseBodyTimeout, context.DeadlineExceeded)
 	}
