@@ -140,11 +140,31 @@ func TestAccumulatorBoundsLogprobReconciliationWork(t *testing.T) {
 		t.Fatal("AddChunk rejected the initial logprob")
 	}
 	acc.logprobState.reconciliationWork = maxChatCompletionAccumulatorLogprobWork - 1
-	if acc.AddChunk(chunk) {
+	acc.Choices[0].Logprobs.Content = append([]ChatCompletionTokenLogprob(nil), acc.Choices[0].Logprobs.Content...)
+	if acc.AddChunk(ChatCompletionChunk{ID: chunk.ID}) {
 		t.Fatal("AddChunk accepted work beyond the logprob reconciliation budget")
 	}
 	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
 		t.Fatalf("rejected chunk changed logprobs to length %d, want 1", got)
+	}
+}
+
+func TestAccumulatorLogprobStreamingUsesIncrementalAccounting(t *testing.T) {
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	chunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "x"}}
+
+	var acc ChatCompletionAccumulator
+	const chunkCount = 12_000
+	for i := range chunkCount {
+		if !acc.AddChunk(chunk) {
+			t.Fatalf("AddChunk rejected logprob chunk %d within the documented budgets", i+1)
+		}
+	}
+	if got := len(acc.Choices[0].Logprobs.Content); got != chunkCount {
+		t.Fatalf("accumulated logprobs = %d, want %d", got, chunkCount)
+	}
+	if acc.logprobState.reconciliationWork != 0 {
+		t.Fatalf("normal streaming used %d public-replacement reconciliation steps, want 0", acc.logprobState.reconciliationWork)
 	}
 }
 

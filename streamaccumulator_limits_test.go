@@ -346,30 +346,6 @@ func TestAccumulatorBudgetsPublicLogprobReplacement(t *testing.T) {
 	}
 }
 
-func TestAccumulatorBudgetsNestedPublicLogprobMutation(t *testing.T) {
-	var acc openai.ChatCompletionAccumulator
-	initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
-	initial.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "initial"}}
-	if !acc.AddChunk(initial) {
-		t.Fatal("AddChunk rejected the initial logprob")
-	}
-
-	logprobOverhead := int(unsafe.Sizeof(openai.ChatCompletionTokenLogprob{}))
-	byteCount := (testAccumulatorMaxLogprobBytes - logprobOverhead) / int(unsafe.Sizeof(int64(0)))
-	remaining := testAccumulatorMaxLogprobBytes - logprobOverhead - byteCount*int(unsafe.Sizeof(int64(0)))
-	acc.Choices[0].Logprobs.Content[0].Token = strings.Repeat("x", remaining)
-	acc.Choices[0].Logprobs.Content[0].Bytes = make([]int64, byteCount)
-
-	beyondLimit := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
-	beyondLimit.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "x"}}
-	if acc.AddChunk(beyondLimit) {
-		t.Fatal("AddChunk accepted logprobs beyond a nested public mutation at the aggregate budget")
-	}
-	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
-		t.Fatalf("public logprobs changed after rejection: got %d, want 1", got)
-	}
-}
-
 func TestAccumulatorChargesOnlyClonedNestedLogprobStorage(t *testing.T) {
 	tests := []struct {
 		name string

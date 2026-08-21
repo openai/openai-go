@@ -126,10 +126,10 @@ func cloneAccumulatorFields(src map[string]respjson.Field) map[string]respjson.F
 	return dst
 }
 
-func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatCompletionLogprobReconcilePlan, inspectNested bool) (bool, bool) {
+func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatCompletionLogprobReconcilePlan, includePopulatedChoices bool) (bool, bool) {
 	state := &acc.logprobState
 	indices := state.activeChoices
-	if inspectNested {
+	if includePopulatedChoices {
 		indices = acc.stringState.activeChoices
 	}
 	headerChanged := false
@@ -145,7 +145,7 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 		logprobs := &acc.Choices[i].Logprobs
 		headerChanged = headerChanged || !current.content.matches(logprobs.Content) || !current.refusal.matches(logprobs.Refusal)
 	}
-	if !headerChanged && !inspectNested {
+	if !headerChanged {
 		return false, true
 	}
 

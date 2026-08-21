@@ -80,8 +80,15 @@ const (
 // memory for untrusted streams, an accumulator accepts at most 100,000 chunks, 1,024
 // combined choice and tool-call slots, 16 MiB each of combined content and tool
 // function text, other retained string metadata, and aggregate retained log
-// probability data, and 64 million retained log-probability reconciliation steps.
-// A rejected chunk does not modify the accumulator.
+// probability data, and 64 million retained log-probability replacement
+// reconciliation steps. A rejected chunk does not modify the accumulator.
+//
+// While accumulation is in progress, callers may replace or clear accumulated
+// top-level strings and string fields of choices and tool calls that the stream
+// has populated, or replace an entire Content or Refusal logprob slice. Writing
+// into sparse placeholder slots or mutating fields inside an accumulated
+// logprob element is unsupported; copy the result after accumulation before
+// making those edits.
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
