@@ -31,6 +31,7 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -146,6 +147,7 @@ func WithTokenCredentialScopes(scopes []string) func(*tokenCredentialConfig) err
 //
 // [Azure Identity]: https://pkg.go.dev/github.com/Azure/azure-sdk-for-go/sdk/azidentity
 func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...TokenCredentialOption) option.RequestOption {
+	directTransports := &azureDirectLoopbackTransportCache{}
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
 		if isNilTokenCredential(tokenCredential) {
 			return errors.New("azure: token credential must not be nil")
@@ -194,7 +196,7 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 			}
 
 			return pipeline.Do(req2)
-		})
+		}, directTransports)
 
 		return rc.Apply(
 			middlewareOption,
@@ -221,6 +223,7 @@ func isNilTokenCredential(tokenCredential azcore.TokenCredential) bool {
 func WithAPIKey(apiKey string) option.RequestOption {
 	// NOTE: option.WithAPIKey() uses the Authorization header. Azure expects
 	// Api-Key instead.
+	directTransports := &azureDirectLoopbackTransportCache{}
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
 		auth := requestconfig.NewProviderAuthOption(azureProvider, azureAPIKeyAuth)
 		if err := rc.Apply(requestconfig.WithEndpointProvider(azureProvider), auth); err != nil {
@@ -232,7 +235,7 @@ func WithAPIKey(apiKey string) option.RequestOption {
 			requestconfig.WithRequestFinalizer(finalizeAzureProvider),
 			withAzureCredentialMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 				return next(req)
-			}),
+			}, directTransports),
 		)
 	})
 }
@@ -278,7 +281,7 @@ func nonEmptyHeaderValues(header http.Header, name string) int {
 	return count
 }
 
-func withAzureCredentialMiddleware(authenticate option.Middleware) option.RequestOption {
+func withAzureCredentialMiddleware(authenticate option.Middleware, directTransports *azureDirectLoopbackTransportCache) option.RequestOption {
 	return requestconfig.WithRequestFinalizer(func(rc *requestconfig.RequestConfig) error {
 		if rc.CustomHTTPDoer != nil {
 			return errors.New("azure: custom HTTP clients must use *http.Client with a custom RoundTripper so redirects can be validated")
@@ -292,7 +295,7 @@ func withAzureCredentialMiddleware(authenticate option.Middleware) option.Reques
 		if transport == nil {
 			transport = http.DefaultTransport
 		}
-		client.Transport = newAzureCredentialTransport(transport)
+		client.Transport = newAzureCredentialTransport(transport, directTransports)
 		rc.HTTPClient = &client
 
 		return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
@@ -312,14 +315,40 @@ type azureCredentialTransport struct {
 	directLoopbackHTTP http.RoundTripper
 }
 
-func newAzureCredentialTransport(base http.RoundTripper) azureCredentialTransport {
+func newAzureCredentialTransport(base http.RoundTripper, directTransports *azureDirectLoopbackTransportCache) azureCredentialTransport {
 	if transport, ok := base.(azureCredentialTransport); ok {
 		return transport
 	}
 	return azureCredentialTransport{
 		base:               base,
-		directLoopbackHTTP: newAzureDirectLoopbackHTTPTransport(base),
+		directLoopbackHTTP: directTransports.get(base),
 	}
+}
+
+// azureDirectLoopbackTransportCache gives each configured HTTP transport one
+// direct loopback pool for the lifetime of the Azure credential option. Azure
+// finalizers run per request, so constructing the direct transport there would
+// defeat keep-alive reuse and per-transport connection limits across SDK calls.
+type azureDirectLoopbackTransportCache struct {
+	transports sync.Map // map[*http.Transport]*http.Transport
+	fallback   sync.Once
+	direct     *http.Transport
+}
+
+func (c *azureDirectLoopbackTransportCache) get(base http.RoundTripper) *http.Transport {
+	if baseTransport, ok := base.(*http.Transport); ok {
+		if cached, ok := c.transports.Load(baseTransport); ok {
+			return cached.(*http.Transport)
+		}
+		direct := newAzureDirectLoopbackHTTPTransport(baseTransport)
+		cached, _ := c.transports.LoadOrStore(baseTransport, direct)
+		return cached.(*http.Transport)
+	}
+
+	c.fallback.Do(func() {
+		c.direct = newAzureDirectLoopbackHTTPTransport(base)
+	})
+	return c.direct
 }
 
 const (

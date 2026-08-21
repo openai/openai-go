@@ -1162,6 +1162,45 @@ func TestAzureUnsafeHTTPPreservesResponseHeaderTimeout(t *testing.T) {
 	}
 }
 
+func TestAzureUnsafeHTTPReusesDirectTransport(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_ADMIN_KEY", "")
+
+	var connections atomic.Int32
+	origin := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	origin.Config.ConnState = func(_ net.Conn, state http.ConnState) {
+		if state == http.StateNew {
+			connections.Add(1)
+		}
+	}
+	origin.Start()
+	t.Cleanup(origin.Close)
+	originURL, err := url.Parse(origin.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client := openai.NewClient(
+		WithEndpoint("http://localhost:"+originURL.Port(), "2024-10-21"),
+		WithAPIKey("azure-api-key"),
+		WithUnsafeAllowHTTP(),
+		option.WithMaxRetries(0),
+	)
+
+	for range 2 {
+		var res map[string]any
+		if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+	}
+	if got := connections.Load(); got != 1 {
+		t.Fatalf("loopback connections = %d, want 1 shared connection", got)
+	}
+}
+
 func TestJSONRoutePathConstruction(t *testing.T) {
 	cases := []struct {
 		path     string
