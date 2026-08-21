@@ -266,7 +266,7 @@ func (acc *ChatCompletionAccumulator) finishedToolCall(justFinished chatCompleti
 func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk) {
 	cc := &acc.ChatCompletion
 	if len(cc.ID) == 0 {
-		cc.ID = chunk.ID
+		assignAccumulatorString(&cc.ID, chunk.ID)
 	}
 
 	for _, delta := range chunk.Choices {
@@ -274,10 +274,10 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 		choice := &cc.Choices[delta.Index]
 
 		choice.Index = delta.Index
-		choice.FinishReason = delta.FinishReason
+		assignAccumulatorString(&choice.FinishReason, delta.FinishReason)
 
 		if delta.Delta.Role != "" {
-			choice.Message.Role = constant.Assistant(delta.Delta.Role)
+			assignAccumulatorString(&choice.Message.Role, constant.Assistant(delta.Delta.Role))
 		}
 
 		choiceStrings := acc.stringState.choice(int(delta.Index))
@@ -293,10 +293,10 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 			tool := &choice.Message.ToolCalls[toolIndex]
 
 			if deltaTool.ID != "" {
-				tool.ID = deltaTool.ID
+				assignAccumulatorString(&tool.ID, deltaTool.ID)
 			}
 			if deltaTool.Type != "" {
-				tool.Type = deltaTool.Type
+				assignAccumulatorString(&tool.Type, deltaTool.Type)
 			}
 			toolStrings := choiceStrings.toolCall(toolIndex)
 			toolStrings.name.append(&tool.Function.Name, deltaTool.Function.Name)
@@ -319,10 +319,10 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 	cc.Usage.PromptTokensDetails.AudioTokens += chunk.Usage.PromptTokensDetails.AudioTokens
 	cc.Usage.PromptTokensDetails.CachedTokens += chunk.Usage.PromptTokensDetails.CachedTokens
 
-	cc.Model = chunk.Model
+	assignAccumulatorString(&cc.Model, chunk.Model)
 	cc.Created = chunk.Created
-	cc.SystemFingerprint = chunk.SystemFingerprint
-	cc.ServiceTier = ChatCompletionServiceTier(chunk.ServiceTier)
+	assignAccumulatorString(&cc.SystemFingerprint, chunk.SystemFingerprint)
+	assignAccumulatorString(&cc.ServiceTier, ChatCompletionServiceTier(chunk.ServiceTier))
 	if chunk.Object == chunk.Object.Default() {
 		cc.Object = cc.Object.Default()
 	}
@@ -623,23 +623,27 @@ func (acc *ChatCompletionAccumulator) reconcileLogprobState() bool {
 			state.choices = expandToFit(state.choices, i)
 		}
 		choiceState := &state.choices[i]
-		if !state.reconcileSlice(&choiceState.content, logprobs.Content) ||
-			!state.reconcileSlice(&choiceState.refusal, logprobs.Refusal) {
+		if !state.reconcileSlice(&choiceState.content, &logprobs.Content) ||
+			!state.reconcileSlice(&choiceState.refusal, &logprobs.Refusal) {
 			return false
 		}
 	}
 	return true
 }
 
-func (state *chatCompletionAccumulatorLogprobState) reconcileSlice(current *chatCompletionLogprobSliceState, logprobs []ChatCompletionTokenLogprob) bool {
-	header := chatCompletionLogprobHeader(logprobs)
+func (state *chatCompletionAccumulatorLogprobState) reconcileSlice(current *chatCompletionLogprobSliceState, logprobs *[]ChatCompletionTokenLogprob) bool {
+	header := chatCompletionLogprobHeader(*logprobs)
 	if current.data == header.data && current.length == header.length && current.capacity == header.capacity {
 		return true
 	}
+	if chatCompletionLogprobSliceRetainsBacking(*current, header) {
+		*logprobs = detachChatCompletionLogprobs(*logprobs)
+		header = chatCompletionLogprobHeader(*logprobs)
+	}
 
 	bytes := 0
-	if !addAccumulatorLogprobStorage(&bytes, cap(logprobs), int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))) ||
-		!addChatCompletionLogprobData(&bytes, logprobs[:cap(logprobs)]) {
+	if !addAccumulatorLogprobStorage(&bytes, cap(*logprobs), int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))) ||
+		!addChatCompletionLogprobData(&bytes, (*logprobs)[:cap(*logprobs)]) {
 		return false
 	}
 	projected := state.bytes - current.bytes
@@ -650,6 +654,15 @@ func (state *chatCompletionAccumulatorLogprobState) reconcileSlice(current *chat
 	*current = header
 	state.bytes = projected
 	return true
+}
+
+func chatCompletionLogprobSliceRetainsBacking(current chatCompletionLogprobSliceState, public chatCompletionLogprobSliceState) bool {
+	if current.data == 0 || current.capacity == 0 || public.data == 0 {
+		return false
+	}
+	allocationEnd := current.data + uintptr(current.capacity)*unsafe.Sizeof(ChatCompletionTokenLogprob{})
+	withinCurrentAllocation := public.data >= current.data && public.data < allocationEnd
+	return withinCurrentAllocation && (public.data != current.data || public.capacity < current.capacity)
 }
 
 func (state *chatCompletionAccumulatorLogprobState) chunkWithinLimit(chunk *ChatCompletionChunk) bool {
@@ -774,7 +787,10 @@ func appendChatCompletionLogprobs(dst []ChatCompletionTokenLogprob, src []ChatCo
 		copy(grown, dst)
 		dst = grown
 	}
-	return append(dst, src...)
+	for i := range src {
+		dst = append(dst, cloneChatCompletionTokenLogprob(src[i]))
+	}
+	return dst
 }
 
 func projectedLogprobCapacity(current int, required int, maximum int) int {
@@ -842,8 +858,8 @@ func addChatCompletionLogprobMetadata(total *int, raw string, extraFields map[st
 	if !addAccumulatorLogprobStorage(total, len(extraFields), entrySize) {
 		return false
 	}
-	if raw != "" {
-		return addAccumulatorLogprobBytes(total, len(raw))
+	if !addAccumulatorLogprobBytes(total, len(raw)) {
+		return false
 	}
 	for i := range fields {
 		if !addAccumulatorLogprobBytes(total, len(fields[i].Raw())) {

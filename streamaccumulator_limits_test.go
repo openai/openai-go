@@ -1,12 +1,16 @@
 package openai_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 	"testing"
 	"unsafe"
 
 	openai "github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/packages/ssestream"
 )
 
 const (
@@ -339,6 +343,106 @@ func TestAccumulatorBudgetsPublicLogprobReplacement(t *testing.T) {
 	}
 	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
 		t.Fatalf("public replacement changed after rejection: got %d logprobs, want 1", got)
+	}
+}
+
+func TestAccumulatorDetachesCapacityClippedLogprobBacking(t *testing.T) {
+	tests := []struct {
+		start   int
+		visible int
+	}{
+		{start: 0, visible: 0},
+		{start: 0, visible: 1},
+		{start: 1, visible: 0},
+	}
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("start=%d/visible=%d", test.start, test.visible), func(t *testing.T) {
+			var acc openai.ChatCompletionAccumulator
+			initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+			initial.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "visible"}, {Token: "hidden"}}
+			if !acc.AddChunk(initial) {
+				t.Fatal("AddChunk rejected the initial logprobs")
+			}
+
+			before := unsafe.SliceData(acc.Choices[0].Logprobs.Content)
+			end := test.start + test.visible
+			acc.Choices[0].Logprobs.Content = acc.Choices[0].Logprobs.Content[test.start:end:end]
+			if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
+				t.Fatal("AddChunk rejected the chunk after the public logprobs were capacity-clipped")
+			}
+			if after := unsafe.SliceData(acc.Choices[0].Logprobs.Content); after == before {
+				t.Fatal("capacity-clipped public logprobs still retain the previous backing array")
+			}
+			if got := len(acc.Choices[0].Logprobs.Content); got != test.visible {
+				t.Fatalf("visible logprobs after detachment = %d, want %d", got, test.visible)
+			}
+		})
+	}
+}
+
+func TestAccumulatorDetachesDecodedChunkBacking(t *testing.T) {
+	payload := fmt.Sprintf(`{
+		"id":"chatcmpl-detach-logprob-json",
+		"choices":[{
+			"delta":{"role":"assistant","content":"content","tool_calls":[{"index":0,"id":"tool-id","type":"function","function":{"name":"tool-name","arguments":"{}"}}]},
+			"finish_reason":"stop",
+			"index":0,
+			"logprobs":{"content":[{"token":"token","bytes":[],"logprob":0,"top_logprobs":[]}],"refusal":[]}
+		}],
+		"created":0,
+		"model":"model",
+		"object":"chat.completion.chunk",
+		"service_tier":"default",
+		"system_fingerprint":"fingerprint",
+		"ignored":"%s"
+	}`, strings.Repeat("x", 1<<20))
+
+	decoder := ssestream.NewDecoder(&http.Response{
+		Body: io.NopCloser(strings.NewReader("data: " + strings.ReplaceAll(payload, "\n", "") + "\n\n")),
+	})
+	defer func() {
+		if err := decoder.Close(); err != nil {
+			t.Errorf("close decoder: %v", err)
+		}
+	}()
+	if !decoder.Next() {
+		t.Fatalf("decode event: %v", decoder.Err())
+	}
+	var chunk openai.ChatCompletionChunk
+	if err := json.Unmarshal(decoder.Event().Data, &chunk); err != nil {
+		t.Fatalf("unmarshal chunk: %v", err)
+	}
+	source := chunk.Choices[0].Logprobs.Content[0]
+	var acc openai.ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the decoded logprob chunk")
+	}
+
+	retained := acc.Choices[0].Logprobs.Content[0]
+	if unsafe.StringData(retained.Token) == unsafe.StringData(source.Token) {
+		t.Fatal("accumulated token still aliases the decoded chunk backing")
+	}
+	if unsafe.StringData(retained.RawJSON()) == unsafe.StringData(source.RawJSON()) {
+		t.Fatal("accumulated logprob metadata still aliases the decoded event backing")
+	}
+	metadata := []struct {
+		name   string
+		got    string
+		source string
+	}{
+		{name: "id", got: acc.ID, source: chunk.ID},
+		{name: "model", got: acc.Model, source: chunk.Model},
+		{name: "system_fingerprint", got: acc.SystemFingerprint, source: chunk.SystemFingerprint},
+		{name: "service_tier", got: string(acc.ServiceTier), source: string(chunk.ServiceTier)},
+		{name: "finish_reason", got: acc.Choices[0].FinishReason, source: chunk.Choices[0].FinishReason},
+		{name: "role", got: string(acc.Choices[0].Message.Role), source: chunk.Choices[0].Delta.Role},
+		{name: "tool_id", got: acc.Choices[0].Message.ToolCalls[0].ID, source: chunk.Choices[0].Delta.ToolCalls[0].ID},
+		{name: "tool_type", got: acc.Choices[0].Message.ToolCalls[0].Type, source: chunk.Choices[0].Delta.ToolCalls[0].Type},
+	}
+	for _, field := range metadata {
+		if unsafe.StringData(field.got) == unsafe.StringData(field.source) {
+			t.Errorf("accumulated %s still aliases the decoded event backing", field.name)
+		}
 	}
 }
 
