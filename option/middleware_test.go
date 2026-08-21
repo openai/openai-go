@@ -2,22 +2,48 @@ package option
 
 import (
 	"net/http"
+	"reflect"
 	"testing"
 )
 
-func TestRedactDebugHeadersRedactsAWSSessionToken(t *testing.T) {
+func TestDebugLogMethod(t *testing.T) {
+	for _, method := range []string{
+		http.MethodConnect,
+		http.MethodDelete,
+		http.MethodGet,
+		http.MethodHead,
+		http.MethodOptions,
+		http.MethodPatch,
+		http.MethodPost,
+		http.MethodPut,
+		http.MethodTrace,
+	} {
+		if got := debugLogMethod(method); got != method {
+			t.Errorf("debugLogMethod(%q) = %q, want unchanged", method, got)
+		}
+	}
+
+	if got := debugLogMethod("CUSTOM-METHOD-SECRET"); got != debugLogRedacted {
+		t.Errorf("debugLogMethod() = %q, want %q", got, debugLogRedacted)
+	}
+}
+
+func TestDebugLogHeaders(t *testing.T) {
 	headers := http.Header{
-		"X-Amz-Security-Token": {"secret-session-token"},
-		"X-Amz-Date":           {"20250102T030405Z"},
+		"Content-Type":         {"application/json"},
+		"Proxy-Authorization":  {"first-secret", "second-secret"},
+		"X-Amz-Security-Token": {"session-secret"},
+		"X-Custom-Secret":      {"custom-secret"},
 	}
-	redacted := redactDebugHeaders(headers)
-	if got := redacted.Get("X-Amz-Security-Token"); got != "***" {
-		t.Fatalf("X-Amz-Security-Token = %q", got)
+	want := http.Header{
+		"Proxy-Authorization":  {"***", "***"},
+		"X-Amz-Security-Token": {"***"},
 	}
-	if got := redacted.Get("X-Amz-Date"); got != "20250102T030405Z" {
-		t.Fatalf("X-Amz-Date = %q", got)
+
+	if got := debugLogHeaders(headers); !reflect.DeepEqual(got, want) {
+		t.Fatalf("debugLogHeaders() = %#v, want %#v", got, want)
 	}
-	if got := headers.Get("X-Amz-Security-Token"); got != "secret-session-token" {
-		t.Fatalf("original header was modified: %q", got)
+	if got := headers.Values("Proxy-Authorization"); !reflect.DeepEqual(got, []string{"first-secret", "second-secret"}) {
+		t.Fatalf("original headers were modified: %#v", got)
 	}
 }
