@@ -12,7 +12,7 @@ const (
 	maxChatCompletionAccumulatorTextBytes       = 16 << 20
 	maxChatCompletionAccumulatorMetadataBytes   = 16 << 20
 	maxChatCompletionAccumulatorLogprobBytes    = 16 << 20
-	maxChatCompletionAccumulatorLogprobWork     = 64_000_000
+	maxChatCompletionAccumulatorReconcileWork   = 800_000_000
 	// Conservatively covers a non-empty map header and its first backing bucket.
 	chatCompletionAccumulatorMapOverheadBytes = 512
 )
@@ -28,6 +28,7 @@ type ChatCompletionAccumulator struct {
 	stringState                      chatCompletionAccumulatorStringState
 	logprobState                     chatCompletionAccumulatorLogprobState
 	chunkCount                       int
+	reconciliationWork               int
 }
 
 type FinishedChatCompletionToolCall struct {
@@ -44,8 +45,14 @@ type chatCompletionResponseState struct {
 
 type chatCompletionAccumulatorStringState struct {
 	// Keep builders behind pointers because a non-zero strings.Builder must not be copied.
-	choices       []*chatCompletionChoiceStringState
-	activeChoices []int
+	choices           []*chatCompletionChoiceStringState
+	activeChoices     []int
+	activeTools       int
+	id                string
+	model             string
+	systemFingerprint string
+	object            string
+	serviceTier       string
 }
 
 type chatCompletionChoiceStringState struct {
@@ -53,11 +60,15 @@ type chatCompletionChoiceStringState struct {
 	refusal         chatCompletionString
 	toolCalls       []*chatCompletionToolCallStringState
 	activeToolCalls []int
+	finishReason    string
+	role            string
 }
 
 type chatCompletionToolCallStringState struct {
 	name      chatCompletionString
 	arguments chatCompletionString
+	id        string
+	typeName  string
 }
 
 type chatCompletionString struct {
@@ -80,8 +91,8 @@ const (
 // memory for untrusted streams, an accumulator accepts at most 100,000 chunks, 1,024
 // combined choice and tool-call slots, 16 MiB each of combined content and tool
 // function text, other retained string metadata, and aggregate retained log
-// probability data, and 64 million retained log-probability replacement
-// reconciliation steps. A rejected chunk does not modify the accumulator.
+// probability data, and 800 million public-state reconciliation steps. A
+// rejected chunk does not modify the accumulator.
 //
 // While accumulation is in progress, callers may replace or clear accumulated
 // top-level strings and string fields of choices and tool calls that the stream
@@ -128,6 +139,10 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	if acc.ID != "" && acc.ID != chunk.ID {
 		return false
 	}
+	projectedReconciliationWork, ok := acc.projectReconciliationWork(len(chunk.Choices) > 0)
+	if !ok {
+		return false
+	}
 	if !acc.chatCompletionStructuralSlotsWithinLimit(chunk) {
 		return false
 	}
@@ -143,7 +158,7 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 		return false
 	}
 	var logprobPlan chatCompletionLogprobReconcilePlan
-	hasLogprobPlan, ok := acc.planLogprobReconciliation(&logprobPlan)
+	hasLogprobPlan, ok := acc.planLogprobReconciliation(&logprobPlan, &projectedReconciliationWork)
 	if !ok {
 		return false
 	}
@@ -159,7 +174,24 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 		acc.applyLogprobReconciliation(&logprobPlan)
 	}
 	acc.reconcilePublicState()
+	acc.reconciliationWork = projectedReconciliationWork
 	return true
+}
+
+func (acc *ChatCompletionAccumulator) projectReconciliationWork(chunkHasChoices bool) (int, bool) {
+	// Preflight and commit make six passes over populated choices, plus one
+	// structural projection pass when the chunk has choices. Populated tools are
+	// visited by text, metadata, and commit reconciliation. Charging those exact
+	// passes keeps sparse detection work bounded without scanning placeholder slots.
+	choicePasses := 6
+	if chunkHasChoices {
+		choicePasses++
+	}
+	work := len(acc.stringState.activeChoices)*choicePasses + acc.stringState.activeTools*3
+	if work > maxChatCompletionAccumulatorReconcileWork-acc.reconciliationWork {
+		return 0, false
+	}
+	return acc.reconciliationWork + work, true
 }
 
 // JustFinishedContent retrieves the chat completion content when it is known to have just been completed.
@@ -259,21 +291,21 @@ func (acc *ChatCompletionAccumulator) finishedToolCall(justFinished chatCompleti
 func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk) {
 	cc := &acc.ChatCompletion
 	if len(cc.ID) == 0 {
-		assignAccumulatorString(&cc.ID, chunk.ID)
+		assignAccumulatorString(&acc.stringState.id, &cc.ID, chunk.ID)
 	}
 
 	for _, delta := range chunk.Choices {
 		cc.Choices = expandToFit(cc.Choices, int(delta.Index))
 		choice := &cc.Choices[delta.Index]
+		choiceStrings := acc.stringState.choice(int(delta.Index))
 
 		choice.Index = delta.Index
-		assignAccumulatorString(&choice.FinishReason, delta.FinishReason)
+		assignAccumulatorString(&choiceStrings.finishReason, &choice.FinishReason, delta.FinishReason)
 
 		if delta.Delta.Role != "" {
-			assignAccumulatorString(&choice.Message.Role, constant.Assistant(delta.Delta.Role))
+			assignAccumulatorString(&choiceStrings.role, &choice.Message.Role, constant.Assistant(delta.Delta.Role))
 		}
 
-		choiceStrings := acc.stringState.choice(int(delta.Index))
 		choiceStrings.content.append(&choice.Message.Content, delta.Delta.Content)
 		choiceStrings.refusal.append(&choice.Message.Refusal, delta.Delta.Refusal)
 
@@ -284,14 +316,14 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 
 			choice.Message.ToolCalls = expandToFit(choice.Message.ToolCalls, toolIndex)
 			tool := &choice.Message.ToolCalls[toolIndex]
+			toolStrings := choiceStrings.toolCall(toolIndex, &acc.stringState.activeTools)
 
 			if deltaTool.ID != "" {
-				assignAccumulatorString(&tool.ID, deltaTool.ID)
+				assignAccumulatorString(&toolStrings.id, &tool.ID, deltaTool.ID)
 			}
 			if deltaTool.Type != "" {
-				assignAccumulatorString(&tool.Type, deltaTool.Type)
+				assignAccumulatorString(&toolStrings.typeName, &tool.Type, deltaTool.Type)
 			}
-			toolStrings := choiceStrings.toolCall(toolIndex)
 			toolStrings.name.append(&tool.Function.Name, deltaTool.Function.Name)
 			toolStrings.arguments.append(&tool.Function.Arguments, deltaTool.Function.Arguments)
 		}
@@ -312,12 +344,12 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 	cc.Usage.PromptTokensDetails.AudioTokens += chunk.Usage.PromptTokensDetails.AudioTokens
 	cc.Usage.PromptTokensDetails.CachedTokens += chunk.Usage.PromptTokensDetails.CachedTokens
 
-	assignAccumulatorString(&cc.Model, chunk.Model)
+	assignAccumulatorString(&acc.stringState.model, &cc.Model, chunk.Model)
 	cc.Created = chunk.Created
-	assignAccumulatorString(&cc.SystemFingerprint, chunk.SystemFingerprint)
-	assignAccumulatorString(&cc.ServiceTier, ChatCompletionServiceTier(chunk.ServiceTier))
+	assignAccumulatorString(&acc.stringState.systemFingerprint, &cc.SystemFingerprint, chunk.SystemFingerprint)
+	assignAccumulatorString(&acc.stringState.serviceTier, &cc.ServiceTier, ChatCompletionServiceTier(chunk.ServiceTier))
 	if chunk.Object == chunk.Object.Default() {
-		cc.Object = cc.Object.Default()
+		assignAccumulatorString(&acc.stringState.object, &cc.Object, cc.Object.Default())
 	}
 }
 
@@ -333,6 +365,11 @@ func (acc *chatCompletionAccumulatorStringState) choice(index int) *chatCompleti
 func (acc *ChatCompletionAccumulator) reconcilePublicState() {
 	completion := &acc.ChatCompletion
 	stringState := &acc.stringState
+	reconcileAccumulatorString(&stringState.id, &completion.ID)
+	reconcileAccumulatorString(&stringState.model, &completion.Model)
+	reconcileAccumulatorString(&stringState.systemFingerprint, &completion.SystemFingerprint)
+	reconcileAccumulatorString(&stringState.object, &completion.Object)
+	reconcileAccumulatorString(&stringState.serviceTier, &completion.ServiceTier)
 
 	previousChoiceCount := len(stringState.choices)
 	completion.Choices = detachTruncatedTail(completion.Choices, previousChoiceCount)
@@ -348,6 +385,7 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState() {
 	activeChoiceCount := 0
 	for _, i := range stringState.activeChoices {
 		if i >= len(completion.Choices) {
+			stringState.activeTools -= len(stringState.choices[i].activeToolCalls)
 			continue
 		}
 		stringState.activeChoices[activeChoiceCount] = i
@@ -357,6 +395,8 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState() {
 		message := &completion.Choices[i].Message
 		choiceState.content.reconcile(&message.Content)
 		choiceState.refusal.reconcile(&message.Refusal)
+		reconcileAccumulatorString(&choiceState.finishReason, &completion.Choices[i].FinishReason)
+		reconcileAccumulatorString(&choiceState.role, &message.Role)
 
 		if len(message.ToolCalls) < len(choiceState.toolCalls) {
 			invalidateRemovedToolCallState(acc.legacyChoiceChatCompletionStates, i, len(message.ToolCalls))
@@ -370,10 +410,13 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState() {
 			choiceState.activeToolCalls[activeToolCallCount] = j
 			activeToolCallCount++
 			toolCallState := choiceState.toolCalls[j]
+			reconcileAccumulatorString(&toolCallState.id, &message.ToolCalls[j].ID)
+			reconcileAccumulatorString(&toolCallState.typeName, &message.ToolCalls[j].Type)
 			function := &message.ToolCalls[j].Function
 			toolCallState.name.reconcile(&function.Name)
 			toolCallState.arguments.reconcile(&function.Arguments)
 		}
+		stringState.activeTools -= len(choiceState.activeToolCalls) - activeToolCallCount
 		clear(choiceState.activeToolCalls[activeToolCallCount:])
 		choiceState.activeToolCalls = choiceState.activeToolCalls[:activeToolCallCount]
 		if len(message.ToolCalls) < len(choiceState.toolCalls) {
@@ -408,11 +451,12 @@ func truncateResponseStates(states []chatCompletionResponseState, choiceCount in
 	return states[:choiceCount]
 }
 
-func (choice *chatCompletionChoiceStringState) toolCall(index int) *chatCompletionToolCallStringState {
+func (choice *chatCompletionChoiceStringState) toolCall(index int, activeTools *int) *chatCompletionToolCallStringState {
 	choice.toolCalls = expandToFit(choice.toolCalls, index)
 	if choice.toolCalls[index] == nil {
 		choice.toolCalls[index] = &chatCompletionToolCallStringState{}
 		choice.activeToolCalls = append(choice.activeToolCalls, index)
+		(*activeTools)++
 	}
 	return choice.toolCalls[index]
 }

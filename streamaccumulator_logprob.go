@@ -9,10 +9,8 @@ import (
 )
 
 type chatCompletionAccumulatorLogprobState struct {
-	choices            []chatCompletionChoiceLogprobState
-	activeChoices      []int
-	bytes              int
-	reconciliationWork int
+	choices []chatCompletionChoiceLogprobState
+	bytes   int
 }
 
 type chatCompletionLogprobReconcilePlan struct {
@@ -48,18 +46,41 @@ type chatCompletionLogprobProjection struct {
 	refusalBytes int
 }
 
-func cloneAccumulatorString[T ~string](src T) T {
-	return T(strings.Clone(string(src)))
+func assignAccumulatorString[T ~string](published *string, dst *T, src T) {
+	current := string(*dst)
+	if current == "" && src == "" {
+		*published = ""
+		*dst = ""
+		return
+	}
+	if current == string(src) && accumulatorStringUsesPublishedBacking(current, *published) {
+		return
+	}
+	*published = strings.Clone(string(src))
+	*dst = T(*published)
 }
 
-func assignAccumulatorString[T ~string](dst *T, src T) {
-	if *dst != src {
-		*dst = cloneAccumulatorString(src)
+func reconcileAccumulatorString[T ~string](published *string, current *T) {
+	value := string(*current)
+	if value == "" {
+		*published = ""
+		*current = ""
+		return
 	}
+	if accumulatorStringUsesPublishedBacking(value, *published) {
+		*current = T(*published)
+		return
+	}
+	*published = strings.Clone(value)
+	*current = T(*published)
+}
+
+func accumulatorStringUsesPublishedBacking(value string, published string) bool {
+	return value == published && unsafe.StringData(value) == unsafe.StringData(published)
 }
 
 func detachChatCompletionLogprobs(src []ChatCompletionTokenLogprob) []ChatCompletionTokenLogprob {
-	detached := make([]ChatCompletionTokenLogprob, len(src), cap(src))
+	detached := make([]ChatCompletionTokenLogprob, len(src))
 	for i := range src {
 		detached[i] = cloneChatCompletionTokenLogprob(src[i])
 	}
@@ -126,7 +147,7 @@ func cloneAccumulatorFields(src map[string]respjson.Field) map[string]respjson.F
 	return dst
 }
 
-func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatCompletionLogprobReconcilePlan) (bool, bool) {
+func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatCompletionLogprobReconcilePlan, work *int) (bool, bool) {
 	state := &acc.logprobState
 	indices := acc.stringState.activeChoices
 	headerChanged := false
@@ -147,18 +168,12 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 	}
 
 	plan.state = *state
-	if headerChanged {
-		plan.state.choices = make([]chatCompletionChoiceLogprobState, len(acc.Choices))
-		copy(plan.state.choices, state.choices)
-		plan.state.activeChoices = make([]int, 0, len(indices))
-		plan.detaches = make([]uint8, len(acc.Choices))
-	}
+	plan.state.choices = make([]chatCompletionChoiceLogprobState, len(acc.Choices))
+	copy(plan.state.choices, state.choices)
+	plan.detaches = make([]uint8, len(acc.Choices))
 
 	plan.state.bytes = 0
 	for _, i := range indices {
-		if !addAccumulatorLogprobWork(&plan.state.reconciliationWork, 1) {
-			return false, false
-		}
 		if i >= len(acc.Choices) {
 			continue
 		}
@@ -167,11 +182,11 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 		if i < len(state.choices) {
 			current = state.choices[i]
 		}
-		content, contentDetach, ok := plan.state.projectSlice(current.content, logprobs.Content)
+		content, contentDetach, ok := projectChatCompletionLogprobSlice(current.content, logprobs.Content, work)
 		if !ok {
 			return false, false
 		}
-		refusal, refusalDetach, ok := plan.state.projectSlice(current.refusal, logprobs.Refusal)
+		refusal, refusalDetach, ok := projectChatCompletionLogprobSlice(current.refusal, logprobs.Refusal, work)
 		if !ok {
 			return false, false
 		}
@@ -182,15 +197,9 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 		plan.measured[i/64] |= uint64(1) << (i % 64)
 		plan.contentBytes[i] = content.bytes
 		plan.refusalBytes[i] = refusal.bytes
-		if !headerChanged {
-			continue
-		}
 		choiceState := &plan.state.choices[i]
 		choiceState.content = content
 		choiceState.refusal = refusal
-		if content.data != 0 || refusal.data != 0 {
-			plan.state.activeChoices = append(plan.state.activeChoices, i)
-		}
 		if contentDetach {
 			plan.detaches[i] |= detachContentLogprobs
 		}
@@ -206,7 +215,7 @@ func (state chatCompletionLogprobSliceState) matches(logprobs []ChatCompletionTo
 	return state.data == header.data && state.length == header.length && state.capacity == header.capacity
 }
 
-func (state *chatCompletionAccumulatorLogprobState) projectSlice(current chatCompletionLogprobSliceState, logprobs []ChatCompletionTokenLogprob) (chatCompletionLogprobSliceState, bool, bool) {
+func projectChatCompletionLogprobSlice(current chatCompletionLogprobSliceState, logprobs []ChatCompletionTokenLogprob, work *int) (chatCompletionLogprobSliceState, bool, bool) {
 	header := chatCompletionLogprobHeader(logprobs)
 	detach := !current.matches(logprobs) && logprobs != nil
 
@@ -214,9 +223,10 @@ func (state *chatCompletionAccumulatorLogprobState) projectSlice(current chatCom
 	retained := true
 	if detach {
 		retained = false
+		header.capacity = len(logprobs)
 	}
-	if !addAccumulatorLogprobStorage(&bytes, cap(logprobs), int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))) ||
-		!addMeasuredChatCompletionLogprobData(&bytes, logprobs, retained, &state.reconciliationWork) {
+	if !addAccumulatorLogprobStorage(&bytes, header.capacity, int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))) ||
+		!addMeasuredChatCompletionLogprobData(&bytes, logprobs, retained, work) {
 		return chatCompletionLogprobSliceState{}, false, false
 	}
 	if current.matches(logprobs) && bytes < current.bytes {
@@ -343,13 +353,8 @@ func (state *chatCompletionAccumulatorLogprobState) acceptChunk(completion *Chat
 	for i := range chunk.Choices {
 		choice := &chunk.Choices[i]
 		choiceState := &state.choices[choice.Index]
-		wasInactive := choiceState.content.length == 0 && choiceState.content.capacity == 0 &&
-			choiceState.refusal.length == 0 && choiceState.refusal.capacity == 0
 		state.acceptSlice(&choiceState.content, choice.Logprobs.Content, logprobSize, maxLogprobs)
 		state.acceptSlice(&choiceState.refusal, choice.Logprobs.Refusal, logprobSize, maxLogprobs)
-		if wasInactive && (choiceState.content.length > 0 || choiceState.refusal.length > 0) {
-			state.activeChoices = append(state.activeChoices, int(choice.Index))
-		}
 	}
 	for i := range chunk.Choices {
 		choiceIndex := int(chunk.Choices[i].Index)
@@ -430,7 +435,7 @@ func addMeasuredChatCompletionLogprobData(total *int, logprobs []ChatCompletionT
 		logprobs = logprobs[:cap(logprobs)]
 	}
 	for i := range logprobs {
-		if work != nil && !addAccumulatorLogprobWork(work, 1) {
+		if work != nil && !addAccumulatorReconciliationWork(work, 1) {
 			return false
 		}
 		logprob := &logprobs[i]
@@ -452,7 +457,7 @@ func addMeasuredChatCompletionLogprobData(total *int, logprobs []ChatCompletionT
 			topLogprobs = topLogprobs[:cap(topLogprobs)]
 		}
 		for j := range topLogprobs {
-			if work != nil && !addAccumulatorLogprobWork(work, 1) {
+			if work != nil && !addAccumulatorReconciliationWork(work, 1) {
 				return false
 			}
 			topLogprob := &topLogprobs[j]
@@ -472,7 +477,7 @@ func addMeasuredChatCompletionLogprobData(total *int, logprobs []ChatCompletionT
 }
 
 func addMeasuredChatCompletionLogprobMetadata(total *int, raw string, extraFields map[string]respjson.Field, work *int, fields ...respjson.Field) bool {
-	if work != nil && !addAccumulatorLogprobWork(work, len(extraFields)) {
+	if work != nil && !addAccumulatorReconciliationWork(work, len(extraFields)) {
 		return false
 	}
 	return addChatCompletionLogprobMetadata(total, raw, extraFields, fields...)
@@ -522,8 +527,8 @@ func addAccumulatorLogprobBytes(total *int, count int) bool {
 	return true
 }
 
-func addAccumulatorLogprobWork(total *int, count int) bool {
-	if count > maxChatCompletionAccumulatorLogprobWork-*total {
+func addAccumulatorReconciliationWork(total *int, count int) bool {
+	if count > maxChatCompletionAccumulatorReconcileWork-*total {
 		return false
 	}
 	*total += count

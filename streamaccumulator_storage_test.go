@@ -107,6 +107,67 @@ func TestAccumulatorCanonicalizesEqualPublicStringBacking(t *testing.T) {
 	}
 }
 
+func TestAccumulatorCanonicalizesEqualPublicMetadataBacking(t *testing.T) {
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		Role: "assistant",
+		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
+			ID:   "tool-id",
+			Type: "function",
+		}},
+	})
+	chunk.Model = "model"
+	chunk.SystemFingerprint = "fingerprint"
+	chunk.ServiceTier = "default"
+	chunk.Object = chunk.Object.Default()
+	chunk.Choices[0].FinishReason = "stop"
+
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the initial metadata")
+	}
+	replacements := []struct {
+		name   string
+		source *byte
+		get    func() string
+	}{
+		{name: "id", source: replaceWithEqualSubstring(&acc.ID), get: func() string { return acc.ID }},
+		{name: "model", source: replaceWithEqualSubstring(&acc.Model), get: func() string { return acc.Model }},
+		{name: "fingerprint", source: replaceWithEqualSubstring(&acc.SystemFingerprint), get: func() string { return acc.SystemFingerprint }},
+		{name: "service_tier", source: replaceWithEqualSubstring(&acc.ServiceTier), get: func() string { return string(acc.ServiceTier) }},
+		{name: "object", source: replaceWithEqualSubstring(&acc.Object), get: func() string { return string(acc.Object) }},
+		{name: "finish_reason", source: replaceWithEqualSubstring(&acc.Choices[0].FinishReason), get: func() string { return acc.Choices[0].FinishReason }},
+		{name: "role", source: replaceWithEqualSubstring(&acc.Choices[0].Message.Role), get: func() string { return string(acc.Choices[0].Message.Role) }},
+		{name: "tool_id", source: replaceWithEqualSubstring(&acc.Choices[0].Message.ToolCalls[0].ID), get: func() string { return acc.Choices[0].Message.ToolCalls[0].ID }},
+		{name: "tool_type", source: replaceWithEqualSubstring(&acc.Choices[0].Message.ToolCalls[0].Type), get: func() string { return acc.Choices[0].Message.ToolCalls[0].Type }},
+	}
+
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected equal public metadata replacements")
+	}
+	for _, replacement := range replacements {
+		if unsafe.StringData(replacement.get()) == replacement.source {
+			t.Errorf("%s still retains replacement backing", replacement.name)
+		}
+	}
+
+	emptyBacking := strings.Repeat("x", 1<<20)[:0]
+	acc.SystemFingerprint = emptyBacking
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected an empty public metadata replacement")
+	}
+	if unsafe.StringData(acc.SystemFingerprint) == unsafe.StringData(emptyBacking) {
+		t.Error("empty metadata still retains replacement backing")
+	}
+}
+
+func replaceWithEqualSubstring[T ~string](dst *T) *byte {
+	value := string(*dst)
+	backing := value + strings.Repeat("x", 1<<20)
+	replacement := backing[:len(value)]
+	*dst = T(replacement)
+	return unsafe.StringData(replacement)
+}
+
 func TestAccumulatorTracksOnlyPopulatedSparseState(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{Content: "x"})
 	chunk.Choices[0].Index = maxChatCompletionAccumulatorStructuralSlots - 1
@@ -131,6 +192,32 @@ func TestAccumulatorTracksOnlyPopulatedSparseState(t *testing.T) {
 	}
 }
 
+func TestAccumulatorTracksOnlyPopulatedToolState(t *testing.T) {
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
+			Index: maxChatCompletionAccumulatorStructuralSlots - 2,
+			Function: ChatCompletionChunkChoiceDeltaToolCallFunction{
+				Name: "tool",
+			},
+		}},
+	})
+
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the sparse tool call")
+	}
+	if acc.stringState.activeTools != 1 {
+		t.Fatalf("active tools = %d, want 1", acc.stringState.activeTools)
+	}
+	acc.Choices[0].Message.ToolCalls = nil
+	if !acc.AddChunk(ChatCompletionChunk{ID: chunk.ID}) {
+		t.Fatal("AddChunk rejected the truncated tool state")
+	}
+	if acc.stringState.activeTools != 0 {
+		t.Fatalf("active tools after truncation = %d, want 0", acc.stringState.activeTools)
+	}
+}
+
 func TestAccumulatorBoundsLogprobReconciliationWork(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
 	chunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "initial"}}
@@ -139,7 +226,7 @@ func TestAccumulatorBoundsLogprobReconciliationWork(t *testing.T) {
 	if !acc.AddChunk(chunk) {
 		t.Fatal("AddChunk rejected the initial logprob")
 	}
-	acc.logprobState.reconciliationWork = maxChatCompletionAccumulatorLogprobWork - 1
+	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - 6
 	acc.Choices[0].Logprobs.Content = append([]ChatCompletionTokenLogprob(nil), acc.Choices[0].Logprobs.Content...)
 	if acc.AddChunk(ChatCompletionChunk{ID: chunk.ID}) {
 		t.Fatal("AddChunk accepted work beyond the logprob reconciliation budget")
@@ -163,8 +250,9 @@ func TestAccumulatorLogprobStreamingUsesIncrementalAccounting(t *testing.T) {
 	if got := len(acc.Choices[0].Logprobs.Content); got != chunkCount {
 		t.Fatalf("accumulated logprobs = %d, want %d", got, chunkCount)
 	}
-	if acc.logprobState.reconciliationWork != 0 {
-		t.Fatalf("normal streaming used %d public-replacement reconciliation steps, want 0", acc.logprobState.reconciliationWork)
+	wantWork := (chunkCount - 1) * 7
+	if acc.reconciliationWork != wantWork {
+		t.Fatalf("normal streaming used %d reconciliation steps, want %d", acc.reconciliationWork, wantWork)
 	}
 }
 

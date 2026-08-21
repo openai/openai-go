@@ -658,6 +658,9 @@ func TestAccumulatorCanonicalizesWholeLogprobSliceReplacement(t *testing.T) {
 	if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
 		t.Fatal("AddChunk rejected a supported whole-slice replacement at the aggregate budget")
 	}
+	if capacity := cap(acc.Choices[0].Logprobs.Content); capacity != len(replacement) {
+		t.Fatalf("canonical replacement capacity = %d, want %d", capacity, len(replacement))
+	}
 
 	next := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
 	next.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "next"}}
@@ -666,6 +669,15 @@ func TestAccumulatorCanonicalizesWholeLogprobSliceReplacement(t *testing.T) {
 	}
 	if got := len(acc.Choices[0].Logprobs.Content); got != 2 {
 		t.Fatalf("accumulated logprobs = %d, want 2", got)
+	}
+
+	largeCapacity := testAccumulatorMaxLogprobBytes / int(unsafe.Sizeof(openai.ChatCompletionTokenLogprob{}))
+	acc.Choices[0].Logprobs.Content = make([]openai.ChatCompletionTokenLogprob, 0, largeCapacity)
+	if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
+		t.Fatal("AddChunk rejected an empty whole-slice replacement with spare capacity")
+	}
+	if capacity := cap(acc.Choices[0].Logprobs.Content); capacity != 0 {
+		t.Fatalf("empty canonical replacement capacity = %d, want 0", capacity)
 	}
 }
 
