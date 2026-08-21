@@ -23,8 +23,20 @@ if [[ "${npm_version%%.*}" -lt 7 ]]; then
 fi
 
 installation="$(mktemp -d scripts/steady/.install.XXXXXXXX)"
-trap 'rm -rf "$installation"' EXIT
 installation="$(cd "$installation" && pwd -P)"
+publication_lock="$(pwd -P)/scripts/steady/.publication-lock"
+lock_owner="owner.$$.$RANDOM.$RANDOM"
+publication_lock_owned=0
+
+cleanup_installation() {
+  if [[ "$publication_lock_owned" -eq 1 ]]; then
+    rm -f "$publication_lock/$lock_owner"
+    rmdir "$publication_lock" 2>/dev/null || true
+  fi
+  rm -rf "$installation"
+}
+trap cleanup_installation EXIT
+
 cp scripts/steady/package.json scripts/steady/package-lock.json "$installation/"
 
 npm ci --prefix "$installation" --no-dry-run --no-package-lock-only --package-lock --no-global \
@@ -69,6 +81,49 @@ verify_installation() {
 
 staged_executable="$(verify_installation "$installation")"
 "$staged_executable" --version >/dev/null
+
+lock_candidate="$installation/publication-lock"
+mkdir "$lock_candidate"
+: >"$lock_candidate/$lock_owner"
+
+for attempt in {1..300}; do
+  if node -e '
+    try {
+      require("fs").renameSync(process.argv[1], process.argv[2]);
+    } catch (error) {
+      if (["EEXIST", "ENOTEMPTY", "EPERM", "EACCES"].includes(error.code)) process.exit(1);
+      console.error(error);
+      process.exit(2);
+    }
+  ' "$lock_candidate" "$publication_lock"; then
+    publication_lock_owned=1
+    break
+  else
+    status=$?
+    if [[ "$status" -ne 1 ]]; then
+      exit "$status"
+    fi
+  fi
+
+  owners=("$publication_lock"/owner.*)
+  if [[ "${#owners[@]}" -eq 1 && -f "${owners[0]}" ]]; then
+    current_owner="${owners[0]##*/}"
+    current_pid="${current_owner#owner.}"
+    current_pid="${current_pid%%.*}"
+    if [[ "$current_pid" =~ ^[0-9]+$ ]] && ! kill -0 "$current_pid" 2>/dev/null; then
+      rm -f "$publication_lock/$current_owner"
+      rmdir "$publication_lock" 2>/dev/null || true
+    fi
+  else
+    rmdir "$publication_lock" 2>/dev/null || true
+  fi
+  sleep 0.05
+done
+
+if [[ "$publication_lock_owned" -ne 1 ]]; then
+  echo "Error: Timed out waiting to publish the locked Steady installation" >&2
+  exit 1
+fi
 
 rm -rf scripts/steady/node_modules
 node -e 'require("fs").renameSync(process.argv[1], process.argv[2])' \

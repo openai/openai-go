@@ -285,14 +285,84 @@ concurrent_fixture="$temporary/concurrent-project"
 mkdir -p "$concurrent_fixture/scripts/steady"
 cp scripts/steady/install scripts/steady/package.json scripts/steady/package-lock.json "$concurrent_fixture/scripts/steady/"
 chmod +x "$concurrent_fixture/scripts/steady/install"
+mkdir "$concurrent_fixture/scripts/steady/.publication-lock"
+touch "$concurrent_fixture/scripts/steady/.publication-lock/owner.2147483647.abandoned"
+
+concurrent_bin="$temporary/concurrent-bin"
+concurrent_barrier="$temporary/concurrent-barrier"
+mkdir -p "$concurrent_bin" "$concurrent_barrier"
+real_npm="$(command -v npm)"
+cat >"$concurrent_bin/npm" <<'EOF'
+#!/usr/bin/env bash
+set -e
+
+if [[ "$1" == "--version" ]]; then
+  exec "$STEADY_REAL_NPM" "$@"
+fi
+
+"$STEADY_REAL_NPM" "$@"
+touch "$STEADY_CONCURRENCY_BARRIER/arrived.$$"
+for attempt in {1..300}; do
+  arrivals=("$STEADY_CONCURRENCY_BARRIER"/arrived.*)
+  if [[ "${#arrivals[@]}" -ge "$STEADY_CONCURRENCY_WORKERS" ]]; then
+    exit 0
+  fi
+  sleep 0.05
+done
+echo "Concurrent Steady installation did not reach its publication barrier" >&2
+exit 1
+EOF
+chmod +x "$concurrent_bin/npm"
+cat >"$concurrent_bin/node" <<'EOF'
+#!/usr/bin/env bash
+set -e
+
+if [[ "${1:-}" == "-e" && "${2:-}" == *renameSync* && "${4:-}" == */node_modules ]]; then
+  touch "$STEADY_CONCURRENCY_BARRIER/publishing.$$"
+  for attempt in {1..60}; do
+    publishers=("$STEADY_CONCURRENCY_BARRIER"/publishing.*)
+    if [[ "${#publishers[@]}" -ge "$STEADY_CONCURRENCY_WORKERS" ]]; then
+      break
+    fi
+    sleep 0.025
+  done
+fi
+
+exec "$STEADY_REAL_NODE" "$@"
+EOF
+chmod +x "$concurrent_bin/node"
+
 processes=()
-for index in 1 2 3 4; do
-  npm_config_offline=true "$concurrent_fixture/scripts/steady/install" >"$temporary/concurrent-$index" 2>&1 &
+for index in 1 2 3 4 5 6; do
+  PATH="$concurrent_bin:$PATH" STEADY_REAL_NPM="$real_npm" STEADY_REAL_NODE="$real_node" \
+    STEADY_CONCURRENCY_BARRIER="$concurrent_barrier" STEADY_CONCURRENCY_WORKERS=6 \
+    npm_config_offline=true "$concurrent_fixture/scripts/steady/install" >"$temporary/concurrent-$index" 2>&1 &
   processes+=("$!")
 done
-for process in "${processes[@]}"; do
-  wait "$process" || true
+
+failures=0
+for index in "${!processes[@]}"; do
+  if ! wait "${processes[$index]}"; then
+    cat "$temporary/concurrent-$((index + 1))" >&2
+    failures=$((failures + 1))
+  fi
 done
-npm_config_offline=true "$concurrent_fixture/scripts/steady/install" >"$temporary/output" 2>&1
+if [[ "$failures" -ne 0 ]]; then
+  echo "$failures concurrent Steady installations failed during publication" >&2
+  exit 1
+fi
+
 node "$concurrent_fixture/scripts/steady/node_modules/@stdy/cli/steady.js" --version | grep -Fx "steady $expected_version" >/dev/null
-echo "Interrupted concurrent installations recover through the normal locked npm installation"
+if [[ -e "$concurrent_fixture/scripts/steady/.publication-lock" ]]; then
+  echo "Concurrent Steady installations left an unreleased publication lock" >&2
+  exit 1
+fi
+echo "Concurrent Steady installations recover abandoned locks and publish without interfering"
+
+mkdir "$concurrent_fixture/scripts/steady/.publication-lock"
+npm_config_offline=true "$concurrent_fixture/scripts/steady/install" >"$temporary/output" 2>&1
+if [[ -e "$concurrent_fixture/scripts/steady/.publication-lock" ]]; then
+  echo "Steady installation left an ownerless publication lock behind" >&2
+  exit 1
+fi
+echo "Steady installation safely recovers an ownerless publication lock"

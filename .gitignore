@@ -5,3 +5,4 @@ Brewfile.lock.json
 .idea/
 /scripts/steady/node_modules/
 /scripts/steady/.install.*/
+/scripts/steady/.publication-lock/
