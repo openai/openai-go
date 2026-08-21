@@ -387,13 +387,50 @@ func dialAzureLoopback(ctx context.Context, network string, address string) (net
 		return nil, fmt.Errorf("azure: invalid loopback address %q: %w", address, err)
 	}
 	if host == "localhost" {
-		host = "127.0.0.1"
+		return dialAzureLocalhost(ctx, network, address, port)
 	}
 	ip := net.ParseIP(host)
 	if ip == nil || !ip.IsLoopback() {
 		return nil, fmt.Errorf("azure: refusing non-loopback plaintext connection to %q", address)
 	}
 	return azureLoopbackDialer.DialContext(ctx, network, net.JoinHostPort(ip.String(), port))
+}
+
+func dialAzureLocalhost(ctx context.Context, network string, address string, port string) (net.Conn, error) {
+	type dialResult struct {
+		conn net.Conn
+		err  error
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Avoid DNS and try only fixed loopback addresses. Concurrent attempts keep
+	// localhost usable when either IP family is unavailable or filtered locally.
+	results := make(chan dialResult, 2)
+	for _, host := range []string{"127.0.0.1", "::1"} {
+		go func() {
+			conn, err := azureLoopbackDialer.DialContext(ctx, network, net.JoinHostPort(host, port))
+			results <- dialResult{conn: conn, err: err}
+		}()
+	}
+
+	errs := make([]error, 0, 2)
+	for attempt := range 2 {
+		result := <-results
+		if result.err == nil {
+			cancel()
+			for remaining := attempt + 1; remaining < 2; remaining++ {
+				loser := <-results
+				if loser.conn != nil {
+					_ = loser.conn.Close()
+				}
+			}
+			return result.conn, nil
+		}
+		errs = append(errs, result.err)
+	}
+	return nil, fmt.Errorf("azure: could not connect to loopback address %q: %w", address, errors.Join(errs...))
 }
 
 func (t azureCredentialTransport) RoundTrip(req *http.Request) (*http.Response, error) {

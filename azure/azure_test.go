@@ -894,14 +894,17 @@ func TestAzureUnsafeHTTPMatchesProxyBypass(t *testing.T) {
 	t.Setenv("http_proxy", proxy.URL)
 
 	hosts := map[string]struct {
-		host        string
-		wantAllowed bool
+		host          string
+		network       string
+		listenAddress string
+		wantAllowed   bool
 	}{
-		"localhost":           {host: "localhost", wantAllowed: true},
-		"uppercase localhost": {host: "LOCALHOST"},
-		"localhost dot":       {host: "localhost."},
-		"IPv4 loopback":       {host: "127.0.0.1", wantAllowed: true},
-		"IPv6 loopback":       {host: "[::1]", wantAllowed: true},
+		"localhost":                  {host: "localhost", network: "tcp4", listenAddress: "127.0.0.1:0", wantAllowed: true},
+		"localhost with IPv6 origin": {host: "localhost", network: "tcp6", listenAddress: "[::1]:0", wantAllowed: true},
+		"uppercase localhost":        {host: "LOCALHOST", network: "tcp4", listenAddress: "127.0.0.1:0"},
+		"localhost dot":              {host: "localhost.", network: "tcp4", listenAddress: "127.0.0.1:0"},
+		"IPv4 loopback":              {host: "127.0.0.1", network: "tcp4", listenAddress: "127.0.0.1:0", wantAllowed: true},
+		"IPv6 loopback":              {host: "[::1]", network: "tcp6", listenAddress: "[::1]:0", wantAllowed: true},
 	}
 	authOptions := map[string]struct {
 		option      func() option.RequestOption
@@ -930,13 +933,7 @@ func TestAzureUnsafeHTTPMatchesProxyBypass(t *testing.T) {
 				}
 
 				originRequests := make(chan requestObservation, 1)
-				network := "tcp4"
-				listenAddress := "127.0.0.1:0"
-				if host.host == "[::1]" {
-					network = "tcp6"
-					listenAddress = "[::1]:0"
-				}
-				origin := newLoopbackHTTPServer(t, network, listenAddress, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				origin := newLoopbackHTTPServer(t, host.network, host.listenAddress, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 					originRequests <- requestObservation{
 						host:          req.URL.Hostname(),
 						apiKey:        req.Header.Get("Api-Key"),
