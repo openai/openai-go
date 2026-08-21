@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
-	"strings"
 
 	"github.com/openai/openai-go/v3/internal/apijson"
 	"github.com/openai/openai-go/v3/internal/apiquery"
@@ -3782,15 +3781,7 @@ type Response struct {
 }
 
 func (r Response) OutputText() string {
-	var outputText strings.Builder
-	for _, item := range r.Output {
-		for _, content := range item.Content {
-			if content.Type == "output_text" {
-				outputText.WriteString(content.Text)
-			}
-		}
-	}
-	return outputText.String()
+	return responseOutputText(r)
 }
 
 // Returns the unmodified JSON received from the API
