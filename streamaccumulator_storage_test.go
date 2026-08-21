@@ -107,6 +107,47 @@ func TestAccumulatorCanonicalizesEqualPublicStringBacking(t *testing.T) {
 	}
 }
 
+func TestAccumulatorTracksOnlyPopulatedSparseState(t *testing.T) {
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{Content: "x"})
+	chunk.Choices[0].Index = maxChatCompletionAccumulatorStructuralSlots - 1
+
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the sparse choice")
+	}
+	if len(acc.stringState.activeChoices) != 1 ||
+		acc.stringState.activeChoices[0] != maxChatCompletionAccumulatorStructuralSlots-1 {
+		t.Fatalf("active choices = %v, want only the populated sparse choice", acc.stringState.activeChoices)
+	}
+
+	empty := ChatCompletionChunk{ID: chunk.ID}
+	for range maxChatCompletionAccumulatorChunks - 1 {
+		if !acc.AddChunk(empty) {
+			t.Fatal("AddChunk rejected an empty chunk within the documented budget")
+		}
+	}
+	if len(acc.stringState.activeChoices) != 1 {
+		t.Fatalf("empty chunks expanded active state to %d choices, want 1", len(acc.stringState.activeChoices))
+	}
+}
+
+func TestAccumulatorBoundsLogprobReconciliationWork(t *testing.T) {
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	chunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "initial"}}
+
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the initial logprob")
+	}
+	acc.logprobState.reconciliationWork = maxChatCompletionAccumulatorLogprobWork - 1
+	if acc.AddChunk(chunk) {
+		t.Fatal("AddChunk accepted work beyond the logprob reconciliation budget")
+	}
+	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
+		t.Fatalf("rejected chunk changed logprobs to length %d, want 1", got)
+	}
+}
+
 func storageTestChunk(delta ChatCompletionChunkChoiceDelta) ChatCompletionChunk {
 	return ChatCompletionChunk{
 		ID: "chatcmpl-storage-reconciliation",

@@ -12,6 +12,7 @@ const (
 	maxChatCompletionAccumulatorTextBytes       = 16 << 20
 	maxChatCompletionAccumulatorMetadataBytes   = 16 << 20
 	maxChatCompletionAccumulatorLogprobBytes    = 16 << 20
+	maxChatCompletionAccumulatorLogprobWork     = 64_000_000
 	// Conservatively covers a non-empty map header and its first backing bucket.
 	chatCompletionAccumulatorMapOverheadBytes = 512
 )
@@ -43,13 +44,15 @@ type chatCompletionResponseState struct {
 
 type chatCompletionAccumulatorStringState struct {
 	// Keep builders behind pointers because a non-zero strings.Builder must not be copied.
-	choices []*chatCompletionChoiceStringState
+	choices       []*chatCompletionChoiceStringState
+	activeChoices []int
 }
 
 type chatCompletionChoiceStringState struct {
-	content   chatCompletionString
-	refusal   chatCompletionString
-	toolCalls []*chatCompletionToolCallStringState
+	content         chatCompletionString
+	refusal         chatCompletionString
+	toolCalls       []*chatCompletionToolCallStringState
+	activeToolCalls []int
 }
 
 type chatCompletionToolCallStringState struct {
@@ -77,7 +80,8 @@ const (
 // memory for untrusted streams, an accumulator accepts at most 100,000 chunks, 1,024
 // combined choice and tool-call slots, 16 MiB each of combined content and tool
 // function text, other retained string metadata, and aggregate retained log
-// probability data. A rejected chunk does not modify the accumulator.
+// probability data, and 64 million retained log-probability reconciliation steps.
+// A rejected chunk does not modify the accumulator.
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
@@ -116,33 +120,36 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	if acc.ID != "" && acc.ID != chunk.ID {
 		return false
 	}
-	if !chatCompletionStructuralSlotsWithinLimit(&acc.ChatCompletion, chunk) {
+	if !acc.chatCompletionStructuralSlotsWithinLimit(chunk) {
 		return false
 	}
 
-	textBytes, ok := addChatCompletionTextBytes(0, &acc.ChatCompletion)
+	textBytes, ok := acc.addChatCompletionTextBytes(0)
 	if !ok {
 		return false
 	}
 	if _, ok = addChatCompletionChunkTextBytes(textBytes, chunk); !ok {
 		return false
 	}
-	if !chatCompletionMetadataWithinLimit(&acc.ChatCompletion, chunk) {
+	if !acc.chatCompletionMetadataWithinLimit(chunk) {
 		return false
 	}
-	logprobPlan, ok := acc.planLogprobReconciliation()
+	var logprobPlan chatCompletionLogprobReconcilePlan
+	hasLogprobPlan, ok := acc.planLogprobReconciliation(&logprobPlan, chatCompletionChunkHasLogprobs(chunk))
 	if !ok {
 		return false
 	}
 	logprobState := &acc.logprobState
-	if logprobPlan != nil {
+	if hasLogprobPlan {
 		logprobState = &logprobPlan.state
 	}
 	if !logprobState.chunkWithinLimit(chunk) {
 		return false
 	}
 
-	acc.applyLogprobReconciliation(logprobPlan)
+	if hasLogprobPlan {
+		acc.applyLogprobReconciliation(&logprobPlan)
+	}
 	acc.reconcilePublicState()
 	return true
 }
@@ -310,6 +317,7 @@ func (acc *chatCompletionAccumulatorStringState) choice(index int) *chatCompleti
 	acc.choices = expandToFit(acc.choices, index)
 	if acc.choices[index] == nil {
 		acc.choices[index] = &chatCompletionChoiceStringState{}
+		acc.activeChoices = append(acc.activeChoices, index)
 	}
 	return acc.choices[index]
 }
@@ -320,45 +328,58 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState() {
 
 	previousChoiceCount := len(stringState.choices)
 	completion.Choices = detachTruncatedTail(completion.Choices, previousChoiceCount)
-	for i := range completion.Choices {
-		message := &completion.Choices[i].Message
-		previousToolCallCount := 0
-		if i < previousChoiceCount && stringState.choices[i] != nil {
-			previousToolCallCount = len(stringState.choices[i].toolCalls)
+	for _, i := range stringState.activeChoices {
+		if i >= len(completion.Choices) {
+			continue
 		}
+		message := &completion.Choices[i].Message
+		previousToolCallCount := len(stringState.choices[i].toolCalls)
 		message.ToolCalls = detachTruncatedTail(message.ToolCalls, previousToolCallCount)
 	}
 
-	choiceCount := min(len(stringState.choices), len(completion.Choices))
-	for i := range choiceCount {
-		choiceState := stringState.choices[i]
-		if choiceState == nil {
+	activeChoiceCount := 0
+	for _, i := range stringState.activeChoices {
+		if i >= len(completion.Choices) {
 			continue
 		}
+		stringState.activeChoices[activeChoiceCount] = i
+		activeChoiceCount++
+		choiceState := stringState.choices[i]
 
 		message := &completion.Choices[i].Message
 		choiceState.content.reconcile(&message.Content)
 		choiceState.refusal.reconcile(&message.Refusal)
 
-		toolCallCount := min(len(choiceState.toolCalls), len(message.ToolCalls))
-		if toolCallCount < len(choiceState.toolCalls) {
-			invalidateRemovedToolCallState(acc.legacyChoiceChatCompletionStates, i, toolCallCount)
-			invalidateRemovedToolCallState(acc.choiceChatCompletionStates, i, toolCallCount)
+		if len(message.ToolCalls) < len(choiceState.toolCalls) {
+			invalidateRemovedToolCallState(acc.legacyChoiceChatCompletionStates, i, len(message.ToolCalls))
+			invalidateRemovedToolCallState(acc.choiceChatCompletionStates, i, len(message.ToolCalls))
 		}
-		for j := range toolCallCount {
-			toolCallState := choiceState.toolCalls[j]
-			if toolCallState == nil {
+		activeToolCallCount := 0
+		for _, j := range choiceState.activeToolCalls {
+			if j >= len(message.ToolCalls) {
 				continue
 			}
+			choiceState.activeToolCalls[activeToolCallCount] = j
+			activeToolCallCount++
+			toolCallState := choiceState.toolCalls[j]
 			function := &message.ToolCalls[j].Function
 			toolCallState.name.reconcile(&function.Name)
 			toolCallState.arguments.reconcile(&function.Arguments)
 		}
-		clear(choiceState.toolCalls[toolCallCount:])
-		choiceState.toolCalls = choiceState.toolCalls[:toolCallCount]
+		clear(choiceState.activeToolCalls[activeToolCallCount:])
+		choiceState.activeToolCalls = choiceState.activeToolCalls[:activeToolCallCount]
+		if len(message.ToolCalls) < len(choiceState.toolCalls) {
+			clear(choiceState.toolCalls[len(message.ToolCalls):])
+			choiceState.toolCalls = choiceState.toolCalls[:len(message.ToolCalls)]
+		}
 	}
-	clear(stringState.choices[choiceCount:])
-	stringState.choices = stringState.choices[:choiceCount]
+	clear(stringState.activeChoices[activeChoiceCount:])
+	stringState.activeChoices = stringState.activeChoices[:activeChoiceCount]
+	choiceCount := len(completion.Choices)
+	if choiceCount < previousChoiceCount {
+		clear(stringState.choices[choiceCount:])
+		stringState.choices = stringState.choices[:choiceCount]
+	}
 	acc.legacyChoiceChatCompletionStates = truncateResponseStates(acc.legacyChoiceChatCompletionStates, choiceCount)
 	acc.choiceChatCompletionStates = truncateResponseStates(acc.choiceChatCompletionStates, choiceCount)
 }
@@ -383,6 +404,7 @@ func (choice *chatCompletionChoiceStringState) toolCall(index int) *chatCompleti
 	choice.toolCalls = expandToFit(choice.toolCalls, index)
 	if choice.toolCalls[index] == nil {
 		choice.toolCalls[index] = &chatCompletionToolCallStringState{}
+		choice.activeToolCalls = append(choice.activeToolCalls, index)
 	}
 	return choice.toolCalls[index]
 }
@@ -411,23 +433,34 @@ func (acc *chatCompletionString) reconcile(current *string) {
 	*current = acc.published
 }
 
-func chatCompletionStructuralSlotsWithinLimit(completion *ChatCompletion, chunk *ChatCompletionChunk) bool {
+func (acc *ChatCompletionAccumulator) chatCompletionStructuralSlotsWithinLimit(chunk *ChatCompletionChunk) bool {
+	completion := &acc.ChatCompletion
 	choiceCount := len(completion.Choices)
 	if choiceCount > maxChatCompletionAccumulatorStructuralSlots {
 		return false
 	}
 
 	structuralSlots := choiceCount
-	// This fixed-size projection keeps duplicate choice deltas exact without a
-	// per-chunk map allocation. The aggregate slot limit bounds its stack cost.
-	var toolCallCounts [maxChatCompletionAccumulatorStructuralSlots]int
-	for i := range completion.Choices {
+	for _, i := range acc.stringState.activeChoices {
+		if i >= len(completion.Choices) {
+			continue
+		}
 		toolCallCount := len(completion.Choices[i].Message.ToolCalls)
 		if toolCallCount > maxChatCompletionAccumulatorStructuralSlots-structuralSlots {
 			return false
 		}
 		structuralSlots += toolCallCount
-		toolCallCounts[i] = toolCallCount
+	}
+	if len(chunk.Choices) == 0 {
+		return true
+	}
+	// This fixed-size projection keeps duplicate choice deltas exact without a
+	// per-chunk map allocation. The aggregate slot limit bounds its stack cost.
+	var toolCallCounts [maxChatCompletionAccumulatorStructuralSlots]int
+	for _, i := range acc.stringState.activeChoices {
+		if i < len(completion.Choices) {
+			toolCallCounts[i] = len(completion.Choices[i].Message.ToolCalls)
+		}
 	}
 
 	chunkEntries := len(chunk.Choices)
@@ -478,14 +511,21 @@ func chatCompletionStructuralSlotsWithinLimit(completion *ChatCompletion, chunk 
 	return true
 }
 
-func addChatCompletionTextBytes(total int, completion *ChatCompletion) (int, bool) {
-	for i := range completion.Choices {
+func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int) (int, bool) {
+	completion := &acc.ChatCompletion
+	for _, i := range acc.stringState.activeChoices {
+		if i >= len(completion.Choices) {
+			continue
+		}
 		message := &completion.Choices[i].Message
 		if !addAccumulatorTextBytes(&total, message.Content) ||
 			!addAccumulatorTextBytes(&total, message.Refusal) {
 			return 0, false
 		}
-		for j := range message.ToolCalls {
+		for _, j := range acc.stringState.choices[i].activeToolCalls {
+			if j >= len(message.ToolCalls) {
+				continue
+			}
 			function := &message.ToolCalls[j].Function
 			if !addAccumulatorTextBytes(&total, function.Name) ||
 				!addAccumulatorTextBytes(&total, function.Arguments) {
@@ -514,7 +554,8 @@ func addChatCompletionChunkTextBytes(total int, chunk *ChatCompletionChunk) (int
 	return total, true
 }
 
-func addChatCompletionMetadataBytes(total int, completion *ChatCompletion) (int, bool) {
+func (acc *ChatCompletionAccumulator) addChatCompletionMetadataBytes(total int) (int, bool) {
+	completion := &acc.ChatCompletion
 	if !addAccumulatorMetadataBytes(&total, completion.ID) ||
 		!addAccumulatorMetadataBytes(&total, completion.Model) ||
 		!addAccumulatorMetadataBytes(&total, completion.SystemFingerprint) ||
@@ -522,13 +563,19 @@ func addChatCompletionMetadataBytes(total int, completion *ChatCompletion) (int,
 		!addAccumulatorMetadataBytes(&total, string(completion.ServiceTier)) {
 		return 0, false
 	}
-	for i := range completion.Choices {
+	for _, i := range acc.stringState.activeChoices {
+		if i >= len(completion.Choices) {
+			continue
+		}
 		choice := &completion.Choices[i]
 		if !addAccumulatorMetadataBytes(&total, choice.FinishReason) ||
 			!addAccumulatorMetadataBytes(&total, string(choice.Message.Role)) {
 			return 0, false
 		}
-		for j := range choice.Message.ToolCalls {
+		for _, j := range acc.stringState.choices[i].activeToolCalls {
+			if j >= len(choice.Message.ToolCalls) {
+				continue
+			}
 			toolCall := &choice.Message.ToolCalls[j]
 			if !addAccumulatorMetadataBytes(&total, toolCall.ID) ||
 				!addAccumulatorMetadataBytes(&total, toolCall.Type) {
@@ -550,8 +597,9 @@ const (
 	projectedToolType
 )
 
-func chatCompletionMetadataWithinLimit(completion *ChatCompletion, chunk *ChatCompletionChunk) bool {
-	total, ok := addChatCompletionMetadataBytes(0, completion)
+func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *ChatCompletionChunk) bool {
+	completion := &acc.ChatCompletion
+	total, ok := acc.addChatCompletionMetadataBytes(0)
 	if !ok {
 		return false
 	}
@@ -564,6 +612,10 @@ func chatCompletionMetadataWithinLimit(completion *ChatCompletion, chunk *ChatCo
 	delta += int64(len(chunk.ServiceTier) - len(completion.ServiceTier))
 	if chunk.Object == chunk.Object.Default() {
 		delta += int64(len(completion.Object.Default()) - len(completion.Object))
+	}
+	if len(chunk.Choices) == 0 {
+		projected := int64(total) + delta
+		return projected >= 0 && projected <= maxChatCompletionAccumulatorMetadataBytes
 	}
 
 	var finishReasonSeen [maxChatCompletionAccumulatorStructuralSlots / 64]uint64

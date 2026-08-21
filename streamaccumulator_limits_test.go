@@ -346,6 +346,67 @@ func TestAccumulatorBudgetsPublicLogprobReplacement(t *testing.T) {
 	}
 }
 
+func TestAccumulatorBudgetsNestedPublicLogprobMutation(t *testing.T) {
+	var acc openai.ChatCompletionAccumulator
+	initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+	initial.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "initial"}}
+	if !acc.AddChunk(initial) {
+		t.Fatal("AddChunk rejected the initial logprob")
+	}
+
+	logprobOverhead := int(unsafe.Sizeof(openai.ChatCompletionTokenLogprob{}))
+	byteCount := (testAccumulatorMaxLogprobBytes - logprobOverhead) / int(unsafe.Sizeof(int64(0)))
+	remaining := testAccumulatorMaxLogprobBytes - logprobOverhead - byteCount*int(unsafe.Sizeof(int64(0)))
+	acc.Choices[0].Logprobs.Content[0].Token = strings.Repeat("x", remaining)
+	acc.Choices[0].Logprobs.Content[0].Bytes = make([]int64, byteCount)
+
+	beyondLimit := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+	beyondLimit.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "x"}}
+	if acc.AddChunk(beyondLimit) {
+		t.Fatal("AddChunk accepted logprobs beyond a nested public mutation at the aggregate budget")
+	}
+	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
+		t.Fatalf("public logprobs changed after rejection: got %d, want 1", got)
+	}
+}
+
+func TestAccumulatorChargesOnlyClonedNestedLogprobStorage(t *testing.T) {
+	tests := []struct {
+		name string
+		set  func(*openai.ChatCompletionTokenLogprob)
+	}{
+		{
+			name: "bytes",
+			set: func(logprob *openai.ChatCompletionTokenLogprob) {
+				logprob.Bytes = make([]int64, 1, testAccumulatorMaxLogprobBytes/int(unsafe.Sizeof(int64(0))))
+			},
+		},
+		{
+			name: "top_logprobs",
+			set: func(logprob *openai.ChatCompletionTokenLogprob) {
+				logprob.TopLogprobs = make([]openai.ChatCompletionTokenLogprobTopLogprob, 1,
+					testAccumulatorMaxLogprobBytes/int(unsafe.Sizeof(openai.ChatCompletionTokenLogprobTopLogprob{})))
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			chunk := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+			chunk.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "token"}}
+			test.set(&chunk.Choices[0].Logprobs.Content[0])
+
+			var acc openai.ChatCompletionAccumulator
+			if !acc.AddChunk(chunk) {
+				t.Fatal("AddChunk charged nested spare capacity that the accumulator does not retain")
+			}
+			retained := acc.Choices[0].Logprobs.Content[0]
+			if cap(retained.Bytes) != len(retained.Bytes) || cap(retained.TopLogprobs) != len(retained.TopLogprobs) {
+				t.Fatal("accumulated logprob retained nested spare capacity")
+			}
+		})
+	}
+}
+
 func TestAccumulatorLogprobReconciliationIsAtomic(t *testing.T) {
 	var acc openai.ChatCompletionAccumulator
 	initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
@@ -534,6 +595,30 @@ func TestAccumulatorDetachesCapacityClippedLogprobBacking(t *testing.T) {
 				t.Fatalf("visible logprobs after detachment = %d, want %d", got, test.visible)
 			}
 		})
+	}
+}
+
+func TestAccumulatorDoesNotChargeHiddenLogprobsDroppedByDetachment(t *testing.T) {
+	logprobOverhead := 2 * int(unsafe.Sizeof(openai.ChatCompletionTokenLogprob{}))
+	initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+	initial.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{
+		{Token: strings.Repeat("x", testAccumulatorMaxLogprobBytes-logprobOverhead)},
+		{},
+	}
+
+	var acc openai.ChatCompletionAccumulator
+	if !acc.AddChunk(initial) {
+		t.Fatal("AddChunk rejected initial logprobs at the aggregate budget")
+	}
+	acc.Choices[0].Logprobs.Content = acc.Choices[0].Logprobs.Content[:0:1]
+
+	next := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+	next.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "replacement"}}
+	if !acc.AddChunk(next) {
+		t.Fatal("AddChunk charged hidden logprobs that detachment drops")
+	}
+	if got := acc.Choices[0].Logprobs.Content[0].Token; got != "replacement" {
+		t.Fatalf("retained token = %q, want replacement", got)
 	}
 }
 
