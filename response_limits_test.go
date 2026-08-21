@@ -113,14 +113,18 @@ func (b *contextResponseBody) closeCount() int {
 }
 
 type closeContextResponseBody struct {
-	ctx context.Context
-	err error
+	ctx    context.Context
+	reader io.Reader
+	err    error
 
 	closed             bool
 	contextDoneOnClose bool
 }
 
-func (b *closeContextResponseBody) Read([]byte) (int, error) {
+func (b *closeContextResponseBody) Read(p []byte) (int, error) {
+	if b.reader != nil {
+		return b.reader.Read(p)
+	}
 	return 0, io.EOF
 }
 
@@ -134,13 +138,19 @@ type closeContextResponseDoer struct {
 	ctx      context.Context
 	body     *closeContextResponseBody
 	closeErr error
+	status   int
+	contents string
 }
 
 func (d *closeContextResponseDoer) Do(req *http.Request) (*http.Response, error) {
 	d.ctx = req.Context()
-	d.body = &closeContextResponseBody{ctx: d.ctx, err: d.closeErr}
+	d.body = &closeContextResponseBody{ctx: d.ctx, reader: strings.NewReader(d.contents), err: d.closeErr}
+	status := d.status
+	if status == 0 {
+		status = http.StatusOK
+	}
 	return &http.Response{
-		StatusCode: http.StatusOK,
+		StatusCode: status,
 		Header:     http.Header{"Content-Type": {"application/json"}},
 		Body:       d.body,
 		Request:    req,
@@ -155,6 +165,37 @@ func newCloseContextResponseClient(closeErr error) (openai.Client, *closeContext
 		option.WithHTTPClient(doer),
 	)
 	return client, doer
+}
+
+type blockingCloseContextResponseBody struct {
+	ctx           context.Context
+	releaseClose  chan struct{}
+	closeFinished chan struct{}
+	closeOnce     sync.Once
+
+	contextDoneOnClose bool
+}
+
+func newBlockingCloseContextResponseBody(ctx context.Context) *blockingCloseContextResponseBody {
+	return &blockingCloseContextResponseBody{
+		ctx:           ctx,
+		releaseClose:  make(chan struct{}),
+		closeFinished: make(chan struct{}),
+	}
+}
+
+func (b *blockingCloseContextResponseBody) Read([]byte) (int, error) {
+	<-b.ctx.Done()
+	return 0, b.ctx.Err()
+}
+
+func (b *blockingCloseContextResponseBody) Close() error {
+	b.closeOnce.Do(func() {
+		b.contextDoneOnClose = b.ctx.Err() != nil
+		<-b.releaseClose
+		close(b.closeFinished)
+	})
+	return nil
 }
 
 type repeatedByteReader byte
@@ -486,6 +527,70 @@ func TestExecuteRawResponseClosesBodyBeforeCancelingAttemptContext(t *testing.T)
 	}
 }
 
+func TestExecuteRawReadAllRetainsAttemptContextUntilClose(t *testing.T) {
+	client, doer := newCloseContextResponseClient(nil)
+	doer.contents = `{}`
+
+	var raw *http.Response
+	if err := client.Get(context.Background(), "test", nil, &raw); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := io.ReadAll(raw.Body); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-doer.ctx.Done():
+		t.Fatal("attempt context canceled at EOF before raw body Close")
+	default:
+	}
+	if err := raw.Body.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if doer.body.contextDoneOnClose {
+		t.Fatal("attempt context was canceled before the underlying body was closed")
+	}
+	select {
+	case <-doer.ctx.Done():
+	case <-time.After(time.Second):
+		t.Fatal("attempt context was not canceled after raw body Close")
+	}
+}
+
+func TestExecuteClosesConsumedBodyBeforeCancelingAttemptContext(t *testing.T) {
+	for _, status := range []int{http.StatusOK, http.StatusBadRequest} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			closeErr := errors.New("close failed")
+			client, doer := newCloseContextResponseClient(closeErr)
+			doer.status = status
+			if status == http.StatusOK {
+				doer.contents = `{}`
+			} else {
+				doer.contents = `{"error":{"message":"bad"}}`
+			}
+
+			var response map[string]any
+			err := client.Get(context.Background(), "test", nil, &response)
+			if status == http.StatusOK && err != nil {
+				t.Fatal(err)
+			}
+			if status != http.StatusOK && err == nil {
+				t.Fatal("Get() error = nil, want API error")
+			}
+			if !doer.body.closed {
+				t.Fatal("consumed response body was not closed")
+			}
+			if doer.body.contextDoneOnClose {
+				t.Fatal("attempt context was canceled before the consumed body was closed")
+			}
+			select {
+			case <-doer.ctx.Done():
+			case <-time.After(time.Second):
+				t.Fatal("attempt context was not canceled after a failed body Close")
+			}
+		})
+	}
+}
+
 func TestExecuteClosesSuccessResponseWithoutOwner(t *testing.T) {
 	client, doer := newCloseContextResponseClient(nil)
 
@@ -617,6 +722,56 @@ func TestExecuteBodyTimeoutCancelsCustomTransportContext(t *testing.T) {
 				t.Fatal("response body timeout did not cancel the custom transport request context")
 			}
 		})
+	}
+}
+
+func TestExecuteBodyTimeoutDoesNotWaitForBlockingClose(t *testing.T) {
+	bodyReady := make(chan *blockingCloseContextResponseBody, 1)
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithMaxRetries(0),
+		option.WithResponseBodyTimeout(10*time.Millisecond),
+		option.WithHTTPClient(&http.Client{
+			Transport: responseRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+				body := newBlockingCloseContextResponseBody(req.Context())
+				bodyReady <- body
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     http.Header{"Content-Type": {"application/json"}},
+					Body:       body,
+					Request:    req,
+				}, nil
+			}),
+		}),
+	)
+	var response map[string]any
+	done := make(chan error, 1)
+	go func() {
+		done <- client.Get(context.Background(), "test", nil, &response)
+	}()
+	body := <-bodyReady
+
+	var err error
+	returnedBeforeRelease := false
+	select {
+	case err = <-done:
+		returnedBeforeRelease = true
+	case <-time.After(250 * time.Millisecond):
+	}
+	close(body.releaseClose)
+	if !returnedBeforeRelease {
+		err = <-done
+	}
+	<-body.closeFinished
+
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("Get() error = %v, want context deadline exceeded", err)
+	}
+	if !returnedBeforeRelease {
+		t.Fatal("response body timeout waited for blocking Close")
+	}
+	if !body.contextDoneOnClose {
+		t.Fatal("timeout Close began before the attempt context was canceled")
 	}
 }
 

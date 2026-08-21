@@ -1,6 +1,8 @@
 package openai_test
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -210,6 +212,80 @@ func TestWorkloadIdentity401Retry(t *testing.T) {
 
 	if provider.GetCallCount() != 2 {
 		t.Errorf("Provider call count = %d, want 2", provider.GetCallCount())
+	}
+}
+
+func TestWorkloadIdentity401RetryPreservesManagedGzip(t *testing.T) {
+	provider := &mockSubjectTokenProvider{
+		token:     "test-subject-token",
+		tokenType: auth.SubjectTokenTypeJWT,
+	}
+
+	var compressed bytes.Buffer
+	zw := gzip.NewWriter(&compressed)
+	if _, err := io.WriteString(zw, `{"ok":true}`); err != nil {
+		t.Fatal(err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	oauthCallCount := 0
+	apiCallCount := 0
+	mockHTTPClient := &http.Client{
+		Transport: &closureTransport{
+			fn: func(req *http.Request) (*http.Response, error) {
+				if strings.Contains(req.URL.String(), "/oauth/token") {
+					oauthCallCount++
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body: io.NopCloser(strings.NewReader(fmt.Sprintf(
+							`{"access_token":"token-%d","expires_in":3600}`,
+							oauthCallCount,
+						))),
+						Header: http.Header{"Content-Type": {"application/json"}},
+					}, nil
+				}
+
+				apiCallCount++
+				if got := req.Header.Get("Accept-Encoding"); got != "gzip" {
+					t.Errorf("API attempt %d Accept-Encoding = %q, want gzip", apiCallCount, got)
+				}
+				if apiCallCount == 1 {
+					return &http.Response{
+						StatusCode: http.StatusUnauthorized,
+						Body:       io.NopCloser(strings.NewReader(`{"error":{"message":"Unauthorized"}}`)),
+						Header:     http.Header{"Content-Type": {"application/json"}},
+					}, nil
+				}
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       io.NopCloser(bytes.NewReader(compressed.Bytes())),
+					Header: http.Header{
+						"Content-Type":     {"application/json"},
+						"Content-Encoding": {"gzip"},
+					},
+				}, nil
+			},
+		},
+	}
+
+	client := openai.NewClient(
+		option.WithWorkloadIdentity(testWorkloadIdentity(provider)),
+		option.WithHTTPClient(mockHTTPClient),
+		option.WithMaxRetries(0),
+	)
+	var response struct {
+		OK bool `json:"ok"`
+	}
+	if err := client.Get(context.Background(), "test", nil, &response); err != nil {
+		t.Fatal(err)
+	}
+	if !response.OK {
+		t.Fatal("decoded response OK = false, want true")
+	}
+	if apiCallCount != 2 {
+		t.Fatalf("API call count = %d, want 2", apiCallCount)
 	}
 }
 
