@@ -39,6 +39,15 @@ The checker and effective budget come from main, not the PR. Keep default CODEOW
   executable behavior changes, including malformed or attacker-controlled input
   where relevant. For docs, dependency, generated, CI, release, or policy-only
   changes, use artifact-appropriate validation.
+- Never treat a `bufio.Scanner` or other per-token size limit as an aggregate
+  resource bound when a parser accumulates multiple attacker-controlled
+  records. Enforce documented conservative limits on aggregate bytes and item
+  or line counts, and make tokenization honor the remaining byte budget so one
+  event cannot buffer another full-limit token before rejection. Keep safe
+  defaults when limits are caller-configurable, return a stable limit error,
+  and preserve cancellation, framing, EOF, and custom-decoder behavior. Add
+  fail-first regressions for cumulative records, exact-limit behavior, and
+  actual overflow.
 - Review the purpose, provenance, versions, and transitive effects of every
   dependency change across the root, `examples`, `api_reference`,
   `internal/testdata/consumer`, and `tools` modules. Inspect `go.mod`, `go.sum`,
