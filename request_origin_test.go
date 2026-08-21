@@ -33,6 +33,35 @@ func (f originTestHTTPDoer) Do(req *http.Request) (*http.Response, error) {
 	return f(req)
 }
 
+type originTestLegacyTransport struct {
+	started     chan struct{}
+	canceled    chan struct{}
+	release     chan struct{}
+	cancelCalls atomic.Int64
+}
+
+func (t *originTestLegacyTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	select {
+	case t.started <- struct{}{}:
+	default:
+	}
+	select {
+	case <-t.canceled:
+		return nil, context.Canceled
+	case <-t.release:
+		return nil, errors.New("test transport released")
+	}
+}
+
+func (t *originTestLegacyTransport) CancelRequest(*http.Request) {
+	t.cancelCalls.Add(1)
+	select {
+	case <-t.canceled:
+	default:
+		close(t.canceled)
+	}
+}
+
 type originTestCloseTrackingBody struct {
 	io.ReadCloser
 	closes *atomic.Int64
@@ -240,6 +269,77 @@ func TestClientEnforcesCredentialOriginAfterRouting(t *testing.T) {
 
 	for _, test := range originTestClientFactories() {
 		t.Run(test.name, func(t *testing.T) {
+			for _, routingField := range []struct {
+				name      string
+				wantError string
+				mutate    func(*http.Request)
+			}{
+				{
+					name:      "Host override",
+					wantError: "request URL origin must match the configured base URL",
+					mutate: func(req *http.Request) {
+						req.Host = "other.example"
+					},
+				},
+				{
+					name:      "opaque request target",
+					wantError: "request URL origin must match the configured base URL",
+					mutate: func(req *http.Request) {
+						req.URL.Opaque = "//other.example/capture"
+					},
+				},
+				{
+					name:      "precomputed request target",
+					wantError: "Request.RequestURI can't be set in client requests",
+					mutate: func(req *http.Request) {
+						req.RequestURI = "https://other.example/capture"
+					},
+				},
+			} {
+				t.Run("middleware "+routingField.name, func(t *testing.T) {
+					var transportCalls atomic.Int64
+					trusted := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+						transportCalls.Add(1)
+						_, _ = io.Copy(io.Discard, req.Body)
+						w.Header().Set("Content-Type", "application/json")
+						_, _ = io.WriteString(w, `{}`)
+					}))
+					defer trusted.Close()
+
+					client, err := test.newClient(trusted.URL, originTestHTTPClient(trusted.Client().Transport))
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					var sawCredential bool
+					var sawBody bool
+					err = client.Post(
+						context.Background(),
+						"responses",
+						strings.NewReader("private payload"),
+						nil,
+						option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+							sawCredential = req.Header.Get(test.credentialHeader) != ""
+							sawBody = req.Body != nil
+							routingField.mutate(req)
+							return next(req)
+						}),
+					)
+					if err == nil || !strings.Contains(err.Error(), routingField.wantError) {
+						t.Fatalf("Post() error = %v, want error containing %q", err, routingField.wantError)
+					}
+					if !sawCredential {
+						t.Fatalf("%s was not present before the transport origin check", test.credentialHeader)
+					}
+					if !sawBody {
+						t.Fatal("request body was not present before the transport origin check")
+					}
+					if got := transportCalls.Load(); got != 0 {
+						t.Fatalf("transport calls = %d, want 0", got)
+					}
+				})
+			}
+
 			t.Run("middleware reroute", func(t *testing.T) {
 				var trustedCalls atomic.Int64
 				trusted := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -430,57 +530,106 @@ func TestCustomHTTPDoerOriginRejectionClosesReplacementBody(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, test := range []struct {
-		name         string
-		cloneRequest bool
+	for _, routingField := range []struct {
+		name   string
+		mutate func(*http.Request)
 	}{
-		{name: "in-place replacement"},
-		{name: "cloned replacement", cloneRequest: true},
+		{name: "URL", mutate: func(req *http.Request) { req.URL = target }},
+		{name: "Host", mutate: func(req *http.Request) { req.Host = "other.example" }},
+		{name: "opaque target", mutate: func(req *http.Request) { req.URL.Opaque = "//other.example/capture" }},
+		{name: "precomputed target", mutate: func(req *http.Request) { req.RequestURI = "https://other.example/capture" }},
 	} {
-		t.Run(test.name, func(t *testing.T) {
-			var doerCalls, originalBodyCloses, replacementBodyCloses atomic.Int64
-			client := openai.NewClient(
-				option.WithBaseURL("https://trusted.example/v1"),
-				option.WithAPIKey("api-key"),
-				option.WithHTTPClient(originTestHTTPDoer(func(*http.Request) (*http.Response, error) {
-					doerCalls.Add(1)
-					return nil, errors.New("custom doer must not be called")
-				})),
-				option.WithMaxRetries(0),
-			)
-			err := client.Post(
-				context.Background(),
-				"responses",
-				originTestCloseTrackingBody{
-					ReadCloser: io.NopCloser(strings.NewReader("original body")),
-					closes:     &originalBodyCloses,
-				},
-				nil,
-				option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
-					if test.cloneRequest {
-						req = req.Clone(req.Context())
-					}
-					req.URL = target
-					req.Body = originTestCloseTrackingBody{
-						ReadCloser: io.NopCloser(strings.NewReader("replacement body")),
-						closes:     &replacementBodyCloses,
-					}
-					return next(req)
-				}),
-			)
-			if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
-				t.Fatalf("Post() error = %v, want configured-origin error", err)
-			}
-			if got := doerCalls.Load(); got != 0 {
-				t.Fatalf("custom doer calls = %d, want 0", got)
-			}
-			if got := originalBodyCloses.Load(); got != 1 {
-				t.Fatalf("original body closes = %d, want 1", got)
-			}
-			if got := replacementBodyCloses.Load(); got != 1 {
-				t.Fatalf("replacement body closes = %d, want 1", got)
-			}
-		})
+		for _, test := range []struct {
+			name         string
+			cloneRequest bool
+		}{
+			{name: "in-place replacement"},
+			{name: "cloned replacement", cloneRequest: true},
+		} {
+			t.Run(routingField.name+"/"+test.name, func(t *testing.T) {
+				var doerCalls, originalBodyCloses, replacementBodyCloses atomic.Int64
+				client := openai.NewClient(
+					option.WithBaseURL("https://trusted.example/v1"),
+					option.WithAPIKey("api-key"),
+					option.WithHTTPClient(originTestHTTPDoer(func(*http.Request) (*http.Response, error) {
+						doerCalls.Add(1)
+						return nil, errors.New("custom doer must not be called")
+					})),
+					option.WithMaxRetries(0),
+				)
+				err := client.Post(
+					context.Background(),
+					"responses",
+					originTestCloseTrackingBody{
+						ReadCloser: io.NopCloser(strings.NewReader("original body")),
+						closes:     &originalBodyCloses,
+					},
+					nil,
+					option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+						if test.cloneRequest {
+							req = req.Clone(req.Context())
+						}
+						routingField.mutate(req)
+						req.Body = originTestCloseTrackingBody{
+							ReadCloser: io.NopCloser(strings.NewReader("replacement body")),
+							closes:     &replacementBodyCloses,
+						}
+						return next(req)
+					}),
+				)
+				if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
+					t.Fatalf("Post() error = %v, want configured-origin error", err)
+				}
+				if got := doerCalls.Load(); got != 0 {
+					t.Fatalf("custom doer calls = %d, want 0", got)
+				}
+				if got := originalBodyCloses.Load(); got != 1 {
+					t.Fatalf("original body closes = %d, want 1", got)
+				}
+				if got := replacementBodyCloses.Load(); got != 1 {
+					t.Fatalf("replacement body closes = %d, want 1", got)
+				}
+			})
+		}
+	}
+}
+
+func TestClientPreservesLegacyTransportCancellation(t *testing.T) {
+	clearOriginTestEnvironment(t)
+
+	transport := &originTestLegacyTransport{
+		started:  make(chan struct{}, 1),
+		canceled: make(chan struct{}),
+		release:  make(chan struct{}),
+	}
+	t.Cleanup(func() { close(transport.release) })
+	client := openai.NewClient(
+		option.WithBaseURL("https://trusted.example/v1"),
+		option.WithAPIKey("api-key"),
+		option.WithHTTPClient(&http.Client{Transport: transport, Timeout: 50 * time.Millisecond}),
+		option.WithMaxRetries(0),
+	)
+
+	done := make(chan error, 1)
+	go func() {
+		done <- client.Get(context.Background(), "models", nil, nil)
+	}()
+
+	select {
+	case <-transport.started:
+	case <-time.After(time.Second):
+		t.Fatal("legacy transport did not receive the request")
+	}
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("Get() error = nil, want timeout error")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("Get() did not honor the HTTP client timeout")
+	}
+	if got := transport.cancelCalls.Load(); got != 1 {
+		t.Fatalf("CancelRequest() calls = %d, want 1", got)
 	}
 }
 

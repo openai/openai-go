@@ -573,7 +573,7 @@ func materializeReplayableBody(req *http.Request) ([]byte, error) {
 }
 
 func validateProviderRequest(req *http.Request, baseURL *url.URL) error {
-	if req.URL == nil || !requestconfig.SameOrigin(req.URL, baseURL) {
+	if !requestconfig.RequestHasOrigin(req, baseURL) {
 		return errors.New("bedrock: provider authentication cannot send credentials to an origin other than the configured provider URL")
 	}
 	return nil
