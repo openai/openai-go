@@ -484,6 +484,42 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 	}
 
 	for authName, auth := range authOptions {
+		t.Run(authName+"/rejects opaque custom doer", func(t *testing.T) {
+			redirectedCredential := ""
+			insecureTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				redirectedCredential = req.Header.Get(auth.header)
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"ok":true}`))
+			}))
+			t.Cleanup(insecureTarget.Close)
+
+			sourceRequests := 0
+			secureSource := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				sourceRequests++
+				http.Redirect(w, req, insecureTarget.URL+"/final", http.StatusTemporaryRedirect)
+			}))
+			t.Cleanup(secureSource.Close)
+
+			client := openai.NewClient(
+				WithEndpoint(secureSource.URL, "2024-10-21"),
+				auth.option(),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(delegatingHTTPDoer{client: secureSource.Client()}),
+			)
+
+			var res map[string]any
+			err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res)
+			if err == nil || !strings.Contains(err.Error(), "custom HTTP clients") {
+				t.Errorf("expected custom HTTP client error, got %v", err)
+			}
+			if sourceRequests != 0 {
+				t.Errorf("custom HTTP client reached redirect source %d times", sourceRequests)
+			}
+			if redirectedCredential != "" {
+				t.Errorf("credential reached insecure redirect target: %q", redirectedCredential)
+			}
+		})
+
 		t.Run(authName+"/rejects HTTPS downgrade", func(t *testing.T) {
 			redirectedCredential := ""
 			insecureTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -1002,6 +1038,14 @@ type roundTripFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req)
+}
+
+type delegatingHTTPDoer struct {
+	client *http.Client
+}
+
+func (d delegatingHTTPDoer) Do(req *http.Request) (*http.Response, error) {
+	return d.client.Do(req)
 }
 
 const azureVectorStoreResponse = `{

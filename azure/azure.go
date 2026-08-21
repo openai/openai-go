@@ -52,6 +52,8 @@ const (
 //
 // Authenticated endpoints must use HTTPS unless [WithUnsafeAllowHTTP] is also
 // configured for a loopback-only local development endpoint.
+// Azure authentication also requires custom networking to use an [*http.Client]
+// with a custom [http.RoundTripper] so every redirect destination can be checked.
 //
 // This function should be paired with a call to authenticate, like [azure.WithAPIKey] or [azure.WithTokenCredential], similar to this:
 //
@@ -268,18 +270,20 @@ func nonEmptyHeaderValues(header http.Header, name string) int {
 
 func withAzureCredentialMiddleware(authenticate option.Middleware) option.RequestOption {
 	return requestconfig.WithRequestFinalizer(func(rc *requestconfig.RequestConfig) error {
+		if rc.CustomHTTPDoer != nil {
+			return errors.New("azure: custom HTTP clients must use *http.Client with a custom RoundTripper so redirects can be validated")
+		}
+
 		// Redirects run inside http.Client.Do and don't re-enter SDK middleware.
 		// Clone the selected client so every redirect reaches this guard without
 		// mutating the caller's client or replacing its CheckRedirect policy.
-		if rc.CustomHTTPDoer == nil {
-			client := *rc.HTTPClient
-			transport := client.Transport
-			if transport == nil {
-				transport = http.DefaultTransport
-			}
-			client.Transport = azureCredentialTransport{base: transport}
-			rc.HTTPClient = &client
+		client := *rc.HTTPClient
+		transport := client.Transport
+		if transport == nil {
+			transport = http.DefaultTransport
 		}
+		client.Transport = azureCredentialTransport{base: transport}
+		rc.HTTPClient = &client
 
 		return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 			if err := validateAzureCredentialTransport(req); err != nil {
