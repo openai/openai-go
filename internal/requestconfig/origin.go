@@ -42,6 +42,20 @@ func SameOrigin(left, right *url.URL) bool {
 	return effectivePort(left) == effectivePort(right)
 }
 
+// RequestHasOrigin reports whether a client request retains the URL origin and
+// HTTP authority of the configured base URL. Client requests must not carry an
+// opaque or precomputed request target because those fields can override the
+// target written by net/http or a custom request doer.
+func RequestHasOrigin(req *http.Request, origin *url.URL) bool {
+	if req == nil || req.URL == nil || req.URL.Opaque != "" || req.RequestURI != "" || !SameOrigin(req.URL, origin) {
+		return false
+	}
+	if req.Host == "" {
+		return true
+	}
+	return SameOrigin(&url.URL{Scheme: req.URL.Scheme, Host: req.Host}, origin)
+}
+
 func effectivePort(value *url.URL) string {
 	if port := value.Port(); port != "" {
 		return port
@@ -61,10 +75,18 @@ type originTransport struct {
 }
 
 func (t originTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if req == nil || !SameOrigin(req.URL, t.origin) {
+	if !RequestHasOrigin(req, t.origin) {
 		return rejectRequestOrigin(req)
 	}
 	return t.next.RoundTrip(req)
+}
+
+// CancelRequest preserves the optional cancellation contract of legacy custom
+// transports. Modern transports cancel through the request context.
+func (t originTransport) CancelRequest(req *http.Request) {
+	if canceler, ok := t.next.(interface{ CancelRequest(*http.Request) }); ok {
+		canceler.CancelRequest(req)
+	}
 }
 
 func rejectRequestOrigin(req *http.Request) (*http.Response, error) {
@@ -83,7 +105,7 @@ func requestOriginError() error {
 
 func enforceRequestOrigin(origin *url.URL, next middlewareNext) middlewareNext {
 	return func(req *http.Request) (*http.Response, error) {
-		if req == nil || !SameOrigin(req.URL, origin) {
+		if !RequestHasOrigin(req, origin) {
 			return rejectRequestOrigin(req)
 		}
 		return next(req)
