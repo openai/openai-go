@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
+	"time"
 )
 
 type closeTrackingReadCloser struct {
@@ -172,6 +174,84 @@ func TestCloneDoesNotAliasMiddlewareSlice(t *testing.T) {
 	}
 	if &clone.Middlewares[0] == &cfg.Middlewares[0] {
 		t.Fatal("clone middleware aliases the original configuration")
+	}
+}
+
+func TestParseRetryAfterHeaderBoundsRemoteDelays(t *testing.T) {
+	tests := map[string]struct {
+		header http.Header
+		want   time.Duration
+		ok     bool
+	}{
+		"milliseconds": {
+			header: http.Header{"Retry-After-Ms": {"125"}},
+			want:   125 * time.Millisecond,
+			ok:     true,
+		},
+		"fractional seconds": {
+			header: http.Header{"Retry-After": {"0.25"}},
+			want:   250 * time.Millisecond,
+			ok:     true,
+		},
+		"huge value": {
+			header: http.Header{"Retry-After": {"1e100"}},
+			want:   DefaultMaxServerDelay,
+			ok:     true,
+		},
+		"finite scaling overflow": {
+			header: http.Header{"Retry-After": {"2" + strings.Repeat("0", 299)}},
+			want:   DefaultMaxServerDelay,
+			ok:     true,
+		},
+		"far future date": {
+			header: http.Header{"Retry-After": {time.Now().Add(time.Hour).UTC().Format(time.RFC1123)}},
+			want:   DefaultMaxServerDelay,
+			ok:     true,
+		},
+		"invalid preferred header falls back": {
+			header: http.Header{"Retry-After-Ms": {"-1"}, "Retry-After": {"0.5"}},
+			want:   500 * time.Millisecond,
+			ok:     true,
+		},
+		"zero": {
+			header: http.Header{"Retry-After": {"0"}},
+			ok:     true,
+		},
+		"zero milliseconds": {
+			header: http.Header{"Retry-After-Ms": {"0"}},
+			ok:     true,
+		},
+		"negative": {
+			header: http.Header{"Retry-After-Ms": {"-100"}},
+		},
+		"not a number": {
+			header: http.Header{"Retry-After": {"NaN"}},
+		},
+		"infinite": {
+			header: http.Header{"Retry-After": {"+Inf"}},
+		},
+		"past date": {
+			header: http.Header{"Retry-After": {time.Now().Add(-time.Hour).UTC().Format(time.RFC1123)}},
+			ok:     true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, ok := parseRetryAfterHeader(&http.Response{Header: test.header}, DefaultMaxServerDelay)
+			if ok != test.ok || got != test.want {
+				t.Fatalf("parseRetryAfterHeader() = (%s, %t), want (%s, %t)", got, ok, test.want, test.ok)
+			}
+		})
+	}
+}
+
+func TestWaitForDelayObservesCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if err := WaitForDelay(ctx, 0); !errors.Is(err, context.Canceled) {
+		t.Fatalf("WaitForDelay() error = %v, want %v", err, context.Canceled)
 	}
 }
 

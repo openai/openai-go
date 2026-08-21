@@ -176,6 +176,7 @@ stream := client.Responses.NewStreaming(ctx, responses.ResponseNewParams{
 		OfString: openai.String("Write a haiku about programming"),
 	},
 })
+defer func() { _ = stream.Close() }()
 
 for stream.Next() {
 	event := stream.Current()

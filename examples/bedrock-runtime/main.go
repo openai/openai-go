@@ -41,6 +41,7 @@ func main() {
 	}
 	if os.Getenv("BEDROCK_STREAM") == "1" {
 		stream := client.Chat.Completions.NewStreaming(ctx, params)
+		defer func() { _ = stream.Close() }()
 		for stream.Next() {
 			if choices := stream.Current().Choices; len(choices) != 0 {
 				fmt.Print(choices[0].Delta.Content)
