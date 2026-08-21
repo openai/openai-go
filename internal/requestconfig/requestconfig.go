@@ -489,7 +489,7 @@ func (b *bodyWithCancel) Read(p []byte) (n int, err error) {
 }
 
 func (b *bodyWithCancel) Close() error {
-	b.once.Do(b.stop)
+	defer b.once.Do(b.stop)
 	return b.rc.Close()
 }
 
@@ -663,15 +663,20 @@ func (cfg *RequestConfig) Execute() (err error) {
 	}
 
 	_, intoCustomResponseBody := cfg.ResponseBodyInto.(**http.Response)
-	if cfg.ResponseBodyInto == nil || intoCustomResponseBody {
-		// We aren't reading the response body in this scope, but whoever is will need the
-		// cancel func from the context to observe request timeouts.
-		// Put the cancel function in the response body so it can be handled elsewhere.
-		res.Body = &bodyWithCancel{rc: res.Body, stop: cancel}
+	if cfg.ResponseBodyInto != nil && !intoCustomResponseBody {
+		return cfg.handleSuccessResponse(res, cancel)
+	}
+
+	if cfg.ResponseInto == nil && !intoCustomResponseBody {
+		_ = res.Body.Close()
+		cancel()
 		return nil
 	}
 
-	return cfg.handleSuccessResponse(res, cancel)
+	// The caller owns this raw response. Keep its attempt context alive until
+	// reading finishes or Close releases the underlying body.
+	res.Body = &bodyWithCancel{rc: res.Body, stop: cancel}
+	return nil
 }
 
 func ExecuteNewRequest(ctx context.Context, method string, u string, body any, dst any, opts ...RequestOption) error {
