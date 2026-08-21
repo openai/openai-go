@@ -61,12 +61,15 @@ verify_installation() {
     const locked = lock.packages[`node_modules/${packageName}`];
     const wrapper = fs.realpathSync(path.join(modules, "@stdy", "cli", "steady.js"));
     const manifest = fs.realpathSync(require.resolve(`${packageName}/package.json`, { paths: [path.dirname(wrapper)] }));
+    if (!contains(modules, manifest) || path.basename(manifest) !== "package.json") {
+      throw new Error("unexpected package metadata location");
+    }
     const packageDirectory = path.dirname(manifest);
-    const metadata = require(manifest);
+    const metadata = JSON.parse(fs.readFileSync(manifest, "utf8"));
     executable = path.join(packageDirectory, "bin", binaryName);
     if (!locked || metadata.name !== packageName || metadata.version !== locked.version ||
         fs.realpathSync(modules) !== modules || !contains(modules, wrapper) ||
-        !contains(modules, manifest) || fs.realpathSync(executable) !== executable ||
+        fs.realpathSync(executable) !== executable ||
         !contains(packageDirectory, executable)) {
       throw new Error("unexpected package version or executable location");
     }

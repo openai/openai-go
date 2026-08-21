@@ -59,6 +59,36 @@ fi
 "$native" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Mock server rejected and replaced tampered existing native executable bytes"
 
+native_manifest="$(node -e '
+  const path = require("path");
+  const name = `@stdy/cli-${process.platform}-${process.arch}`;
+  process.stdout.write(require.resolve(`${name}/package.json`, {
+    paths: [path.resolve("scripts/steady/node_modules/@stdy/cli")],
+  }));
+')"
+node -e '
+  const fs = require("fs");
+  const path = require("path");
+  const manifest = process.argv[1];
+  const metadata = JSON.parse(fs.readFileSync(manifest, "utf8"));
+  metadata.exports = { "./package.json": "./metadata-payload.cjs" };
+  fs.writeFileSync(manifest, JSON.stringify(metadata));
+  fs.writeFileSync(path.join(path.dirname(manifest), "metadata-payload.cjs"),
+    `require("fs").writeFileSync(process.env.STEADY_TEST_MARKER, "executed");` +
+    `module.exports = ${JSON.stringify({ name: metadata.name, version: metadata.version })};\n`);
+' "$native_manifest"
+
+if ! STEADY_TEST_MARKER="$marker" npm_config_offline=true ./scripts/steady/install >"$temporary/output" 2>&1; then
+  echo "Steady installation failed to replace export-remapped package metadata" >&2
+  exit 1
+fi
+if [[ -e "$marker" ]]; then
+  echo "Steady package metadata executed code before package authentication" >&2
+  exit 1
+fi
+"$native" --version | grep -Fx "steady $expected_version" >/dev/null
+echo "Steady package metadata stays inert when package exports are remapped"
+
 printf '#!/bin/sh\nprintf "%%s" "$STEADY_TEST_SECRET" >"$STEADY_TEST_MARKER"\n' >"$native"
 chmod +x "$native"
 if ! STEADY_TEST_MARKER="$marker" STEADY_TEST_SECRET=synthetic-dry-run-credential \
