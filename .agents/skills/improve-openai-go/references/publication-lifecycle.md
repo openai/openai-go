@@ -12,7 +12,7 @@ Unless an approved host proves every boundary below, use audit/report-only mode.
 
 A trusted coordinator, not the model worker, owns this state machine:
 
-`claim -> authorize -> implement -> validate -> publish-branch -> establish-pr -> dispatch -> attest -> report-status -> steward -> finalize -> release`
+`sanitize-evidence -> claim -> authorize -> implement -> validate -> publish-branch -> establish-pr -> dispatch -> attest -> report-status -> steward -> finalize -> release`
 
 After a successful owned release, or after proving that a stale run cannot
 release anything, emit a read-only run report from the durable terminal record.
@@ -94,8 +94,15 @@ the service-run source head the PR base.
 Keep these components independently constrained:
 
 - **Coordinator:** owns state and read-only hosted inspection, but has no GitHub,
-  Actions, or Slack write credential. Assign hosted security scans to this
-  trusted read-only stage.
+  Actions, or Slack write credential. It owns the trusted evidence-intake gate:
+  before any hosted or source evidence enters model context, enforce explicit
+  byte and type limits, scan for credentials, customer data, and sensitive
+  metadata, and provide only a content-addressed, provenance-bound redacted
+  derivative. Scan immutable source before mounting it; withhold a matching
+  file rather than silently changing authoritative bytes. A source match,
+  detector failure, incomplete coverage, or ambiguous safe redaction stops the
+  run. Keep raw sensitive evidence outside every model-readable path and
+  diagnostic. Assign hosted security scans to this trusted read-only stage.
 - **Model worker:** receives no ambient repository, pull-request, Actions,
   Slack, cloud, SSH-agent, credential-helper, or broker credential. It may read
   and edit only its disposable workspace after authorization. Use a standalone
@@ -147,6 +154,19 @@ Keep these components independently constrained:
   and current epoch, then attaches that result to `published_sha` with a
   one-operation token. It stores the check-run ID and a stable external ID or
   status-context lookup key for idempotent recovery while the lease is held.
+- **PR-stewardship writer:** receives no model API credential and exposes only
+  pull-request discussion and review-request operations. It has no repository-
+  content, workflow-dispatch, checks/status, or Slack authority. Its broker
+  accepts one coordinator-signed mutation envelope and one short-lived token
+  for exactly one reply, resolution, or allowlisted review request. If the
+  hosting provider's pull-request scope also technically permits creation,
+  closure, or another mutation, retain the token inside a method allowlist that
+  makes those operations unreachable. Bind the sanitized payload, repository,
+  canonical pull-request identity, thread when applicable, `published_sha`,
+  idempotency key, and current epoch; recheck the live head and open state
+  immediately before credential issuance and mutation. Persist the returned
+  comment, thread state, or review-request identity before another operation.
+  Never give this token to the coordinator or model worker.
 - **Slack writer:** accepts only the allowlisted channel, pull-request URL,
   target message or thread, payload, idempotency key, and current epoch. It gets
   a short-lived credential inside one brokered, tracked mutation.
@@ -161,6 +181,7 @@ test for infrastructure the repository does not own.
 | Assertion | Reject or stop when | Required passing proof |
 | --- | --- | --- |
 | Fenced lifecycle | Lease is held elsewhere, the run lacks its acquisition receipt, epoch or owner is stale, ownership is lost, or an earlier write is in flight or outcome-unknown | Adversarial tests reject stale epochs at credential issuance and mutation, drain unknown operations, prohibit reassignment until terminal reconciliation, and prove that only `lease_acquired`, `lease_owner_id`, and the matching `fencing_epoch` can release the lease |
+| Sanitized model context | Hosted or source evidence reaches model context before bounded detection and redaction, raw sensitive material is model-readable, or safe sanitization is uncertain | Adversarial fixtures prove credentials and customer data never enter model input, source matches are withheld without rewriting authoritative bytes, and every scanner failure or ambiguity stops the run |
 | Uncredentialed model | Model or subprocess can reach a secret, helper, agent, external mutation tool, command network, or write broker | Environment/tool inspection is clean and the broker rejects model identity |
 | Authenticated allowlist | Artifact differs from the trusted work order in revisions, paths, kinds, modes, contract, or digest | Independent validation records both digests, epoch, and all accepted allowlist items before token issuance |
 | Authenticated ancestry | Candidate is not the approved linear descendant | Merge-base and no-unapproved-merge assertions pass |
@@ -171,9 +192,11 @@ test for infrastructure the repository does not own.
 | Separate dispatch | Publisher can dispatch, a mutable candidate ref selects executable workflow code, or PR-only checks did not analyze the published tree | Dispatcher records run IDs, authenticates the trusted wrapper revision, and accepts its signed receipt only when the platform-measured input tree matches `published_sha` |
 | No implicit execution | Publishing a branch or pull request can trigger candidate execution before brokered dispatch | Credential event semantics and trigger filters prove publication creates no workflow run; every check starts explicitly through the trusted wrapper |
 | Persisted pull request | A published new-improvement branch has no uniquely reconciled pull request, PR creation is outcome-unknown, or a retry could create a duplicate | `publish-branch` is persisted before a separately fenced `create-pr` mutation whose idempotency key and canonical result bind `published_sha`; restart tests recover branch-created/PR-missing and PR-created/result-missing states without an orphan or duplicate |
+| Open pull-request lifecycle | Recovery finds a closed or merged match, a service pull request is not open, or the canonical pull request closes before a later mutation | Closed or merged matches are terminal recovery evidence; only a separately authorized maintainer reopening a closed pull request permits a new lifecycle, and every post-publication writer rejects non-open state |
 | Trusted review instructions | Candidate content can supply or modify a mandatory review skill | Review receipts identify a trusted pre-candidate skill snapshot and immutable candidate blobs |
 | Isolated Git metadata | Model-writable Git state shares refs, config, hooks, objects, alternates, promisor storage, or hardlinked inodes with a trusted or reusable checkout | Filesystem and resolved-config proof confines an independent no-local/no-hardlinks clone and all Git inputs to the per-run sandbox |
 | Bounded candidate execution | Any candidate-controlled command lacks an explicit finite wall-clock, CPU, memory, PID, scratch-disk, or output budget, or descendants survive its terminal state | The trusted harness enforces every signed work-order budget, kills the complete process tree on exit or breach, and rejects over-limit results |
+| Separate PR stewardship | The coordinator, publisher, model, or another writer can reply, resolve, or request review, or one token authorizes multiple operations | The independently constrained PR-stewardship writer uses one envelope-bound token per operation, persists its remote identity, and cannot reach content, creation, dispatch, status, or Slack operations through its broker |
 | Target-bound status | A successful candidate check names a stale `target_head_sha` or cannot be found idempotently during recovery | Reporter rechecks the target immediately before success, binds the target in its mutation, stores the remote check identity, and relies on strict up-to-date protection or a merge queue after release |
 | Published-head stewardship | The canonical remote branch or pull-request head differs from `published_sha` before a post-publication mutation or finalization | Broker-side rechecks at credential issuance and mutation bind both heads to `published_sha`; any drift stops stewardship and restarts from a new work order without resolving feedback |
 | Review-ready | Required checks are absent, stale, pending, unexpectedly skipped, for another revision, or not attached to the candidate | Strict up-to-date protection or a merge queue gates integration; the reporter attaches every validated result to `published_sha`, the current target integration tree is green, and no actionable feedback remains |
@@ -212,23 +235,29 @@ Discard the branch token and durably record `published_sha`, the remote ref,
 artifact digest, and compare-and-swap result before attempting a pull-request
 mutation.
 
-The `establish-pr` transition then binds one canonical pull request to that
-persisted branch result. In new-improvement mode, first reconcile open and
-closed pull requests by repository, base, source repository and ref,
-`published_sha`, and a stable skill-owned marker. If none exists and the prior
-outcome is definitively absent, perform a separately fenced `create-pr`
-mutation. Its authenticated envelope, short-lived token, and deterministic
-idempotency key must bind the normalized title and body, target base, source
-ref, stable marker, and `published_sha`. Persist the returned node ID, number,
-URL, base, source ref, head SHA, and idempotency key. In service mode, reconcile
-and bind the authenticated existing pull request to the same fields instead of
-creating one. On restart after branch publication, repeat reconciliation before
-any retry: resume `create-pr` when creation is definitively absent, adopt the
-one exact matching result when creation succeeded but its response was lost,
-and stop on ambiguity. Never leave the lifecycle ready to dispatch with an
-orphan branch, and never create a second pull request to recover an unknown
-outcome. Prove separately that the pull-request mutation also cannot trigger
-implicit candidate execution.
+The `establish-pr` transition then binds one canonical open pull request to that
+persisted branch result. In new-improvement mode, first reconcile open, closed,
+and merged pull requests by repository, base, source repository and ref,
+`published_sha`, and a stable skill-owned marker. Adopt only the one exact open,
+unmerged match. Treat an exact closed or merged match as terminal recovery
+evidence: record it and stop without dispatch, stewardship, readiness claims,
+reopening, or a replacement pull request. Only after an authorized maintainer
+explicitly reopens a closed pull request may a new lifecycle reconsider it; a
+merged match remains terminal. If no match exists and the prior outcome is
+definitively absent, perform a separately fenced `create-pr` mutation. Its
+authenticated envelope, short-lived token, and deterministic idempotency key
+must bind the normalized title and body, target base, source ref, stable marker,
+and `published_sha`. Persist the returned node ID, number, URL, state, base,
+source ref, head SHA, and idempotency key. In service mode, require the
+authenticated existing pull request to be open and unmerged before binding it
+to the same fields instead of creating one. On restart after branch publication,
+repeat reconciliation before any retry: resume `create-pr` only when creation is
+definitively absent, adopt the one exact open matching result when creation
+succeeded but its response was lost, and stop on closed, merged, or ambiguous
+outcomes. Never leave the lifecycle ready to dispatch with an orphan or
+non-open pull request, and never create a second pull request to recover an
+unknown outcome. Prove separately that the pull-request mutation also cannot
+trigger implicit candidate execution.
 
 ## Dispatch and steward the exact published head
 
@@ -275,10 +304,11 @@ status reporting, review replies or resolutions, review requests, readiness
 announcements, and Slack messages--and again before finalization, read the
 canonical remote branch and pull-request head through the coordinator. Require
 both to equal `published_sha` and the pull request to match the persisted
-`establish-pr` identity. Bind those observations in the mutation envelope. The
-broker must recheck them immediately before credential issuance and mutation;
-if either head or identity drifts, perform no stewardship mutation, resolve no
-thread, and restart from a new work order.
+`establish-pr` identity, remain open, and remain unmerged. Bind those
+observations in the mutation envelope. The broker must recheck them immediately
+before credential issuance and mutation; if either head, identity, or state
+drifts, perform no stewardship mutation, resolve no thread, and restart from a
+new work order.
 
 The separately authorized status reporter must validate the signed receipt and
 re-read the target branch immediately before attaching a successful check run or
@@ -294,17 +324,20 @@ that cannot satisfy the merge gate. Treat wrapper checks that exist only on the
 trusted wrapper revision as execution receipts, never candidate status.
 
 Validate each review concern against `published_sha`. After publishing a real
-fix, reply with individualized exact-head evidence. Resolve only that addressed
-thread. Bind each reply or resolution to repository, pull-request number,
-GraphQL thread ID, operation type, normalized payload digest, `published_sha`,
-idempotency key, and current epoch in its authenticated mutation envelope.
-Recheck the live pull-request head as required above separately before the reply
-and before the resolution; a successful reply does not authorize a resolution
-after drift.
+fix, use only the PR-stewardship writer to reply with individualized exact-head
+evidence. Resolve only that addressed thread through a separate writer
+operation. Bind each reply or resolution to repository, pull-request number,
+GraphQL thread ID, operation type, normalized sanitized payload digest,
+`published_sha`, idempotency key, and current epoch in its authenticated
+mutation envelope. Recheck the live pull-request head and open state as required
+above separately before the reply and before the resolution; a successful reply
+does not authorize a resolution after drift.
 Leave disputed, blocked, informational, unvalidated, and unfixed concerns open.
 
 Do not claim green or review-ready until every required push and dispatched
 PR-only check succeeds on `published_sha` and no actionable feedback remains.
+Send any review request only through a distinct PR-stewardship writer operation
+whose allowlist names the established SDK reviewer or team.
 Never merge automatically.
 
 For `#sdk-reviews`, reuse the retained thread reference or successfully search
