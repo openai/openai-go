@@ -2,13 +2,17 @@ package openai
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
+
+const maxPollInterval = time.Duration(1<<63 - 1)
 
 func mkPollingOptions(pollIntervalMs int) []option.RequestOption {
 	options := []option.RequestOption{option.WithHeader("X-Stainless-Poll-Helper", "true")}
@@ -18,17 +22,46 @@ func mkPollingOptions(pollIntervalMs int) []option.RequestOption {
 	return options
 }
 
-func getPollInterval(raw *http.Response) (ms int) {
-	if ms, err := strconv.Atoi(raw.Header.Get("openai-poll-after-ms")); err == nil {
-		return ms
+func getPollInterval(raw *http.Response) time.Duration {
+	const defaultPollInterval = time.Second
+	if raw == nil {
+		return defaultPollInterval
 	}
-	return 1000
+
+	ms, err := strconv.ParseInt(raw.Header.Get("openai-poll-after-ms"), 10, 64)
+	if err != nil {
+		if errors.Is(err, strconv.ErrRange) && ms > 0 {
+			return requestconfig.DefaultMaxServerDelay
+		}
+		return defaultPollInterval
+	}
+	if ms <= 0 {
+		return defaultPollInterval
+	}
+
+	maxServerMilliseconds := int64(requestconfig.DefaultMaxServerDelay / time.Millisecond)
+	return time.Duration(min(ms, maxServerMilliseconds)) * time.Millisecond
+}
+
+func pollInterval(pollIntervalMs int, raw *http.Response) time.Duration {
+	if pollIntervalMs <= 0 {
+		return getPollInterval(raw)
+	}
+
+	ms := int64(pollIntervalMs)
+	if ms > int64(maxPollInterval/time.Millisecond) {
+		return maxPollInterval
+	}
+	return time.Duration(ms) * time.Millisecond
 }
 
 // PollStatus waits until a VectorStoreFile is no longer in an incomplete state and returns it.
 // Pass 0 as pollIntervalMs to use the default polling interval of 1 second.
+// Server-suggested intervals are limited to 8 seconds; pass a positive value to
+// explicitly use a longer interval.
 func (r *VectorStoreFileService) PollStatus(ctx context.Context, vectorStoreID string, fileID string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFile, error) {
 	var raw *http.Response
+	var interval time.Duration
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
 	opts = append(opts, option.WithResponseInto(&raw))
 	for {
@@ -39,10 +72,12 @@ func (r *VectorStoreFileService) PollStatus(ctx context.Context, vectorStoreID s
 
 		switch file.Status {
 		case VectorStoreFileStatusInProgress:
-			if pollIntervalMs <= 0 {
-				pollIntervalMs = getPollInterval(raw)
+			if interval == 0 {
+				interval = pollInterval(pollIntervalMs, raw)
 			}
-			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
+			if err := requestconfig.WaitForDelay(ctx, interval); err != nil {
+				return nil, err
+			}
 		case VectorStoreFileStatusCancelled,
 			VectorStoreFileStatusCompleted,
 			VectorStoreFileStatusFailed:
@@ -50,20 +85,16 @@ func (r *VectorStoreFileService) PollStatus(ctx context.Context, vectorStoreID s
 		default:
 			return nil, fmt.Errorf("invalid vector store file status during polling: received %s", file.Status)
 		}
-
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-
-		}
 	}
 }
 
 // PollStatus waits until a BetaVectorStoreFileBatch is no longer in an incomplete state and returns it.
 // Pass 0 as pollIntervalMs to use the default polling interval of 1 second.
+// Server-suggested intervals are limited to 8 seconds; pass a positive value to
+// explicitly use a longer interval.
 func (r *VectorStoreFileBatchService) PollStatus(ctx context.Context, vectorStoreID string, batchID string, pollIntervalMs int, opts ...option.RequestOption) (*VectorStoreFileBatch, error) {
 	var raw *http.Response
+	var interval time.Duration
 	opts = append(opts, option.WithResponseInto(&raw))
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
 	for {
@@ -74,10 +105,12 @@ func (r *VectorStoreFileBatchService) PollStatus(ctx context.Context, vectorStor
 
 		switch batch.Status {
 		case VectorStoreFileBatchStatusInProgress:
-			if pollIntervalMs <= 0 {
-				pollIntervalMs = getPollInterval(raw)
+			if interval == 0 {
+				interval = pollInterval(pollIntervalMs, raw)
 			}
-			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
+			if err := requestconfig.WaitForDelay(ctx, interval); err != nil {
+				return nil, err
+			}
 		case VectorStoreFileBatchStatusCancelled,
 			VectorStoreFileBatchStatusCompleted,
 			VectorStoreFileBatchStatusFailed:
@@ -85,22 +118,19 @@ func (r *VectorStoreFileBatchService) PollStatus(ctx context.Context, vectorStor
 		default:
 			return nil, fmt.Errorf("invalid vector store file batch status during polling: received %s", batch.Status)
 		}
-
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
 	}
 }
 
 // PollStatus waits until a VectorStoreFile is no longer in an incomplete state and returns it.
 // Pass 0 as pollIntervalMs to use the default polling interval of 1 second.
+// Server-suggested intervals are limited to 8 seconds; pass a positive value to
+// explicitly use a longer interval.
 //
 // Deprecated: The Sora API is scheduled to permanently shut down on September 24,
 // 2026.
 func (r *VideoService) PollStatus(ctx context.Context, videoID string, pollIntervalMs int, opts ...option.RequestOption) (*Video, error) {
 	var raw *http.Response
+	var interval time.Duration
 	opts = append(opts, mkPollingOptions(pollIntervalMs)...)
 	opts = append(opts, option.WithResponseInto(&raw))
 	for {
@@ -111,22 +141,17 @@ func (r *VideoService) PollStatus(ctx context.Context, videoID string, pollInter
 
 		switch video.Status {
 		case VideoStatusQueued, VideoStatusInProgress:
-			if pollIntervalMs <= 0 {
-				pollIntervalMs = getPollInterval(raw)
+			if interval == 0 {
+				interval = pollInterval(pollIntervalMs, raw)
 			}
-			time.Sleep(time.Duration(pollIntervalMs) * time.Millisecond)
+			if err := requestconfig.WaitForDelay(ctx, interval); err != nil {
+				return nil, err
+			}
 		case VideoStatusCompleted,
 			VideoStatusFailed:
 			return video, nil
 		default:
 			return nil, fmt.Errorf("invalid video status during polling: received %s", video.Status)
-		}
-
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-
 		}
 	}
 }
