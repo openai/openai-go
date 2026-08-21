@@ -193,6 +193,10 @@ func (s RequestOptionFunc) Apply(r *RequestConfig) error    { return s(r) }
 func (s PreRequestOptionFunc) Apply(r *RequestConfig) error { return s(r) }
 
 func NewRequestConfig(ctx context.Context, method string, u string, body any, dst any, opts ...RequestOption) (*RequestConfig, error) {
+	if err := validateRequestReference(u); err != nil {
+		return nil, err
+	}
+
 	var reader io.Reader
 
 	contentType := "application/json"
@@ -606,9 +610,15 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 	}
 
-	handler := cfg.HTTPClient.Do
+	client := *cfg.HTTPClient
+	transport := client.Transport
+	if transport == nil {
+		transport = http.DefaultTransport
+	}
+	client.Transport = originTransport{origin: cfg.BaseURL, next: transport}
+	handler := client.Do
 	if cfg.CustomHTTPDoer != nil {
-		handler = cfg.CustomHTTPDoer.Do
+		handler = enforceRequestOrigin(cfg.BaseURL, cfg.CustomHTTPDoer.Do)
 	}
 	for i := len(cfg.Middlewares) - 1; i >= 0; i -= 1 {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
@@ -639,9 +649,15 @@ func (cfg *RequestConfig) Execute() (err error) {
 			req.Header.Set("X-Stainless-Retry-Count", strconv.Itoa(retryCount))
 		}
 
+		attemptBody := req.Body
 		res, err = handler(req)
-		if err != nil && req.Body != nil {
-			_ = req.Body.Close()
+		if err != nil {
+			if req.Body != nil {
+				_ = req.Body.Close()
+			}
+			if attemptBody != nil {
+				_ = attemptBody.Close()
+			}
 		}
 		if ctx != nil && ctx.Err() != nil {
 			return ctx.Err()

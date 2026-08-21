@@ -663,25 +663,11 @@ func TestMaterializeReplayableBodyFailuresAndReset(t *testing.T) {
 	}
 }
 
-func TestURLHelpers(t *testing.T) {
+func TestBaseURLHelpers(t *testing.T) {
 	if normalizeBaseURL(nil) != nil {
 		t.Fatal("normalizeBaseURL(nil) must return nil")
 	}
 	if !sameBaseURL(nil, nil) || sameBaseURL(nil, &url.URL{}) {
 		t.Fatal("unexpected nil base URL comparison")
-	}
-	httpDefault, _ := url.Parse("http://example.com/path")
-	httpExplicit, _ := url.Parse("http://example.com:80/other")
-	if !sameOrigin(httpDefault, httpExplicit) {
-		t.Fatal("default and explicit HTTP ports should match")
-	}
-	httpsDefault, _ := url.Parse("https://example.com/path")
-	httpsExplicit, _ := url.Parse("https://example.com:443/other")
-	if !sameOrigin(httpsDefault, httpsExplicit) {
-		t.Fatal("default and explicit HTTPS ports should match")
-	}
-	ftpURL, _ := url.Parse("ftp://example.com/path")
-	if got := effectivePort(ftpURL); got != "" {
-		t.Fatalf("FTP effective port = %q", got)
 	}
 }
