@@ -211,8 +211,9 @@ func TestDecoderReportsDefaultLineLimit(t *testing.T) {
 
 func TestDecoderAllowsLineAtByteLimit(t *testing.T) {
 	for name, body := range map[string]string{
-		"LF":   "data: x\n\n",
-		"CRLF": "data: x\r\n\r\n",
+		"LF":          "data: x\n\n",
+		"CRLF":        "data: x\r\n\r\n",
+		"terminal CR": "data: x\n\r",
 	} {
 		t.Run(name, func(t *testing.T) {
 			decoder := NewDecoderWithOptions(&http.Response{
@@ -227,6 +228,20 @@ func TestDecoderAllowsLineAtByteLimit(t *testing.T) {
 				t.Fatalf("event data = %q, want %q", got, want)
 			}
 		})
+	}
+}
+
+func TestDecoderDispatchesEventWithTerminalCRDelimiter(t *testing.T) {
+	decoder := NewDecoder(&http.Response{
+		Header: http.Header{"Content-Type": []string{"text/event-stream"}},
+		Body:   io.NopCloser(strings.NewReader("data: {\"value\":\"ok\"}\n\r")),
+	})
+
+	if !decoder.Next() {
+		t.Fatalf("decoder stopped before event with terminal CR delimiter: %v", decoder.Err())
+	}
+	if got, want := string(decoder.Event().Data), "{\"value\":\"ok\"}\n"; got != want {
+		t.Fatalf("event data = %q, want %q", got, want)
 	}
 }
 

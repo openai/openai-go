@@ -149,6 +149,9 @@ func (s *eventStreamDecoder) scanLines(data []byte, atEOF bool) (advance int, to
 	}
 
 	if atEOF {
+		if isEventDelimiter(data) {
+			return bufio.ScanLines(data, atEOF)
+		}
 		if len(data) > s.remainingBytes {
 			return 0, nil, s.eventTooLargeError()
 		}
