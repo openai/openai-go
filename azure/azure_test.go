@@ -3,6 +3,7 @@ package azure
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -16,6 +17,22 @@ import (
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/option"
 )
+
+var invalidJSONRouteBodies = []struct {
+	name      string
+	body      []byte
+	wantError string
+}{
+	{name: "nil body", wantError: "requires a JSON request body"},
+	{name: "empty body", body: []byte{}, wantError: "could not parse JSON request body"},
+	{name: "null", body: []byte("null"), wantError: "requires a non-empty model field"},
+	{name: "empty object", body: []byte("{}"), wantError: "requires a non-empty model field"},
+	{name: "missing model", body: []byte(`{"input":"hello"}`), wantError: "requires a non-empty model field"},
+	{name: "empty model", body: []byte(`{"model":""}`), wantError: "requires a non-empty model field"},
+	{name: "scalar", body: []byte(`"gpt-4"`), wantError: "could not parse JSON request body"},
+	{name: "wrong model type", body: []byte(`{"model":123}`), wantError: "could not parse JSON request body"},
+	{name: "malformed", body: []byte(`{"model":`), wantError: "could not parse JSON request body"},
+}
 
 func TestJSONRoute(t *testing.T) {
 	chatCompletionParams := openai.ChatCompletionNewParams{
@@ -46,6 +63,150 @@ func TestJSONRoute(t *testing.T) {
 
 	if replacementPath != "/openai/deployments/arbitraryDeployment/chat/completions" {
 		t.Fatalf("replacementpath didn't match: %s", replacementPath)
+	}
+
+	restoredBody, err := io.ReadAll(req.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(restoredBody, serializedBytes) {
+		t.Fatalf("restored body = %q, want %q", restoredBody, serializedBytes)
+	}
+}
+
+func TestJSONRouteRejectsInvalidBodies(t *testing.T) {
+	for _, tc := range invalidJSONRouteBodies {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, "/chat/completions", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tc.body != nil {
+				req.Body = io.NopCloser(bytes.NewReader(tc.body))
+			}
+
+			if _, err = getJSONRoute(req); err == nil {
+				t.Fatal("expected an error")
+			} else if !strings.Contains(err.Error(), tc.wantError) {
+				t.Fatalf("error = %q, want it to contain %q", err, tc.wantError)
+			}
+
+			if tc.body == nil {
+				return
+			}
+			restoredBody, err := io.ReadAll(req.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !bytes.Equal(restoredBody, tc.body) {
+				t.Fatalf("restored body = %q, want %q", restoredBody, tc.body)
+			}
+		})
+	}
+}
+
+func TestAzureJSONRoutesRejectInvalidBodiesBeforeTransport(t *testing.T) {
+	routes := []string{
+		"/completions",
+		"/chat/completions",
+		"/embeddings",
+		"/audio/speech",
+		"/images/generations",
+	}
+
+	transportCalls := 0
+	routingAttempts := 0
+	client := openai.NewClient(
+		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			routingAttempts++
+			return next(req)
+		}),
+		WithEndpoint("https://my-resource.openai.azure.com", "2024-10-21"),
+		WithAPIKey("azure-api-key"),
+		option.WithHTTPClient(&http.Client{
+			Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
+				transportCalls++
+				return nil, errors.New("unexpected transport call")
+			}),
+		}),
+	)
+
+	wantRoutingAttempts := 0
+	for _, route := range routes {
+		for _, tc := range invalidJSONRouteBodies {
+			t.Run(route+"/"+tc.name, func(t *testing.T) {
+				wantRoutingAttempts++
+				var body any
+				if tc.body != nil {
+					body = tc.body
+				}
+
+				err := client.Execute(context.Background(), http.MethodPost, route, body, nil)
+				if err == nil {
+					t.Fatal("expected an error")
+				}
+				if !strings.Contains(err.Error(), tc.wantError) {
+					t.Fatalf("error = %q, want it to contain %q", err, tc.wantError)
+				}
+				if transportCalls != 0 {
+					t.Fatalf("transport called %d times, want 0", transportCalls)
+				}
+				if routingAttempts != wantRoutingAttempts {
+					t.Fatalf("routing attempted %d times, want %d", routingAttempts, wantRoutingAttempts)
+				}
+			})
+		}
+	}
+}
+
+func TestAzureJSONRoutesPreserveValidBodyAndRewritePath(t *testing.T) {
+	routes := []string{
+		"/completions",
+		"/chat/completions",
+		"/embeddings",
+		"/audio/speech",
+		"/images/generations",
+	}
+	body := []byte("{\n  \"model\" : \"deployment-name\",\n  \"input\" : \"unchanged\"\n}\n")
+
+	for _, route := range routes {
+		t.Run(route, func(t *testing.T) {
+			transportCalls := 0
+			client := openai.NewClient(
+				WithEndpoint("https://my-resource.openai.azure.com", "2024-10-21"),
+				WithAPIKey("azure-api-key"),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(&http.Client{
+					Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+						transportCalls++
+						if got, want := req.URL.EscapedPath(), "/openai/deployments/deployment-name"+route; got != want {
+							t.Errorf("path = %q, want %q", got, want)
+						}
+						gotBody, err := io.ReadAll(req.Body)
+						if err != nil {
+							t.Fatal(err)
+						}
+						if !bytes.Equal(gotBody, body) {
+							t.Errorf("body = %q, want %q", gotBody, body)
+						}
+						return &http.Response{
+							StatusCode: http.StatusOK,
+							Header:     http.Header{"Content-Type": []string{"application/json"}},
+							Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+							Request:    req,
+						}, nil
+					}),
+				}),
+			)
+
+			var response map[string]any
+			if err := client.Execute(context.Background(), http.MethodPost, route, body, &response); err != nil {
+				t.Fatal(err)
+			}
+			if transportCalls != 1 {
+				t.Fatalf("transport called %d times, want 1", transportCalls)
+			}
+		})
 	}
 }
 

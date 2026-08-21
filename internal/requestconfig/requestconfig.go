@@ -740,25 +740,13 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 	if err != nil {
 		return nil
 	}
-	new := &RequestConfig{
-		MaxRetries:         cfg.MaxRetries,
-		RequestTimeout:     cfg.RequestTimeout,
-		Context:            ctx,
-		Request:            req,
-		BaseURL:            cfg.BaseURL,
-		HTTPClient:         cfg.HTTPClient,
-		Middlewares:        cfg.Middlewares,
-		APIKey:             cfg.APIKey,
-		AdminAPIKey:        cfg.AdminAPIKey,
-		Organization:       cfg.Organization,
-		Project:            cfg.Project,
-		WebhookSecret:      cfg.WebhookSecret,
-		finalizers:         append([]requestFinalizer(nil), cfg.finalizers...),
-		authHeaderOverride: cfg.authHeaderOverride,
-		authPreference:     cfg.authPreference,
-	}
+	clone := *cfg
+	clone.Context = ctx
+	clone.Request = req
+	clone.Middlewares = append([]middleware(nil), cfg.Middlewares...)
+	clone.finalizers = append([]requestFinalizer(nil), cfg.finalizers...)
 
-	return new
+	return &clone
 }
 
 func (cfg *RequestConfig) SetHeader(key, value string) {
