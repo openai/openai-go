@@ -112,6 +112,51 @@ func (b *contextResponseBody) closeCount() int {
 	return b.closes
 }
 
+type closeContextResponseBody struct {
+	ctx context.Context
+	err error
+
+	closed             bool
+	contextDoneOnClose bool
+}
+
+func (b *closeContextResponseBody) Read([]byte) (int, error) {
+	return 0, io.EOF
+}
+
+func (b *closeContextResponseBody) Close() error {
+	b.closed = true
+	b.contextDoneOnClose = b.ctx.Err() != nil
+	return b.err
+}
+
+type closeContextResponseDoer struct {
+	ctx      context.Context
+	body     *closeContextResponseBody
+	closeErr error
+}
+
+func (d *closeContextResponseDoer) Do(req *http.Request) (*http.Response, error) {
+	d.ctx = req.Context()
+	d.body = &closeContextResponseBody{ctx: d.ctx, err: d.closeErr}
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": {"application/json"}},
+		Body:       d.body,
+		Request:    req,
+	}, nil
+}
+
+func newCloseContextResponseClient(closeErr error) (openai.Client, *closeContextResponseDoer) {
+	doer := &closeContextResponseDoer{closeErr: closeErr}
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithMaxRetries(0),
+		option.WithHTTPClient(doer),
+	)
+	return client, doer
+}
+
 type repeatedByteReader byte
 
 func (b repeatedByteReader) Read(p []byte) (int, error) {
@@ -414,6 +459,86 @@ func TestExecuteRawResponseOwnsAttemptContextLifecycle(t *testing.T) {
 	case <-attemptCtx.Done():
 	case <-time.After(time.Second):
 		t.Fatal("raw response close did not end the attempt context lifecycle")
+	}
+}
+
+func TestExecuteRawResponseClosesBodyBeforeCancelingAttemptContext(t *testing.T) {
+	closeErr := errors.New("close failed")
+	client, doer := newCloseContextResponseClient(closeErr)
+
+	var raw *http.Response
+	if err := client.Get(context.Background(), "test", nil, &raw); err != nil {
+		t.Fatal(err)
+	}
+	if err := raw.Body.Close(); !errors.Is(err, closeErr) {
+		t.Fatalf("raw response Close() error = %v, want %v", err, closeErr)
+	}
+	if !doer.body.closed {
+		t.Fatal("raw response Close() did not close the underlying body")
+	}
+	if doer.body.contextDoneOnClose {
+		t.Fatal("attempt context was canceled before the underlying body was closed")
+	}
+	select {
+	case <-doer.ctx.Done():
+	case <-time.After(time.Second):
+		t.Fatal("attempt context was not canceled after a failed underlying Close")
+	}
+}
+
+func TestExecuteClosesSuccessResponseWithoutOwner(t *testing.T) {
+	client, doer := newCloseContextResponseClient(nil)
+
+	if err := client.Get(context.Background(), "test", nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	if !doer.body.closed {
+		t.Fatal("unowned success response body was not closed")
+	}
+	if doer.body.contextDoneOnClose {
+		t.Fatal("attempt context was canceled before the unowned body was closed")
+	}
+	select {
+	case <-doer.ctx.Done():
+	case <-time.After(time.Second):
+		t.Fatal("unowned success response did not end the attempt context lifecycle")
+	}
+}
+
+func TestExecuteResponseIntoOwnsSuccessBody(t *testing.T) {
+	client, doer := newCloseContextResponseClient(nil)
+
+	var raw *http.Response
+	if err := client.Get(
+		context.Background(),
+		"test",
+		nil,
+		nil,
+		option.WithResponseInto(&raw),
+	); err != nil {
+		t.Fatal(err)
+	}
+	if doer.body.closed {
+		t.Fatal("caller-owned response body was closed before handoff")
+	}
+	select {
+	case <-doer.ctx.Done():
+		t.Fatal("attempt context canceled before ResponseInto ownership ended")
+	default:
+	}
+	if err := raw.Body.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if !doer.body.closed {
+		t.Fatal("ResponseInto body Close() did not close the underlying body")
+	}
+	if doer.body.contextDoneOnClose {
+		t.Fatal("attempt context was canceled before the ResponseInto body was closed")
+	}
+	select {
+	case <-doer.ctx.Done():
+	case <-time.After(time.Second):
+		t.Fatal("ResponseInto body close did not end the attempt context lifecycle")
 	}
 }
 
