@@ -104,6 +104,21 @@ func WithMaxRetries(retries int) RequestOption {
 	})
 }
 
+// WithMaxRetryDelay returns a RequestOption that sets the maximum delay between
+// retry attempts. This bounds both server-directed retry delays and the client's
+// exponential backoff. The default maximum is 8 seconds.
+//
+// WithMaxRetryDelay panics when delay is not positive.
+func WithMaxRetryDelay(delay time.Duration) RequestOption {
+	if delay <= 0 {
+		panic("option: max retry delay must be positive")
+	}
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.MaxRetryDelay = delay
+		return nil
+	})
+}
+
 // WithHeader returns a RequestOption that sets the header value to the associated key. It overwrites
 // any value if there was one already present.
 func WithHeader(key, value string) RequestOption {
@@ -366,9 +381,16 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 	var initErr error
 
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		workloadIdentityAuth := requestconfig.NewProviderAuthOption("OpenAI", "option.WithWorkloadIdentity")
+		if err := workloadIdentityAuth.Apply(r); err != nil {
+			return err
+		}
 		r.SetAPIKey("")
 
 		r.Middlewares = append(r.Middlewares, func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
+			if !workloadIdentityAuth.Selected(r) {
+				return next(req)
+			}
 			initOnce.Do(func() {
 				wia, initErr = auth.NewWorkloadIdentityAuth(config)
 			})

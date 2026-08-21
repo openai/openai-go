@@ -22,6 +22,10 @@ import (
 	"github.com/openai/openai-go/v3/internal/apiquery"
 )
 
+// DefaultMaxServerDelay bounds server-directed retry and polling waits unless
+// the caller explicitly opts into a different retry limit.
+const DefaultMaxServerDelay = 8 * time.Second
+
 func getDefaultHeaders() map[string]string {
 	return map[string]string{
 		"User-Agent": fmt.Sprintf("OpenAI/Go %s", internal.PackageVersion),
@@ -151,10 +155,10 @@ func WithRequestFinalizer(finalize func(*RequestConfig) error) RequestOption {
 	return requestFinalizerOption{finalize: finalize}
 }
 
-type environmentDefaultsDisabledOption struct{}
+type environmentDefaultsDisabledOption []RequestOption
 
-func (environmentDefaultsDisabledOption) Apply(*RequestConfig) error {
-	return nil
+func (opts environmentDefaultsDisabledOption) Apply(cfg *RequestConfig) error {
+	return cfg.Apply(opts...)
 }
 
 // WithEnvironmentDefaultsDisabled marks a provider-owned client that must not
@@ -162,8 +166,8 @@ func (environmentDefaultsDisabledOption) Apply(*RequestConfig) error {
 // apply.
 //
 // This function is internal API and may change without notice.
-func WithEnvironmentDefaultsDisabled() RequestOption {
-	return environmentDefaultsDisabledOption{}
+func WithEnvironmentDefaultsDisabled(opts ...RequestOption) RequestOption {
+	return environmentDefaultsDisabledOption(append([]RequestOption(nil), opts...))
 }
 
 // EnvironmentDefaultsDisabled reports whether opts contains the internal
@@ -269,6 +273,7 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 	}
 	cfg := RequestConfig{
 		MaxRetries:                2,
+		MaxRetryDelay:             DefaultMaxServerDelay,
 		MaxResponseBodyBytes:      defaultMaxResponseBodyBytes,
 		MaxErrorResponseBodyBytes: defaultMaxErrorResponseBodyBytes,
 		ResponseBodyTimeout:       defaultResponseBodyTimeout,
@@ -323,31 +328,32 @@ type HTTPDoer interface {
 // Editing the variables inside RequestConfig directly is unstable api. Prefer
 // composing the RequestOption instead if possible.
 type RequestConfig struct {
-	MaxRetries                int
-	RequestTimeout            time.Duration
-	MaxResponseBodyBytes      int64
-	MaxErrorResponseBodyBytes int64
-	ResponseBodyTimeout       time.Duration
-	Context                   context.Context
-	Request                   *http.Request
-	BaseURL                   *url.URL
-	endpointSelector          string
-	endpointProvider          string
-	dataResidencyEndpoint     bool
+	MaxRetries                 int
+	MaxRetryDelay              time.Duration
+	RequestTimeout             time.Duration
+	MaxResponseBodyBytes       int64
+	MaxErrorResponseBodyBytes  int64
+	ResponseBodyTimeout        time.Duration
+	Context                    context.Context
+	Request                    *http.Request
+	BaseURL                    *url.URL
+	endpointSelector           string
+	endpointProvider           string
+	configuredProviderEndpoint string
+	dataResidencyEndpoint      bool
+	authentication             authenticationState
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
-	DefaultBaseURL     *url.URL
-	CustomHTTPDoer     HTTPDoer
-	HTTPClient         *http.Client
-	Middlewares        []middleware
-	APIKey             string
-	AdminAPIKey        string
-	Organization       string
-	Project            string
-	WebhookSecret      string
-	finalizers         []requestFinalizer
-	authHeaderOverride bool
-	authPreference     authCredentialPreference
+	DefaultBaseURL *url.URL
+	CustomHTTPDoer HTTPDoer
+	HTTPClient     *http.Client
+	Middlewares    []middleware
+	APIKey         string
+	AdminAPIKey    string
+	Organization   string
+	Project        string
+	WebhookSecret  string
+	finalizers     []requestFinalizer
 	// Configure which security scheme(s) should be enabled for this request
 	Security Security
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
@@ -406,9 +412,12 @@ func shouldRetry(req *http.Request, res *http.Response, err error) bool {
 		res.StatusCode >= http.StatusInternalServerError
 }
 
-func parseRetryAfterHeader(resp *http.Response) (time.Duration, bool) {
+func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (time.Duration, bool) {
 	if resp == nil {
 		return 0, false
+	}
+	if maxDelay <= 0 {
+		maxDelay = DefaultMaxServerDelay
 	}
 
 	type retryData struct {
@@ -451,10 +460,19 @@ func parseRetryAfterHeader(resp *http.Response) (time.Duration, bool) {
 			continue
 		}
 		if retryAfter, err := strconv.ParseFloat(v, 64); err == nil {
+			if math.IsNaN(retryAfter) || math.IsInf(retryAfter, 0) || retryAfter < 0 {
+				continue
+			}
+			if retryAfter >= float64(maxDelay)/float64(retry.units) {
+				return maxDelay, true
+			}
 			return time.Duration(retryAfter * float64(retry.units)), true
 		}
 		if d, ok := retry.custom(v); ok {
-			return d, true
+			if d <= 0 {
+				return 0, true
+			}
+			return min(d, maxDelay), true
 		}
 	}
 
@@ -488,21 +506,46 @@ func (b *closeOnceReadCloser) Close() error {
 	return b.err
 }
 
-func retryDelay(res *http.Response, retryCount int) time.Duration {
+func retryDelay(res *http.Response, retryCount int, maxDelay time.Duration) time.Duration {
+	if maxDelay <= 0 {
+		maxDelay = DefaultMaxServerDelay
+	}
+
 	// If the backend tells us to wait a certain amount of time, use that value
-	if retryAfterDelay, ok := parseRetryAfterHeader(res); ok {
-		return max(0, retryAfterDelay)
+	if retryAfterDelay, ok := parseRetryAfterHeader(res, maxDelay); ok {
+		return retryAfterDelay
 	}
 
-	maxDelay := 8 * time.Second
-	delay := time.Duration(0.5 * float64(time.Second) * math.Pow(2, float64(retryCount)))
-	if delay > maxDelay {
+	backoff := 0.5 * float64(time.Second) * math.Pow(2, float64(retryCount))
+	var delay time.Duration
+	if math.IsInf(backoff, 0) || backoff >= float64(maxDelay) {
 		delay = maxDelay
+	} else {
+		delay = time.Duration(backoff)
 	}
 
-	jitter := rand.Int63n(int64(delay / 4))
-	delay -= time.Duration(jitter)
+	if jitterRange := int64(delay / 4); jitterRange > 0 {
+		delay -= time.Duration(rand.Int63n(jitterRange))
+	}
 	return delay
+}
+
+// WaitForDelay waits for delay to elapse or for ctx to be cancelled, whichever
+// happens first. The timer is always released before returning.
+func WaitForDelay(ctx context.Context, delay time.Duration) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }
 
 func (cfg *RequestConfig) Execute() (err error) {
@@ -610,12 +653,9 @@ func (cfg *RequestConfig) Execute() (err error) {
 			_ = res.Body.Close()
 		}
 
-		select {
-		case <-ctx.Done():
-			ctxErr := ctx.Err()
+		if waitErr := WaitForDelay(ctx, retryDelay(res, retryCount, cfg.MaxRetryDelay)); waitErr != nil {
 			cancel()
-			return ctxErr
-		case <-time.After(retryDelay(res, retryCount)):
+			return waitErr
 		}
 		cancel()
 	}
@@ -683,41 +723,34 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 	clone.Request = req
 	clone.Middlewares = append([]middleware(nil), cfg.Middlewares...)
 	clone.finalizers = append([]requestFinalizer(nil), cfg.finalizers...)
+	clone.authentication = cfg.authentication.cloneAsInherited(&clone)
 
 	return &clone
 }
 
 func (cfg *RequestConfig) SetHeader(key, value string) {
 	cfg.Request.Header.Set(key, value)
-	if strings.EqualFold(key, "Authorization") {
-		cfg.authHeaderOverride = true
-	}
+	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) AddHeader(key, value string) {
 	cfg.Request.Header.Add(key, value)
-	if strings.EqualFold(key, "Authorization") {
-		cfg.authHeaderOverride = true
-	}
+	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) DelHeader(key string) {
 	cfg.Request.Header.Del(key)
-	if strings.EqualFold(key, "Authorization") {
-		cfg.authHeaderOverride = true
-	}
+	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) SetAPIKey(value string) {
 	cfg.APIKey = value
-	cfg.authHeaderOverride = false
-	cfg.authPreference = authCredentialPreferenceBearer
+	cfg.authentication.recordAPIKey()
 }
 
 func (cfg *RequestConfig) SetAdminAPIKey(value string) {
 	cfg.AdminAPIKey = value
-	cfg.authHeaderOverride = false
-	cfg.authPreference = authCredentialPreferenceAdmin
+	cfg.authentication.recordAdminAPIKey()
 }
 
 func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
@@ -750,6 +783,10 @@ func applyPreRequestOptions(cfg *RequestConfig, opts []RequestOption) error {
 				return err
 			}
 		case optionLayer:
+			if err := applyPreRequestOptions(cfg, opt); err != nil {
+				return err
+			}
+		case environmentDefaultsDisabledOption:
 			if err := applyPreRequestOptions(cfg, opt); err != nil {
 				return err
 			}
@@ -820,22 +857,22 @@ func WithAdminAPIKeyAuthSecurity() RequestOption {
 // auth schemes and has no endpoint-specific security preference.
 func WithBearerAuthPreference() RequestOption {
 	return RequestOptionFunc(func(r *RequestConfig) error {
-		r.authPreference = authCredentialPreferenceBearer
+		r.authentication.preference = authCredentialPreferenceBearer
 		return nil
 	})
 }
 
 func ApplySecurity(r RequestConfig) {
-	if r.authHeaderOverride {
+	if r.authentication.headerOverride {
 		return
 	}
 
-	if r.authPreference == authCredentialPreferenceBearer && r.Security.BearerAuth && r.APIKey != "" {
+	if r.authentication.preference == authCredentialPreferenceBearer && r.Security.BearerAuth && r.APIKey != "" {
 		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
 		return
 	}
 
-	if r.authPreference == authCredentialPreferenceAdmin && r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
+	if r.authentication.preference == authCredentialPreferenceAdmin && r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
 		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.AdminAPIKey))
 		return
 	}

@@ -13,6 +13,8 @@ import (
 
 // aliased to make [param.APIUnion] private when embedding
 type paramUnion = param.APIUnion
+
+// aliased to make [param.APIObject] private when embedding
 type paramObj = param.APIObject
 
 // AllModels also accepts any [string] or [ChatModel]
@@ -42,9 +44,6 @@ const (
 )
 
 type ChatModel = string
-type ResponsesModel = string
-
-// aliased to make [param.APIObject] private when embedding
 
 const (
 	ChatModelGPT5_6Sol                        ChatModel = "gpt-5.6-sol"
@@ -1201,6 +1200,7 @@ func (r *ResponseFormatTextParam) UnmarshalJSON(data []byte) error {
 }
 
 // ResponsesModel also accepts any [string] or [ChatModel]
+type ResponsesModel = string
 
 const (
 	ResponsesModelO1Pro                        ResponsesModel = "o1-pro"

@@ -87,8 +87,7 @@ func (cfg *RequestConfig) ownsSuccessResponseBody() bool {
 }
 
 func (cfg *RequestConfig) shouldManageGzip(req *http.Request) bool {
-	if cfg.CustomHTTPDoer != nil ||
-		req.Method == http.MethodHead ||
+	if req.Method == http.MethodHead ||
 		req.Header.Get("Accept-Encoding") != "" ||
 		req.Header.Get("Range") != "" {
 		return false
