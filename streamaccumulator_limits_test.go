@@ -309,8 +309,11 @@ func TestAccumulatorRejectsLogprobsBeyondBudgetWithoutMutation(t *testing.T) {
 	afterClearing := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
 	afterClearing.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "x"}}
 	acc.Choices[0].Logprobs.Content = acc.Choices[0].Logprobs.Content[:0]
-	if acc.AddChunk(afterClearing) {
-		t.Fatal("AddChunk ignored retained logprob backing after the public slice was truncated")
+	if !acc.AddChunk(afterClearing) {
+		t.Fatal("AddChunk did not release retained logprob backing after the public slice was truncated")
+	}
+	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
+		t.Fatalf("logprobs after truncation = %d, want 1", got)
 	}
 
 	acc.Choices[0].Logprobs.Content = nil
