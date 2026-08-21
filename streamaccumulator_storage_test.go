@@ -70,8 +70,8 @@ func TestAccumulatorReleasesClearedStringStorageBeforeNextChunk(t *testing.T) {
 			if !acc.AddChunk(test.initial) {
 				t.Fatal("AddChunk rejected the initial chunk")
 			}
-			if capacity := test.state(&acc).builder.Cap(); capacity < len(text) {
-				t.Fatalf("initial builder capacity: got %d, want at least %d", capacity, len(text))
+			if capacity := cap(test.state(&acc).buffer); capacity < len(text) {
+				t.Fatalf("initial buffer capacity: got %d, want at least %d", capacity, len(text))
 			}
 
 			*test.value(&acc) = ""
@@ -79,10 +79,37 @@ func TestAccumulatorReleasesClearedStringStorageBeforeNextChunk(t *testing.T) {
 				t.Fatal("AddChunk rejected the chunk after the public string was cleared")
 			}
 			state := test.state(&acc)
-			if state.builder.Cap() != 0 || state.published != "" {
-				t.Fatalf("cleared string storage was retained: capacity %d, published length %d", state.builder.Cap(), len(state.published))
+			if cap(state.buffer) != 0 || state.published != "" {
+				t.Fatalf("cleared string storage was retained: capacity %d, published length %d", cap(state.buffer), len(state.published))
 			}
 		})
+	}
+}
+
+func TestAccumulatorBoundsRetainedTextBufferCapacity(t *testing.T) {
+	const fragmentBytes = 1 << 10
+	fragment := strings.Repeat("x", fragmentBytes)
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{Content: fragment})
+
+	var acc ChatCompletionAccumulator
+	for range maxChatCompletionAccumulatorTextBytes / fragmentBytes {
+		if !acc.AddChunk(chunk) {
+			t.Fatal("AddChunk rejected text within the documented logical and retained-capacity budgets")
+		}
+	}
+	if got := len(acc.Choices[0].Message.Content); got != maxChatCompletionAccumulatorTextBytes {
+		t.Fatalf("content length = %d, want %d", got, maxChatCompletionAccumulatorTextBytes)
+	}
+	if got := cap(acc.stringState.choices[0].content.buffer); got > maxChatCompletionAccumulatorTextCapacity {
+		t.Fatalf("retained buffer capacity = %d, limit %d", got, maxChatCompletionAccumulatorTextCapacity)
+	}
+
+	capacity := cap(acc.stringState.choices[0].content.buffer)
+	if acc.AddChunk(chunk) {
+		t.Fatal("AddChunk accepted text beyond the documented logical budget")
+	}
+	if got := cap(acc.stringState.choices[0].content.buffer); got != capacity {
+		t.Fatalf("rejected chunk changed retained capacity from %d to %d", capacity, got)
 	}
 }
 
@@ -226,13 +253,56 @@ func TestAccumulatorBoundsLogprobReconciliationWork(t *testing.T) {
 	if !acc.AddChunk(chunk) {
 		t.Fatal("AddChunk rejected the initial logprob")
 	}
-	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - 6
+	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - 12
 	acc.Choices[0].Logprobs.Content = append([]ChatCompletionTokenLogprob(nil), acc.Choices[0].Logprobs.Content...)
 	if acc.AddChunk(ChatCompletionChunk{ID: chunk.ID}) {
-		t.Fatal("AddChunk accepted work beyond the logprob reconciliation budget")
+		t.Fatal("AddChunk accepted copy work beyond the logprob reconciliation budget")
 	}
 	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
 		t.Fatalf("rejected chunk changed logprobs to length %d, want 1", got)
+	}
+}
+
+func TestAccumulatorChargesAllLogprobReconciliationPasses(t *testing.T) {
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	chunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "initial"}}
+
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the initial logprob")
+	}
+	before := acc.reconciliationWork
+	acc.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{}
+	if !acc.AddChunk(ChatCompletionChunk{ID: chunk.ID}) {
+		t.Fatal("AddChunk rejected an empty whole-slice replacement")
+	}
+	const wantWork = 10 // six normal passes, two staged-slice passes, measurement, and sparse commit
+	if got := acc.reconciliationWork - before; got != wantWork {
+		t.Fatalf("reconciliation work = %d, want %d", got, wantWork)
+	}
+}
+
+func TestAccumulatorChargesPublicReplacementCopyWork(t *testing.T) {
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{Content: "initial"})
+	chunk.Model = "initial"
+
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the initial strings")
+	}
+	const replacementBytes = 1_024
+	acc.Choices[0].Message.Content = strings.Repeat("c", replacementBytes)
+	acc.Model = strings.Repeat("m", replacementBytes)
+	chunk.Choices = nil
+	chunk.Model = acc.Model
+	before := acc.reconciliationWork
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected supported public replacements")
+	}
+	const normalPasses = 6
+	wantWork := normalPasses + 2*replacementBytes
+	if got := acc.reconciliationWork - before; got != wantWork {
+		t.Fatalf("reconciliation work = %d, want %d", got, wantWork)
 	}
 }
 

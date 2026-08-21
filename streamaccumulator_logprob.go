@@ -1,7 +1,6 @@
 package openai
 
 import (
-	"math/bits"
 	"strings"
 	"unsafe"
 
@@ -14,11 +13,13 @@ type chatCompletionAccumulatorLogprobState struct {
 }
 
 type chatCompletionLogprobReconcilePlan struct {
-	state        chatCompletionAccumulatorLogprobState
-	detaches     []uint8
-	measured     [maxChatCompletionAccumulatorStructuralSlots / 64]uint64
-	contentBytes [maxChatCompletionAccumulatorStructuralSlots]int
-	refusalBytes [maxChatCompletionAccumulatorStructuralSlots]int
+	state    chatCompletionAccumulatorLogprobState
+	detaches []chatCompletionLogprobDetach
+}
+
+type chatCompletionLogprobDetach struct {
+	choice int
+	fields uint8
 }
 
 const (
@@ -168,12 +169,17 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 	}
 
 	plan.state = *state
+	if !addAccumulatorReconciliationWork(work, 2*len(acc.Choices)) {
+		return false, false
+	}
 	plan.state.choices = make([]chatCompletionChoiceLogprobState, len(acc.Choices))
 	copy(plan.state.choices, state.choices)
-	plan.detaches = make([]uint8, len(acc.Choices))
 
 	plan.state.bytes = 0
 	for _, i := range indices {
+		if !addAccumulatorReconciliationWork(work, 1) {
+			return false, false
+		}
 		if i >= len(acc.Choices) {
 			continue
 		}
@@ -194,17 +200,21 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 			!addAccumulatorLogprobBytes(&plan.state.bytes, refusal.bytes) {
 			return false, false
 		}
-		plan.measured[i/64] |= uint64(1) << (i % 64)
-		plan.contentBytes[i] = content.bytes
-		plan.refusalBytes[i] = refusal.bytes
 		choiceState := &plan.state.choices[i]
 		choiceState.content = content
 		choiceState.refusal = refusal
+		detaches := uint8(0)
 		if contentDetach {
-			plan.detaches[i] |= detachContentLogprobs
+			detaches |= detachContentLogprobs
 		}
 		if refusalDetach {
-			plan.detaches[i] |= detachRefusalLogprobs
+			detaches |= detachRefusalLogprobs
+		}
+		if detaches != 0 {
+			if !addAccumulatorReconciliationWork(work, 1) {
+				return false, false
+			}
+			plan.detaches = append(plan.detaches, chatCompletionLogprobDetach{choice: i, fields: detaches})
 		}
 	}
 	return true, true
@@ -221,12 +231,15 @@ func projectChatCompletionLogprobSlice(current chatCompletionLogprobSliceState, 
 
 	bytes := 0
 	retained := true
+	workPerVisit := 1
 	if detach {
 		retained = false
 		header.capacity = len(logprobs)
+		// The accepted commit clones the same visible graph after preflight.
+		workPerVisit++
 	}
 	if !addAccumulatorLogprobStorage(&bytes, header.capacity, int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))) ||
-		!addMeasuredChatCompletionLogprobData(&bytes, logprobs, retained, work) {
+		!addMeasuredChatCompletionLogprobData(&bytes, logprobs, retained, work, workPerVisit) {
 		return chatCompletionLogprobSliceState{}, false, false
 	}
 	if current.matches(logprobs) && bytes < current.bytes {
@@ -234,6 +247,9 @@ func projectChatCompletionLogprobSlice(current chatCompletionLogprobSliceState, 
 		// reslice has hidden. Only an outer replacement or deep detachment proves
 		// that storage has been released.
 		bytes = current.bytes
+	}
+	if detach && !addAccumulatorReconciliationWork(work, bytes) {
+		return chatCompletionLogprobSliceState{}, false, false
 	}
 	header.bytes = bytes
 	return header, detach, true
@@ -253,27 +269,16 @@ func (acc *ChatCompletionAccumulator) applyLogprobReconciliation(plan *chatCompl
 	if plan == nil {
 		return
 	}
-	for i, detaches := range plan.detaches {
-		logprobs := &acc.Choices[i].Logprobs
-		choiceState := &plan.state.choices[i]
-		if detaches&detachContentLogprobs != 0 {
+	for _, detach := range plan.detaches {
+		logprobs := &acc.Choices[detach.choice].Logprobs
+		choiceState := &plan.state.choices[detach.choice]
+		if detach.fields&detachContentLogprobs != 0 {
 			logprobs.Content = detachChatCompletionLogprobs(logprobs.Content)
 			setChatCompletionLogprobHeader(&choiceState.content, logprobs.Content)
 		}
-		if detaches&detachRefusalLogprobs != 0 {
+		if detach.fields&detachRefusalLogprobs != 0 {
 			logprobs.Refusal = detachChatCompletionLogprobs(logprobs.Refusal)
 			setChatCompletionLogprobHeader(&choiceState.refusal, logprobs.Refusal)
-		}
-	}
-	for word, measured := range plan.measured {
-		for measured != 0 {
-			bit := bits.TrailingZeros64(measured)
-			i := word*64 + bit
-			if i < len(plan.state.choices) {
-				plan.state.choices[i].content.bytes = plan.contentBytes[i]
-				plan.state.choices[i].refusal.bytes = plan.refusalBytes[i]
-			}
-			measured &^= uint64(1) << bit
 		}
 	}
 	acc.logprobState = plan.state
@@ -427,15 +432,15 @@ func setChatCompletionLogprobHeader(state *chatCompletionLogprobSliceState, logp
 }
 
 func addClonedChatCompletionLogprobData(total *int, logprobs []ChatCompletionTokenLogprob) bool {
-	return addMeasuredChatCompletionLogprobData(total, logprobs, false, nil)
+	return addMeasuredChatCompletionLogprobData(total, logprobs, false, nil, 0)
 }
 
-func addMeasuredChatCompletionLogprobData(total *int, logprobs []ChatCompletionTokenLogprob, retainCapacity bool, work *int) bool {
+func addMeasuredChatCompletionLogprobData(total *int, logprobs []ChatCompletionTokenLogprob, retainCapacity bool, work *int, workPerVisit int) bool {
 	if retainCapacity {
 		logprobs = logprobs[:cap(logprobs)]
 	}
 	for i := range logprobs {
-		if work != nil && !addAccumulatorReconciliationWork(work, 1) {
+		if work != nil && !addAccumulatorReconciliationWork(work, workPerVisit) {
 			return false
 		}
 		logprob := &logprobs[i]
@@ -448,7 +453,7 @@ func addMeasuredChatCompletionLogprobData(total *int, logprobs []ChatCompletionT
 		if !addAccumulatorLogprobBytes(total, len(logprob.Token)) ||
 			!addAccumulatorLogprobStorage(total, byteCount, int(unsafe.Sizeof(int64(0)))) ||
 			!addAccumulatorLogprobStorage(total, topLogprobCount, int(unsafe.Sizeof(ChatCompletionTokenLogprobTopLogprob{}))) ||
-			!addMeasuredChatCompletionLogprobMetadata(total, logprob.RawJSON(), logprob.JSON.ExtraFields, work,
+			!addMeasuredChatCompletionLogprobMetadata(total, logprob.RawJSON(), logprob.JSON.ExtraFields, work, workPerVisit,
 				logprob.JSON.Token, logprob.JSON.Bytes, logprob.JSON.Logprob, logprob.JSON.TopLogprobs) {
 			return false
 		}
@@ -457,7 +462,7 @@ func addMeasuredChatCompletionLogprobData(total *int, logprobs []ChatCompletionT
 			topLogprobs = topLogprobs[:cap(topLogprobs)]
 		}
 		for j := range topLogprobs {
-			if work != nil && !addAccumulatorReconciliationWork(work, 1) {
+			if work != nil && !addAccumulatorReconciliationWork(work, workPerVisit) {
 				return false
 			}
 			topLogprob := &topLogprobs[j]
@@ -467,7 +472,7 @@ func addMeasuredChatCompletionLogprobData(total *int, logprobs []ChatCompletionT
 			}
 			if !addAccumulatorLogprobBytes(total, len(topLogprob.Token)) ||
 				!addAccumulatorLogprobStorage(total, topLogprobByteCount, int(unsafe.Sizeof(int64(0)))) ||
-				!addMeasuredChatCompletionLogprobMetadata(total, topLogprob.RawJSON(), topLogprob.JSON.ExtraFields, work,
+				!addMeasuredChatCompletionLogprobMetadata(total, topLogprob.RawJSON(), topLogprob.JSON.ExtraFields, work, workPerVisit,
 					topLogprob.JSON.Token, topLogprob.JSON.Bytes, topLogprob.JSON.Logprob) {
 				return false
 			}
@@ -476,8 +481,8 @@ func addMeasuredChatCompletionLogprobData(total *int, logprobs []ChatCompletionT
 	return true
 }
 
-func addMeasuredChatCompletionLogprobMetadata(total *int, raw string, extraFields map[string]respjson.Field, work *int, fields ...respjson.Field) bool {
-	if work != nil && !addAccumulatorReconciliationWork(work, len(extraFields)) {
+func addMeasuredChatCompletionLogprobMetadata(total *int, raw string, extraFields map[string]respjson.Field, work *int, workPerVisit int, fields ...respjson.Field) bool {
+	if work != nil && !addAccumulatorReconciliationWork(work, workPerVisit*len(extraFields)) {
 		return false
 	}
 	return addChatCompletionLogprobMetadata(total, raw, extraFields, fields...)

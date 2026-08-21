@@ -1,7 +1,7 @@
 package openai
 
 import (
-	"strings"
+	"unsafe"
 
 	"github.com/openai/openai-go/v3/shared/constant"
 )
@@ -10,9 +10,11 @@ const (
 	maxChatCompletionAccumulatorChunks          = 100_000
 	maxChatCompletionAccumulatorStructuralSlots = 1_024
 	maxChatCompletionAccumulatorTextBytes       = 16 << 20
-	maxChatCompletionAccumulatorMetadataBytes   = 16 << 20
-	maxChatCompletionAccumulatorLogprobBytes    = 16 << 20
-	maxChatCompletionAccumulatorReconcileWork   = 800_000_000
+	// Deterministic doubling preserves capacity < 2*length for non-empty buffers.
+	maxChatCompletionAccumulatorTextCapacity  = 2 * maxChatCompletionAccumulatorTextBytes
+	maxChatCompletionAccumulatorMetadataBytes = 16 << 20
+	maxChatCompletionAccumulatorLogprobBytes  = 16 << 20
+	maxChatCompletionAccumulatorReconcileWork = 64_000_000
 	// Conservatively covers a non-empty map header and its first backing bucket.
 	chatCompletionAccumulatorMapOverheadBytes = 512
 )
@@ -44,7 +46,6 @@ type chatCompletionResponseState struct {
 }
 
 type chatCompletionAccumulatorStringState struct {
-	// Keep builders behind pointers because a non-zero strings.Builder must not be copied.
 	choices           []*chatCompletionChoiceStringState
 	activeChoices     []int
 	activeTools       int
@@ -72,7 +73,7 @@ type chatCompletionToolCallStringState struct {
 }
 
 type chatCompletionString struct {
-	builder   strings.Builder
+	buffer    []byte
 	published string
 }
 
@@ -91,8 +92,8 @@ const (
 // memory for untrusted streams, an accumulator accepts at most 100,000 chunks, 1,024
 // combined choice and tool-call slots, 16 MiB each of combined content and tool
 // function text, other retained string metadata, and aggregate retained log
-// probability data, and 800 million public-state reconciliation steps. A
-// rejected chunk does not modify the accumulator.
+// probability data, 32 MiB of retained text-buffer capacity, and 64 million
+// public-state reconciliation steps. A rejected chunk does not modify the accumulator.
 //
 // While accumulation is in progress, callers may replace or clear accumulated
 // top-level strings and string fields of choices and tool calls that the stream
@@ -147,14 +148,14 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 		return false
 	}
 
-	textBytes, ok := acc.addChatCompletionTextBytes(0)
+	textBytes, ok := acc.addChatCompletionTextBytes(0, &projectedReconciliationWork)
 	if !ok {
 		return false
 	}
 	if _, ok = addChatCompletionChunkTextBytes(textBytes, chunk); !ok {
 		return false
 	}
-	if !acc.chatCompletionMetadataWithinLimit(chunk) {
+	if !acc.chatCompletionMetadataWithinLimit(chunk, &projectedReconciliationWork) {
 		return false
 	}
 	var logprobPlan chatCompletionLogprobReconcilePlan
@@ -466,8 +467,15 @@ func (acc *chatCompletionString) append(current *string, fragment string) {
 		return
 	}
 	acc.reconcile(current)
-	_, _ = acc.builder.WriteString(fragment)
-	acc.published = acc.builder.String()
+	required := len(acc.buffer) + len(fragment)
+	if required > cap(acc.buffer) {
+		capacity := projectedAccumulatorTextCapacity(cap(acc.buffer), required)
+		grown := make([]byte, len(acc.buffer), capacity)
+		copy(grown, acc.buffer)
+		acc.buffer = grown
+	}
+	acc.buffer = append(acc.buffer, fragment...)
+	acc.published = accumulatorBufferString(acc.buffer)
 	*current = acc.published
 }
 
@@ -479,10 +487,29 @@ func (acc *chatCompletionString) reconcile(current *string) {
 
 	replacement := *current
 	acc.published = ""
-	acc.builder.Reset()
-	_, _ = acc.builder.WriteString(replacement)
-	acc.published = acc.builder.String()
+	acc.buffer = append(make([]byte, 0, len(replacement)), replacement...)
+	acc.published = accumulatorBufferString(acc.buffer)
 	*current = acc.published
+}
+
+func projectedAccumulatorTextCapacity(current int, required int) int {
+	capacity := max(1, current)
+	for capacity < required {
+		if capacity > maxChatCompletionAccumulatorTextBytes/2 {
+			return required
+		}
+		capacity *= 2
+	}
+	return capacity
+}
+
+func accumulatorBufferString(buffer []byte) string {
+	if len(buffer) == 0 {
+		return ""
+	}
+	// The accumulator only appends beyond the published length; it never mutates
+	// bytes visible through an earlier string value.
+	return unsafe.String(unsafe.SliceData(buffer), len(buffer))
 }
 
 func (acc *ChatCompletionAccumulator) chatCompletionStructuralSlotsWithinLimit(chunk *ChatCompletionChunk) bool {
@@ -563,29 +590,54 @@ func (acc *ChatCompletionAccumulator) chatCompletionStructuralSlotsWithinLimit(c
 	return true
 }
 
-func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int) (int, bool) {
+func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int, work *int) (int, bool) {
 	completion := &acc.ChatCompletion
+	capacity := 0
 	for _, i := range acc.stringState.activeChoices {
 		if i >= len(completion.Choices) {
 			continue
 		}
 		message := &completion.Choices[i].Message
+		choiceState := acc.stringState.choices[i]
 		if !addAccumulatorTextBytes(&total, message.Content) ||
-			!addAccumulatorTextBytes(&total, message.Refusal) {
+			!addAccumulatorTextBytes(&total, message.Refusal) ||
+			!addAccumulatorBufferReconciliationWork(work, message.Content, &choiceState.content) ||
+			!addAccumulatorBufferReconciliationWork(work, message.Refusal, &choiceState.refusal) {
 			return 0, false
 		}
-		for _, j := range acc.stringState.choices[i].activeToolCalls {
+		capacity += projectedAccumulatorBufferCapacity(message.Content, &choiceState.content)
+		capacity += projectedAccumulatorBufferCapacity(message.Refusal, &choiceState.refusal)
+		for _, j := range choiceState.activeToolCalls {
 			if j >= len(message.ToolCalls) {
 				continue
 			}
 			function := &message.ToolCalls[j].Function
+			toolState := choiceState.toolCalls[j]
 			if !addAccumulatorTextBytes(&total, function.Name) ||
-				!addAccumulatorTextBytes(&total, function.Arguments) {
+				!addAccumulatorTextBytes(&total, function.Arguments) ||
+				!addAccumulatorBufferReconciliationWork(work, function.Name, &toolState.name) ||
+				!addAccumulatorBufferReconciliationWork(work, function.Arguments, &toolState.arguments) {
 				return 0, false
 			}
+			capacity += projectedAccumulatorBufferCapacity(function.Name, &toolState.name)
+			capacity += projectedAccumulatorBufferCapacity(function.Arguments, &toolState.arguments)
 		}
 	}
-	return total, true
+	return total, capacity <= maxChatCompletionAccumulatorTextCapacity
+}
+
+func addAccumulatorBufferReconciliationWork(work *int, current string, state *chatCompletionString) bool {
+	if current == state.published {
+		return true
+	}
+	return addAccumulatorReconciliationWork(work, len(current))
+}
+
+func projectedAccumulatorBufferCapacity(current string, state *chatCompletionString) int {
+	if current != state.published {
+		return len(current)
+	}
+	return cap(state.buffer)
 }
 
 func addChatCompletionChunkTextBytes(total int, chunk *ChatCompletionChunk) (int, bool) {
@@ -606,13 +658,18 @@ func addChatCompletionChunkTextBytes(total int, chunk *ChatCompletionChunk) (int
 	return total, true
 }
 
-func (acc *ChatCompletionAccumulator) addChatCompletionMetadataBytes(total int) (int, bool) {
+func (acc *ChatCompletionAccumulator) addChatCompletionMetadataBytes(total int, work *int) (int, bool) {
 	completion := &acc.ChatCompletion
 	if !addAccumulatorMetadataBytes(&total, completion.ID) ||
 		!addAccumulatorMetadataBytes(&total, completion.Model) ||
 		!addAccumulatorMetadataBytes(&total, completion.SystemFingerprint) ||
 		!addAccumulatorMetadataBytes(&total, string(completion.Object)) ||
-		!addAccumulatorMetadataBytes(&total, string(completion.ServiceTier)) {
+		!addAccumulatorMetadataBytes(&total, string(completion.ServiceTier)) ||
+		!addAccumulatorStringReconciliationWork(work, completion.ID, acc.stringState.id) ||
+		!addAccumulatorStringReconciliationWork(work, completion.Model, acc.stringState.model) ||
+		!addAccumulatorStringReconciliationWork(work, completion.SystemFingerprint, acc.stringState.systemFingerprint) ||
+		!addAccumulatorStringReconciliationWork(work, completion.Object, acc.stringState.object) ||
+		!addAccumulatorStringReconciliationWork(work, completion.ServiceTier, acc.stringState.serviceTier) {
 		return 0, false
 	}
 	for _, i := range acc.stringState.activeChoices {
@@ -620,22 +677,36 @@ func (acc *ChatCompletionAccumulator) addChatCompletionMetadataBytes(total int) 
 			continue
 		}
 		choice := &completion.Choices[i]
+		choiceState := acc.stringState.choices[i]
 		if !addAccumulatorMetadataBytes(&total, choice.FinishReason) ||
-			!addAccumulatorMetadataBytes(&total, string(choice.Message.Role)) {
+			!addAccumulatorMetadataBytes(&total, string(choice.Message.Role)) ||
+			!addAccumulatorStringReconciliationWork(work, choice.FinishReason, choiceState.finishReason) ||
+			!addAccumulatorStringReconciliationWork(work, choice.Message.Role, choiceState.role) {
 			return 0, false
 		}
-		for _, j := range acc.stringState.choices[i].activeToolCalls {
+		for _, j := range choiceState.activeToolCalls {
 			if j >= len(choice.Message.ToolCalls) {
 				continue
 			}
 			toolCall := &choice.Message.ToolCalls[j]
+			toolState := choiceState.toolCalls[j]
 			if !addAccumulatorMetadataBytes(&total, toolCall.ID) ||
-				!addAccumulatorMetadataBytes(&total, toolCall.Type) {
+				!addAccumulatorMetadataBytes(&total, toolCall.Type) ||
+				!addAccumulatorStringReconciliationWork(work, toolCall.ID, toolState.id) ||
+				!addAccumulatorStringReconciliationWork(work, toolCall.Type, toolState.typeName) {
 				return 0, false
 			}
 		}
 	}
 	return total, true
+}
+
+func addAccumulatorStringReconciliationWork[T ~string](work *int, current T, published string) bool {
+	value := string(current)
+	if value == "" || accumulatorStringUsesPublishedBacking(value, published) {
+		return true
+	}
+	return addAccumulatorReconciliationWork(work, len(value))
 }
 
 type chatCompletionToolMetadataProjection struct {
@@ -649,9 +720,9 @@ const (
 	projectedToolType
 )
 
-func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *ChatCompletionChunk) bool {
+func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *ChatCompletionChunk, work *int) bool {
 	completion := &acc.ChatCompletion
-	total, ok := acc.addChatCompletionMetadataBytes(0)
+	total, ok := acc.addChatCompletionMetadataBytes(0, work)
 	if !ok {
 		return false
 	}
