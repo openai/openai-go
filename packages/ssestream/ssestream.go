@@ -83,13 +83,13 @@ func NewDecoderWithOptions(res *http.Response, options DecoderOptions) Decoder {
 	if maxScanTokenBytes < math.MaxInt {
 		maxScanTokenBytes++
 	}
-	scn := bufio.NewScanner(res.Body)
-	scn.Buffer(nil, maxScanTokenBytes)
 	decoder := &eventStreamDecoder{
 		rc:            res.Body,
 		maxEventBytes: options.MaxEventBytes,
 		maxEventLines: options.MaxEventLines,
 	}
+	scn := bufio.NewScanner(decoder)
+	scn.Buffer(nil, maxScanTokenBytes)
 	scn.Split(decoder.scanLines)
 	decoder.scn = scn
 	return decoder
@@ -137,6 +137,20 @@ type eventStreamDecoder struct {
 	maxEventBytes  int
 	maxEventLines  int
 	remainingBytes int
+}
+
+// Read prevents Scanner from fetching another full-sized token after earlier
+// lines consume most of the current event's byte budget. The extra byte lets
+// the split function identify framing or actual overflow at the boundary.
+func (s *eventStreamDecoder) Read(p []byte) (int, error) {
+	maxRead := s.remainingBytes
+	if maxRead < math.MaxInt {
+		maxRead++
+	}
+	if len(p) > maxRead {
+		p = p[:maxRead]
+	}
+	return s.rc.Read(p)
 }
 
 func (s *eventStreamDecoder) scanLines(data []byte, atEOF bool) (advance int, token []byte, err error) {
