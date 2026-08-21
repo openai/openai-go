@@ -142,7 +142,7 @@ func TestProviderAuthOptionsPreserveConfigurationLayers(t *testing.T) {
 	})
 }
 
-func TestClearInheritedOpenAICredentialsPreservesLayerConflicts(t *testing.T) {
+func TestClearInheritedAuthenticationPreservesLayerConflicts(t *testing.T) {
 	t.Run("inherited credentials are cleared", func(t *testing.T) {
 		cfg := RequestConfig{}
 		credentials := RequestOptionFunc(func(cfg *RequestConfig) error {
@@ -153,7 +153,7 @@ func TestClearInheritedOpenAICredentialsPreservesLayerConflicts(t *testing.T) {
 		if err := cfg.Apply(InheritedOptions(credentials)...); err != nil {
 			t.Fatal(err)
 		}
-		cfg.ClearInheritedOpenAICredentials()
+		cfg.ClearInheritedAuthentication()
 		if cfg.APIKey != "" || cfg.AdminAPIKey != "" {
 			t.Fatal("credentials were not cleared")
 		}
@@ -169,12 +169,49 @@ func TestClearInheritedOpenAICredentialsPreservesLayerConflicts(t *testing.T) {
 		t.Run(test.name+" in the current layer is preserved", func(t *testing.T) {
 			cfg := RequestConfig{}
 			test.set(&cfg)
-			cfg.ClearInheritedOpenAICredentials()
+			cfg.ClearInheritedAuthentication()
 			if cfg.APIKey == "" && cfg.AdminAPIKey == "" {
 				t.Fatal("same-layer credential was cleared")
 			}
 		})
 	}
+}
+
+func TestClearInheritedAuthenticationHandlesAuthorizationHeaderLayers(t *testing.T) {
+	newConfig := func(t *testing.T) RequestConfig {
+		t.Helper()
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://example.com", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return RequestConfig{Request: req}
+	}
+
+	t.Run("inherited header is cleared", func(t *testing.T) {
+		cfg := newConfig(t)
+		if err := cfg.Apply(InheritedOptions(RequestOptionFunc(func(cfg *RequestConfig) error {
+			cfg.SetHeader("Authorization", "Bearer inherited-token")
+			return nil
+		}))...); err != nil {
+			t.Fatal(err)
+		}
+		cfg.ClearInheritedAuthentication()
+		if got := cfg.Request.Header.Values("Authorization"); len(got) != 0 {
+			t.Fatalf("Authorization values = %q, want none", got)
+		}
+		if cfg.authHeaderOverride {
+			t.Fatal("inherited authorization override was not cleared")
+		}
+	})
+
+	t.Run("current layer header is preserved", func(t *testing.T) {
+		cfg := newConfig(t)
+		cfg.SetHeader("Authorization", "Bearer current-token")
+		cfg.ClearInheritedAuthentication()
+		if got := cfg.Request.Header.Get("Authorization"); got != "Bearer current-token" {
+			t.Fatalf("Authorization = %q", got)
+		}
+	})
 }
 
 func TestProviderSelectionIsPreservedByClone(t *testing.T) {
@@ -213,8 +250,26 @@ func TestCloneTreatsOpenAICredentialsAsInherited(t *testing.T) {
 	if clone == nil {
 		t.Fatal("request config clone is nil")
 	}
-	clone.ClearInheritedOpenAICredentials()
+	clone.ClearInheritedAuthentication()
 	if clone.APIKey != "" || clone.AdminAPIKey != "" {
 		t.Fatal("cloned credentials were not cleared")
+	}
+}
+
+func TestCloneTreatsAuthorizationHeaderAsInherited(t *testing.T) {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://example.com", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg := RequestConfig{Request: req}
+	cfg.SetHeader("Authorization", "Bearer custom-token")
+
+	clone := cfg.Clone(context.Background())
+	if clone == nil {
+		t.Fatal("request config clone is nil")
+	}
+	clone.ClearInheritedAuthentication()
+	if got := clone.Request.Header.Values("Authorization"); len(got) != 0 {
+		t.Fatalf("Authorization values = %q, want none", got)
 	}
 }

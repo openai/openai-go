@@ -337,6 +337,7 @@ type RequestConfig struct {
 	providerAuth               *ProviderAuthOption
 	apiKeyLayer                *optionLayerIdentity
 	adminAPIKeyLayer           *optionLayerIdentity
+	authorizationHeaderLayer   *optionLayerIdentity
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL     *url.URL
@@ -746,14 +747,18 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 	if err != nil {
 		return nil
 	}
-	var apiKeyLayer, adminAPIKeyLayer *optionLayerIdentity
-	if cfg.APIKey != "" || cfg.AdminAPIKey != "" {
+	var apiKeyLayer, adminAPIKeyLayer, authorizationHeaderLayer *optionLayerIdentity
+	hasAuthorizationOverride := cfg.authHeaderOverride || len(req.Header.Values("Authorization")) != 0
+	if cfg.APIKey != "" || cfg.AdminAPIKey != "" || hasAuthorizationOverride {
 		inheritedLayer := new(optionLayerIdentity)
 		if cfg.APIKey != "" {
 			apiKeyLayer = inheritedLayer
 		}
 		if cfg.AdminAPIKey != "" {
 			adminAPIKeyLayer = inheritedLayer
+		}
+		if hasAuthorizationOverride {
+			authorizationHeaderLayer = inheritedLayer
 		}
 	}
 	new := &RequestConfig{
@@ -768,6 +773,7 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		providerAuth:               cfg.providerAuth,
 		apiKeyLayer:                apiKeyLayer,
 		adminAPIKeyLayer:           adminAPIKeyLayer,
+		authorizationHeaderLayer:   authorizationHeaderLayer,
 		HTTPClient:                 cfg.HTTPClient,
 		Middlewares:                cfg.Middlewares,
 		APIKey:                     cfg.APIKey,
@@ -787,6 +793,7 @@ func (cfg *RequestConfig) SetHeader(key, value string) {
 	cfg.Request.Header.Set(key, value)
 	if strings.EqualFold(key, "Authorization") {
 		cfg.authHeaderOverride = true
+		cfg.authorizationHeaderLayer = cfg.optionLayer
 	}
 }
 
@@ -794,6 +801,7 @@ func (cfg *RequestConfig) AddHeader(key, value string) {
 	cfg.Request.Header.Add(key, value)
 	if strings.EqualFold(key, "Authorization") {
 		cfg.authHeaderOverride = true
+		cfg.authorizationHeaderLayer = cfg.optionLayer
 	}
 }
 
@@ -801,6 +809,7 @@ func (cfg *RequestConfig) DelHeader(key string) {
 	cfg.Request.Header.Del(key)
 	if strings.EqualFold(key, "Authorization") {
 		cfg.authHeaderOverride = true
+		cfg.authorizationHeaderLayer = cfg.optionLayer
 	}
 }
 

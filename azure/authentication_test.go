@@ -244,6 +244,9 @@ func TestAzureAuthenticationReplacesInheritedOpenAICredentials(t *testing.T) {
 	}{
 		{name: "OpenAI API key", option: func() option.RequestOption { return option.WithAPIKey("openai-api-key") }},
 		{name: "OpenAI admin API key", option: func() option.RequestOption { return option.WithAdminAPIKey("openai-admin-key") }},
+		{name: "custom Authorization header", option: func() option.RequestOption {
+			return option.WithHeader("Authorization", "Bearer custom-token")
+		}},
 	}
 	authModes := []struct {
 		name              string
@@ -352,8 +355,23 @@ func TestAzureRejectsAmbiguousCredentialsBeforeMiddleware(t *testing.T) {
 			message: "cannot be combined",
 		},
 		{
+			name:    "Azure token credential and Authorization header",
+			options: []option.RequestOption{WithTokenCredential(&fake.TokenCredential{}), option.WithHeader("Authorization", "Bearer other-token")},
+			message: "cannot be combined",
+		},
+		{
+			name:    "Authorization header and Azure token credential",
+			options: []option.RequestOption{option.WithHeader("Authorization", "Bearer other-token"), WithTokenCredential(&fake.TokenCredential{})},
+			message: "cannot be combined",
+		},
+		{
 			name:    "Azure API key and Authorization header",
 			options: []option.RequestOption{WithAPIKey("azure-api-key"), option.WithHeader("Authorization", "Bearer other-token")},
+			message: "cannot be combined",
+		},
+		{
+			name:    "Authorization header and Azure API key",
+			options: []option.RequestOption{option.WithHeader("Authorization", "Bearer other-token"), WithAPIKey("azure-api-key")},
 			message: "cannot be combined",
 		},
 		{

@@ -123,7 +123,7 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 		if err := rc.Apply(requestconfig.WithEndpointProvider(azureProvider), auth); err != nil {
 			return err
 		}
-		rc.ClearInheritedOpenAICredentials()
+		rc.ClearInheritedAuthentication()
 		tc := &tokenCredentialConfig{
 			Scopes: []string{"https://cognitiveservices.azure.com/.default"},
 		}
@@ -184,16 +184,14 @@ func isNilTokenCredential(tokenCredential azcore.TokenCredential) bool {
 // This function should be paired with a call to [WithEndpoint] to point to your Azure OpenAI instance.
 func WithAPIKey(apiKey string) option.RequestOption {
 	// NOTE: option.WithAPIKey() uses the Authorization header. Azure expects
-	// Api-Key instead. Deleting Authorization also prevents request security from
-	// automatically injecting environment-derived client credentials.
+	// Api-Key instead.
 	return requestconfig.RequestOptionFunc(func(rc *requestconfig.RequestConfig) error {
 		auth := requestconfig.NewProviderAuthOption(azureProvider, azureAPIKeyAuth)
 		if err := rc.Apply(requestconfig.WithEndpointProvider(azureProvider), auth); err != nil {
 			return err
 		}
-		rc.ClearInheritedOpenAICredentials()
+		rc.ClearInheritedAuthentication()
 		return rc.Apply(
-			option.WithHeaderDel("Authorization"),
 			option.WithHeader("Api-Key", apiKey),
 			requestconfig.WithRequestFinalizer(finalizeAzureProvider),
 		)

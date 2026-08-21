@@ -170,10 +170,11 @@ func (cfg *RequestConfig) ProviderAuth(provider string) (string, bool) {
 	return cfg.providerAuth.selector, true
 }
 
-// ClearInheritedOpenAICredentials removes OpenAI API credentials selected by
-// an earlier option layer. Credentials selected in the current layer remain so
-// a provider finalizer can reject the ambiguity after all options are applied.
-func (cfg *RequestConfig) ClearInheritedOpenAICredentials() {
+// ClearInheritedAuthentication removes OpenAI credentials and a custom
+// Authorization header selected by an earlier option layer. Authentication
+// selected in the current layer remains so a provider finalizer can reject the
+// ambiguity after all options are applied.
+func (cfg *RequestConfig) ClearInheritedAuthentication() {
 	if cfg.APIKey != "" && cfg.apiKeyLayer != cfg.optionLayer {
 		cfg.APIKey = ""
 		cfg.apiKeyLayer = nil
@@ -184,5 +185,10 @@ func (cfg *RequestConfig) ClearInheritedOpenAICredentials() {
 	}
 	if cfg.APIKey == "" && cfg.AdminAPIKey == "" {
 		cfg.authPreference = authCredentialPreferenceNone
+	}
+	if cfg.authorizationHeaderLayer != cfg.optionLayer {
+		cfg.Request.Header.Del("Authorization")
+		cfg.authorizationHeaderLayer = nil
+		cfg.authHeaderOverride = false
 	}
 }
