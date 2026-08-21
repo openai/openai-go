@@ -311,6 +311,9 @@ type azureCredentialTransport struct {
 
 func (t azureCredentialTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err := validateAzureCredentialTransport(req); err != nil {
+		if req.Body != nil {
+			_ = req.Body.Close()
+		}
 		return nil, err
 	}
 	return t.base.RoundTrip(req)

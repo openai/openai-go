@@ -568,6 +568,7 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 		}
 		for targetName, redirectTarget := range crossOriginTargets {
 			t.Run(authName+"/rejects HTTPS cross-origin redirect/"+targetName, func(t *testing.T) {
+				redirectBodyClosed := make(chan struct{}, 1)
 				redirectedCredential := ""
 				target := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 					redirectedCredential = req.Header.Get(auth.header)
@@ -586,12 +587,21 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 				client := openai.NewClient(
 					WithEndpoint(source.URL, "2024-10-21"),
 					auth.option(),
+					option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+						req.GetBody = func() (io.ReadCloser, error) {
+							return &closeTrackingBody{
+								Reader: strings.NewReader(`{"model":"test"}`),
+								closed: redirectBodyClosed,
+							}, nil
+						}
+						return next(req)
+					}),
 					option.WithMaxRetries(0),
 					option.WithHTTPClient(source.Client()),
 				)
 
 				var res map[string]any
-				err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res)
+				err := client.Execute(context.Background(), http.MethodPost, "models", []byte(`{"model":"test"}`), &res)
 				if err == nil || !strings.Contains(err.Error(), "authenticated redirects must remain on the original origin") {
 					t.Fatalf("expected origin restriction error, got %v", err)
 				}
@@ -600,6 +610,15 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 				}
 				if redirectedCredential != "" {
 					t.Fatalf("credential reached cross-origin redirect target: %q", redirectedCredential)
+				}
+				// The token policy rebuilds the request body; the direct API-key path
+				// exposes the close-tracking replay body to this transport wrapper.
+				if authName == "API key" {
+					select {
+					case <-redirectBodyClosed:
+					default:
+						t.Fatal("rejected redirect body was not closed")
+					}
 				}
 			})
 		}
@@ -1129,6 +1148,19 @@ type delegatingHTTPDoer struct {
 
 func (d delegatingHTTPDoer) Do(req *http.Request) (*http.Response, error) {
 	return d.client.Do(req)
+}
+
+type closeTrackingBody struct {
+	io.Reader
+	closed chan<- struct{}
+}
+
+func (b *closeTrackingBody) Close() error {
+	select {
+	case b.closed <- struct{}{}:
+	default:
+	}
+	return nil
 }
 
 const azureVectorStoreResponse = `{
