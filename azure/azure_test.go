@@ -12,7 +12,9 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
 	"github.com/openai/openai-go/v3"
@@ -401,10 +403,10 @@ func TestAzureCredentialTransportSecurity(t *testing.T) {
 	for authName, auth := range authOptions {
 		for testName, test := range tests {
 			t.Run(authName+"/"+testName, func(t *testing.T) {
-				var captured *http.Request
+				var captured atomic.Pointer[http.Request]
 				endpoint := test.endpoint
 				transport := http.RoundTripper(roundTripFunc(func(req *http.Request) (*http.Response, error) {
-					captured = req
+					captured.Store(req)
 					return &http.Response{
 						StatusCode: http.StatusOK,
 						Header:     http.Header{"Content-Type": []string{"application/json"}},
@@ -424,7 +426,7 @@ func TestAzureCredentialTransportSecurity(t *testing.T) {
 						listenAddress = "[::1]:0"
 					}
 					origin := newLoopbackHTTPServer(t, network, listenAddress, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-						captured = req
+						captured.Store(req)
 						w.Header().Set("Content-Type", "application/json")
 						_, _ = w.Write([]byte(`{"ok":true}`))
 					}))
@@ -465,10 +467,11 @@ func TestAzureCredentialTransportSecurity(t *testing.T) {
 					if err != nil {
 						t.Fatalf("request failed: %v", err)
 					}
-					if captured == nil {
+					request := captured.Load()
+					if request == nil {
 						t.Fatal("request did not reach the transport")
 					}
-					if got := captured.Header.Get(auth.header); got != auth.headerValue {
+					if got := request.Header.Get(auth.header); got != auth.headerValue {
 						t.Fatalf("%s header = %q, want %q", auth.header, got, auth.headerValue)
 					}
 					return
@@ -477,7 +480,7 @@ func TestAzureCredentialTransportSecurity(t *testing.T) {
 				if err == nil || !strings.Contains(err.Error(), "azure: authenticated requests require HTTPS") {
 					t.Fatalf("expected HTTPS requirement error, got %v", err)
 				}
-				if captured != nil {
+				if captured.Load() != nil {
 					t.Fatal("insecure credential transport reached the network")
 				}
 			})
@@ -508,17 +511,17 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 
 	for authName, auth := range authOptions {
 		t.Run(authName+"/rejects opaque custom doer", func(t *testing.T) {
-			redirectedCredential := ""
+			var redirectedCredential atomicString
 			insecureTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				redirectedCredential = req.Header.Get(auth.header)
+				redirectedCredential.Store(req.Header.Get(auth.header))
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(`{"ok":true}`))
 			}))
 			t.Cleanup(insecureTarget.Close)
 
-			sourceRequests := 0
+			var sourceRequests atomic.Int32
 			secureSource := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				sourceRequests++
+				sourceRequests.Add(1)
 				http.Redirect(w, req, insecureTarget.URL+"/final", http.StatusTemporaryRedirect)
 			}))
 			t.Cleanup(secureSource.Close)
@@ -535,26 +538,26 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 			if err == nil || !strings.Contains(err.Error(), "custom HTTP clients") {
 				t.Errorf("expected custom HTTP client error, got %v", err)
 			}
-			if sourceRequests != 0 {
-				t.Errorf("custom HTTP client reached redirect source %d times", sourceRequests)
+			if got := sourceRequests.Load(); got != 0 {
+				t.Errorf("custom HTTP client reached redirect source %d times", got)
 			}
-			if redirectedCredential != "" {
-				t.Errorf("credential reached insecure redirect target: %q", redirectedCredential)
+			if got := redirectedCredential.Load(); got != "" {
+				t.Errorf("credential reached insecure redirect target: %q", got)
 			}
 		})
 
 		t.Run(authName+"/rejects HTTPS downgrade", func(t *testing.T) {
-			redirectedCredential := ""
+			var redirectedCredential atomicString
 			insecureTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				redirectedCredential = req.Header.Get(auth.header)
+				redirectedCredential.Store(req.Header.Get(auth.header))
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(`{"ok":true}`))
 			}))
 			t.Cleanup(insecureTarget.Close)
 
-			sourceRequests := 0
+			var sourceRequests atomic.Int32
 			secureSource := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				sourceRequests++
+				sourceRequests.Add(1)
 				if req.URL.Path != "/hop" {
 					http.Redirect(w, req, "/hop", http.StatusTemporaryRedirect)
 					return
@@ -575,11 +578,11 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 			if err == nil || !strings.Contains(err.Error(), "azure: authenticated requests require HTTPS") {
 				t.Fatalf("expected HTTPS requirement error, got %v", err)
 			}
-			if redirectedCredential != "" {
-				t.Fatalf("credential reached insecure redirect target: %q", redirectedCredential)
+			if got := redirectedCredential.Load(); got != "" {
+				t.Fatalf("credential reached insecure redirect target: %q", got)
 			}
-			if sourceRequests != 2 {
-				t.Fatalf("secure source requests = %d, want 2", sourceRequests)
+			if got := sourceRequests.Load(); got != 2 {
+				t.Fatalf("secure source requests = %d, want 2", got)
 			}
 		})
 
@@ -592,17 +595,17 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 		for targetName, redirectTarget := range crossOriginTargets {
 			t.Run(authName+"/rejects HTTPS cross-origin redirect/"+targetName, func(t *testing.T) {
 				redirectBodyClosed := make(chan struct{}, 1)
-				redirectedCredential := ""
+				var redirectedCredential atomicString
 				target := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-					redirectedCredential = req.Header.Get(auth.header)
+					redirectedCredential.Store(req.Header.Get(auth.header))
 					w.Header().Set("Content-Type", "application/json")
 					_, _ = w.Write([]byte(`{"ok":true}`))
 				}))
 				t.Cleanup(target.Close)
 
-				sourceRequests := 0
+				var sourceRequests atomic.Int32
 				source := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-					sourceRequests++
+					sourceRequests.Add(1)
 					http.Redirect(w, req, redirectTarget(target.URL)+"/final", http.StatusTemporaryRedirect)
 				}))
 				t.Cleanup(source.Close)
@@ -628,11 +631,11 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 				if err == nil || !strings.Contains(err.Error(), "authenticated redirects must remain on the original origin") {
 					t.Fatalf("expected origin restriction error, got %v", err)
 				}
-				if sourceRequests != 1 {
-					t.Fatalf("secure source requests = %d, want 1", sourceRequests)
+				if got := sourceRequests.Load(); got != 1 {
+					t.Fatalf("secure source requests = %d, want 1", got)
 				}
-				if redirectedCredential != "" {
-					t.Fatalf("credential reached cross-origin redirect target: %q", redirectedCredential)
+				if got := redirectedCredential.Load(); got != "" {
+					t.Fatalf("credential reached cross-origin redirect target: %q", got)
 				}
 				// The token policy rebuilds the request body; the direct API-key path
 				// exposes the close-tracking replay body to this transport wrapper.
@@ -647,9 +650,9 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 		}
 
 		t.Run(authName+"/unsafe remote HTTPS cannot redirect to loopback HTTP", func(t *testing.T) {
-			targetReached := false
+			var targetReached atomic.Bool
 			target := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
-				targetReached = true
+				targetReached.Store(true)
 			}))
 			t.Cleanup(target.Close)
 
@@ -680,19 +683,19 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 			if requestErr == nil || !strings.Contains(requestErr.Error(), "azure: authenticated requests require HTTPS") {
 				t.Fatalf("expected HTTPS requirement error, got %v", requestErr)
 			}
-			if targetReached {
+			if targetReached.Load() {
 				t.Fatal("credential request reached loopback redirect target")
 			}
 		})
 
 		t.Run(authName+"/preserves HTTPS redirect", func(t *testing.T) {
-			redirectedCredential := ""
+			var redirectedCredential atomicString
 			secureServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				if req.URL.Path != "/final" {
 					http.Redirect(w, req, "/final", http.StatusTemporaryRedirect)
 					return
 				}
-				redirectedCredential = req.Header.Get(auth.header)
+				redirectedCredential.Store(req.Header.Get(auth.header))
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(`{"ok":true}`))
 			}))
@@ -709,15 +712,15 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err != nil {
 				t.Fatalf("request failed: %v", err)
 			}
-			if redirectedCredential != auth.headerValue {
-				t.Fatalf("redirected credential = %q, want %q", redirectedCredential, auth.headerValue)
+			if got := redirectedCredential.Load(); got != auth.headerValue {
+				t.Fatalf("redirected credential = %q, want %q", got, auth.headerValue)
 			}
 		})
 
 		t.Run(authName+"/preserves unsafe loopback redirect", func(t *testing.T) {
-			redirectedCredential := ""
+			var redirectedCredential atomicString
 			target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				redirectedCredential = req.Header.Get(auth.header)
+				redirectedCredential.Store(req.Header.Get(auth.header))
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(`{"ok":true}`))
 			}))
@@ -740,23 +743,65 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err != nil {
 				t.Fatalf("request failed: %v", err)
 			}
-			if redirectedCredential != auth.headerValue {
-				t.Fatalf("redirected credential = %q, want %q", redirectedCredential, auth.headerValue)
+			if got := redirectedCredential.Load(); got != auth.headerValue {
+				t.Fatalf("redirected credential = %q, want %q", got, auth.headerValue)
 			}
 		})
 
+		for _, targetScheme := range []string{"HTTP", "HTTPS"} {
+			t.Run(authName+"/rejects unsafe cross-host loopback "+targetScheme+" redirect", func(t *testing.T) {
+				targetReached := make(chan struct{}, 1)
+				target := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+					targetReached <- struct{}{}
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = w.Write([]byte(`{"ok":true}`))
+				}))
+				if targetScheme == "HTTPS" {
+					target.StartTLS()
+				} else {
+					target.Start()
+				}
+				t.Cleanup(target.Close)
+
+				source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					http.Redirect(w, req, target.URL+"/final", http.StatusTemporaryRedirect)
+				}))
+				t.Cleanup(source.Close)
+				sourceEndpoint := strings.Replace(source.URL, "127.0.0.1", "localhost", 1)
+
+				client := openai.NewClient(
+					WithEndpoint(sourceEndpoint, "2024-10-21"),
+					auth.option(),
+					WithUnsafeAllowHTTP(),
+					option.WithMaxRetries(0),
+					option.WithHTTPClient(target.Client()),
+				)
+
+				var res map[string]any
+				err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res)
+				if err == nil || !strings.Contains(err.Error(), "authenticated redirects must remain on the original origin") {
+					t.Fatalf("expected origin restriction error, got %v", err)
+				}
+				select {
+				case <-targetReached:
+					t.Fatal("cross-host loopback redirect reached target")
+				default:
+				}
+			})
+		}
+
 		t.Run(authName+"/preserves unsafe loopback HTTPS upgrade", func(t *testing.T) {
-			redirectedCredential := ""
+			var redirectedCredential atomicString
 			target := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				redirectedCredential = req.Header.Get(auth.header)
+				redirectedCredential.Store(req.Header.Get(auth.header))
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(`{"ok":true}`))
 			}))
 			t.Cleanup(target.Close)
 
-			sourceRequests := 0
+			var sourceRequests atomic.Int32
 			source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				sourceRequests++
+				sourceRequests.Add(1)
 				http.Redirect(w, req, target.URL+"/final", http.StatusTemporaryRedirect)
 			}))
 			t.Cleanup(source.Close)
@@ -775,29 +820,29 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err != nil {
 				t.Fatalf("request failed: %v", err)
 			}
-			if sourceRequests != 1 {
-				t.Fatalf("source requests = %d, want 1", sourceRequests)
+			if got := sourceRequests.Load(); got != 1 {
+				t.Fatalf("source requests = %d, want 1", got)
 			}
-			if redirectedCredential != auth.headerValue {
-				t.Fatalf("redirected credential = %q, want %q", redirectedCredential, auth.headerValue)
+			if got := redirectedCredential.Load(); got != auth.headerValue {
+				t.Fatalf("redirected credential = %q, want %q", got, auth.headerValue)
 			}
 		})
 
 		t.Run(authName+"/preserves caller redirect policy", func(t *testing.T) {
-			finalReached := false
+			var finalReached atomic.Bool
 			secureServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				if req.URL.Path != "/final" {
 					http.Redirect(w, req, "/final", http.StatusTemporaryRedirect)
 					return
 				}
-				finalReached = true
+				finalReached.Store(true)
 			}))
 			t.Cleanup(secureServer.Close)
 
-			redirectPolicyCalled := false
+			var redirectPolicyCalled atomic.Bool
 			httpClient := secureServer.Client()
 			httpClient.CheckRedirect = func(*http.Request, []*http.Request) error {
-				redirectPolicyCalled = true
+				redirectPolicyCalled.Store(true)
 				return http.ErrUseLastResponse
 			}
 			client := openai.NewClient(
@@ -811,10 +856,10 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err == nil {
 				t.Fatal("expected redirect response error")
 			}
-			if !redirectPolicyCalled {
+			if !redirectPolicyCalled.Load() {
 				t.Fatal("caller redirect policy was not invoked")
 			}
-			if finalReached {
+			if finalReached.Load() {
 				t.Fatal("redirect target was reached despite caller policy")
 			}
 		})
@@ -1041,9 +1086,9 @@ func TestAzureUnsafeHTTPBypassesOpaqueRoundTripper(t *testing.T) {
 	t.Setenv("OPENAI_API_KEY", "")
 	t.Setenv("OPENAI_ADMIN_KEY", "")
 
-	originReached := false
+	var originReached atomic.Bool
 	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		originReached = true
+		originReached.Store(true)
 		if got := req.Header.Get("Api-Key"); got != "azure-api-key" {
 			t.Errorf("Api-Key header = %q, want %q", got, "azure-api-key")
 		}
@@ -1075,8 +1120,45 @@ func TestAzureUnsafeHTTPBypassesOpaqueRoundTripper(t *testing.T) {
 	if transportCalled {
 		t.Fatal("opaque transport received unsafe loopback request")
 	}
-	if !originReached {
+	if !originReached.Load() {
 		t.Fatal("direct loopback origin did not receive request")
+	}
+}
+
+func TestAzureUnsafeHTTPPreservesResponseHeaderTimeout(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_ADMIN_KEY", "")
+
+	origin := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, req *http.Request) {
+		<-req.Context().Done()
+	}))
+	t.Cleanup(origin.Close)
+	originURL, err := url.Parse(origin.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	const responseHeaderTimeout = 50 * time.Millisecond
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.ResponseHeaderTimeout = responseHeaderTimeout
+	client := openai.NewClient(
+		WithEndpoint("http://localhost:"+originURL.Port(), "2024-10-21"),
+		WithAPIKey("azure-api-key"),
+		WithUnsafeAllowHTTP(),
+		option.WithMaxRetries(0),
+		option.WithHTTPClient(&http.Client{Transport: transport}),
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	started := time.Now()
+	var res map[string]any
+	err = client.Execute(ctx, http.MethodGet, "models", nil, &res)
+	if err == nil || !strings.Contains(err.Error(), "timeout awaiting response headers") {
+		t.Fatalf("expected response header timeout, got %v", err)
+	}
+	if elapsed := time.Since(started); elapsed >= time.Second {
+		t.Fatalf("response header timeout took %v, want less than 1s", elapsed)
 	}
 }
 
@@ -1358,6 +1440,19 @@ func (b *closeTrackingBody) Close() error {
 	default:
 	}
 	return nil
+}
+
+type atomicString struct {
+	value atomic.Value
+}
+
+func (s *atomicString) Load() string {
+	value, _ := s.value.Load().(string)
+	return value
+}
+
+func (s *atomicString) Store(value string) {
+	s.value.Store(value)
 }
 
 const azureVectorStoreResponse = `{

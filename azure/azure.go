@@ -31,6 +31,7 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
@@ -307,17 +308,49 @@ func withAzureCredentialMiddleware(authenticate option.Middleware) option.Reques
 }
 
 type azureCredentialTransport struct {
-	base http.RoundTripper
+	base               http.RoundTripper
+	directLoopbackHTTP http.RoundTripper
 }
 
 func newAzureCredentialTransport(base http.RoundTripper) azureCredentialTransport {
 	if transport, ok := base.(azureCredentialTransport); ok {
 		return transport
 	}
-	return azureCredentialTransport{base: base}
+	return azureCredentialTransport{
+		base:               base,
+		directLoopbackHTTP: newAzureDirectLoopbackHTTPTransport(base),
+	}
 }
 
-var azureDirectLoopbackHTTPTransport = &http.Transport{DialContext: dialAzureLoopback}
+const (
+	azureDirectResponseHeaderTimeout = 10 * time.Minute
+	azureDirectIdleConnTimeout       = 90 * time.Second
+)
+
+var azureLoopbackDialer = net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}
+
+func newAzureDirectLoopbackHTTPTransport(base http.RoundTripper) *http.Transport {
+	var transport *http.Transport
+	if baseTransport, ok := base.(*http.Transport); ok {
+		transport = baseTransport.Clone()
+	} else {
+		transport = &http.Transport{}
+	}
+
+	transport.Proxy = nil
+	transport.DialContext = dialAzureLoopback
+	if transport.ResponseHeaderTimeout <= 0 {
+		// Match the root SDK client's default bound for silent servers.
+		transport.ResponseHeaderTimeout = azureDirectResponseHeaderTimeout
+	}
+	if transport.IdleConnTimeout <= 0 {
+		transport.IdleConnTimeout = azureDirectIdleConnTimeout
+	}
+	if transport.ExpectContinueTimeout <= 0 {
+		transport.ExpectContinueTimeout = time.Second
+	}
+	return transport
+}
 
 func dialAzureLoopback(ctx context.Context, network string, address string) (net.Conn, error) {
 	host, port, err := net.SplitHostPort(address)
@@ -331,7 +364,7 @@ func dialAzureLoopback(ctx context.Context, network string, address string) (net
 	if ip == nil || !ip.IsLoopback() {
 		return nil, fmt.Errorf("azure: refusing non-loopback plaintext connection to %q", address)
 	}
-	return (&net.Dialer{}).DialContext(ctx, network, net.JoinHostPort(ip.String(), port))
+	return azureLoopbackDialer.DialContext(ctx, network, net.JoinHostPort(ip.String(), port))
 }
 
 func (t azureCredentialTransport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -341,7 +374,7 @@ func (t azureCredentialTransport) RoundTrip(req *http.Request) (*http.Response, 
 
 	transport := t.base
 	if azureCredentialHTTPAllowed(req) {
-		transport = azureDirectLoopbackHTTPTransport
+		transport = t.directLoopbackHTTP
 	}
 	return transport.RoundTrip(req)
 }
@@ -364,7 +397,10 @@ func validateAzureCredentialTransport(req *http.Request) error {
 		// Unsafe mode may redirect between local development servers, but it
 		// must never expand a remote credential origin to a loopback target.
 		if azureCredentialOriginIsLoopback(origin) && azureCredentialHTTPAllowed(req) {
-			return nil
+			if origin.host == destination.host {
+				return nil
+			}
+			return requestconfig.WithNoRetryError(&azureCredentialOriginError{})
 		}
 		return requestconfig.WithNoRetryError(&azureCredentialTransportError{})
 	}
@@ -374,7 +410,7 @@ func validateAzureCredentialTransport(req *http.Request) error {
 	}
 	// An explicitly unsafe loopback HTTP origin may upgrade to a loopback TLS
 	// server without weakening the origin rules for ordinary HTTPS endpoints.
-	if origin.scheme == "http" && azureCredentialUnsafeHTTPConfigured(req) &&
+	if origin.scheme == "http" && origin.host == destination.host && azureCredentialUnsafeHTTPConfigured(req) &&
 		azureCredentialOriginIsLoopback(origin) && azureCredentialOriginIsLoopback(destination) {
 		return nil
 	}
