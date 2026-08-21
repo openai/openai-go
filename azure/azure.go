@@ -115,7 +115,8 @@ type azureCredentialOrigin struct {
 // WithUnsafeAllowHTTP permits Azure credentials to be sent over plaintext HTTP
 // only when the final request destination is localhost or a loopback IP address.
 // This option is intended exclusively for local development and testing. It
-// should never be used in production.
+// should never be used in production. Plaintext loopback requests always use
+// a direct connection and bypass configured proxies and custom RoundTrippers.
 func WithUnsafeAllowHTTP() option.RequestOption {
 	return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 		ctx := context.WithValue(req.Context(), unsafeAllowHTTPContextKey{}, true)
@@ -290,7 +291,7 @@ func withAzureCredentialMiddleware(authenticate option.Middleware) option.Reques
 		if transport == nil {
 			transport = http.DefaultTransport
 		}
-		client.Transport = azureCredentialTransport{base: transport}
+		client.Transport = newAzureCredentialTransport(transport)
 		rc.HTTPClient = &client
 
 		return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
@@ -309,14 +310,47 @@ type azureCredentialTransport struct {
 	base http.RoundTripper
 }
 
+func newAzureCredentialTransport(base http.RoundTripper) azureCredentialTransport {
+	if transport, ok := base.(azureCredentialTransport); ok {
+		return transport
+	}
+	return azureCredentialTransport{base: base}
+}
+
+var azureDirectLoopbackHTTPTransport = &http.Transport{DialContext: dialAzureLoopback}
+
+func dialAzureLoopback(ctx context.Context, network string, address string) (net.Conn, error) {
+	host, port, err := net.SplitHostPort(address)
+	if err != nil {
+		return nil, fmt.Errorf("azure: invalid loopback address %q: %w", address, err)
+	}
+	if host == "localhost" {
+		host = "127.0.0.1"
+	}
+	ip := net.ParseIP(host)
+	if ip == nil || !ip.IsLoopback() {
+		return nil, fmt.Errorf("azure: refusing non-loopback plaintext connection to %q", address)
+	}
+	return (&net.Dialer{}).DialContext(ctx, network, net.JoinHostPort(ip.String(), port))
+}
+
 func (t azureCredentialTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err := validateAzureCredentialTransport(req); err != nil {
-		if req.Body != nil {
-			_ = req.Body.Close()
-		}
-		return nil, err
+		return rejectAzureCredentialTransport(req, err)
 	}
-	return t.base.RoundTrip(req)
+
+	transport := t.base
+	if azureCredentialHTTPAllowed(req) {
+		transport = azureDirectLoopbackHTTPTransport
+	}
+	return transport.RoundTrip(req)
+}
+
+func rejectAzureCredentialTransport(req *http.Request, err error) (*http.Response, error) {
+	if req.Body != nil {
+		_ = req.Body.Close()
+	}
+	return nil, err
 }
 
 func validateAzureCredentialTransport(req *http.Request) error {
@@ -336,6 +370,12 @@ func validateAzureCredentialTransport(req *http.Request) error {
 	}
 
 	if destination == origin {
+		return nil
+	}
+	// An explicitly unsafe loopback HTTP origin may upgrade to a loopback TLS
+	// server without weakening the origin rules for ordinary HTTPS endpoints.
+	if origin.scheme == "http" && azureCredentialUnsafeHTTPConfigured(req) &&
+		azureCredentialOriginIsLoopback(origin) && azureCredentialOriginIsLoopback(destination) {
 		return nil
 	}
 	return requestconfig.WithNoRetryError(&azureCredentialOriginError{})
@@ -389,8 +429,7 @@ func azureCredentialHTTPAllowed(req *http.Request) bool {
 	if !strings.EqualFold(req.URL.Scheme, "http") {
 		return false
 	}
-	allowed, _ := req.Context().Value(unsafeAllowHTTPContextKey{}).(bool)
-	if !allowed {
+	if !azureCredentialUnsafeHTTPConfigured(req) {
 		return false
 	}
 
@@ -402,6 +441,11 @@ func azureCredentialHTTPAllowed(req *http.Request) bool {
 	}
 	ip := net.ParseIP(host)
 	return ip != nil && ip.IsLoopback()
+}
+
+func azureCredentialUnsafeHTTPConfigured(req *http.Request) bool {
+	allowed, _ := req.Context().Value(unsafeAllowHTTPContextKey{}).(bool)
+	return allowed
 }
 
 // jsonRoutes have JSON payloads - we'll deserialize looking for a .model field in there

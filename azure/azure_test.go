@@ -361,7 +361,7 @@ func TestAzureCredentialTransportSecurity(t *testing.T) {
 			wantRequest: true,
 		},
 		"unsafe IPv4 loopback HTTP": {
-			endpoint:    "http://127.0.0.2:8080",
+			endpoint:    "http://127.0.0.1:8080",
 			unsafe:      true,
 			wantRequest: true,
 		},
@@ -402,8 +402,41 @@ func TestAzureCredentialTransportSecurity(t *testing.T) {
 		for testName, test := range tests {
 			t.Run(authName+"/"+testName, func(t *testing.T) {
 				var captured *http.Request
+				endpoint := test.endpoint
+				transport := http.RoundTripper(roundTripFunc(func(req *http.Request) (*http.Response, error) {
+					captured = req
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     http.Header{"Content-Type": []string{"application/json"}},
+						Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+						Request:    req,
+					}, nil
+				}))
+				if test.unsafe && test.wantRequest {
+					endpointURL, err := url.Parse(endpoint)
+					if err != nil {
+						t.Fatal(err)
+					}
+					network := "tcp4"
+					listenAddress := "127.0.0.1:0"
+					if ip := net.ParseIP(endpointURL.Hostname()); ip != nil && ip.To4() == nil {
+						network = "tcp6"
+						listenAddress = "[::1]:0"
+					}
+					origin := newLoopbackHTTPServer(t, network, listenAddress, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+						captured = req
+						w.Header().Set("Content-Type", "application/json")
+						_, _ = w.Write([]byte(`{"ok":true}`))
+					}))
+					originURL, err := url.Parse(origin.URL)
+					if err != nil {
+						t.Fatal(err)
+					}
+					endpointURL.Host = net.JoinHostPort(endpointURL.Hostname(), originURL.Port())
+					endpoint = endpointURL.String()
+				}
 				opts := []option.RequestOption{
-					WithEndpoint(test.endpoint, "2024-10-21"),
+					WithEndpoint(endpoint, "2024-10-21"),
 					auth.option(),
 				}
 				if test.unsafe {
@@ -418,17 +451,7 @@ func TestAzureCredentialTransportSecurity(t *testing.T) {
 				}
 				opts = append(opts,
 					option.WithMaxRetries(0),
-					option.WithHTTPClient(&http.Client{
-						Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-							captured = req
-							return &http.Response{
-								StatusCode: http.StatusOK,
-								Header:     http.Header{"Content-Type": []string{"application/json"}},
-								Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
-								Request:    req,
-							}, nil
-						}),
-					}),
+					option.WithHTTPClient(&http.Client{Transport: transport}),
 				)
 				client := openai.NewClient(opts...)
 
@@ -722,6 +745,44 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 			}
 		})
 
+		t.Run(authName+"/preserves unsafe loopback HTTPS upgrade", func(t *testing.T) {
+			redirectedCredential := ""
+			target := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				redirectedCredential = req.Header.Get(auth.header)
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"ok":true}`))
+			}))
+			t.Cleanup(target.Close)
+
+			sourceRequests := 0
+			source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				sourceRequests++
+				http.Redirect(w, req, target.URL+"/final", http.StatusTemporaryRedirect)
+			}))
+			t.Cleanup(source.Close)
+
+			transport := target.Client().Transport.(*http.Transport).Clone()
+			transport.Proxy = nil
+			client := openai.NewClient(
+				WithEndpoint(source.URL, "2024-10-21"),
+				auth.option(),
+				WithUnsafeAllowHTTP(),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(&http.Client{Transport: transport}),
+			)
+
+			var res map[string]any
+			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
+			if sourceRequests != 1 {
+				t.Fatalf("source requests = %d, want 1", sourceRequests)
+			}
+			if redirectedCredential != auth.headerValue {
+				t.Fatalf("redirected credential = %q, want %q", redirectedCredential, auth.headerValue)
+			}
+		})
+
 		t.Run(authName+"/preserves caller redirect policy", func(t *testing.T) {
 			finalReached := false
 			secureServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -785,11 +846,6 @@ func TestAzureUnsafeHTTPMatchesProxyBypass(t *testing.T) {
 	t.Setenv("HTTP_PROXY", proxy.URL)
 	t.Setenv("http_proxy", proxy.URL)
 
-	proxyURL, err := url.Parse(proxy.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	hosts := map[string]struct {
 		host        string
 		wantAllowed bool
@@ -827,7 +883,13 @@ func TestAzureUnsafeHTTPMatchesProxyBypass(t *testing.T) {
 				}
 
 				originRequests := make(chan requestObservation, 1)
-				origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				network := "tcp4"
+				listenAddress := "127.0.0.1:0"
+				if host.host == "[::1]" {
+					network = "tcp6"
+					listenAddress = "[::1]:0"
+				}
+				origin := newLoopbackHTTPServer(t, network, listenAddress, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 					originRequests <- requestObservation{
 						host:          req.URL.Hostname(),
 						apiKey:        req.Header.Get("Api-Key"),
@@ -836,7 +898,6 @@ func TestAzureUnsafeHTTPMatchesProxyBypass(t *testing.T) {
 					w.Header().Set("Content-Type", "application/json")
 					_, _ = w.Write([]byte(`{"ok":true}`))
 				}))
-				t.Cleanup(origin.Close)
 				originURL, parseErr := url.Parse(origin.URL)
 				if parseErr != nil {
 					t.Fatal(parseErr)
@@ -844,13 +905,6 @@ func TestAzureUnsafeHTTPMatchesProxyBypass(t *testing.T) {
 
 				transport := http.DefaultTransport.(*http.Transport).Clone()
 				transport.Proxy = http.ProxyFromEnvironment
-				dialer := &net.Dialer{}
-				transport.DialContext = func(ctx context.Context, network string, address string) (net.Conn, error) {
-					if address == proxyURL.Host {
-						return dialer.DialContext(ctx, network, proxyURL.Host)
-					}
-					return dialer.DialContext(ctx, network, originURL.Host)
-				}
 
 				endpoint := "http://" + host.host + ":" + originURL.Port()
 				client := openai.NewClient(
@@ -898,6 +952,131 @@ func TestAzureUnsafeHTTPMatchesProxyBypass(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestAzureUnsafeHTTPForcesDirectTransport(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_ADMIN_KEY", "")
+
+	authOptions := map[string]struct {
+		option      func() option.RequestOption
+		header      string
+		headerValue string
+	}{
+		"API key": {
+			option:      func() option.RequestOption { return WithAPIKey("azure-api-key") },
+			header:      "Api-Key",
+			headerValue: "azure-api-key",
+		},
+		"token": {
+			option:      func() option.RequestOption { return WithTokenCredential(&fake.TokenCredential{}) },
+			header:      "Authorization",
+			headerValue: "Bearer fake_token",
+		},
+	}
+
+	for authName, auth := range authOptions {
+		t.Run(authName, func(t *testing.T) {
+			originCredential := make(chan string, 1)
+			origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				originCredential <- req.Header.Get(auth.header)
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"ok":true}`))
+			}))
+			t.Cleanup(origin.Close)
+			originURL, err := url.Parse(origin.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			proxyCredential := make(chan string, 1)
+			proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				proxyCredential <- req.Header.Get(auth.header)
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"ok":true}`))
+			}))
+			t.Cleanup(proxy.Close)
+			proxyURL, err := url.Parse(proxy.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			transport := http.DefaultTransport.(*http.Transport).Clone()
+			transport.Proxy = http.ProxyURL(proxyURL)
+			dialer := &net.Dialer{}
+			transport.DialContext = func(ctx context.Context, network string, _ string) (net.Conn, error) {
+				return dialer.DialContext(ctx, network, proxyURL.Host)
+			}
+			client := openai.NewClient(
+				WithEndpoint("http://localhost:"+originURL.Port(), "2024-10-21"),
+				auth.option(),
+				WithUnsafeAllowHTTP(),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(&http.Client{Transport: transport}),
+			)
+
+			var res map[string]any
+			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err != nil {
+				t.Fatalf("request failed: %v", err)
+			}
+			select {
+			case credential := <-proxyCredential:
+				t.Fatalf("loopback credential reached explicit proxy: %q", credential)
+			default:
+			}
+			select {
+			case credential := <-originCredential:
+				if credential != auth.headerValue {
+					t.Fatalf("%s header = %q, want %q", auth.header, credential, auth.headerValue)
+				}
+			default:
+				t.Fatal("direct loopback origin did not receive request")
+			}
+		})
+	}
+}
+
+func TestAzureUnsafeHTTPBypassesOpaqueRoundTripper(t *testing.T) {
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_ADMIN_KEY", "")
+
+	originReached := false
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		originReached = true
+		if got := req.Header.Get("Api-Key"); got != "azure-api-key" {
+			t.Errorf("Api-Key header = %q, want %q", got, "azure-api-key")
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	t.Cleanup(origin.Close)
+	originURL, err := url.Parse(origin.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	transportCalled := false
+	client := openai.NewClient(
+		WithEndpoint("http://localhost:"+originURL.Port(), "2024-10-21"),
+		WithAPIKey("azure-api-key"),
+		WithUnsafeAllowHTTP(),
+		option.WithMaxRetries(0),
+		option.WithHTTPClient(&http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
+			transportCalled = true
+			return nil, errors.New("unexpected transport call")
+		})}),
+	)
+
+	var res map[string]any
+	if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &res); err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	if transportCalled {
+		t.Fatal("opaque transport received unsafe loopback request")
+	}
+	if !originReached {
+		t.Fatal("direct loopback origin did not receive request")
 	}
 }
 
@@ -1134,6 +1313,24 @@ func newMultipartRouteRequest(t *testing.T, route string, model string) *http.Re
 	}
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	return req
+}
+
+func newLoopbackHTTPServer(t *testing.T, network string, address string, handler http.Handler) *httptest.Server {
+	t.Helper()
+	listener, err := net.Listen(network, address)
+	if err != nil {
+		if network == "tcp6" {
+			t.Skipf("IPv6 loopback is unavailable: %v", err)
+		}
+		t.Fatal(err)
+	}
+
+	server := httptest.NewUnstartedServer(handler)
+	_ = server.Listener.Close()
+	server.Listener = listener
+	server.Start()
+	t.Cleanup(server.Close)
+	return server
 }
 
 type roundTripFunc func(*http.Request) (*http.Response, error)
