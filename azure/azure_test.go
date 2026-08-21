@@ -622,7 +622,9 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 						}
 						return next(req)
 					}),
-					option.WithMaxRetries(0),
+					// Keep the normal retry count so the source-request assertion
+					// proves deterministic redirect failures skip outer retries.
+					option.WithMaxRetryDelay(time.Millisecond),
 					option.WithHTTPClient(source.Client()),
 				)
 
@@ -1198,6 +1200,45 @@ func TestAzureUnsafeHTTPReusesDirectTransport(t *testing.T) {
 	}
 	if got := connections.Load(); got != 1 {
 		t.Fatalf("loopback connections = %d, want 1 shared connection", got)
+	}
+}
+
+func TestAzureHTTPSDoesNotCacheDirectTransports(t *testing.T) {
+	origin := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	t.Cleanup(origin.Close)
+	originURL, err := url.Parse(origin.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	directTransports := &azureDirectLoopbackTransportCache{}
+	for range 10 {
+		base := origin.Client().Transport.(*http.Transport).Clone()
+		transport := newAzureCredentialTransport(base, directTransports)
+		req, err := http.NewRequest(http.MethodGet, origin.URL, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx := context.WithValue(req.Context(), azureCredentialOriginContextKey{}, azureCredentialOriginFromURL(originURL))
+		res, err := transport.RoundTrip(req.WithContext(ctx))
+		if err != nil {
+			t.Fatalf("HTTPS request failed: %v", err)
+		}
+		_, _ = io.Copy(io.Discard, res.Body)
+		_ = res.Body.Close()
+		base.CloseIdleConnections()
+	}
+
+	cached := 0
+	directTransports.transports.Range(func(_, _ any) bool {
+		cached++
+		return true
+	})
+	if cached != 0 {
+		t.Fatalf("cached direct transports after HTTPS requests = %d, want 0", cached)
 	}
 }
 

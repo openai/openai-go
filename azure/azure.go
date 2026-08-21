@@ -311,8 +311,8 @@ func withAzureCredentialMiddleware(authenticate option.Middleware, directTranspo
 }
 
 type azureCredentialTransport struct {
-	base               http.RoundTripper
-	directLoopbackHTTP http.RoundTripper
+	base             http.RoundTripper
+	directTransports *azureDirectLoopbackTransportCache
 }
 
 func newAzureCredentialTransport(base http.RoundTripper, directTransports *azureDirectLoopbackTransportCache) azureCredentialTransport {
@@ -320,15 +320,15 @@ func newAzureCredentialTransport(base http.RoundTripper, directTransports *azure
 		return transport
 	}
 	return azureCredentialTransport{
-		base:               base,
-		directLoopbackHTTP: directTransports.get(base),
+		base:             base,
+		directTransports: directTransports,
 	}
 }
 
-// azureDirectLoopbackTransportCache gives each configured HTTP transport one
-// direct loopback pool for the lifetime of the Azure credential option. Azure
-// finalizers run per request, so constructing the direct transport there would
-// defeat keep-alive reuse and per-transport connection limits across SDK calls.
+// azureDirectLoopbackTransportCache lazily gives each HTTP transport used for
+// unsafe loopback HTTP one direct pool for the lifetime of the Azure credential
+// option. Azure finalizers run per request, so constructing the direct transport
+// there would defeat keep-alive reuse and retain ordinary HTTPS overrides.
 type azureDirectLoopbackTransportCache struct {
 	transports sync.Map // map[*http.Transport]*http.Transport
 	fallback   sync.Once
@@ -403,7 +403,7 @@ func (t azureCredentialTransport) RoundTrip(req *http.Request) (*http.Response, 
 
 	transport := t.base
 	if azureCredentialHTTPAllowed(req) {
-		transport = t.directLoopbackHTTP
+		transport = t.directTransports.get(t.base)
 	}
 	return transport.RoundTrip(req)
 }
