@@ -125,11 +125,15 @@ if [[ "$publication_lock_owned" -ne 1 ]]; then
   exit 1
 fi
 
-rm -rf scripts/steady/node_modules
-node -e 'require("fs").renameSync(process.argv[1], process.argv[2])' \
-  "$installation/node_modules" "$(pwd -P)/scripts/steady/node_modules"
+if ! executable="$(verify_installation "$(pwd -P)/scripts/steady" 2>/dev/null)" ||
+  ! cmp -s "$installation/node_modules/@stdy/cli/steady.js" scripts/steady/node_modules/@stdy/cli/steady.js ||
+  ! cmp -s "$staged_executable" "$executable"; then
+  rm -rf scripts/steady/node_modules
+  node -e 'require("fs").renameSync(process.argv[1], process.argv[2])' \
+    "$installation/node_modules" "$(pwd -P)/scripts/steady/node_modules"
+  executable="$(verify_installation "$(pwd -P)/scripts/steady")"
+fi
 
-executable="$(verify_installation "$(pwd -P)/scripts/steady")"
 "$executable" --version >/dev/null
 
 if [[ "${1:-}" == "--print-executable" ]]; then

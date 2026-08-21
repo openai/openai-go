@@ -366,3 +366,50 @@ if [[ -e "$concurrent_fixture/scripts/steady/.publication-lock" ]]; then
   exit 1
 fi
 echo "Steady installation safely recovers an ownerless publication lock"
+
+live_executable="$(npm_config_offline=true "$concurrent_fixture/scripts/steady/install" --print-executable)"
+lifetime_bin="$temporary/lifetime-bin"
+mkdir "$lifetime_bin"
+cat >"$lifetime_bin/node" <<'EOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" == "-e" && "${2:-}" == *renameSync* && "${4:-}" == */node_modules ]]; then
+  touch "$STEADY_PUBLICATION_GAP"
+  while [[ ! -e "$STEADY_PUBLICATION_RELEASE" ]]; do
+    sleep 0.025
+  done
+fi
+exec "$STEADY_REAL_NODE" "$@"
+EOF
+chmod +x "$lifetime_bin/node"
+
+PATH="$lifetime_bin:$PATH" STEADY_REAL_NODE="$real_node" \
+  STEADY_PUBLICATION_GAP="$temporary/publication-gap" \
+  STEADY_PUBLICATION_RELEASE="$temporary/publication-release" \
+  npm_config_offline=true "$concurrent_fixture/scripts/steady/install" --print-executable \
+  >"$temporary/concurrent-executable" 2>"$temporary/concurrent-output" &
+concurrent_process=$!
+
+for attempt in {1..300}; do
+  if [[ -e "$temporary/publication-gap" ]] || ! kill -0 "$concurrent_process" 2>/dev/null; then
+    break
+  fi
+  sleep 0.025
+done
+
+if ! "$live_executable" --version >"$temporary/live-version" 2>&1; then
+  touch "$temporary/publication-release"
+  wait "$concurrent_process" || true
+  echo "A concurrent Steady installation deleted an executable before its caller could start it" >&2
+  exit 1
+fi
+
+touch "$temporary/publication-release"
+if ! wait "$concurrent_process"; then
+  cat "$temporary/concurrent-output" >&2
+  echo "Concurrent Steady installation failed while an existing executable remained live" >&2
+  exit 1
+fi
+
+grep -Fx "steady $expected_version" "$temporary/live-version" >/dev/null
+grep -Fx "$live_executable" "$temporary/concurrent-executable" >/dev/null
+echo "Concurrent Steady installation preserves and reuses the authenticated live executable"
