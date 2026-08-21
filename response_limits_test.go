@@ -289,12 +289,23 @@ func TestExecuteBoundsCompressedWireResponse(t *testing.T) {
 
 			clients := []struct {
 				name string
-				doer option.RequestOption
+				opts []option.RequestOption
 			}{
 				{name: "native client"},
 				{
 					name: "delegating doer",
-					doer: option.WithHTTPClient(&delegatingResponseDoer{Client: &http.Client{}}),
+					opts: []option.RequestOption{
+						option.WithHTTPClient(&delegatingResponseDoer{Client: &http.Client{}}),
+					},
+				},
+				{
+					name: "delegating doer replaces compression-disabled client",
+					opts: []option.RequestOption{
+						option.WithHTTPClient(&http.Client{
+							Transport: &http.Transport{DisableCompression: true},
+						}),
+						option.WithHTTPClient(&delegatingResponseDoer{Client: &http.Client{}}),
+					},
 				},
 			}
 			for _, test := range clients {
@@ -306,9 +317,7 @@ func TestExecuteBoundsCompressedWireResponse(t *testing.T) {
 						option.WithMaxResponseBodyBytes(wireLimit),
 						option.WithMaxErrorResponseBodyBytes(wireLimit),
 					}
-					if test.doer != nil {
-						opts = append(opts, test.doer)
-					}
+					opts = append(opts, test.opts...)
 
 					client := openai.NewClient(opts...)
 					var response map[string]any
