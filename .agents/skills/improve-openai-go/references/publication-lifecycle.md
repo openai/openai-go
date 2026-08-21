@@ -73,9 +73,16 @@ Use these names everywhere:
 - `integration_tree_digest`: independently measured tree produced by combining
   `target_head_sha` and the candidate or published head without executing either.
 
-Require `source_head_sha` to be an ancestor of `candidate_sha`, its merge base to
-equal `source_head_sha`, and the range to contain no merge commit unless the
-authenticated work order explicitly allows one.
+Require `candidate_sha` to be one newly created, non-merge synthetic commit
+whose direct parent is exactly `source_head_sha` in new-improvement mode or
+`expected_remote_sha` in service mode. Require `expected_remote_sha` to equal
+`source_head_sha` before service-mode implementation begins. Materialize that
+commit's tree from the validated patch; do not publish a worker-authored commit
+chain. Enumerate every object reachable from `candidate_sha` but not its direct
+parent. Reject any additional commit and any newly reachable blob that is not
+referenced by the final candidate tree. This single-commit rule ensures the
+compare-and-swap never exposes an unvalidated intermediate commit or abandoned
+blob.
 
 Bind validation to these exact ranges:
 
@@ -116,22 +123,26 @@ Keep these components independently constrained:
   mutation tool or write-network route. Require the broker to reject the model
   identity even if a brokered app is visible. Warm reviewed dependencies in a
   separate trusted step before model execution.
-- **Validation-network sandbox:** denies external, host, cloud-metadata, and
-  cross-job networking by default. When the authenticated validation contract
-  requires a local mock, a trusted harness may start a reviewed, credential-
-  free service inside the job's isolated network namespace before candidate
-  execution and allow commands to connect only to its explicitly bound job-
-  local loopback endpoint. The namespace must not share the runner's host
-  loopback, and every unrelated loopback address or port must remain
-  unreachable. Bind the service identity and digest, endpoint, and network
-  policy in the work order; candidate or model output cannot start, replace, or
-  widen the trusted service. Never give the service secrets or a write route.
+- **Validation-network sandbox:** places each job in an isolated network
+  namespace that never shares runner-host or another job's loopback. Deny every
+  non-loopback route, including external, host, cloud-metadata, and cross-job
+  destinations. Permit candidate-created job-local loopback listeners and
+  connections so repository tests such as Go `httptest` can exercise their real
+  protocol without gaining a route outside the disposable job. When the
+  authenticated validation contract requires a reviewed Steady or other
+  trusted mock, the harness may reserve and attest a distinct credential-free
+  job-local endpoint before candidate execution. Bind that service's identity,
+  digest, endpoint, and network policy in the work order; candidate or model
+  output cannot replace, impersonate, or widen the trusted service. Never give
+  any local service secrets or a write route.
 - **Authenticated work order:** is signed by the coordinator or kept in trusted
   immutable storage outside model-writable paths. It fixes the run ID, mode,
   revision record, epoch, allowed paths and change kinds, and validation
   contract before implementation, including finite per-command resource
-  budgets. It also limits the external operation types and targets the run may
-  later request.
+  budgets. For service mode it also fixes the canonical pull-request identity,
+  source repository identity and ref, and base repository identity and base
+  ref. It limits the external operation types and targets the run may later
+  request.
 - **Authenticated mutation envelope:** is a separately coordinator-signed,
   append-only record for each external write. It binds the allowed method,
   normalized payload digest, repository and resource target, expected head,
@@ -160,11 +171,15 @@ Keep these components independently constrained:
   a reusable credential.
 - **Status reporter:** has checks/status write permission but no repository,
   pull-request, workflow-dispatch, or Slack write permission. Its broker accepts
-  only a validated signed receipt, `published_sha`, `target_head_sha`,
-  integration-tree digest, check name, conclusion, details URL, idempotency key,
-  and current epoch, then attaches that result to `published_sha` with a
-  one-operation token. It stores the check-run ID and a stable external ID or
-  status-context lookup key for idempotent recovery while the lease is held.
+  only a validated signed receipt that itself binds the run, work order, epoch,
+  trusted wrapper and tool identities, workflow run and job, `published_sha`,
+  `target_head_sha`, measured input and integration-tree digests, result schema,
+  exact check name, conclusion, and details URL. The separately authenticated
+  mutation envelope must bind that receipt's digest and every externally
+  reported field. The broker rejects a renamed, remapped, or replayed result,
+  then attaches the exact signed result to `published_sha` with a one-operation
+  token. It stores the check-run ID and a stable external ID or status-context
+  lookup key for idempotent recovery while the lease is held.
 - **PR-stewardship writer:** receives no model API credential and exposes only
   pull-request discussion and review-request operations. It has no repository-
   content, workflow-dispatch, checks/status, or Slack authority. Its broker
@@ -178,9 +193,13 @@ Keep these components independently constrained:
   immediately before credential issuance and mutation. Persist the returned
   comment, thread state, or review-request identity before another operation.
   Never give this token to the coordinator or model worker.
-- **Slack writer:** accepts only the allowlisted channel, pull-request URL,
-  target message or thread, payload, idempotency key, and current epoch. It gets
-  a short-lived credential inside one brokered, tracked mutation.
+- **Slack writer:** is the only component that may create or reply to a Slack
+  message. Its broker accepts a coordinator-signed mutation envelope binding
+  the allowlisted channel, pull-request identity and URL, `published_sha`,
+  target root or thread, normalized sanitized payload digest, stable root
+  marker, idempotency key, and current epoch. It gets a short-lived credential
+  inside one brokered, tracked mutation and persists the returned message or
+  thread identity before another operation.
 
 ## Fail-first host assertions
 
@@ -194,21 +213,24 @@ test for infrastructure the repository does not own.
 | Fenced lifecycle | Lease is held elsewhere, the run lacks its acquisition receipt, epoch or owner is stale, ownership is lost, or an earlier write is in flight or outcome-unknown | Adversarial tests reject stale epochs at credential issuance and mutation, drain unknown operations, prohibit reassignment until terminal reconciliation, and prove that only `lease_acquired`, `lease_owner_id`, and the matching `fencing_epoch` can release the lease |
 | Sanitized model context | Hosted or source evidence reaches model context before bounded detection and redaction, raw sensitive material is model-readable, or safe sanitization is uncertain | Adversarial fixtures prove credentials and customer data never enter model input, source matches are withheld without rewriting authoritative bytes, and every scanner failure or ambiguity stops the run |
 | Uncredentialed model | Model or subprocess can reach a secret, helper, agent, external mutation tool, non-allowlisted command network, or write broker | Environment/tool inspection is clean and the broker rejects model identity |
-| Isolated validation network | A required trusted local mock is unreachable, or candidate execution can reach external, host, metadata, cross-job, or unrelated loopback services, substitute the mock, or widen its route | The repository's full loopback-dependent validation passes through the work-order-bound trusted mock while adversarial probes prove every non-allowlisted route and service remains unreachable |
+| Isolated validation network | A required trusted mock or candidate-created test listener is unreachable, candidate execution can reach a non-loopback, host, metadata, or cross-job destination, or the candidate can substitute the trusted mock | The repository's full loopback-dependent validation, including candidate-created `httptest` listeners, passes inside one job namespace while adversarial probes prove every outside route is denied and the attested mock cannot be replaced |
 | Authenticated allowlist | Artifact differs from the trusted work order in revisions, paths, kinds, modes, contract, or digest | Independent validation records both digests, epoch, and all accepted allowlist items before token issuance |
-| Authenticated ancestry | Candidate is not the approved linear descendant | Merge-base and no-unapproved-merge assertions pass |
+| Single-commit publication | Candidate is not exactly one synthetic commit directly atop the authenticated source, or the published range contains an intermediate commit or non-final blob | Direct-parent and reachable-object assertions prove the compare-and-swap exposes only the validated final tree |
 | Current target integration | Target tip changed or its measured merge tree was not validated | Work order restarts on target drift; candidate and published integration-tree receipts bind the current `target_head_sha` and measured digest |
 | Appropriate proof | Executable behavior lacks a base-failing regression, or a non-executable artifact lacks suitable validation | Proof distinguishes base from head and matches the artifact |
 | Complete intended diff | Manifest differs from staged, worktree, untracked, or committed paths, or whitespace coverage is incomplete | Exact path reconciliation, staged check, and final range check pass |
 | Honest resolution | Concern is disputed, blocked, informational, unvalidated, or not fixed on the published head | Exact-head evidence exists before resolving only that thread |
 | Separate dispatch | Publisher can dispatch, a mutable candidate ref selects executable workflow code, or PR-only checks did not analyze the published tree | Dispatcher records run IDs, authenticates the trusted wrapper revision, and accepts its signed receipt only when the platform-measured input tree matches `published_sha` |
 | No implicit execution | Publishing a branch or pull request can trigger candidate execution before brokered dispatch | Credential event semantics and trigger filters prove publication creates no workflow run; every check starts explicitly through the trusted wrapper |
+| Head-bound pull-request creation | The source ref can move between its check and `create-pr`, or the returned pull request does not exactly bind `published_sha` | A provider-supported atomic source-ref equality precondition or exclusive ref-control proof spans creation through persisted identity, and immediate readback matches every signed source and base field |
 | Persisted pull request | A published new-improvement branch has no uniquely reconciled pull request, PR creation is outcome-unknown, or a retry could create a duplicate | `publish-branch` is persisted before a separately fenced `create-pr` mutation whose idempotency key and canonical result bind `published_sha`; restart tests recover branch-created/PR-missing and PR-created/result-missing states without an orphan or duplicate |
-| Open pull-request lifecycle | Recovery finds a closed or merged match, a service pull request is not open, or the canonical pull request closes before a later mutation | Closed or merged matches are terminal recovery evidence; only a separately authorized maintainer reopening a closed pull request permits a new lifecycle, and every post-publication writer rejects non-open state |
+| Open pull-request lifecycle | Recovery finds a closed or merged match, a service pull request is not open, its source or base identity differs from the work order, or the canonical pull request closes before a later mutation | Closed or merged matches are terminal recovery evidence; only a separately authorized maintainer reopening a closed pull request permits a new lifecycle, and every post-publication writer rejects non-open or identity-drifted state |
 | Trusted review instructions | Candidate content can supply or modify a mandatory review skill | Review receipts identify a trusted pre-candidate skill snapshot and immutable candidate blobs |
 | Isolated Git metadata | Model-writable Git state shares refs, config, hooks, objects, alternates, promisor storage, or hardlinked inodes with a trusted or reusable checkout | Filesystem and resolved-config proof confines an independent no-local/no-hardlinks clone and all Git inputs to the per-run sandbox |
 | Bounded candidate execution | Any candidate-controlled command lacks an explicit finite wall-clock, CPU, memory, PID, scratch-disk, or output budget, or descendants survive its terminal state | The trusted harness enforces every signed work-order budget, kills the complete process tree on exit or breach, and rejects over-limit results |
 | Separate PR stewardship | The coordinator, publisher, model, or another writer can reply, resolve, or request review, or one token authorizes multiple operations | The independently constrained PR-stewardship writer uses one envelope-bound token per operation, persists its remote identity, and cannot reach content, creation, dispatch, status, or Slack operations through its broker |
+| Signed check outcome | A reported check name, conclusion, or target is not covered by the validator's signature, or a receipt can be relabeled or replayed | Receipt and mutation-envelope verification bind the exact check fields, revisions, integration evidence, workflow identity, result schema, epoch, and idempotency key before one write |
+| Authenticated Slack root | Search evidence, root ownership, or the root and follow-up payload are not authenticated, permitting reuse of an unrelated thread | A coordinator-signed canonical Slack root record proves the unique approved-writer root, and each one-operation writer envelope binds the exact root, payload, head, epoch, and idempotency key |
 | Target-bound status | A successful candidate check names a stale `target_head_sha` or cannot be found idempotently during recovery | Reporter rechecks the target immediately before success, binds the target in its mutation, stores the remote check identity, and relies on strict up-to-date protection or a merge queue after release |
 | Published-head stewardship | The canonical remote branch or pull-request head differs from `published_sha` before a post-publication mutation or finalization | Broker-side rechecks at credential issuance and mutation bind both heads to `published_sha`; any drift stops stewardship and restarts from a new work order without resolving feedback |
 | Review-ready | Required checks are absent, stale, pending, unexpectedly skipped, for another revision, or not attached to the candidate | Strict up-to-date protection or a merge queue gates integration; the reporter attaches every validated result to `published_sha`, the current target integration tree is green, and no actionable feedback remains |
@@ -230,6 +252,10 @@ The validator/publisher must reject unapproved creates, deletes, renames,
 symlinks, executable bits, workflows, dependencies, generated source, file
 types or modes, and any validation-contract mismatch. It must rerun every
 artifact-appropriate check required by the work order before obtaining a token.
+In its fresh checkout, it must materialize the validated final tree and create
+the single synthetic commit defined by the revision record. Before integration
+validation or token issuance, enumerate the commit range and all newly reachable
+objects and reject any extra commit or blob absent from the final tree.
 
 Immediately before publication, recount skill-owned pull requests and repeat
 duplicate and overlap searches. Abort if the budget or selection rules no
@@ -258,18 +284,31 @@ explicitly reopens a closed pull request may a new lifecycle reconsider it; a
 merged match remains terminal. If no match exists and the prior outcome is
 definitively absent, perform a separately fenced `create-pr` mutation. Its
 authenticated envelope, short-lived token, and deterministic idempotency key
-must bind the normalized title and body, target base, source ref, stable marker,
-and `published_sha`. Persist the returned node ID, number, URL, state, base,
-source ref, head SHA, and idempotency key. In service mode, require the
-authenticated existing pull request to be open and unmerged before binding it
-to the same fields instead of creating one. On restart after branch publication,
-repeat reconciliation before any retry: resume `create-pr` only when creation is
-definitively absent, adopt the one exact open matching result when creation
-succeeded but its response was lost, and stop on closed, merged, or ambiguous
-outcomes. Never leave the lifecycle ready to dispatch with an orphan or
-non-open pull request, and never create a second pull request to recover an
-unknown outcome. Prove separately that the pull-request mutation also cannot
-trigger implicit candidate execution.
+must bind the normalized title and body, target base repository and ref, source
+repository and ref, stable marker, and `published_sha`. Immediately before
+creation, require the live source ref to equal `published_sha`. Guard the
+mutation with either a provider-supported atomic source-ref equality
+precondition or an exclusive ref-control proof that prevents every other actor
+from changing that ref until the returned pull-request identity and head have
+been read back and persisted. If neither guarantee exists, publication-capable
+mode is unavailable: stop without creating the pull request. Immediately read
+back the created pull request and accept it only when its open state, source and
+base repository identities and refs, and head exactly match the signed work
+order and `published_sha`. Persist the returned node ID, number, URL, state,
+base repository and ref, source repository and ref, head SHA, and idempotency
+key before releasing exclusive ref control.
+
+In service mode, require the authenticated existing pull request to be open and
+unmerged and require its live base repository identity and base ref, source
+repository identity and source ref, and head SHA to equal the signed work order
+before binding the same fields instead of creating one. On restart after branch
+publication, repeat reconciliation before any retry: resume `create-pr` only
+when creation is definitively absent, adopt the one exact open matching result
+when creation succeeded but its response was lost, and stop on closed, merged,
+or ambiguous outcomes. Never leave the lifecycle ready to dispatch with an
+orphan or non-open pull request, and never create a second pull request to
+recover an unknown outcome. Prove separately that the pull-request mutation
+also cannot trigger implicit candidate execution.
 
 ## Dispatch and steward the exact published head
 
@@ -305,7 +344,11 @@ job identity, exit status, measured input-tree digest, and bounded canonical
 non-executable results from a platform-attested channel, never candidate output.
 Before signing, verify that digest against the tree for `published_sha`. Bind the
 trusted wrapper revision, tool and analyzer identities, measured tree digest,
-current `target_head_sha`, integration-tree digest, and result into the receipt.
+current `target_head_sha`, integration-tree digest, result schema, exact check
+name, conclusion, details URL, work-order identity, run and job identities, and
+epoch into the receipt. Sign the canonical receipt as one object; never sign
+only the raw tool result and let a later component choose its public label or
+conclusion.
 
 Verify the epoch and authenticated mutation envelope before the broker performs
 each dispatch. Record the workflow-run ID, authenticate the trusted wrapper's
@@ -317,19 +360,23 @@ status reporting, review replies or resolutions, review requests, readiness
 announcements, and Slack messages--and again before finalization, read the
 canonical remote branch and pull-request head through the coordinator. Require
 both to equal `published_sha` and the pull request to match the persisted
-`establish-pr` identity, remain open, and remain unmerged. Bind those
+`establish-pr` identity--including its source repository and ref and base
+repository identity and base ref--remain open, and remain unmerged. Bind those
 observations in the mutation envelope. The broker must recheck them immediately
-before credential issuance and mutation; if either head, identity, or state
-drifts, perform no stewardship mutation, resolve no thread, and restart from a
-new work order.
+before credential issuance and mutation; if either head, repository, ref,
+identity, or state drifts, perform no stewardship mutation, resolve no thread,
+and restart from a new work order.
 
 The separately authorized status reporter must validate the signed receipt and
 re-read the target branch immediately before attaching a successful check run or
 commit status to `published_sha`, not the wrapper revision. Bind
+the signed receipt digest, exact check name, conclusion, details URL,
 `target_head_sha`, the stored check-run ID and external ID or stable status
-context, and the payload digest in the authenticated mutation. If the target
-differs, do not write success. Re-read it again before lifecycle finalization and
-restart with a new work order if it moved while the lease was held. Require
+context, and the payload digest in the authenticated mutation. Reject a receipt
+whose signed field differs from the requested public result, or whose run,
+epoch, revision, or idempotency identity was already consumed. If the target
+differs, do not write success. Re-read it again before lifecycle finalization
+and restart with a new work order if it moved while the lease was held. Require
 strict up-to-date branch protection or a merge queue for any required reporter
 check; that merge gate, not a post-release automation writer, invalidates
 eligibility after later target drift. Otherwise use an informational check name
@@ -353,8 +400,17 @@ Send any review request only through a distinct PR-stewardship writer operation
 whose allowlist names the established SDK reviewer or team.
 Never merge automatically.
 
-For `#sdk-reviews`, reuse the retained thread reference or successfully search
-the channel for the pull-request URL. Create exactly one root message only after
-a successful search finds none, then store its thread identifier. If search is
-unavailable, failed, or ambiguous, stop rather than risk a duplicate. Send all
-follow-ups in that thread through the separate Slack writer.
+For `#sdk-reviews`, first reconcile any retained root through trusted read-only
+Slack evidence. Otherwise have the coordinator search the exact allowlisted
+channel for the pull-request URL and stable root marker, then persist a
+coordinator-signed canonical Slack root record binding the search query and
+result digest, channel, approved writer identity, pull-request identity and URL,
+`published_sha`, epoch, and the unique matching root timestamp when one exists.
+Reuse only that authenticated, unique root; reject a root from another writer,
+head, pull request, or marker. If the authenticated search proves none exists,
+the Slack writer may create exactly one root under an envelope binding the exact
+normalized payload and all canonical-root fields, then persist its returned
+thread identifier and author. If search is unavailable, failed, or ambiguous,
+stop rather than risk a duplicate. Send each follow-up only through a separate
+Slack-writer operation whose envelope binds the authenticated root timestamp and
+exact follow-up payload.
