@@ -494,27 +494,6 @@ func isBeforeContextDeadline(t time.Time, ctx context.Context) bool {
 	return t.Before(d)
 }
 
-// bodyWithCancel keeps a raw response tied to its request context until the
-// caller finishes reading or closes the body.
-type bodyWithCancel struct {
-	stop func() // ends the request context lifecycle
-	rc   io.ReadCloser
-	once sync.Once
-}
-
-func (b *bodyWithCancel) Read(p []byte) (n int, err error) {
-	n, err = b.rc.Read(p)
-	if err != nil {
-		b.once.Do(b.stop)
-	}
-	return n, err
-}
-
-func (b *bodyWithCancel) Close() error {
-	defer b.once.Do(b.stop)
-	return b.rc.Close()
-}
-
 // closeOnceReadCloser lets Execute clean up bodies when middleware returns an
 // error before reaching the transport, without double-closing bodies that a
 // transport has already closed.
@@ -721,24 +700,24 @@ func (cfg *RequestConfig) Execute() (err error) {
 		return err
 	}
 
+	lifecycle := newResponseBodyLifecycle(res.Body, cancel)
 	if res.StatusCode >= 400 {
-		return cfg.handleErrorResponse(res, cancel)
+		return cfg.handleErrorResponse(res, lifecycle)
 	}
 
 	_, intoCustomResponseBody := cfg.ResponseBodyInto.(**http.Response)
 	if cfg.ResponseBodyInto != nil && !intoCustomResponseBody {
-		return cfg.handleSuccessResponse(res, cancel)
+		return cfg.handleSuccessResponse(res, lifecycle)
 	}
 
 	if cfg.ResponseInto == nil && !intoCustomResponseBody {
-		_ = res.Body.Close()
-		cancel()
+		_ = lifecycle.Close()
 		return nil
 	}
 
 	// The caller owns this raw response. Keep its attempt context alive until
-	// reading finishes or Close releases the underlying body.
-	res.Body = &bodyWithCancel{rc: res.Body, stop: cancel}
+	// Close releases the underlying body.
+	res.Body = lifecycle
 	return nil
 }
 

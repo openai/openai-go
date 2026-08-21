@@ -112,8 +112,9 @@ func (cfg *RequestConfig) withManagedGzip(next middlewareNext) middlewareNext {
 	return func(req *http.Request) (*http.Response, error) {
 		manageGzip := cfg.shouldManageGzip(req)
 		if manageGzip {
-			// Set this below user middleware, matching net/http's transparent gzip
-			// negotiation while retaining access to compressed wire bytes.
+			// Decorate a per-attempt clone so authentication or other outer
+			// middleware can replay the pristine request through this layer.
+			req = req.Clone(req.Context())
 			req.Header.Set("Accept-Encoding", "gzip")
 		}
 

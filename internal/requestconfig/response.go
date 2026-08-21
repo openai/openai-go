@@ -39,8 +39,8 @@ func (e *responseBodyLimitError) Error() string {
 
 func (e *responseBodyLimitError) Unwrap() error { return e.cause }
 
-func (cfg *RequestConfig) handleErrorResponse(res *http.Response, cancel context.CancelFunc) error {
-	return cfg.withResponseBodyTimeout(res, cancel, func(body io.Reader) error {
+func (cfg *RequestConfig) handleErrorResponse(res *http.Response, lifecycle *responseBodyLifecycle) error {
+	return cfg.withResponseBodyTimeout(lifecycle, func(body io.Reader) error {
 		contents, overflow, readErr := readBodyUpTo(body, cfg.MaxErrorResponseBodyBytes)
 		var compressedLimitErr *compressedResponseBodyLimitError
 		if readErr != nil && !errors.As(readErr, &compressedLimitErr) {
@@ -78,8 +78,8 @@ func (cfg *RequestConfig) handleErrorResponse(res *http.Response, cancel context
 	})
 }
 
-func (cfg *RequestConfig) handleSuccessResponse(res *http.Response, cancel context.CancelFunc) error {
-	return cfg.withResponseBodyTimeout(res, cancel, func(body io.Reader) error {
+func (cfg *RequestConfig) handleSuccessResponse(res *http.Response, lifecycle *responseBodyLifecycle) error {
+	return cfg.withResponseBodyTimeout(lifecycle, func(body io.Reader) error {
 		contentType := res.Header.Get("content-type")
 		mediaType, _, _ := mime.ParseMediaType(contentType)
 		isJSON := strings.Contains(mediaType, "application/json") || strings.HasSuffix(mediaType, "+json")
@@ -127,43 +127,63 @@ func (cfg *RequestConfig) handleSuccessResponse(res *http.Response, cancel conte
 	})
 }
 
+type responseBodyLifecycle struct {
+	body       io.ReadCloser
+	stop       func()
+	cancelOnce sync.Once
+}
+
+func newResponseBodyLifecycle(body io.ReadCloser, stop func()) *responseBodyLifecycle {
+	return &responseBodyLifecycle{body: body, stop: stop}
+}
+
+func (l *responseBodyLifecycle) stopAttempt() {
+	if l.stop != nil {
+		l.cancelOnce.Do(l.stop)
+	}
+}
+
+func (l *responseBodyLifecycle) Read(p []byte) (int, error) {
+	return l.body.Read(p)
+}
+
+func (l *responseBodyLifecycle) Close() error {
+	defer l.stopAttempt()
+	return l.body.Close()
+}
+
+func (l *responseBodyLifecycle) interrupt(interrupted chan<- struct{}) {
+	// Timeout must cancel first so transports whose Close does not interrupt
+	// Read can observe the request ending. Signal before Close because HTTP/2
+	// cleanup is allowed to block independently of the foreground timeout.
+	l.stopAttempt()
+	close(interrupted)
+	_ = l.body.Close()
+}
+
 func (cfg *RequestConfig) withResponseBodyTimeout(
-	res *http.Response,
-	cancel context.CancelFunc,
+	lifecycle *responseBodyLifecycle,
 	read func(io.Reader) error,
 ) error {
-	body := res.Body
-	var stopOnce sync.Once
-	stopRead := func() {
-		stopOnce.Do(func() {
-			if cancel != nil {
-				cancel()
-			}
-			_ = body.Close()
-		})
-	}
 	var timedOut atomic.Bool
 	var timer *time.Timer
-	var timeoutDone chan struct{}
+	var interrupted chan struct{}
 	if cfg.ResponseBodyTimeout > 0 {
-		timeoutDone = make(chan struct{})
+		interrupted = make(chan struct{})
 		timer = time.AfterFunc(cfg.ResponseBodyTimeout, func() {
-			defer close(timeoutDone)
 			timedOut.Store(true)
-			// Cancel first so supported custom transports whose Body.Close does
-			// not interrupt Read can observe the request lifecycle ending.
-			stopRead()
+			lifecycle.interrupt(interrupted)
 		})
 	}
 
-	err := read(body)
+	err := read(lifecycle.body)
 	if timer != nil && !timer.Stop() {
-		<-timeoutDone
+		<-interrupted
 	}
-	stopRead()
 	if timedOut.Load() {
 		return fmt.Errorf("response body read timed out after %s: %w", cfg.ResponseBodyTimeout, context.DeadlineExceeded)
 	}
+	_ = lifecycle.Close()
 	return err
 }
 
