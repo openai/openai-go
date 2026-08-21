@@ -111,10 +111,21 @@ Keep these components independently constrained:
   alternates, promisor or shared object directories, cross-boundary hardlinked
   objects, external config/includes, credential helpers, and external hooks;
   verify object inodes and resolved configuration before model access. Never
-  expose shared refs, config, hooks, or objects. Deny command network and every
-  external mutation tool or write-network route. Require the broker to reject
-  the model identity even if a brokered app is visible. Warm reviewed
-  dependencies in a separate trusted step before model execution.
+  expose shared refs, config, hooks, or objects. Deny command network except
+  through the validation-network sandbox below, and deny every external
+  mutation tool or write-network route. Require the broker to reject the model
+  identity even if a brokered app is visible. Warm reviewed dependencies in a
+  separate trusted step before model execution.
+- **Validation-network sandbox:** denies external, host, cloud-metadata, and
+  cross-job networking by default. When the authenticated validation contract
+  requires a local mock, a trusted harness may start a reviewed, credential-
+  free service inside the job's isolated network namespace before candidate
+  execution and allow commands to connect only to its explicitly bound job-
+  local loopback endpoint. The namespace must not share the runner's host
+  loopback, and every unrelated loopback address or port must remain
+  unreachable. Bind the service identity and digest, endpoint, and network
+  policy in the work order; candidate or model output cannot start, replace, or
+  widen the trusted service. Never give the service secrets or a write route.
 - **Authenticated work order:** is signed by the coordinator or kept in trusted
   immutable storage outside model-writable paths. It fixes the run ID, mode,
   revision record, epoch, allowed paths and change kinds, and validation
@@ -134,14 +145,14 @@ Keep these components independently constrained:
 - **Validator/publisher:** receives no model API credential and initially no
   publishing credential. It independently retrieves the authenticated work
   order and validates the artifact in a fresh, secret-free checkout without
-  persistent caches, command network, or elevated privilege. Only its final
-  brokered stages may obtain separate short-lived tokens: first one scoped to
-  the single branch compare-and-swap, then one scoped to establishing the
-  single pull request. Each broker retains its token and synchronously performs
-  only its envelope's allowlisted request; it never returns reusable credentials
-  to the publisher. Both credentials' event semantics must suppress every
-  implicit push- or pull-request-triggered workflow, and neither has Actions-
-  dispatch permission.
+  persistent caches, elevated privilege, or command network other than the
+  validation-network sandbox. Only its final brokered stages may obtain
+  separate short-lived tokens: first one scoped to the single branch compare-
+  and-swap, then one scoped to establishing the single pull request. Each broker
+  retains its token and synchronously performs only its envelope's allowlisted
+  request; it never returns reusable credentials to the publisher. Both
+  credentials' event semantics must suppress every implicit push- or pull-
+  request-triggered workflow, and neither has Actions-dispatch permission.
 - **Dispatcher:** has Actions-dispatch permission but no repository-content or
   pull-request write permission. Its broker retains a short-lived token scoped
   to one allowlisted wrapper workflow, immutable target revision, exact inputs,
@@ -182,7 +193,8 @@ test for infrastructure the repository does not own.
 | --- | --- | --- |
 | Fenced lifecycle | Lease is held elsewhere, the run lacks its acquisition receipt, epoch or owner is stale, ownership is lost, or an earlier write is in flight or outcome-unknown | Adversarial tests reject stale epochs at credential issuance and mutation, drain unknown operations, prohibit reassignment until terminal reconciliation, and prove that only `lease_acquired`, `lease_owner_id`, and the matching `fencing_epoch` can release the lease |
 | Sanitized model context | Hosted or source evidence reaches model context before bounded detection and redaction, raw sensitive material is model-readable, or safe sanitization is uncertain | Adversarial fixtures prove credentials and customer data never enter model input, source matches are withheld without rewriting authoritative bytes, and every scanner failure or ambiguity stops the run |
-| Uncredentialed model | Model or subprocess can reach a secret, helper, agent, external mutation tool, command network, or write broker | Environment/tool inspection is clean and the broker rejects model identity |
+| Uncredentialed model | Model or subprocess can reach a secret, helper, agent, external mutation tool, non-allowlisted command network, or write broker | Environment/tool inspection is clean and the broker rejects model identity |
+| Isolated validation network | A required trusted local mock is unreachable, or candidate execution can reach external, host, metadata, cross-job, or unrelated loopback services, substitute the mock, or widen its route | The repository's full loopback-dependent validation passes through the work-order-bound trusted mock while adversarial probes prove every non-allowlisted route and service remains unreachable |
 | Authenticated allowlist | Artifact differs from the trusted work order in revisions, paths, kinds, modes, contract, or digest | Independent validation records both digests, epoch, and all accepted allowlist items before token issuance |
 | Authenticated ancestry | Candidate is not the approved linear descendant | Merge-base and no-unapproved-merge assertions pass |
 | Current target integration | Target tip changed or its measured merge tree was not validated | Work order restarts on target drift; candidate and published integration-tree receipts bind the current `target_head_sha` and measured digest |
@@ -271,21 +283,22 @@ workflows accept only mutable refs and therefore do not satisfy this protocol
 without such a wrapper.
 
 Run candidate-controlled build, test, analysis, and scripts in a fresh
-disposable job with no command network, secrets, write token, persistent cache
-restore or write capability, or receipt-signing authority. A trusted stage must
-measure the input tree and mount source, toolchain, analyzers, and warmed
-dependencies read-only; confine candidate writes to fresh scratch storage. Use
-a fixed trusted harness to invoke reviewed analyzers against that immutable
-snapshot. The authenticated work order must assign every candidate-controlled
-command explicit finite numeric ceilings for wall-clock duration, CPU time or
-quota, memory bytes, PID/process count, scratch-disk bytes and inodes, and
-aggregate stdout, stderr, and result bytes. Do not inherit a platform default or
-allow a candidate to raise a limit. Enforce the ceilings in the sandbox or job
-runtime, terminate the complete process group and all descendants when the
-command exits, times out, or exceeds any ceiling, and reclaim its scratch
-storage. Treat a limit breach or incomplete descendant teardown as validation
-failure: discard candidate-provided results, do not publish a pre-publication
-candidate, and do not issue a successful receipt for a published one.
+disposable job with no command network except the validation-network sandbox,
+secrets, write token, persistent cache restore or write capability, or receipt-
+signing authority. A trusted stage must measure the input tree and mount source,
+toolchain, analyzers, and warmed dependencies read-only; confine candidate
+writes to fresh scratch storage. Use a fixed trusted harness to invoke reviewed
+analyzers against that immutable snapshot. The authenticated work order must
+assign every candidate-controlled command explicit finite numeric ceilings for
+wall-clock duration, CPU time or quota, memory bytes, PID/process count,
+scratch-disk bytes and inodes, and aggregate stdout, stderr, and result bytes.
+Do not inherit a platform default or allow a candidate to raise a limit.
+Enforce the ceilings in the sandbox or job runtime, terminate the complete
+process group and all descendants when the command exits, times out, or exceeds
+any ceiling, and reclaim its scratch storage. Treat a limit breach or
+incomplete descendant teardown as validation failure: discard candidate-
+provided results, do not publish a pre-publication candidate, and do not issue
+a successful receipt for a published one.
 
 After the candidate job exits, have a separate trusted job or service obtain
 job identity, exit status, measured input-tree digest, and bounded canonical
