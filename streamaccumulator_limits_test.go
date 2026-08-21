@@ -346,6 +346,163 @@ func TestAccumulatorBudgetsPublicLogprobReplacement(t *testing.T) {
 	}
 }
 
+func TestAccumulatorLogprobReconciliationIsAtomic(t *testing.T) {
+	var acc openai.ChatCompletionAccumulator
+	initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+	initial.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "visible"}, {Token: "hidden"}}
+	if !acc.AddChunk(initial) {
+		t.Fatal("AddChunk rejected the initial logprobs")
+	}
+
+	acc.Choices[0].Logprobs.Content = acc.Choices[0].Logprobs.Content[:0:0]
+	contentData := unsafe.SliceData(acc.Choices[0].Logprobs.Content)
+	byteCount := testAccumulatorMaxLogprobBytes / int(unsafe.Sizeof(int64(0)))
+	acc.Choices[0].Logprobs.Refusal = []openai.ChatCompletionTokenLogprob{{Bytes: make([]int64, byteCount)}}
+	if acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
+		t.Fatal("AddChunk accepted public logprobs beyond the aggregate budget")
+	}
+	content := acc.Choices[0].Logprobs.Content
+	if len(content) != 0 || cap(content) != 0 || unsafe.SliceData(content) != contentData {
+		t.Fatal("AddChunk detached public logprob backing before rejecting the chunk")
+	}
+
+	acc.Choices[0].Logprobs.Refusal = nil
+	if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
+		t.Fatal("AddChunk rejected the valid chunk after excessive public logprobs were cleared")
+	}
+	if unsafe.SliceData(acc.Choices[0].Logprobs.Content) == contentData {
+		t.Fatal("AddChunk did not apply the staged detachment after accepting the chunk")
+	}
+}
+
+func TestAccumulatorMetadataUsesProjectedRetainedState(t *testing.T) {
+	tests := []struct {
+		name             string
+		chunk            func() openai.ChatCompletionChunk
+		setChunk         func(*openai.ChatCompletionChunk, string)
+		get              func(*openai.ChatCompletionAccumulator) string
+		clearAccumulator func(*openai.ChatCompletionAccumulator)
+	}{
+		{
+			name: "model",
+			chunk: func() openai.ChatCompletionChunk {
+				return accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+			},
+			setChunk: func(chunk *openai.ChatCompletionChunk, value string) { chunk.Model = value },
+			get:      func(acc *openai.ChatCompletionAccumulator) string { return acc.Model },
+		},
+		{
+			name: "system_fingerprint",
+			chunk: func() openai.ChatCompletionChunk {
+				return accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+			},
+			setChunk: func(chunk *openai.ChatCompletionChunk, value string) { chunk.SystemFingerprint = value },
+			get:      func(acc *openai.ChatCompletionAccumulator) string { return acc.SystemFingerprint },
+		},
+		{
+			name: "finish_reason",
+			chunk: func() openai.ChatCompletionChunk {
+				return accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+			},
+			setChunk: func(chunk *openai.ChatCompletionChunk, value string) { chunk.Choices[0].FinishReason = value },
+			get:      func(acc *openai.ChatCompletionAccumulator) string { return acc.Choices[0].FinishReason },
+		},
+		{
+			name: "role",
+			chunk: func() openai.ChatCompletionChunk {
+				return accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+			},
+			setChunk:         func(chunk *openai.ChatCompletionChunk, value string) { chunk.Choices[0].Delta.Role = value },
+			get:              func(acc *openai.ChatCompletionAccumulator) string { return string(acc.Choices[0].Message.Role) },
+			clearAccumulator: func(acc *openai.ChatCompletionAccumulator) { acc.Choices[0].Message.Role = "" },
+		},
+		{
+			name:             "tool_id",
+			chunk:            func() openai.ChatCompletionChunk { return accumulatorToolStringChunk("", "") },
+			setChunk:         func(chunk *openai.ChatCompletionChunk, value string) { chunk.Choices[0].Delta.ToolCalls[0].ID = value },
+			get:              func(acc *openai.ChatCompletionAccumulator) string { return acc.Choices[0].Message.ToolCalls[0].ID },
+			clearAccumulator: func(acc *openai.ChatCompletionAccumulator) { acc.Choices[0].Message.ToolCalls[0].ID = "" },
+		},
+		{
+			name:  "tool_type",
+			chunk: func() openai.ChatCompletionChunk { return accumulatorToolStringChunk("", "") },
+			setChunk: func(chunk *openai.ChatCompletionChunk, value string) {
+				chunk.Choices[0].Delta.ToolCalls[0].Type = value
+			},
+			get:              func(acc *openai.ChatCompletionAccumulator) string { return acc.Choices[0].Message.ToolCalls[0].Type },
+			clearAccumulator: func(acc *openai.ChatCompletionAccumulator) { acc.Choices[0].Message.ToolCalls[0].Type = "" },
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			chunk := test.chunk()
+			atLimit := strings.Repeat("x", testAccumulatorMaxMetadataBytes-len(chunk.ID))
+			test.setChunk(&chunk, atLimit)
+			var acc openai.ChatCompletionAccumulator
+			if !acc.AddChunk(chunk) {
+				t.Fatal("AddChunk rejected metadata at the aggregate budget")
+			}
+			if !acc.AddChunk(chunk) {
+				t.Fatal("AddChunk double-counted repeated replacement metadata")
+			}
+
+			test.setChunk(&chunk, "replacement")
+			if !acc.AddChunk(chunk) || test.get(&acc) != "replacement" {
+				t.Fatal("AddChunk did not accept shorter replacement metadata")
+			}
+
+			if test.clearAccumulator != nil {
+				test.clearAccumulator(&acc)
+			} else {
+				test.setChunk(&chunk, "")
+			}
+			if test.clearAccumulator != nil {
+				test.setChunk(&chunk, "")
+			}
+			if !acc.AddChunk(chunk) || test.get(&acc) != "" {
+				t.Fatal("AddChunk did not preserve cleared replacement metadata")
+			}
+		})
+	}
+}
+
+func TestAccumulatorMetadataProjectionUsesLastWriteSemantics(t *testing.T) {
+	tests := []struct {
+		name string
+		set  func(*openai.ChatCompletionChunkChoice, string)
+		get  func(*openai.ChatCompletionAccumulator) string
+	}{
+		{
+			name: "finish_reason",
+			set:  func(choice *openai.ChatCompletionChunkChoice, value string) { choice.FinishReason = value },
+			get:  func(acc *openai.ChatCompletionAccumulator) string { return acc.Choices[0].FinishReason },
+		},
+		{
+			name: "tool_id",
+			set:  func(choice *openai.ChatCompletionChunkChoice, value string) { choice.Delta.ToolCalls[0].ID = value },
+			get:  func(acc *openai.ChatCompletionAccumulator) string { return acc.Choices[0].Message.ToolCalls[0].ID },
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			chunk := accumulatorToolStringChunk("", "")
+			test.set(&chunk.Choices[0], strings.Repeat("x", testAccumulatorMaxMetadataBytes-len(chunk.ID)))
+			last := chunk.Choices[0]
+			test.set(&last, "final")
+			chunk.Choices = append(chunk.Choices, last)
+
+			var acc openai.ChatCompletionAccumulator
+			if !acc.AddChunk(chunk) {
+				t.Fatal("AddChunk charged metadata overwritten by duplicate deltas")
+			}
+			if got := test.get(&acc); got != "final" {
+				t.Fatalf("last metadata value = %q, want final", got)
+			}
+		})
+	}
+}
+
 func TestAccumulatorDetachesCapacityClippedLogprobBacking(t *testing.T) {
 	tests := []struct {
 		start   int
@@ -443,6 +600,20 @@ func TestAccumulatorDetachesDecodedChunkBacking(t *testing.T) {
 		if unsafe.StringData(field.got) == unsafe.StringData(field.source) {
 			t.Errorf("accumulated %s still aliases the decoded event backing", field.name)
 		}
+	}
+}
+
+func TestAccumulatorPreservesNilNestedLogprobSlices(t *testing.T) {
+	chunk := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+	chunk.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "token"}}
+
+	var acc openai.ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the logprob chunk")
+	}
+	logprob := acc.Choices[0].Logprobs.Content[0]
+	if logprob.Bytes != nil || logprob.TopLogprobs != nil {
+		t.Fatal("AddChunk changed nil nested logprob slices into non-nil empty slices")
 	}
 }
 
