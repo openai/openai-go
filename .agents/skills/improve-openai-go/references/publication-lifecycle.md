@@ -68,8 +68,10 @@ Use these names everywhere:
 - `source_head_sha`: trusted starting head for this run's candidate artifact.
 - `expected_remote_sha`: absent for a new branch; exact current remote head for
   a service run.
-- `candidate_sha`: locally committed result produced by implementation.
-- `published_sha`: head returned by the publisher after its compare-and-swap.
+- `candidate_sha`: validator-created synthetic commit materializing the
+  independently accepted artifact.
+- `published_sha`: remote head independently read back after publication; it
+  must equal `candidate_sha`.
 - `integration_tree_digest`: independently measured tree produced by combining
   `target_head_sha` and the candidate or published head without executing either.
 
@@ -361,11 +363,11 @@ announcements, and Slack messages--and again before finalization, read the
 canonical remote branch and pull-request head through the coordinator. Require
 both to equal `published_sha` and the pull request to match the persisted
 `establish-pr` identity--including its source repository and ref and base
-repository identity and base ref--remain open, and remain unmerged. Bind those
-observations in the mutation envelope. The broker must recheck them immediately
-before credential issuance and mutation; if either head, repository, ref,
-identity, or state drifts, perform no stewardship mutation, resolve no thread,
-and restart from a new work order.
+repository identity and base ref. Require it to remain open and unmerged. Bind
+those observations in the mutation envelope. The broker must recheck them
+immediately before credential issuance and mutation; if either head,
+repository, ref, identity, or state drifts, perform no stewardship mutation,
+resolve no thread, and restart from a new work order.
 
 The separately authorized status reporter must validate the signed receipt and
 re-read the target branch immediately before attaching a successful check run or
@@ -402,15 +404,18 @@ Never merge automatically.
 
 For `#sdk-reviews`, first reconcile any retained root through trusted read-only
 Slack evidence. Otherwise have the coordinator search the exact allowlisted
-channel for the pull-request URL and stable root marker, then persist a
+channel for the pull-request URL and stable root marker through an authenticated
+read API, verify the platform-returned author and content, then persist a
 coordinator-signed canonical Slack root record binding the search query and
-result digest, channel, approved writer identity, pull-request identity and URL,
-`published_sha`, epoch, and the unique matching root timestamp when one exists.
-Reuse only that authenticated, unique root; reject a root from another writer,
-head, pull request, or marker. If the authenticated search proves none exists,
-the Slack writer may create exactly one root under an envelope binding the exact
+result digest, channel, approved writer identity, expected and observed
+normalized root-payload digests, pull-request identity and URL, `published_sha`,
+epoch, and the unique matching root timestamp when one exists. Reuse only that
+authenticated, unique root whose author and payload digest match the approved
+writer and payload; reject a root from another writer, payload, head, pull
+request, or marker. If the authenticated search proves none exists, the Slack
+writer may create exactly one root under an envelope binding the exact
 normalized payload and all canonical-root fields, then persist its returned
-thread identifier and author. If search is unavailable, failed, or ambiguous,
-stop rather than risk a duplicate. Send each follow-up only through a separate
-Slack-writer operation whose envelope binds the authenticated root timestamp and
-exact follow-up payload.
+thread identifier, author, and payload digest. If search is unavailable,
+failed, or ambiguous, stop rather than risk a duplicate. Send each follow-up
+only through a separate Slack-writer operation whose envelope binds the
+authenticated root timestamp and exact follow-up payload.
