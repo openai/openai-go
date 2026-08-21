@@ -338,27 +338,19 @@ type RequestConfig struct {
 	endpointProvider           string
 	configuredProviderEndpoint string
 	dataResidencyEndpoint      bool
-	optionLayer                *optionLayerIdentity
-	providerAuthLayer          *ProviderAuthOption
-	providerAuth               *ProviderAuthOption
-	apiKeyLayer                *optionLayerIdentity
-	adminAPIKeyLayer           *optionLayerIdentity
-	authorizationHeaderLayer   *optionLayerIdentity
-	apiKeyHeaderLayer          *optionLayerIdentity
+	authentication             authenticationState
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
-	DefaultBaseURL     *url.URL
-	CustomHTTPDoer     HTTPDoer
-	HTTPClient         *http.Client
-	Middlewares        []middleware
-	APIKey             string
-	AdminAPIKey        string
-	Organization       string
-	Project            string
-	WebhookSecret      string
-	finalizers         []requestFinalizer
-	authHeaderOverride bool
-	authPreference     authCredentialPreference
+	DefaultBaseURL *url.URL
+	CustomHTTPDoer HTTPDoer
+	HTTPClient     *http.Client
+	Middlewares    []middleware
+	APIKey         string
+	AdminAPIKey    string
+	Organization   string
+	Project        string
+	WebhookSecret  string
+	finalizers     []requestFinalizer
 	// Configure which security scheme(s) should be enabled for this request
 	Security Security
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
@@ -794,79 +786,34 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 	clone.Request = req
 	clone.Middlewares = append([]middleware(nil), cfg.Middlewares...)
 	clone.finalizers = append([]requestFinalizer(nil), cfg.finalizers...)
-	clone.optionLayer = nil
-	clone.providerAuthLayer = nil
-	clone.apiKeyLayer = nil
-	clone.adminAPIKeyLayer = nil
-	clone.authorizationHeaderLayer = nil
-	clone.apiKeyHeaderLayer = nil
-
-	hasAuthorizationOverride := cfg.authHeaderOverride || len(req.Header.Values("Authorization")) != 0
-	hasAPIKeyHeader := len(req.Header.Values("Api-Key")) != 0
-	if cfg.APIKey != "" || cfg.AdminAPIKey != "" || hasAuthorizationOverride || hasAPIKeyHeader {
-		inheritedLayer := new(optionLayerIdentity)
-		if cfg.APIKey != "" {
-			clone.apiKeyLayer = inheritedLayer
-		}
-		if cfg.AdminAPIKey != "" {
-			clone.adminAPIKeyLayer = inheritedLayer
-		}
-		if hasAuthorizationOverride {
-			clone.authorizationHeaderLayer = inheritedLayer
-		}
-		if hasAPIKeyHeader {
-			clone.apiKeyHeaderLayer = inheritedLayer
-		}
-	}
+	clone.authentication = cfg.authentication.cloneAsInherited(&clone)
 
 	return &clone
 }
 
 func (cfg *RequestConfig) SetHeader(key, value string) {
 	cfg.Request.Header.Set(key, value)
-	if strings.EqualFold(key, "Authorization") {
-		cfg.authHeaderOverride = true
-		cfg.authorizationHeaderLayer = cfg.optionLayer
-	}
-	if strings.EqualFold(key, "Api-Key") {
-		cfg.apiKeyHeaderLayer = cfg.optionLayer
-	}
+	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) AddHeader(key, value string) {
 	cfg.Request.Header.Add(key, value)
-	if strings.EqualFold(key, "Authorization") {
-		cfg.authHeaderOverride = true
-		cfg.authorizationHeaderLayer = cfg.optionLayer
-	}
-	if strings.EqualFold(key, "Api-Key") {
-		cfg.apiKeyHeaderLayer = cfg.optionLayer
-	}
+	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) DelHeader(key string) {
 	cfg.Request.Header.Del(key)
-	if strings.EqualFold(key, "Authorization") {
-		cfg.authHeaderOverride = true
-		cfg.authorizationHeaderLayer = cfg.optionLayer
-	}
-	if strings.EqualFold(key, "Api-Key") {
-		cfg.apiKeyHeaderLayer = cfg.optionLayer
-	}
+	cfg.authentication.recordHeader(key)
 }
 
 func (cfg *RequestConfig) SetAPIKey(value string) {
 	cfg.APIKey = value
-	cfg.apiKeyLayer = cfg.optionLayer
-	cfg.authHeaderOverride = false
-	cfg.authPreference = authCredentialPreferenceBearer
+	cfg.authentication.recordAPIKey()
 }
 
 func (cfg *RequestConfig) SetAdminAPIKey(value string) {
 	cfg.AdminAPIKey = value
-	cfg.adminAPIKeyLayer = cfg.optionLayer
-	cfg.authHeaderOverride = false
-	cfg.authPreference = authCredentialPreferenceAdmin
+	cfg.authentication.recordAdminAPIKey()
 }
 
 func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
@@ -973,22 +920,22 @@ func WithAdminAPIKeyAuthSecurity() RequestOption {
 // auth schemes and has no endpoint-specific security preference.
 func WithBearerAuthPreference() RequestOption {
 	return RequestOptionFunc(func(r *RequestConfig) error {
-		r.authPreference = authCredentialPreferenceBearer
+		r.authentication.preference = authCredentialPreferenceBearer
 		return nil
 	})
 }
 
 func ApplySecurity(r RequestConfig) {
-	if r.authHeaderOverride {
+	if r.authentication.headerOverride {
 		return
 	}
 
-	if r.authPreference == authCredentialPreferenceBearer && r.Security.BearerAuth && r.APIKey != "" {
+	if r.authentication.preference == authCredentialPreferenceBearer && r.Security.BearerAuth && r.APIKey != "" {
 		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.APIKey))
 		return
 	}
 
-	if r.authPreference == authCredentialPreferenceAdmin && r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
+	if r.authentication.preference == authCredentialPreferenceAdmin && r.Security.AdminAPIKeyAuth && r.AdminAPIKey != "" {
 		r.Request.Header.Set("authorization", fmt.Sprintf("Bearer %s", r.AdminAPIKey))
 		return
 	}

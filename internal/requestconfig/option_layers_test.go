@@ -199,7 +199,7 @@ func TestClearInheritedAuthenticationHandlesAuthorizationHeaderLayers(t *testing
 		if got := cfg.Request.Header.Values("Authorization"); len(got) != 0 {
 			t.Fatalf("Authorization values = %q, want none", got)
 		}
-		if cfg.authHeaderOverride {
+		if cfg.authentication.headerOverride {
 			t.Fatal("inherited authorization override was not cleared")
 		}
 	})

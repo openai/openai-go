@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"slices"
+	"strings"
 )
 
 // optionLayer preserves a configuration-call boundary after generated services
@@ -12,17 +13,36 @@ type optionLayer []RequestOption
 
 type optionLayerIdentity byte
 
+type authenticationState struct {
+	currentLayer             *optionLayerIdentity
+	providerInCurrentLayer   *ProviderAuthOption
+	selectedProvider         *ProviderAuthOption
+	apiKeyLayer              *optionLayerIdentity
+	adminAPIKeyLayer         *optionLayerIdentity
+	authorizationHeaderLayer *optionLayerIdentity
+	apiKeyHeaderLayer        *optionLayerIdentity
+	headerOverride           bool
+	preference               authCredentialPreference
+}
+
+func (state *authenticationState) enterLayer() func() {
+	previousLayer := state.currentLayer
+	previousProvider := state.providerInCurrentLayer
+	state.currentLayer = new(optionLayerIdentity)
+	state.providerInCurrentLayer = nil
+	return func() {
+		state.currentLayer = previousLayer
+		state.providerInCurrentLayer = previousProvider
+	}
+}
+
 func (opts optionLayer) Apply(cfg *RequestConfig) error {
 	previousEndpoint := cfg.endpointSelector
-	previousAuth := cfg.providerAuthLayer
-	previousLayer := cfg.optionLayer
 	cfg.endpointSelector = ""
-	cfg.providerAuthLayer = nil
-	cfg.optionLayer = new(optionLayerIdentity)
+	restoreAuthenticationLayer := cfg.authentication.enterLayer()
 	defer func() {
 		cfg.endpointSelector = previousEndpoint
-		cfg.providerAuthLayer = previousAuth
-		cfg.optionLayer = previousLayer
+		restoreAuthenticationLayer()
 	}()
 	return cfg.Apply(opts...)
 }
@@ -142,7 +162,7 @@ func NewProviderAuthOption(provider string, selector string) *ProviderAuthOption
 }
 
 func (opt *ProviderAuthOption) Apply(cfg *RequestConfig) error {
-	if previous := cfg.providerAuthLayer; previous != nil &&
+	if previous := cfg.authentication.providerInCurrentLayer; previous != nil &&
 		(previous.provider != opt.provider || previous.selector != opt.selector) {
 		return fmt.Errorf(
 			"requestconfig: %s authentication is ambiguous; %s and %s cannot be combined in the same configuration call",
@@ -151,23 +171,76 @@ func (opt *ProviderAuthOption) Apply(cfg *RequestConfig) error {
 			opt.selector,
 		)
 	}
-	cfg.providerAuthLayer = opt
-	cfg.providerAuth = opt
+	cfg.authentication.providerInCurrentLayer = opt
+	cfg.authentication.selectedProvider = opt
 	return nil
 }
 
 // Selected reports whether this authentication option won after every option
 // layer was applied to cfg.
 func (opt *ProviderAuthOption) Selected(cfg *RequestConfig) bool {
-	return cfg.providerAuth == opt
+	return cfg.authentication.selectedProvider == opt
 }
 
 // ProviderAuth reports the selected authentication mode for provider.
 func (cfg *RequestConfig) ProviderAuth(provider string) (string, bool) {
-	if cfg.providerAuth == nil || cfg.providerAuth.provider != provider {
+	selected := cfg.authentication.selectedProvider
+	if selected == nil || selected.provider != provider {
 		return "", false
 	}
-	return cfg.providerAuth.selector, true
+	return selected.selector, true
+}
+
+func (state *authenticationState) recordHeader(name string) {
+	switch {
+	case strings.EqualFold(name, "Authorization"):
+		state.headerOverride = true
+		state.authorizationHeaderLayer = state.currentLayer
+	case strings.EqualFold(name, "Api-Key"):
+		state.apiKeyHeaderLayer = state.currentLayer
+	}
+}
+
+func (state *authenticationState) recordAPIKey() {
+	state.apiKeyLayer = state.currentLayer
+	state.preference = authCredentialPreferenceBearer
+	state.headerOverride = false
+}
+
+func (state *authenticationState) recordAdminAPIKey() {
+	state.adminAPIKeyLayer = state.currentLayer
+	state.preference = authCredentialPreferenceAdmin
+	state.headerOverride = false
+}
+
+func (state authenticationState) cloneAsInherited(cfg *RequestConfig) authenticationState {
+	state.currentLayer = nil
+	state.providerInCurrentLayer = nil
+	state.apiKeyLayer = nil
+	state.adminAPIKeyLayer = nil
+	state.authorizationHeaderLayer = nil
+	state.apiKeyHeaderLayer = nil
+
+	hasAuthorizationOverride := state.headerOverride || len(cfg.Request.Header.Values("Authorization")) != 0
+	hasAPIKeyHeader := len(cfg.Request.Header.Values("Api-Key")) != 0
+	if cfg.APIKey == "" && cfg.AdminAPIKey == "" && !hasAuthorizationOverride && !hasAPIKeyHeader {
+		return state
+	}
+
+	inheritedLayer := new(optionLayerIdentity)
+	if cfg.APIKey != "" {
+		state.apiKeyLayer = inheritedLayer
+	}
+	if cfg.AdminAPIKey != "" {
+		state.adminAPIKeyLayer = inheritedLayer
+	}
+	if hasAuthorizationOverride {
+		state.authorizationHeaderLayer = inheritedLayer
+	}
+	if hasAPIKeyHeader {
+		state.apiKeyHeaderLayer = inheritedLayer
+	}
+	return state
 }
 
 // ClearInheritedAuthentication removes OpenAI credentials and a custom
@@ -175,24 +248,25 @@ func (cfg *RequestConfig) ProviderAuth(provider string) (string, bool) {
 // selected in the current layer remains so a provider finalizer can reject the
 // ambiguity after all options are applied.
 func (cfg *RequestConfig) ClearInheritedAuthentication() {
-	if cfg.APIKey != "" && cfg.apiKeyLayer != cfg.optionLayer {
+	state := &cfg.authentication
+	if cfg.APIKey != "" && state.apiKeyLayer != state.currentLayer {
 		cfg.APIKey = ""
-		cfg.apiKeyLayer = nil
+		state.apiKeyLayer = nil
 	}
-	if cfg.AdminAPIKey != "" && cfg.adminAPIKeyLayer != cfg.optionLayer {
+	if cfg.AdminAPIKey != "" && state.adminAPIKeyLayer != state.currentLayer {
 		cfg.AdminAPIKey = ""
-		cfg.adminAPIKeyLayer = nil
+		state.adminAPIKeyLayer = nil
 	}
 	if cfg.APIKey == "" && cfg.AdminAPIKey == "" {
-		cfg.authPreference = authCredentialPreferenceNone
+		state.preference = authCredentialPreferenceNone
 	}
-	if cfg.authorizationHeaderLayer != cfg.optionLayer {
+	if state.authorizationHeaderLayer != state.currentLayer {
 		cfg.Request.Header.Del("Authorization")
-		cfg.authorizationHeaderLayer = nil
-		cfg.authHeaderOverride = false
+		state.authorizationHeaderLayer = nil
+		state.headerOverride = false
 	}
-	if cfg.apiKeyHeaderLayer != cfg.optionLayer {
+	if state.apiKeyHeaderLayer != state.currentLayer {
 		cfg.Request.Header.Del("Api-Key")
-		cfg.apiKeyHeaderLayer = nil
+		state.apiKeyHeaderLayer = nil
 	}
 }
