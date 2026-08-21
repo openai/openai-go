@@ -85,10 +85,11 @@ const (
 //
 // While accumulation is in progress, callers may replace or clear accumulated
 // top-level strings and string fields of choices and tool calls that the stream
-// has populated, or replace an entire Content or Refusal logprob slice. Writing
-// into sparse placeholder slots or mutating fields inside an accumulated
-// logprob element is unsupported; copy the result after accumulation before
-// making those edits.
+// has populated, or replace an entire Content or Refusal logprob slice. ID may
+// be cleared but cannot be replaced with a different nonempty value. Writing into
+// sparse placeholder slots or mutating fields inside an accumulated logprob
+// element is unsupported; copy the result after accumulation before making those
+// edits.
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
@@ -142,7 +143,7 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 		return false
 	}
 	var logprobPlan chatCompletionLogprobReconcilePlan
-	hasLogprobPlan, ok := acc.planLogprobReconciliation(&logprobPlan, chatCompletionChunkHasLogprobs(chunk))
+	hasLogprobPlan, ok := acc.planLogprobReconciliation(&logprobPlan)
 	if !ok {
 		return false
 	}

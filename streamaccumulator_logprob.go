@@ -126,12 +126,9 @@ func cloneAccumulatorFields(src map[string]respjson.Field) map[string]respjson.F
 	return dst
 }
 
-func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatCompletionLogprobReconcilePlan, includePopulatedChoices bool) (bool, bool) {
+func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatCompletionLogprobReconcilePlan) (bool, bool) {
 	state := &acc.logprobState
-	indices := state.activeChoices
-	if includePopulatedChoices {
-		indices = acc.stringState.activeChoices
-	}
+	indices := acc.stringState.activeChoices
 	headerChanged := false
 	for _, i := range indices {
 		if i >= len(acc.Choices) {
@@ -211,7 +208,7 @@ func (state chatCompletionLogprobSliceState) matches(logprobs []ChatCompletionTo
 
 func (state *chatCompletionAccumulatorLogprobState) projectSlice(current chatCompletionLogprobSliceState, logprobs []ChatCompletionTokenLogprob) (chatCompletionLogprobSliceState, bool, bool) {
 	header := chatCompletionLogprobHeader(logprobs)
-	detach := chatCompletionLogprobSliceRetainsBacking(current, header)
+	detach := !current.matches(logprobs) && logprobs != nil
 
 	bytes := 0
 	retained := true
@@ -270,15 +267,6 @@ func (acc *ChatCompletionAccumulator) applyLogprobReconciliation(plan *chatCompl
 		}
 	}
 	acc.logprobState = plan.state
-}
-
-func chatCompletionLogprobSliceRetainsBacking(current chatCompletionLogprobSliceState, public chatCompletionLogprobSliceState) bool {
-	if current.data == 0 || current.capacity == 0 || public.data == 0 {
-		return false
-	}
-	allocationEnd := current.data + uintptr(current.capacity)*unsafe.Sizeof(ChatCompletionTokenLogprob{})
-	withinCurrentAllocation := public.data >= current.data && public.data < allocationEnd
-	return withinCurrentAllocation && (public.data != current.data || public.capacity < current.capacity)
 }
 
 func (state *chatCompletionAccumulatorLogprobState) chunkWithinLimit(chunk *ChatCompletionChunk) bool {

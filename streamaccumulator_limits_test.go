@@ -346,6 +346,46 @@ func TestAccumulatorBudgetsPublicLogprobReplacement(t *testing.T) {
 	}
 }
 
+func TestAccumulatorBudgetsPublicLogprobInsertionBeforeTextChunk(t *testing.T) {
+	var acc openai.ChatCompletionAccumulator
+	if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
+		t.Fatal("AddChunk rejected the initial chunk")
+	}
+
+	logprobOverhead := int(unsafe.Sizeof(openai.ChatCompletionTokenLogprob{}))
+	byteCount := (testAccumulatorMaxLogprobBytes-logprobOverhead)/int(unsafe.Sizeof(int64(0))) + 1
+	acc.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Bytes: make([]int64, byteCount)}}
+
+	textChunk := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "text"})
+	if acc.AddChunk(textChunk) {
+		t.Fatal("AddChunk accepted text while a supported public logprob insertion exceeded the budget")
+	}
+	if got := acc.Choices[0].Message.Content; got != "" {
+		t.Fatalf("rejected chunk changed content to %q", got)
+	}
+}
+
+func TestAccumulatorPublicIDMutationContract(t *testing.T) {
+	chunk := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+	var acc openai.ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the initial chunk")
+	}
+
+	acc.ID = ""
+	if !acc.AddChunk(chunk) || acc.ID != chunk.ID {
+		t.Fatal("AddChunk did not restore a cleared public ID")
+	}
+
+	acc.ID = "different-id"
+	if acc.AddChunk(chunk) {
+		t.Fatal("AddChunk accepted a different nonempty public ID")
+	}
+	if acc.ID != "different-id" {
+		t.Fatal("AddChunk changed the rejected public ID replacement")
+	}
+}
+
 func TestAccumulatorChargesOnlyClonedNestedLogprobStorage(t *testing.T) {
 	tests := []struct {
 		name string
@@ -595,6 +635,34 @@ func TestAccumulatorDoesNotChargeHiddenLogprobsDroppedByDetachment(t *testing.T)
 	}
 	if got := acc.Choices[0].Logprobs.Content[0].Token; got != "replacement" {
 		t.Fatalf("retained token = %q, want replacement", got)
+	}
+}
+
+func TestAccumulatorCanonicalizesWholeLogprobSliceReplacement(t *testing.T) {
+	var acc openai.ChatCompletionAccumulator
+	initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+	initial.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "initial"}}
+	if !acc.AddChunk(initial) {
+		t.Fatal("AddChunk rejected the initial logprob")
+	}
+
+	logprobOverhead := 2 * int(unsafe.Sizeof(openai.ChatCompletionTokenLogprob{}))
+	replacement := make([]openai.ChatCompletionTokenLogprob, 1, 2)
+	replacement[0].Token = "visible"
+	hidden := replacement[:2]
+	hidden[1].Token = strings.Repeat("x", testAccumulatorMaxLogprobBytes-logprobOverhead-len(replacement[0].Token))
+	acc.Choices[0].Logprobs.Content = replacement
+	if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
+		t.Fatal("AddChunk rejected a supported whole-slice replacement at the aggregate budget")
+	}
+
+	next := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+	next.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "next"}}
+	if !acc.AddChunk(next) {
+		t.Fatal("AddChunk charged hidden replacement data that canonicalization releases")
+	}
+	if got := len(acc.Choices[0].Logprobs.Content); got != 2 {
+		t.Fatalf("accumulated logprobs = %d, want 2", got)
 	}
 }
 
