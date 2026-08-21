@@ -97,12 +97,12 @@ func TestNewDecoderMatchesRegisteredMediaTypeWithCaseAndParameters(t *testing.T)
 		delete(decoderTypes, contentType)
 	})
 
-	decoder := NewDecoder(&http.Response{
+	decoder := NewDecoderWithOptions(&http.Response{
 		Header: http.Header{
 			"Content-Type": {"Application/X-OpenAI-Go-Test; charset=utf-8"},
 		},
 		Body: io.NopCloser(strings.NewReader("")),
-	})
+	}, DecoderOptions{MaxEventBytes: 1, MaxEventLines: 1})
 
 	if decoder != want {
 		t.Fatalf("decoder = %T, want registered decoder", decoder)
