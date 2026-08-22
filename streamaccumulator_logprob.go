@@ -151,9 +151,20 @@ func cloneAccumulatorFields(src map[string]respjson.Field) map[string]respjson.F
 	return dst
 }
 
-func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatCompletionLogprobReconcilePlan, work *int) (bool, bool) {
+func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatCompletionLogprobReconcilePlan, work *int, chunk *ChatCompletionChunk) (bool, bool) {
 	state := &acc.logprobState
 	indices := acc.stringState.activeChoices
+	var contentAppends, refusalAppends [2]uint64
+	for i := range chunk.Choices {
+		choice := &chunk.Choices[i]
+		choiceIndex := int(choice.Index)
+		if len(choice.Logprobs.Content) > 0 {
+			markChatCompletionTextAppend(&contentAppends, choiceIndex)
+		}
+		if len(choice.Logprobs.Refusal) > 0 {
+			markChatCompletionTextAppend(&refusalAppends, choiceIndex)
+		}
+	}
 	headerChanged := false
 	for _, i := range indices {
 		if i >= len(acc.Choices) {
@@ -191,11 +202,21 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 		if i < len(state.choices) {
 			current = state.choices[i]
 		}
-		content, contentDetach, ok := projectChatCompletionLogprobSlice(current.content, logprobs.Content, work)
+		content, contentDetach, ok := projectChatCompletionLogprobSlice(
+			current.content,
+			logprobs.Content,
+			chatCompletionTextAppendMarked(&contentAppends, i),
+			work,
+		)
 		if !ok {
 			return false, false
 		}
-		refusal, refusalDetach, ok := projectChatCompletionLogprobSlice(current.refusal, logprobs.Refusal, work)
+		refusal, refusalDetach, ok := projectChatCompletionLogprobSlice(
+			current.refusal,
+			logprobs.Refusal,
+			chatCompletionTextAppendMarked(&refusalAppends, i),
+			work,
+		)
 		if !ok {
 			return false, false
 		}
@@ -228,7 +249,12 @@ func (state chatCompletionLogprobSliceState) matches(logprobs []ChatCompletionTo
 	return state.data == header.data && state.length == header.length && state.capacity == header.capacity
 }
 
-func projectChatCompletionLogprobSlice(current chatCompletionLogprobSliceState, logprobs []ChatCompletionTokenLogprob, work *int) (chatCompletionLogprobSliceState, bool, bool) {
+func projectChatCompletionLogprobSlice(
+	current chatCompletionLogprobSliceState,
+	logprobs []ChatCompletionTokenLogprob,
+	mayAppend bool,
+	work *int,
+) (chatCompletionLogprobSliceState, bool, bool) {
 	header := chatCompletionLogprobHeader(logprobs)
 	detach := !current.matches(logprobs) && logprobs != nil
 
@@ -252,6 +278,12 @@ func projectChatCompletionLogprobSlice(current chatCompletionLogprobSliceState, 
 		bytes = current.bytes
 	}
 	if detach && !addAccumulatorReconciliationWork(work, bytes) {
+		return chatCompletionLogprobSliceState{}, false, false
+	}
+	if detach && mayAppend &&
+		!addAccumulatorReconciliationWork(work, header.length*int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))) {
+		// Detachment publishes exact-capacity outer storage. A same-chunk append
+		// grows it and copies the visible prefix once before appending.
 		return chatCompletionLogprobSliceState{}, false, false
 	}
 	header.bytes = bytes

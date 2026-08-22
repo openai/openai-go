@@ -184,7 +184,7 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	if !ok {
 		return false
 	}
-	liveTextBytes, ok := acc.addChatCompletionTextBytes(0, &projectedReconciliationWork)
+	liveTextBytes, ok := acc.addChatCompletionTextBytes(0, &projectedReconciliationWork, chunk)
 	if !ok {
 		return false
 	}
@@ -195,7 +195,7 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 		return false
 	}
 	var logprobPlan chatCompletionLogprobReconcilePlan
-	hasLogprobPlan, ok := acc.planLogprobReconciliation(&logprobPlan, &projectedReconciliationWork)
+	hasLogprobPlan, ok := acc.planLogprobReconciliation(&logprobPlan, &projectedReconciliationWork, chunk)
 	if !ok {
 		return false
 	}
@@ -656,8 +656,9 @@ func (acc *ChatCompletionAccumulator) chatCompletionStructuralSlotsWithinLimit(c
 	return true
 }
 
-func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int, work *int) (int, bool) {
+func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int, work *int, chunk *ChatCompletionChunk) (int, bool) {
 	completion := &acc.ChatCompletion
+	var appends *chatCompletionTextAppendProjection
 	capacity := 0
 	for _, i := range acc.stringState.activeChoices {
 		if i >= len(completion.Choices) {
@@ -665,10 +666,17 @@ func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int, work
 		}
 		message := &completion.Choices[i].Message
 		choiceState := acc.stringState.choices[i]
+		contentAppend, refusalAppend := false, false
+		if !accumulatorStringUsesPublishedBacking(message.Content, choiceState.content.published) ||
+			!accumulatorStringUsesPublishedBacking(message.Refusal, choiceState.refusal.published) {
+			appends = ensureChatCompletionTextAppendProjection(appends, chunk)
+			contentAppend = appends.choiceContent(i)
+			refusalAppend = appends.choiceRefusal(i)
+		}
 		if !addAccumulatorTextBytes(&total, message.Content) ||
 			!addAccumulatorTextBytes(&total, message.Refusal) ||
-			!addAccumulatorBufferReconciliationWork(work, message.Content, &choiceState.content) ||
-			!addAccumulatorBufferReconciliationWork(work, message.Refusal, &choiceState.refusal) {
+			!addAccumulatorBufferReconciliationWork(work, message.Content, &choiceState.content, contentAppend) ||
+			!addAccumulatorBufferReconciliationWork(work, message.Refusal, &choiceState.refusal, refusalAppend) {
 			return 0, false
 		}
 		capacity += projectedAccumulatorBufferCapacity(message.Content, &choiceState.content)
@@ -679,10 +687,17 @@ func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int, work
 			}
 			function := &message.ToolCalls[j].Function
 			toolState := choiceState.toolCalls[j]
+			nameAppend, argumentsAppend := false, false
+			if !accumulatorStringUsesPublishedBacking(function.Name, toolState.name.published) ||
+				!accumulatorStringUsesPublishedBacking(function.Arguments, toolState.arguments.published) {
+				appends = ensureChatCompletionTextAppendProjection(appends, chunk)
+				nameAppend = appends.toolName(i, j)
+				argumentsAppend = appends.toolArguments(i, j)
+			}
 			if !addAccumulatorTextBytes(&total, function.Name) ||
 				!addAccumulatorTextBytes(&total, function.Arguments) ||
-				!addAccumulatorBufferReconciliationWork(work, function.Name, &toolState.name) ||
-				!addAccumulatorBufferReconciliationWork(work, function.Arguments, &toolState.arguments) {
+				!addAccumulatorBufferReconciliationWork(work, function.Name, &toolState.name, nameAppend) ||
+				!addAccumulatorBufferReconciliationWork(work, function.Arguments, &toolState.arguments, argumentsAppend) {
 				return 0, false
 			}
 			capacity += projectedAccumulatorBufferCapacity(function.Name, &toolState.name)
@@ -692,11 +707,17 @@ func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int, work
 	return total, capacity <= maxChatCompletionAccumulatorTextCapacity
 }
 
-func addAccumulatorBufferReconciliationWork(work *int, current string, state *chatCompletionString) bool {
+func addAccumulatorBufferReconciliationWork(work *int, current string, state *chatCompletionString, mayAppend bool) bool {
 	if accumulatorStringUsesPublishedBacking(current, state.published) {
 		return true
 	}
-	return addAccumulatorStringCopyWork(work, current, 2)
+	passes := 2
+	if mayAppend && len(current) > 0 {
+		// A changed public value is committed into exact-capacity backing. The
+		// first same-chunk append must therefore copy that prefix while growing.
+		passes++
+	}
+	return addAccumulatorStringCopyWork(work, current, passes)
 }
 
 func projectedAccumulatorBufferCapacity(current string, state *chatCompletionString) int {

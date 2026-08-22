@@ -6,10 +6,124 @@ type chatCompletionToolMetadataProjection struct {
 	used   bool
 }
 
+type chatCompletionTextAppendProjection struct {
+	content [2]uint64
+	refusal [2]uint64
+	tools   [maxChatCompletionAccumulatorStructuralSlots * 2]chatCompletionToolTextAppendProjection
+}
+
+type chatCompletionToolTextAppendProjection struct {
+	keyPlusOne uint32
+	fields     uint8
+}
+
 const (
 	projectedToolID uint8 = 1 << iota
 	projectedToolType
 )
+
+const (
+	projectedToolName uint8 = 1 << iota
+	projectedToolArguments
+)
+
+func (projection *chatCompletionTextAppendProjection) addChunk(chunk *ChatCompletionChunk) {
+	for i := range chunk.Choices {
+		choice := &chunk.Choices[i]
+		choiceIndex := int(choice.Index)
+		if choice.Delta.Content != "" {
+			markChatCompletionTextAppend(&projection.content, choiceIndex)
+		}
+		if choice.Delta.Refusal != "" {
+			markChatCompletionTextAppend(&projection.refusal, choiceIndex)
+		}
+		for j := range choice.Delta.ToolCalls {
+			tool := &choice.Delta.ToolCalls[j]
+			toolIndex := preflightedToolCallIndex(tool.Index)
+			fields := uint8(0)
+			if tool.Function.Name != "" {
+				fields |= projectedToolName
+			}
+			if tool.Function.Arguments != "" {
+				fields |= projectedToolArguments
+			}
+			if fields != 0 {
+				projection.lookupTool(choiceIndex, toolIndex).fields |= fields
+			}
+		}
+	}
+}
+
+func ensureChatCompletionTextAppendProjection(
+	projection *chatCompletionTextAppendProjection,
+	chunk *ChatCompletionChunk,
+) *chatCompletionTextAppendProjection {
+	if projection == nil {
+		projection = &chatCompletionTextAppendProjection{}
+		projection.addChunk(chunk)
+	}
+	return projection
+}
+
+func (projection *chatCompletionTextAppendProjection) choiceContent(index int) bool {
+	return chatCompletionTextAppendMarked(&projection.content, index)
+}
+
+func (projection *chatCompletionTextAppendProjection) choiceRefusal(index int) bool {
+	return chatCompletionTextAppendMarked(&projection.refusal, index)
+}
+
+func (projection *chatCompletionTextAppendProjection) toolName(choiceIndex int, toolIndex int) bool {
+	return projection.toolFields(choiceIndex, toolIndex)&projectedToolName != 0
+}
+
+func (projection *chatCompletionTextAppendProjection) toolArguments(choiceIndex int, toolIndex int) bool {
+	return projection.toolFields(choiceIndex, toolIndex)&projectedToolArguments != 0
+}
+
+func markChatCompletionTextAppend(marked *[2]uint64, index int) {
+	marked[index/64] |= uint64(1) << (index % 64)
+}
+
+func chatCompletionTextAppendMarked(marked *[2]uint64, index int) bool {
+	return marked[index/64]&(uint64(1)<<(index%64)) != 0
+}
+
+func (projection *chatCompletionTextAppendProjection) toolFields(choiceIndex int, toolIndex int) uint8 {
+	keyPlusOne := uint32(choiceIndex*maxChatCompletionAccumulatorStructuralSlots + toolIndex + 1)
+	slot := chatCompletionTextAppendSlot(keyPlusOne, len(projection.tools))
+	for {
+		tool := &projection.tools[slot]
+		if tool.keyPlusOne == 0 {
+			return 0
+		}
+		if tool.keyPlusOne == keyPlusOne {
+			return tool.fields
+		}
+		slot = (slot + 1) & (len(projection.tools) - 1)
+	}
+}
+
+func (projection *chatCompletionTextAppendProjection) lookupTool(choiceIndex int, toolIndex int) *chatCompletionToolTextAppendProjection {
+	keyPlusOne := uint32(choiceIndex*maxChatCompletionAccumulatorStructuralSlots + toolIndex + 1)
+	slot := chatCompletionTextAppendSlot(keyPlusOne, len(projection.tools))
+	for {
+		tool := &projection.tools[slot]
+		if tool.keyPlusOne == 0 {
+			tool.keyPlusOne = keyPlusOne
+			return tool
+		}
+		if tool.keyPlusOne == keyPlusOne {
+			return tool
+		}
+		slot = (slot + 1) & (len(projection.tools) - 1)
+	}
+}
+
+func chatCompletionTextAppendSlot(keyPlusOne uint32, slots int) int {
+	hash := uint(keyPlusOne) * 2_654_435_761
+	return int((hash ^ hash>>16) & uint(slots-1))
+}
 
 func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *ChatCompletionChunk, work *int) bool {
 	completion := &acc.ChatCompletion
@@ -61,6 +175,7 @@ func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *C
 }
 
 func (acc *ChatCompletionAccumulator) addChatCompletionChunkMetadataWork(work *int, chunk *ChatCompletionChunk) bool {
+	completion := &acc.ChatCompletion
 	idPasses := 1
 	if acc.ID != "" || acc.stringState.id != "" {
 		idPasses = 2
@@ -68,13 +183,13 @@ func (acc *ChatCompletionAccumulator) addChatCompletionChunkMetadataWork(work *i
 	if !addAccumulatorStringCopyWork(work, chunk.ID, idPasses) {
 		return false
 	}
-	if !addAccumulatorStringAssignmentWork(work, chunk.Model, acc.stringState.model) ||
-		!addAccumulatorStringAssignmentWork(work, chunk.SystemFingerprint, acc.stringState.systemFingerprint) ||
-		!addAccumulatorStringAssignmentWork(work, chunk.ServiceTier, acc.stringState.serviceTier) {
+	if !addAccumulatorStringAssignmentAfterPublicReconciliation(work, chunk.Model, completion.Model, acc.stringState.model) ||
+		!addAccumulatorStringAssignmentAfterPublicReconciliation(work, chunk.SystemFingerprint, completion.SystemFingerprint, acc.stringState.systemFingerprint) ||
+		!addAccumulatorStringAssignmentAfterPublicReconciliation(work, chunk.ServiceTier, completion.ServiceTier, acc.stringState.serviceTier) {
 		return false
 	}
 	if chunk.Object == chunk.Object.Default() &&
-		!addAccumulatorStringAssignmentWork(work, chunk.Object.Default(), acc.stringState.object) {
+		!addAccumulatorStringAssignmentAfterPublicReconciliation(work, chunk.Object.Default(), completion.Object, acc.stringState.object) {
 		return false
 	}
 	var finishReasonSeen [2]uint64
@@ -87,14 +202,37 @@ func (acc *ChatCompletionAccumulator) addChatCompletionChunkMetadataWork(work *i
 			choiceState = acc.stringState.choices[choiceIndex]
 		}
 		finishReason, role := "", ""
-		if choiceState != nil {
+		hasPublicChoice := choiceState != nil && choiceIndex < len(completion.Choices)
+		if hasPublicChoice {
 			finishReason = choiceState.finishReason
 			role = choiceState.role
+			choice := &completion.Choices[choiceIndex]
+			if !addAccumulatorMetadataAssignmentAfterPublicReconciliation(
+				work,
+				delta.FinishReason,
+				choice.FinishReason,
+				finishReason,
+				&finishReasonSeen,
+				choiceIndex,
+			) {
+				return false
+			}
+			if delta.Delta.Role != "" && !addAccumulatorMetadataAssignmentAfterPublicReconciliation(
+				work,
+				delta.Delta.Role,
+				choice.Message.Role,
+				role,
+				&roleSeen,
+				choiceIndex,
+			) {
+				return false
+			}
 		}
-		if !addAccumulatorMetadataAssignmentWork(work, delta.FinishReason, finishReason, &finishReasonSeen, choiceIndex) {
+		if !hasPublicChoice &&
+			!addAccumulatorMetadataAssignmentWork(work, delta.FinishReason, finishReason, &finishReasonSeen, choiceIndex) {
 			return false
 		}
-		if delta.Delta.Role != "" &&
+		if !hasPublicChoice && delta.Delta.Role != "" &&
 			!addAccumulatorMetadataAssignmentWork(work, delta.Delta.Role, role, &roleSeen, choiceIndex) {
 			return false
 		}
@@ -118,7 +256,25 @@ func addAccumulatorMetadataAssignmentWork[T ~string](
 	return addAccumulatorStringAssignmentWork(work, value, published)
 }
 
+func addAccumulatorMetadataAssignmentAfterPublicReconciliation[T ~string, U ~string](
+	work *int,
+	value T,
+	current U,
+	published string,
+	seen *[2]uint64,
+	index int,
+) bool {
+	word := index / 64
+	mask := uint64(1) << (index % 64)
+	if seen[word]&mask != 0 {
+		return addAccumulatorStringCopyWork(work, value, 3)
+	}
+	seen[word] |= mask
+	return addAccumulatorStringAssignmentAfterPublicReconciliation(work, value, current, published)
+}
+
 func (acc *ChatCompletionAccumulator) addChatCompletionToolMetadataWork(work *int, chunk *ChatCompletionChunk) bool {
+	completion := &acc.ChatCompletion
 	hasMetadata := false
 	for i := range chunk.Choices {
 		for j := range chunk.Choices[i].Delta.ToolCalls {
@@ -143,13 +299,26 @@ func (acc *ChatCompletionAccumulator) addChatCompletionToolMetadataWork(work *in
 			toolIndex := preflightedToolCallIndex(tool.Index)
 			projection := lookupChatCompletionToolMetadataProjection(&seen, choiceIndex, toolIndex)
 			id, typeName := "", ""
-			if choiceState != nil && toolIndex < len(choiceState.toolCalls) && choiceState.toolCalls[toolIndex] != nil {
+			hasPublicTool := choiceState != nil &&
+				toolIndex < len(choiceState.toolCalls) && choiceState.toolCalls[toolIndex] != nil &&
+				choiceIndex < len(completion.Choices) &&
+				toolIndex < len(completion.Choices[choiceIndex].Message.ToolCalls)
+			if hasPublicTool {
 				id = choiceState.toolCalls[toolIndex].id
 				typeName = choiceState.toolCalls[toolIndex].typeName
+				current := &completion.Choices[choiceIndex].Message.ToolCalls[toolIndex]
+				if tool.ID != "" && projection.fields&projectedToolID == 0 &&
+					!addAccumulatorStringAssignmentAfterPublicReconciliation(work, tool.ID, current.ID, id) {
+					return false
+				}
+				if tool.Type != "" && projection.fields&projectedToolType == 0 &&
+					!addAccumulatorStringAssignmentAfterPublicReconciliation(work, tool.Type, current.Type, typeName) {
+					return false
+				}
 			}
 			if tool.ID != "" {
 				if projection.fields&projectedToolID == 0 {
-					if !addAccumulatorStringAssignmentWork(work, tool.ID, id) {
+					if !hasPublicTool && !addAccumulatorStringAssignmentWork(work, tool.ID, id) {
 						return false
 					}
 				} else if !addAccumulatorStringCopyWork(work, tool.ID, 3) {
@@ -159,7 +328,7 @@ func (acc *ChatCompletionAccumulator) addChatCompletionToolMetadataWork(work *in
 			}
 			if tool.Type != "" {
 				if projection.fields&projectedToolType == 0 {
-					if !addAccumulatorStringAssignmentWork(work, tool.Type, typeName) {
+					if !hasPublicTool && !addAccumulatorStringAssignmentWork(work, tool.Type, typeName) {
 						return false
 					}
 				} else if !addAccumulatorStringCopyWork(work, tool.Type, 3) {
@@ -170,6 +339,35 @@ func (acc *ChatCompletionAccumulator) addChatCompletionToolMetadataWork(work *in
 		}
 	}
 	return true
+}
+
+func addAccumulatorStringAssignmentAfterPublicReconciliation[T ~string, U ~string](
+	work *int,
+	value T,
+	current U,
+	published string,
+) bool {
+	currentValue := string(current)
+	if accumulatorStringUsesPublishedBacking(currentValue, published) {
+		return addAccumulatorStringAssignmentWork(work, value, published)
+	}
+
+	text := string(value)
+	if len(text) != len(currentValue) {
+		return addAccumulatorStringCopyWork(work, text, 1)
+	}
+	// Reconciliation publishes either the prior equal value or a clone of the
+	// changed public value. In both cases its backing differs from currentValue.
+	if accumulatorStringUsesPublishedBacking(text, currentValue) {
+		return addAccumulatorStringCopyWork(work, text, 1)
+	}
+	if !addAccumulatorStringCopyWork(work, text, 1) {
+		return false
+	}
+	if text == currentValue {
+		return addAccumulatorStringCopyWork(work, text, 1)
+	}
+	return addAccumulatorStringCopyWork(work, text, 2)
 }
 
 func addAccumulatorStringAssignmentWork[T ~string](work *int, value T, published string) bool {

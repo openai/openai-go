@@ -172,6 +172,167 @@ func TestAccumulatorBoundsDuplicateMetadataAssignmentWork(t *testing.T) {
 	}
 }
 
+func TestAccumulatorAccountsMetadataAssignmentAfterPublicReplacement(t *testing.T) {
+	const metadataBytes = 256 << 10
+	original := strings.Repeat("a", metadataBytes-1) + "x"
+	replacement := strings.Repeat("a", metadataBytes-1) + "y"
+	tests := []struct {
+		name     string
+		initial  func() ChatCompletionChunk
+		get      func(*ChatCompletionAccumulator) string
+		set      func(*ChatCompletionAccumulator, string)
+		setChunk func(*ChatCompletionChunk, string)
+	}{
+		{
+			name: "model",
+			initial: func() ChatCompletionChunk {
+				chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+				chunk.Model = original
+				return chunk
+			},
+			get:      func(acc *ChatCompletionAccumulator) string { return acc.Model },
+			set:      func(acc *ChatCompletionAccumulator, value string) { acc.Model = value },
+			setChunk: func(chunk *ChatCompletionChunk, value string) { chunk.Model = value },
+		},
+		{
+			name: "tool_id",
+			initial: func() ChatCompletionChunk {
+				return storageTestChunk(ChatCompletionChunkChoiceDelta{ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{ID: original}}})
+			},
+			get: func(acc *ChatCompletionAccumulator) string {
+				return acc.Choices[0].Message.ToolCalls[0].ID
+			},
+			set: func(acc *ChatCompletionAccumulator, value string) {
+				acc.Choices[0].Message.ToolCalls[0].ID = value
+			},
+			setChunk: func(chunk *ChatCompletionChunk, value string) {
+				chunk.Choices[0].Delta.ToolCalls[0].ID = value
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			initial := test.initial()
+			var acc ChatCompletionAccumulator
+			if !acc.AddChunk(initial) {
+				t.Fatal("AddChunk rejected the initial metadata")
+			}
+			published := test.get(&acc)
+			test.set(&acc, replacement)
+			next := test.initial()
+			test.setChunk(&next, published)
+
+			acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - 4*metadataBytes
+			beforeWork := acc.reconciliationWork
+			if acc.AddChunk(next) {
+				t.Fatal("AddChunk accepted metadata work beyond the post-reconciliation budget")
+			}
+			if acc.reconciliationWork != beforeWork || test.get(&acc) != replacement {
+				t.Fatal("rejected metadata assignment changed the accumulator")
+			}
+		})
+	}
+}
+
+func TestAccumulatorAccountsGrowthAfterPublicTextReplacement(t *testing.T) {
+	const replacementBytes = 256 << 10
+	replacement := strings.Repeat("r", replacementBytes)
+	tests := []struct {
+		name    string
+		initial ChatCompletionChunkChoiceDelta
+		next    ChatCompletionChunkChoiceDelta
+		value   func(*ChatCompletionAccumulator) *string
+	}{
+		{
+			name:    "content",
+			initial: ChatCompletionChunkChoiceDelta{Content: "initial"},
+			next:    ChatCompletionChunkChoiceDelta{Content: "x"},
+			value: func(acc *ChatCompletionAccumulator) *string {
+				return &acc.Choices[0].Message.Content
+			},
+		},
+		{
+			name:    "refusal",
+			initial: ChatCompletionChunkChoiceDelta{Refusal: "initial"},
+			next:    ChatCompletionChunkChoiceDelta{Refusal: "x"},
+			value: func(acc *ChatCompletionAccumulator) *string {
+				return &acc.Choices[0].Message.Refusal
+			},
+		},
+		{
+			name: "tool_name",
+			initial: ChatCompletionChunkChoiceDelta{ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
+				Function: ChatCompletionChunkChoiceDeltaToolCallFunction{Name: "initial"},
+			}}},
+			next: ChatCompletionChunkChoiceDelta{ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
+				Function: ChatCompletionChunkChoiceDeltaToolCallFunction{Name: "x"},
+			}}},
+			value: func(acc *ChatCompletionAccumulator) *string {
+				return &acc.Choices[0].Message.ToolCalls[0].Function.Name
+			},
+		},
+		{
+			name: "tool_arguments",
+			initial: ChatCompletionChunkChoiceDelta{ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
+				Function: ChatCompletionChunkChoiceDeltaToolCallFunction{Arguments: "initial"},
+			}}},
+			next: ChatCompletionChunkChoiceDelta{ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
+				Function: ChatCompletionChunkChoiceDeltaToolCallFunction{Arguments: "x"},
+			}}},
+			value: func(acc *ChatCompletionAccumulator) *string {
+				return &acc.Choices[0].Message.ToolCalls[0].Function.Arguments
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			initial := storageTestChunk(test.initial)
+			var acc ChatCompletionAccumulator
+			if !acc.AddChunk(initial) {
+				t.Fatal("AddChunk rejected the initial text")
+			}
+			*test.value(&acc) = replacement
+			next := storageTestChunk(test.next)
+			acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - (2*replacementBytes + 4_096)
+			beforeWork := acc.reconciliationWork
+			if acc.AddChunk(next) {
+				t.Fatal("AddChunk accepted an unbudgeted post-reconciliation growth copy")
+			}
+			if acc.reconciliationWork != beforeWork || *test.value(&acc) != replacement {
+				t.Fatal("rejected text append changed the accumulator")
+			}
+		})
+	}
+}
+
+func TestAccumulatorAccountsGrowthAfterPublicLogprobReplacement(t *testing.T) {
+	initial := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	initial.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "initial"}}
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(initial) {
+		t.Fatal("AddChunk rejected the initial logprob")
+	}
+
+	const replacementBytes = 1 << 20
+	logprobSize := int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
+	replacementCount := replacementBytes / logprobSize
+	replacement := make([]ChatCompletionTokenLogprob, replacementCount)
+	acc.Choices[0].Logprobs.Content = replacement
+	next := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	next.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "x"}}
+	oldProjectionWork := replacementCount*logprobSize + 2*replacementCount
+	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - oldProjectionWork - 4_096
+	beforeWork := acc.reconciliationWork
+	if acc.AddChunk(next) {
+		t.Fatal("AddChunk accepted an unbudgeted post-reconciliation logprob growth copy")
+	}
+	if acc.reconciliationWork != beforeWork || len(acc.Choices[0].Logprobs.Content) != replacementCount {
+		t.Fatal("rejected logprob append changed the accumulator")
+	}
+}
+
 func TestAccumulatorCanonicalizesEqualPublicStringBacking(t *testing.T) {
 	var acc ChatCompletionAccumulator
 	if !acc.AddChunk(storageTestChunk(ChatCompletionChunkChoiceDelta{Content: strings.Repeat("x", 32<<10)})) {
