@@ -319,7 +319,7 @@ if [[ "$1" == "-e" ]]; then
   source="$2"
   if [[ "$source" == *'const requestedRoot = path.resolve'* ]]; then
     output='process.stdout.write('
-    native_path='executable = executable.split("/").join("\\"); process.stdout.write('
+    native_path='executable = executable.split("/").join(String.fromCharCode(92)); process.stdout.write('
     source="${source/$output/$native_path}"
   fi
   source="Object.defineProperty(process, 'platform', { value: 'win32' }); Object.defineProperty(process, 'arch', { value: 'x64' }); $source"
