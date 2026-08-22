@@ -294,6 +294,25 @@ func (state *chatCompletionAccumulatorLogprobState) chunkWithinLimit(chunk *Chat
 	return true
 }
 
+func addChatCompletionChunkLogprobBytes(total int, chunk *ChatCompletionChunk) (int, bool) {
+	logprobSize := int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
+	for i := range chunk.Choices {
+		logprobs := &chunk.Choices[i].Logprobs
+		if !addChatCompletionChunkLogprobSliceBytes(&total, logprobs.Content, logprobSize) ||
+			!addChatCompletionChunkLogprobSliceBytes(&total, logprobs.Refusal, logprobSize) {
+			return 0, false
+		}
+	}
+	return total, true
+}
+
+func addChatCompletionChunkLogprobSliceBytes(total *int, logprobs []ChatCompletionTokenLogprob, logprobSize int) bool {
+	if !addAccumulatorLogprobStorage(total, len(logprobs), logprobSize) {
+		return false
+	}
+	return addClonedChatCompletionLogprobData(total, logprobs)
+}
+
 func (state *chatCompletionAccumulatorLogprobState) nonEmptyChunkWithinLimit(chunk *ChatCompletionChunk) bool {
 	var projections [maxChatCompletionAccumulatorStructuralSlots]chatCompletionLogprobProjection
 	var touched [maxChatCompletionAccumulatorStructuralSlots]int
@@ -413,7 +432,7 @@ func projectedLogprobCapacity(current int, required int, maximum int) int {
 	// retained logical capacity exactly predictable during preflight.
 	for capacity < required {
 		if capacity > maximum/2 {
-			return required
+			return maximum
 		}
 		capacity *= 2
 	}

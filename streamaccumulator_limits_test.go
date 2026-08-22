@@ -520,7 +520,7 @@ func TestAccumulatorDetachesCapacityClippedLogprobBacking(t *testing.T) {
 	}
 }
 
-func TestAccumulatorDoesNotChargeHiddenLogprobsDroppedByDetachment(t *testing.T) {
+func TestAccumulatorDoesNotReplenishLogprobBudgetAfterDetachment(t *testing.T) {
 	logprobOverhead := 2 * int(unsafe.Sizeof(openai.ChatCompletionTokenLogprob{}))
 	initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
 	initial.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{
@@ -533,14 +533,20 @@ func TestAccumulatorDoesNotChargeHiddenLogprobsDroppedByDetachment(t *testing.T)
 		t.Fatal("AddChunk rejected initial logprobs at the aggregate budget")
 	}
 	acc.Choices[0].Logprobs.Content = acc.Choices[0].Logprobs.Content[:0:1]
+	if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
+		t.Fatal("AddChunk rejected the empty chunk that detaches hidden logprobs")
+	}
+	if got := len(acc.Choices[0].Logprobs.Content); got != 0 {
+		t.Fatalf("visible logprobs after detachment = %d, want 0", got)
+	}
 
 	next := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
 	next.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "replacement"}}
-	if !acc.AddChunk(next) {
-		t.Fatal("AddChunk charged hidden logprobs that detachment drops")
+	if acc.AddChunk(next) {
+		t.Fatal("AddChunk replenished the cumulative remote-logprob budget after detachment")
 	}
-	if got := acc.Choices[0].Logprobs.Content[0].Token; got != "replacement" {
-		t.Fatalf("retained token = %q, want replacement", got)
+	if got := len(acc.Choices[0].Logprobs.Content); got != 0 {
+		t.Fatalf("rejected logprobs changed accumulated length to %d", got)
 	}
 }
 

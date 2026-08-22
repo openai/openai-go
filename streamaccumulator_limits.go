@@ -61,7 +61,11 @@ func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *C
 }
 
 func (acc *ChatCompletionAccumulator) addChatCompletionChunkMetadataWork(work *int, chunk *ChatCompletionChunk) bool {
-	if !addAccumulatorStringCopyWork(work, chunk.ID, 1) {
+	idPasses := 1
+	if acc.ID != "" || acc.stringState.id != "" {
+		idPasses = 2
+	}
+	if !addAccumulatorStringCopyWork(work, chunk.ID, idPasses) {
 		return false
 	}
 	if !addAccumulatorStringAssignmentWork(work, chunk.Model, acc.stringState.model) ||
@@ -73,10 +77,12 @@ func (acc *ChatCompletionAccumulator) addChatCompletionChunkMetadataWork(work *i
 		!addAccumulatorStringAssignmentWork(work, chunk.Object.Default(), acc.stringState.object) {
 		return false
 	}
+	var finishReasonSeen [2]uint64
+	var roleSeen [2]uint64
 	for i := range chunk.Choices {
 		delta := &chunk.Choices[i]
-		var choiceState *chatCompletionChoiceStringState
 		choiceIndex := int(delta.Index)
+		var choiceState *chatCompletionChoiceStringState
 		if choiceIndex < len(acc.stringState.choices) {
 			choiceState = acc.stringState.choices[choiceIndex]
 		}
@@ -85,29 +91,81 @@ func (acc *ChatCompletionAccumulator) addChatCompletionChunkMetadataWork(work *i
 			finishReason = choiceState.finishReason
 			role = choiceState.role
 		}
-		if !addAccumulatorStringAssignmentWork(work, delta.FinishReason, finishReason) {
+		if !addAccumulatorMetadataAssignmentWork(work, delta.FinishReason, finishReason, &finishReasonSeen, choiceIndex) {
 			return false
 		}
-		if delta.Delta.Role != "" && !addAccumulatorStringAssignmentWork(work, delta.Delta.Role, role) {
+		if delta.Delta.Role != "" &&
+			!addAccumulatorMetadataAssignmentWork(work, delta.Delta.Role, role, &roleSeen, choiceIndex) {
 			return false
 		}
-		for j := range delta.Delta.ToolCalls {
-			tool := &delta.Delta.ToolCalls[j]
+	}
+	return acc.addChatCompletionToolMetadataWork(work, chunk)
+}
+
+func addAccumulatorMetadataAssignmentWork[T ~string](
+	work *int,
+	value T,
+	published string,
+	seen *[2]uint64,
+	index int,
+) bool {
+	word := index / 64
+	mask := uint64(1) << (index % 64)
+	if seen[word]&mask != 0 {
+		return addAccumulatorStringCopyWork(work, value, 3)
+	}
+	seen[word] |= mask
+	return addAccumulatorStringAssignmentWork(work, value, published)
+}
+
+func (acc *ChatCompletionAccumulator) addChatCompletionToolMetadataWork(work *int, chunk *ChatCompletionChunk) bool {
+	hasMetadata := false
+	for i := range chunk.Choices {
+		for j := range chunk.Choices[i].Delta.ToolCalls {
+			tool := &chunk.Choices[i].Delta.ToolCalls[j]
+			hasMetadata = hasMetadata || tool.ID != "" || tool.Type != ""
+		}
+	}
+	if !hasMetadata {
+		return true
+	}
+
+	var seen [maxChatCompletionAccumulatorStructuralSlots * 2]chatCompletionToolMetadataProjection
+	for i := range chunk.Choices {
+		choice := &chunk.Choices[i]
+		choiceIndex := int(choice.Index)
+		var choiceState *chatCompletionChoiceStringState
+		if choiceIndex < len(acc.stringState.choices) {
+			choiceState = acc.stringState.choices[choiceIndex]
+		}
+		for j := range choice.Delta.ToolCalls {
+			tool := &choice.Delta.ToolCalls[j]
 			toolIndex := preflightedToolCallIndex(tool.Index)
-			var toolState *chatCompletionToolCallStringState
-			if choiceState != nil && toolIndex < len(choiceState.toolCalls) {
-				toolState = choiceState.toolCalls[toolIndex]
-			}
+			projection := lookupChatCompletionToolMetadataProjection(&seen, choiceIndex, toolIndex)
 			id, typeName := "", ""
-			if toolState != nil {
-				id = toolState.id
-				typeName = toolState.typeName
+			if choiceState != nil && toolIndex < len(choiceState.toolCalls) && choiceState.toolCalls[toolIndex] != nil {
+				id = choiceState.toolCalls[toolIndex].id
+				typeName = choiceState.toolCalls[toolIndex].typeName
 			}
-			if tool.ID != "" && !addAccumulatorStringAssignmentWork(work, tool.ID, id) {
-				return false
+			if tool.ID != "" {
+				if projection.fields&projectedToolID == 0 {
+					if !addAccumulatorStringAssignmentWork(work, tool.ID, id) {
+						return false
+					}
+				} else if !addAccumulatorStringCopyWork(work, tool.ID, 3) {
+					return false
+				}
+				projection.fields |= projectedToolID
 			}
-			if tool.Type != "" && !addAccumulatorStringAssignmentWork(work, tool.Type, typeName) {
-				return false
+			if tool.Type != "" {
+				if projection.fields&projectedToolType == 0 {
+					if !addAccumulatorStringAssignmentWork(work, tool.Type, typeName) {
+						return false
+					}
+				} else if !addAccumulatorStringCopyWork(work, tool.Type, 3) {
+					return false
+				}
+				projection.fields |= projectedToolType
 			}
 		}
 	}

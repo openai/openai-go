@@ -34,6 +34,7 @@ type ChatCompletionAccumulator struct {
 	logprobState                     chatCompletionAccumulatorLogprobState
 	chunkCount                       int
 	textBytes                        int
+	logprobBytes                     int
 	reconciliationWork               int
 }
 
@@ -108,8 +109,9 @@ const maxStreamAccumulatorToolCallGrowth = 128
 // memory for untrusted streams, an accumulator accepts choice indices from 0 through
 // 127, at most 100,000 chunks and 1,024 combined choice and tool-call slots, 16 MiB
 // each of cumulative remote text, live combined content and tool function text,
-// other retained string metadata, and aggregate retained log probability data,
-// 32 MiB of retained text-buffer capacity, and 64 million accumulation work units.
+// other retained string metadata, cumulative remote log probability data, and live
+// retained log probability data, 32 MiB of retained text-buffer capacity, and 64
+// million accumulation work units.
 // A tool-call index may grow its choice by at most 128 positions; dense sequences
 // may contain more than 128 calls.
 // For compatibility with providers that use -1 for a single tool call, that value is
@@ -160,8 +162,11 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	if acc.chunkCount >= maxChatCompletionAccumulatorChunks {
 		return false
 	}
-	if (acc.ID != "" && acc.ID != chunk.ID) ||
-		(acc.stringState.id != "" && acc.stringState.id != chunk.ID) {
+	canonicalID := acc.stringState.id
+	if canonicalID != "" && canonicalID != chunk.ID {
+		return false
+	}
+	if acc.ID != "" && !accumulatorStringUsesPublishedBacking(acc.ID, canonicalID) && acc.ID != chunk.ID {
 		return false
 	}
 	if !acc.validChatCompletionChunkIndices(*chunk) {
@@ -198,6 +203,10 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	if hasLogprobPlan {
 		logprobState = &logprobPlan.state
 	}
+	projectedLogprobBytes, ok := addChatCompletionChunkLogprobBytes(acc.logprobBytes, chunk)
+	if !ok {
+		return false
+	}
 	if !logprobState.chunkWithinLimit(chunk) {
 		return false
 	}
@@ -207,6 +216,7 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	}
 	acc.reconcilePublicState()
 	acc.textBytes = projectedTextBytes
+	acc.logprobBytes = projectedLogprobBytes
 	acc.reconciliationWork = projectedReconciliationWork
 	return true
 }
@@ -555,7 +565,7 @@ func projectedAccumulatorTextCapacity(current int, required int) int {
 	capacity := max(1, current)
 	for capacity < required {
 		if capacity > maxChatCompletionAccumulatorTextBytes/2 {
-			return required
+			return maxChatCompletionAccumulatorTextBytes
 		}
 		capacity *= 2
 	}

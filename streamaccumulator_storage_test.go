@@ -113,6 +113,65 @@ func TestAccumulatorBoundsRetainedTextBufferCapacity(t *testing.T) {
 	}
 }
 
+func TestAccumulatorTextReplacementRetainsGeometricHeadroom(t *testing.T) {
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{Content: "x"})
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the initial chunk")
+	}
+
+	replacementBytes := maxChatCompletionAccumulatorTextBytes/2 + 1
+	acc.Choices[0].Message.Content = strings.Repeat("x", replacementBytes)
+	chunk.Choices[0].Delta.Content = "y"
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected text after a large supported public replacement")
+	}
+	if got := cap(acc.stringState.choices[0].content.buffer); got != maxChatCompletionAccumulatorTextBytes {
+		t.Fatalf("retained text capacity = %d, want geometric headroom %d", got, maxChatCompletionAccumulatorTextBytes)
+	}
+}
+
+func TestAccumulatorLogprobsRetainGeometricHeadroomAtFinalGrowth(t *testing.T) {
+	logprobSize := int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
+	maxLogprobs := maxChatCompletionAccumulatorLogprobBytes / logprobSize
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	chunk.Choices[0].Logprobs.Content = make([]ChatCompletionTokenLogprob, 1<<16)
+
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected logprobs at the last power-of-two capacity")
+	}
+	chunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{}}
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the final bounded geometric logprob growth")
+	}
+	if got := cap(acc.Choices[0].Logprobs.Content); got != maxLogprobs {
+		t.Fatalf("retained logprob capacity = %d, want bounded headroom %d", got, maxLogprobs)
+	}
+}
+
+func TestAccumulatorBoundsDuplicateMetadataAssignmentWork(t *testing.T) {
+	initial := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(initial) {
+		t.Fatal("AddChunk rejected the initial chunk")
+	}
+
+	const metadataBytes = 1 << 20
+	next := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	next.Choices = append(next.Choices, next.Choices[0])
+	next.Choices[0].FinishReason = strings.Repeat("a", metadataBytes-1) + "x"
+	next.Choices[1].FinishReason = strings.Repeat("a", metadataBytes-1) + "y"
+	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - 3*metadataBytes
+	before := acc.reconciliationWork
+	if acc.AddChunk(next) {
+		t.Fatal("AddChunk accepted duplicate metadata work beyond the cumulative budget")
+	}
+	if acc.reconciliationWork != before || acc.Choices[0].FinishReason != "" {
+		t.Fatal("rejected duplicate metadata changed the accumulator")
+	}
+}
+
 func TestAccumulatorCanonicalizesEqualPublicStringBacking(t *testing.T) {
 	var acc ChatCompletionAccumulator
 	if !acc.AddChunk(storageTestChunk(ChatCompletionChunkChoiceDelta{Content: strings.Repeat("x", 32<<10)})) {
@@ -306,7 +365,7 @@ func TestAccumulatorChargesAllLogprobReconciliationPasses(t *testing.T) {
 	if !acc.AddChunk(ChatCompletionChunk{ID: chunk.ID}) {
 		t.Fatal("AddChunk rejected an empty whole-slice replacement")
 	}
-	wantWork := 10 + len(chunk.ID) // six normal passes, two staged-slice passes, measurement, sparse commit, and incoming ID
+	wantWork := 10 + 2*len(chunk.ID) // six normal passes, two staged-slice passes, measurement, sparse commit, and established ID
 	if got := acc.reconciliationWork - before; got != wantWork {
 		t.Fatalf("reconciliation work = %d, want %d", got, wantWork)
 	}
@@ -330,7 +389,7 @@ func TestAccumulatorChargesPublicReplacementCopyWork(t *testing.T) {
 		t.Fatal("AddChunk rejected supported public replacements")
 	}
 	const normalPasses = 6
-	wantWork := normalPasses + len(chunk.ID) + 5*replacementBytes
+	wantWork := normalPasses + 2*len(chunk.ID) + 5*replacementBytes
 	if got := acc.reconciliationWork - before; got != wantWork {
 		t.Fatalf("reconciliation work = %d, want %d", got, wantWork)
 	}
@@ -350,7 +409,8 @@ func TestAccumulatorLogprobStreamingUsesIncrementalAccounting(t *testing.T) {
 	if got := len(acc.Choices[0].Logprobs.Content); got != chunkCount {
 		t.Fatalf("accumulated logprobs = %d, want %d", got, chunkCount)
 	}
-	wantWork := chunkCount*(chatCompletionAccumulatorChoiceWork+len(chunk.ID)) + (chunkCount-1)*7
+	wantWork := chunkCount*chatCompletionAccumulatorChoiceWork + len(chunk.ID) +
+		(chunkCount-1)*(7+2*len(chunk.ID))
 	if acc.reconciliationWork != wantWork {
 		t.Fatalf("normal streaming used %d reconciliation steps, want %d", acc.reconciliationWork, wantWork)
 	}

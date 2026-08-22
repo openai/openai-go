@@ -55,19 +55,17 @@ func TestAccumulatorRejectsLogprobsBeyondBudgetWithoutMutation(t *testing.T) {
 	afterClearing := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
 	afterClearing.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "x"}}
 	acc.Choices[0].Logprobs.Content = acc.Choices[0].Logprobs.Content[:0]
-	if !acc.AddChunk(afterClearing) {
+	if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
 		t.Fatal("AddChunk did not release retained logprob backing after the public slice was truncated")
 	}
-	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
-		t.Fatalf("logprobs after truncation = %d, want 1", got)
+	if got := len(acc.Choices[0].Logprobs.Content); got != 0 {
+		t.Fatalf("logprobs after truncation = %d, want 0", got)
 	}
-
-	acc.Choices[0].Logprobs.Content = nil
-	if !acc.AddChunk(afterClearing) {
-		t.Fatal("AddChunk did not recover logprob budget after the public logprobs were cleared")
+	if acc.AddChunk(afterClearing) {
+		t.Fatal("AddChunk replenished the cumulative remote-logprob budget after public truncation")
 	}
-	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
-		t.Fatalf("logprobs after clearing = %d, want 1", got)
+	if got := len(acc.Choices[0].Logprobs.Content); got != 0 {
+		t.Fatalf("rejected logprobs changed accumulated length to %d", got)
 	}
 }
 
