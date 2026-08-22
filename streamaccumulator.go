@@ -15,6 +15,8 @@ const (
 	maxChatCompletionAccumulatorMetadataBytes = 16 << 20
 	maxChatCompletionAccumulatorLogprobBytes  = 16 << 20
 	maxChatCompletionAccumulatorReconcileWork = 64_000_000
+	chatCompletionAccumulatorChoiceWork       = 16
+	chatCompletionAccumulatorToolWork         = 8
 	// Conservatively covers a non-empty map header and its first backing bucket.
 	chatCompletionAccumulatorMapOverheadBytes = 512
 )
@@ -93,7 +95,7 @@ const (
 // combined choice and tool-call slots, 16 MiB each of combined content and tool
 // function text, other retained string metadata, and aggregate retained log
 // probability data, 32 MiB of retained text-buffer capacity, and 64 million
-// public-state reconciliation steps. A rejected chunk does not modify the accumulator.
+// accumulation work units. A rejected chunk does not modify the accumulator.
 //
 // While accumulation is in progress, callers may replace or clear accumulated
 // top-level strings and string fields of choices and tool calls that the stream
@@ -140,7 +142,7 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	if acc.ID != "" && acc.ID != chunk.ID {
 		return false
 	}
-	projectedReconciliationWork, ok := acc.projectReconciliationWork(len(chunk.Choices) > 0)
+	projectedReconciliationWork, ok := acc.projectReconciliationWork(chunk)
 	if !ok {
 		return false
 	}
@@ -179,20 +181,34 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	return true
 }
 
-func (acc *ChatCompletionAccumulator) projectReconciliationWork(chunkHasChoices bool) (int, bool) {
+func (acc *ChatCompletionAccumulator) projectReconciliationWork(chunk *ChatCompletionChunk) (int, bool) {
 	// Preflight and commit make six passes over populated choices, plus one
 	// structural projection pass when the chunk has choices. Populated tools are
 	// visited by text, metadata, and commit reconciliation. Charging those exact
 	// passes keeps sparse detection work bounded without scanning placeholder slots.
+	// Per-chunk choice and tool units conservatively cover the remaining fixed
+	// validation, projection, accumulation, and state-update passes over new input.
 	choicePasses := 6
-	if chunkHasChoices {
+	if len(chunk.Choices) > 0 {
 		choicePasses++
 	}
 	work := len(acc.stringState.activeChoices)*choicePasses + acc.stringState.activeTools*3
 	if work > maxChatCompletionAccumulatorReconcileWork-acc.reconciliationWork {
 		return 0, false
 	}
-	return acc.reconciliationWork + work, true
+	projected := acc.reconciliationWork + work
+	if len(chunk.Choices) > (maxChatCompletionAccumulatorReconcileWork-projected)/chatCompletionAccumulatorChoiceWork {
+		return 0, false
+	}
+	projected += len(chunk.Choices) * chatCompletionAccumulatorChoiceWork
+	for i := range chunk.Choices {
+		toolCount := len(chunk.Choices[i].Delta.ToolCalls)
+		if toolCount > (maxChatCompletionAccumulatorReconcileWork-projected)/chatCompletionAccumulatorToolWork {
+			return 0, false
+		}
+		projected += toolCount * chatCompletionAccumulatorToolWork
+	}
+	return projected, true
 }
 
 // JustFinishedContent retrieves the chat completion content when it is known to have just been completed.
@@ -480,6 +496,10 @@ func (acc *chatCompletionString) append(current *string, fragment string) {
 }
 
 func (acc *chatCompletionString) reconcile(current *string) {
+	if accumulatorStringUsesPublishedBacking(*current, acc.published) {
+		*current = acc.published
+		return
+	}
 	if *current == acc.published {
 		*current = acc.published
 		return
@@ -627,14 +647,14 @@ func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int, work
 }
 
 func addAccumulatorBufferReconciliationWork(work *int, current string, state *chatCompletionString) bool {
-	if current == state.published {
+	if accumulatorStringUsesPublishedBacking(current, state.published) {
 		return true
 	}
-	return addAccumulatorReconciliationWork(work, len(current))
+	return addAccumulatorStringCopyWork(work, current, 2)
 }
 
 func projectedAccumulatorBufferCapacity(current string, state *chatCompletionString) int {
-	if current != state.published {
+	if !accumulatorStringUsesPublishedBacking(current, state.published) {
 		return len(current)
 	}
 	return cap(state.buffer)
@@ -703,10 +723,19 @@ func (acc *ChatCompletionAccumulator) addChatCompletionMetadataBytes(total int, 
 
 func addAccumulatorStringReconciliationWork[T ~string](work *int, current T, published string) bool {
 	value := string(current)
-	if value == "" || accumulatorStringUsesPublishedBacking(value, published) {
+	if accumulatorStringUsesPublishedBacking(value, published) {
 		return true
 	}
-	return addAccumulatorReconciliationWork(work, len(value))
+	return addAccumulatorStringCopyWork(work, value, 2)
+}
+
+func addAccumulatorStringCopyWork[T ~string](work *int, value T, passes int) bool {
+	for range passes {
+		if !addAccumulatorReconciliationWork(work, len(value)) {
+			return false
+		}
+	}
+	return true
 }
 
 type chatCompletionToolMetadataProjection struct {
@@ -722,6 +751,9 @@ const (
 
 func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *ChatCompletionChunk, work *int) bool {
 	completion := &acc.ChatCompletion
+	if !acc.addChatCompletionChunkMetadataWork(work, chunk) {
+		return false
+	}
 	total, ok := acc.addChatCompletionMetadataBytes(0, work)
 	if !ok {
 		return false
@@ -764,6 +796,79 @@ func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *C
 	delta += chatCompletionToolMetadataDelta(completion, chunk)
 	projected := int64(total) + delta
 	return projected >= 0 && projected <= maxChatCompletionAccumulatorMetadataBytes
+}
+
+func (acc *ChatCompletionAccumulator) addChatCompletionChunkMetadataWork(work *int, chunk *ChatCompletionChunk) bool {
+	if !addAccumulatorStringCopyWork(work, chunk.ID, 1) {
+		return false
+	}
+	if !addAccumulatorStringAssignmentWork(work, chunk.Model, acc.stringState.model) ||
+		!addAccumulatorStringAssignmentWork(work, chunk.SystemFingerprint, acc.stringState.systemFingerprint) ||
+		!addAccumulatorStringAssignmentWork(work, chunk.ServiceTier, acc.stringState.serviceTier) {
+		return false
+	}
+	if chunk.Object == chunk.Object.Default() &&
+		!addAccumulatorStringAssignmentWork(work, chunk.Object.Default(), acc.stringState.object) {
+		return false
+	}
+	for i := range chunk.Choices {
+		delta := &chunk.Choices[i]
+		var choiceState *chatCompletionChoiceStringState
+		choiceIndex := int(delta.Index)
+		if choiceIndex < len(acc.stringState.choices) {
+			choiceState = acc.stringState.choices[choiceIndex]
+		}
+		finishReason, role := "", ""
+		if choiceState != nil {
+			finishReason = choiceState.finishReason
+			role = choiceState.role
+		}
+		if !addAccumulatorStringAssignmentWork(work, delta.FinishReason, finishReason) {
+			return false
+		}
+		if delta.Delta.Role != "" && !addAccumulatorStringAssignmentWork(work, delta.Delta.Role, role) {
+			return false
+		}
+		for j := range delta.Delta.ToolCalls {
+			tool := &delta.Delta.ToolCalls[j]
+			toolIndex := clampToZero(tool.Index)
+			var toolState *chatCompletionToolCallStringState
+			if choiceState != nil && toolIndex < len(choiceState.toolCalls) {
+				toolState = choiceState.toolCalls[toolIndex]
+			}
+			id, typeName := "", ""
+			if toolState != nil {
+				id = toolState.id
+				typeName = toolState.typeName
+			}
+			if tool.ID != "" && !addAccumulatorStringAssignmentWork(work, tool.ID, id) {
+				return false
+			}
+			if tool.Type != "" && !addAccumulatorStringAssignmentWork(work, tool.Type, typeName) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func addAccumulatorStringAssignmentWork[T ~string](work *int, value T, published string) bool {
+	text := string(value)
+	if accumulatorStringUsesPublishedBacking(text, published) {
+		return true
+	}
+	if len(text) != len(published) {
+		return addAccumulatorStringCopyWork(work, text, 1)
+	}
+	// Preflight performs this comparison once, and assignment repeats it after
+	// every other check has succeeded. A changed value is then copied once.
+	if !addAccumulatorStringCopyWork(work, text, 1) {
+		return false
+	}
+	if text == published {
+		return addAccumulatorStringCopyWork(work, text, 1)
+	}
+	return addAccumulatorStringCopyWork(work, text, 2)
 }
 
 func markChatCompletionMetadataProjected(seen *[maxChatCompletionAccumulatorStructuralSlots / 64]uint64, index int) bool {
@@ -858,6 +963,7 @@ func addAccumulatorMetadataBytes(total *int, text string) bool {
 	return true
 }
 
+// update updates the internal response state and returns the previous state if
 // the state changed. This ensures that JustFinished events only fire once.
 func (prev *chatCompletionResponseState) update(choice ChatCompletionChunkChoice) (justFinished chatCompletionResponseState) {
 	delta := choice.Delta

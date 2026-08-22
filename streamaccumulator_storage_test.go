@@ -134,6 +134,36 @@ func TestAccumulatorCanonicalizesEqualPublicStringBacking(t *testing.T) {
 	}
 }
 
+func TestAccumulatorBoundsEqualPublicStringComparisonWork(t *testing.T) {
+	const contentBytes = 1 << 20
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{Content: strings.Repeat("x", contentBytes)})
+
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the initial chunk")
+	}
+	clone := strings.Clone(acc.Choices[0].Message.Content)
+	if unsafe.StringData(clone) == unsafe.StringData(acc.stringState.choices[0].content.published) {
+		t.Fatal("strings.Clone did not produce distinct test backing storage")
+	}
+	acc.Choices[0].Message.Content = clone
+
+	empty := ChatCompletionChunk{ID: chunk.ID}
+	const activeChoicePasses = 6
+	requiredWork := activeChoicePasses + len(empty.ID) + 2*contentBytes
+	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - requiredWork + 1
+	beforeWork := acc.reconciliationWork
+	if acc.AddChunk(empty) {
+		t.Fatal("AddChunk accepted equal-string comparison work beyond the documented budget")
+	}
+	if acc.reconciliationWork != beforeWork {
+		t.Fatal("rejected chunk changed the reconciliation budget")
+	}
+	if unsafe.StringData(acc.Choices[0].Message.Content) != unsafe.StringData(clone) {
+		t.Fatal("rejected chunk changed the public string backing")
+	}
+}
+
 func TestAccumulatorCanonicalizesEqualPublicMetadataBacking(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
 		Role: "assistant",
@@ -276,7 +306,7 @@ func TestAccumulatorChargesAllLogprobReconciliationPasses(t *testing.T) {
 	if !acc.AddChunk(ChatCompletionChunk{ID: chunk.ID}) {
 		t.Fatal("AddChunk rejected an empty whole-slice replacement")
 	}
-	const wantWork = 10 // six normal passes, two staged-slice passes, measurement, and sparse commit
+	wantWork := 10 + len(chunk.ID) // six normal passes, two staged-slice passes, measurement, sparse commit, and incoming ID
 	if got := acc.reconciliationWork - before; got != wantWork {
 		t.Fatalf("reconciliation work = %d, want %d", got, wantWork)
 	}
@@ -300,7 +330,7 @@ func TestAccumulatorChargesPublicReplacementCopyWork(t *testing.T) {
 		t.Fatal("AddChunk rejected supported public replacements")
 	}
 	const normalPasses = 6
-	wantWork := normalPasses + 2*replacementBytes
+	wantWork := normalPasses + len(chunk.ID) + 5*replacementBytes
 	if got := acc.reconciliationWork - before; got != wantWork {
 		t.Fatalf("reconciliation work = %d, want %d", got, wantWork)
 	}
@@ -320,7 +350,7 @@ func TestAccumulatorLogprobStreamingUsesIncrementalAccounting(t *testing.T) {
 	if got := len(acc.Choices[0].Logprobs.Content); got != chunkCount {
 		t.Fatalf("accumulated logprobs = %d, want %d", got, chunkCount)
 	}
-	wantWork := (chunkCount - 1) * 7
+	wantWork := chunkCount*(chatCompletionAccumulatorChoiceWork+len(chunk.ID)) + (chunkCount-1)*7
 	if acc.reconciliationWork != wantWork {
 		t.Fatalf("normal streaming used %d reconciliation steps, want %d", acc.reconciliationWork, wantWork)
 	}

@@ -33,8 +33,10 @@ type chatCompletionChoiceLogprobState struct {
 }
 
 type chatCompletionLogprobSliceState struct {
-	// A uintptr fingerprints published storage without keeping cleared backing alive.
-	data     uintptr
+	// Keep the published outer allocation alive so allocator address reuse cannot
+	// make a replacement look identical before reconciliation. bytes accounts for
+	// this retained backing until an accepted chunk updates the state.
+	data     *ChatCompletionTokenLogprob
 	length   int
 	capacity int
 	bytes    int
@@ -48,16 +50,17 @@ type chatCompletionLogprobProjection struct {
 }
 
 func assignAccumulatorString[T ~string](published *string, dst *T, src T) {
-	current := string(*dst)
-	if current == "" && src == "" {
+	value := string(src)
+	if value == "" {
 		*published = ""
 		*dst = ""
 		return
 	}
-	if current == string(src) && accumulatorStringUsesPublishedBacking(current, *published) {
+	if accumulatorStringUsesPublishedBacking(value, *published) || value == *published {
+		*dst = T(*published)
 		return
 	}
-	*published = strings.Clone(string(src))
+	*published = strings.Clone(value)
 	*dst = T(*published)
 }
 
@@ -68,7 +71,7 @@ func reconcileAccumulatorString[T ~string](published *string, current *T) {
 		*current = ""
 		return
 	}
-	if accumulatorStringUsesPublishedBacking(value, *published) {
+	if accumulatorStringUsesPublishedBacking(value, *published) || value == *published {
 		*current = T(*published)
 		return
 	}
@@ -77,7 +80,7 @@ func reconcileAccumulatorString[T ~string](published *string, current *T) {
 }
 
 func accumulatorStringUsesPublishedBacking(value string, published string) bool {
-	return value == published && unsafe.StringData(value) == unsafe.StringData(published)
+	return len(value) == len(published) && (value == "" || unsafe.StringData(value) == unsafe.StringData(published))
 }
 
 func detachChatCompletionLogprobs(src []ChatCompletionTokenLogprob) []ChatCompletionTokenLogprob {
@@ -419,14 +422,14 @@ func projectedLogprobCapacity(current int, required int, maximum int) int {
 
 func chatCompletionLogprobHeader(logprobs []ChatCompletionTokenLogprob) chatCompletionLogprobSliceState {
 	return chatCompletionLogprobSliceState{
-		data:     uintptr(unsafe.Pointer(unsafe.SliceData(logprobs))),
+		data:     unsafe.SliceData(logprobs),
 		length:   len(logprobs),
 		capacity: cap(logprobs),
 	}
 }
 
 func setChatCompletionLogprobHeader(state *chatCompletionLogprobSliceState, logprobs []ChatCompletionTokenLogprob) {
-	state.data = uintptr(unsafe.Pointer(unsafe.SliceData(logprobs)))
+	state.data = unsafe.SliceData(logprobs)
 	state.length = len(logprobs)
 	state.capacity = cap(logprobs)
 }
@@ -539,5 +542,3 @@ func addAccumulatorReconciliationWork(total *int, count int) bool {
 	*total += count
 	return true
 }
-
-// Updates the internal response state and returns the previous state if
