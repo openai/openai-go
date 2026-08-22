@@ -55,6 +55,17 @@ updates:
         patterns:
           - "golang.org/x/*"
 
+  - package-ecosystem: npm
+    directory: /scripts/steady
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:20"
+      timezone: Etc/UTC
+    cooldown:
+      default-days: 8
+    open-pull-requests-limit: 2
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
