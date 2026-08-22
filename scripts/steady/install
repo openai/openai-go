@@ -102,7 +102,7 @@ verify_installation() {
       throw new Error("unexpected package version or executable location");
     }
     fs.accessSync(executable, fs.constants.X_OK);
-    process.stdout.write(executable);
+    process.stdout.write(process.platform === "win32" ? executable.replace(/\\/g, "/") : executable);
   } catch (error) {
     console.error(`Missing locked Steady platform-native executable: ${executable}`);
     process.exit(1);

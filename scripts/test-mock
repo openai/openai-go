@@ -296,6 +296,69 @@ done
 echo "Bootstrap and mock rejected unsupported Node.js 13 before installation"
 
 rm -f "$node_stub" "$go_stub"
+
+windows_fixture="$temporary/windows-project"
+windows_bin="$temporary/windows-bin"
+windows_modules="$temporary/windows-modules"
+mkdir -p "$windows_fixture/scripts/steady" "$windows_bin" \
+  "$windows_modules/@stdy/cli" "$windows_modules/@stdy/cli-win32-x64/bin" \
+  "$windows_modules/.bin"
+cp scripts/steady/install scripts/steady/package.json scripts/steady/package-lock.json \
+  "$windows_fixture/scripts/steady/"
+printf 'console.log("unused Windows wrapper")\n' >"$windows_modules/@stdy/cli/steady.js"
+printf '{"name":"@stdy/cli-win32-x64","version":"%s"}\n' "$expected_version" \
+  >"$windows_modules/@stdy/cli-win32-x64/package.json"
+printf '#!/usr/bin/env bash\nprintf "steady %s\\n"\n' "$expected_version" \
+  >"$windows_modules/@stdy/cli-win32-x64/bin/steady.exe"
+printf 'regular npm-generated command shim\n' >"$windows_modules/.bin/steady.cmd"
+chmod +x "$windows_modules/@stdy/cli-win32-x64/bin/steady.exe"
+
+cat >"$windows_bin/node" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "-e" ]]; then
+  source="$2"
+  if [[ "$source" == *'const requestedRoot = path.resolve'* ]]; then
+    output='process.stdout.write('
+    native_path='executable = executable.split("/").join("\\"); process.stdout.write('
+    source="${source/$output/$native_path}"
+  fi
+  source="Object.defineProperty(process, 'platform', { value: 'win32' }); Object.defineProperty(process, 'arch', { value: 'x64' }); $source"
+  shift 2
+  exec "$STEADY_REAL_NODE" -e "$source" "$@"
+fi
+exec "$STEADY_REAL_NODE" "$@"
+EOF
+cat >"$windows_bin/npm" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "--version" ]]; then
+  printf '10.9.0\n'
+  exit 0
+fi
+while (($#)); do
+  if [[ "$1" == "--prefix" ]]; then
+    cp -R "$STEADY_WINDOWS_FIXTURE_MODULES" "$2/node_modules"
+    exit 0
+  fi
+  shift
+done
+exit 1
+EOF
+chmod +x "$windows_bin/node" "$windows_bin/npm"
+
+if ! windows_executable="$(PATH="$windows_bin:$PATH" STEADY_REAL_NODE="$real_node" \
+  STEADY_WINDOWS_FIXTURE_MODULES="$windows_modules" \
+  "$windows_fixture/scripts/steady/install" --print-executable 2>"$temporary/windows-output")"; then
+  cat "$temporary/windows-output" >&2
+  echo "Windows Steady installation returned a native path that Git Bash could not execute" >&2
+  exit 1
+fi
+if [[ "$windows_executable" == *\\* || "$windows_executable" != */@stdy/cli-win32-x64/bin/steady.exe ]]; then
+  echo "Windows Steady installation did not return a Git Bash-compatible executable path" >&2
+  exit 1
+fi
+"$windows_executable" --version | grep -Fx "steady $expected_version" >/dev/null
+echo "Windows Steady native paths remain executable under Git Bash"
+
 printf '#!/bin/sh\nexit 0\n' >"$go_stub"
 chmod +x "$go_stub"
 
@@ -471,6 +534,9 @@ exec "$STEADY_REAL_NODE" "$@"
 EOF
 chmod +x "$lifetime_bin/node"
 
+live_wrapper="$concurrent_fixture/scripts/steady/.versions/$installation_name/node_modules/@stdy/cli/steady.js"
+printf 'throw new Error("force authenticated publication")\n' >"$live_wrapper"
+
 PATH="$lifetime_bin:$PATH" STEADY_REAL_NODE="$real_node" \
   STEADY_PUBLICATION_GAP="$temporary/publication-gap" \
   STEADY_PUBLICATION_RELEASE="$temporary/publication-release" \
@@ -484,6 +550,14 @@ for attempt in {1..300}; do
   fi
   sleep 0.025
 done
+
+if [[ ! -e "$temporary/publication-gap" ]]; then
+  touch "$temporary/publication-release"
+  wait "$concurrent_process" || true
+  cat "$temporary/concurrent-output" >&2
+  echo "Concurrent Steady lifetime regression did not reach an actual publication gap" >&2
+  exit 1
+fi
 
 if ! "$live_executable" --version >"$temporary/live-version" 2>&1; then
   touch "$temporary/publication-release"
@@ -500,8 +574,13 @@ if ! wait "$concurrent_process"; then
 fi
 
 grep -Fx "steady $expected_version" "$temporary/live-version" >/dev/null
-grep -Fx "$live_executable" "$temporary/concurrent-executable" >/dev/null
-echo "Concurrent Steady installation preserves and reuses the authenticated live executable"
+published_executable="$(cat "$temporary/concurrent-executable")"
+if [[ "$published_executable" == "$live_executable" ]]; then
+  echo "Concurrent Steady repair reused a tampered generation instead of publishing a replacement" >&2
+  exit 1
+fi
+"$published_executable" --version | grep -Fx "steady $expected_version" >/dev/null
+echo "Concurrent Steady repair preserves the live executable throughout an actual publication gap"
 
 upgrade_fixture="$temporary/version-upgrade"
 upgrade_bin="$temporary/version-upgrade-bin"
