@@ -29,11 +29,11 @@ type Origin struct {
 }
 
 func GenerateSchema[T any]() (map[string]any, error) {
-	// Structured Outputs uses a subset of JSON schema
-	// These flags are necessary to comply with the subset
+	// Structured Outputs requires object schemas to disallow additional
+	// properties. Keep references enabled so recursive Go types can use
+	// $defs/$ref instead of being inlined indefinitely.
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
-		DoNotReference:            true,
 	}
 	var v T
 	schema := reflector.Reflect(v)
