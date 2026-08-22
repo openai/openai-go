@@ -33,6 +33,7 @@ type ChatCompletionAccumulator struct {
 	stringState                      chatCompletionAccumulatorStringState
 	logprobState                     chatCompletionAccumulatorLogprobState
 	chunkCount                       int
+	textBytes                        int
 	reconciliationWork               int
 }
 
@@ -106,10 +107,11 @@ const maxStreamAccumulatorToolCallGrowth = 128
 // Returns false if the chunk could not be successfully accumulated. To bound work and
 // memory for untrusted streams, an accumulator accepts choice indices from 0 through
 // 127, at most 100,000 chunks and 1,024 combined choice and tool-call slots, 16 MiB
-// each of combined content and tool function text, other retained string metadata,
-// and aggregate retained log probability data, 32 MiB of retained text-buffer
-// capacity, and 64 million accumulation work units. A tool-call index may grow its
-// choice by at most 128 positions; dense sequences may contain more than 128 calls.
+// each of cumulative remote text, live combined content and tool function text,
+// other retained string metadata, and aggregate retained log probability data,
+// 32 MiB of retained text-buffer capacity, and 64 million accumulation work units.
+// A tool-call index may grow its choice by at most 128 positions; dense sequences
+// may contain more than 128 calls.
 // For compatibility with providers that use -1 for a single tool call, that value is
 // treated as index 0. A rejected chunk does not modify accumulated response data or
 // resource budgets, but it clears any prior JustFinished event.
@@ -173,11 +175,15 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 		return false
 	}
 
-	textBytes, ok := acc.addChatCompletionTextBytes(0, &projectedReconciliationWork)
+	projectedTextBytes, ok := addChatCompletionChunkTextBytes(acc.textBytes, chunk)
 	if !ok {
 		return false
 	}
-	if _, ok = addChatCompletionChunkTextBytes(textBytes, chunk); !ok {
+	liveTextBytes, ok := acc.addChatCompletionTextBytes(0, &projectedReconciliationWork)
+	if !ok {
+		return false
+	}
+	if _, ok = addChatCompletionChunkTextBytes(liveTextBytes, chunk); !ok {
 		return false
 	}
 	if !acc.chatCompletionMetadataWithinLimit(chunk, &projectedReconciliationWork) {
@@ -200,6 +206,7 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 		acc.applyLogprobReconciliation(&logprobPlan)
 	}
 	acc.reconcilePublicState()
+	acc.textBytes = projectedTextBytes
 	acc.reconciliationWork = projectedReconciliationWork
 	return true
 }

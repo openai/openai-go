@@ -173,7 +173,7 @@ func TestAccumulatorBudgetsPublicStringReplacements(t *testing.T) {
 			}
 		})
 
-		t.Run(test.name+"/clearing_recovers_budget", func(t *testing.T) {
+		t.Run(test.name+"/clearing_does_not_replenish_output_budget", func(t *testing.T) {
 			var acc openai.ChatCompletionAccumulator
 			chunk := test.chunk(atLimit)
 			chunk.Model = "initial-model"
@@ -183,12 +183,12 @@ func TestAccumulatorBudgetsPublicStringReplacements(t *testing.T) {
 
 			*test.value(&acc) = ""
 			chunk = test.chunk("x")
-			chunk.Model = "recovered-model"
-			if !acc.AddChunk(chunk) {
-				t.Fatal("AddChunk did not recover budget after the public string was cleared")
+			chunk.Model = "rejected-model"
+			if acc.AddChunk(chunk) {
+				t.Fatal("AddChunk replenished the cumulative remote-output budget after the public string was cleared")
 			}
-			if acc.Model != "recovered-model" || *test.value(&acc) != "x" {
-				t.Fatal("AddChunk did not accumulate the accepted chunk after budget recovery")
+			if acc.Model != "initial-model" || *test.value(&acc) != "" {
+				t.Fatal("AddChunk mutated the accumulator after rejecting remote text beyond the cumulative budget")
 			}
 		})
 	}
@@ -733,11 +733,15 @@ func TestAccumulatorDoesNotResurrectTruncatedPublicStrings(t *testing.T) {
 		}
 
 		acc.Choices = acc.Choices[:0]
-		if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "x"})) {
-			t.Fatal("AddChunk rejected text after the public choices were truncated")
+		empty := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+		if !acc.AddChunk(empty) {
+			t.Fatal("AddChunk rejected the empty chunk after the public choices were truncated")
 		}
-		if content := acc.Choices[0].Message.Content; content != "x" {
+		if content := acc.Choices[0].Message.Content; content != "" {
 			t.Fatalf("AddChunk resurrected truncated choice content with length %d", len(content))
+		}
+		if acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "x"})) {
+			t.Fatal("AddChunk replenished the cumulative remote-output budget after choices were truncated")
 		}
 	})
 
@@ -749,11 +753,15 @@ func TestAccumulatorDoesNotResurrectTruncatedPublicStrings(t *testing.T) {
 
 		message := &acc.Choices[0].Message
 		message.ToolCalls = message.ToolCalls[:0]
-		if !acc.AddChunk(accumulatorToolStringChunk("", "x")) {
-			t.Fatal("AddChunk rejected text after the public tool calls were truncated")
+		empty := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+		if !acc.AddChunk(empty) {
+			t.Fatal("AddChunk rejected the empty chunk after the public tool calls were truncated")
 		}
-		if arguments := acc.Choices[0].Message.ToolCalls[0].Function.Arguments; arguments != "x" {
-			t.Fatalf("AddChunk resurrected truncated tool arguments with length %d", len(arguments))
+		if len(acc.Choices[0].Message.ToolCalls) != 0 {
+			t.Fatal("AddChunk resurrected a truncated tool call")
+		}
+		if acc.AddChunk(accumulatorToolStringChunk("", "x")) {
+			t.Fatal("AddChunk replenished the cumulative remote-output budget after tool calls were truncated")
 		}
 	})
 }
