@@ -30,10 +30,11 @@ type Origin struct {
 
 func GenerateSchema[T any]() (map[string]any, error) {
 	// Structured Outputs requires object schemas to disallow additional
-	// properties. Keep references enabled so recursive Go types can use
-	// $defs/$ref instead of being inlined indefinitely.
+	// properties. Keep definitions referenced so recursive Go types terminate,
+	// while expanding the root struct preserves the example's object-shaped root.
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
+		ExpandedStruct:             true,
 	}
 	var v T
 	schema := reflector.Reflect(v)
