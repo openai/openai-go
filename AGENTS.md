@@ -188,9 +188,8 @@ affect exported APIs.
 
 Treat large payloads as a normal API contract, not evidence of malformed or
 hostile input. Responses, Chat Completions, and other APIs can legitimately
-return large `application/json` bodies, streaming events, and, where supported,
-WebSocket messages. Do not introduce arbitrary fixed limits on bodies, frames,
-events, or lines as a security or efficiency fix. Prefer incremental processing,
+return large `application/json` bodies and streaming events. Do not introduce
+arbitrary fixed limits on bodies, events, or lines as a security or efficiency fix. Prefer incremental processing,
 amortized-linear buffering, timely cleanup, and caller cancellation. Any new
 rejection limit needs an explicit, owner-approved API contract and a review of
 existing supported payloads and transports.
@@ -199,6 +198,5 @@ Protect this behavior with focused, deterministic public-entrypoint tests using
 large synthetic payloads generated in memory, not committed captures or live
 image generation. Their high memory use is intentional: do not shrink the
 payloads or raise client limits to make the tests pass. Keep coverage to the main
-JSON, streaming, and supported WebSocket categories, and run large cases
-sequentially to keep peak memory reasonable. The fixture size is a regression
+HTTP JSON and SSE categories, and run large cases sequentially to keep peak memory reasonable. The fixture size is a regression
 probe, not a new API maximum.
