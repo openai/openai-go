@@ -156,11 +156,24 @@ if [[ "$publication_lock_owned" -ne 1 ]]; then
   exit 1
 fi
 
-if ! executable="$(verify_installation "$published_installation" 2>/dev/null)" ||
-  ! cmp -s "$installation/node_modules/@stdy/cli/steady.js" \
-    "$published_installation/node_modules/@stdy/cli/steady.js" ||
-  ! cmp -s "$staged_executable" "$executable"; then
-  rm -rf "$published_installation"
+executable=""
+generations=("$published_installation" "$published_installation".*)
+for generation in "${generations[@]}"; do
+  if [[ -d "$generation" ]] &&
+    candidate="$(verify_installation "$generation" 2>/dev/null)" &&
+    cmp -s "$installation/node_modules/@stdy/cli/steady.js" \
+      "$generation/node_modules/@stdy/cli/steady.js" &&
+    cmp -s "$staged_executable" "$candidate"; then
+    executable="$candidate"
+    break
+  fi
+done
+
+if [[ -z "$executable" ]]; then
+  if [[ -e "$published_installation" || -L "$published_installation" ]]; then
+    published_installation="$(mktemp -d "$versions_directory/$installation_name.XXXXXXXX")"
+    rmdir "$published_installation"
+  fi
   node -e 'require("fs").renameSync(process.argv[1], process.argv[2])' \
     "$installation" "$published_installation"
   executable="$(verify_installation "$published_installation")"

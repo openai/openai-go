@@ -26,7 +26,17 @@ cleanup() {
 }
 trap cleanup EXIT
 
-npm_config_offline=true ./scripts/steady/install >/dev/null
+refresh_steady_installation() {
+  native="$(npm_config_offline=true ./scripts/steady/install --print-executable)"
+  steady_installation="${native%%/node_modules/*}"
+  if [[ "$steady_installation" == "$native" ]]; then
+    echo "Steady executable escaped its installation root" >&2
+    exit 1
+  fi
+  wrapper="$steady_installation/node_modules/@stdy/cli/steady.js"
+}
+
+refresh_steady_installation
 
 printf 'require("fs").writeFileSync(process.env.STEADY_TEST_MARKER, "executed")\n' >"$wrapper"
 
@@ -46,6 +56,7 @@ if [[ "$status" -eq 0 ]]; then
   exit 1
 fi
 
+refresh_steady_installation
 node "$wrapper" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Mock server rejected tampered existing Steady bytes"
 
@@ -69,6 +80,7 @@ if [[ -e "$marker" || "$status" -eq 0 ]]; then
   echo "Mock server executed an unverified existing Steady native executable" >&2
   exit 1
 fi
+refresh_steady_installation
 "$native" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Mock server rejected and replaced tampered existing native executable bytes"
 
@@ -99,6 +111,7 @@ if [[ -e "$marker" ]]; then
   echo "Steady package metadata executed code before package authentication" >&2
   exit 1
 fi
+refresh_steady_installation
 "$native" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Steady package metadata stays inert when package exports are remapped"
 
@@ -118,6 +131,7 @@ if [[ -e "$marker" ]]; then
 fi
 echo "Versioned Steady installation rejects executable or modified published lockfiles"
 
+refresh_steady_installation
 printf '#!/bin/sh\nprintf "%%s" "$STEADY_TEST_SECRET" >"$STEADY_TEST_MARKER"\n' >"$native"
 chmod +x "$native"
 if ! STEADY_TEST_MARKER="$marker" STEADY_TEST_SECRET=synthetic-dry-run-credential \
@@ -129,6 +143,7 @@ if [[ -e "$marker" ]]; then
   echo "Inherited npm dry-run executed a forged existing native with developer credentials" >&2
   exit 1
 fi
+refresh_steady_installation
 "$native" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Inherited npm dry-run cannot skip authenticated native installation"
 
@@ -151,6 +166,7 @@ if [[ -e "$temporary/untrusted-prefix" ]]; then
   echo "Hostile npm configuration redirected the authenticated installation prefix" >&2
   exit 1
 fi
+refresh_steady_installation
 "$native" --version | grep -Fx "steady $expected_version" >/dev/null
 echo "Hostile npm user configuration cannot disable authenticated installation"
 
@@ -568,3 +584,45 @@ fi
 kill "$old_daemon" 2>/dev/null || true
 wait "$old_daemon" 2>/dev/null || true
 echo "Locked Steady updates publish without deleting active Windows executables"
+
+repair_fixture="$temporary/same-version-repair"
+mkdir -p "$repair_fixture/scripts/steady"
+cp scripts/steady/install scripts/steady/package.json scripts/steady/package-lock.json "$repair_fixture/scripts/steady/"
+old_executable="$(npm_config_offline=true "$repair_fixture/scripts/steady/install" --print-executable)"
+"$old_executable" --host 127.0.0.1 -p 14032 api_reference/openapi.transformed.yml \
+  >"$temporary/repair-daemon-output" 2>&1 &
+old_daemon=$!
+for attempt in {1..300}; do
+  if curl --silent --fail 'http://127.0.0.1:14032/_x-steady/health' >/dev/null 2>&1; then
+    break
+  fi
+  if ! kill -0 "$old_daemon" 2>/dev/null; then
+    cat "$temporary/repair-daemon-output" >&2
+    echo "Steady same-version repair regression could not start the genuine daemon" >&2
+    exit 1
+  fi
+  sleep 0.05
+done
+
+repair_wrapper="$repair_fixture/scripts/steady/.versions/$installation_name/node_modules/@stdy/cli/steady.js"
+printf 'throw new Error("tampered active wrapper")\n' >"$repair_wrapper"
+if ! repaired_executable="$(PATH="$upgrade_bin:$PATH" STEADY_REAL_RM="$real_rm" \
+  STEADY_WINDOWS_LOCKED_EXECUTABLE="$old_executable" npm_config_offline=true \
+  "$repair_fixture/scripts/steady/install" --print-executable 2>"$temporary/repair-output")"; then
+  cat "$temporary/repair-output" >&2
+  echo "A same-version Steady repair tried to delete a loaded Windows executable" >&2
+  exit 1
+fi
+if [[ "$repaired_executable" == "$old_executable" ]] || ! kill -0 "$old_daemon" 2>/dev/null; then
+  echo "A same-version Steady repair replaced the active daemon executable" >&2
+  exit 1
+fi
+"$repaired_executable" --version | grep -Fx "steady $expected_version" >/dev/null
+reused_repair="$(npm_config_offline=true "$repair_fixture/scripts/steady/install" --print-executable)"
+if [[ "$reused_repair" != "$repaired_executable" ]]; then
+  echo "A subsequent same-version Steady installation did not reuse its authenticated repair" >&2
+  exit 1
+fi
+kill "$old_daemon" 2>/dev/null || true
+wait "$old_daemon" 2>/dev/null || true
+echo "Same-version Steady repairs preserve active Windows executables and reuse immutable generations"
