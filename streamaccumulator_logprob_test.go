@@ -40,8 +40,8 @@ func TestAccumulatorRejectsLogprobsBeyondBudgetWithoutMutation(t *testing.T) {
 	if acc.Model != "accepted-model" || len(acc.Choices[0].Logprobs.Content) != 1 {
 		t.Fatal("AddChunk mutated the accumulator after rejecting excessive logprobs")
 	}
-	if toolCall, ok := acc.JustFinishedToolCall(); !ok || toolCall.Name != "tool" {
-		t.Fatal("AddChunk changed the current completion event after rejecting excessive logprobs")
+	if _, ok := acc.JustFinishedToolCall(); ok {
+		t.Fatal("AddChunk retained a completion event after rejecting excessive logprobs")
 	}
 
 	afterRejection := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "-after"})

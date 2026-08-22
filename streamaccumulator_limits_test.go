@@ -270,6 +270,15 @@ func TestAccumulatorPublicIDMutationContract(t *testing.T) {
 	}
 
 	acc.ID = ""
+	differentStream := chunk
+	differentStream.ID = "chatcmpl-different-stream"
+	differentStream.Model = "rejected-model"
+	if acc.AddChunk(differentStream) {
+		t.Fatal("AddChunk accepted a different stream after the public ID was cleared")
+	}
+	if acc.ID != "" || acc.Model == "rejected-model" {
+		t.Fatal("AddChunk mutated the accumulator after rejecting the different stream")
+	}
 	if !acc.AddChunk(chunk) || acc.ID != chunk.ID {
 		t.Fatal("AddChunk did not restore a cleared public ID")
 	}
@@ -691,8 +700,7 @@ func TestAccumulatorRejectsSparseToolCallIndexWithoutMutation(t *testing.T) {
 func TestAccumulatorStructuralBudgetBoundary(t *testing.T) {
 	t.Run("accepts_limit", func(t *testing.T) {
 		var acc openai.ChatCompletionAccumulator
-		chunk := accumulatorToolStringChunk("name", "arguments")
-		chunk.Choices[0].Delta.ToolCalls[0].Index = testAccumulatorMaxStructuralSlots - 2
+		chunk := accumulatorDenseToolStringChunk(testAccumulatorMaxStructuralSlots - 1)
 
 		if !acc.AddChunk(chunk) {
 			t.Fatal("AddChunk rejected the documented structural budget")
@@ -704,8 +712,7 @@ func TestAccumulatorStructuralBudgetBoundary(t *testing.T) {
 
 	t.Run("rejects_beyond_limit", func(t *testing.T) {
 		var acc openai.ChatCompletionAccumulator
-		chunk := accumulatorToolStringChunk("name", "arguments")
-		chunk.Choices[0].Delta.ToolCalls[0].Index = testAccumulatorMaxStructuralSlots - 1
+		chunk := accumulatorDenseToolStringChunk(testAccumulatorMaxStructuralSlots)
 
 		if acc.AddChunk(chunk) {
 			t.Fatal("AddChunk accepted structures beyond the documented budget")
@@ -881,6 +888,17 @@ func accumulatorToolStringChunk(name, arguments string) openai.ChatCompletionChu
 			},
 		}},
 	})
+}
+
+func accumulatorDenseToolStringChunk(count int) openai.ChatCompletionChunk {
+	chunk := accumulatorToolStringChunk("name", "arguments")
+	toolCall := chunk.Choices[0].Delta.ToolCalls[0]
+	chunk.Choices[0].Delta.ToolCalls = make([]openai.ChatCompletionChunkChoiceDeltaToolCall, count)
+	for i := range chunk.Choices[0].Delta.ToolCalls {
+		toolCall.Index = int64(i)
+		chunk.Choices[0].Delta.ToolCalls[i] = toolCall
+	}
+	return chunk
 }
 
 func assertAccumulatorStrings(t *testing.T, acc *openai.ChatCompletionAccumulator, content, refusal, name, arguments string) {

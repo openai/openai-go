@@ -227,14 +227,14 @@ func replaceWithEqualSubstring[T ~string](dst *T) *byte {
 
 func TestAccumulatorTracksOnlyPopulatedSparseState(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{Content: "x"})
-	chunk.Choices[0].Index = maxChatCompletionAccumulatorStructuralSlots - 1
+	chunk.Choices[0].Index = maxStreamAccumulatorChoiceIndex
 
 	var acc ChatCompletionAccumulator
 	if !acc.AddChunk(chunk) {
 		t.Fatal("AddChunk rejected the sparse choice")
 	}
 	if len(acc.stringState.activeChoices) != 1 ||
-		acc.stringState.activeChoices[0] != maxChatCompletionAccumulatorStructuralSlots-1 {
+		acc.stringState.activeChoices[0] != maxStreamAccumulatorChoiceIndex {
 		t.Fatalf("active choices = %v, want only the populated sparse choice", acc.stringState.activeChoices)
 	}
 
@@ -252,7 +252,7 @@ func TestAccumulatorTracksOnlyPopulatedSparseState(t *testing.T) {
 func TestAccumulatorTracksOnlyPopulatedToolState(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
 		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
-			Index: maxChatCompletionAccumulatorStructuralSlots - 2,
+			Index: maxStreamAccumulatorToolCallGrowth - 1,
 			Function: ChatCompletionChunkChoiceDeltaToolCallFunction{
 				Name: "tool",
 			},

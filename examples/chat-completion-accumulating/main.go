@@ -41,7 +41,7 @@ func main() {
 		chunk := stream.Current()
 
 		if !acc.AddChunk(chunk) {
-			panic("chat completion stream could not be accumulated")
+			panic("failed to accumulate stream chunk")
 		}
 
 		// When this fires, the current chunk value will not contain content data
