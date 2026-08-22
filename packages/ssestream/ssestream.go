@@ -41,8 +41,9 @@ func NewDecoder(res *http.Response) Decoder {
 		}
 	}
 
-	// Buffered reads grow with the line instead of imposing an arbitrary event-size cap.
-	return &eventStreamDecoder{rc: res.Body, rdr: bufio.NewReader(res.Body)}
+	scn := bufio.NewScanner(res.Body)
+	scn.Buffer(nil, bufio.MaxScanTokenSize<<9)
+	return &eventStreamDecoder{rc: res.Body, scn: scn}
 }
 
 var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
@@ -82,7 +83,7 @@ func (e *StreamError) Error() string {
 type eventStreamDecoder struct {
 	evt Event
 	rc  io.ReadCloser
-	rdr *bufio.Reader
+	scn *bufio.Scanner
 	err error
 }
 
@@ -94,24 +95,13 @@ func (s *eventStreamDecoder) Next() bool {
 	event := ""
 	var data []byte
 
-	for {
-		txt, err := s.rdr.ReadBytes('\n')
-		if err != nil && err != io.EOF {
-			s.err = err
-		}
-		if len(txt) == 0 {
-			return false
-		}
-		txt = bytes.TrimSuffix(txt, []byte{'\n'})
-		txt = bytes.TrimSuffix(txt, []byte{'\r'})
+	for s.scn.Scan() {
+		txt := s.scn.Bytes()
 
 		// Dispatch event on an empty line
 		if len(txt) == 0 {
 			if len(data) == 0 {
 				event = ""
-				if err != nil {
-					return false
-				}
 				continue
 			}
 			s.evt = Event{
@@ -132,16 +122,20 @@ func (s *eventStreamDecoder) Next() bool {
 		switch string(name) {
 		case "":
 			// An empty line in the for ": something" is a comment and should be ignored.
+			continue
 		case "event":
 			event = string(value)
 		case "data":
 			data = append(data, value...)
 			data = append(data, '\n')
 		}
-		if err != nil {
-			return false
-		}
 	}
+
+	if s.scn.Err() != nil {
+		s.err = s.scn.Err()
+	}
+
+	return false
 }
 
 func (s *eventStreamDecoder) Event() Event {

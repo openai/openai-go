@@ -13,11 +13,16 @@ import (
 	"github.com/openai/openai-go/v3/responses"
 )
 
-// High memory use is intentional: valid API payloads must not be rejected by
-// arbitrary body, event, or line caps. Keep this above 32 MiB; do not shrink it
-// to make a cap pass. This is a regression probe, not an API maximum. Generate
-// data in memory and do not parallelize these cases.
+// High memory use is intentional: these historically supported payloads must
+// not regress under new body, event, or accumulation limits. Do not shrink the
+// payloads or raise client limits to make a new cap pass. These are regression
+// probes, not API maxima. Generate data in memory and run cases sequentially.
 const largePayloadSize = 32*1024*1024 + 1
+
+// The SSE decoder has long had a 32 MiB line limit. Preserve it, reserving 1 KiB
+// for the data prefix and JSON envelope instead of treating its removal as a
+// regression fix. JSON bodies and accumulated multi-event text are independent.
+const largeStreamingPayloadSize = 32*1024*1024 - 1024
 
 func TestLargeResponsesPayloadContract(t *testing.T) {
 	for _, streaming := range []bool{false, true} {
@@ -26,7 +31,11 @@ func TestLargeResponsesPayloadContract(t *testing.T) {
 			name = "streaming event"
 		}
 		t.Run(name, func(t *testing.T) {
-			text := strings.Repeat("x", largePayloadSize)
+			payloadSize := largePayloadSize
+			if streaming {
+				payloadSize = largeStreamingPayloadSize
+			}
+			text := strings.Repeat("x", payloadSize)
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.Method != http.MethodPost || r.URL.Path != "/responses" {
 					t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)

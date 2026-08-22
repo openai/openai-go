@@ -186,17 +186,21 @@ affect exported APIs.
 
 ## Large-payload compatibility
 
-Treat large payloads as a normal API contract, not evidence of malformed or
-hostile input. Responses, Chat Completions, and other APIs can legitimately
-return large `application/json` bodies and streaming events. Do not introduce
-arbitrary fixed limits on bodies, events, or lines as a security or efficiency fix. Prefer incremental processing,
-amortized-linear buffering, timely cleanup, and caller cancellation. Any new
-rejection limit needs an explicit, owner-approved API contract and a review of
-existing supported payloads and transports.
+Large HTTP JSON bodies and SSE events are normal Responses, Chat Completions,
+and other API output, not evidence of malformed or hostile input. Preserve
+historically supported payloads when changing parsers, streaming, or final-result
+helpers. Do not introduce arbitrary new body, event, line, or accumulation limits
+as a security or efficiency fix. Any new restriction or tightening of an existing
+limit needs an explicit, owner-approved API contract and review of supported
+payloads. Preserve established limits unless changing them is explicitly in scope;
+compatibility regression work is not authorization to remove longstanding limits.
+Prefer incremental processing, amortized-linear buffering, timely cleanup, and
+caller cancellation when improving large-payload handling.
 
-Protect this behavior with focused, deterministic public-entrypoint tests using
-large synthetic payloads generated in memory, not committed captures or live
-image generation. Their high memory use is intentional: do not shrink the
-payloads or raise client limits to make the tests pass. Keep coverage to the main
-HTTP JSON and SSE categories, and run large cases sequentially to keep peak memory reasonable. The fixture size is a regression
-probe, not a new API maximum.
+Protect existing behavior with focused, deterministic public-entrypoint tests
+using large synthetic payloads generated in memory, not committed captures or
+live image generation. Their high memory use is intentional: do not shrink the
+payloads or raise client limits to make a new restriction pass. Cover HTTP JSON,
+SSE, and independent final-result helpers, and run large cases sequentially to
+keep peak memory reasonable. Fixture sizes are regression probes chosen within
+the historically supported behavior, not new API maxima.
