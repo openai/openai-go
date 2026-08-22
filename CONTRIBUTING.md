@@ -13,7 +13,11 @@ $ ./scripts/lint
 
 This will install all the required dependencies and build the SDK.
 
-You can also [install Go 1.25 or later manually](https://go.dev/doc/install).
+Contributors need [Go 1.25 or later](https://go.dev/doc/install) and
+[Node.js 14 or later with npm 7 or later](https://nodejs.org/). Homebrew can
+install both from the repository's `Brewfile`; they can also be installed
+manually. npm 7 is the minimum version compatible with the committed Steady
+lockfile.
 CI tests every supported Go release line with `GOTOOLCHAIN=local`, so
 contributors should not rely on automatic toolchain downloads to satisfy the
 repository's minimum version.
@@ -105,6 +109,15 @@ $ go mod edit -replace github.com/openai/openai-go=/path/to/openai-go
 ## Running tests
 
 Most tests require you to [set up a mock server](https://github.com/dgellow/steady) against the OpenAPI spec to run the tests.
+
+`./scripts/bootstrap` installs the exact Steady release recorded in
+`scripts/steady/package.json`. Its committed npm lockfile verifies the exact
+packages for each supported platform, and installation disables npm lifecycle
+scripts. Bootstrap and `./scripts/mock` share the same installation checks,
+including the required Node.js/npm versions and a real invocation of Steady's
+platform-native executable. Before every launch, `./scripts/mock` reinstalls
+Steady from the lockfile so stale or modified local executables are never
+trusted. Dependabot proposes Steady updates separately from Go dependencies.
 
 ```sh
 $ ./scripts/mock
