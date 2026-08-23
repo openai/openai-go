@@ -120,6 +120,7 @@ func normalizeMediaParameter(mediaType string, param string) string {
 		return param
 	}
 	name := namePart[nameStart:nameEnd]
+	logicalName := mediaParameterLogicalName(name)
 
 	var normalized strings.Builder
 	normalized.WriteString(namePart[:nameStart])
@@ -129,11 +130,15 @@ func normalizeMediaParameter(mediaType string, param string) string {
 
 	value := param[equals+1:]
 	switch {
-	case isCaseInsensitiveMediaParameterValue(mediaType, name):
-		valueStart, valueEnd := trimOWSBounds(value)
-		normalized.WriteString(value[:valueStart])
-		normalized.WriteString(strings.ToLower(value[valueStart:valueEnd]))
-		normalized.WriteString(value[valueEnd:])
+	case isCaseInsensitiveMediaParameterValue(mediaType, logicalName):
+		if strings.HasSuffix(name, "*") {
+			normalized.WriteString(normalizeCaseInsensitiveExtendedParameterValue(value))
+		} else {
+			valueStart, valueEnd := trimOWSBounds(value)
+			normalized.WriteString(value[:valueStart])
+			normalized.WriteString(strings.ToLower(value[valueStart:valueEnd]))
+			normalized.WriteString(value[valueEnd:])
+		}
 	case strings.HasSuffix(name, "*"):
 		normalized.WriteString(normalizeExtendedParameterValue(value))
 	default:
@@ -143,20 +148,113 @@ func normalizeMediaParameter(mediaType string, param string) string {
 	return normalized.String()
 }
 
+func mediaParameterLogicalName(name string) string {
+	logicalName := strings.TrimSuffix(name, "*")
+	section := strings.LastIndexByte(logicalName, '*')
+	if section < 0 || !isRFC2231Section(logicalName[section+1:]) {
+		return logicalName
+	}
+	return logicalName[:section]
+}
+
+func isRFC2231Section(section string) bool {
+	if section == "0" {
+		return true
+	}
+	if len(section) == 0 || section[0] < '1' || section[0] > '9' {
+		return false
+	}
+	for i := 1; i < len(section); i++ {
+		if section[i] < '0' || section[i] > '9' {
+			return false
+		}
+	}
+	return true
+}
+
 func isCaseInsensitiveMediaParameterValue(mediaType string, name string) bool {
 	if strings.EqualFold(name, "charset") {
 		return true
 	}
-	if !strings.EqualFold(strings.TrimSpace(mediaType), "message/external-body") {
-		return false
+
+	switch strings.ToLower(strings.TrimSpace(mediaType)) {
+	case "message/external-body":
+		switch strings.ToLower(name) {
+		case "access-type", "permission", "mode":
+			return true
+		}
+	case "text/plain":
+		switch strings.ToLower(name) {
+		case "format", "delsp":
+			return true
+		}
+	}
+	return false
+}
+
+func normalizeCaseInsensitiveExtendedParameterValue(value string) string {
+	valueStart, valueEnd := trimOWSBounds(value)
+	core := value[valueStart:valueEnd]
+	if strings.HasPrefix(core, "\"") {
+		return value
 	}
 
-	switch strings.ToLower(name) {
-	case "access-type", "permission", "mode":
-		return true
-	default:
-		return false
+	firstQuote := strings.IndexByte(core, '\'')
+	secondQuote := -1
+	if firstQuote >= 0 {
+		if offset := strings.IndexByte(core[firstQuote+1:], '\''); offset >= 0 {
+			secondQuote = firstQuote + 1 + offset
+		}
 	}
+
+	var normalized string
+	if firstQuote >= 0 && secondQuote >= 0 {
+		normalized = strings.ToLower(core[:firstQuote]) + "'" +
+			strings.ToLower(core[firstQuote+1:secondQuote]) + "'" +
+			normalizeCaseInsensitiveExtendedData(core[secondQuote+1:])
+	} else {
+		normalized = normalizeCaseInsensitiveExtendedData(core)
+	}
+
+	return value[:valueStart] + normalized + value[valueEnd:]
+}
+
+func normalizeCaseInsensitiveExtendedData(value string) string {
+	bytes := []byte(value)
+	for i := 0; i < len(bytes); i++ {
+		if bytes[i] == '%' && i+2 < len(bytes) && isHexDigit(bytes[i+1]) && isHexDigit(bytes[i+2]) {
+			decoded := hexValue(bytes[i+1])<<4 | hexValue(bytes[i+2])
+			if decoded >= 'A' && decoded <= 'Z' {
+				decoded += 'a' - 'A'
+			}
+			bytes[i+1] = hexDigit(decoded >> 4)
+			bytes[i+2] = hexDigit(decoded & 0x0f)
+			i += 2
+			continue
+		}
+		if bytes[i] >= 'A' && bytes[i] <= 'Z' {
+			bytes[i] += 'a' - 'A'
+		}
+	}
+	return string(bytes)
+}
+
+func hexValue(value byte) byte {
+	switch {
+	case value >= '0' && value <= '9':
+		return value - '0'
+	case value >= 'a' && value <= 'f':
+		return value - 'a' + 10
+	default:
+		return value - 'A' + 10
+	}
+}
+
+func hexDigit(value byte) byte {
+	if value < 10 {
+		return '0' + value
+	}
+	return 'a' + value - 10
 }
 
 func normalizeExtendedParameterValue(value string) string {
