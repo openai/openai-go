@@ -257,7 +257,7 @@ func (s *eventStreamDecoder) Next() bool {
 	var data []byte
 
 	for s.scn.Scan() {
-		txt := scnBytes(s.scn)
+		txt := s.scn.Bytes()
 
 		// Dispatch event on an empty line
 		if len(txt) == 0 {
@@ -297,10 +297,6 @@ func (s *eventStreamDecoder) Next() bool {
 	}
 
 	return false
-}
-
-func scnBytes(scn *bufio.Scanner) []byte {
-	return scn.Bytes()
 }
 
 func (s *eventStreamDecoder) Event() Event {
