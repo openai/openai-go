@@ -87,8 +87,7 @@ func (cfg *RequestConfig) ownsSuccessResponseBody() bool {
 }
 
 func (cfg *RequestConfig) shouldManageGzip(req *http.Request) bool {
-	if cfg.CustomHTTPDoer != nil ||
-		req.Method == http.MethodHead ||
+	if req.Method == http.MethodHead ||
 		req.Header.Get("Accept-Encoding") != "" ||
 		req.Header.Get("Range") != "" {
 		return false
@@ -96,7 +95,7 @@ func (cfg *RequestConfig) shouldManageGzip(req *http.Request) bool {
 
 	// Respect explicit stdlib transport configuration. Wrapped and custom
 	// transports can opt out in the portable way by setting Accept-Encoding.
-	if cfg.HTTPClient != nil {
+	if cfg.CustomHTTPDoer == nil && cfg.HTTPClient != nil {
 		transport := cfg.HTTPClient.Transport
 		if transport == nil {
 			transport = http.DefaultTransport

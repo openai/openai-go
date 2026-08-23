@@ -30,6 +30,10 @@ func (f responseRoundTripperFunc) RoundTrip(req *http.Request) (*http.Response, 
 	return f(req)
 }
 
+type delegatingResponseDoer struct {
+	*http.Client
+}
+
 type countingResponseBody struct {
 	reader  io.Reader
 	endless bool
@@ -91,7 +95,9 @@ type contextResponseBody struct {
 	ctx context.Context
 	mu  sync.Mutex
 
-	closes int
+	closes    int
+	closed    chan struct{}
+	closeOnce sync.Once
 }
 
 func (b *contextResponseBody) Read([]byte) (int, error) {
@@ -103,6 +109,7 @@ func (b *contextResponseBody) Close() error {
 	b.mu.Lock()
 	b.closes++
 	b.mu.Unlock()
+	b.closeOnce.Do(func() { close(b.closed) })
 	return nil
 }
 
@@ -280,23 +287,51 @@ func TestExecuteBoundsCompressedWireResponse(t *testing.T) {
 			}))
 			defer server.Close()
 
-			client := openai.NewClient(
-				option.WithAPIKey("test-key"),
-				option.WithBaseURL(server.URL+"/"),
-				option.WithMaxRetries(0),
-				option.WithMaxResponseBodyBytes(wireLimit),
-				option.WithMaxErrorResponseBodyBytes(wireLimit),
-			)
-			var response map[string]any
-			err := client.Get(context.Background(), "compressed", nil, &response)
-			if err == nil || !strings.Contains(err.Error(), "compressed response body exceeded configured limit of 64 bytes") {
-				t.Fatalf("Get() error = %v, want compressed response body limit error", err)
+			clients := []struct {
+				name string
+				opts []option.RequestOption
+			}{
+				{name: "native client"},
+				{
+					name: "delegating doer",
+					opts: []option.RequestOption{
+						option.WithHTTPClient(&delegatingResponseDoer{Client: &http.Client{}}),
+					},
+				},
+				{
+					name: "delegating doer replaces compression-disabled client",
+					opts: []option.RequestOption{
+						option.WithHTTPClient(&http.Client{
+							Transport: &http.Transport{DisableCompression: true},
+						}),
+						option.WithHTTPClient(&delegatingResponseDoer{Client: &http.Client{}}),
+					},
+				},
 			}
-			if status >= http.StatusBadRequest {
-				var apiErr *openai.Error
-				if !errors.As(err, &apiErr) {
-					t.Fatalf("errors.As(%T, *openai.Error) = false", err)
-				}
+			for _, test := range clients {
+				t.Run(test.name, func(t *testing.T) {
+					opts := []option.RequestOption{
+						option.WithAPIKey("test-key"),
+						option.WithBaseURL(server.URL + "/"),
+						option.WithMaxRetries(0),
+						option.WithMaxResponseBodyBytes(wireLimit),
+						option.WithMaxErrorResponseBodyBytes(wireLimit),
+					}
+					opts = append(opts, test.opts...)
+
+					client := openai.NewClient(opts...)
+					var response map[string]any
+					err := client.Get(context.Background(), "compressed", nil, &response)
+					if err == nil || !strings.Contains(err.Error(), "compressed response body exceeded configured limit of 64 bytes") {
+						t.Fatalf("Get() error = %v, want compressed response body limit error", err)
+					}
+					if status >= http.StatusBadRequest {
+						var apiErr *openai.Error
+						if !errors.As(err, &apiErr) {
+							t.Fatalf("errors.As(%T, *openai.Error) = false", err)
+						}
+					}
+				})
 			}
 		})
 	}
@@ -692,7 +727,7 @@ func TestExecuteBodyTimeoutCancelsCustomTransportContext(t *testing.T) {
 				option.WithResponseBodyTimeout(10*time.Millisecond),
 				option.WithHTTPClient(&http.Client{
 					Transport: responseRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
-						body = &contextResponseBody{ctx: req.Context()}
+						body = &contextResponseBody{ctx: req.Context(), closed: make(chan struct{})}
 						return &http.Response{
 							StatusCode: status,
 							Header:     http.Header{"Content-Type": {"application/json"}},
@@ -712,6 +747,11 @@ func TestExecuteBodyTimeoutCancelsCustomTransportContext(t *testing.T) {
 			case err := <-done:
 				if !errors.Is(err, context.DeadlineExceeded) {
 					t.Fatalf("Get() error = %v, want context deadline exceeded", err)
+				}
+				select {
+				case <-body.closed:
+				case <-time.After(time.Second):
+					t.Fatal("timed out waiting for response body cleanup")
 				}
 				if body.closeCount() != 1 {
 					t.Fatalf("response body close count = %d, want 1", body.closeCount())
