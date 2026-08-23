@@ -190,9 +190,10 @@ func (cfg *RequestConfig) withResponseBodyTimeout(
 	}
 	var bodyLimitErr *responseBodyLimitError
 	var compressedLimitErr *compressedResponseBodyLimitError
-	if errors.As(err, &bodyLimitErr) || errors.As(err, &compressedLimitErr) {
-		// An oversized body still has unread bytes, so HTTP/2 Close can block
-		// while resetting its stream. Return the established limit immediately.
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) ||
+		errors.As(err, &bodyLimitErr) || errors.As(err, &compressedLimitErr) {
+		// Aborted reads can leave unread bytes, so HTTP/2 Close can block while
+		// resetting its stream. Return the established failure immediately.
 		lifecycle.abort()
 		return err
 	}

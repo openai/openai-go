@@ -24,6 +24,16 @@ type stalledHTTP2ResponseBody struct {
 	closeFinished chan struct{}
 }
 
+type canceledHTTP2ResponseBody struct {
+	*stalledHTTP2ResponseBody
+	endAttempt func()
+}
+
+func (b *canceledHTTP2ResponseBody) Read([]byte) (int, error) {
+	b.endAttempt()
+	return 0, b.attemptCtx.Err()
+}
+
 func (b *stalledHTTP2ResponseBody) Close() error {
 	close(b.closeStarted)
 	<-b.releaseClose
@@ -167,10 +177,13 @@ func TestExecuteExpiredContextDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 	tests := []struct {
 		name           string
 		requestTimeout bool
+		duringRead     bool
 		wantErr        error
 	}{
-		{name: "caller cancellation", wantErr: context.Canceled},
-		{name: "request timeout", requestTimeout: true, wantErr: context.DeadlineExceeded},
+		{name: "caller cancellation after response", wantErr: context.Canceled},
+		{name: "caller cancellation during read", duringRead: true, wantErr: context.Canceled},
+		{name: "request timeout after response", requestTimeout: true, wantErr: context.DeadlineExceeded},
+		{name: "request timeout during read", requestTimeout: true, duringRead: true, wantErr: context.DeadlineExceeded},
 	}
 
 	for _, test := range tests {
@@ -202,10 +215,14 @@ func TestExecuteExpiredContextDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 						return nil, err
 					}
 					bodyReady <- body
+					endAttempt := cancelCaller
 					if test.requestTimeout {
-						<-req.Context().Done()
+						endAttempt = func() { <-req.Context().Done() }
+					}
+					if test.duringRead {
+						res.Body = &canceledHTTP2ResponseBody{stalledHTTP2ResponseBody: body, endAttempt: endAttempt}
 					} else {
-						cancelCaller()
+						endAttempt()
 					}
 					return res, nil
 				})),
@@ -256,5 +273,73 @@ func TestExecuteExpiredContextDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 				t.Fatalf("caller safety deadline expired before request timeout returned: %v", callerCtx.Err())
 			}
 		})
+	}
+}
+
+func TestExecuteUnownedResponseDoesNotWaitForStalledHTTP2Close(t *testing.T) {
+	releaseClose := make(chan struct{})
+	var releaseOnce sync.Once
+	release := func() { releaseOnce.Do(func() { close(releaseClose) }) }
+	server := newStalledHTTP2Server(t, http.StatusOK, releaseClose)
+	defer func() {
+		release()
+		server.Close()
+	}()
+
+	bodyReady := make(chan *stalledHTTP2ResponseBody, 1)
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithBaseURL(server.URL+"/"),
+		option.WithMaxRetries(0),
+		option.WithHTTPClient(responseDoerFunc(func(req *http.Request) (*http.Response, error) {
+			res, err := server.Client().Transport.RoundTrip(req)
+			if err != nil {
+				return nil, err
+			}
+			body, err := wrapStalledHTTP2ResponseBody(req, res, releaseClose)
+			if err != nil {
+				return nil, err
+			}
+			bodyReady <- body
+			return res, nil
+		})),
+	)
+
+	done := make(chan error, 1)
+	go func() { done <- client.Get(context.Background(), "discard", nil, nil) }()
+
+	var body *stalledHTTP2ResponseBody
+	select {
+	case body = <-bodyReady:
+	case <-time.After(time.Second):
+		t.Fatal("HTTP/2 response was not received")
+	}
+	select {
+	case <-body.closeStarted:
+	case <-time.After(time.Second):
+		t.Fatal("unowned response cleanup was not started")
+	}
+
+	var err error
+	returnedBeforeRelease := false
+	select {
+	case err = <-done:
+		returnedBeforeRelease = true
+	case <-time.After(250 * time.Millisecond):
+	}
+	if returnedBeforeRelease && body.attemptCtx.Err() == nil {
+		t.Fatal("unowned response returned before canceling its attempt context")
+	}
+	release()
+	if !returnedBeforeRelease {
+		err = <-done
+	}
+	<-body.closeFinished
+
+	if err != nil {
+		t.Fatalf("Get() error = %v, want nil", err)
+	}
+	if !returnedBeforeRelease {
+		t.Fatal("unowned HTTP/2 response waited for a stalled body Close")
 	}
 }

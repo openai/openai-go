@@ -374,7 +374,10 @@ func newAzureDirectLoopbackHTTPTransport(base http.RoundTripper) *http.Transport
 	if baseTransport, ok := base.(*http.Transport); ok {
 		transport = baseTransport.Clone()
 	} else {
-		transport = &http.Transport{}
+		// Opaque wrappers are intentionally bypassed for hardened loopback
+		// dialing. Leave compression negotiation to the SDK so their policy
+		// cannot be contradicted by this shared fallback transport.
+		transport = &http.Transport{DisableCompression: true}
 	}
 
 	transport.Proxy = nil

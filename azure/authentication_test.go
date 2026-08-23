@@ -271,20 +271,23 @@ func TestAzureTokenCredentialUsesSDKRetryPolicy(t *testing.T) {
 
 func TestAzureAuthenticationPreservesDisabledNativeCompression(t *testing.T) {
 	authModes := []struct {
-		name    string
-		auth    option.RequestOption
-		wrapped bool
+		name     string
+		auth     option.RequestOption
+		wrapped  bool
+		loopback bool
 	}{
 		{name: "API key/native transport", auth: WithAPIKey("azure-api-key")},
 		{name: "API key/wrapped transport", auth: WithAPIKey("azure-api-key"), wrapped: true},
+		{name: "API key/wrapped loopback transport", auth: WithAPIKey("azure-api-key"), wrapped: true, loopback: true},
 		{name: "token credential/native transport", auth: WithTokenCredential(&fake.TokenCredential{})},
 		{name: "token credential/wrapped transport", auth: WithTokenCredential(&fake.TokenCredential{}), wrapped: true},
+		{name: "token credential/wrapped loopback transport", auth: WithTokenCredential(&fake.TokenCredential{}), wrapped: true, loopback: true},
 	}
 
 	for _, authMode := range authModes {
 		t.Run(authMode.name, func(t *testing.T) {
 			var acceptEncoding atomicString
-			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				acceptEncoding.Store(req.Header.Get("Accept-Encoding"))
 				w.Header().Set("Content-Type", "application/json")
 				if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
@@ -302,7 +305,13 @@ func TestAzureAuthenticationPreservesDisabledNativeCompression(t *testing.T) {
 				if _, err := io.WriteString(w, "{}"); err != nil {
 					t.Errorf("write response: %v", err)
 				}
-			}))
+			})
+			var server *httptest.Server
+			if authMode.loopback {
+				server = httptest.NewServer(handler)
+			} else {
+				server = httptest.NewTLSServer(handler)
+			}
 			t.Cleanup(server.Close)
 
 			serverTransport, ok := server.Client().Transport.(*http.Transport)
@@ -315,13 +324,17 @@ func TestAzureAuthenticationPreservesDisabledNativeCompression(t *testing.T) {
 			if authMode.wrapped {
 				selectedTransport = compressionDisabledRoundTripper{RoundTripper: transport}
 			}
-			client := openai.NewClient(
+			opts := []option.RequestOption{
 				WithEndpoint(server.URL, "2024-10-21"),
 				authMode.auth,
 				option.WithMaxRetries(0),
 				option.WithMaxResponseBodyBytes(2),
 				option.WithHTTPClient(&http.Client{Transport: selectedTransport}),
-			)
+			}
+			if authMode.loopback {
+				opts = append(opts, WithUnsafeAllowHTTP())
+			}
+			client := openai.NewClient(opts...)
 
 			var response map[string]any
 			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &response); err != nil {
