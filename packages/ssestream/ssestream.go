@@ -64,17 +64,18 @@ func decoderContentTypes(contentType string) (string, string) {
 
 // decoderContentTypeKey normalizes only MIME components whose case is
 // semantically insignificant. Parameter values remain case-sensitive unless
-// their parameter defines otherwise, such as charset. Extended parameter
-// percent-encoding is normalized without changing unescaped value bytes.
+// their parameter defines otherwise. Extended parameter percent-encoding is
+// normalized without changing unescaped value bytes.
 func decoderContentTypeKey(contentType string) string {
 	base, params, found := strings.Cut(contentType, ";")
 	if !found {
 		return strings.ToLower(contentType)
 	}
-	return strings.ToLower(base) + ";" + normalizeMediaParameterTail(params)
+	normalizedBase := strings.ToLower(base)
+	return normalizedBase + ";" + normalizeMediaParameterTail(normalizedBase, params)
 }
 
-func normalizeMediaParameterTail(params string) string {
+func normalizeMediaParameterTail(mediaType string, params string) string {
 	var normalized strings.Builder
 	segmentStart := 0
 	inQuotes := false
@@ -82,7 +83,7 @@ func normalizeMediaParameterTail(params string) string {
 
 	for i := 0; i <= len(params); i++ {
 		if i == len(params) || (!inQuotes && params[i] == ';') {
-			normalized.WriteString(normalizeMediaParameter(params[segmentStart:i]))
+			normalized.WriteString(normalizeMediaParameter(mediaType, params[segmentStart:i]))
 			if i < len(params) {
 				normalized.WriteByte(';')
 			}
@@ -107,7 +108,7 @@ func normalizeMediaParameterTail(params string) string {
 	return normalized.String()
 }
 
-func normalizeMediaParameter(param string) string {
+func normalizeMediaParameter(mediaType string, param string) string {
 	equals := strings.IndexByte(param, '=')
 	if equals < 0 {
 		return param
@@ -128,18 +129,34 @@ func normalizeMediaParameter(param string) string {
 
 	value := param[equals+1:]
 	switch {
-	case strings.EqualFold(name, "charset"):
+	case isCaseInsensitiveMediaParameterValue(mediaType, name):
 		valueStart, valueEnd := trimOWSBounds(value)
 		normalized.WriteString(value[:valueStart])
 		normalized.WriteString(strings.ToLower(value[valueStart:valueEnd]))
 		normalized.WriteString(value[valueEnd:])
-	case strings.Contains(name, "*"):
+	case strings.HasSuffix(name, "*"):
 		normalized.WriteString(normalizeExtendedParameterValue(value))
 	default:
 		normalized.WriteString(value)
 	}
 
 	return normalized.String()
+}
+
+func isCaseInsensitiveMediaParameterValue(mediaType string, name string) bool {
+	if strings.EqualFold(name, "charset") {
+		return true
+	}
+	if !strings.EqualFold(strings.TrimSpace(mediaType), "message/external-body") {
+		return false
+	}
+
+	switch strings.ToLower(name) {
+	case "access-type", "permission", "mode":
+		return true
+	default:
+		return false
+	}
 }
 
 func normalizeExtendedParameterValue(value string) string {
@@ -240,7 +257,7 @@ func (s *eventStreamDecoder) Next() bool {
 	var data []byte
 
 	for s.scn.Scan() {
-		txt := s.scn.Bytes()
+		txt := scnBytes(s.scn)
 
 		// Dispatch event on an empty line
 		if len(txt) == 0 {
@@ -280,6 +297,10 @@ func (s *eventStreamDecoder) Next() bool {
 	}
 
 	return false
+}
+
+func scnBytes(scn *bufio.Scanner) []byte {
+	return scn.Bytes()
 }
 
 func (s *eventStreamDecoder) Event() Event {
