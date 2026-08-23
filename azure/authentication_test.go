@@ -21,6 +21,12 @@ import (
 	"github.com/openai/openai-go/v3/option"
 )
 
+type compressionDisabledRoundTripper struct {
+	http.RoundTripper
+}
+
+func (compressionDisabledRoundTripper) CompressionDisabled() bool { return true }
+
 func TestEndpointRequiresExplicitAzureAuthentication(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -265,11 +271,14 @@ func TestAzureTokenCredentialUsesSDKRetryPolicy(t *testing.T) {
 
 func TestAzureAuthenticationPreservesDisabledNativeCompression(t *testing.T) {
 	authModes := []struct {
-		name string
-		auth option.RequestOption
+		name    string
+		auth    option.RequestOption
+		wrapped bool
 	}{
-		{name: "API key", auth: WithAPIKey("azure-api-key")},
-		{name: "token credential", auth: WithTokenCredential(&fake.TokenCredential{})},
+		{name: "API key/native transport", auth: WithAPIKey("azure-api-key")},
+		{name: "API key/wrapped transport", auth: WithAPIKey("azure-api-key"), wrapped: true},
+		{name: "token credential/native transport", auth: WithTokenCredential(&fake.TokenCredential{})},
+		{name: "token credential/wrapped transport", auth: WithTokenCredential(&fake.TokenCredential{}), wrapped: true},
 	}
 
 	for _, authMode := range authModes {
@@ -302,12 +311,16 @@ func TestAzureAuthenticationPreservesDisabledNativeCompression(t *testing.T) {
 			}
 			transport := serverTransport.Clone()
 			transport.DisableCompression = true
+			var selectedTransport http.RoundTripper = transport
+			if authMode.wrapped {
+				selectedTransport = compressionDisabledRoundTripper{RoundTripper: transport}
+			}
 			client := openai.NewClient(
 				WithEndpoint(server.URL, "2024-10-21"),
 				authMode.auth,
 				option.WithMaxRetries(0),
 				option.WithMaxResponseBodyBytes(2),
-				option.WithHTTPClient(&http.Client{Transport: transport}),
+				option.WithHTTPClient(&http.Client{Transport: selectedTransport}),
 			)
 
 			var response map[string]any

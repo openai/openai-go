@@ -2,6 +2,7 @@ package openai_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -31,6 +32,46 @@ func (b *stalledHTTP2ResponseBody) Close() error {
 	return err
 }
 
+func wrapStalledHTTP2ResponseBody(
+	req *http.Request,
+	res *http.Response,
+	release <-chan struct{},
+) (*stalledHTTP2ResponseBody, error) {
+	if res.ProtoMajor != 2 {
+		_ = res.Body.Close()
+		return nil, fmt.Errorf("response protocol = %s, want HTTP/2", res.Proto)
+	}
+	body := &stalledHTTP2ResponseBody{
+		ReadCloser:    res.Body,
+		attemptCtx:    req.Context(),
+		closeStarted:  make(chan struct{}),
+		releaseClose:  release,
+		closeFinished: make(chan struct{}),
+	}
+	res.Body = body
+	return body, nil
+}
+
+func newStalledHTTP2Server(t *testing.T, status int, release <-chan struct{}) *httptest.Server {
+	t.Helper()
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if req.ProtoMajor != 2 {
+			t.Errorf("request protocol = %s, want HTTP/2", req.Proto)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(status)
+		if _, err := io.WriteString(w, `{"ok":true}`+strings.Repeat(" ", 256)); err != nil {
+			t.Errorf("write response: %v", err)
+			return
+		}
+		w.(http.Flusher).Flush()
+		<-release
+	}))
+	server.EnableHTTP2 = true
+	server.StartTLS()
+	return server
+}
+
 func TestExecuteOverflowDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 	for _, status := range []int{http.StatusOK, http.StatusBadRequest} {
 		t.Run(http.StatusText(status), func(t *testing.T) {
@@ -38,21 +79,7 @@ func TestExecuteOverflowDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 			var releaseOnce sync.Once
 			release := func() { releaseOnce.Do(func() { close(releaseClose) }) }
 
-			server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				if req.ProtoMajor != 2 {
-					t.Errorf("request protocol = %s, want HTTP/2", req.Proto)
-				}
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(status)
-				if _, err := io.WriteString(w, `{"ok":true}`+strings.Repeat(" ", 256)); err != nil {
-					t.Errorf("write response: %v", err)
-					return
-				}
-				w.(http.Flusher).Flush()
-				<-releaseClose
-			}))
-			server.EnableHTTP2 = true
-			server.StartTLS()
+			server := newStalledHTTP2Server(t, status, releaseClose)
 			defer func() {
 				release()
 				server.Close()
@@ -73,18 +100,10 @@ func TestExecuteOverflowDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 						if err != nil {
 							return nil, err
 						}
-						if res.ProtoMajor != 2 {
-							_ = res.Body.Close()
-							return nil, fmt.Errorf("response protocol = %s, want HTTP/2", res.Proto)
+						body, err := wrapStalledHTTP2ResponseBody(req, res, releaseClose)
+						if err != nil {
+							return nil, err
 						}
-						body := &stalledHTTP2ResponseBody{
-							ReadCloser:    res.Body,
-							attemptCtx:    req.Context(),
-							closeStarted:  make(chan struct{}),
-							releaseClose:  releaseClose,
-							closeFinished: make(chan struct{}),
-						}
-						res.Body = body
 						bodyReady <- body
 						return res, nil
 					}),
@@ -139,6 +158,102 @@ func TestExecuteOverflowDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 			}
 			if callerCtx.Err() != nil {
 				t.Fatalf("caller context ended before overflow returned: %v", callerCtx.Err())
+			}
+		})
+	}
+}
+
+func TestExecuteExpiredContextDoesNotWaitForStalledHTTP2Close(t *testing.T) {
+	tests := []struct {
+		name           string
+		requestTimeout bool
+		wantErr        error
+	}{
+		{name: "caller cancellation", wantErr: context.Canceled},
+		{name: "request timeout", requestTimeout: true, wantErr: context.DeadlineExceeded},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			releaseClose := make(chan struct{})
+			var releaseOnce sync.Once
+			release := func() { releaseOnce.Do(func() { close(releaseClose) }) }
+
+			server := newStalledHTTP2Server(t, http.StatusOK, releaseClose)
+			defer func() {
+				release()
+				server.Close()
+			}()
+
+			callerCtx, cancelCaller := context.WithTimeout(context.Background(), time.Second)
+			defer cancelCaller()
+			bodyReady := make(chan *stalledHTTP2ResponseBody, 1)
+			opts := []option.RequestOption{
+				option.WithAPIKey("test-key"),
+				option.WithBaseURL(server.URL + "/"),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(responseDoerFunc(func(req *http.Request) (*http.Response, error) {
+					res, err := server.Client().Transport.RoundTrip(req)
+					if err != nil {
+						return nil, err
+					}
+					body, err := wrapStalledHTTP2ResponseBody(req, res, releaseClose)
+					if err != nil {
+						return nil, err
+					}
+					bodyReady <- body
+					if test.requestTimeout {
+						<-req.Context().Done()
+					} else {
+						cancelCaller()
+					}
+					return res, nil
+				})),
+			}
+			if test.requestTimeout {
+				opts = append(opts, option.WithRequestTimeout(20*time.Millisecond))
+			}
+			client := openai.NewClient(opts...)
+
+			var response map[string]any
+			done := make(chan error, 1)
+			go func() {
+				done <- client.Get(callerCtx, "canceled", nil, &response)
+			}()
+
+			var body *stalledHTTP2ResponseBody
+			select {
+			case body = <-bodyReady:
+			case <-time.After(time.Second):
+				t.Fatal("HTTP/2 response was not received")
+			}
+			select {
+			case <-body.closeStarted:
+			case <-time.After(time.Second):
+				t.Fatal("expired request cleanup was not started")
+			}
+
+			var err error
+			returnedBeforeRelease := false
+			select {
+			case err = <-done:
+				returnedBeforeRelease = true
+			case <-time.After(250 * time.Millisecond):
+			}
+			release()
+			if !returnedBeforeRelease {
+				err = <-done
+			}
+			<-body.closeFinished
+
+			if !errors.Is(err, test.wantErr) {
+				t.Fatalf("Get() error = %v, want %v", err, test.wantErr)
+			}
+			if !returnedBeforeRelease {
+				t.Fatal("expired HTTP/2 request waited for a stalled body Close")
+			}
+			if test.requestTimeout && callerCtx.Err() != nil {
+				t.Fatalf("caller safety deadline expired before request timeout returned: %v", callerCtx.Err())
 			}
 		})
 	}

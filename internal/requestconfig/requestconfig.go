@@ -646,11 +646,12 @@ func (cfg *RequestConfig) Execute() (err error) {
 			}
 		}
 		if ctx.Err() != nil {
-			if res != nil && res.Body != nil {
-				_ = res.Body.Close()
-			}
 			ctxErr := ctx.Err()
-			cancel()
+			if res != nil && res.Body != nil {
+				newResponseBodyLifecycle(res.Body, cancel).abort()
+			} else {
+				cancel()
+			}
 			return ctxErr
 		}
 		if !shouldRetry(cfg.Request, res, err) || retryCount >= cfg.MaxRetries {
