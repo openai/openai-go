@@ -1,12 +1,53 @@
 package openai_test
 
 import (
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	openai "github.com/openai/openai-go/v3"
 )
+
+func TestAccumulatorValueCopyDoesNotRetainSource(t *testing.T) {
+	finalized := make(chan struct{}, 1)
+	var dormant openai.ChatCompletionAccumulator
+	func() {
+		source := &openai.ChatCompletionAccumulator{}
+		initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "existing"})
+		initial.Choices[0].Index = 1
+		if !source.AddChunk(initial) {
+			t.Fatal("AddChunk rejected the initial sparse choice")
+		}
+
+		dormant = *source
+		source.Choices = slices.Clone(source.Choices)
+		later := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{
+			Content: strings.Repeat("x", 1<<20),
+		})
+		if !source.AddChunk(later) {
+			t.Fatal("AddChunk rejected storage accumulated after the value copy")
+		}
+		runtime.SetFinalizer(source, func(*openai.ChatCompletionAccumulator) {
+			finalized <- struct{}{}
+		})
+	}()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		runtime.GC()
+		select {
+		case <-finalized:
+			runtime.KeepAlive(&dormant)
+			return
+		default:
+			runtime.Gosched()
+		}
+	}
+	runtime.KeepAlive(&dormant)
+	t.Fatal("a dormant accumulator copy retained its later-mutated source")
+}
 
 func TestAccumulatorValueCopyTruncationPreservesOriginalState(t *testing.T) {
 	t.Run("choices", func(t *testing.T) {

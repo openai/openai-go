@@ -2,6 +2,7 @@ package openai
 
 import (
 	"unsafe"
+	"weak"
 
 	"github.com/openai/openai-go/v3/shared/constant"
 )
@@ -35,7 +36,8 @@ type ChatCompletionAccumulator struct {
 	textBytes                        int
 	logprobBytes                     int
 	reconciliationWork               int
-	privateStateOwner                *ChatCompletionAccumulator
+	privateStateOwner                weak.Pointer[ChatCompletionAccumulator]
+	privateStateInitialized          bool
 }
 
 type FinishedChatCompletionToolCall struct {
@@ -131,7 +133,6 @@ const maxStreamAccumulatorToolCallGrowth = 128
 //
 // The ChatCompletion field JSON does not get accumulated.
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
-	acc.ensurePrivateStateOwned()
 	acc.justFinished = chatCompletionResponseState{}
 	acc.justFinishedByChoice = nil
 	if !acc.preflightChunk(&chunk) {
@@ -158,46 +159,6 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 		}
 	}
 	return true
-}
-
-func (acc *ChatCompletionAccumulator) ensurePrivateStateOwned() {
-	if acc.privateStateOwner == acc {
-		return
-	}
-	if acc.privateStateOwner == nil {
-		acc.privateStateOwner = acc
-		return
-	}
-
-	acc.stringState = acc.stringState.cloneForAccumulatorCopy()
-	acc.logprobState.choices = cloneAccumulatorSlice(acc.logprobState.choices)
-	acc.privateStateOwner = acc
-}
-
-func (state chatCompletionAccumulatorStringState) cloneForAccumulatorCopy() chatCompletionAccumulatorStringState {
-	state.choices = cloneAccumulatorSlice(state.choices)
-	state.activeChoices = cloneAccumulatorSlice(state.activeChoices)
-	for i, choice := range state.choices {
-		if choice == nil {
-			continue
-		}
-		choiceCopy := *choice
-		choiceCopy.content.shared = len(choiceCopy.content.buffer) > 0
-		choiceCopy.refusal.shared = len(choiceCopy.refusal.buffer) > 0
-		choiceCopy.toolCalls = cloneAccumulatorSlice(choiceCopy.toolCalls)
-		choiceCopy.activeToolCalls = cloneAccumulatorSlice(choiceCopy.activeToolCalls)
-		for j, toolCall := range choiceCopy.toolCalls {
-			if toolCall == nil {
-				continue
-			}
-			toolCallCopy := *toolCall
-			toolCallCopy.name.shared = len(toolCallCopy.name.buffer) > 0
-			toolCallCopy.arguments.shared = len(toolCallCopy.arguments.buffer) > 0
-			choiceCopy.toolCalls[j] = &toolCallCopy
-		}
-		state.choices[i] = &choiceCopy
-	}
-	return state
 }
 
 func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk) bool {
@@ -253,6 +214,7 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 		return false
 	}
 
+	acc.detachPrivateStateForCopy()
 	if hasLogprobPlan {
 		acc.applyLogprobReconciliation(&logprobPlan)
 	}
@@ -260,21 +222,74 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	acc.textBytes = projectedTextBytes
 	acc.logprobBytes = projectedLogprobBytes
 	acc.reconciliationWork = projectedReconciliationWork
+	acc.claimPrivateStateOwnership()
 	return true
 }
 
+func (acc *ChatCompletionAccumulator) privateStateNeedsDetach() bool {
+	return acc.privateStateInitialized && acc.privateStateOwner.Value() != acc
+}
+
+func (acc *ChatCompletionAccumulator) detachPrivateStateForCopy() {
+	if !acc.privateStateNeedsDetach() {
+		return
+	}
+	acc.stringState = acc.stringState.cloneForAccumulatorCopy()
+	acc.logprobState.choices = cloneAccumulatorSlice(acc.logprobState.choices)
+}
+
+func (acc *ChatCompletionAccumulator) claimPrivateStateOwnership() {
+	if acc.privateStateInitialized && !acc.privateStateNeedsDetach() {
+		return
+	}
+	acc.privateStateOwner = weak.Make(acc)
+	acc.privateStateInitialized = true
+}
+
+func (state chatCompletionAccumulatorStringState) cloneForAccumulatorCopy() chatCompletionAccumulatorStringState {
+	state.choices = cloneAccumulatorSlice(state.choices)
+	state.activeChoices = cloneAccumulatorSlice(state.activeChoices)
+	for i, choice := range state.choices {
+		if choice == nil {
+			continue
+		}
+		choiceCopy := *choice
+		choiceCopy.content.shared = len(choiceCopy.content.buffer) > 0
+		choiceCopy.refusal.shared = len(choiceCopy.refusal.buffer) > 0
+		choiceCopy.toolCalls = cloneAccumulatorSlice(choiceCopy.toolCalls)
+		choiceCopy.activeToolCalls = cloneAccumulatorSlice(choiceCopy.activeToolCalls)
+		for j, toolCall := range choiceCopy.toolCalls {
+			if toolCall == nil {
+				continue
+			}
+			toolCallCopy := *toolCall
+			toolCallCopy.name.shared = len(toolCallCopy.name.buffer) > 0
+			toolCallCopy.arguments.shared = len(toolCallCopy.arguments.buffer) > 0
+			choiceCopy.toolCalls[j] = &toolCallCopy
+		}
+		state.choices[i] = &choiceCopy
+	}
+	return state
+}
+
 func (acc *ChatCompletionAccumulator) projectReconciliationWork(chunk *ChatCompletionChunk) (int, bool) {
-	// Preflight and commit make six passes over populated choices, plus one
+	// Preflight and commit make seven passes over populated choices, including
+	// the structural-copy projection, plus one
 	// structural projection pass when the chunk has choices. Populated tools are
 	// visited by text, metadata, and commit reconciliation. Charging those exact
 	// passes keeps sparse detection work bounded without scanning placeholder slots.
 	// Per-chunk choice and tool units conservatively cover the remaining fixed
 	// validation, projection, accumulation, and state-update passes over new input.
-	choicePasses := 6
+	choicePasses := 7
 	if len(chunk.Choices) > 0 {
 		choicePasses++
 	}
 	work := len(acc.stringState.activeChoices)*choicePasses + acc.stringState.activeTools*3
+	privateCopyWork := acc.privateStateCopyWork()
+	if privateCopyWork > maxChatCompletionAccumulatorReconcileWork-work {
+		return 0, false
+	}
+	work += privateCopyWork
 	structuralCopyWork := acc.structuralReconciliationCopyWork()
 	if structuralCopyWork > maxChatCompletionAccumulatorReconcileWork-work {
 		return 0, false
@@ -296,6 +311,27 @@ func (acc *ChatCompletionAccumulator) projectReconciliationWork(chunk *ChatCompl
 		projected += toolCount * chatCompletionAccumulatorToolWork
 	}
 	return projected, true
+}
+
+func (acc *ChatCompletionAccumulator) privateStateCopyWork() int {
+	if !acc.privateStateNeedsDetach() {
+		return 0
+	}
+	// Charge both this projection scan and the accepted chunk's clone pass.
+	work := 2*len(acc.stringState.choices) + len(acc.stringState.activeChoices) + len(acc.logprobState.choices)
+	for _, choice := range acc.stringState.choices {
+		if choice == nil {
+			continue
+		}
+		work++
+		work += 2*len(choice.toolCalls) + len(choice.activeToolCalls)
+		for _, toolCall := range choice.toolCalls {
+			if toolCall != nil {
+				work++
+			}
+		}
+	}
+	return work
 }
 
 func (acc *ChatCompletionAccumulator) structuralReconciliationCopyWork() int {
