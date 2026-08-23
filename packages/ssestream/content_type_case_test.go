@@ -66,6 +66,49 @@ func TestRegisterDecoderNormalizesCaseInsensitiveParameterComponents(t *testing.
 	}
 }
 
+func TestRegisterDecoderNormalizesExternalBodyCaseInsensitiveValues(t *testing.T) {
+	for name, test := range map[string]struct {
+		parameter string
+		registered string
+		response   string
+	}{
+		"access type": {
+			parameter:  "Access-Type",
+			registered: "LOCAL-FILE",
+			response:   "local-file",
+		},
+		"permission": {
+			parameter:  "Permission",
+			registered: "READ-WRITE",
+			response:   "read-write",
+		},
+		"mode": {
+			parameter:  "Mode",
+			registered: "IMAGE",
+			response:   "image",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			registered := "message/external-body; " + test.parameter + "=" + test.registered
+			want := &testDecoder{}
+			RegisterDecoder(registered, func(io.ReadCloser) Decoder { return want })
+			t.Cleanup(func() {
+				delete(decoderTypes, decoderContentTypeKey(registered))
+			})
+
+			decoder := NewDecoder(&http.Response{
+				Header: http.Header{
+					"Content-Type": {"Message/External-Body; " + strings.ToLower(test.parameter) + "=" + test.response},
+				},
+				Body: io.NopCloser(strings.NewReader("")),
+			})
+			if decoder != want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
 func TestRegisterDecoderExtendedParameterPreservesUnescapedValueCase(t *testing.T) {
 	const (
 		mediaType = "application/x-openai-go-test-registration-extended"
@@ -91,6 +134,46 @@ func TestRegisterDecoderExtendedParameterPreservesUnescapedValueCase(t *testing.
 		},
 		"distinct unescaped value case": {
 			contentType: variantv1,
+			want:        wantDefault,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			decoder := NewDecoder(&http.Response{
+				Header: http.Header{"Content-Type": {test.contentType}},
+				Body:   io.NopCloser(strings.NewReader("")),
+			})
+			if decoder != test.want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
+func TestRegisterDecoderUnencodedContinuationPreservesValueCase(t *testing.T) {
+	const (
+		mediaType = "application/x-openai-go-test-registration-continuation"
+		upper     = mediaType + "; title*0=V%AB"
+		lower     = mediaType + "; title*0=V%ab"
+	)
+	wantDefault := &testDecoder{}
+	wantUpper := &testDecoder{}
+	RegisterDecoder(mediaType, func(io.ReadCloser) Decoder { return wantDefault })
+	RegisterDecoder(upper, func(io.ReadCloser) Decoder { return wantUpper })
+	t.Cleanup(func() {
+		delete(decoderTypes, decoderContentTypeKey(mediaType))
+		delete(decoderTypes, decoderContentTypeKey(upper))
+	})
+
+	for name, test := range map[string]struct {
+		contentType string
+		want        Decoder
+	}{
+		"registered uppercase escape text": {
+			contentType: upper,
+			want:        wantUpper,
+		},
+		"distinct lowercase escape text": {
+			contentType: lower,
 			want:        wantDefault,
 		},
 	} {
