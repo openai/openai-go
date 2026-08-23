@@ -49,18 +49,162 @@ func NewDecoder(res *http.Response) Decoder {
 var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
 
 func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
-	decoderTypes[strings.ToLower(contentType)] = decoder
+	decoderTypes[decoderContentTypeKey(contentType)] = decoder
 }
 
 func decoderContentTypes(contentType string) (string, string) {
-	base, _, _ := strings.Cut(contentType, ";")
-	exactType := strings.ToLower(base) + contentType[len(base):]
+	exactType := decoderContentTypeKey(contentType)
 
 	mediaType, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
 		return exactType, ""
 	}
 	return exactType, mediaType
+}
+
+// decoderContentTypeKey normalizes only MIME components whose case is
+// semantically insignificant. Parameter values remain case-sensitive unless
+// their parameter defines otherwise, such as charset. Extended parameter
+// percent-encoding is normalized without changing unescaped value bytes.
+func decoderContentTypeKey(contentType string) string {
+	base, params, found := strings.Cut(contentType, ";")
+	if !found {
+		return strings.ToLower(contentType)
+	}
+	return strings.ToLower(base) + ";" + normalizeMediaParameterTail(params)
+}
+
+func normalizeMediaParameterTail(params string) string {
+	var normalized strings.Builder
+	segmentStart := 0
+	inQuotes := false
+	escaped := false
+
+	for i := 0; i <= len(params); i++ {
+		if i == len(params) || (!inQuotes && params[i] == ';') {
+			normalized.WriteString(normalizeMediaParameter(params[segmentStart:i]))
+			if i < len(params) {
+				normalized.WriteByte(';')
+			}
+			segmentStart = i + 1
+			continue
+		}
+
+		switch params[i] {
+		case '\\':
+			if inQuotes && !escaped {
+				escaped = true
+				continue
+			}
+		case '"':
+			if !escaped {
+				inQuotes = !inQuotes
+			}
+		}
+		escaped = false
+	}
+
+	return normalized.String()
+}
+
+func normalizeMediaParameter(param string) string {
+	equals := strings.IndexByte(param, '=')
+	if equals < 0 {
+		return param
+	}
+
+	namePart := param[:equals]
+	nameStart, nameEnd := trimOWSBounds(namePart)
+	if nameStart == nameEnd {
+		return param
+	}
+	name := namePart[nameStart:nameEnd]
+
+	var normalized strings.Builder
+	normalized.WriteString(namePart[:nameStart])
+	normalized.WriteString(strings.ToLower(name))
+	normalized.WriteString(namePart[nameEnd:])
+	normalized.WriteByte('=')
+
+	value := param[equals+1:]
+	switch {
+	case strings.EqualFold(name, "charset"):
+		valueStart, valueEnd := trimOWSBounds(value)
+		normalized.WriteString(value[:valueStart])
+		normalized.WriteString(strings.ToLower(value[valueStart:valueEnd]))
+		normalized.WriteString(value[valueEnd:])
+	case strings.Contains(name, "*"):
+		normalized.WriteString(normalizeExtendedParameterValue(value))
+	default:
+		normalized.WriteString(value)
+	}
+
+	return normalized.String()
+}
+
+func normalizeExtendedParameterValue(value string) string {
+	valueStart, valueEnd := trimOWSBounds(value)
+	core := value[valueStart:valueEnd]
+	if strings.HasPrefix(core, "\"") {
+		return value
+	}
+
+	firstQuote := strings.IndexByte(core, '\'')
+	secondQuote := -1
+	if firstQuote >= 0 {
+		if offset := strings.IndexByte(core[firstQuote+1:], '\''); offset >= 0 {
+			secondQuote = firstQuote + 1 + offset
+		}
+	}
+
+	var normalized string
+	if firstQuote >= 0 && secondQuote >= 0 {
+		normalized = strings.ToLower(core[:firstQuote]) + "'" +
+			strings.ToLower(core[firstQuote+1:secondQuote]) + "'" +
+			normalizePercentEncoding(core[secondQuote+1:])
+	} else {
+		normalized = normalizePercentEncoding(core)
+	}
+
+	return value[:valueStart] + normalized + value[valueEnd:]
+}
+
+func normalizePercentEncoding(value string) string {
+	bytes := []byte(value)
+	for i := 0; i+2 < len(bytes); i++ {
+		if bytes[i] != '%' || !isHexDigit(bytes[i+1]) || !isHexDigit(bytes[i+2]) {
+			continue
+		}
+		bytes[i+1] = lowerHexDigit(bytes[i+1])
+		bytes[i+2] = lowerHexDigit(bytes[i+2])
+		i += 2
+	}
+	return string(bytes)
+}
+
+func isHexDigit(value byte) bool {
+	return value >= '0' && value <= '9' ||
+		value >= 'a' && value <= 'f' ||
+		value >= 'A' && value <= 'F'
+}
+
+func lowerHexDigit(value byte) byte {
+	if value >= 'A' && value <= 'F' {
+		return value + ('a' - 'A')
+	}
+	return value
+}
+
+func trimOWSBounds(value string) (int, int) {
+	start := 0
+	end := len(value)
+	for start < end && (value[start] == ' ' || value[start] == '\t') {
+		start++
+	}
+	for end > start && (value[end-1] == ' ' || value[end-1] == '\t') {
+		end--
+	}
+	return start, end
 }
 
 type Event struct {
