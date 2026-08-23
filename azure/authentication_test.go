@@ -166,44 +166,59 @@ func TestReusedTokenCredentialOptionAuthenticatesOnce(t *testing.T) {
 }
 
 func TestAzureTokenCredentialBodyTimeoutBoundsRetryableResponse(t *testing.T) {
-	var attempts atomic.Int32
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		attempts.Add(1)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusTooManyRequests)
-		flusher, ok := w.(http.Flusher)
-		if !ok {
-			t.Error("response writer does not support flushing")
-			return
-		}
-		flusher.Flush()
-		<-req.Context().Done()
-	}))
-	t.Cleanup(server.Close)
+	tests := []struct {
+		name          string
+		overrideRetry bool
+	}{
+		{name: "default Azure retry policy"},
+		{name: "caller Azure retry override", overrideRetry: true},
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	client := openai.NewClient(
-		WithEndpoint(server.URL, "2024-10-21"),
-		WithTokenCredential(&fake.TokenCredential{}),
-		option.WithMaxRetries(0),
-		option.WithResponseBodyTimeout(20*time.Millisecond),
-		option.WithHTTPClient(server.Client()),
-	)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var attempts atomic.Int32
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				attempts.Add(1)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusTooManyRequests)
+				flusher, ok := w.(http.Flusher)
+				if !ok {
+					t.Error("response writer does not support flushing")
+					return
+				}
+				flusher.Flush()
+				<-req.Context().Done()
+			}))
+			t.Cleanup(server.Close)
 
-	var response map[string]any
-	err := client.Execute(ctx, http.MethodGet, "models", nil, &response)
-	if !errors.Is(err, context.DeadlineExceeded) {
-		t.Fatalf("Execute() error = %v, want response body deadline exceeded", err)
-	}
-	if ctx.Err() != nil {
-		t.Fatal("Azure retry consumed the response body until the caller safety deadline")
-	}
-	if !strings.Contains(err.Error(), "response body read timed out") {
-		t.Fatalf("Execute() error = %v, want SDK response body timeout", err)
-	}
-	if got := attempts.Load(); got != 1 {
-		t.Fatalf("request attempts = %d, want 1", got)
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			if test.overrideRetry {
+				ctx = policy.WithRetryOptions(ctx, policy.RetryOptions{MaxRetries: 1})
+			}
+			client := openai.NewClient(
+				WithEndpoint(server.URL, "2024-10-21"),
+				WithTokenCredential(&fake.TokenCredential{}),
+				option.WithMaxRetries(0),
+				option.WithResponseBodyTimeout(20*time.Millisecond),
+				option.WithHTTPClient(server.Client()),
+			)
+
+			var response map[string]any
+			err := client.Execute(ctx, http.MethodGet, "models", nil, &response)
+			if !errors.Is(err, context.DeadlineExceeded) {
+				t.Fatalf("Execute() error = %v, want response body deadline exceeded", err)
+			}
+			if ctx.Err() != nil {
+				t.Fatal("Azure retry consumed the response body until the caller safety deadline")
+			}
+			if !strings.Contains(err.Error(), "response body read timed out") {
+				t.Fatalf("Execute() error = %v, want SDK response body timeout", err)
+			}
+			if got := attempts.Load(); got != 1 {
+				t.Fatalf("request attempts = %d, want 1", got)
+			}
+		})
 	}
 }
 
