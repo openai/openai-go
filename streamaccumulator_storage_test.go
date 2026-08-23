@@ -750,6 +750,104 @@ func TestAccumulatorChargesPrivateStateCopyBeforeDetaching(t *testing.T) {
 	}
 }
 
+func TestAccumulatorChargesCopiedTextBufferPrefixes(t *testing.T) {
+	const prefixBytes = 32 << 10
+	prefix := strings.Repeat("x", prefixBytes)
+	tests := []struct {
+		name    string
+		initial ChatCompletionChunk
+		append  ChatCompletionChunk
+		value   func(*ChatCompletionAccumulator) string
+	}{
+		{
+			name:    "content",
+			initial: storageTestChunk(ChatCompletionChunkChoiceDelta{Content: prefix}),
+			append:  storageTestChunk(ChatCompletionChunkChoiceDelta{Content: "y"}),
+			value: func(acc *ChatCompletionAccumulator) string {
+				return acc.Choices[0].Message.Content
+			},
+		},
+		{
+			name:    "refusal",
+			initial: storageTestChunk(ChatCompletionChunkChoiceDelta{Refusal: prefix}),
+			append:  storageTestChunk(ChatCompletionChunkChoiceDelta{Refusal: "y"}),
+			value: func(acc *ChatCompletionAccumulator) string {
+				return acc.Choices[0].Message.Refusal
+			},
+		},
+		{
+			name: "tool_name",
+			initial: storageTestChunk(ChatCompletionChunkChoiceDelta{
+				ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
+					Function: ChatCompletionChunkChoiceDeltaToolCallFunction{Name: prefix},
+				}},
+			}),
+			append: storageTestChunk(ChatCompletionChunkChoiceDelta{
+				ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
+					Function: ChatCompletionChunkChoiceDeltaToolCallFunction{Name: "y"},
+				}},
+			}),
+			value: func(acc *ChatCompletionAccumulator) string {
+				return acc.Choices[0].Message.ToolCalls[0].Function.Name
+			},
+		},
+		{
+			name: "tool_arguments",
+			initial: storageTestChunk(ChatCompletionChunkChoiceDelta{
+				ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
+					Function: ChatCompletionChunkChoiceDeltaToolCallFunction{Arguments: prefix},
+				}},
+			}),
+			append: storageTestChunk(ChatCompletionChunkChoiceDelta{
+				ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
+					Function: ChatCompletionChunkChoiceDeltaToolCallFunction{Arguments: "y"},
+				}},
+			}),
+			value: func(acc *ChatCompletionAccumulator) string {
+				return acc.Choices[0].Message.ToolCalls[0].Function.Arguments
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			for _, delayed := range []bool{false, true} {
+				name := "immediate"
+				if delayed {
+					name = "delayed"
+				}
+				t.Run(name, func(t *testing.T) {
+					var original ChatCompletionAccumulator
+					if !original.AddChunk(test.initial) {
+						t.Fatal("AddChunk rejected the initial text prefix")
+					}
+
+					branch := original
+					if delayed && !branch.AddChunk(ChatCompletionChunk{ID: test.initial.ID}) {
+						t.Fatal("AddChunk rejected the copied accumulator before its delayed append")
+					}
+					owner := branch.privateStateOwner.Value()
+					state := branch.stringState.choices[0]
+					branch.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - prefixBytes + 1
+					before := branch.reconciliationWork
+					if branch.AddChunk(test.append) {
+						t.Fatal("AddChunk accepted an uncharged copy-on-write text prefix")
+					}
+					if branch.privateStateOwner.Value() != owner || branch.stringState.choices[0] != state {
+						t.Fatal("rejected copy-on-write append changed private ownership or state")
+					}
+					if got := test.value(&branch); got != prefix {
+						t.Fatal("rejected copy-on-write append changed public text")
+					}
+					if branch.reconciliationWork != before {
+						t.Fatal("rejected copy-on-write append changed the work budget")
+					}
+				})
+			}
+		})
+	}
+}
+
 func TestAccumulatorSteadyLogprobStateDoesNotAllocate(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
 	chunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "token"}}
