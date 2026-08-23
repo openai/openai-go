@@ -30,14 +30,28 @@ type Origin struct {
 
 func GenerateSchema[T any]() (map[string]any, error) {
 	// Structured Outputs requires object schemas to disallow additional
-	// properties. Keep definitions referenced so recursive Go types terminate,
-	// while expanding the root struct preserves the example's object-shaped root.
+	// properties. Keep definitions referenced so recursive Go types terminate.
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
-		ExpandedStruct:             true,
 	}
 	var v T
 	schema := reflector.Reflect(v)
+	if schema.Ref != "" {
+		const definitionsPrefix = "#/$defs/"
+		if len(schema.Ref) <= len(definitionsPrefix) || schema.Ref[:len(definitionsPrefix)] != definitionsPrefix {
+			return nil, fmt.Errorf("expand root JSON schema reference %q: unsupported reference", schema.Ref)
+		}
+		definition, ok := schema.Definitions[schema.Ref[len(definitionsPrefix):]]
+		if !ok {
+			return nil, fmt.Errorf("expand root JSON schema reference %q: definition not found", schema.Ref)
+		}
+		expanded := *definition
+		expanded.Version = schema.Version
+		expanded.ID = schema.ID
+		expanded.Anchor = schema.Anchor
+		expanded.Definitions = schema.Definitions
+		schema = &expanded
+	}
 	data, err := json.Marshal(schema)
 	if err != nil {
 		return nil, fmt.Errorf("marshal JSON schema: %w", err)
