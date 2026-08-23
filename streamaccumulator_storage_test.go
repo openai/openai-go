@@ -562,8 +562,10 @@ func TestAccumulatorToolActivationStateGrowsAmortized(t *testing.T) {
 	var acc ChatCompletionAccumulator
 	var previousToolCalls **chatCompletionToolCallStringState
 	var previousActiveToolCalls *int
+	var previousPublicToolCalls *ChatCompletionMessageToolCallUnion
 	toolCallBackingChanges := 0
 	activeToolCallBackingChanges := 0
+	publicToolCallBackingChanges := 0
 	for i := range toolCount {
 		toolCall := ChatCompletionChunkChoiceDeltaToolCall{Index: int64(i)}
 		chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
@@ -584,16 +586,22 @@ func TestAccumulatorToolActivationStateGrowsAmortized(t *testing.T) {
 			activeToolCallBackingChanges++
 			previousActiveToolCalls = activeToolCalls
 		}
+		publicToolCalls := unsafe.SliceData(acc.Choices[0].Message.ToolCalls)
+		if publicToolCalls != previousPublicToolCalls {
+			publicToolCallBackingChanges++
+			previousPublicToolCalls = publicToolCalls
+		}
 	}
 
 	if acc.stringState.activeTools != toolCount {
 		t.Fatalf("active tools = %d, want %d", acc.stringState.activeTools, toolCount)
 	}
-	if toolCallBackingChanges > 16 || activeToolCallBackingChanges > 16 {
+	if toolCallBackingChanges > 16 || activeToolCallBackingChanges > 16 || publicToolCallBackingChanges > 16 {
 		t.Fatalf(
-			"tool activation repeatedly reallocated state: tool calls %d, active indices %d backing changes",
+			"tool activation repeatedly reallocated state: private tool calls %d, active indices %d, public tool calls %d backing changes",
 			toolCallBackingChanges,
 			activeToolCallBackingChanges,
+			publicToolCallBackingChanges,
 		)
 	}
 }

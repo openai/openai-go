@@ -950,7 +950,7 @@ func expandToFit[T any](slice []T, index int) []T {
 
 func detachTruncatedTail[T any](slice []T, previousLength int) []T {
 	// A full slice expression can hide a retained tail while reporting len == cap.
-	if slice == nil || (len(slice) == cap(slice) && len(slice) >= previousLength) {
+	if slice == nil || len(slice) >= previousLength {
 		return slice
 	}
 	detached := make([]T, len(slice))
