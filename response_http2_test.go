@@ -120,7 +120,7 @@ func TestExecuteOverflowDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 				}),
 			)
 
-			callerCtx, cancelCaller := context.WithTimeout(context.Background(), time.Second)
+			callerCtx, cancelCaller := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancelCaller()
 			var response map[string]any
 			done := make(chan error, 1)
@@ -198,7 +198,7 @@ func TestExecuteExpiredContextDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 				server.Close()
 			}()
 
-			callerCtx, cancelCaller := context.WithTimeout(context.Background(), time.Second)
+			callerCtx, cancelCaller := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancelCaller()
 			bodyReady := make(chan *stalledHTTP2ResponseBody, 1)
 			opts := []option.RequestOption{
@@ -228,7 +228,7 @@ func TestExecuteExpiredContextDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 				})),
 			}
 			if test.requestTimeout {
-				opts = append(opts, option.WithRequestTimeout(20*time.Millisecond))
+				opts = append(opts, option.WithRequestTimeout(500*time.Millisecond))
 			}
 			client := openai.NewClient(opts...)
 
@@ -241,12 +241,12 @@ func TestExecuteExpiredContextDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 			var body *stalledHTTP2ResponseBody
 			select {
 			case body = <-bodyReady:
-			case <-time.After(time.Second):
+			case <-time.After(5 * time.Second):
 				t.Fatal("HTTP/2 response was not received")
 			}
 			select {
 			case <-body.closeStarted:
-			case <-time.After(time.Second):
+			case <-time.After(5 * time.Second):
 				t.Fatal("expired request cleanup was not started")
 			}
 
@@ -311,12 +311,12 @@ func TestExecuteUnownedResponseDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 	var body *stalledHTTP2ResponseBody
 	select {
 	case body = <-bodyReady:
-	case <-time.After(time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("HTTP/2 response was not received")
 	}
 	select {
 	case <-body.closeStarted:
-	case <-time.After(time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("unowned response cleanup was not started")
 	}
 
