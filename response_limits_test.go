@@ -35,10 +35,11 @@ type delegatingResponseDoer struct {
 }
 
 type countingResponseBody struct {
-	reader  io.Reader
-	endless bool
-	reads   int
-	closed  bool
+	reader        io.Reader
+	endless       bool
+	reads         int
+	closed        bool
+	closeFinished chan struct{}
 }
 
 func (b *countingResponseBody) Read(p []byte) (int, error) {
@@ -58,6 +59,9 @@ func (b *countingResponseBody) Read(p []byte) (int, error) {
 
 func (b *countingResponseBody) Close() error {
 	b.closed = true
+	if b.closeFinished != nil {
+		close(b.closeFinished)
+	}
 	return nil
 }
 
@@ -231,7 +235,7 @@ func newResponseLimitClient(body io.ReadCloser, status int, contentType string, 
 }
 
 func TestExecuteBoundsTypedSuccessResponse(t *testing.T) {
-	body := &countingResponseBody{endless: true}
+	body := &countingResponseBody{endless: true, closeFinished: make(chan struct{})}
 	client := newResponseLimitClient(body, http.StatusOK, "application/json")
 	var response struct {
 		OK bool `json:"ok"`
@@ -251,7 +255,9 @@ func TestExecuteBoundsTypedSuccessResponse(t *testing.T) {
 	if body.reads != 9 {
 		t.Fatalf("response bytes read = %d, want 9", body.reads)
 	}
-	if !body.closed {
+	select {
+	case <-body.closeFinished:
+	case <-time.After(time.Second):
 		t.Fatal("response body was not closed")
 	}
 }

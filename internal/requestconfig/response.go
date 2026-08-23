@@ -161,6 +161,11 @@ func (l *responseBodyLifecycle) interrupt(interrupted chan<- struct{}) {
 	_ = l.body.Close()
 }
 
+func (l *responseBodyLifecycle) abort() {
+	l.stopAttempt()
+	go func() { _ = l.body.Close() }()
+}
+
 func (cfg *RequestConfig) withResponseBodyTimeout(
 	lifecycle *responseBodyLifecycle,
 	read func(io.Reader) error,
@@ -182,6 +187,14 @@ func (cfg *RequestConfig) withResponseBodyTimeout(
 	}
 	if timedOut.Load() {
 		return fmt.Errorf("response body read timed out after %s: %w", cfg.ResponseBodyTimeout, context.DeadlineExceeded)
+	}
+	var bodyLimitErr *responseBodyLimitError
+	var compressedLimitErr *compressedResponseBodyLimitError
+	if errors.As(err, &bodyLimitErr) || errors.As(err, &compressedLimitErr) {
+		// An oversized body still has unread bytes, so HTTP/2 Close can block
+		// while resetting its stream. Return the established limit immediately.
+		lifecycle.abort()
+		return err
 	}
 	_ = lifecycle.Close()
 	return err
