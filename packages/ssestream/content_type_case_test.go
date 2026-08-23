@@ -68,7 +68,7 @@ func TestRegisterDecoderNormalizesCaseInsensitiveParameterComponents(t *testing.
 
 func TestRegisterDecoderNormalizesExternalBodyCaseInsensitiveValues(t *testing.T) {
 	for name, test := range map[string]struct {
-		parameter string
+		parameter  string
 		registered string
 		response   string
 	}{
@@ -106,6 +106,57 @@ func TestRegisterDecoderNormalizesExternalBodyCaseInsensitiveValues(t *testing.T
 				t.Fatalf("decoder = %T, want registered decoder", decoder)
 			}
 		})
+	}
+}
+
+func TestRegisterDecoderNormalizesLogicalCaseInsensitiveParameters(t *testing.T) {
+	for name, test := range map[string]struct {
+		registered string
+		response   string
+	}{
+		"text plain format": {
+			registered: "text/plain; Format=FLOWED",
+			response:   "Text/Plain; format=flowed",
+		},
+		"text plain delsp": {
+			registered: "text/plain; DelSP=YES",
+			response:   "Text/Plain; delsp=yes",
+		},
+		"encoded charset": {
+			registered: "text/plain; Charset*=US-ASCII'EN'%55TF-8",
+			response:   "Text/Plain; charset*=us-ascii'en'%75tf-8",
+		},
+		"unencoded format continuation": {
+			registered: "text/plain; Format*0=FLO; Format*1=WED",
+			response:   "Text/Plain; format*0=flo; format*1=wed",
+		},
+		"encoded access type continuation": {
+			registered: "message/external-body; Access-Type*0*=US-ASCII''LOCAL-; Access-Type*1*=FILE",
+			response:   "Message/External-Body; access-type*0*=us-ascii''local-; access-type*1*=file",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			want := &testDecoder{}
+			RegisterDecoder(test.registered, func(io.ReadCloser) Decoder { return want })
+			t.Cleanup(func() {
+				delete(decoderTypes, decoderContentTypeKey(test.registered))
+			})
+
+			decoder := NewDecoder(&http.Response{
+				Header: http.Header{"Content-Type": {test.response}},
+				Body:   io.NopCloser(strings.NewReader("")),
+			})
+			if decoder != want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
+func TestDecoderContentTypeKeyKeepsContextualValuesCaseSensitive(t *testing.T) {
+	const contentType = "text/html; Format=FLOWED"
+	if got := decoderContentTypeKey(contentType); got != "text/html; format=FLOWED" {
+		t.Fatalf("decoder content type key = %q, want context-specific value case preserved", got)
 	}
 }
 
