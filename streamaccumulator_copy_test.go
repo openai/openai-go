@@ -49,6 +49,49 @@ func TestAccumulatorValueCopyTruncationPreservesOriginalState(t *testing.T) {
 			t.Fatalf("original tool name = %q, want %q", name, "tool")
 		}
 	})
+
+	t.Run("original_choices", func(t *testing.T) {
+		var original openai.ChatCompletionAccumulator
+		initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "x"})
+		if !original.AddChunk(initial) {
+			t.Fatal("AddChunk rejected the initial chunk")
+		}
+
+		copy := original
+		copy.Choices = slices.Clone(copy.Choices)
+		original.Choices = original.Choices[:0]
+		if !original.AddChunk(openai.ChatCompletionChunk{ID: initial.ID}) {
+			t.Fatal("AddChunk rejected the chunk after the original accumulator was truncated")
+		}
+		if !copy.AddChunk(openai.ChatCompletionChunk{ID: initial.ID}) {
+			t.Fatal("AddChunk rejected the copy after the original accumulator was truncated")
+		}
+		if content := copy.Choices[0].Message.Content; content != "x" {
+			t.Fatalf("copied content = %q, want %q", content, "x")
+		}
+	})
+
+	t.Run("original_tool_calls", func(t *testing.T) {
+		var original openai.ChatCompletionAccumulator
+		initial := accumulatorToolStringChunk("tool", "arguments")
+		if !original.AddChunk(initial) {
+			t.Fatal("AddChunk rejected the initial chunk")
+		}
+
+		copy := original
+		copy.Choices = slices.Clone(copy.Choices)
+		copy.Choices[0].Message.ToolCalls = slices.Clone(copy.Choices[0].Message.ToolCalls)
+		original.Choices[0].Message.ToolCalls = original.Choices[0].Message.ToolCalls[:0]
+		if !original.AddChunk(openai.ChatCompletionChunk{ID: initial.ID}) {
+			t.Fatal("AddChunk rejected the chunk after the original tool calls were truncated")
+		}
+		if !copy.AddChunk(openai.ChatCompletionChunk{ID: initial.ID}) {
+			t.Fatal("AddChunk rejected the copy after the original tool calls were truncated")
+		}
+		if name := copy.Choices[0].Message.ToolCalls[0].Function.Name; name != "tool" {
+			t.Fatalf("copied tool name = %q, want %q", name, "tool")
+		}
+	})
 }
 
 func TestAccumulatorValueCopyChoiceActivationPreservesAccounting(t *testing.T) {
@@ -150,26 +193,47 @@ func TestAccumulatorValueCopyStringBuffersIsolated(t *testing.T) {
 }
 
 func TestAccumulatorValueCopyResponseStateIsolated(t *testing.T) {
-	var original openai.ChatCompletionAccumulator
-	initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "existing"})
-	initial.Choices[0].Index = 1
-	if !original.AddChunk(initial) {
-		t.Fatal("AddChunk rejected the initial sparse choice")
-	}
+	for _, branchFirst := range []bool{true, false} {
+		name := "original_first"
+		if branchFirst {
+			name = "branch_first"
+		}
+		t.Run(name, func(t *testing.T) {
+			var original openai.ChatCompletionAccumulator
+			initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "existing"})
+			initial.Choices[0].Index = 1
+			if !original.AddChunk(initial) {
+				t.Fatal("AddChunk rejected the initial sparse choice")
+			}
 
-	branch := original
-	branch.Choices = slices.Clone(branch.Choices)
-	if !branch.AddChunk(accumulatorToolStringChunk("tool", "arguments")) {
-		t.Fatal("AddChunk rejected the branch tool call")
-	}
-	if !original.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
-		t.Fatal("AddChunk rejected the original empty delta")
-	}
+			branch := original
+			branch.Choices = slices.Clone(branch.Choices)
+			if branchFirst {
+				if !branch.AddChunk(accumulatorToolStringChunk("tool", "arguments")) {
+					t.Fatal("AddChunk rejected the branch tool call")
+				}
+				if !original.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
+					t.Fatal("AddChunk rejected the original empty delta")
+				}
+			} else {
+				if !original.AddChunk(accumulatorToolStringChunk("tool", "arguments")) {
+					t.Fatal("AddChunk rejected the original tool call")
+				}
+				if !branch.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
+					t.Fatal("AddChunk rejected the branch empty delta")
+				}
+			}
 
-	if _, ok := original.JustFinishedToolCall(); ok {
-		t.Fatal("original reported a tool call activated only in its copied branch")
-	}
-	if _, ok := original.JustFinishedToolCallForChoice(0); ok {
-		t.Fatal("original reported a per-choice tool call activated only in its copied branch")
+			unmodified := &original
+			if !branchFirst {
+				unmodified = &branch
+			}
+			if _, ok := unmodified.JustFinishedToolCall(); ok {
+				t.Fatal("unmodified accumulator reported a tool call activated only in its copy")
+			}
+			if _, ok := unmodified.JustFinishedToolCallForChoice(0); ok {
+				t.Fatal("unmodified accumulator reported a per-choice tool call activated only in its copy")
+			}
+		})
 	}
 }

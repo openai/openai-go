@@ -26,8 +26,8 @@ const (
 type ChatCompletionAccumulator struct {
 	// The up-to-date accumulation of model's responses
 	ChatCompletion
-	choiceChatCompletionStates       []chatCompletionResponseState
-	legacyChoiceChatCompletionStates []chatCompletionResponseState
+	choiceChatCompletionStates       [maxStreamAccumulatorChoiceIndex + 1]chatCompletionResponseStateCode
+	legacyChoiceChatCompletionStates [maxStreamAccumulatorChoiceIndex + 1]chatCompletionResponseStateCode
 	justFinished                     chatCompletionResponseState
 	justFinishedByChoice             []chatCompletionResponseState
 	stringState                      chatCompletionAccumulatorStringState
@@ -50,6 +50,8 @@ type chatCompletionResponseState struct {
 	choiceIndex   int
 	toolCallIndex int
 }
+
+type chatCompletionResponseStateCode uint16
 
 type chatCompletionAccumulatorStringState struct {
 	choices           []*chatCompletionChoiceStringState
@@ -132,7 +134,7 @@ const maxStreamAccumulatorToolCallGrowth = 128
 func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 	acc.ensurePrivateStateOwned()
 	acc.justFinished = chatCompletionResponseState{}
-	acc.justFinishedByChoice = acc.justFinishedByChoice[:0]
+	acc.justFinishedByChoice = nil
 	if !acc.preflightChunk(&chunk) {
 		return false
 	}
@@ -144,14 +146,12 @@ func (acc *ChatCompletionAccumulator) AddChunk(chunk ChatCompletionChunk) bool {
 	if len(chunk.Choices) > 0 {
 		firstChoice := chunk.Choices[0]
 		choiceIndex, _ := checkedStreamAccumulatorChoiceIndex(firstChoice.Index)
-		acc.legacyChoiceChatCompletionStates = expandToFit(acc.legacyChoiceChatCompletionStates, choiceIndex)
 		toolCallCount := len(acc.Choices[choiceIndex].Message.ToolCalls)
 		acc.justFinished = acc.legacyChoiceChatCompletionStates[choiceIndex].update(firstChoice, toolCallCount)
 	}
 
 	for _, choice := range chunk.Choices {
 		choiceIndex, _ := checkedStreamAccumulatorChoiceIndex(choice.Index)
-		acc.choiceChatCompletionStates = expandToFit(acc.choiceChatCompletionStates, choiceIndex)
 		toolCallCount := len(acc.Choices[choiceIndex].Message.ToolCalls)
 		justFinished := acc.choiceChatCompletionStates[choiceIndex].update(choice, toolCallCount)
 		if justFinished.state != emptyResponseState {
@@ -170,9 +170,6 @@ func (acc *ChatCompletionAccumulator) ensurePrivateStateOwned() {
 		return
 	}
 
-	acc.choiceChatCompletionStates = cloneAccumulatorSlice(acc.choiceChatCompletionStates)
-	acc.legacyChoiceChatCompletionStates = cloneAccumulatorSlice(acc.legacyChoiceChatCompletionStates)
-	acc.justFinishedByChoice = cloneAccumulatorSlice(acc.justFinishedByChoice)
 	acc.stringState = acc.stringState.cloneForAccumulatorCopy()
 	acc.logprobState.choices = cloneAccumulatorSlice(acc.logprobState.choices)
 	acc.privateStateOwner = acc
@@ -215,7 +212,7 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	if acc.ID != "" && !accumulatorStringUsesPublishedBacking(acc.ID, canonicalID) && acc.ID != chunk.ID {
 		return false
 	}
-	if !acc.validChatCompletionChunkIndices(*chunk) {
+	if !chatCompletionChunkEntriesWithinLimit(chunk) || !acc.validChatCompletionChunkIndices(*chunk) {
 		return false
 	}
 	projectedReconciliationWork, ok := acc.projectReconciliationWork(chunk)
@@ -466,8 +463,12 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 }
 
 func (acc *chatCompletionAccumulatorStringState) choice(index int) *chatCompletionChoiceStringState {
+	previousLength := len(acc.choices)
 	acc.choices = expandToFit(acc.choices, index)
 	if acc.choices[index] == nil {
+		if index < previousLength {
+			acc.choices = cloneAccumulatorSlice(acc.choices)
+		}
 		acc.choices[index] = &chatCompletionChoiceStringState{}
 		acc.activeChoices = append(acc.activeChoices, index)
 	}
@@ -483,44 +484,58 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState() {
 	reconcileAccumulatorString(&stringState.object, &completion.Object)
 	reconcileAccumulatorString(&stringState.serviceTier, &completion.ServiceTier)
 
-	previousChoiceCount := len(stringState.choices)
+	previousChoices := stringState.choices
+	previousChoiceCount := len(previousChoices)
 	completion.Choices = detachTruncatedTail(completion.Choices, previousChoiceCount)
+	choiceCount := len(completion.Choices)
+	choicesDetached := choiceCount < previousChoiceCount
+	if choicesDetached {
+		stringState.choices = cloneAccumulatorSlice(previousChoices[:choiceCount])
+	}
 	for _, i := range stringState.activeChoices {
-		if i >= len(completion.Choices) {
+		if i >= choiceCount {
 			continue
 		}
 		message := &completion.Choices[i].Message
-		previousToolCallCount := len(stringState.choices[i].toolCalls)
+		previousToolCallCount := len(previousChoices[i].toolCalls)
 		message.ToolCalls = detachTruncatedTail(message.ToolCalls, previousToolCallCount)
 	}
 
-	activeChoiceCount := 0
-	for _, i := range stringState.activeChoices {
-		if i >= len(completion.Choices) {
-			stringState.activeTools -= len(stringState.choices[i].activeToolCalls)
+	previousActiveChoices := stringState.activeChoices
+	stringState.activeChoices = retainAccumulatorIndices(previousActiveChoices, choiceCount)
+	for _, i := range previousActiveChoices {
+		if i >= choiceCount {
+			stringState.activeTools -= len(previousChoices[i].activeToolCalls)
 			continue
 		}
-		stringState.activeChoices[activeChoiceCount] = i
-		activeChoiceCount++
 		choiceState := stringState.choices[i]
 
 		message := &completion.Choices[i].Message
+		toolCallsTruncated := len(message.ToolCalls) < len(choiceState.toolCalls)
+		if toolCallsTruncated {
+			if !choicesDetached {
+				stringState.choices = cloneAccumulatorSlice(stringState.choices)
+				choicesDetached = true
+			}
+			detachedChoiceState := *choiceState
+			detachedChoiceState.toolCalls = cloneAccumulatorSlice(choiceState.toolCalls[:len(message.ToolCalls)])
+			detachedChoiceState.activeToolCalls = cloneAccumulatorSlice(
+				retainAccumulatorIndices(choiceState.activeToolCalls, len(message.ToolCalls)),
+			)
+			stringState.activeTools -= len(choiceState.activeToolCalls) - len(detachedChoiceState.activeToolCalls)
+			stringState.choices[i] = &detachedChoiceState
+			choiceState = &detachedChoiceState
+		}
 		choiceState.content.reconcile(&message.Content)
 		choiceState.refusal.reconcile(&message.Refusal)
 		reconcileAccumulatorString(&choiceState.finishReason, &completion.Choices[i].FinishReason)
 		reconcileAccumulatorString(&choiceState.role, &message.Role)
 
-		if len(message.ToolCalls) < len(choiceState.toolCalls) {
-			invalidateRemovedToolCallState(acc.legacyChoiceChatCompletionStates, i, len(message.ToolCalls))
-			invalidateRemovedToolCallState(acc.choiceChatCompletionStates, i, len(message.ToolCalls))
+		if toolCallsTruncated {
+			invalidateRemovedToolCallState(&acc.legacyChoiceChatCompletionStates, i, len(message.ToolCalls))
+			invalidateRemovedToolCallState(&acc.choiceChatCompletionStates, i, len(message.ToolCalls))
 		}
-		activeToolCallCount := 0
 		for _, j := range choiceState.activeToolCalls {
-			if j >= len(message.ToolCalls) {
-				continue
-			}
-			choiceState.activeToolCalls[activeToolCallCount] = j
-			activeToolCallCount++
 			toolCallState := choiceState.toolCalls[j]
 			reconcileAccumulatorString(&toolCallState.id, &message.ToolCalls[j].ID)
 			reconcileAccumulatorString(&toolCallState.typeName, &message.ToolCalls[j].Type)
@@ -528,39 +543,40 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState() {
 			toolCallState.name.reconcile(&function.Name)
 			toolCallState.arguments.reconcile(&function.Arguments)
 		}
-		stringState.activeTools -= len(choiceState.activeToolCalls) - activeToolCallCount
-		clear(choiceState.activeToolCalls[activeToolCallCount:])
-		choiceState.activeToolCalls = choiceState.activeToolCalls[:activeToolCallCount]
-		if len(message.ToolCalls) < len(choiceState.toolCalls) {
-			clear(choiceState.toolCalls[len(message.ToolCalls):])
-			choiceState.toolCalls = choiceState.toolCalls[:len(message.ToolCalls)]
+	}
+	truncateResponseStates(&acc.legacyChoiceChatCompletionStates, choiceCount)
+	truncateResponseStates(&acc.choiceChatCompletionStates, choiceCount)
+}
+
+func retainAccumulatorIndices(indices []int, limit int) []int {
+	retainedCount := 0
+	for _, index := range indices {
+		if index < limit {
+			retainedCount++
 		}
 	}
-	clear(stringState.activeChoices[activeChoiceCount:])
-	stringState.activeChoices = stringState.activeChoices[:activeChoiceCount]
-	choiceCount := len(completion.Choices)
-	if choiceCount < previousChoiceCount {
-		clear(stringState.choices[choiceCount:])
-		stringState.choices = stringState.choices[:choiceCount]
+	if retainedCount == len(indices) {
+		return indices
 	}
-	acc.legacyChoiceChatCompletionStates = truncateResponseStates(acc.legacyChoiceChatCompletionStates, choiceCount)
-	acc.choiceChatCompletionStates = truncateResponseStates(acc.choiceChatCompletionStates, choiceCount)
+	retained := make([]int, 0, retainedCount)
+	for _, index := range indices {
+		if index < limit {
+			retained = append(retained, index)
+		}
+	}
+	return retained
 }
 
-func invalidateRemovedToolCallState(states []chatCompletionResponseState, choiceIndex int, toolCallCount int) {
-	if choiceIndex >= len(states) {
-		return
-	}
-	state := &states[choiceIndex]
+func invalidateRemovedToolCallState(states *[maxStreamAccumulatorChoiceIndex + 1]chatCompletionResponseStateCode, choiceIndex int, toolCallCount int) {
+	state := states[choiceIndex].decode(choiceIndex)
 	if state.state == toolResponseState && state.toolCallIndex >= toolCallCount {
-		*state = chatCompletionResponseState{}
+		states[choiceIndex] = 0
 	}
 }
 
-func truncateResponseStates(states []chatCompletionResponseState, choiceCount int) []chatCompletionResponseState {
-	choiceCount = min(len(states), choiceCount)
+func truncateResponseStates(states *[maxStreamAccumulatorChoiceIndex + 1]chatCompletionResponseStateCode, choiceCount int) {
+	choiceCount = min(choiceCount, len(states))
 	clear(states[choiceCount:])
-	return states[:choiceCount]
 }
 
 func (choice *chatCompletionChoiceStringState) toolCall(index int, activeTools *int) *chatCompletionToolCallStringState {
@@ -853,9 +869,24 @@ func addAccumulatorStringCopyWork[T ~string](work *int, value T, passes int) boo
 	return true
 }
 
+func chatCompletionChunkEntriesWithinLimit(chunk *ChatCompletionChunk) bool {
+	entries := len(chunk.Choices)
+	if entries > maxChatCompletionAccumulatorStructuralSlots {
+		return false
+	}
+	for i := range chunk.Choices {
+		toolCalls := len(chunk.Choices[i].Delta.ToolCalls)
+		if toolCalls > maxChatCompletionAccumulatorStructuralSlots-entries {
+			return false
+		}
+		entries += toolCalls
+	}
+	return true
+}
+
 // update updates the internal response state and returns the previous state if
 // the state changed. This ensures that JustFinished events only fire once.
-func (prev *chatCompletionResponseState) update(choice ChatCompletionChunkChoice, toolCallCount int) (justFinished chatCompletionResponseState) {
+func (prev *chatCompletionResponseStateCode) update(choice ChatCompletionChunkChoice, toolCallCount int) (justFinished chatCompletionResponseState) {
 	delta := choice.Delta
 	choiceIndex, _ := checkedStreamAccumulatorChoiceIndex(choice.Index)
 	new := chatCompletionResponseState{choiceIndex: choiceIndex}
@@ -874,12 +905,25 @@ func (prev *chatCompletionResponseState) update(choice ChatCompletionChunkChoice
 		new.state = finishedResponseState
 	}
 
-	if *prev != new {
-		justFinished = *prev
+	newCode := encodeChatCompletionResponseState(new)
+	if *prev != newCode {
+		justFinished = prev.decode(choiceIndex)
 	}
-	*prev = new
+	*prev = newCode
 
 	return
+}
+
+func encodeChatCompletionResponseState(state chatCompletionResponseState) chatCompletionResponseStateCode {
+	return chatCompletionResponseStateCode(state.state) | chatCompletionResponseStateCode(state.toolCallIndex<<3)
+}
+
+func (code chatCompletionResponseStateCode) decode(choiceIndex int) chatCompletionResponseState {
+	return chatCompletionResponseState{
+		state:         chatCompletionResponseStateEnum(code & 0b111),
+		choiceIndex:   choiceIndex,
+		toolCallIndex: int(code >> 3),
+	}
 }
 
 func (acc *ChatCompletionAccumulator) validChatCompletionChunkIndices(chunk ChatCompletionChunk) bool {

@@ -606,6 +606,21 @@ func TestAccumulatorToolActivationStateGrowsAmortized(t *testing.T) {
 	}
 }
 
+func TestAccumulatorRejectsOversizedChunkBeforeIndexValidation(t *testing.T) {
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: make([]ChatCompletionChunkChoiceDeltaToolCall, maxChatCompletionAccumulatorStructuralSlots),
+	})
+	chunk.Choices[0].Delta.ToolCalls[len(chunk.Choices[0].Delta.ToolCalls)-1].Index = 1 << 30
+	if chatCompletionChunkEntriesWithinLimit(&chunk) {
+		t.Fatal("oversized chunk passed the bounded cardinality guard")
+	}
+
+	var acc ChatCompletionAccumulator
+	if acc.AddChunk(chunk) {
+		t.Fatal("AddChunk accepted a chunk beyond the structural entry limit")
+	}
+}
+
 func TestAccumulatorSteadyLogprobStateDoesNotAllocate(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
 	chunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "token"}}
