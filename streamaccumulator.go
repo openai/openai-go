@@ -420,10 +420,19 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 }
 
 func (acc *chatCompletionAccumulatorStringState) choice(index int) *chatCompletionChoiceStringState {
-	acc.choices = expandToFit(acc.choices, index)
+	detached := false
+	if index >= len(acc.choices) {
+		choices := make([]*chatCompletionChoiceStringState, index+1)
+		copy(choices, acc.choices)
+		acc.choices = choices
+		detached = true
+	}
 	if acc.choices[index] == nil {
+		if !detached {
+			acc.choices = cloneAccumulatorSlice(acc.choices)
+		}
 		acc.choices[index] = &chatCompletionChoiceStringState{}
-		acc.activeChoices = append(acc.activeChoices, index)
+		acc.activeChoices = append(cloneAccumulatorSlice(acc.activeChoices), index)
 	}
 	return acc.choices[index]
 }

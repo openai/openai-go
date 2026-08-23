@@ -404,9 +404,9 @@ func (state *chatCompletionAccumulatorLogprobState) acceptChunk(completion *Chat
 	if !chatCompletionChunkHasLogprobs(chunk) {
 		return
 	}
-	if len(completion.Choices) > len(state.choices) {
-		state.choices = expandToFit(state.choices, len(completion.Choices)-1)
-	}
+	choices := make([]chatCompletionChoiceLogprobState, max(len(completion.Choices), len(state.choices)))
+	copy(choices, state.choices)
+	state.choices = choices
 	logprobSize := int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
 	maxLogprobs := maxChatCompletionAccumulatorLogprobBytes / logprobSize
 	for i := range chunk.Choices {

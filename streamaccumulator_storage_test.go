@@ -495,6 +495,37 @@ func TestAccumulatorTracksOnlyPopulatedToolState(t *testing.T) {
 	}
 }
 
+func TestAccumulatorValueCopyLogprobStateIsolated(t *testing.T) {
+	initial := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	initial.Choices[0].Index = 1
+	initial.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "existing"}}
+
+	var original ChatCompletionAccumulator
+	if !original.AddChunk(initial) {
+		t.Fatal("AddChunk rejected the initial sparse choice")
+	}
+
+	branch := original
+	branch.Choices = cloneAccumulatorSlice(branch.Choices)
+	branchChunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	branchChunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "branch"}}
+	if !branch.AddChunk(branchChunk) {
+		t.Fatal("AddChunk rejected the branch logprob")
+	}
+	if length := original.logprobState.choices[0].content.length; length != 0 {
+		t.Fatalf("branch changed original logprob length to %d", length)
+	}
+
+	originalChunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	originalChunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "original"}}
+	if !original.AddChunk(originalChunk) {
+		t.Fatal("AddChunk rejected the original logprob")
+	}
+	if length := original.logprobState.choices[0].content.length; length != 1 {
+		t.Fatalf("original logprob length = %d, want 1", length)
+	}
+}
+
 func TestAccumulatorBoundsLogprobReconciliationWork(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
 	chunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "initial"}}

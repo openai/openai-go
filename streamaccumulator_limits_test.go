@@ -867,6 +867,31 @@ func TestAccumulatorValueCopyTruncationPreservesOriginalState(t *testing.T) {
 	})
 }
 
+func TestAccumulatorValueCopyChoiceActivationPreservesAccounting(t *testing.T) {
+	var original openai.ChatCompletionAccumulator
+	initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "existing"})
+	initial.Choices[0].Index = 1
+	if !original.AddChunk(initial) {
+		t.Fatal("AddChunk rejected the initial sparse choice")
+	}
+
+	branch := original
+	branch.Choices = slices.Clone(branch.Choices)
+	branchChunk := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "branch"})
+	if !branch.AddChunk(branchChunk) {
+		t.Fatal("AddChunk rejected the branch choice")
+	}
+	originalChunk := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "original"})
+	if !original.AddChunk(originalChunk) {
+		t.Fatal("AddChunk rejected the original choice")
+	}
+
+	original.Choices[0].Message.Content = strings.Repeat("x", testAccumulatorMaxTextBytes)
+	if original.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "x"})) {
+		t.Fatal("AddChunk omitted a choice activated after a value copy from the live-text budget")
+	}
+}
+
 func TestAccumulatorTruncationInvalidatesFinishedToolCallState(t *testing.T) {
 	t.Run("legacy_tool_calls", func(t *testing.T) {
 		var acc openai.ChatCompletionAccumulator
