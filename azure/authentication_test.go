@@ -1,9 +1,12 @@
 package azure
 
 import (
+	"compress/gzip"
 	"context"
+	"errors"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"slices"
 	"strings"
 	"sync/atomic"
@@ -159,6 +162,147 @@ func TestReusedTokenCredentialOptionAuthenticatesOnce(t *testing.T) {
 	}
 	if authorization != "Bearer counting_token" {
 		t.Fatalf("Authorization = %q", authorization)
+	}
+}
+
+func TestAzureTokenCredentialBodyTimeoutBoundsRetryableResponse(t *testing.T) {
+	var attempts atomic.Int32
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		attempts.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusTooManyRequests)
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			t.Error("response writer does not support flushing")
+			return
+		}
+		flusher.Flush()
+		<-req.Context().Done()
+	}))
+	t.Cleanup(server.Close)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	client := openai.NewClient(
+		WithEndpoint(server.URL, "2024-10-21"),
+		WithTokenCredential(&fake.TokenCredential{}),
+		option.WithMaxRetries(0),
+		option.WithResponseBodyTimeout(20*time.Millisecond),
+		option.WithHTTPClient(server.Client()),
+	)
+
+	var response map[string]any
+	err := client.Execute(ctx, http.MethodGet, "models", nil, &response)
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("Execute() error = %v, want response body deadline exceeded", err)
+	}
+	if ctx.Err() != nil {
+		t.Fatal("Azure retry consumed the response body until the caller safety deadline")
+	}
+	if !strings.Contains(err.Error(), "response body read timed out") {
+		t.Fatalf("Execute() error = %v, want SDK response body timeout", err)
+	}
+	if got := attempts.Load(); got != 1 {
+		t.Fatalf("request attempts = %d, want 1", got)
+	}
+}
+
+func TestAzureTokenCredentialUsesSDKRetryPolicy(t *testing.T) {
+	var attempts atomic.Int32
+	retryCounts := make(chan string, 2)
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		retryCounts <- req.Header.Get("X-Stainless-Retry-Count")
+		w.Header().Set("Content-Type", "application/json")
+		if attempts.Add(1) == 1 {
+			w.Header().Set("Retry-After-Ms", "1")
+			w.WriteHeader(http.StatusTooManyRequests)
+			if _, err := io.WriteString(w, `{"error":{"message":"retry"}}`); err != nil {
+				t.Errorf("write retry response: %v", err)
+			}
+			return
+		}
+		if _, err := io.WriteString(w, `{"ok":true}`); err != nil {
+			t.Errorf("write success response: %v", err)
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	client := openai.NewClient(
+		WithEndpoint(server.URL, "2024-10-21"),
+		WithTokenCredential(&fake.TokenCredential{}),
+		option.WithMaxRetries(1),
+		option.WithMaxRetryDelay(time.Millisecond),
+		option.WithHTTPClient(server.Client()),
+	)
+	var response map[string]any
+	if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &response); err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if got := attempts.Load(); got != 2 {
+		t.Fatalf("request attempts = %d, want 2", got)
+	}
+	for _, want := range []string{"0", "1"} {
+		if got := <-retryCounts; got != want {
+			t.Fatalf("X-Stainless-Retry-Count = %q, want %q", got, want)
+		}
+	}
+}
+
+func TestAzureAuthenticationPreservesDisabledNativeCompression(t *testing.T) {
+	authModes := []struct {
+		name string
+		auth option.RequestOption
+	}{
+		{name: "API key", auth: WithAPIKey("azure-api-key")},
+		{name: "token credential", auth: WithTokenCredential(&fake.TokenCredential{})},
+	}
+
+	for _, authMode := range authModes {
+		t.Run(authMode.name, func(t *testing.T) {
+			var acceptEncoding atomicString
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				acceptEncoding.Store(req.Header.Get("Accept-Encoding"))
+				w.Header().Set("Content-Type", "application/json")
+				if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
+					w.Header().Set("Content-Encoding", "gzip")
+					compressed := gzip.NewWriter(w)
+					if _, err := compressed.Write([]byte("{}")); err != nil {
+						t.Errorf("write gzip response: %v", err)
+						return
+					}
+					if err := compressed.Close(); err != nil {
+						t.Errorf("close gzip response: %v", err)
+					}
+					return
+				}
+				if _, err := io.WriteString(w, "{}"); err != nil {
+					t.Errorf("write response: %v", err)
+				}
+			}))
+			t.Cleanup(server.Close)
+
+			serverTransport, ok := server.Client().Transport.(*http.Transport)
+			if !ok {
+				t.Fatalf("server transport = %T, want *http.Transport", server.Client().Transport)
+			}
+			transport := serverTransport.Clone()
+			transport.DisableCompression = true
+			client := openai.NewClient(
+				WithEndpoint(server.URL, "2024-10-21"),
+				authMode.auth,
+				option.WithMaxRetries(0),
+				option.WithMaxResponseBodyBytes(2),
+				option.WithHTTPClient(&http.Client{Transport: transport}),
+			)
+
+			var response map[string]any
+			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &response); err != nil {
+				t.Fatalf("Execute() error = %v", err)
+			}
+			if got := acceptEncoding.Load(); got != "" {
+				t.Fatalf("Accept-Encoding = %q, want no compression negotiation", got)
+			}
+		})
 	}
 }
 

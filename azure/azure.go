@@ -456,6 +456,11 @@ func (t azureCredentialTransport) RoundTrip(req *http.Request) (*http.Response, 
 	return transport.RoundTrip(req)
 }
 
+func (t azureCredentialTransport) CompressionDisabled() bool {
+	transport, ok := t.base.(*http.Transport)
+	return ok && transport.DisableCompression
+}
+
 func rejectAzureCredentialTransport(req *http.Request, err error) (*http.Response, error) {
 	if req.Body != nil {
 		_ = req.Body.Close()

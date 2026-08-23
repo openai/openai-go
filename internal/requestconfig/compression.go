@@ -93,15 +93,18 @@ func (cfg *RequestConfig) shouldManageGzip(req *http.Request) bool {
 		return false
 	}
 
-	// Respect explicit stdlib transport configuration. Wrapped and custom
-	// transports can opt out in the portable way by setting Accept-Encoding.
+	// Respect explicit stdlib transport configuration, including SDK-owned
+	// wrappers that preserve the selected native transport's policy.
 	if cfg.CustomHTTPDoer == nil && cfg.HTTPClient != nil {
 		transport := cfg.HTTPClient.Transport
 		if transport == nil {
 			transport = http.DefaultTransport
 		}
-		if transport, ok := transport.(*http.Transport); ok && transport.DisableCompression {
-			return false
+		switch transport := transport.(type) {
+		case *http.Transport:
+			return !transport.DisableCompression
+		case interface{ CompressionDisabled() bool }:
+			return !transport.CompressionDisabled()
 		}
 	}
 	return true
