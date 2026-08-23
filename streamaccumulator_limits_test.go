@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 	"unsafe"
@@ -819,6 +820,49 @@ func TestAccumulatorReleasesTruncatedPublicBacking(t *testing.T) {
 		}
 		if capacity := cap(message.ToolCalls); capacity != len(message.ToolCalls) {
 			t.Fatalf("truncated tool-call backing was retained: length %d, capacity %d", len(message.ToolCalls), capacity)
+		}
+	})
+}
+
+func TestAccumulatorValueCopyTruncationPreservesOriginalState(t *testing.T) {
+	t.Run("choices", func(t *testing.T) {
+		var original openai.ChatCompletionAccumulator
+		initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "x"})
+		if !original.AddChunk(initial) {
+			t.Fatal("AddChunk rejected the initial chunk")
+		}
+
+		truncated := original
+		truncated.Choices = truncated.Choices[:0]
+		if !truncated.AddChunk(openai.ChatCompletionChunk{ID: initial.ID}) {
+			t.Fatal("AddChunk rejected the chunk after the copied accumulator was truncated")
+		}
+		if !original.AddChunk(openai.ChatCompletionChunk{ID: initial.ID}) {
+			t.Fatal("AddChunk rejected the original accumulator after its copy was truncated")
+		}
+		if content := original.Choices[0].Message.Content; content != "x" {
+			t.Fatalf("original content = %q, want %q", content, "x")
+		}
+	})
+
+	t.Run("tool_calls", func(t *testing.T) {
+		var original openai.ChatCompletionAccumulator
+		initial := accumulatorToolStringChunk("tool", "arguments")
+		if !original.AddChunk(initial) {
+			t.Fatal("AddChunk rejected the initial chunk")
+		}
+
+		truncated := original
+		truncated.Choices = slices.Clone(truncated.Choices)
+		truncated.Choices[0].Message.ToolCalls = truncated.Choices[0].Message.ToolCalls[:0]
+		if !truncated.AddChunk(openai.ChatCompletionChunk{ID: initial.ID}) {
+			t.Fatal("AddChunk rejected the chunk after the copied tool calls were truncated")
+		}
+		if !original.AddChunk(openai.ChatCompletionChunk{ID: initial.ID}) {
+			t.Fatal("AddChunk rejected the original accumulator after its copy's tool calls were truncated")
+		}
+		if name := original.Choices[0].Message.ToolCalls[0].Function.Name; name != "tool" {
+			t.Fatalf("original tool name = %q, want %q", name, "tool")
 		}
 	})
 }

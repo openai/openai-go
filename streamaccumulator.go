@@ -437,44 +437,62 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState() {
 	reconcileAccumulatorString(&stringState.object, &completion.Object)
 	reconcileAccumulatorString(&stringState.serviceTier, &completion.ServiceTier)
 
-	previousChoiceCount := len(stringState.choices)
+	previousChoices := stringState.choices
+	previousChoiceCount := len(previousChoices)
 	completion.Choices = detachTruncatedTail(completion.Choices, previousChoiceCount)
+	choiceCount := len(completion.Choices)
+	choicesDetached := choiceCount < previousChoiceCount
+	if choicesDetached {
+		stringState.choices = cloneAccumulatorSlice(previousChoices[:choiceCount])
+	}
 	for _, i := range stringState.activeChoices {
-		if i >= len(completion.Choices) {
+		if i >= choiceCount {
 			continue
 		}
 		message := &completion.Choices[i].Message
-		previousToolCallCount := len(stringState.choices[i].toolCalls)
+		previousToolCallCount := len(previousChoices[i].toolCalls)
 		message.ToolCalls = detachTruncatedTail(message.ToolCalls, previousToolCallCount)
 	}
 
-	activeChoiceCount := 0
-	for _, i := range stringState.activeChoices {
-		if i >= len(completion.Choices) {
-			stringState.activeTools -= len(stringState.choices[i].activeToolCalls)
+	previousActiveChoices := stringState.activeChoices
+	stringState.activeChoices = retainAccumulatorIndices(previousActiveChoices, choiceCount)
+	for _, i := range previousActiveChoices {
+		if i >= choiceCount {
+			stringState.activeTools -= len(previousChoices[i].activeToolCalls)
 			continue
 		}
-		stringState.activeChoices[activeChoiceCount] = i
-		activeChoiceCount++
 		choiceState := stringState.choices[i]
 
 		message := &completion.Choices[i].Message
+		toolCallsTruncated := len(message.ToolCalls) < len(choiceState.toolCalls)
+		if toolCallsTruncated {
+			if !choicesDetached {
+				stringState.choices = cloneAccumulatorSlice(stringState.choices)
+				choicesDetached = true
+			}
+			detachedChoiceState := *choiceState
+			detachedChoiceState.toolCalls = cloneAccumulatorSlice(choiceState.toolCalls[:len(message.ToolCalls)])
+			detachedChoiceState.activeToolCalls = cloneAccumulatorSlice(
+				retainAccumulatorIndices(choiceState.activeToolCalls, len(message.ToolCalls)),
+			)
+			stringState.activeTools -= len(choiceState.activeToolCalls) - len(detachedChoiceState.activeToolCalls)
+			stringState.choices[i] = &detachedChoiceState
+			choiceState = &detachedChoiceState
+		}
 		choiceState.content.reconcile(&message.Content)
 		choiceState.refusal.reconcile(&message.Refusal)
 		reconcileAccumulatorString(&choiceState.finishReason, &completion.Choices[i].FinishReason)
 		reconcileAccumulatorString(&choiceState.role, &message.Role)
 
-		if len(message.ToolCalls) < len(choiceState.toolCalls) {
-			invalidateRemovedToolCallState(acc.legacyChoiceChatCompletionStates, i, len(message.ToolCalls))
-			invalidateRemovedToolCallState(acc.choiceChatCompletionStates, i, len(message.ToolCalls))
+		if toolCallsTruncated {
+			acc.legacyChoiceChatCompletionStates = invalidateRemovedToolCallState(
+				acc.legacyChoiceChatCompletionStates, i, len(message.ToolCalls),
+			)
+			acc.choiceChatCompletionStates = invalidateRemovedToolCallState(
+				acc.choiceChatCompletionStates, i, len(message.ToolCalls),
+			)
 		}
-		activeToolCallCount := 0
 		for _, j := range choiceState.activeToolCalls {
-			if j >= len(message.ToolCalls) {
-				continue
-			}
-			choiceState.activeToolCalls[activeToolCallCount] = j
-			activeToolCallCount++
 			toolCallState := choiceState.toolCalls[j]
 			reconcileAccumulatorString(&toolCallState.id, &message.ToolCalls[j].ID)
 			reconcileAccumulatorString(&toolCallState.typeName, &message.ToolCalls[j].Type)
@@ -482,39 +500,48 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState() {
 			toolCallState.name.reconcile(&function.Name)
 			toolCallState.arguments.reconcile(&function.Arguments)
 		}
-		stringState.activeTools -= len(choiceState.activeToolCalls) - activeToolCallCount
-		clear(choiceState.activeToolCalls[activeToolCallCount:])
-		choiceState.activeToolCalls = choiceState.activeToolCalls[:activeToolCallCount]
-		if len(message.ToolCalls) < len(choiceState.toolCalls) {
-			clear(choiceState.toolCalls[len(message.ToolCalls):])
-			choiceState.toolCalls = choiceState.toolCalls[:len(message.ToolCalls)]
-		}
-	}
-	clear(stringState.activeChoices[activeChoiceCount:])
-	stringState.activeChoices = stringState.activeChoices[:activeChoiceCount]
-	choiceCount := len(completion.Choices)
-	if choiceCount < previousChoiceCount {
-		clear(stringState.choices[choiceCount:])
-		stringState.choices = stringState.choices[:choiceCount]
 	}
 	acc.legacyChoiceChatCompletionStates = truncateResponseStates(acc.legacyChoiceChatCompletionStates, choiceCount)
 	acc.choiceChatCompletionStates = truncateResponseStates(acc.choiceChatCompletionStates, choiceCount)
 }
 
-func invalidateRemovedToolCallState(states []chatCompletionResponseState, choiceIndex int, toolCallCount int) {
+func retainAccumulatorIndices(indices []int, limit int) []int {
+	retainedCount := 0
+	for _, index := range indices {
+		if index < limit {
+			retainedCount++
+		}
+	}
+	if retainedCount == len(indices) {
+		return indices
+	}
+	retained := make([]int, 0, retainedCount)
+	for _, index := range indices {
+		if index < limit {
+			retained = append(retained, index)
+		}
+	}
+	return retained
+}
+
+func invalidateRemovedToolCallState(states []chatCompletionResponseState, choiceIndex int, toolCallCount int) []chatCompletionResponseState {
 	if choiceIndex >= len(states) {
-		return
+		return states
 	}
-	state := &states[choiceIndex]
+	state := states[choiceIndex]
 	if state.state == toolResponseState && state.toolCallIndex >= toolCallCount {
-		*state = chatCompletionResponseState{}
+		states = cloneAccumulatorSlice(states)
+		states[choiceIndex] = chatCompletionResponseState{}
 	}
+	return states
 }
 
 func truncateResponseStates(states []chatCompletionResponseState, choiceCount int) []chatCompletionResponseState {
 	choiceCount = min(len(states), choiceCount)
-	clear(states[choiceCount:])
-	return states[:choiceCount]
+	if choiceCount == len(states) {
+		return states
+	}
+	return cloneAccumulatorSlice(states[:choiceCount])
 }
 
 func (choice *chatCompletionChoiceStringState) toolCall(index int, activeTools *int) *chatCompletionToolCallStringState {
