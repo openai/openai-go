@@ -556,6 +556,48 @@ func TestAccumulatorValueCopyToolActivationStateIsolated(t *testing.T) {
 	}
 }
 
+func TestAccumulatorToolActivationStateGrowsAmortized(t *testing.T) {
+	const toolCount = 128
+
+	var acc ChatCompletionAccumulator
+	var previousToolCalls **chatCompletionToolCallStringState
+	var previousActiveToolCalls *int
+	toolCallBackingChanges := 0
+	activeToolCallBackingChanges := 0
+	for i := range toolCount {
+		toolCall := ChatCompletionChunkChoiceDeltaToolCall{Index: int64(i)}
+		chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+			ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{toolCall, toolCall},
+		})
+		if !acc.AddChunk(chunk) {
+			t.Fatalf("AddChunk rejected dense tool call %d", i)
+		}
+
+		choiceState := acc.stringState.choices[0]
+		toolCalls := unsafe.SliceData(choiceState.toolCalls)
+		if toolCalls != previousToolCalls {
+			toolCallBackingChanges++
+			previousToolCalls = toolCalls
+		}
+		activeToolCalls := unsafe.SliceData(choiceState.activeToolCalls)
+		if activeToolCalls != previousActiveToolCalls {
+			activeToolCallBackingChanges++
+			previousActiveToolCalls = activeToolCalls
+		}
+	}
+
+	if acc.stringState.activeTools != toolCount {
+		t.Fatalf("active tools = %d, want %d", acc.stringState.activeTools, toolCount)
+	}
+	if toolCallBackingChanges > 16 || activeToolCallBackingChanges > 16 {
+		t.Fatalf(
+			"tool activation repeatedly reallocated state: tool calls %d, active indices %d backing changes",
+			toolCallBackingChanges,
+			activeToolCallBackingChanges,
+		)
+	}
+}
+
 func TestAccumulatorSteadyLogprobStateDoesNotAllocate(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
 	chunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "token"}}
