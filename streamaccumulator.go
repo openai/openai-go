@@ -347,6 +347,7 @@ func (acc *ChatCompletionAccumulator) finishedToolCall(justFinished chatCompleti
 // Ignores the JSON field.
 func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk) {
 	cc := &acc.ChatCompletion
+	acc.stringState.detachToolActivationState(chunk)
 	if len(cc.ID) == 0 {
 		assignAccumulatorString(&acc.stringState.id, &cc.ID, chunk.ID)
 	}
@@ -416,6 +417,41 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 	assignAccumulatorString(&acc.stringState.serviceTier, &cc.ServiceTier, ChatCompletionServiceTier(chunk.ServiceTier))
 	if chunk.Object == chunk.Object.Default() {
 		assignAccumulatorString(&acc.stringState.object, &cc.Object, cc.Object.Default())
+	}
+}
+
+func (acc *chatCompletionAccumulatorStringState) detachToolActivationState(chunk *ChatCompletionChunk) {
+	var detachChoice [maxStreamAccumulatorChoiceIndex + 1]bool
+	hasDetach := false
+	for i := range chunk.Choices {
+		choice := &chunk.Choices[i]
+		choiceIndex := int(choice.Index)
+		var choiceState *chatCompletionChoiceStringState
+		if choiceIndex < len(acc.choices) {
+			choiceState = acc.choices[choiceIndex]
+		}
+		for j := range choice.Delta.ToolCalls {
+			toolIndex := preflightedToolCallIndex(choice.Delta.ToolCalls[j].Index)
+			if choiceState != nil && !detachChoice[choiceIndex] &&
+				(toolIndex >= len(choiceState.toolCalls) || choiceState.toolCalls[toolIndex] == nil) {
+				detachChoice[choiceIndex] = true
+				hasDetach = true
+			}
+		}
+	}
+	if !hasDetach {
+		return
+	}
+
+	acc.choices = cloneAccumulatorSlice(acc.choices)
+	for choiceIndex, detach := range detachChoice {
+		if !detach {
+			continue
+		}
+		choiceState := *acc.choices[choiceIndex]
+		choiceState.toolCalls = cloneAccumulatorSlice(choiceState.toolCalls)
+		choiceState.activeToolCalls = cloneAccumulatorSlice(choiceState.activeToolCalls)
+		acc.choices[choiceIndex] = &choiceState
 	}
 }
 

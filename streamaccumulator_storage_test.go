@@ -526,6 +526,56 @@ func TestAccumulatorValueCopyLogprobStateIsolated(t *testing.T) {
 	}
 }
 
+func TestAccumulatorValueCopyToolActivationStateIsolated(t *testing.T) {
+	initial := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{Index: 1}},
+	})
+
+	var original ChatCompletionAccumulator
+	if !original.AddChunk(initial) {
+		t.Fatal("AddChunk rejected the initial sparse tool call")
+	}
+
+	branch := original
+	branch.Choices = cloneAccumulatorSlice(branch.Choices)
+	branch.Choices[0].Message.ToolCalls = cloneAccumulatorSlice(branch.Choices[0].Message.ToolCalls)
+	branchChunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{Index: 0}},
+	})
+	if !branch.AddChunk(branchChunk) {
+		t.Fatal("AddChunk rejected the branch tool call")
+	}
+
+	choiceState := original.stringState.choices[0]
+	if original.stringState.activeTools != 1 || len(choiceState.activeToolCalls) != 1 || choiceState.activeToolCalls[0] != 1 {
+		t.Fatalf(
+			"branch changed original tool state: active tools %d, indices %v",
+			original.stringState.activeTools,
+			choiceState.activeToolCalls,
+		)
+	}
+}
+
+func TestAccumulatorSteadyLogprobStateDoesNotAllocate(t *testing.T) {
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	chunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "token"}}
+	completion := ChatCompletion{Choices: []ChatCompletionChoice{{
+		Logprobs: ChatCompletionChoiceLogprobs{Content: []ChatCompletionTokenLogprob{{Token: "token"}}},
+	}}}
+	state := chatCompletionAccumulatorLogprobState{
+		choices: []chatCompletionChoiceLogprobState{{
+			content: chatCompletionLogprobSliceState{length: 1, capacity: 1},
+		}},
+	}
+
+	allocations := testing.AllocsPerRun(100, func() {
+		state.acceptChunk(&completion, &chunk)
+	})
+	if allocations != 0 {
+		t.Fatalf("steady logprob state allocated %.0f times per chunk, want 0", allocations)
+	}
+}
+
 func TestAccumulatorBoundsLogprobReconciliationWork(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
 	chunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "initial"}}
