@@ -1,5 +1,98 @@
 package openai
 
+import "slices"
+
+func chatCompletionChunkEntriesWithinLimit(chunk *ChatCompletionChunk) bool {
+	entries := len(chunk.Choices)
+	if entries > maxChatCompletionAccumulatorStructuralSlots {
+		return false
+	}
+	for i := range chunk.Choices {
+		toolCalls := len(chunk.Choices[i].Delta.ToolCalls)
+		if toolCalls > maxChatCompletionAccumulatorStructuralSlots-entries {
+			return false
+		}
+		entries += toolCalls
+	}
+	return true
+}
+
+func (acc *ChatCompletionAccumulator) validChatCompletionChunkIndices(chunk ChatCompletionChunk) bool {
+	var toolCallCounts [maxStreamAccumulatorChoiceIndex + 1]int
+	var initializedToolCallCounts [maxStreamAccumulatorChoiceIndex + 1]bool
+
+	for _, choice := range chunk.Choices {
+		choiceIndex, ok := checkedStreamAccumulatorChoiceIndex(choice.Index)
+		if !ok {
+			return false
+		}
+		if !initializedToolCallCounts[choiceIndex] {
+			if choiceIndex < len(acc.Choices) {
+				toolCallCounts[choiceIndex] = len(acc.Choices[choiceIndex].Message.ToolCalls)
+			}
+			initializedToolCallCounts[choiceIndex] = true
+		}
+		for _, toolCall := range choice.Delta.ToolCalls {
+			toolIndex, ok := checkedToolCallIndex(toolCall.Index, toolCallCounts[choiceIndex])
+			if !ok {
+				return false
+			}
+			if toolIndex >= toolCallCounts[choiceIndex] {
+				toolCallCounts[choiceIndex] = toolIndex + 1
+			}
+		}
+	}
+	return true
+}
+
+func checkedStreamAccumulatorChoiceIndex(index int64) (int, bool) {
+	if index < 0 || index > maxStreamAccumulatorChoiceIndex {
+		return 0, false
+	}
+	return int(index), true
+}
+
+// checkedToolCallIndex handles providers like AWS Bedrock that return -1 for a
+// single tool call. Tool calls have no protocol maximum, so the bound applies
+// only to the growth caused by this index instead of the accumulated count.
+func checkedToolCallIndex(index int64, toolCallCount int) (int, bool) {
+	if index == -1 {
+		index = 0
+	}
+	// The maximum int value cannot be used because slice growth needs index+1.
+	if index < 0 || index >= int64(^uint(0)>>1) {
+		return 0, false
+	}
+	if index >= int64(toolCallCount) && index-int64(toolCallCount) >= maxStreamAccumulatorToolCallGrowth {
+		return 0, false
+	}
+	return int(index), true
+}
+
+func preflightedToolCallIndex(index int64) int {
+	if index == -1 {
+		return 0
+	}
+	return int(index)
+}
+
+func expandToFit[T any](slice []T, index int) []T {
+	if index < len(slice) {
+		return slice
+	}
+	return slices.Grow(slice, index+1-len(slice))[:index+1]
+}
+
+func detachTruncatedTail[T any](slice []T, previousLength int) []T {
+	// A full slice expression can hide a retained tail while reporting len == cap.
+	if slice == nil || len(slice) >= previousLength {
+		return slice
+	}
+	detached := make([]T, len(slice))
+	copy(detached, slice)
+	return detached
+}
+
 type chatCompletionToolMetadataProjection struct {
 	key    int
 	fields uint8

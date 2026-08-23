@@ -167,26 +167,43 @@ func TestAccumulatorValueCopyStringBuffersIsolated(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var original openai.ChatCompletionAccumulator
-			if !original.AddChunk(test.initial) {
-				t.Fatal("AddChunk rejected the initial chunk")
-			}
+			for _, branchFirst := range []bool{true, false} {
+				name := "original_first"
+				if branchFirst {
+					name = "branch_first"
+				}
+				t.Run(name, func(t *testing.T) {
+					var original openai.ChatCompletionAccumulator
+					if !original.AddChunk(test.initial) {
+						t.Fatal("AddChunk rejected the initial chunk")
+					}
 
-			branch := original
-			branch.Choices = slices.Clone(branch.Choices)
-			branch.Choices[0].Message.ToolCalls = slices.Clone(branch.Choices[0].Message.ToolCalls)
-			if !branch.AddChunk(test.branch) {
-				t.Fatal("AddChunk rejected the branch suffix")
-			}
-			if !original.AddChunk(test.original) {
-				t.Fatal("AddChunk rejected the original suffix")
-			}
+					branch := original
+					branch.Choices = slices.Clone(branch.Choices)
+					branch.Choices[0].Message.ToolCalls = slices.Clone(branch.Choices[0].Message.ToolCalls)
+					if branchFirst {
+						if !branch.AddChunk(test.branch) {
+							t.Fatal("AddChunk rejected the branch suffix")
+						}
+						if !original.AddChunk(test.original) {
+							t.Fatal("AddChunk rejected the original suffix")
+						}
+					} else {
+						if !original.AddChunk(test.original) {
+							t.Fatal("AddChunk rejected the original suffix")
+						}
+						if !branch.AddChunk(test.branch) {
+							t.Fatal("AddChunk rejected the branch suffix")
+						}
+					}
 
-			if got := test.value(&branch); got != "initial-branch" {
-				t.Fatalf("branch value = %q, want %q", got, "initial-branch")
-			}
-			if got := test.value(&original); got != "initial-original" {
-				t.Fatalf("original value = %q, want %q", got, "initial-original")
+					if got := test.value(&branch); got != "initial-branch" {
+						t.Fatalf("branch value = %q, want %q", got, "initial-branch")
+					}
+					if got := test.value(&original); got != "initial-original" {
+						t.Fatalf("original value = %q, want %q", got, "initial-original")
+					}
+				})
 			}
 		})
 	}

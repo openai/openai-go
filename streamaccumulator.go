@@ -1,7 +1,6 @@
 package openai
 
 import (
-	"slices"
 	"unsafe"
 
 	"github.com/openai/openai-go/v3/shared/constant"
@@ -276,6 +275,11 @@ func (acc *ChatCompletionAccumulator) projectReconciliationWork(chunk *ChatCompl
 		choicePasses++
 	}
 	work := len(acc.stringState.activeChoices)*choicePasses + acc.stringState.activeTools*3
+	structuralCopyWork := acc.structuralReconciliationCopyWork()
+	if structuralCopyWork > maxChatCompletionAccumulatorReconcileWork-work {
+		return 0, false
+	}
+	work += structuralCopyWork
 	if work > maxChatCompletionAccumulatorReconcileWork-acc.reconciliationWork {
 		return 0, false
 	}
@@ -292,6 +296,33 @@ func (acc *ChatCompletionAccumulator) projectReconciliationWork(chunk *ChatCompl
 		projected += toolCount * chatCompletionAccumulatorToolWork
 	}
 	return projected, true
+}
+
+func (acc *ChatCompletionAccumulator) structuralReconciliationCopyWork() int {
+	completion := &acc.ChatCompletion
+	stringState := &acc.stringState
+	choiceCount := len(completion.Choices)
+	work := 0
+	if choiceCount < len(stringState.choices) {
+		// Public and private choice slices may each be copied before growing again,
+		// while active indices are visited once to count and once to retain them.
+		work += 4*choiceCount + 2*len(stringState.activeChoices)
+	}
+	for _, i := range stringState.activeChoices {
+		if i >= choiceCount {
+			continue
+		}
+		choiceState := stringState.choices[i]
+		toolCallCount := len(completion.Choices[i].Message.ToolCalls)
+		if toolCallCount >= len(choiceState.toolCalls) {
+			continue
+		}
+		// Truncation copies the visible public and private prefixes. Re-activation
+		// can then grow both exact-capacity slices, copying those prefixes again.
+		// The bounded outer choice table may also detach at both stages.
+		work += 4*toolCallCount + 2*len(choiceState.activeToolCalls) + 2*len(stringState.choices)
+	}
+	return work
 }
 
 // JustFinishedContent retrieves the chat completion content when it is known to have just been completed.
@@ -390,6 +421,7 @@ func (acc *ChatCompletionAccumulator) finishedToolCall(justFinished chatCompleti
 // Ignores the JSON field.
 func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk) {
 	cc := &acc.ChatCompletion
+	acc.stringState.detachToolActivationState(chunk)
 	if len(cc.ID) == 0 {
 		assignAccumulatorString(&acc.stringState.id, &cc.ID, chunk.ID)
 	}
@@ -459,6 +491,44 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 	assignAccumulatorString(&acc.stringState.serviceTier, &cc.ServiceTier, ChatCompletionServiceTier(chunk.ServiceTier))
 	if chunk.Object == chunk.Object.Default() {
 		assignAccumulatorString(&acc.stringState.object, &cc.Object, cc.Object.Default())
+	}
+}
+
+func (acc *chatCompletionAccumulatorStringState) detachToolActivationState(chunk *ChatCompletionChunk) {
+	var detachChoice [maxStreamAccumulatorChoiceIndex + 1]bool
+	var detachToolCalls [maxStreamAccumulatorChoiceIndex + 1]bool
+	hasDetach := false
+	for i := range chunk.Choices {
+		choice := &chunk.Choices[i]
+		choiceIndex := int(choice.Index)
+		if choiceIndex >= len(acc.choices) || acc.choices[choiceIndex] == nil {
+			continue
+		}
+		choiceState := acc.choices[choiceIndex]
+		for j := range choice.Delta.ToolCalls {
+			toolIndex := preflightedToolCallIndex(choice.Delta.ToolCalls[j].Index)
+			if toolIndex < len(choiceState.toolCalls) && choiceState.toolCalls[toolIndex] != nil {
+				continue
+			}
+			detachChoice[choiceIndex] = true
+			detachToolCalls[choiceIndex] = detachToolCalls[choiceIndex] || toolIndex < len(choiceState.toolCalls)
+			hasDetach = true
+		}
+	}
+	if !hasDetach {
+		return
+	}
+
+	acc.choices = cloneAccumulatorSlice(acc.choices)
+	for choiceIndex, detach := range detachChoice {
+		if !detach {
+			continue
+		}
+		choiceState := *acc.choices[choiceIndex]
+		if detachToolCalls[choiceIndex] {
+			choiceState.toolCalls = cloneAccumulatorSlice(choiceState.toolCalls)
+		}
+		acc.choices[choiceIndex] = &choiceState
 	}
 }
 
@@ -869,21 +939,6 @@ func addAccumulatorStringCopyWork[T ~string](work *int, value T, passes int) boo
 	return true
 }
 
-func chatCompletionChunkEntriesWithinLimit(chunk *ChatCompletionChunk) bool {
-	entries := len(chunk.Choices)
-	if entries > maxChatCompletionAccumulatorStructuralSlots {
-		return false
-	}
-	for i := range chunk.Choices {
-		toolCalls := len(chunk.Choices[i].Delta.ToolCalls)
-		if toolCalls > maxChatCompletionAccumulatorStructuralSlots-entries {
-			return false
-		}
-		entries += toolCalls
-	}
-	return true
-}
-
 // update updates the internal response state and returns the previous state if
 // the state changed. This ensures that JustFinished events only fire once.
 func (prev *chatCompletionResponseStateCode) update(choice ChatCompletionChunkChoice, toolCallCount int) (justFinished chatCompletionResponseState) {
@@ -924,80 +979,4 @@ func (code chatCompletionResponseStateCode) decode(choiceIndex int) chatCompleti
 		choiceIndex:   choiceIndex,
 		toolCallIndex: int(code >> 3),
 	}
-}
-
-func (acc *ChatCompletionAccumulator) validChatCompletionChunkIndices(chunk ChatCompletionChunk) bool {
-	var toolCallCounts [maxStreamAccumulatorChoiceIndex + 1]int
-	var initializedToolCallCounts [maxStreamAccumulatorChoiceIndex + 1]bool
-
-	for _, choice := range chunk.Choices {
-		choiceIndex, ok := checkedStreamAccumulatorChoiceIndex(choice.Index)
-		if !ok {
-			return false
-		}
-		if !initializedToolCallCounts[choiceIndex] {
-			if choiceIndex < len(acc.Choices) {
-				toolCallCounts[choiceIndex] = len(acc.Choices[choiceIndex].Message.ToolCalls)
-			}
-			initializedToolCallCounts[choiceIndex] = true
-		}
-		for _, toolCall := range choice.Delta.ToolCalls {
-			toolIndex, ok := checkedToolCallIndex(toolCall.Index, toolCallCounts[choiceIndex])
-			if !ok {
-				return false
-			}
-			if toolIndex >= toolCallCounts[choiceIndex] {
-				toolCallCounts[choiceIndex] = toolIndex + 1
-			}
-		}
-	}
-	return true
-}
-
-func checkedStreamAccumulatorChoiceIndex(index int64) (int, bool) {
-	if index < 0 || index > maxStreamAccumulatorChoiceIndex {
-		return 0, false
-	}
-	return int(index), true
-}
-
-// checkedToolCallIndex handles providers like AWS Bedrock that return -1 for a
-// single tool call. Tool calls have no protocol maximum, so the bound applies
-// only to the growth caused by this index instead of the accumulated count.
-func checkedToolCallIndex(index int64, toolCallCount int) (int, bool) {
-	if index == -1 {
-		index = 0
-	}
-	// The maximum int value cannot be used because slice growth needs index+1.
-	if index < 0 || index >= int64(^uint(0)>>1) {
-		return 0, false
-	}
-	if index >= int64(toolCallCount) && index-int64(toolCallCount) >= maxStreamAccumulatorToolCallGrowth {
-		return 0, false
-	}
-	return int(index), true
-}
-
-func preflightedToolCallIndex(index int64) int {
-	if index == -1 {
-		return 0
-	}
-	return int(index)
-}
-
-func expandToFit[T any](slice []T, index int) []T {
-	if index < len(slice) {
-		return slice
-	}
-	return slices.Grow(slice, index+1-len(slice))[:index+1]
-}
-
-func detachTruncatedTail[T any](slice []T, previousLength int) []T {
-	// A full slice expression can hide a retained tail while reporting len == cap.
-	if slice == nil || len(slice) >= previousLength {
-		return slice
-	}
-	detached := make([]T, len(slice))
-	copy(detached, slice)
-	return detached
 }

@@ -496,63 +496,124 @@ func TestAccumulatorTracksOnlyPopulatedToolState(t *testing.T) {
 }
 
 func TestAccumulatorValueCopyLogprobStateIsolated(t *testing.T) {
-	initial := storageTestChunk(ChatCompletionChunkChoiceDelta{})
-	initial.Choices[0].Index = 1
-	initial.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "existing"}}
+	for _, branchFirst := range []bool{true, false} {
+		name := "original_first"
+		if branchFirst {
+			name = "branch_first"
+		}
+		t.Run(name, func(t *testing.T) {
+			initial := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+			initial.Choices[0].Index = 1
+			initial.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "existing"}}
 
-	var original ChatCompletionAccumulator
-	if !original.AddChunk(initial) {
-		t.Fatal("AddChunk rejected the initial sparse choice")
-	}
+			var original ChatCompletionAccumulator
+			if !original.AddChunk(initial) {
+				t.Fatal("AddChunk rejected the initial sparse choice")
+			}
 
-	branch := original
-	branch.Choices = cloneAccumulatorSlice(branch.Choices)
-	branchChunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
-	branchChunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "branch"}}
-	if !branch.AddChunk(branchChunk) {
-		t.Fatal("AddChunk rejected the branch logprob")
-	}
-	if length := original.logprobState.choices[0].content.length; length != 0 {
-		t.Fatalf("branch changed original logprob length to %d", length)
-	}
+			branch := original
+			branch.Choices = cloneAccumulatorSlice(branch.Choices)
+			activation := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+			activation.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "activated"}}
+			if branchFirst {
+				if !branch.AddChunk(activation) {
+					t.Fatal("AddChunk rejected the branch logprob")
+				}
+			} else {
+				if !original.AddChunk(activation) {
+					t.Fatal("AddChunk rejected the original logprob")
+				}
+				if !branch.AddChunk(ChatCompletionChunk{ID: initial.ID}) {
+					t.Fatal("AddChunk rejected the branch reconciliation chunk")
+				}
+			}
 
-	originalChunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
-	originalChunk.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "original"}}
-	if !original.AddChunk(originalChunk) {
-		t.Fatal("AddChunk rejected the original logprob")
-	}
-	if length := original.logprobState.choices[0].content.length; length != 1 {
-		t.Fatalf("original logprob length = %d, want 1", length)
+			unmodified := &original
+			if !branchFirst {
+				unmodified = &branch
+			}
+			if length := unmodified.logprobState.choices[0].content.length; length != 0 {
+				t.Fatalf("copy changed unmodified logprob length to %d", length)
+			}
+			if !unmodified.AddChunk(activation) {
+				t.Fatal("AddChunk rejected logprob activation on the unmodified accumulator")
+			}
+			if length := unmodified.logprobState.choices[0].content.length; length != 1 {
+				t.Fatalf("activated logprob length = %d, want 1", length)
+			}
+		})
 	}
 }
 
 func TestAccumulatorValueCopyToolActivationStateIsolated(t *testing.T) {
-	initial := storageTestChunk(ChatCompletionChunkChoiceDelta{
-		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{Index: 1}},
-	})
+	for _, branchFirst := range []bool{true, false} {
+		name := "original_first"
+		if branchFirst {
+			name = "branch_first"
+		}
+		t.Run(name, func(t *testing.T) {
+			initial := storageTestChunk(ChatCompletionChunkChoiceDelta{
+				ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{Index: 1}},
+			})
 
-	var original ChatCompletionAccumulator
-	if !original.AddChunk(initial) {
-		t.Fatal("AddChunk rejected the initial sparse tool call")
-	}
+			var original ChatCompletionAccumulator
+			if !original.AddChunk(initial) {
+				t.Fatal("AddChunk rejected the initial sparse tool call")
+			}
 
-	branch := original
-	branch.Choices = cloneAccumulatorSlice(branch.Choices)
-	branch.Choices[0].Message.ToolCalls = cloneAccumulatorSlice(branch.Choices[0].Message.ToolCalls)
-	branchChunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
-		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{Index: 0}},
-	})
-	if !branch.AddChunk(branchChunk) {
-		t.Fatal("AddChunk rejected the branch tool call")
-	}
+			branch := original
+			branch.Choices = cloneAccumulatorSlice(branch.Choices)
+			branch.Choices[0].Message.ToolCalls = cloneAccumulatorSlice(branch.Choices[0].Message.ToolCalls)
+			activation := storageTestChunk(ChatCompletionChunkChoiceDelta{
+				ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{Index: 0}},
+			})
+			if branchFirst {
+				if !branch.AddChunk(activation) {
+					t.Fatal("AddChunk rejected the branch tool call")
+				}
+			} else {
+				if !original.AddChunk(activation) {
+					t.Fatal("AddChunk rejected the original tool call")
+				}
+				if !branch.AddChunk(ChatCompletionChunk{ID: initial.ID}) {
+					t.Fatal("AddChunk rejected the branch reconciliation chunk")
+				}
+			}
 
-	choiceState := original.stringState.choices[0]
-	if original.stringState.activeTools != 1 || len(choiceState.activeToolCalls) != 1 || choiceState.activeToolCalls[0] != 1 {
-		t.Fatalf(
-			"branch changed original tool state: active tools %d, indices %v",
-			original.stringState.activeTools,
-			choiceState.activeToolCalls,
-		)
+			unmodified := &original
+			if !branchFirst {
+				unmodified = &branch
+			}
+			choiceState := unmodified.stringState.choices[0]
+			if unmodified.stringState.activeTools != 1 || len(choiceState.activeToolCalls) != 1 || choiceState.activeToolCalls[0] != 1 {
+				t.Fatalf(
+					"copy changed unmodified tool state: active tools %d, indices %v",
+					unmodified.stringState.activeTools,
+					choiceState.activeToolCalls,
+				)
+			}
+			if choiceState.toolCalls[0] != nil {
+				t.Fatal("copy populated an inactive private tool slot on the unmodified accumulator")
+			}
+			if !unmodified.AddChunk(activation) {
+				t.Fatal("AddChunk rejected tool activation on the unmodified accumulator")
+			}
+			choiceState = unmodified.stringState.choices[0]
+			if unmodified.stringState.activeTools != 2 || len(choiceState.activeToolCalls) != 2 || choiceState.activeToolCalls[1] != 0 {
+				t.Fatalf(
+					"tool activation accounting: active tools %d, indices %v",
+					unmodified.stringState.activeTools,
+					choiceState.activeToolCalls,
+				)
+			}
+			unmodified.Choices[0].Message.ToolCalls = nil
+			if !unmodified.AddChunk(ChatCompletionChunk{ID: initial.ID}) {
+				t.Fatal("AddChunk rejected tool truncation on the unmodified accumulator")
+			}
+			if unmodified.stringState.activeTools != 0 {
+				t.Fatalf("active tools after truncation = %d, want 0", unmodified.stringState.activeTools)
+			}
+		})
 	}
 }
 
@@ -618,6 +679,44 @@ func TestAccumulatorRejectsOversizedChunkBeforeIndexValidation(t *testing.T) {
 	var acc ChatCompletionAccumulator
 	if acc.AddChunk(chunk) {
 		t.Fatal("AddChunk accepted a chunk beyond the structural entry limit")
+	}
+}
+
+func TestAccumulatorChargesSparseToolTruncationCopies(t *testing.T) {
+	const toolIndex = maxChatCompletionAccumulatorStructuralSlots - 2
+	var acc ChatCompletionAccumulator
+	for index := int64(maxStreamAccumulatorToolCallGrowth - 1); index < toolIndex; index += maxStreamAccumulatorToolCallGrowth - 1 {
+		chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+			ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{Index: index}},
+		})
+		if !acc.AddChunk(chunk) {
+			t.Fatalf("AddChunk rejected sparse tool call %d", index)
+		}
+	}
+	final := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{Index: toolIndex}},
+	})
+	if !acc.AddChunk(final) {
+		t.Fatal("AddChunk rejected the final sparse tool call")
+	}
+
+	acc.Choices[0].Message.ToolCalls = acc.Choices[0].Message.ToolCalls[:toolIndex]
+	reactivate := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{Index: toolIndex}},
+	})
+	const minimumCopyWork = 4 * toolIndex
+	before := acc.reconciliationWork
+	projected, ok := acc.projectReconciliationWork(&reactivate)
+	if !ok {
+		t.Fatal("projectReconciliationWork rejected the sparse reactivation with the normal budget")
+	}
+	if got := projected - before; got < minimumCopyWork {
+		t.Fatalf("sparse truncation work = %d, want at least %d", got, minimumCopyWork)
+	}
+
+	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - minimumCopyWork + 1
+	if acc.AddChunk(reactivate) {
+		t.Fatal("AddChunk accepted sparse truncation copies beyond the cumulative work budget")
 	}
 }
 
