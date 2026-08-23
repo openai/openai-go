@@ -281,12 +281,13 @@ type Origin struct {
 	Organization string `json:"organization" jsonschema_description:"The organization that was in charge of its development"`
 }
 
-// Structured Outputs uses a subset of JSON schema
-// These flags are necessary to comply with the subset
 func GenerateSchema[T any]() (map[string]any, error) {
+	// Structured Outputs requires object schemas to disallow additional
+	// properties. Keep definitions referenced so recursive Go types terminate,
+	// while expanding the root struct preserves the example's object-shaped root.
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
-		DoNotReference:            true,
+		ExpandedStruct:             true,
 	}
 	var v T
 	schema := reflector.Reflect(v)
