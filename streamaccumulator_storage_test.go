@@ -86,30 +86,27 @@ func TestAccumulatorReleasesClearedStringStorageBeforeNextChunk(t *testing.T) {
 	}
 }
 
-func TestAccumulatorBoundsRetainedTextBufferCapacity(t *testing.T) {
+func TestAccumulatorRetainedTextBufferGrowsGeometrically(t *testing.T) {
 	const fragmentBytes = 1 << 10
+	const initialBytes = 16 << 20
 	fragment := strings.Repeat("x", fragmentBytes)
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{Content: fragment})
 
 	var acc ChatCompletionAccumulator
-	for range maxChatCompletionAccumulatorTextBytes / fragmentBytes {
+	for range initialBytes / fragmentBytes {
 		if !acc.AddChunk(chunk) {
-			t.Fatal("AddChunk rejected text within the documented logical and retained-capacity budgets")
+			t.Fatal("AddChunk rejected valid accumulated text")
 		}
 	}
-	if got := len(acc.Choices[0].Message.Content); got != maxChatCompletionAccumulatorTextBytes {
-		t.Fatalf("content length = %d, want %d", got, maxChatCompletionAccumulatorTextBytes)
+	if got := len(acc.Choices[0].Message.Content); got != initialBytes {
+		t.Fatalf("content length = %d, want %d", got, initialBytes)
 	}
-	if got := cap(acc.stringState.choices[0].content.buffer); got > maxChatCompletionAccumulatorTextCapacity {
-		t.Fatalf("retained buffer capacity = %d, limit %d", got, maxChatCompletionAccumulatorTextCapacity)
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected text beyond the former accumulation budget")
 	}
-
-	capacity := cap(acc.stringState.choices[0].content.buffer)
-	if acc.AddChunk(chunk) {
-		t.Fatal("AddChunk accepted text beyond the documented logical budget")
-	}
-	if got := cap(acc.stringState.choices[0].content.buffer); got != capacity {
-		t.Fatalf("rejected chunk changed retained capacity from %d to %d", capacity, got)
+	state := &acc.stringState.choices[0].content
+	if got := cap(state.buffer); got > 2*len(state.buffer) {
+		t.Fatalf("retained buffer capacity = %d, want at most twice the accumulated length %d", got, len(state.buffer))
 	}
 }
 
@@ -120,14 +117,32 @@ func TestAccumulatorTextReplacementRetainsGeometricHeadroom(t *testing.T) {
 		t.Fatal("AddChunk rejected the initial chunk")
 	}
 
-	replacementBytes := maxChatCompletionAccumulatorTextBytes/2 + 1
+	const replacementBytes = 8<<20 + 1
 	acc.Choices[0].Message.Content = strings.Repeat("x", replacementBytes)
 	chunk.Choices[0].Delta.Content = "y"
 	if !acc.AddChunk(chunk) {
 		t.Fatal("AddChunk rejected text after a large supported public replacement")
 	}
-	if got := cap(acc.stringState.choices[0].content.buffer); got != maxChatCompletionAccumulatorTextBytes {
-		t.Fatalf("retained text capacity = %d, want geometric headroom %d", got, maxChatCompletionAccumulatorTextBytes)
+	if got, want := cap(acc.stringState.choices[0].content.buffer), 2*replacementBytes; got != want {
+		t.Fatalf("retained text capacity = %d, want geometric headroom %d", got, want)
+	}
+}
+
+func TestAccumulatorTextAccountingRejectsIntegerOverflow(t *testing.T) {
+	total := maxChatCompletionAccumulatorInt - 1
+	if !addAccumulatorTextBytes(&total, "x") || total != maxChatCompletionAccumulatorInt {
+		t.Fatal("text accounting rejected the largest representable total")
+	}
+	if addAccumulatorTextBytes(&total, "x") || total != maxChatCompletionAccumulatorInt {
+		t.Fatal("text accounting accepted or mutated an overflowing total")
+	}
+}
+
+func TestAccumulatorTextCapacityGrowthAvoidsIntegerOverflow(t *testing.T) {
+	current := maxChatCompletionAccumulatorInt/2 + 1
+	required := current + 1
+	if got := projectedAccumulatorTextCapacity(current, required); got != required {
+		t.Fatalf("overflow-safe capacity = %d, want %d", got, required)
 	}
 }
 

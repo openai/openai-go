@@ -154,9 +154,9 @@ func TestAccumulatorValueCopyChoiceActivationPreservesAccounting(t *testing.T) {
 		t.Fatal("AddChunk rejected the original choice")
 	}
 
-	original.Choices[0].Message.Content = strings.Repeat("x", testAccumulatorMaxTextBytes)
+	original.Choices[0].Message.Content = strings.Repeat("x", testAccumulatorMaxReconcileWork/3+1)
 	if original.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "x"})) {
-		t.Fatal("AddChunk omitted a choice activated after a value copy from the live-text budget")
+		t.Fatal("AddChunk omitted a choice activated after a value copy from the reconciliation work budget")
 	}
 }
 

@@ -16,9 +16,10 @@ import (
 const (
 	testAccumulatorMaxChunks          = 100_000
 	testAccumulatorMaxStructuralSlots = 1_024
-	testAccumulatorMaxTextBytes       = 16 << 20
+	testAccumulatorLargeTextBytes     = 16 << 20
 	testAccumulatorMaxMetadataBytes   = 16 << 20
 	testAccumulatorMaxLogprobBytes    = 16 << 20
+	testAccumulatorMaxReconcileWork   = 64_000_000
 )
 
 func TestAccumulatorStringGrowthIsAmortized(t *testing.T) {
@@ -108,8 +109,8 @@ func TestAccumulatorPublishesStringsAfterEveryChunk(t *testing.T) {
 	)
 }
 
-func TestAccumulatorBudgetsPublicStringReplacements(t *testing.T) {
-	atLimit := strings.Repeat("x", testAccumulatorMaxTextBytes)
+func TestAccumulatorPreservesLargePublicStringReplacements(t *testing.T) {
+	largeText := strings.Repeat("x", testAccumulatorLargeTextBytes)
 	tests := []struct {
 		name  string
 		chunk func(string) openai.ChatCompletionChunk
@@ -154,7 +155,7 @@ func TestAccumulatorBudgetsPublicStringReplacements(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name+"/replacement_is_rejected", func(t *testing.T) {
+		t.Run(test.name+"/replacement_can_grow", func(t *testing.T) {
 			var acc openai.ChatCompletionAccumulator
 			chunk := test.chunk("x")
 			chunk.Model = "accepted-model"
@@ -162,60 +163,60 @@ func TestAccumulatorBudgetsPublicStringReplacements(t *testing.T) {
 				t.Fatal("AddChunk rejected the initial chunk")
 			}
 
-			*test.value(&acc) = atLimit
+			*test.value(&acc) = largeText
 			chunk = test.chunk("x")
-			chunk.Model = "rejected-model"
-			if acc.AddChunk(chunk) {
-				t.Fatal("AddChunk accepted text beyond the live public-string budget")
+			chunk.Model = "updated-model"
+			if !acc.AddChunk(chunk) {
+				t.Fatal("AddChunk rejected a public string replacement beyond the former text budget")
 			}
-			if acc.Model != "accepted-model" || *test.value(&acc) != atLimit {
-				t.Fatal("AddChunk mutated the accumulator after rejecting the chunk")
+			if acc.Model != "updated-model" || *test.value(&acc) != largeText+"x" {
+				t.Fatal("AddChunk did not preserve the large public replacement and appended text")
 			}
 		})
 
-		t.Run(test.name+"/clearing_does_not_replenish_output_budget", func(t *testing.T) {
+		t.Run(test.name+"/clearing_allows_further_output", func(t *testing.T) {
 			var acc openai.ChatCompletionAccumulator
-			chunk := test.chunk(atLimit)
+			chunk := test.chunk(largeText)
 			chunk.Model = "initial-model"
 			if !acc.AddChunk(chunk) {
-				t.Fatal("AddChunk rejected text at the documented aggregate budget")
+				t.Fatal("AddChunk rejected the initial large text fragment")
 			}
 
 			*test.value(&acc) = ""
 			chunk = test.chunk("x")
-			chunk.Model = "rejected-model"
-			if acc.AddChunk(chunk) {
-				t.Fatal("AddChunk replenished the cumulative remote-output budget after the public string was cleared")
+			chunk.Model = "updated-model"
+			if !acc.AddChunk(chunk) {
+				t.Fatal("AddChunk rejected further output after the public string was cleared")
 			}
-			if acc.Model != "initial-model" || *test.value(&acc) != "" {
-				t.Fatal("AddChunk mutated the accumulator after rejecting remote text beyond the cumulative budget")
+			if acc.Model != "updated-model" || *test.value(&acc) != "x" {
+				t.Fatal("AddChunk did not release the cleared string before accumulating new output")
 			}
 		})
 	}
 }
 
-func TestAccumulatorRejectsTextBeyondBudgetWithoutMutation(t *testing.T) {
+func TestAccumulatorAcceptsTextBeyondFormerBudget(t *testing.T) {
 	var acc openai.ChatCompletionAccumulator
 	chunk := openai.ChatCompletionChunk{
 		ID:    "chatcmpl-oversized",
 		Model: "accepted-model",
 		Choices: []openai.ChatCompletionChunkChoice{{
 			Delta: openai.ChatCompletionChunkChoiceDelta{
-				Content: strings.Repeat("x", testAccumulatorMaxTextBytes),
+				Content: strings.Repeat("x", testAccumulatorLargeTextBytes),
 			},
 		}},
 	}
 
 	if !acc.AddChunk(chunk) {
-		t.Fatal("AddChunk rejected text at the documented aggregate budget")
+		t.Fatal("AddChunk rejected the first large text fragment")
 	}
-	chunk.Model = "rejected-model"
-	chunk.Choices[0].Delta.Content = "x"
-	if acc.AddChunk(chunk) {
-		t.Fatal("AddChunk accepted text beyond the documented aggregate budget")
+	chunk.Model = "updated-model"
+	chunk.Choices[0].Delta.Content = strings.Repeat("x", testAccumulatorLargeTextBytes+1)
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected accumulated text beyond the former text budget")
 	}
-	if acc.Model != "accepted-model" || len(acc.Choices[0].Message.Content) != testAccumulatorMaxTextBytes {
-		t.Fatalf("AddChunk mutated the accumulator after rejecting the chunk: model %q, content length %d", acc.Model, len(acc.Choices[0].Message.Content))
+	if acc.Model != "updated-model" || len(acc.Choices[0].Message.Content) != 2*testAccumulatorLargeTextBytes+1 {
+		t.Fatalf("AddChunk changed the large accumulated response: model %q, content length %d", acc.Model, len(acc.Choices[0].Message.Content))
 	}
 }
 
@@ -730,11 +731,11 @@ func TestAccumulatorStructuralBudgetBoundary(t *testing.T) {
 }
 
 func TestAccumulatorDoesNotResurrectTruncatedPublicStrings(t *testing.T) {
-	atLimit := strings.Repeat("x", testAccumulatorMaxTextBytes)
+	largeText := strings.Repeat("x", testAccumulatorLargeTextBytes)
 
 	t.Run("choices", func(t *testing.T) {
 		var acc openai.ChatCompletionAccumulator
-		if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: atLimit})) {
+		if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: largeText})) {
 			t.Fatal("AddChunk rejected the initial chunk")
 		}
 
@@ -746,14 +747,17 @@ func TestAccumulatorDoesNotResurrectTruncatedPublicStrings(t *testing.T) {
 		if content := acc.Choices[0].Message.Content; content != "" {
 			t.Fatalf("AddChunk resurrected truncated choice content with length %d", len(content))
 		}
-		if acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "x"})) {
-			t.Fatal("AddChunk replenished the cumulative remote-output budget after choices were truncated")
+		if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "x"})) {
+			t.Fatal("AddChunk rejected new output after choices were truncated")
+		}
+		if content := acc.Choices[0].Message.Content; content != "x" {
+			t.Fatalf("AddChunk resurrected truncated content: got %q", content)
 		}
 	})
 
 	t.Run("tool_calls", func(t *testing.T) {
 		var acc openai.ChatCompletionAccumulator
-		if !acc.AddChunk(accumulatorToolStringChunk("", atLimit)) {
+		if !acc.AddChunk(accumulatorToolStringChunk("", largeText)) {
 			t.Fatal("AddChunk rejected the initial chunk")
 		}
 
@@ -766,14 +770,17 @@ func TestAccumulatorDoesNotResurrectTruncatedPublicStrings(t *testing.T) {
 		if len(acc.Choices[0].Message.ToolCalls) != 0 {
 			t.Fatal("AddChunk resurrected a truncated tool call")
 		}
-		if acc.AddChunk(accumulatorToolStringChunk("", "x")) {
-			t.Fatal("AddChunk replenished the cumulative remote-output budget after tool calls were truncated")
+		if !acc.AddChunk(accumulatorToolStringChunk("", "x")) {
+			t.Fatal("AddChunk rejected new output after tool calls were truncated")
+		}
+		if arguments := acc.Choices[0].Message.ToolCalls[0].Function.Arguments; arguments != "x" {
+			t.Fatalf("AddChunk resurrected truncated tool arguments: got %q", arguments)
 		}
 	})
 }
 
 func TestAccumulatorReleasesTruncatedPublicBacking(t *testing.T) {
-	halfLimit := strings.Repeat("x", testAccumulatorMaxTextBytes/2)
+	halfLimit := strings.Repeat("x", testAccumulatorLargeTextBytes/2)
 
 	t.Run("choices", func(t *testing.T) {
 		var acc openai.ChatCompletionAccumulator

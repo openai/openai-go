@@ -559,7 +559,7 @@ func lookupChatCompletionToolMetadataProjection(
 }
 
 func addAccumulatorTextBytes(total *int, text string) bool {
-	if len(text) > maxChatCompletionAccumulatorTextBytes-*total {
+	if len(text) > maxChatCompletionAccumulatorInt-*total {
 		return false
 	}
 	*total += len(text)

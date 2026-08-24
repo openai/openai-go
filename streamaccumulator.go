@@ -10,14 +10,12 @@ import (
 const (
 	maxChatCompletionAccumulatorChunks          = 100_000
 	maxChatCompletionAccumulatorStructuralSlots = 1_024
-	maxChatCompletionAccumulatorTextBytes       = 16 << 20
-	// Deterministic doubling preserves capacity < 2*length for non-empty buffers.
-	maxChatCompletionAccumulatorTextCapacity  = 2 * maxChatCompletionAccumulatorTextBytes
-	maxChatCompletionAccumulatorMetadataBytes = 16 << 20
-	maxChatCompletionAccumulatorLogprobBytes  = 16 << 20
-	maxChatCompletionAccumulatorReconcileWork = 64_000_000
-	chatCompletionAccumulatorChoiceWork       = 16
-	chatCompletionAccumulatorToolWork         = 8
+	maxChatCompletionAccumulatorInt             = int(^uint(0) >> 1)
+	maxChatCompletionAccumulatorMetadataBytes   = 16 << 20
+	maxChatCompletionAccumulatorLogprobBytes    = 16 << 20
+	maxChatCompletionAccumulatorReconcileWork   = 64_000_000
+	chatCompletionAccumulatorChoiceWork         = 16
+	chatCompletionAccumulatorToolWork           = 8
 	// Conservatively covers a non-empty map header and its first backing bucket.
 	chatCompletionAccumulatorMapOverheadBytes = 512
 )
@@ -113,10 +111,10 @@ const maxStreamAccumulatorToolCallGrowth = 128
 // Returns false if the chunk could not be successfully accumulated. To bound work and
 // memory for untrusted streams, an accumulator accepts choice indices from 0 through
 // 127, at most 100,000 chunks and 1,024 combined choice and tool-call slots, 16 MiB
-// each of cumulative remote text, live combined content and tool function text,
-// other retained string metadata, cumulative remote log probability data, and live
-// retained log probability data, 32 MiB of retained text-buffer capacity, and 64
-// million accumulation work units.
+// each of other retained string metadata, cumulative remote log probability data,
+// and live retained log probability data, and 64 million accumulation work units.
+// Accumulated content, refusal, and tool-function text retain their existing
+// unlimited-size contract and use amortized-linear, geometrically growing buffers.
 // A tool-call index may grow its choice by at most 128 positions; dense sequences
 // may contain more than 128 calls.
 // For compatibility with providers that use -1 for a single tool call, that value is
@@ -667,8 +665,8 @@ func (acc *chatCompletionString) reconcile(current *string) {
 func projectedAccumulatorTextCapacity(current int, required int) int {
 	capacity := max(1, current)
 	for capacity < required {
-		if capacity > maxChatCompletionAccumulatorTextBytes/2 {
-			return maxChatCompletionAccumulatorTextBytes
+		if capacity > maxChatCompletionAccumulatorInt/2 {
+			return required
 		}
 		capacity *= 2
 	}
@@ -765,7 +763,6 @@ func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int, work
 	}
 	completion := &acc.ChatCompletion
 	var appends *chatCompletionTextAppendProjection
-	capacity := 0
 	for _, i := range acc.stringState.activeChoices {
 		if i >= len(completion.Choices) {
 			continue
@@ -785,8 +782,6 @@ func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int, work
 			!addAccumulatorBufferReconciliationWork(work, message.Refusal, &choiceState.refusal, refusalAppend) {
 			return 0, false
 		}
-		capacity += projectedAccumulatorBufferCapacity(message.Content, &choiceState.content)
-		capacity += projectedAccumulatorBufferCapacity(message.Refusal, &choiceState.refusal)
 		for _, j := range choiceState.activeToolCalls {
 			if j >= len(message.ToolCalls) {
 				continue
@@ -806,11 +801,9 @@ func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int, work
 				!addAccumulatorBufferReconciliationWork(work, function.Arguments, &toolState.arguments, argumentsAppend) {
 				return 0, false
 			}
-			capacity += projectedAccumulatorBufferCapacity(function.Name, &toolState.name)
-			capacity += projectedAccumulatorBufferCapacity(function.Arguments, &toolState.arguments)
 		}
 	}
-	return total, capacity <= maxChatCompletionAccumulatorTextCapacity
+	return total, true
 }
 
 func addAccumulatorBufferReconciliationWork(work *int, current string, state *chatCompletionString, mayAppend bool) bool {
@@ -824,13 +817,6 @@ func addAccumulatorBufferReconciliationWork(work *int, current string, state *ch
 		passes++
 	}
 	return addAccumulatorStringCopyWork(work, current, passes)
-}
-
-func projectedAccumulatorBufferCapacity(current string, state *chatCompletionString) int {
-	if !accumulatorStringUsesPublishedBacking(current, state.published) {
-		return len(current)
-	}
-	return cap(state.buffer)
 }
 
 func addChatCompletionChunkTextBytes(total int, chunk *ChatCompletionChunk) (int, bool) {
