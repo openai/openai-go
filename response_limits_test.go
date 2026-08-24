@@ -880,11 +880,9 @@ func TestImagesGenerateAllowsDocumented4KBase64Response(t *testing.T) {
 	)
 
 	parts := []io.Reader{strings.NewReader(responseHeader)}
-	expectedBytes := int64(len(responseHeader) + len(responseFooter))
 	for i := 0; i < imageCount; i++ {
 		if i != 0 {
 			parts = append(parts, strings.NewReader(","))
-			expectedBytes++
 		}
 		parts = append(
 			parts,
@@ -892,7 +890,6 @@ func TestImagesGenerateAllowsDocumented4KBase64Response(t *testing.T) {
 			io.LimitReader(repeatedByteReader('A'), base64Bytes),
 			strings.NewReader(imageSuffix),
 		)
-		expectedBytes += int64(len(imagePrefix)+len(imageSuffix)) + base64Bytes
 	}
 	parts = append(parts, strings.NewReader(responseFooter))
 
@@ -908,8 +905,7 @@ func TestImagesGenerateAllowsDocumented4KBase64Response(t *testing.T) {
 			}, nil
 		})),
 	)
-	var rawResponse []byte
-	_, err := client.Images.Generate(
+	response, err := client.Images.Generate(
 		context.Background(),
 		openai.ImageGenerateParams{
 			Prompt: "synthetic compatibility fixture",
@@ -917,13 +913,17 @@ func TestImagesGenerateAllowsDocumented4KBase64Response(t *testing.T) {
 			N:      openai.Int(imageCount),
 			Size:   openai.ImageGenerateParamsSize("3840x2160"),
 		},
-		option.WithResponseBodyInto(&rawResponse),
 	)
 	if err != nil {
 		t.Fatalf("Images.Generate() error = %v, want documented multi-image response to fit the endpoint policy", err)
 	}
-	if int64(len(rawResponse)) != expectedBytes {
-		t.Fatalf("response bytes = %d, want %d", len(rawResponse), expectedBytes)
+	if len(response.Data) != imageCount {
+		t.Fatalf("generated images = %d, want %d", len(response.Data), imageCount)
+	}
+	for i, image := range response.Data {
+		if int64(len(image.B64JSON)) != base64Bytes {
+			t.Fatalf("image %d base64 length = %d, want %d", i, len(image.B64JSON), base64Bytes)
+		}
 	}
 }
 

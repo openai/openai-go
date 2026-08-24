@@ -233,7 +233,7 @@ func TestWorkloadIdentity401RetryPreservesManagedGzip(t *testing.T) {
 	oauthCallCount := 0
 	apiCallCount := 0
 	mockHTTPClient := &http.Client{
-		Transport: &closureTransport{
+		Transport: managedCompressionRoundTripper{RoundTripper: &closureTransport{
 			fn: func(req *http.Request) (*http.Response, error) {
 				if strings.Contains(req.URL.String(), "/oauth/token") {
 					oauthCallCount++
@@ -267,7 +267,7 @@ func TestWorkloadIdentity401RetryPreservesManagedGzip(t *testing.T) {
 					},
 				}, nil
 			},
-		},
+		}},
 	}
 
 	client := openai.NewClient(

@@ -274,14 +274,19 @@ func TestAzureAuthenticationPreservesDisabledNativeCompression(t *testing.T) {
 		name     string
 		auth     option.RequestOption
 		wrapped  bool
+		opaque   bool
 		loopback bool
 	}{
 		{name: "API key/native transport", auth: WithAPIKey("azure-api-key")},
 		{name: "API key/wrapped transport", auth: WithAPIKey("azure-api-key"), wrapped: true},
+		{name: "API key/opaque transport", auth: WithAPIKey("azure-api-key"), opaque: true},
 		{name: "API key/wrapped loopback transport", auth: WithAPIKey("azure-api-key"), wrapped: true, loopback: true},
+		{name: "API key/opaque loopback transport", auth: WithAPIKey("azure-api-key"), opaque: true, loopback: true},
 		{name: "token credential/native transport", auth: WithTokenCredential(&fake.TokenCredential{})},
 		{name: "token credential/wrapped transport", auth: WithTokenCredential(&fake.TokenCredential{}), wrapped: true},
+		{name: "token credential/opaque transport", auth: WithTokenCredential(&fake.TokenCredential{}), opaque: true},
 		{name: "token credential/wrapped loopback transport", auth: WithTokenCredential(&fake.TokenCredential{}), wrapped: true, loopback: true},
+		{name: "token credential/opaque loopback transport", auth: WithTokenCredential(&fake.TokenCredential{}), opaque: true, loopback: true},
 	}
 
 	for _, authMode := range authModes {
@@ -323,6 +328,8 @@ func TestAzureAuthenticationPreservesDisabledNativeCompression(t *testing.T) {
 			var selectedTransport http.RoundTripper = transport
 			if authMode.wrapped {
 				selectedTransport = compressionDisabledRoundTripper{RoundTripper: transport}
+			} else if authMode.opaque {
+				selectedTransport = roundTripFunc(transport.RoundTrip)
 			}
 			opts := []option.RequestOption{
 				WithEndpoint(server.URL, "2024-10-21"),
@@ -340,8 +347,12 @@ func TestAzureAuthenticationPreservesDisabledNativeCompression(t *testing.T) {
 			if err := client.Execute(context.Background(), http.MethodGet, "models", nil, &response); err != nil {
 				t.Fatalf("Execute() error = %v", err)
 			}
-			if got := acceptEncoding.Load(); got != "" {
-				t.Fatalf("Accept-Encoding = %q, want no compression negotiation", got)
+			wantEncoding := ""
+			if authMode.opaque {
+				wantEncoding = "identity"
+			}
+			if got := acceptEncoding.Load(); got != wantEncoding {
+				t.Fatalf("Accept-Encoding = %q, want %q", got, wantEncoding)
 			}
 		})
 	}

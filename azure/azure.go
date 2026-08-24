@@ -467,6 +467,14 @@ func (t azureCredentialTransport) CompressionDisabled() bool {
 	return ok && transport.DisableCompression
 }
 
+func (t azureCredentialTransport) CompressionPolicyKnown() bool {
+	if _, ok := t.base.(interface{ CompressionDisabled() bool }); ok {
+		return true
+	}
+	_, ok := t.base.(*http.Transport)
+	return ok
+}
+
 func rejectAzureCredentialTransport(req *http.Request, err error) (*http.Response, error) {
 	if req.Body != nil {
 		_ = req.Body.Close()

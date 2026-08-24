@@ -86,11 +86,19 @@ func (cfg *RequestConfig) ownsSuccessResponseBody() bool {
 	return !raw
 }
 
-func (cfg *RequestConfig) shouldManageGzip(req *http.Request) bool {
+type responseCompressionPolicy uint8
+
+const (
+	responseCompressionPreserved responseCompressionPolicy = iota
+	responseCompressionManaged
+	responseCompressionIdentity
+)
+
+func (cfg *RequestConfig) compressionPolicy(req *http.Request) responseCompressionPolicy {
 	if req.Method == http.MethodHead ||
 		req.Header.Get("Accept-Encoding") != "" ||
 		req.Header.Get("Range") != "" {
-		return false
+		return responseCompressionPreserved
 	}
 
 	// Respect explicit stdlib transport configuration, including SDK-owned
@@ -102,26 +110,46 @@ func (cfg *RequestConfig) shouldManageGzip(req *http.Request) bool {
 		}
 		switch transport := transport.(type) {
 		case *http.Transport:
-			return !transport.DisableCompression
+			if transport.DisableCompression {
+				return responseCompressionPreserved
+			}
+		case interface {
+			CompressionDisabled() bool
+			CompressionPolicyKnown() bool
+		}:
+			if !transport.CompressionPolicyKnown() {
+				return responseCompressionIdentity
+			}
+			if transport.CompressionDisabled() {
+				return responseCompressionPreserved
+			}
 		case interface{ CompressionDisabled() bool }:
-			return !transport.CompressionDisabled()
+			if transport.CompressionDisabled() {
+				return responseCompressionPreserved
+			}
 		default:
-			// Opaque wrappers own their native transport's compression policy;
-			// injecting gzip here could override an inaccessible disabled setting.
-			return false
+			// Hidden native transports may either disable gzip or transparently
+			// decompress it before wire bytes can be bounded. Identity preserves
+			// both policies without guessing which transport the wrapper owns.
+			return responseCompressionIdentity
 		}
 	}
-	return true
+	return responseCompressionManaged
 }
 
 func (cfg *RequestConfig) withManagedGzip(next middlewareNext) middlewareNext {
 	return func(req *http.Request) (*http.Response, error) {
-		manageGzip := cfg.shouldManageGzip(req)
-		if manageGzip {
+		policy := cfg.compressionPolicy(req)
+		manageGzip := policy == responseCompressionManaged
+		if policy != responseCompressionPreserved {
 			// Decorate a per-attempt clone so authentication or other outer
 			// middleware can replay the pristine request through this layer.
 			req = req.Clone(req.Context())
-			req.Header.Set("Accept-Encoding", "gzip")
+			encoding := "identity"
+			if manageGzip {
+				encoding = "gzip"
+			}
+			req.Header.Set("Accept-Encoding", encoding)
 		}
 
 		res, err := next(req)

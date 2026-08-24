@@ -550,6 +550,27 @@ func WaitForDelay(ctx context.Context, delay time.Duration) error {
 	}
 }
 
+func (cfg *RequestConfig) waitForRetry(
+	ctx context.Context,
+	cancel context.CancelFunc,
+	res *http.Response,
+	retryCount int,
+) error {
+	waitCtx := cfg.Request.Context()
+	if deadline, ok := ctx.Deadline(); ok {
+		var stop context.CancelFunc
+		waitCtx, stop = context.WithDeadline(waitCtx, deadline)
+		defer stop()
+	}
+
+	if res != nil && res.Body != nil {
+		newResponseBodyLifecycle(res.Body, cancel).abort()
+	} else {
+		cancel()
+	}
+	return WaitForDelay(waitCtx, retryDelay(res, retryCount, cfg.MaxRetryDelay))
+}
+
 func (cfg *RequestConfig) Execute() (err error) {
 	if cfg.BaseURL == nil {
 		if cfg.DefaultBaseURL != nil {
@@ -670,16 +691,9 @@ func (cfg *RequestConfig) Execute() (err error) {
 			break
 		}
 
-		// Close the response body before retrying to prevent connection leaks
-		if res != nil && res.Body != nil {
-			_ = res.Body.Close()
-		}
-
-		if waitErr := WaitForDelay(ctx, retryDelay(res, retryCount, cfg.MaxRetryDelay)); waitErr != nil {
-			cancel()
+		if waitErr := cfg.waitForRetry(ctx, cancel, res, retryCount); waitErr != nil {
 			return waitErr
 		}
-		cancel()
 	}
 
 	// Save *http.Response if it is requested to, even if there was an error making the request. This is
