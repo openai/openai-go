@@ -296,7 +296,10 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
+	// This field is from variant
+	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult].
+	QuantityUnit string `json:"quantity_unit"`
+	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
 		Object                 respjson.Field
@@ -332,6 +335,7 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 		Amount                 respjson.Field
 		LineItem               respjson.Field
 		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -937,16 +941,20 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResul
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit string `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -1141,7 +1149,10 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
+	// This field is from variant
+	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult].
+	QuantityUnit string `json:"quantity_unit"`
+	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
 		Object                 respjson.Field
@@ -1177,6 +1188,7 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 		Amount                 respjson.Field
 		LineItem               respjson.Field
 		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -1783,16 +1795,20 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCost
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit string `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -1990,7 +2006,10 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
+	// This field is from variant
+	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult].
+	QuantityUnit string `json:"quantity_unit"`
+	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
 		Object                 respjson.Field
@@ -2026,6 +2045,7 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 		Amount                 respjson.Field
 		LineItem               respjson.Field
 		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -2632,16 +2652,20 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit string `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -2836,7 +2860,10 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
+	// This field is from variant
+	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult].
+	QuantityUnit string `json:"quantity_unit"`
+	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
 		Object                 respjson.Field
@@ -2872,6 +2899,7 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 		Amount                 respjson.Field
 		LineItem               respjson.Field
 		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -3475,16 +3503,20 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult 
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit string `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -3679,7 +3711,10 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
+	// This field is from variant
+	// [AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult].
+	QuantityUnit string `json:"quantity_unit"`
+	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
 		Object                 respjson.Field
@@ -3715,6 +3750,7 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 		Amount                 respjson.Field
 		LineItem               respjson.Field
 		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -4317,16 +4353,20 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult struct
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit string `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -4521,7 +4561,10 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
+	// This field is from variant
+	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult].
+	QuantityUnit string `json:"quantity_unit"`
+	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
 		Object                 respjson.Field
@@ -4557,6 +4600,7 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 		Amount                 respjson.Field
 		LineItem               respjson.Field
 		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -5160,16 +5204,20 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult s
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit string `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -5364,7 +5412,10 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
+	// This field is from variant
+	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult].
+	QuantityUnit string `json:"quantity_unit"`
+	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
 		Object                 respjson.Field
@@ -5400,6 +5451,7 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
 		Amount                 respjson.Field
 		LineItem               respjson.Field
 		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -6005,16 +6057,20 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsRes
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit string `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -6209,7 +6265,10 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
+	// This field is from variant
+	// [AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult].
+	QuantityUnit string `json:"quantity_unit"`
+	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
 		Object                 respjson.Field
@@ -6245,6 +6304,7 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 		Amount                 respjson.Field
 		LineItem               respjson.Field
 		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -6847,16 +6907,20 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult struc
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit string `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -7051,7 +7115,10 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
+	// This field is from variant
+	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult].
+	QuantityUnit string `json:"quantity_unit"`
+	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
 		Object                 respjson.Field
@@ -7087,6 +7154,7 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 		Amount                 respjson.Field
 		LineItem               respjson.Field
 		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -7690,16 +7758,20 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult 
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit string `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -7894,7 +7966,10 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
+	// This field is from variant
+	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult].
+	QuantityUnit string `json:"quantity_unit"`
+	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
 		Object                 respjson.Field
@@ -7930,6 +8005,7 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 		Amount                 respjson.Field
 		LineItem               respjson.Field
 		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -8535,16 +8611,20 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit string `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -8739,7 +8819,10 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
 	// This field is from variant
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult].
 	Quantity float64 `json:"quantity"`
-	JSON     struct {
+	// This field is from variant
+	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult].
+	QuantityUnit string `json:"quantity_unit"`
+	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
 		Object                 respjson.Field
@@ -8775,6 +8858,7 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
 		Amount                 respjson.Field
 		LineItem               respjson.Field
 		Quantity               respjson.Field
+		QuantityUnit           respjson.Field
 		raw                    string
 	} `json:"-"`
 }
@@ -9380,16 +9464,20 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResu
 	// When `group_by=line_item`, this field provides the quantity of the grouped costs
 	// result.
 	Quantity float64 `json:"quantity" api:"nullable"`
+	// The unit of the `quantity` value. If no single supported unit applies to the
+	// result, this field is `null`.
+	QuantityUnit string `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Object      respjson.Field
-		Amount      respjson.Field
-		APIKeyID    respjson.Field
-		LineItem    respjson.Field
-		ProjectID   respjson.Field
-		Quantity    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Object       respjson.Field
+		Amount       respjson.Field
+		APIKeyID     respjson.Field
+		LineItem     respjson.Field
+		ProjectID    respjson.Field
+		Quantity     respjson.Field
+		QuantityUnit respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
