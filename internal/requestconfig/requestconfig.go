@@ -278,9 +278,7 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 	cfg := RequestConfig{
 		MaxRetries:                2,
 		MaxRetryDelay:             DefaultMaxServerDelay,
-		MaxResponseBodyBytes:      defaultMaxResponseBodyBytes,
 		MaxErrorResponseBodyBytes: defaultMaxErrorResponseBodyBytes,
-		ResponseBodyTimeout:       defaultResponseBodyTimeout,
 		Context:                   ctx,
 		Request:                   req,
 		HTTPClient:                http.DefaultClient,

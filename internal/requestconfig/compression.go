@@ -105,6 +105,10 @@ func (cfg *RequestConfig) shouldManageGzip(req *http.Request) bool {
 			return !transport.DisableCompression
 		case interface{ CompressionDisabled() bool }:
 			return !transport.CompressionDisabled()
+		default:
+			// Opaque wrappers own their native transport's compression policy;
+			// injecting gzip here could override an inaccessible disabled setting.
+			return false
 		}
 	}
 	return true

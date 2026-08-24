@@ -262,10 +262,9 @@ func WithResponseInto(dst **http.Response) RequestOption {
 // WithMaxResponseBodyBytes returns a RequestOption that limits the number of
 // bytes buffered or decoded for a successful non-streaming response. For
 // transparently decompressed gzip responses, the limit applies independently to
-// compressed wire bytes and decoded bytes. The default is 64 MiB for most
-// responses. Services documented to return larger payloads may apply a higher
-// finite default before client and request options. Raw *http.Response bodies
-// are not subject to this limit.
+// compressed wire bytes and decoded bytes. Successful responses are unbounded
+// by default to preserve compatibility with large API payloads. Raw
+// *http.Response bodies are not subject to this limit.
 //
 // WithMaxResponseBodyBytes panics unless maxBytes is between 1 and
 // [math.MaxInt64] - 1.
@@ -298,8 +297,9 @@ func WithMaxErrorResponseBodyBytes(maxBytes int64) RequestOption {
 
 // WithResponseBodyTimeout returns a RequestOption that bounds how long the
 // client spends reading a non-streaming response body after receiving response
-// headers. The default is 10 minutes. A zero duration disables this timeout.
-// Raw *http.Response bodies are not subject to this timeout.
+// headers. The timeout is disabled by default, leaving the caller's context in
+// control. A zero duration also disables this timeout. Raw *http.Response bodies
+// are not subject to this timeout.
 //
 // WithResponseBodyTimeout panics when dur is negative.
 func WithResponseBodyTimeout(dur time.Duration) RequestOption {

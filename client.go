@@ -170,11 +170,12 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 //     respects UnmarshalJSON if it is defined on the type.
 //   - A nil value will not read the response body.
 //
-// Non-streaming responses use bounded body size and read-duration defaults.
-// Use [option.WithMaxResponseBodyBytes], [option.WithMaxErrorResponseBodyBytes],
-// and [option.WithResponseBodyTimeout] to override them for a client or request.
-// Raw [*http.Response] success bodies remain streaming and are not subject to
-// those non-streaming limits.
+// Successful non-streaming responses preserve their existing unbounded size and
+// caller-controlled lifetime unless [option.WithMaxResponseBodyBytes] or
+// [option.WithResponseBodyTimeout] opts into a limit. Error response bodies are
+// bounded by default and can be configured with
+// [option.WithMaxErrorResponseBodyBytes]. Raw [*http.Response] success bodies
+// remain streaming and are not subject to those non-streaming limits.
 //
 // For even greater flexibility, see [option.WithResponseInto] and
 // [option.WithResponseBodyInto].

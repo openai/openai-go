@@ -18,11 +18,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-const (
-	defaultMaxResponseBodyBytes      int64 = 64 << 20
-	defaultMaxErrorResponseBodyBytes int64 = 64 << 10
-	defaultResponseBodyTimeout             = 10 * time.Minute
-)
+const defaultMaxErrorResponseBodyBytes int64 = 64 << 10
 
 type responseBodyLimitError struct {
 	limit      int64
@@ -202,6 +198,10 @@ func (cfg *RequestConfig) withResponseBodyTimeout(
 }
 
 func readBodyUpTo(body io.Reader, limit int64) (contents []byte, overflow bool, err error) {
+	if limit == 0 {
+		contents, err = io.ReadAll(body)
+		return contents, false, err
+	}
 	contents, err = io.ReadAll(io.LimitReader(body, limit+1))
 	if int64(len(contents)) > limit {
 		return contents[:limit], true, nil
@@ -210,10 +210,15 @@ func readBodyUpTo(body io.Reader, limit int64) (contents []byte, overflow bool, 
 }
 
 func decodeJSONUpTo(body io.Reader, limit int64, dst any) (overflow bool, err error) {
-	limited := &io.LimitedReader{R: body, N: limit + 1}
-	decodeErr := json.NewDecoder(limited).Decode(dst)
-	_, readErr := io.Copy(io.Discard, limited)
-	if limited.N == 0 {
+	reader := body
+	var limited *io.LimitedReader
+	if limit > 0 {
+		limited = &io.LimitedReader{R: body, N: limit + 1}
+		reader = limited
+	}
+	decodeErr := json.NewDecoder(reader).Decode(dst)
+	_, readErr := io.Copy(io.Discard, reader)
+	if limited != nil && limited.N == 0 {
 		return true, nil
 	}
 	if readErr != nil {

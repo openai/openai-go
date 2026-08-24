@@ -297,14 +297,14 @@ func TestNewRequestConfigSetsAndClonesResponsePolicies(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.MaxResponseBodyBytes != defaultMaxResponseBodyBytes {
-		t.Fatalf("MaxResponseBodyBytes = %d, want %d", cfg.MaxResponseBodyBytes, defaultMaxResponseBodyBytes)
+	if cfg.MaxResponseBodyBytes != 0 {
+		t.Fatalf("MaxResponseBodyBytes = %d, want disabled by default", cfg.MaxResponseBodyBytes)
 	}
 	if cfg.MaxErrorResponseBodyBytes != defaultMaxErrorResponseBodyBytes {
 		t.Fatalf("MaxErrorResponseBodyBytes = %d, want %d", cfg.MaxErrorResponseBodyBytes, defaultMaxErrorResponseBodyBytes)
 	}
-	if cfg.ResponseBodyTimeout != defaultResponseBodyTimeout {
-		t.Fatalf("ResponseBodyTimeout = %s, want %s", cfg.ResponseBodyTimeout, defaultResponseBodyTimeout)
+	if cfg.ResponseBodyTimeout != 0 {
+		t.Fatalf("ResponseBodyTimeout = %s, want disabled by default", cfg.ResponseBodyTimeout)
 	}
 
 	cloned := cfg.Clone(context.Background())
@@ -323,6 +323,16 @@ func TestNewRequestConfigSetsAndClonesResponsePolicies(t *testing.T) {
 			cfg.MaxErrorResponseBodyBytes,
 			cfg.ResponseBodyTimeout,
 		)
+	}
+}
+
+func TestNewRequestConfigLeavesResponseBodyTimeoutDisabledByDefault(t *testing.T) {
+	cfg, err := NewRequestConfig(context.Background(), http.MethodGet, "/models", nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.ResponseBodyTimeout != 0 {
+		t.Fatalf("ResponseBodyTimeout = %s, want disabled by default", cfg.ResponseBodyTimeout)
 	}
 }
 
