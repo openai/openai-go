@@ -533,7 +533,7 @@ func TestX509TransportSnapshotsRequestBeforeTraceMutation(t *testing.T) {
 	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
 	request.Header.Set("Authorization", "Bearer original-workload-token")
 	trace := &httptrace.ClientTrace{
-		GotConn: func(httptrace.GotConnInfo) {
+		GetConn: func(string) {
 			request.URL.Host = "attacker.example.test"
 			request.Host = "attacker.example.test"
 			request.Header.Set("Authorization", "Bearer attacker-replaced-token")

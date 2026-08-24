@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httptrace"
 	"path"
 	"slices"
 	"strings"
@@ -59,6 +60,23 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 	}
 	config := template.TLSClientConfig.Clone()
 	config.Certificates = slices.Clone(config.Certificates)
+	for index := range config.Certificates {
+		certificate := &config.Certificates[index]
+		certificate.Certificate = slices.Clone(certificate.Certificate)
+		for chainIndex := range certificate.Certificate {
+			certificate.Certificate[chainIndex] = slices.Clone(certificate.Certificate[chainIndex])
+		}
+		certificate.OCSPStaple = slices.Clone(certificate.OCSPStaple)
+		certificate.SignedCertificateTimestamps = slices.Clone(certificate.SignedCertificateTimestamps)
+		for timestampIndex := range certificate.SignedCertificateTimestamps {
+			certificate.SignedCertificateTimestamps[timestampIndex] = slices.Clone(
+				certificate.SignedCertificateTimestamps[timestampIndex],
+			)
+		}
+	}
+	if config.RootCAs != nil {
+		config.RootCAs = config.RootCAs.Clone()
+	}
 	config.NextProtos = slices.Clone(config.NextProtos)
 	transport := &http.Transport{
 		DialContext:            template.DialContext,
@@ -189,6 +207,7 @@ func (transport *X509Transport) Close() error {
 // Do sends a request to an approved global OpenAI mTLS endpoint without
 // following redirects. The request is snapshotted before validation so caller
 // hooks cannot alter its URL or credentials after the final safety checks.
+// Traces exposing a live connection and request trailers are unsupported.
 // Request context and caller-owned TLS credentials are preserved; the
 // capability owns its isolated pool. OAuth authentication is configured
 // separately.
@@ -198,6 +217,9 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 	}
 	if err := request.Context().Err(); err != nil {
 		return nil, err
+	}
+	if trace := httptrace.ContextClientTrace(request.Context()); trace != nil && trace.GotConn != nil {
+		return nil, errors.New("X.509 transport does not support connection-exposing HTTP trace callbacks")
 	}
 	request = request.Clone(request.Context())
 	if err := transport.validateAttestation(); err != nil {
@@ -223,6 +245,9 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 }
 
 func validateX509Request(request *http.Request) error {
+	if len(request.Trailer) != 0 {
+		return errors.New("X.509 requests do not support HTTP trailers")
+	}
 	if request.URL == nil || request.URL.Scheme != "https" || request.URL.User != nil ||
 		request.URL.Opaque != "" || request.URL.Fragment != "" || request.URL.RawFragment != "" {
 		return errors.New("X.509 requests require an absolute HTTPS URL without credentials or fragments")
