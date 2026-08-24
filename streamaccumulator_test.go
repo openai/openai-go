@@ -117,7 +117,7 @@ func TestStreamingAccumulatorWithToolCalls(t *testing.T) {
 		t.Fatalf("err should be nil: %s", err.Error())
 	}
 
-	if acc.Choices == nil || len(acc.Choices) == 0 {
+	if len(acc.Choices) == 0 {
 		t.Fatal("No choices in accumulation")
 	}
 

@@ -4,6 +4,12 @@ issues:
   max-issues-per-linter: 0
   max-same-issues: 0
 
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: disable
+
 linters:
   default: none
   enable:
@@ -49,3 +55,4 @@ linters:
     staticcheck:
       checks:
         - "SA*"
+        - "S1009"
