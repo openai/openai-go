@@ -147,6 +147,12 @@ func (cfg *RequestConfig) ProviderEndpointConfigured(provider string) bool {
 	return cfg.configuredProviderEndpoint == provider
 }
 
+// EndpointProvider reports the third-party provider associated with this
+// request's routing, including providers that intentionally skip authentication.
+func (cfg *RequestConfig) EndpointProvider() string {
+	return cfg.endpointProvider
+}
+
 // ProviderAuthOption identifies one provider authentication mode. Instances are
 // immutable and can be shared across concurrent requests.
 type ProviderAuthOption struct {

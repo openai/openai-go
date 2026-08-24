@@ -92,6 +92,22 @@ func TestEnvironmentDefaultsDisabledWrapperPreservesOptionBehavior(t *testing.T)
 	}
 }
 
+func TestEndpointProviderReportsProviderRouting(t *testing.T) {
+	for _, provider := range []string{"", "Azure", "Bedrock"} {
+		t.Run(provider, func(t *testing.T) {
+			cfg := RequestConfig{}
+			if provider != "" {
+				if err := WithEndpointProvider(provider).Apply(&cfg); err != nil {
+					t.Fatalf("configure provider routing: %v", err)
+				}
+			}
+			if got := cfg.EndpointProvider(); got != provider {
+				t.Errorf("endpoint provider = %q, want %q", got, provider)
+			}
+		})
+	}
+}
+
 func TestProviderAuthOptionsPreserveConfigurationLayers(t *testing.T) {
 	apiKey := NewProviderAuthOption("Azure", "azure.WithAPIKey")
 	secondAPIKey := NewProviderAuthOption("Azure", "azure.WithAPIKey")
