@@ -101,6 +101,9 @@ jobs:
           SKIP_BREW: "1"
         run: ./scripts/bootstrap
 
+      - name: Verify mock-server installation integrity
+        run: ./scripts/test-mock
+
       - name: Test root module
         run: ./scripts/test
 

@@ -1,65 +1,29 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-set -e
+set -eu
 
 cd "$(dirname "$0")/.."
-
-echo "==> Checking Go formatting"
-go_files=()
-while IFS= read -r -d '' file; do
-  [[ -f "$file" && ! -L "$file" ]] || continue
-  go_files+=("./$file")
-done < <(git ls-files --cached --others --exclude-standard -z -- '*.go' ':(exclude,glob)**/vendor/**')
-
-unformatted=""
-if ((${#go_files[@]} > 0)); then
-  unformatted="$(gofmt -l -- "${go_files[@]}")"
-fi
-if [[ -n "$unformatted" ]]; then
-  echo "The following files are not formatted with gofmt:"
-  printf '%s\n' "$unformatted"
-  echo
-  gofmt -d -- "${go_files[@]}"
-  echo "Run go fmt ./... in each affected Go module, or gofmt -w on the listed files."
-  exit 1
-fi
-
-echo "==> Running Go build"
-go build ./...
-
-echo "==> Checking tests compile"
-go test -run=^$ ./...
-
-echo "==> Building examples"
-(cd examples && go build ./...)
-
-echo "==> Running static analysis"
 repo_root="$PWD"
 lint_tests="${OPENAI_GO_LINT_TESTS:-true}"
-lint_args=(
-  --config "$repo_root/.golangci.yml"
-  --tests="$lint_tests"
-)
-if [[ "$lint_tests" == false ]]; then
-  # Compatibility checks intentionally omit historical tests from analysis.
-  # unused needs current test references to classify test-only helpers correctly.
-  lint_args+=(--disable unused)
+lint_runner="$(go tool -modfile="$repo_root/tools/go.mod" -n golangci-lint)"
+
+"$lint_runner" fmt --config="$repo_root/.golangci.yml" --diff ./tools/...
+
+if [ "$lint_tests" = false ]; then
+  go test -run='^$' ./...
+  set -- --disable=unused
+else
+  set --
 fi
-for module in "$repo_root" "$repo_root/examples" "$repo_root/internal/testdata/consumer"; do
+
+for module in . examples internal/testdata/consumer; do
   (
     cd "$module"
-    go tool -modfile="$repo_root/tools/go.mod" golangci-lint run \
-      "${lint_args[@]}"
+    "$lint_runner" run --config="$repo_root/.golangci.yml" --tests="$lint_tests" "$@"
+
+    if [ "$lint_tests" = true ]; then
+      GOOS=windows GOARCH=arm64 CGO_ENABLED=0 \
+        "$lint_runner" run --config="$repo_root/.golangci.yml" --tests=true
+    fi
   )
 done
-
-if [[ "$(go env GOOS)" == linux ]]; then
-  echo "==> Running static analysis for non-Linux examples"
-  (
-    cd "$repo_root/examples"
-    lint_runner="$(go tool -modfile="$repo_root/tools/go.mod" -n golangci-lint)"
-    GOOS=windows "$lint_runner" run \
-      "${lint_args[@]}" \
-      ./audio-text-to-speech
-  )
-fi

@@ -58,6 +58,13 @@ The runner version used locally and in CI must match. It must also be built
 with a Go release at least as new as the newest Go release analyzed by CI. Tool
 updates are explicit policy changes and receive normal SDK CODEOWNER review.
 
+Staticcheck retains its upstream generated-file behavior: simplification
+checks do not report diagnostics for the conventional `// Code generated ...
+DO NOT EDIT.` marker. Castiron uses its existing `// File generated from our
+OpenAPI spec by Castiron.` ownership header instead, so its generated SDK
+source remains subject to S1009 alongside handwritten code. Do not add custom
+generated-file scanners or companion analyzers to override upstream behavior.
+
 The initial rollout order is:
 
 1. `gofmt`;
