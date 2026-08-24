@@ -110,7 +110,7 @@ func TestAccumulatorPublishesStringsAfterEveryChunk(t *testing.T) {
 }
 
 func TestAccumulatorPreservesLargePublicStringReplacements(t *testing.T) {
-	largeText := strings.Repeat("x", testAccumulatorLargeTextBytes)
+	largeText := strings.Repeat("x", 2*testAccumulatorLargeTextBytes+1)
 	tests := []struct {
 		name  string
 		chunk func(string) openai.ChatCompletionChunk

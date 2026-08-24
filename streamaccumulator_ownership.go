@@ -126,7 +126,7 @@ func addCopiedChoiceTextBufferWork(
 		return true
 	}
 	markChatCompletionTextAppend(charged, choiceIndex)
-	return addAccumulatorReconciliationWork(work, len(state.buffer))
+	return addAccumulatorTextWork(work, len(state.buffer))
 }
 
 func addCopiedToolTextBufferWork(
@@ -151,7 +151,7 @@ func addCopiedToolTextBufferWork(
 		return true
 	}
 	tool.fields |= field
-	return addAccumulatorReconciliationWork(work, len(state.buffer))
+	return addAccumulatorTextWork(work, len(state.buffer))
 }
 
 func accumulatorBufferWillBeCopied(state *chatCompletionString, current string, fragment string, copied bool) bool {

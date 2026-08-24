@@ -32,6 +32,7 @@ type ChatCompletionAccumulator struct {
 	logprobState                     chatCompletionAccumulatorLogprobState
 	chunkCount                       int
 	textBytes                        int
+	textReconciliationWork           int
 	logprobBytes                     int
 	reconciliationWork               int
 	privateStateOwner                weak.Pointer[ChatCompletionAccumulator]
@@ -112,7 +113,8 @@ const maxStreamAccumulatorToolCallGrowth = 128
 // memory for untrusted streams, an accumulator accepts choice indices from 0 through
 // 127, at most 100,000 chunks and 1,024 combined choice and tool-call slots, 16 MiB
 // each of other retained string metadata, cumulative remote log probability data,
-// and live retained log probability data, and 64 million accumulation work units.
+// and live retained log probability data, and 64 million non-text accumulation
+// work units.
 // Accumulated content, refusal, and tool-function text retain their existing
 // unlimited-size contract and use amortized-linear, geometrically growing buffers.
 // A tool-call index may grow its choice by at most 128 positions; dense sequences
@@ -185,7 +187,8 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	if !ok {
 		return false
 	}
-	liveTextBytes, ok := acc.addChatCompletionTextBytes(0, &projectedReconciliationWork, chunk)
+	projectedTextReconciliationWork := acc.textReconciliationWork
+	liveTextBytes, ok := acc.addChatCompletionTextBytes(0, &projectedTextReconciliationWork, chunk)
 	if !ok {
 		return false
 	}
@@ -218,6 +221,7 @@ func (acc *ChatCompletionAccumulator) preflightChunk(chunk *ChatCompletionChunk)
 	}
 	acc.reconcilePublicState()
 	acc.textBytes = projectedTextBytes
+	acc.textReconciliationWork = projectedTextReconciliationWork
 	acc.logprobBytes = projectedLogprobBytes
 	acc.reconciliationWork = projectedReconciliationWork
 	acc.claimPrivateStateOwnership()
@@ -816,7 +820,12 @@ func addAccumulatorBufferReconciliationWork(work *int, current string, state *ch
 		// first same-chunk append must therefore copy that prefix while growing.
 		passes++
 	}
-	return addAccumulatorStringCopyWork(work, current, passes)
+	for range passes {
+		if !addAccumulatorTextBytes(work, current) {
+			return false
+		}
+	}
+	return true
 }
 
 func addChatCompletionChunkTextBytes(total int, chunk *ChatCompletionChunk) (int, bool) {

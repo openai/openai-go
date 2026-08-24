@@ -154,9 +154,37 @@ func TestAccumulatorValueCopyChoiceActivationPreservesAccounting(t *testing.T) {
 		t.Fatal("AddChunk rejected the original choice")
 	}
 
-	original.Choices[0].Message.Content = strings.Repeat("x", testAccumulatorMaxReconcileWork/3+1)
-	if original.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "x"})) {
-		t.Fatal("AddChunk omitted a choice activated after a value copy from the reconciliation work budget")
+	replacement := strings.Repeat("x", 2*testAccumulatorLargeTextBytes+1)
+	original.Choices[0].Message.Content = replacement
+	if !original.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "x"})) {
+		t.Fatal("AddChunk rejected large public text in a choice activated after a value copy")
+	}
+	if got := original.Choices[0].Message.Content; got != replacement+"x" {
+		t.Fatal("AddChunk did not preserve the activated choice's large replacement")
+	}
+	if got := branch.Choices[0].Message.Content; got != "branch" {
+		t.Fatalf("AddChunk changed the copied accumulator's content to %q", got)
+	}
+}
+
+func TestAccumulatorValueCopyAllowsLargeTextPrefixes(t *testing.T) {
+	prefix := strings.Repeat("x", testAccumulatorMaxReconcileWork+1)
+	initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: prefix})
+	var original openai.ChatCompletionAccumulator
+	if !original.AddChunk(initial) {
+		t.Fatal("AddChunk rejected the original large text prefix")
+	}
+
+	copy := original
+	copy.Choices = slices.Clone(copy.Choices)
+	if !copy.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "y"})) {
+		t.Fatal("AddChunk rejected a copied text prefix beyond the structural-work budget")
+	}
+	if got := copy.Choices[0].Message.Content; got != prefix+"y" {
+		t.Fatal("AddChunk did not preserve the copied large text prefix")
+	}
+	if got := original.Choices[0].Message.Content; got != prefix {
+		t.Fatal("AddChunk changed the original accumulator's large text prefix")
 	}
 }
 

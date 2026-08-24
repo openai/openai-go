@@ -310,12 +310,12 @@ func TestAccumulatorAccountsGrowthAfterPublicTextReplacement(t *testing.T) {
 			}
 			*test.value(&acc) = replacement
 			next := storageTestChunk(test.next)
-			acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - (2*replacementBytes + 4_096)
-			beforeWork := acc.reconciliationWork
+			acc.textReconciliationWork = maxChatCompletionAccumulatorInt - (2*replacementBytes + 4_096)
+			beforeWork := acc.textReconciliationWork
 			if acc.AddChunk(next) {
-				t.Fatal("AddChunk accepted an unbudgeted post-reconciliation growth copy")
+				t.Fatal("AddChunk accepted overflowing post-reconciliation text-copy accounting")
 			}
-			if acc.reconciliationWork != beforeWork || *test.value(&acc) != replacement {
+			if acc.textReconciliationWork != beforeWork || *test.value(&acc) != replacement {
 				t.Fatal("rejected text append changed the accumulator")
 			}
 		})
@@ -384,15 +384,13 @@ func TestAccumulatorBoundsEqualPublicStringComparisonWork(t *testing.T) {
 	acc.Choices[0].Message.Content = clone
 
 	empty := ChatCompletionChunk{ID: chunk.ID}
-	const activeChoicePasses = 6
-	requiredWork := activeChoicePasses + len(empty.ID) + 2*contentBytes
-	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - requiredWork + 1
-	beforeWork := acc.reconciliationWork
+	acc.textReconciliationWork = maxChatCompletionAccumulatorInt - 2*contentBytes + 1
+	beforeWork := acc.textReconciliationWork
 	if acc.AddChunk(empty) {
-		t.Fatal("AddChunk accepted equal-string comparison work beyond the documented budget")
+		t.Fatal("AddChunk accepted overflowing equal-string comparison accounting")
 	}
-	if acc.reconciliationWork != beforeWork {
-		t.Fatal("rejected chunk changed the reconciliation budget")
+	if acc.textReconciliationWork != beforeWork {
+		t.Fatal("rejected chunk changed the text reconciliation accounting")
 	}
 	if unsafe.StringData(acc.Choices[0].Message.Content) != unsafe.StringData(clone) {
 		t.Fatal("rejected chunk changed the public string backing")
@@ -843,10 +841,10 @@ func TestAccumulatorChargesCopiedTextBufferPrefixes(t *testing.T) {
 					}
 					owner := branch.privateStateOwner.Value()
 					state := branch.stringState.choices[0]
-					branch.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - prefixBytes + 1
-					before := branch.reconciliationWork
+					branch.textReconciliationWork = maxChatCompletionAccumulatorInt - prefixBytes + 1
+					before := branch.textReconciliationWork
 					if branch.AddChunk(test.append) {
-						t.Fatal("AddChunk accepted an uncharged copy-on-write text prefix")
+						t.Fatal("AddChunk accepted overflowing copy-on-write text-prefix accounting")
 					}
 					if branch.privateStateOwner.Value() != owner || branch.stringState.choices[0] != state {
 						t.Fatal("rejected copy-on-write append changed private ownership or state")
@@ -854,8 +852,8 @@ func TestAccumulatorChargesCopiedTextBufferPrefixes(t *testing.T) {
 					if got := test.value(&branch); got != prefix {
 						t.Fatal("rejected copy-on-write append changed public text")
 					}
-					if branch.reconciliationWork != before {
-						t.Fatal("rejected copy-on-write append changed the work budget")
+					if branch.textReconciliationWork != before {
+						t.Fatal("rejected copy-on-write append changed the text-copy accounting")
 					}
 				})
 			}
@@ -934,13 +932,17 @@ func TestAccumulatorChargesPublicReplacementCopyWork(t *testing.T) {
 	chunk.Choices = nil
 	chunk.Model = acc.Model
 	before := acc.reconciliationWork
+	beforeText := acc.textReconciliationWork
 	if !acc.AddChunk(chunk) {
 		t.Fatal("AddChunk rejected supported public replacements")
 	}
 	const normalPasses = 7
-	wantWork := normalPasses + 2*len(chunk.ID) + 5*replacementBytes
+	wantWork := normalPasses + 2*len(chunk.ID) + 3*replacementBytes
 	if got := acc.reconciliationWork - before; got != wantWork {
 		t.Fatalf("reconciliation work = %d, want %d", got, wantWork)
+	}
+	if got, want := acc.textReconciliationWork-beforeText, 2*replacementBytes; got != want {
+		t.Fatalf("text-copy work = %d, want %d", got, want)
 	}
 }
 
