@@ -1193,36 +1193,51 @@ func TestAzureUnsafeHTTPPreservesResponseHeaderTimeout(t *testing.T) {
 	t.Setenv("OPENAI_API_KEY", "")
 	t.Setenv("OPENAI_ADMIN_KEY", "")
 
-	origin := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, req *http.Request) {
-		<-req.Context().Done()
-	}))
-	t.Cleanup(origin.Close)
-	originURL, err := url.Parse(origin.URL)
-	if err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		name        string
+		requestOpts []option.RequestOption
+	}{
+		{name: "client authentication"},
+		{
+			name:        "request authentication override",
+			requestOpts: []option.RequestOption{WithAPIKey("request-api-key")},
+		},
 	}
 
-	const responseHeaderTimeout = 50 * time.Millisecond
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.ResponseHeaderTimeout = responseHeaderTimeout
-	client := openai.NewClient(
-		WithEndpoint("http://localhost:"+originURL.Port(), "2024-10-21"),
-		WithAPIKey("azure-api-key"),
-		WithUnsafeAllowHTTP(),
-		option.WithMaxRetries(0),
-		option.WithHTTPClient(&http.Client{Transport: transport}),
-	)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			origin := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, req *http.Request) {
+				<-req.Context().Done()
+			}))
+			t.Cleanup(origin.Close)
+			originURL, err := url.Parse(origin.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	started := time.Now()
-	var res map[string]any
-	err = client.Execute(ctx, http.MethodGet, "models", nil, &res)
-	if err == nil || !strings.Contains(err.Error(), "timeout awaiting response headers") {
-		t.Fatalf("expected response header timeout, got %v", err)
-	}
-	if elapsed := time.Since(started); elapsed >= time.Second {
-		t.Fatalf("response header timeout took %v, want less than 1s", elapsed)
+			const responseHeaderTimeout = 50 * time.Millisecond
+			transport := http.DefaultTransport.(*http.Transport).Clone()
+			transport.ResponseHeaderTimeout = responseHeaderTimeout
+			client := openai.NewClient(
+				WithEndpoint("http://localhost:"+originURL.Port(), "2024-10-21"),
+				WithAPIKey("azure-api-key"),
+				WithUnsafeAllowHTTP(),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(&http.Client{Transport: transport}),
+			)
+
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			started := time.Now()
+			var res map[string]any
+			err = client.Execute(ctx, http.MethodGet, "models", nil, &res, test.requestOpts...)
+			if err == nil || !strings.Contains(err.Error(), "timeout awaiting response headers") {
+				t.Fatalf("expected response header timeout, got %v", err)
+			}
+			if elapsed := time.Since(started); elapsed >= time.Second {
+				t.Fatalf("response header timeout took %v, want less than 1s", elapsed)
+			}
+		})
 	}
 }
 

@@ -324,6 +324,9 @@ type azureCredentialTransport struct {
 }
 
 func newAzureCredentialTransport(base http.RoundTripper, directTransports *azureDirectLoopbackTransportCache) azureCredentialTransport {
+	if guarded, ok := requestconfig.UnwrapCredentialRedirectGuard(base); ok {
+		base = guarded
+	}
 	if transport, ok := base.(azureCredentialTransport); ok {
 		return transport
 	}

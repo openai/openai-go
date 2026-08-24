@@ -126,6 +126,17 @@ func WithCredentialRedirectGuard(transport http.RoundTripper) http.RoundTripper 
 	return credentialRedirectGuardTransport{next: transport}
 }
 
+// UnwrapCredentialRedirectGuard returns the provider transport owned by an
+// internal redirect guard. Provider finalizers use this when they are applied
+// more than once to avoid nesting a second provider transport around the guard.
+func UnwrapCredentialRedirectGuard(transport http.RoundTripper) (http.RoundTripper, bool) {
+	guard, ok := transport.(credentialRedirectGuardTransport)
+	if !ok {
+		return nil, false
+	}
+	return guard.next, true
+}
+
 func hasCredentialRedirectGuard(transport http.RoundTripper) bool {
 	_, ok := transport.(credentialRedirectGuardTransport)
 	return ok
