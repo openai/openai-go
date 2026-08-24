@@ -563,11 +563,7 @@ func (cfg *RequestConfig) waitForRetry(
 		defer stop()
 	}
 
-	if res != nil && res.Body != nil {
-		newResponseBodyLifecycle(res.Body, cancel).abort()
-	} else {
-		cancel()
-	}
+	cancel()
 	return WaitForDelay(waitCtx, retryDelay(res, retryCount, cfg.MaxRetryDelay))
 }
 
@@ -691,6 +687,10 @@ func (cfg *RequestConfig) Execute() (err error) {
 			break
 		}
 
+		if res != nil && res.Body != nil {
+			retryResponse := res
+			context.AfterFunc(ctx, func() { _ = retryResponse.Body.Close() })
+		}
 		if waitErr := cfg.waitForRetry(ctx, cancel, res, retryCount); waitErr != nil {
 			return waitErr
 		}
