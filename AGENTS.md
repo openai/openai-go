@@ -183,3 +183,24 @@ govulncheck ./...
 Also test with `GOTOOLCHAIN=local` on every Go release line listed in the CI
 matrix. Use `scripts/detect-breaking-changes` when a dependency update could
 affect exported APIs.
+
+## Large-payload compatibility
+
+Large HTTP JSON bodies and SSE events are normal Responses, Chat Completions,
+and other API output, not evidence of malformed or hostile input. Preserve
+historically supported payloads when changing parsers, streaming, or final-result
+helpers. Do not introduce arbitrary new body, event, line, or accumulation limits
+as a security or efficiency fix. Any new restriction or tightening of an existing
+limit needs an explicit, owner-approved API contract and review of supported
+payloads. Preserve established limits unless changing them is explicitly in scope;
+compatibility regression work is not authorization to remove longstanding limits.
+Prefer incremental processing, amortized-linear buffering, timely cleanup, and
+caller cancellation when improving large-payload handling.
+
+Protect existing behavior with focused, deterministic public-entrypoint tests
+using large synthetic payloads generated in memory, not committed captures or
+live image generation. Their high memory use is intentional: do not shrink the
+payloads or raise client limits to make a new restriction pass. Cover HTTP JSON,
+SSE, and independent final-result helpers, and run large cases sequentially to
+keep peak memory reasonable. Fixture sizes are regression probes chosen within
+the historically supported behavior, not new API maxima.
