@@ -27,6 +27,26 @@ type x509ExchangedToken struct {
 	expiresAt time.Time
 }
 
+type x509ExchangeHTTPError struct {
+	statusCode int
+}
+
+func (err *x509ExchangeHTTPError) Error() string {
+	return fmt.Sprintf("X.509 token exchange failed with HTTP status %d", err.statusCode)
+}
+
+func (err *x509ExchangeHTTPError) retryable() bool {
+	return err.statusCode == http.StatusTooManyRequests ||
+		(err.statusCode >= http.StatusInternalServerError && err.statusCode < 600)
+}
+
+type x509ExchangeReadError struct{}
+
+func (*x509ExchangeReadError) Error() string {
+	return "X.509 token exchange response could not be read"
+}
+func (*x509ExchangeReadError) retryable() bool { return true }
+
 func x509Exchange(ctx context.Context, transport *X509Transport, identityProviderID, serviceAccountID string) (x509ExchangedToken, error) {
 	if ctx == nil {
 		return x509ExchangedToken{}, errors.New("X.509 token exchange requires a non-nil context")
@@ -89,7 +109,7 @@ func x509ReadExchangeResponse(ctx context.Context, response *http.Response, maxi
 		if contextErr := ctx.Err(); contextErr != nil {
 			return nil, contextErr
 		}
-		return nil, errors.New("X.509 token exchange response could not be read")
+		return nil, &x509ExchangeReadError{}
 	}
 	if int64(len(body)) > maximum {
 		return nil, errors.New("X.509 token exchange response exceeds its size limit")
@@ -164,10 +184,18 @@ func x509DecodeExchangedToken(ctx context.Context, body []byte, started time.Tim
 	return x509ExchangedToken{value: accessToken, expiresAt: expiresAt}, nil
 }
 
-func x509ExchangeStatusError(ctx context.Context, response *http.Response) error {
+func x509ExchangeStatusError(ctx context.Context, response *http.Response) (result error) {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	defer func() {
+		if err := ctx.Err(); err != nil {
+			result = err
+		}
+	}()
 	if response.StatusCode != http.StatusBadRequest && response.StatusCode != http.StatusUnauthorized &&
 		response.StatusCode != http.StatusForbidden {
-		return fmt.Errorf("X.509 token exchange failed with HTTP status %d", response.StatusCode)
+		return &x509ExchangeHTTPError{statusCode: response.StatusCode}
 	}
 	oauthError := &OAuthError{StatusCode: response.StatusCode}
 	body, err := x509ReadExchangeResponse(ctx, response, x509ErrorResponseMaximum)

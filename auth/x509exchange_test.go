@@ -23,6 +23,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"testing/iotest"
 	"time"
 
 	"github.com/openai/openai-go/v3/shared"
@@ -223,13 +224,13 @@ func TestX509ExchangeBoundsSuccessResponseSizes(t *testing.T) {
 
 func TestX509ExchangeRedactsAndClassifiesOAuthErrors(t *testing.T) {
 	for _, test := range []struct {
-		name       string
-		status     int
-		body       string
-		code       shared.OAuthErrorCode
-		wantTyped  bool
-		oversized  bool
-		wantCancel bool
+		name      string
+		status    int
+		body      string
+		code      shared.OAuthErrorCode
+		wantTyped bool
+		oversized bool
+		retryable bool
 	}{
 		{name: "bad request known code", status: 400, body: `{"error":"invalid_grant","error_description":"private-issuer-secret"}`,
 			code: shared.OAuthErrorCodeInvalidGrant, wantTyped: true},
@@ -242,8 +243,10 @@ func TestX509ExchangeRedactsAndClassifiesOAuthErrors(t *testing.T) {
 		{name: "bad request malformed", status: 400, body: `private-issuer-secret`, wantTyped: true},
 		{name: "oversized typed error", status: 401, body: strings.Repeat("private-issuer-secret", x509ErrorResponseMaximum),
 			wantTyped: true, oversized: true},
-		{name: "rate limited", status: 429, body: `{"error":"private-issuer-secret"}`},
-		{name: "server failure", status: 500, body: `{"error":"private-issuer-secret"}`},
+		{name: "rate limited", status: 429, body: `{"error":"private-issuer-secret"}`, retryable: true},
+		{name: "server failure", status: 500, body: `{"error":"private-issuer-secret"}`, retryable: true},
+		{name: "service unavailable", status: 503, body: `{"error":"private-issuer-secret"}`, retryable: true},
+		{name: "not found permanent", status: 404, body: `{"error":"private-issuer-secret"}`},
 		{name: "unexpected redirect", status: 307, body: `{"error":"private-issuer-secret"}`},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -270,6 +273,67 @@ func TestX509ExchangeRedactsAndClassifiesOAuthErrors(t *testing.T) {
 			if oauthError != nil && (oauthError.StatusCode != test.status || oauthError.ErrorCode != test.code ||
 				oauthError.ErrorDescription != "") {
 				t.Errorf("safe OAuth error = %+v, want status=%d code=%q without description", oauthError, test.status, test.code)
+			}
+			var statusError *x509ExchangeHTTPError
+			if got := errors.As(err, &statusError); got == test.wantTyped {
+				t.Fatalf("typed internal HTTP status error = %v, want %v", got, !test.wantTyped)
+			}
+			if statusError != nil && (statusError.statusCode != test.status || statusError.retryable() != test.retryable) {
+				t.Errorf("safe HTTP status taxonomy = %d/retryable:%v, want %d/retryable:%v",
+					statusError.statusCode, statusError.retryable(), test.status, test.retryable)
+			}
+		})
+	}
+}
+
+func TestX509ExchangePreservesSanitizedReadFailureTaxonomy(t *testing.T) {
+	sensitiveCause := errors.New("Authorization: Bearer private-response-read-token")
+	response := &http.Response{
+		ContentLength: -1,
+		Body:          io.NopCloser(iotest.ErrReader(sensitiveCause)),
+	}
+	body, err := x509ReadExchangeResponse(t.Context(), response, x509SuccessResponseMaximum)
+	var readError *x509ExchangeReadError
+	if body != nil || !errors.As(err, &readError) || !readError.retryable() {
+		t.Fatalf("issuer body-read failure = body:%q error:%v, want safe retryable typed error", body, err)
+	}
+	if errors.Is(err, sensitiveCause) || errors.Unwrap(err) != nil || strings.Contains(err.Error(), "private-") {
+		t.Errorf("issuer body-read failure retained its sensitive original cause: %v", err)
+	}
+
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Length", "1024")
+		_, _ = io.WriteString(w, "private-truncated-response-token")
+	}))
+	token, err := x509Exchange(t.Context(), fixture.capability, "idp", "service-account")
+	readError = nil
+	if token != (x509ExchangedToken{}) || !errors.As(err, &readError) || !readError.retryable() {
+		t.Fatalf("real mTLS body-read failure = token:%v error:%v", token, err)
+	}
+	if strings.Contains(err.Error(), "private-") || errors.Unwrap(err) != nil {
+		t.Errorf("real mTLS body-read failure exposed sensitive response data: %v", err)
+	}
+}
+
+func TestX509ExchangeCancellationPrecedesHTTPStatusClassification(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	for _, status := range []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusTooManyRequests,
+		http.StatusInternalServerError, http.StatusServiceUnavailable} {
+		t.Run(strconv.Itoa(status), func(t *testing.T) {
+			response := &http.Response{
+				StatusCode:    status,
+				ContentLength: -1,
+				Body:          io.NopCloser(strings.NewReader("private-canceled-response-body")),
+			}
+			err := x509ExchangeStatusError(ctx, response)
+			if !errors.Is(err, context.Canceled) {
+				t.Errorf("canceled HTTP %d classification = %v, want context.Canceled", status, err)
+			}
+			var statusError *x509ExchangeHTTPError
+			var oauthError *OAuthError
+			if errors.As(err, &statusError) || errors.As(err, &oauthError) {
+				t.Errorf("canceled HTTP %d retained an OAuth/HTTP status classification", status)
 			}
 		})
 	}
