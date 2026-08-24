@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -13,8 +14,13 @@ import (
 	"sync/atomic"
 
 	shimjson "github.com/openai/openai-go/v3/internal/encoding/json"
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/tidwall/gjson"
 )
+
+// ErrEventTooLarge is returned when an SSE event exceeds the explicit limit
+// configured with option.WithSSEMaxEventBytes.
+var ErrEventTooLarge = errors.New("ssestream: event exceeds configured limit")
 
 type Decoder interface {
 	Event() Event
@@ -41,9 +47,18 @@ func NewDecoder(res *http.Response) Decoder {
 		}
 	}
 
-	scn := bufio.NewScanner(res.Body)
-	scn.Buffer(nil, bufio.MaxScanTokenSize<<9)
-	return &eventStreamDecoder{rc: res.Body, scn: scn}
+	maxEventBytes := requestconfig.SSEMaxEventBytes(res.Request)
+	if maxEventBytes <= 0 {
+		scn := bufio.NewScanner(res.Body)
+		scn.Buffer(nil, maxScanTokenBytes)
+		return &eventStreamDecoder{rc: res.Body, scn: scn}
+	}
+
+	limit := newEventLimit(res.Body, maxEventBytes)
+	scn := bufio.NewScanner(limit)
+	scn.Buffer(nil, limit.maxScanTokenBytes())
+	scn.Split(limit.scanLines)
+	return &eventStreamDecoder{rc: res.Body, scn: scn, limit: limit}
 }
 
 var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
@@ -81,10 +96,11 @@ func (e *StreamError) Error() string {
 
 // A base implementation of a Decoder for text/event-stream.
 type eventStreamDecoder struct {
-	evt Event
-	rc  io.ReadCloser
-	scn *bufio.Scanner
-	err error
+	evt   Event
+	rc    io.ReadCloser
+	scn   *bufio.Scanner
+	err   error
+	limit *eventLimit
 }
 
 func (s *eventStreamDecoder) Next() bool {
@@ -131,8 +147,11 @@ func (s *eventStreamDecoder) Next() bool {
 		}
 	}
 
-	if s.scn.Err() != nil {
-		s.err = s.scn.Err()
+	if scanErr := s.scn.Err(); scanErr != nil {
+		s.err = scanErr
+		if s.limit != nil && s.limit.err != nil && !errors.Is(scanErr, ErrEventTooLarge) {
+			s.err = errors.Join(s.limit.err, scanErr)
+		}
 	}
 
 	return false

@@ -83,6 +83,44 @@ func TestLargeResponsesPayloadContract(t *testing.T) {
 	}
 }
 
+func TestLargeSegmentedSSEEventContract(t *testing.T) {
+	const whitespaceChunkSize = 8 * 1024
+	whitespace := strings.Repeat(" ", whitespaceChunkSize)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/responses" {
+			t.Errorf("unexpected request: %s %s", r.Method, r.URL.Path)
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "text/event-stream")
+		writeLargePayload(t, w, "event: response.output_text.done\ndata: {\"type\":\"response.output_text.done\",\n")
+		remainingWhitespace := largePayloadSize
+		for remainingWhitespace > 0 {
+			chunkSize := min(remainingWhitespace, whitespaceChunkSize)
+			writeLargePayload(t, w, "data: "+whitespace[:chunkSize]+"\n")
+			remainingWhitespace -= chunkSize
+		}
+		writeLargePayload(t, w, "data: \"text\":\"ok\",\"item_id\":\"msg_test\",\"output_index\":0,\"content_index\":0,\"sequence_number\":1,\"logprobs\":[]}\n\ndata: [DONE]\n\n")
+	}))
+	defer server.Close()
+
+	client := openai.NewClient(option.WithAPIKey("test-key"), option.WithBaseURL(server.URL), option.WithMaxRetries(0))
+	stream := client.Responses.NewStreaming(context.Background(), responses.ResponseNewParams{
+		Model: "gpt-4o-mini",
+		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String("Hello")},
+	})
+	defer func() { _ = stream.Close() }()
+
+	if !stream.Next() {
+		t.Fatalf("large segmented event was not delivered: %v", stream.Err())
+	}
+	event := stream.Current()
+	if event.Type != "response.output_text.done" || event.AsResponseOutputTextDone().Text != "ok" {
+		t.Fatal("large segmented event was truncated or changed")
+	}
+}
+
 func TestLargeChatCompletionPayloadContract(t *testing.T) {
 	for _, streaming := range []bool{false, true} {
 		name := "blocking JSON"

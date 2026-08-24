@@ -335,6 +335,7 @@ type RequestConfig struct {
 	MaxRetries                 int
 	MaxRetryDelay              time.Duration
 	RequestTimeout             time.Duration
+	SSEMaxEventBytes           int
 	Context                    context.Context
 	Request                    *http.Request
 	BaseURL                    *url.URL
@@ -658,6 +659,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 
 		attemptBody := req.Body
 		res, err = handler(req)
+		attachSSEMaxEventBytes(res, req, cfg.SSEMaxEventBytes)
 		if err != nil {
 			if req.Body != nil {
 				_ = req.Body.Close()

@@ -123,6 +123,26 @@ func WithMaxRetryDelay(delay time.Duration) RequestOption {
 	})
 }
 
+// WithSSEMaxEventBytes returns a RequestOption that limits the aggregate size
+// of each server-sent event decoded by the built-in text/event-stream decoder.
+// The budget counts each non-empty SSE line after normalizing its ending to one
+// byte and excludes the blank event delimiter. It composes with the decoder's
+// existing per-line limit and does not apply to decoders installed with
+// ssestream.RegisterDecoder.
+//
+// The aggregate limit is opt-in: zero preserves the default unlimited
+// aggregate event size and can disable a client-level limit for one request.
+// Negative limits panic.
+func WithSSEMaxEventBytes(maxBytes int) RequestOption {
+	if maxBytes < 0 {
+		panic("option: SSE event size limit cannot be negative")
+	}
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.SSEMaxEventBytes = maxBytes
+		return nil
+	})
+}
+
 // WithHeader returns a RequestOption that sets the header value to the associated key. It overwrites
 // any value if there was one already present.
 func WithHeader(key, value string) RequestOption {
