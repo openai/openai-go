@@ -301,7 +301,9 @@ func withAzureCredentialMiddleware(authenticate option.Middleware, directTranspo
 		if transport == nil {
 			transport = http.DefaultTransport
 		}
-		client.Transport = newAzureCredentialTransport(transport, directTransports)
+		client.Transport = requestconfig.WithCredentialRedirectGuard(
+			newAzureCredentialTransport(transport, directTransports),
+		)
 		rc.HTTPClient = &client
 
 		return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {

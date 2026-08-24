@@ -119,16 +119,43 @@ func originTestHTTPClient(fallback http.RoundTripper) *http.Client {
 
 type originTestClientFactory func(string, *http.Client) (openai.Client, error)
 
-func originTestClientFactories() []struct {
+type originTestCredentialPipeline int
+
+const (
+	originTestGenericCredentialPipeline originTestCredentialPipeline = iota
+	originTestAzureAPIKeyPipeline
+	originTestAzureTokenPipeline
+)
+
+type originTestClientCase struct {
 	name             string
 	credentialHeader string
+	pipeline         originTestCredentialPipeline
 	newClient        originTestClientFactory
-} {
-	return []struct {
-		name             string
-		credentialHeader string
-		newClient        originTestClientFactory
-	}{
+}
+
+func (c originTestClientCase) credentialVisibleToMiddleware() bool {
+	return c.pipeline != originTestAzureTokenPipeline
+}
+
+func (c originTestClientCase) redirectError() string {
+	if c.pipeline != originTestGenericCredentialPipeline {
+		return "authenticated redirects must remain on the original origin"
+	}
+	return "request URL origin must match the configured base URL"
+}
+
+func (c originTestClientCase) wantRedirectBodies() int64 {
+	if c.pipeline == originTestAzureTokenPipeline {
+		// The Azure token policy rebuilds the request before the provider's
+		// redirect guard receives it, so the caller's GetBody is not invoked.
+		return 0
+	}
+	return 1
+}
+
+func originTestClientFactories() []originTestClientCase {
+	return []originTestClientCase{
 		{
 			name:             "API key",
 			credentialHeader: "Authorization",
@@ -172,6 +199,7 @@ func originTestClientFactories() []struct {
 		{
 			name:             "Azure API key",
 			credentialHeader: "Api-Key",
+			pipeline:         originTestAzureAPIKeyPipeline,
 			newClient: func(baseURL string, httpClient *http.Client) (openai.Client, error) {
 				return openai.NewClient(
 					azure.WithEndpoint(baseURL, "2026-08-01"),
@@ -184,6 +212,7 @@ func originTestClientFactories() []struct {
 		{
 			name:             "Azure token credential",
 			credentialHeader: "Authorization",
+			pipeline:         originTestAzureTokenPipeline,
 			newClient: func(baseURL string, httpClient *http.Client) (openai.Client, error) {
 				return openai.NewClient(
 					azure.WithEndpoint(baseURL, "2026-08-01"),
@@ -290,7 +319,7 @@ func TestClientEnforcesCredentialOriginAfterRouting(t *testing.T) {
 				},
 				{
 					name:      "precomputed request target",
-					wantError: "Request.RequestURI can't be set in client requests",
+					wantError: "request URL origin must match the configured base URL",
 					mutate: func(req *http.Request) {
 						req.RequestURI = "https://other.example/capture"
 					},
@@ -328,7 +357,7 @@ func TestClientEnforcesCredentialOriginAfterRouting(t *testing.T) {
 					if err == nil || !strings.Contains(err.Error(), routingField.wantError) {
 						t.Fatalf("Post() error = %v, want error containing %q", err, routingField.wantError)
 					}
-					if !sawCredential {
+					if test.credentialVisibleToMiddleware() && !sawCredential {
 						t.Fatalf("%s was not present before the transport origin check", test.credentialHeader)
 					}
 					if !sawBody {
@@ -385,7 +414,7 @@ func TestClientEnforcesCredentialOriginAfterRouting(t *testing.T) {
 				if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
 					t.Fatalf("Post() error = %v, want configured-origin error", err)
 				}
-				if !sawCredential {
+				if test.credentialVisibleToMiddleware() && !sawCredential {
 					t.Fatalf("%s was not present before the transport origin check", test.credentialHeader)
 				}
 				if !sawBody {
@@ -439,8 +468,8 @@ func TestClientEnforcesCredentialOriginAfterRouting(t *testing.T) {
 						return next(req)
 					}),
 				)
-				if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
-					t.Fatalf("Post() error = %v, want configured-origin error", err)
+				if err == nil || !strings.Contains(err.Error(), test.redirectError()) {
+					t.Fatalf("Post() error = %v, want error containing %q", err, test.redirectError())
 				}
 				if got := trustedCalls.Load(); got != 1 {
 					t.Fatalf("trusted-origin calls = %d, want 1", got)
@@ -448,11 +477,11 @@ func TestClientEnforcesCredentialOriginAfterRouting(t *testing.T) {
 				if got := otherOriginCalls.Load(); got != 0 {
 					t.Fatalf("other-origin calls = %d, want 0", got)
 				}
-				if got := redirectBodies.Load(); got != 1 {
-					t.Fatalf("redirect bodies = %d, want 1", got)
+				if got := redirectBodies.Load(); got != test.wantRedirectBodies() {
+					t.Fatalf("redirect bodies = %d, want %d", got, test.wantRedirectBodies())
 				}
-				if got := redirectBodyCloses.Load(); got != 1 {
-					t.Fatalf("redirect body closes = %d, want 1", got)
+				if got := redirectBodyCloses.Load(); got != test.wantRedirectBodies() {
+					t.Fatalf("redirect body closes = %d, want %d", got, test.wantRedirectBodies())
 				}
 			})
 		})

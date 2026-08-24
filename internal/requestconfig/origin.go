@@ -89,6 +89,39 @@ func (t originTransport) CancelRequest(req *http.Request) {
 	}
 }
 
+// credentialRedirectGuardTransport identifies an internal provider transport
+// that validates every redirect destination before forwarding credentials.
+// The generic request pipeline still validates the initial post-middleware
+// request against the configured base URL.
+type credentialRedirectGuardTransport struct {
+	next http.RoundTripper
+}
+
+func (t credentialRedirectGuardTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return t.next.RoundTrip(req)
+}
+
+func (t credentialRedirectGuardTransport) CancelRequest(req *http.Request) {
+	if canceler, ok := t.next.(interface{ CancelRequest(*http.Request) }); ok {
+		canceler.CancelRequest(req)
+	}
+}
+
+// WithCredentialRedirectGuard marks an internal provider transport that owns
+// credential redirect validation. External SDK consumers cannot construct the
+// private marker type because requestconfig is an internal package.
+func WithCredentialRedirectGuard(transport http.RoundTripper) http.RoundTripper {
+	if _, ok := transport.(credentialRedirectGuardTransport); ok {
+		return transport
+	}
+	return credentialRedirectGuardTransport{next: transport}
+}
+
+func hasCredentialRedirectGuard(transport http.RoundTripper) bool {
+	_, ok := transport.(credentialRedirectGuardTransport)
+	return ok
+}
+
 func rejectRequestOrigin(req *http.Request) (*http.Response, error) {
 	if req != nil && req.Body != nil {
 		if _, ok := req.Body.(*closeOnceReadCloser); !ok {

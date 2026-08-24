@@ -41,8 +41,11 @@ func WithBaseURL(base string) RequestOption {
 // HTTPClient is primarily used to describe an [*http.Client], but also
 // supports custom implementations.
 //
-// For bespoke implementations, prefer using an [*http.Client] with a
-// custom transport. See [http.RoundTripper] for further information.
+// A native [*http.Client] keeps the SDK's credential-origin checks in its
+// redirect path. Bespoke implementations own any redirects performed inside
+// Do and must keep credentialed requests on the configured origin. Prefer
+// using an [*http.Client] with a custom transport. See [http.RoundTripper] for
+// further information.
 type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
@@ -50,8 +53,10 @@ type HTTPClient interface {
 // WithHTTPClient returns a RequestOption that changes the underlying http client used to make this
 // request, which by default is [http.DefaultClient].
 //
-// For custom uses cases, it is recommended to provide an [*http.Client] with a custom
-// [http.RoundTripper] as its transport, rather than directly implementing [HTTPClient].
+// For custom use cases, it is recommended to provide an [*http.Client] with a
+// custom [http.RoundTripper] as its transport, rather than directly
+// implementing [HTTPClient]. A bespoke [HTTPClient] is responsible for keeping
+// any redirects it performs inside Do on the configured request origin.
 func WithHTTPClient(client HTTPClient) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		if client == nil {

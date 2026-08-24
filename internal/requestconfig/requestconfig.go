@@ -615,8 +615,15 @@ func (cfg *RequestConfig) Execute() (err error) {
 	if transport == nil {
 		transport = http.DefaultTransport
 	}
-	client.Transport = originTransport{origin: cfg.BaseURL, next: transport}
-	handler := client.Do
+	if hasCredentialRedirectGuard(transport) {
+		client.Transport = transport
+	} else {
+		client.Transport = originTransport{origin: cfg.BaseURL, next: transport}
+	}
+	// Provider transports may implement a narrower, explicitly configured
+	// redirect policy. Every initial request must still retain the configured
+	// origin after all SDK and caller middleware has run.
+	handler := enforceRequestOrigin(cfg.BaseURL, client.Do)
 	if cfg.CustomHTTPDoer != nil {
 		handler = enforceRequestOrigin(cfg.BaseURL, cfg.CustomHTTPDoer.Do)
 	}
