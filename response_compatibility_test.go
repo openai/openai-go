@@ -86,35 +86,46 @@ func TestExecutePreservesLargeBinaryDownloadsByDefault(t *testing.T) {
 }
 
 func TestExecutePreservesDisabledCompressionBehindOpaqueTransport(t *testing.T) {
-	acceptEncoding := make(chan string, 1)
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		acceptEncoding <- req.Header.Get("Accept-Encoding")
-		w.Header().Set("Content-Type", "application/json")
-		if _, err := io.WriteString(w, "{}"); err != nil {
-			t.Errorf("write response: %v", err)
+	for _, customDoer := range []bool{false, true} {
+		name := "HTTP client transport"
+		if customDoer {
+			name = "custom HTTP doer"
 		}
-	}))
-	defer server.Close()
+		t.Run(name, func(t *testing.T) {
+			acceptEncoding := make(chan string, 1)
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				acceptEncoding <- req.Header.Get("Accept-Encoding")
+				w.Header().Set("Content-Type", "application/json")
+				if _, err := io.WriteString(w, "{}"); err != nil {
+					t.Errorf("write response: %v", err)
+				}
+			}))
+			defer server.Close()
 
-	transport := server.Client().Transport.(*http.Transport).Clone()
-	transport.DisableCompression = true
-	client := openai.NewClient(
-		option.WithAPIKey("test-key"),
-		option.WithBaseURL(server.URL+"/"),
-		option.WithMaxRetries(0),
-		option.WithMaxResponseBodyBytes(2),
-		option.WithHTTPClient(&http.Client{
-			Transport: responseRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
-				return transport.RoundTrip(req)
-			}),
-		}),
-	)
-	var response map[string]any
-	if err := client.Get(context.Background(), "wrapped", nil, &response); err != nil {
-		t.Fatalf("Get() error = %v", err)
-	}
-	if got := <-acceptEncoding; got != "identity" {
-		t.Fatalf("Accept-Encoding = %q, want opaque transport compression safely disabled", got)
+			transport := server.Client().Transport.(*http.Transport).Clone()
+			transport.DisableCompression = true
+			httpClient := &http.Client{
+				Transport: responseRoundTripperFunc(transport.RoundTrip),
+			}
+			var selectedClient option.HTTPClient = httpClient
+			if customDoer {
+				selectedClient = responseDoerFunc(httpClient.Do)
+			}
+			client := openai.NewClient(
+				option.WithAPIKey("test-key"),
+				option.WithBaseURL(server.URL+"/"),
+				option.WithMaxRetries(0),
+				option.WithMaxResponseBodyBytes(2),
+				option.WithHTTPClient(selectedClient),
+			)
+			var response map[string]any
+			if err := client.Get(context.Background(), "wrapped", nil, &response); err != nil {
+				t.Fatalf("Get() error = %v", err)
+			}
+			if got := <-acceptEncoding; got != "identity" {
+				t.Fatalf("Accept-Encoding = %q, want opaque transport compression safely disabled", got)
+			}
+		})
 	}
 }
 

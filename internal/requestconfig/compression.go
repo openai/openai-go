@@ -101,9 +101,20 @@ func (cfg *RequestConfig) compressionPolicy(req *http.Request) responseCompressi
 		return responseCompressionPreserved
 	}
 
+	if cfg.CustomHTTPDoer != nil {
+		policy, ok := cfg.CustomHTTPDoer.(interface{ CompressionDisabled() bool })
+		if !ok {
+			return responseCompressionIdentity
+		}
+		if policy.CompressionDisabled() {
+			return responseCompressionPreserved
+		}
+		return responseCompressionManaged
+	}
+
 	// Respect explicit stdlib transport configuration, including SDK-owned
 	// wrappers that preserve the selected native transport's policy.
-	if cfg.CustomHTTPDoer == nil && cfg.HTTPClient != nil {
+	if cfg.HTTPClient != nil {
 		transport := cfg.HTTPClient.Transport
 		if transport == nil {
 			transport = http.DefaultTransport

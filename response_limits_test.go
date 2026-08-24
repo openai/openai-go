@@ -34,6 +34,8 @@ type delegatingResponseDoer struct {
 	*http.Client
 }
 
+func (*delegatingResponseDoer) CompressionDisabled() bool { return false }
+
 type countingResponseBody struct {
 	reader        io.Reader
 	endless       bool
