@@ -6,10 +6,12 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -237,6 +239,140 @@ func TestX509TransportConformanceHTTPConnectKeepsCredentialsSeparated(t *testing
 	}
 }
 
+func TestX509TransportConformanceRejectsRedirectsBeforeCredentialDisclosure(t *testing.T) {
+	for _, leg := range []string{"token exchange", "API request"} {
+		t.Run(leg, func(t *testing.T) {
+			lab := newX509ConformanceLab(t)
+			issuer := lab.server(t, x509ConformanceIssuerHost, true)
+			api := lab.server(t, x509ConformanceAPIHost, false)
+			destination := lab.server(t, "redirect-target.x509.test", false)
+			routes := x509ConformanceRoutes(issuer, api)
+			routes["redirect-target.x509.test:443"] = destination.server.Listener.Addr().String()
+
+			refused := errors.New("X.509 workload identity redirects are disabled")
+			httpClient := &http.Client{
+				Transport: lab.transport(t, routes, lab.identity(t, "redirect-workload", true)),
+				CheckRedirect: func(*http.Request, []*http.Request) error {
+					return refused
+				},
+			}
+			location := "https://redirect-target.x509.test/credential-capture"
+
+			var err error
+			switch leg {
+			case "token exchange":
+				issuer.setRedirect(location)
+				_, err = x509ConformanceExchange(t.Context(), httpClient)
+			case "API request":
+				var token string
+				token, err = x509ConformanceExchange(t.Context(), httpClient)
+				if err != nil {
+					t.Fatalf("exchange token before API redirect: %v", err)
+				}
+				api.setRedirect(location)
+				client := x509ConformanceClient(t, httpClient, token)
+				_, err = client.Models.List(t.Context())
+			}
+			if !errors.Is(err, refused) {
+				t.Fatalf("redirect error = %v, want the concrete redirect-refusal error", err)
+			}
+			if requests := destination.requests(); len(requests) != 0 {
+				t.Errorf("redirect destination received %d HTTP requests", len(requests))
+			}
+			if handshakes := destination.handshakeCount(); handshakes != 0 {
+				t.Errorf("redirect destination observed %d TLS handshakes/client certificates", handshakes)
+			}
+		})
+	}
+}
+
+// net/http applies one TLSClientConfig to both the HTTPS proxy and the tunneled
+// origin, so an HTTPS proxy requesting client authentication receives the
+// caller's workload certificate before the intended issuer is contacted.
+func TestX509TransportConformanceHTTPSProxyExposesWorkloadCertificate(t *testing.T) {
+	workloadLab := newX509ConformanceLab(t)
+	proxyLab := newX509ConformanceLab(t)
+	issuer := workloadLab.server(t, x509ConformanceIssuerHost, true)
+	api := workloadLab.server(t, x509ConformanceAPIHost, false)
+	routes := x509ConformanceRoutes(issuer, api)
+
+	type proxyObservation struct {
+		method             string
+		host               string
+		serverName         string
+		peerCommonName     string
+		authorization      string
+		proxyAuthorization string
+	}
+	observations := make(chan proxyObservation, 1)
+	proxy := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		observations <- proxyObservation{
+			method:             req.Method,
+			host:               req.Host,
+			serverName:         req.TLS.ServerName,
+			peerCommonName:     req.TLS.PeerCertificates[0].Subject.CommonName,
+			authorization:      req.Header.Get("Authorization"),
+			proxyAuthorization: req.Header.Get("Proxy-Authorization"),
+		}
+		http.Error(w, "synthetic HTTPS proxy refuses CONNECT", http.StatusBadGateway)
+	}))
+	proxyLeaf, proxyKey := proxyLab.issue(
+		t,
+		"proxy.x509.test",
+		proxyLab.intermediate,
+		proxyLab.issuerKey,
+		false,
+		[]string{"proxy.x509.test"},
+	)
+	proxy.TLS = &tls.Config{
+		MinVersion: tls.VersionTLS12,
+		ClientAuth: tls.RequireAndVerifyClientCert,
+		ClientCAs:  workloadLab.trust,
+		Certificates: []tls.Certificate{{
+			Certificate: [][]byte{proxyLeaf.Raw, proxyLab.intermediate.Raw},
+			PrivateKey:  proxyKey,
+			Leaf:        proxyLeaf,
+		}},
+	}
+	proxy.Config.ErrorLog = log.New(io.Discard, "", 0)
+	proxy.StartTLS()
+	t.Cleanup(proxy.Close)
+	routes["proxy.x509.test:443"] = proxy.Listener.Addr().String()
+
+	transport := workloadLab.transport(t, routes, workloadLab.identity(t, "disclosed-workload", true))
+	trust := x509.NewCertPool()
+	trust.AddCert(workloadLab.root)
+	trust.AddCert(proxyLab.root)
+	transport.TLSClientConfig.RootCAs = trust
+	transport.Proxy = http.ProxyURL(&url.URL{Scheme: "https", Host: "proxy.x509.test"})
+	transport.ProxyConnectHeader = http.Header{"Proxy-Authorization": {x509ConformanceProxyAuth}}
+
+	if _, err := x509ConformanceExchange(t.Context(), &http.Client{Transport: transport}); err == nil {
+		t.Fatal("token exchange unexpectedly succeeded through the rejecting HTTPS proxy")
+	}
+
+	select {
+	case observed := <-observations:
+		if observed.method != http.MethodConnect || observed.host != x509ConformanceIssuerHost+":443" {
+			t.Errorf("HTTPS proxy request = %s %s, want CONNECT %s:443", observed.method, observed.host, x509ConformanceIssuerHost)
+		}
+		if observed.serverName != "proxy.x509.test" || observed.peerCommonName != "disclosed-workload" {
+			t.Errorf("HTTPS proxy SNI/client certificate = %q/%q", observed.serverName, observed.peerCommonName)
+		}
+		if observed.authorization != "" || observed.proxyAuthorization != x509ConformanceProxyAuth {
+			t.Errorf("HTTPS proxy origin/proxy authorization = %q/%q", observed.authorization, observed.proxyAuthorization)
+		}
+	default:
+		t.Fatal("HTTPS proxy did not observe the workload certificate on a real TLS handshake")
+	}
+	if requests := issuer.requests(); len(requests) != 0 {
+		t.Errorf("issuer received %d requests after the HTTPS proxy disclosed the client certificate", len(requests))
+	}
+	if requests := api.requests(); len(requests) != 0 {
+		t.Errorf("API received %d requests after the HTTPS proxy disclosed the client certificate", len(requests))
+	}
+}
+
 func x509ConformanceExchange(ctx context.Context, httpClient *http.Client) (string, error) {
 	body, err := json.Marshal(struct {
 		GrantType          string `json:"grant_type"`
@@ -329,6 +465,11 @@ func (lab *x509ConformanceLab) issue(
 	if err != nil {
 		t.Fatalf("generate certificate serial: %v", err)
 	}
+	publicKey, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
+	if err != nil {
+		t.Fatalf("encode ephemeral %q public key: %v", name, err)
+	}
+	keyID := sha256.Sum256(publicKey)
 
 	template := &x509.Certificate{
 		SerialNumber:          serial,
@@ -339,17 +480,22 @@ func (lab *x509ConformanceLab) issue(
 		IsCA:                  certificateAuthority,
 		DNSNames:              hostnames,
 		KeyUsage:              x509.KeyUsageDigitalSignature,
+		SubjectKeyId:          keyID[:],
 	}
 	if certificateAuthority {
 		template.KeyUsage |= x509.KeyUsageCertSign
 	} else if len(hostnames) != 0 {
+		template.KeyUsage |= x509.KeyUsageKeyEncipherment
 		template.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}
 	} else {
+		template.KeyUsage |= x509.KeyUsageKeyEncipherment
+		template.DNSNames = []string{name + ".workload.x509.test"}
 		template.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}
 	}
 	if issuer == nil {
 		issuer, issuerKey = template, key
 	}
+	template.AuthorityKeyId = issuer.SubjectKeyId
 
 	encoded, err := x509.CreateCertificate(rand.Reader, template, issuer, &key.PublicKey, issuerKey)
 	if err != nil {
@@ -365,6 +511,13 @@ func (lab *x509ConformanceLab) issue(
 func (lab *x509ConformanceLab) identity(t *testing.T, name string, completeChain bool) tls.Certificate {
 	t.Helper()
 	certificate, key := lab.issue(t, name, lab.intermediate, lab.issuerKey, false, nil)
+	requiredKeyUsage := x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment
+	if len(certificate.DNSNames) == 0 || len(certificate.SubjectKeyId) == 0 ||
+		!bytes.Equal(certificate.AuthorityKeyId, lab.intermediate.SubjectKeyId) ||
+		certificate.KeyUsage&requiredKeyUsage != requiredKeyUsage ||
+		len(certificate.ExtKeyUsage) != 1 || certificate.ExtKeyUsage[0] != x509.ExtKeyUsageClientAuth {
+		t.Fatalf("generated workload certificate %q does not satisfy X.509 enrollment requirements", name)
+	}
 	chain := [][]byte{certificate.Raw}
 	if completeChain {
 		chain = append(chain, lab.intermediate.Raw)
@@ -409,9 +562,11 @@ type x509ConformanceRequest struct {
 }
 
 type x509ConformanceServer struct {
-	server  *httptest.Server
-	mu      sync.Mutex
-	records []x509ConformanceRequest
+	server     *httptest.Server
+	mu         sync.Mutex
+	records    []x509ConformanceRequest
+	handshakes int
+	redirectTo string
 }
 
 func (lab *x509ConformanceLab) server(t *testing.T, hostname string, exchange bool) *x509ConformanceServer {
@@ -438,7 +593,12 @@ func (lab *x509ConformanceLab) server(t *testing.T, hostname string, exchange bo
 		}
 		observed.mu.Lock()
 		observed.records = append(observed.records, record)
+		redirectTo := observed.redirectTo
 		observed.mu.Unlock()
+		if redirectTo != "" {
+			http.Redirect(w, req, redirectTo, http.StatusTemporaryRedirect)
+			return
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		body := map[string]any{"data": []any{}}
@@ -464,6 +624,12 @@ func (lab *x509ConformanceLab) server(t *testing.T, hostname string, exchange bo
 			PrivateKey:  serverKey,
 			Leaf:        serverLeaf,
 		}},
+		GetConfigForClient: func(*tls.ClientHelloInfo) (*tls.Config, error) {
+			observed.mu.Lock()
+			observed.handshakes++
+			observed.mu.Unlock()
+			return nil, nil
+		},
 	}
 	observed.server.Config.ErrorLog = log.New(io.Discard, "", 0)
 	observed.server.StartTLS()
@@ -475,6 +641,18 @@ func (server *x509ConformanceServer) requests() []x509ConformanceRequest {
 	server.mu.Lock()
 	defer server.mu.Unlock()
 	return append([]x509ConformanceRequest(nil), server.records...)
+}
+
+func (server *x509ConformanceServer) setRedirect(destination string) {
+	server.mu.Lock()
+	defer server.mu.Unlock()
+	server.redirectTo = destination
+}
+
+func (server *x509ConformanceServer) handshakeCount() int {
+	server.mu.Lock()
+	defer server.mu.Unlock()
+	return server.handshakes
 }
 
 func x509ConformanceRoutes(issuer, api *x509ConformanceServer) map[string]string {
