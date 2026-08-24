@@ -47,13 +47,19 @@ func SameOrigin(left, right *url.URL) bool {
 // opaque or precomputed request target because those fields can override the
 // target written by net/http or a custom request doer.
 func RequestHasOrigin(req *http.Request, origin *url.URL) bool {
-	if req == nil || req.URL == nil || req.URL.Opaque != "" || req.RequestURI != "" || !SameOrigin(req.URL, origin) {
+	return requestHasCanonicalTarget(req) && SameOrigin(req.URL, origin)
+}
+
+// requestHasCanonicalTarget rejects alternate request-target fields while
+// allowing provider transports to apply their own redirect-origin policy.
+func requestHasCanonicalTarget(req *http.Request) bool {
+	if req == nil || req.URL == nil || req.URL.Opaque != "" || req.RequestURI != "" {
 		return false
 	}
 	if req.Host == "" {
 		return true
 	}
-	return SameOrigin(&url.URL{Scheme: req.URL.Scheme, Host: req.Host}, origin)
+	return SameOrigin(&url.URL{Scheme: req.URL.Scheme, Host: req.Host}, req.URL)
 }
 
 func effectivePort(value *url.URL) string {
@@ -98,6 +104,9 @@ type credentialRedirectGuardTransport struct {
 }
 
 func (t credentialRedirectGuardTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if !requestHasCanonicalTarget(req) {
+		return rejectRequestOrigin(req)
+	}
 	return t.next.RoundTrip(req)
 }
 
