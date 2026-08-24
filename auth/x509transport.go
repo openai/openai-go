@@ -207,7 +207,8 @@ func (transport *X509Transport) Close() error {
 // Do sends a request to an approved global OpenAI mTLS endpoint without
 // following redirects. The request is snapshotted before validation so caller
 // hooks cannot alter its URL or credentials after the final safety checks.
-// Traces exposing a live connection and request trailers are unsupported.
+// HTTP tracing callbacks and request trailers are unsupported because mutable
+// trace hooks can expose a live connection after request validation.
 // Request context and caller-owned TLS credentials are preserved; the
 // capability owns its isolated pool. OAuth authentication is configured
 // separately.
@@ -218,8 +219,8 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 	if err := request.Context().Err(); err != nil {
 		return nil, err
 	}
-	if trace := httptrace.ContextClientTrace(request.Context()); trace != nil && trace.GotConn != nil {
-		return nil, errors.New("X.509 transport does not support connection-exposing HTTP trace callbacks")
+	if httptrace.ContextClientTrace(request.Context()) != nil {
+		return nil, errors.New("X.509 transport does not support HTTP trace callbacks")
 	}
 	request = request.Clone(request.Context())
 	if err := transport.validateAttestation(); err != nil {

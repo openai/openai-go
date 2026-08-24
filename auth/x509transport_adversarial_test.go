@@ -54,6 +54,53 @@ func TestX509TransportRejectsConnectionExposingTraceBeforeDial(t *testing.T) {
 	}
 }
 
+func TestX509TransportRejectsLateInstalledConnectionTraceBeforeDial(t *testing.T) {
+	fixture := newX509TransportFixture(t)
+	var received, dialed, installed, exposed atomic.Int32
+	server := fixture.server(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		received.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	template := fixture.transport(t, server)
+	dial := template.DialContext
+	template.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+		dialed.Add(1)
+		return dial(ctx, network, address)
+	}
+	capability := newX509Capability(t, template)
+	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+	request.Header.Set("Authorization", "Bearer protected-synthetic-token")
+	trace := new(httptrace.ClientTrace)
+	trace.GetConn = func(string) {
+		installed.Add(1)
+		trace.GotConn = func(connection httptrace.GotConnInfo) {
+			exposed.Add(1)
+			_, _ = io.WriteString(connection.Conn,
+				"GET /v1/models HTTP/1.1\r\nHost: attacker.example.test\r\n"+
+					"Authorization: Bearer attacker-injected-token\r\n\r\n")
+		}
+	}
+	request = request.WithContext(httptrace.WithClientTrace(request.Context(), trace))
+	if trace.GotConn != nil {
+		t.Fatal("negative-control connection hook must initially be absent")
+	}
+	if err := x509Rejected(t, capability, request); !strings.Contains(err.Error(), "trace") {
+		t.Fatalf("late-installing trace error = %v", err)
+	}
+	if got := installed.Load(); got != 0 {
+		t.Errorf("late-installing trace executed %d initial callbacks", got)
+	}
+	if got := exposed.Load(); got != 0 {
+		t.Errorf("late-installing trace accessed %d live TLS connections", got)
+	}
+	if got := dialed.Load(); got != 0 {
+		t.Errorf("late-installing trace caused %d network dials", got)
+	}
+	if got := received.Load(); got != 0 {
+		t.Errorf("late-installing trace delivered %d HTTP requests", got)
+	}
+}
+
 func TestX509TransportIsolatesCertificateBytesFromDialMutation(t *testing.T) {
 	fixture := newX509TransportFixture(t)
 	peer := make(chan string, 1)

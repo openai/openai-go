@@ -18,7 +18,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httptrace"
 	"net/url"
 	"strings"
 	"sync"
@@ -513,7 +512,7 @@ func TestX509TransportIgnoresHiddenRegisteredHTTPSProtocol(t *testing.T) {
 	}
 }
 
-func TestX509TransportSnapshotsRequestBeforeTraceMutation(t *testing.T) {
+func TestX509TransportSnapshotsRequestBeforeDialMutation(t *testing.T) {
 	fixture := newX509TransportFixture(t)
 	type observedRequest struct {
 		host          string
@@ -529,24 +528,24 @@ func TestX509TransportSnapshotsRequestBeforeTraceMutation(t *testing.T) {
 		}
 		w.WriteHeader(http.StatusOK)
 	}))
-	capability := newX509Capability(t, fixture.transport(t, server))
 	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
 	request.Header.Set("Authorization", "Bearer original-workload-token")
-	trace := &httptrace.ClientTrace{
-		GetConn: func(string) {
-			request.URL.Host = "attacker.example.test"
-			request.Host = "attacker.example.test"
-			request.Header.Set("Authorization", "Bearer attacker-replaced-token")
-		},
+	template := fixture.transport(t, server)
+	dial := template.DialContext
+	template.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+		request.URL.Host = "attacker.example.test"
+		request.Host = "attacker.example.test"
+		request.Header.Set("Authorization", "Bearer attacker-replaced-token")
+		return dial(ctx, network, address)
 	}
-	request = request.WithContext(httptrace.WithClientTrace(request.Context(), trace))
+	capability := newX509Capability(t, template)
 
 	response, err := capability.Do(request)
 	if err != nil {
-		t.Fatalf("dispatch with late request-mutating trace: %v", err)
+		t.Fatalf("dispatch with late request-mutating dialer: %v", err)
 	}
 	if err := response.Body.Close(); err != nil {
-		t.Fatalf("close trace-mutating response: %v", err)
+		t.Fatalf("close dialer-mutating response: %v", err)
 	}
 	select {
 	case record := <-observed:
@@ -554,14 +553,14 @@ func TestX509TransportSnapshotsRequestBeforeTraceMutation(t *testing.T) {
 			t.Errorf("protected Host/SNI = %q/%q", record.host, record.serverName)
 		}
 		if record.authorization != "Bearer original-workload-token" {
-			t.Errorf("protected bearer was changed by late trace: %q", record.authorization)
+			t.Errorf("protected bearer was changed by late dialer: %q", record.authorization)
 		}
 	default:
 		t.Fatal("real mTLS server did not receive the protected request")
 	}
 	if request.Host != "attacker.example.test" ||
 		request.Header.Get("Authorization") != "Bearer attacker-replaced-token" {
-		t.Fatal("negative-control trace did not mutate the original caller request")
+		t.Fatal("negative-control dialer did not mutate the original caller request")
 	}
 }
 
