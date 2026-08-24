@@ -8,7 +8,7 @@ import (
 	openai "github.com/openai/openai-go/v3"
 )
 
-func TestAccumulatorRejectsLogprobsBeyondBudgetWithoutMutation(t *testing.T) {
+func TestAccumulatorPreservesLargeLogprobsAcrossPublicTruncation(t *testing.T) {
 	var acc openai.ChatCompletionAccumulator
 	toolChunk := accumulatorToolStringChunk("tool", "arguments")
 	if !acc.AddChunk(toolChunk) {
@@ -32,21 +32,18 @@ func TestAccumulatorRejectsLogprobsBeyondBudgetWithoutMutation(t *testing.T) {
 	}
 
 	beyondLimit := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
-	beyondLimit.Model = "rejected-model"
+	beyondLimit.Model = "updated-model"
 	beyondLimit.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "x"}}
-	if acc.AddChunk(beyondLimit) {
-		t.Fatal("AddChunk accepted logprobs beyond the documented aggregate budget")
+	if !acc.AddChunk(beyondLimit) {
+		t.Fatal("AddChunk rejected historically supported logprobs beyond the former aggregate budget")
 	}
-	if acc.Model != "accepted-model" || len(acc.Choices[0].Logprobs.Content) != 1 {
-		t.Fatal("AddChunk mutated the accumulator after rejecting excessive logprobs")
-	}
-	if _, ok := acc.JustFinishedToolCall(); ok {
-		t.Fatal("AddChunk retained a completion event after rejecting excessive logprobs")
+	if acc.Model != "updated-model" || len(acc.Choices[0].Logprobs.Content) != 2 {
+		t.Fatal("AddChunk did not preserve the large accumulated logprobs")
 	}
 
-	afterRejection := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "-after"})
-	if !acc.AddChunk(afterRejection) {
-		t.Fatal("AddChunk consumed unrelated text or chunk budget after rejecting excessive logprobs")
+	afterLargeLogprobs := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "-after"})
+	if !acc.AddChunk(afterLargeLogprobs) {
+		t.Fatal("AddChunk rejected unrelated text after large logprobs")
 	}
 	if got := acc.Choices[0].Message.Content; got != "-after" {
 		t.Fatalf("content after rejected logprobs = %q, want %q", got, "-after")
@@ -61,15 +58,15 @@ func TestAccumulatorRejectsLogprobsBeyondBudgetWithoutMutation(t *testing.T) {
 	if got := len(acc.Choices[0].Logprobs.Content); got != 0 {
 		t.Fatalf("logprobs after truncation = %d, want 0", got)
 	}
-	if acc.AddChunk(afterClearing) {
-		t.Fatal("AddChunk replenished the cumulative remote-logprob budget after public truncation")
+	if !acc.AddChunk(afterClearing) {
+		t.Fatal("AddChunk rejected historically supported logprobs after public truncation")
 	}
-	if got := len(acc.Choices[0].Logprobs.Content); got != 0 {
-		t.Fatalf("rejected logprobs changed accumulated length to %d", got)
+	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
+		t.Fatalf("accumulated logprobs after truncation = %d, want 1", got)
 	}
 }
 
-func TestAccumulatorBudgetsPublicLogprobReplacement(t *testing.T) {
+func TestAccumulatorPreservesLargePublicLogprobReplacement(t *testing.T) {
 	var acc openai.ChatCompletionAccumulator
 	if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
 		t.Fatal("AddChunk rejected the initial chunk")
@@ -85,15 +82,15 @@ func TestAccumulatorBudgetsPublicLogprobReplacement(t *testing.T) {
 
 	beyondLimit := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
 	beyondLimit.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "x"}}
-	if acc.AddChunk(beyondLimit) {
-		t.Fatal("AddChunk accepted logprobs beyond the live public logprob budget")
+	if !acc.AddChunk(beyondLimit) {
+		t.Fatal("AddChunk rejected a historically supported large public logprob replacement")
 	}
-	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
-		t.Fatalf("public replacement changed after rejection: got %d logprobs, want 1", got)
+	if got := len(acc.Choices[0].Logprobs.Content); got != 2 {
+		t.Fatalf("accumulated public replacement = %d logprobs, want 2", got)
 	}
 }
 
-func TestAccumulatorBudgetsPublicLogprobInsertionBeforeTextChunk(t *testing.T) {
+func TestAccumulatorPreservesLargePublicLogprobInsertionBeforeTextChunk(t *testing.T) {
 	var acc openai.ChatCompletionAccumulator
 	if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
 		t.Fatal("AddChunk rejected the initial chunk")
@@ -104,10 +101,10 @@ func TestAccumulatorBudgetsPublicLogprobInsertionBeforeTextChunk(t *testing.T) {
 	acc.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Bytes: make([]int64, byteCount)}}
 
 	textChunk := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{Content: "text"})
-	if acc.AddChunk(textChunk) {
-		t.Fatal("AddChunk accepted text while a supported public logprob insertion exceeded the budget")
+	if !acc.AddChunk(textChunk) {
+		t.Fatal("AddChunk rejected text after a historically supported large public logprob insertion")
 	}
-	if got := acc.Choices[0].Message.Content; got != "" {
-		t.Fatalf("rejected chunk changed content to %q", got)
+	if got := acc.Choices[0].Message.Content; got != "text" {
+		t.Fatalf("accumulated content after public logprob insertion = %q, want text", got)
 	}
 }

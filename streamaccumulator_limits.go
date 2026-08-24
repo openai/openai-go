@@ -2,21 +2,6 @@ package openai
 
 import "slices"
 
-func chatCompletionChunkEntriesWithinLimit(chunk *ChatCompletionChunk) bool {
-	entries := len(chunk.Choices)
-	if entries > maxChatCompletionAccumulatorStructuralSlots {
-		return false
-	}
-	for i := range chunk.Choices {
-		toolCalls := len(chunk.Choices[i].Delta.ToolCalls)
-		if toolCalls > maxChatCompletionAccumulatorStructuralSlots-entries {
-			return false
-		}
-		entries += toolCalls
-	}
-	return true
-}
-
 func (acc *ChatCompletionAccumulator) validChatCompletionChunkIndices(chunk ChatCompletionChunk) bool {
 	var toolCallCounts [maxStreamAccumulatorChoiceIndex + 1]int
 	var initializedToolCallCounts [maxStreamAccumulatorChoiceIndex + 1]bool
@@ -94,20 +79,26 @@ func detachTruncatedTail[T any](slice []T, previousLength int) []T {
 }
 
 type chatCompletionToolMetadataProjection struct {
-	key    int
+	key    chatCompletionToolProjectionKey
 	fields uint8
 	used   bool
+}
+
+type chatCompletionToolProjectionKey struct {
+	choice int
+	tool   int
+}
+
+type chatCompletionToolProjectionTable struct {
+	inline   [chatCompletionAccumulatorInlineProjectionSlots * 2]chatCompletionToolMetadataProjection
+	overflow map[chatCompletionToolProjectionKey]*chatCompletionToolMetadataProjection
+	count    int
 }
 
 type chatCompletionTextAppendProjection struct {
 	content [2]uint64
 	refusal [2]uint64
-	tools   [maxChatCompletionAccumulatorStructuralSlots * 2]chatCompletionToolTextAppendProjection
-}
-
-type chatCompletionToolTextAppendProjection struct {
-	keyPlusOne uint32
-	fields     uint8
+	tools   chatCompletionToolProjectionTable
 }
 
 const (
@@ -183,39 +174,14 @@ func chatCompletionTextAppendMarked(marked *[2]uint64, index int) bool {
 }
 
 func (projection *chatCompletionTextAppendProjection) toolFields(choiceIndex int, toolIndex int) uint8 {
-	keyPlusOne := uint32(choiceIndex*maxChatCompletionAccumulatorStructuralSlots + toolIndex + 1)
-	slot := chatCompletionTextAppendSlot(keyPlusOne, len(projection.tools))
-	for {
-		tool := &projection.tools[slot]
-		if tool.keyPlusOne == 0 {
-			return 0
-		}
-		if tool.keyPlusOne == keyPlusOne {
-			return tool.fields
-		}
-		slot = (slot + 1) & (len(projection.tools) - 1)
+	if tool := findChatCompletionToolMetadataProjection(&projection.tools, choiceIndex, toolIndex); tool != nil {
+		return tool.fields
 	}
+	return 0
 }
 
-func (projection *chatCompletionTextAppendProjection) lookupTool(choiceIndex int, toolIndex int) *chatCompletionToolTextAppendProjection {
-	keyPlusOne := uint32(choiceIndex*maxChatCompletionAccumulatorStructuralSlots + toolIndex + 1)
-	slot := chatCompletionTextAppendSlot(keyPlusOne, len(projection.tools))
-	for {
-		tool := &projection.tools[slot]
-		if tool.keyPlusOne == 0 {
-			tool.keyPlusOne = keyPlusOne
-			return tool
-		}
-		if tool.keyPlusOne == keyPlusOne {
-			return tool
-		}
-		slot = (slot + 1) & (len(projection.tools) - 1)
-	}
-}
-
-func chatCompletionTextAppendSlot(keyPlusOne uint32, slots int) int {
-	hash := uint(keyPlusOne) * 2_654_435_761
-	return int((hash ^ hash>>16) & uint(slots-1))
+func (projection *chatCompletionTextAppendProjection) lookupTool(choiceIndex int, toolIndex int) *chatCompletionToolMetadataProjection {
+	return lookupChatCompletionToolMetadataProjection(&projection.tools, choiceIndex, toolIndex)
 }
 
 func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *ChatCompletionChunk, work *int) bool {
@@ -223,7 +189,7 @@ func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *C
 	if !acc.addChatCompletionChunkMetadataWork(work, chunk) {
 		return false
 	}
-	total, ok := acc.addChatCompletionMetadataBytes(0, work)
+	total, ok := acc.addChatCompletionMetadataBytes(0, work, chunk)
 	if !ok {
 		return false
 	}
@@ -239,11 +205,11 @@ func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *C
 	}
 	if len(chunk.Choices) == 0 {
 		projected := int64(total) + delta
-		return projected >= 0 && projected <= maxChatCompletionAccumulatorMetadataBytes
+		return projected >= 0 && projected <= int64(maxChatCompletionAccumulatorInt)
 	}
 
-	var finishReasonSeen [maxChatCompletionAccumulatorStructuralSlots / 64]uint64
-	var roleSeen [maxChatCompletionAccumulatorStructuralSlots / 64]uint64
+	var finishReasonSeen [2]uint64
+	var roleSeen [2]uint64
 	for i := len(chunk.Choices) - 1; i >= 0; i-- {
 		choiceDelta := &chunk.Choices[i]
 		choiceIndex := int(choiceDelta.Index)
@@ -264,7 +230,7 @@ func (acc *ChatCompletionAccumulator) chatCompletionMetadataWithinLimit(chunk *C
 	}
 	delta += chatCompletionToolMetadataDelta(completion, chunk)
 	projected := int64(total) + delta
-	return projected >= 0 && projected <= maxChatCompletionAccumulatorMetadataBytes
+	return projected >= 0 && projected <= int64(maxChatCompletionAccumulatorInt)
 }
 
 func (acc *ChatCompletionAccumulator) addChatCompletionChunkMetadataWork(work *int, chunk *ChatCompletionChunk) bool {
@@ -379,7 +345,7 @@ func (acc *ChatCompletionAccumulator) addChatCompletionToolMetadataWork(work *in
 		return true
 	}
 
-	var seen [maxChatCompletionAccumulatorStructuralSlots * 2]chatCompletionToolMetadataProjection
+	var seen chatCompletionToolProjectionTable
 	for i := range chunk.Choices {
 		choice := &chunk.Choices[i]
 		choiceIndex := int(choice.Index)
@@ -482,7 +448,7 @@ func addAccumulatorStringAssignmentWork[T ~string](work *int, value T, published
 	return addAccumulatorStringCopyWork(work, text, 2)
 }
 
-func markChatCompletionMetadataProjected(seen *[maxChatCompletionAccumulatorStructuralSlots / 64]uint64, index int) bool {
+func markChatCompletionMetadataProjected(seen *[2]uint64, index int) bool {
 	word := index / 64
 	mask := uint64(1) << (index % 64)
 	first := seen[word]&mask == 0
@@ -505,7 +471,7 @@ func chatCompletionToolMetadataDelta(completion *ChatCompletion, chunk *ChatComp
 }
 
 func nonEmptyChatCompletionToolMetadataDelta(completion *ChatCompletion, chunk *ChatCompletionChunk) int64 {
-	var projections [maxChatCompletionAccumulatorStructuralSlots * 2]chatCompletionToolMetadataProjection
+	var projections chatCompletionToolProjectionTable
 	deltaBytes := int64(0)
 	for i := len(chunk.Choices) - 1; i >= 0; i-- {
 		choice := &chunk.Choices[i]
@@ -537,24 +503,66 @@ func nonEmptyChatCompletionToolMetadataDelta(completion *ChatCompletion, chunk *
 }
 
 func lookupChatCompletionToolMetadataProjection(
-	projections *[maxChatCompletionAccumulatorStructuralSlots * 2]chatCompletionToolMetadataProjection,
+	projections *chatCompletionToolProjectionTable,
 	choiceIndex int,
 	toolIndex int,
 ) *chatCompletionToolMetadataProjection {
-	key := choiceIndex*maxChatCompletionAccumulatorStructuralSlots + toolIndex
-	hash := uint(key) * 2_654_435_761
-	slot := int((hash ^ hash>>16) & uint(len(projections)-1))
+	key := chatCompletionToolProjectionKey{choice: choiceIndex, tool: toolIndex}
+	if projections.overflow != nil {
+		if projection := projections.overflow[key]; projection != nil {
+			return projection
+		}
+		projection := &chatCompletionToolMetadataProjection{key: key, used: true}
+		projections.overflow[key] = projection
+		return projection
+	}
+	if projections.count >= len(projections.inline)/2 {
+		projections.overflow = make(map[chatCompletionToolProjectionKey]*chatCompletionToolMetadataProjection, 2*projections.count)
+		for i := range projections.inline {
+			projection := &projections.inline[i]
+			if projection.used {
+				projections.overflow[projection.key] = projection
+			}
+		}
+		return lookupChatCompletionToolMetadataProjection(projections, choiceIndex, toolIndex)
+	}
+	hash := uint(toolIndex)*2_654_435_761 ^ uint(choiceIndex)*4_046_345_921
+	slot := int((hash ^ hash>>16) & uint(len(projections.inline)-1))
 	for {
-		projection := &projections[slot]
+		projection := &projections.inline[slot]
 		if !projection.used {
 			projection.key = key
 			projection.used = true
+			projections.count++
 			return projection
 		}
 		if projection.key == key {
 			return projection
 		}
-		slot = (slot + 1) & (len(projections) - 1)
+		slot = (slot + 1) & (len(projections.inline) - 1)
+	}
+}
+
+func findChatCompletionToolMetadataProjection(
+	projections *chatCompletionToolProjectionTable,
+	choiceIndex int,
+	toolIndex int,
+) *chatCompletionToolMetadataProjection {
+	key := chatCompletionToolProjectionKey{choice: choiceIndex, tool: toolIndex}
+	if projections.overflow != nil {
+		return projections.overflow[key]
+	}
+	hash := uint(toolIndex)*2_654_435_761 ^ uint(choiceIndex)*4_046_345_921
+	slot := int((hash ^ hash>>16) & uint(len(projections.inline)-1))
+	for {
+		projection := &projections.inline[slot]
+		if !projection.used {
+			return nil
+		}
+		if projection.key == key {
+			return projection
+		}
+		slot = (slot + 1) & (len(projections.inline) - 1)
 	}
 }
 
@@ -571,7 +579,7 @@ func addAccumulatorTextWork(total *int, bytes int) bool {
 }
 
 func addAccumulatorMetadataBytes(total *int, text string) bool {
-	if len(text) > maxChatCompletionAccumulatorMetadataBytes-*total {
+	if len(text) > maxChatCompletionAccumulatorInt-*total {
 		return false
 	}
 	*total += len(text)

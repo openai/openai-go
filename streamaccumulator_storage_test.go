@@ -146,9 +146,7 @@ func TestAccumulatorTextCapacityGrowthAvoidsIntegerOverflow(t *testing.T) {
 	}
 }
 
-func TestAccumulatorLogprobsRetainGeometricHeadroomAtFinalGrowth(t *testing.T) {
-	logprobSize := int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
-	maxLogprobs := maxChatCompletionAccumulatorLogprobBytes / logprobSize
+func TestAccumulatorLogprobsRetainGeometricHeadroomBeyondFormerLimit(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{})
 	chunk.Choices[0].Logprobs.Content = make([]ChatCompletionTokenLogprob, 1<<16)
 
@@ -160,8 +158,8 @@ func TestAccumulatorLogprobsRetainGeometricHeadroomAtFinalGrowth(t *testing.T) {
 	if !acc.AddChunk(chunk) {
 		t.Fatal("AddChunk rejected the final bounded geometric logprob growth")
 	}
-	if got := cap(acc.Choices[0].Logprobs.Content); got != maxLogprobs {
-		t.Fatalf("retained logprob capacity = %d, want bounded headroom %d", got, maxLogprobs)
+	if got, want := cap(acc.Choices[0].Logprobs.Content), 1<<17; got != want {
+		t.Fatalf("retained logprob capacity = %d, want geometric headroom %d", got, want)
 	}
 }
 
@@ -177,7 +175,7 @@ func TestAccumulatorBoundsDuplicateMetadataAssignmentWork(t *testing.T) {
 	next.Choices = append(next.Choices, next.Choices[0])
 	next.Choices[0].FinishReason = strings.Repeat("a", metadataBytes-1) + "x"
 	next.Choices[1].FinishReason = strings.Repeat("a", metadataBytes-1) + "y"
-	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - 3*metadataBytes
+	acc.reconciliationWork = maxChatCompletionAccumulatorInt - 3*metadataBytes
 	before := acc.reconciliationWork
 	if acc.AddChunk(next) {
 		t.Fatal("AddChunk accepted duplicate metadata work beyond the cumulative budget")
@@ -238,7 +236,7 @@ func TestAccumulatorAccountsMetadataAssignmentAfterPublicReplacement(t *testing.
 			next := test.initial()
 			test.setChunk(&next, published)
 
-			acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - 4*metadataBytes
+			acc.reconciliationWork = maxChatCompletionAccumulatorInt - 4*metadataBytes
 			beforeWork := acc.reconciliationWork
 			if acc.AddChunk(next) {
 				t.Fatal("AddChunk accepted metadata work beyond the post-reconciliation budget")
@@ -338,7 +336,7 @@ func TestAccumulatorAccountsGrowthAfterPublicLogprobReplacement(t *testing.T) {
 	next := storageTestChunk(ChatCompletionChunkChoiceDelta{})
 	next.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "x"}}
 	oldProjectionWork := replacementCount*logprobSize + 2*replacementCount
-	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - oldProjectionWork - 4_096
+	acc.reconciliationWork = maxChatCompletionAccumulatorInt - oldProjectionWork - 4_096
 	beforeWork := acc.reconciliationWork
 	if acc.AddChunk(next) {
 		t.Fatal("AddChunk accepted an unbudgeted post-reconciliation logprob growth copy")
@@ -472,7 +470,7 @@ func TestAccumulatorTracksOnlyPopulatedSparseState(t *testing.T) {
 	}
 
 	empty := ChatCompletionChunk{ID: chunk.ID}
-	for range maxChatCompletionAccumulatorChunks - 1 {
+	for range 100_000 - 1 {
 		if !acc.AddChunk(empty) {
 			t.Fatal("AddChunk rejected an empty chunk within the documented budget")
 		}
@@ -680,23 +678,19 @@ func TestAccumulatorToolActivationStateGrowsAmortized(t *testing.T) {
 	}
 }
 
-func TestAccumulatorRejectsOversizedChunkBeforeIndexValidation(t *testing.T) {
+func TestAccumulatorRejectsSparseToolIndexInLargeDenseChunk(t *testing.T) {
 	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
-		ToolCalls: make([]ChatCompletionChunkChoiceDeltaToolCall, maxChatCompletionAccumulatorStructuralSlots),
+		ToolCalls: make([]ChatCompletionChunkChoiceDeltaToolCall, chatCompletionAccumulatorInlineProjectionSlots),
 	})
 	chunk.Choices[0].Delta.ToolCalls[len(chunk.Choices[0].Delta.ToolCalls)-1].Index = 1 << 30
-	if chatCompletionChunkEntriesWithinLimit(&chunk) {
-		t.Fatal("oversized chunk passed the bounded cardinality guard")
-	}
-
 	var acc ChatCompletionAccumulator
 	if acc.AddChunk(chunk) {
-		t.Fatal("AddChunk accepted a chunk beyond the structural entry limit")
+		t.Fatal("AddChunk accepted an invalid sparse tool index in a large chunk")
 	}
 }
 
 func TestAccumulatorChargesSparseToolTruncationCopies(t *testing.T) {
-	const toolIndex = maxChatCompletionAccumulatorStructuralSlots - 2
+	const toolIndex = chatCompletionAccumulatorInlineProjectionSlots - 2
 	var acc ChatCompletionAccumulator
 	for index := int64(maxStreamAccumulatorToolCallGrowth - 1); index < toolIndex; index += maxStreamAccumulatorToolCallGrowth - 1 {
 		chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
@@ -727,7 +721,7 @@ func TestAccumulatorChargesSparseToolTruncationCopies(t *testing.T) {
 		t.Fatalf("sparse truncation work = %d, want at least %d", got, minimumCopyWork)
 	}
 
-	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - minimumCopyWork + 1
+	acc.reconciliationWork = maxChatCompletionAccumulatorInt - minimumCopyWork + 1
 	if acc.AddChunk(reactivate) {
 		t.Fatal("AddChunk accepted sparse truncation copies beyond the cumulative work budget")
 	}
@@ -754,7 +748,7 @@ func TestAccumulatorChargesPrivateStateCopyBeforeDetaching(t *testing.T) {
 	if copyWork == 0 {
 		t.Fatal("value copy projected no private-state copy work")
 	}
-	branch.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - copyWork + 1
+	branch.reconciliationWork = maxChatCompletionAccumulatorInt - copyWork + 1
 	if branch.AddChunk(ChatCompletionChunk{ID: initial.ID}) {
 		t.Fatal("AddChunk accepted private-state copy work beyond the cumulative budget")
 	}
@@ -889,7 +883,7 @@ func TestAccumulatorBoundsLogprobReconciliationWork(t *testing.T) {
 	if !acc.AddChunk(chunk) {
 		t.Fatal("AddChunk rejected the initial logprob")
 	}
-	acc.reconciliationWork = maxChatCompletionAccumulatorReconcileWork - 12
+	acc.reconciliationWork = maxChatCompletionAccumulatorInt - 12
 	acc.Choices[0].Logprobs.Content = append([]ChatCompletionTokenLogprob(nil), acc.Choices[0].Logprobs.Content...)
 	if acc.AddChunk(ChatCompletionChunk{ID: chunk.ID}) {
 		t.Fatal("AddChunk accepted copy work beyond the logprob reconciliation budget")

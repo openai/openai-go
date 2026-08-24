@@ -202,23 +202,31 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 		if i < len(state.choices) {
 			current = state.choices[i]
 		}
-		content, contentDetach, ok := projectChatCompletionLogprobSlice(
-			current.content,
-			logprobs.Content,
-			chatCompletionTextAppendMarked(&contentAppends, i),
-			work,
-		)
-		if !ok {
-			return false, false
+		content, contentDetach := current.content, false
+		if !current.content.matches(logprobs.Content) {
+			var ok bool
+			content, contentDetach, ok = projectChatCompletionLogprobSlice(
+				current.content,
+				logprobs.Content,
+				chatCompletionTextAppendMarked(&contentAppends, i),
+				work,
+			)
+			if !ok {
+				return false, false
+			}
 		}
-		refusal, refusalDetach, ok := projectChatCompletionLogprobSlice(
-			current.refusal,
-			logprobs.Refusal,
-			chatCompletionTextAppendMarked(&refusalAppends, i),
-			work,
-		)
-		if !ok {
-			return false, false
+		refusal, refusalDetach := current.refusal, false
+		if !current.refusal.matches(logprobs.Refusal) {
+			var ok bool
+			refusal, refusalDetach, ok = projectChatCompletionLogprobSlice(
+				current.refusal,
+				logprobs.Refusal,
+				chatCompletionTextAppendMarked(&refusalAppends, i),
+				work,
+			)
+			if !ok {
+				return false, false
+			}
 		}
 		if !addAccumulatorLogprobBytes(&plan.state.bytes, content.bytes) ||
 			!addAccumulatorLogprobBytes(&plan.state.bytes, refusal.bytes) {
@@ -346,8 +354,8 @@ func addChatCompletionChunkLogprobSliceBytes(total *int, logprobs []ChatCompleti
 }
 
 func (state *chatCompletionAccumulatorLogprobState) nonEmptyChunkWithinLimit(chunk *ChatCompletionChunk) bool {
-	var projections [maxChatCompletionAccumulatorStructuralSlots]chatCompletionLogprobProjection
-	var touched [maxChatCompletionAccumulatorStructuralSlots]int
+	var projections [maxStreamAccumulatorChoiceIndex + 1]chatCompletionLogprobProjection
+	var touched [maxStreamAccumulatorChoiceIndex + 1]int
 	touchedCount := 0
 	for i := range chunk.Choices {
 		choice := &chunk.Choices[i]
@@ -380,7 +388,7 @@ func (state *chatCompletionAccumulatorLogprobState) nonEmptyChunkWithinLimit(chu
 }
 
 func addChatCompletionLogprobProjection(count *int, bytes *int, logprobs []ChatCompletionTokenLogprob) bool {
-	maxLogprobs := maxChatCompletionAccumulatorLogprobBytes / int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
+	maxLogprobs := maxChatCompletionAccumulatorInt / int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
 	if len(logprobs) > maxLogprobs-*count {
 		return false
 	}
@@ -389,7 +397,7 @@ func addChatCompletionLogprobProjection(count *int, bytes *int, logprobs []ChatC
 }
 
 func addProjectedLogprobSliceBytes(total *int, current chatCompletionLogprobSliceState, count int, dataBytes int, logprobSize int) bool {
-	maxLogprobs := maxChatCompletionAccumulatorLogprobBytes / logprobSize
+	maxLogprobs := maxChatCompletionAccumulatorInt / logprobSize
 	if count > maxLogprobs-current.length {
 		return false
 	}
@@ -424,7 +432,7 @@ func (state *chatCompletionAccumulatorLogprobState) acceptChunk(completion *Chat
 		state.choices = choices
 	}
 	logprobSize := int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
-	maxLogprobs := maxChatCompletionAccumulatorLogprobBytes / logprobSize
+	maxLogprobs := maxChatCompletionAccumulatorInt / logprobSize
 	for i := range chunk.Choices {
 		choice := &chunk.Choices[i]
 		choiceState := &state.choices[choice.Index]
@@ -459,7 +467,7 @@ func appendChatCompletionLogprobs(dst []ChatCompletionTokenLogprob, src []ChatCo
 	}
 	required := len(dst) + len(src)
 	if required > cap(dst) {
-		maxLogprobs := maxChatCompletionAccumulatorLogprobBytes / int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
+		maxLogprobs := maxChatCompletionAccumulatorInt / int(unsafe.Sizeof(ChatCompletionTokenLogprob{}))
 		capacity := projectedLogprobCapacity(cap(dst), required, maxLogprobs)
 		grown := make([]ChatCompletionTokenLogprob, len(dst), capacity)
 		copy(grown, dst)
@@ -587,7 +595,7 @@ func addChatCompletionLogprobMetadata(total *int, raw string, extraFields map[st
 }
 
 func addAccumulatorLogprobStorage(total *int, count int, size int) bool {
-	if count > (maxChatCompletionAccumulatorLogprobBytes-*total)/size {
+	if count > (maxChatCompletionAccumulatorInt-*total)/size {
 		return false
 	}
 	*total += count * size
@@ -595,7 +603,7 @@ func addAccumulatorLogprobStorage(total *int, count int, size int) bool {
 }
 
 func addAccumulatorLogprobBytes(total *int, count int) bool {
-	if count > maxChatCompletionAccumulatorLogprobBytes-*total {
+	if count > maxChatCompletionAccumulatorInt-*total {
 		return false
 	}
 	*total += count
@@ -603,7 +611,7 @@ func addAccumulatorLogprobBytes(total *int, count int) bool {
 }
 
 func addAccumulatorReconciliationWork(total *int, count int) bool {
-	if count > maxChatCompletionAccumulatorReconcileWork-*total {
+	if count > maxChatCompletionAccumulatorInt-*total {
 		return false
 	}
 	*total += count

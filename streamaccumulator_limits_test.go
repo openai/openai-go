@@ -220,7 +220,7 @@ func TestAccumulatorAcceptsTextBeyondFormerBudget(t *testing.T) {
 	}
 }
 
-func TestAccumulatorRejectsRetainedToolMetadataBeyondBudgetWithoutMutation(t *testing.T) {
+func TestAccumulatorPreservesLargeRetainedToolMetadata(t *testing.T) {
 	tests := []struct {
 		name string
 		set  func(*openai.ChatCompletionChunkChoiceDeltaToolCall, string)
@@ -253,11 +253,11 @@ func TestAccumulatorRejectsRetainedToolMetadataBeyondBudgetWithoutMutation(t *te
 			beyondLimit.Created = 2
 			beyondLimit.Choices[0].Delta.ToolCalls[0].Index = 1
 			test.set(&beyondLimit.Choices[0].Delta.ToolCalls[0], "x")
-			if acc.AddChunk(beyondLimit) {
-				t.Fatal("AddChunk accepted retained tool metadata beyond the documented aggregate budget")
+			if !acc.AddChunk(beyondLimit) {
+				t.Fatal("AddChunk rejected historically supported retained tool metadata beyond the former budget")
 			}
-			if acc.Created != 1 || len(acc.Choices[0].Message.ToolCalls) != 1 {
-				t.Fatal("AddChunk mutated the accumulator after rejecting excessive retained tool metadata")
+			if acc.Created != 2 || len(acc.Choices[0].Message.ToolCalls) != 2 {
+				t.Fatal("AddChunk did not preserve the large retained tool metadata")
 			}
 		})
 	}
@@ -340,19 +340,18 @@ func TestAccumulatorLogprobReconciliationIsAtomic(t *testing.T) {
 
 	acc.Choices[0].Logprobs.Content = acc.Choices[0].Logprobs.Content[:0:0]
 	contentData := unsafe.SliceData(acc.Choices[0].Logprobs.Content)
-	byteCount := testAccumulatorMaxLogprobBytes / int(unsafe.Sizeof(int64(0)))
-	acc.Choices[0].Logprobs.Refusal = []openai.ChatCompletionTokenLogprob{{Bytes: make([]int64, byteCount)}}
-	if acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
-		t.Fatal("AddChunk accepted public logprobs beyond the aggregate budget")
+	invalid := accumulatorToolStringChunk("", "")
+	invalid.Choices[0].Delta.ToolCalls[0].Index = 100_000
+	if acc.AddChunk(invalid) {
+		t.Fatal("AddChunk accepted an invalid sparse tool-call index")
 	}
 	content := acc.Choices[0].Logprobs.Content
 	if len(content) != 0 || cap(content) != 0 || unsafe.SliceData(content) != contentData {
 		t.Fatal("AddChunk detached public logprob backing before rejecting the chunk")
 	}
 
-	acc.Choices[0].Logprobs.Refusal = nil
 	if !acc.AddChunk(accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})) {
-		t.Fatal("AddChunk rejected the valid chunk after excessive public logprobs were cleared")
+		t.Fatal("AddChunk rejected the valid chunk after the invalid sparse index")
 	}
 	if unsafe.SliceData(acc.Choices[0].Logprobs.Content) == contentData {
 		t.Fatal("AddChunk did not apply the staged detachment after accepting the chunk")
@@ -521,7 +520,7 @@ func TestAccumulatorDetachesCapacityClippedLogprobBacking(t *testing.T) {
 	}
 }
 
-func TestAccumulatorDoesNotReplenishLogprobBudgetAfterDetachment(t *testing.T) {
+func TestAccumulatorAcceptsLogprobsAfterDetachingLargeBacking(t *testing.T) {
 	logprobOverhead := 2 * int(unsafe.Sizeof(openai.ChatCompletionTokenLogprob{}))
 	initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
 	initial.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{
@@ -543,11 +542,11 @@ func TestAccumulatorDoesNotReplenishLogprobBudgetAfterDetachment(t *testing.T) {
 
 	next := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
 	next.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "replacement"}}
-	if acc.AddChunk(next) {
-		t.Fatal("AddChunk replenished the cumulative remote-logprob budget after detachment")
+	if !acc.AddChunk(next) {
+		t.Fatal("AddChunk rejected historically supported logprobs after large backing was detached")
 	}
-	if got := len(acc.Choices[0].Logprobs.Content); got != 0 {
-		t.Fatalf("rejected logprobs changed accumulated length to %d", got)
+	if got := len(acc.Choices[0].Logprobs.Content); got != 1 {
+		t.Fatalf("accumulated replacement logprobs = %d, want 1", got)
 	}
 }
 
@@ -671,7 +670,7 @@ func TestAccumulatorPreservesNilNestedLogprobSlices(t *testing.T) {
 	}
 }
 
-func TestAccumulatorRejectsChunksBeyondBudgetWithoutMutation(t *testing.T) {
+func TestAccumulatorPreservesMetadataBeyondFormerChunkBudget(t *testing.T) {
 	var acc openai.ChatCompletionAccumulator
 	chunk := openai.ChatCompletionChunk{ID: "chatcmpl-too-many-chunks", Model: "accepted-model"}
 
@@ -681,12 +680,12 @@ func TestAccumulatorRejectsChunksBeyondBudgetWithoutMutation(t *testing.T) {
 		}
 	}
 
-	chunk.Model = "rejected-model"
-	if acc.AddChunk(chunk) {
-		t.Fatal("AddChunk accepted a chunk beyond the documented budget")
+	chunk.Model = "updated-model"
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected a valid stream beyond the former chunk budget")
 	}
-	if acc.Model != "accepted-model" {
-		t.Fatalf("AddChunk mutated model after rejecting the chunk: got %q", acc.Model)
+	if acc.Model != "updated-model" {
+		t.Fatalf("AddChunk did not update model beyond the former chunk budget: got %q", acc.Model)
 	}
 }
 
@@ -704,8 +703,8 @@ func TestAccumulatorRejectsSparseToolCallIndexWithoutMutation(t *testing.T) {
 	}
 }
 
-func TestAccumulatorStructuralBudgetBoundary(t *testing.T) {
-	t.Run("accepts_limit", func(t *testing.T) {
+func TestAccumulatorDenseToolCallsHaveNoAggregateStructuralLimit(t *testing.T) {
+	t.Run("at_former_limit", func(t *testing.T) {
 		var acc openai.ChatCompletionAccumulator
 		chunk := accumulatorDenseToolStringChunk(testAccumulatorMaxStructuralSlots - 1)
 
@@ -717,15 +716,15 @@ func TestAccumulatorStructuralBudgetBoundary(t *testing.T) {
 		}
 	})
 
-	t.Run("rejects_beyond_limit", func(t *testing.T) {
+	t.Run("beyond_former_limit", func(t *testing.T) {
 		var acc openai.ChatCompletionAccumulator
 		chunk := accumulatorDenseToolStringChunk(testAccumulatorMaxStructuralSlots)
 
-		if acc.AddChunk(chunk) {
-			t.Fatal("AddChunk accepted structures beyond the documented budget")
+		if !acc.AddChunk(chunk) {
+			t.Fatal("AddChunk rejected historically supported dense tool calls beyond the former limit")
 		}
-		if acc.ID != "" || len(acc.Choices) != 0 {
-			t.Fatal("AddChunk mutated the accumulator after rejecting structures beyond the budget")
+		if got := len(acc.Choices[0].Message.ToolCalls); got != testAccumulatorMaxStructuralSlots {
+			t.Fatalf("accumulated tool calls = %d, want %d", got, testAccumulatorMaxStructuralSlots)
 		}
 	})
 }
