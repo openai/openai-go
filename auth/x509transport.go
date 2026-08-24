@@ -2,12 +2,17 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
+	"crypto/subtle"
 	"crypto/tls"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"net/http"
 	"path"
+	"slices"
 	"strings"
+	"sync/atomic"
 )
 
 const (
@@ -24,30 +29,63 @@ type x509TransportError struct {
 func (err *x509TransportError) Error() string { return "X.509 transport request failed" }
 func (err *x509TransportError) Unwrap() error { return err.cause }
 
-// X509Transport represents one explicitly attested, caller-owned mTLS transport
+// X509Transport represents one explicitly attested mTLS configuration
 // generation. Its identity is the capability pointer, not a certificate-bound
 // OAuth token. Rotating credentials requires a new transport and capability.
 //
-// The application owns the transport, certificate, private key, trust roots,
-// connection pool, and lifecycle. It must not mutate the transport or its TLS
-// configuration after attestation. HTTPS proxies are unsupported because
-// net/http uses the same client TLS configuration for a proxy and its origin.
+// The application owns its template transport, certificate, private key, and
+// trust roots. The template is never used, modified, or closed by this
+// capability. X509Transport creates an isolated native connection pool that
+// cannot inherit privately registered HTTPS handlers; call Close to release
+// that pool. The template and its TLS configuration must remain unchanged after
+// attestation. HTTPS proxies are unsupported because net/http uses the same
+// client TLS configuration for a proxy and its origin.
 type X509Transport struct {
-	transport *http.Transport
-	tlsConfig *tls.Config
-	client    *http.Client
+	template          *http.Transport
+	templateTLS       *tls.Config
+	transport         *http.Transport
+	tlsConfig         *tls.Config
+	certificateDigest [sha256.Size]byte
+	client            *http.Client
+	closed            atomic.Bool
 }
 
-// NewX509Transport attests a direct, native HTTP transport configured with one
-// static client certificate. The transport remains owned by its caller.
-func NewX509Transport(transport *http.Transport) (*X509Transport, error) {
-	if err := validateX509NativeTransport(transport); err != nil {
+// NewX509Transport attests a direct, native HTTP transport template configured
+// with one static client certificate. The template and TLS credentials remain
+// caller-owned; the returned capability owns a separate clean connection pool.
+func NewX509Transport(template *http.Transport) (*X509Transport, error) {
+	if err := validateX509NativeTransport(template); err != nil {
 		return nil, err
 	}
+	config := template.TLSClientConfig.Clone()
+	config.Certificates = slices.Clone(config.Certificates)
+	config.NextProtos = slices.Clone(config.NextProtos)
+	transport := &http.Transport{
+		DialContext:            template.DialContext,
+		TLSClientConfig:        config,
+		TLSHandshakeTimeout:    template.TLSHandshakeTimeout,
+		DisableKeepAlives:      template.DisableKeepAlives,
+		DisableCompression:     template.DisableCompression,
+		MaxIdleConns:           template.MaxIdleConns,
+		MaxIdleConnsPerHost:    template.MaxIdleConnsPerHost,
+		MaxConnsPerHost:        template.MaxConnsPerHost,
+		IdleConnTimeout:        template.IdleConnTimeout,
+		ResponseHeaderTimeout:  template.ResponseHeaderTimeout,
+		ExpectContinueTimeout:  template.ExpectContinueTimeout,
+		MaxResponseHeaderBytes: template.MaxResponseHeaderBytes,
+		WriteBufferSize:        template.WriteBufferSize,
+		ReadBufferSize:         template.ReadBufferSize,
+		ForceAttemptHTTP2:      template.ForceAttemptHTTP2,
+	}
+	//nolint:staticcheck // Preserve a legacy TCP dialer; unlike DialTLS, it cannot bypass native TLS.
+	transport.Dial = template.Dial
 
 	return &X509Transport{
-		transport: transport,
-		tlsConfig: transport.TLSClientConfig,
+		template:          template,
+		templateTLS:       template.TLSClientConfig,
+		transport:         transport,
+		tlsConfig:         config,
+		certificateDigest: x509CertificateDigest(config.Certificates[0].Certificate),
 		client: &http.Client{
 			Transport: transport,
 			CheckRedirect: func(*http.Request, []*http.Request) error {
@@ -55,6 +93,19 @@ func NewX509Transport(transport *http.Transport) (*X509Transport, error) {
 			},
 		},
 	}, nil
+}
+
+func x509CertificateDigest(chain [][]byte) [sha256.Size]byte {
+	digest := sha256.New()
+	var length [8]byte
+	for _, certificate := range chain {
+		binary.BigEndian.PutUint64(length[:], uint64(len(certificate)))
+		_, _ = digest.Write(length[:])
+		_, _ = digest.Write(certificate)
+	}
+	var result [sha256.Size]byte
+	copy(result[:], digest.Sum(nil))
+	return result
 }
 
 func validateX509NativeTransport(transport *http.Transport) error {
@@ -85,6 +136,9 @@ func validateX509NativeTransport(transport *http.Transport) error {
 	if transport.Proxy != nil {
 		return errors.New("X.509 transport currently supports direct connections only")
 	}
+	if len(transport.TLSNextProto) != 0 {
+		return errors.New("X.509 transport does not support custom TLS protocol handlers")
+	}
 	if config.InsecureSkipVerify {
 		return errors.New("X.509 transport requires TLS certificate and hostname verification")
 	}
@@ -95,21 +149,49 @@ func validateX509NativeTransport(transport *http.Transport) error {
 }
 
 func (transport *X509Transport) validateAttestation() error {
-	if transport == nil || transport.client == nil || transport.transport == nil {
+	if transport == nil || transport.client == nil || transport.transport == nil || transport.template == nil {
 		return errors.New("X.509 transport capability is invalid")
 	}
-	if err := validateX509NativeTransport(transport.transport); err != nil {
+	if transport.closed.Load() {
+		return errors.New("X.509 transport capability is closed")
+	}
+	if err := validateX509NativeTransport(transport.template); err != nil {
 		return fmt.Errorf("X.509 transport attestation changed: %w", err)
 	}
-	if transport.transport.TLSClientConfig != transport.tlsConfig {
+	if transport.template.TLSClientConfig != transport.templateTLS ||
+		transport.transport.TLSClientConfig != transport.tlsConfig {
 		return errors.New("X.509 transport TLS configuration changed after attestation")
+	}
+	for _, config := range []*tls.Config{transport.templateTLS, transport.tlsConfig} {
+		if len(config.Certificates) != 1 {
+			return errors.New("X.509 transport certificate changed after attestation")
+		}
+		digest := x509CertificateDigest(config.Certificates[0].Certificate)
+		if subtle.ConstantTimeCompare(digest[:], transport.certificateDigest[:]) != 1 {
+			return errors.New("X.509 transport certificate changed after attestation")
+		}
+	}
+	return nil
+}
+
+// Close releases this capability's isolated idle connections. It is
+// idempotent, never closes the caller's template, and prevents future requests.
+func (transport *X509Transport) Close() error {
+	if transport == nil || transport.transport == nil {
+		return errors.New("X.509 transport capability is invalid")
+	}
+	if transport.closed.CompareAndSwap(false, true) {
+		transport.transport.CloseIdleConnections()
 	}
 	return nil
 }
 
 // Do sends a request to an approved global OpenAI mTLS endpoint without
-// following redirects. Request context, transport ownership, and pooling are
-// preserved. OAuth exchange and client authentication are configured separately.
+// following redirects. The request is snapshotted before validation so caller
+// hooks cannot alter its URL or credentials after the final safety checks.
+// Request context and caller-owned TLS credentials are preserved; the
+// capability owns its isolated pool. OAuth authentication is configured
+// separately.
 func (transport *X509Transport) Do(request *http.Request) (*http.Response, error) {
 	if request == nil {
 		return nil, errors.New("X.509 transport requires a non-nil HTTP request")
@@ -117,6 +199,7 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 	if err := request.Context().Err(); err != nil {
 		return nil, err
 	}
+	request = request.Clone(request.Context())
 	if err := transport.validateAttestation(); err != nil {
 		return nil, err
 	}
@@ -166,8 +249,12 @@ func validateX509Request(request *http.Request) error {
 			return errors.New("X.509 requests cannot contain alternate credentials, cookies, or authority headers")
 		case "authorization":
 			authorizationCount += len(values)
-			if host == x509AuthenticationHost || authorizationCount != 1 {
+			if host == x509AuthenticationHost || authorizationCount != 1 || !validX509BearerHeader(values[0]) {
 				return errors.New("X.509 requests contain invalid Authorization credentials")
+			}
+		case "openai-organization", "openai-project":
+			if host == x509AuthenticationHost {
+				return errors.New("X.509 token exchange cannot contain organization or project headers")
 			}
 		}
 		if strings.HasPrefix(normalized, ":") {
@@ -187,4 +274,26 @@ func validateX509Request(request *http.Request) error {
 		return errors.New("X.509 API requests must remain inside the /v1/ path")
 	}
 	return nil
+}
+
+func validX509BearerHeader(value string) bool {
+	token, ok := strings.CutPrefix(value, "Bearer ")
+	if !ok || token == "" {
+		return false
+	}
+	padding := false
+	for _, value := range []byte(token) {
+		switch {
+		case value == '=':
+			padding = true
+		case value >= 'A' && value <= 'Z', value >= 'a' && value <= 'z', value >= '0' && value <= '9',
+			value == '-', value == '.', value == '_', value == '~', value == '+', value == '/':
+			if padding {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+	return token[0] != '='
 }

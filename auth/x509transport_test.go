@@ -1,10 +1,12 @@
 package auth_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -16,6 +18,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/http/httptrace"
 	"net/url"
 	"strings"
 	"sync"
@@ -115,6 +118,15 @@ func TestNewX509TransportRequiresStaticNativeConfiguration(t *testing.T) {
 			want: "direct connections",
 		},
 		{
+			name: "custom TLS protocol handler",
+			change: func(transport *http.Transport) {
+				transport.TLSNextProto = map[string]func(string, *tls.Conn) http.RoundTripper{
+					"attacker": func(string, *tls.Conn) http.RoundTripper { return nil },
+				}
+			},
+			want: "TLS protocol handlers",
+		},
+		{
 			name:   "disabled certificate verification",
 			change: func(transport *http.Transport) { transport.TLSClientConfig.InsecureSkipVerify = true },
 			want:   "hostname verification",
@@ -158,6 +170,21 @@ func TestX509TransportAttestationDetectsUnsafeMutations(t *testing.T) {
 			change: func(transport *http.Transport) { transport.TLSClientConfig = transport.TLSClientConfig.Clone() },
 		},
 		{
+			name: "replace static certificate generation",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.Certificates = []tls.Certificate{fixture.certificate(t, "rotated-workload", nil, true)}
+			},
+		},
+		{
+			name: "replace certificate chain",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.Certificates[0].Certificate = append(
+					transport.TLSClientConfig.Certificates[0].Certificate,
+					[]byte("synthetic alternate intermediate"),
+				)
+			},
+		},
+		{
 			name: "install dynamic certificate callback",
 			change: func(transport *http.Transport) {
 				transport.TLSClientConfig.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
@@ -185,19 +212,52 @@ func TestX509TransportAttestationDetectsUnsafeMutations(t *testing.T) {
 				}
 			},
 		},
+		{
+			name: "install custom TLS protocol handler",
+			change: func(transport *http.Transport) {
+				transport.TLSNextProto = map[string]func(string, *tls.Conn) http.RoundTripper{
+					"attacker": func(string, *tls.Conn) http.RoundTripper { return nil },
+				}
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			transport := fixture.transport(t, nil)
-			capability, err := auth.NewX509Transport(transport)
-			if err != nil {
-				t.Fatalf("create initial capability: %v", err)
-			}
+			capability := newX509Capability(t, transport)
 			test.change(transport)
 			request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
 			_ = x509Rejected(t, capability, request)
 		})
+	}
+}
+
+func TestX509TransportRejectsCertificateRotationBeforeMutualTLS(t *testing.T) {
+	fixture := newX509TransportFixture(t)
+	var requests atomic.Int32
+	server := fixture.server(t, http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		requests.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	template := fixture.transport(t, server)
+	capability := newX509Capability(t, template)
+	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+	request.Header.Set("Authorization", "Bearer initial-workload-token")
+	first, err := capability.Do(request)
+	if err != nil {
+		t.Fatalf("initial hostname-verified mTLS request: %v", err)
+	}
+	if closeErr := first.Body.Close(); closeErr != nil {
+		t.Fatalf("close initial mTLS response: %v", closeErr)
+	}
+
+	template.TLSClientConfig.Certificates[0] = fixture.certificate(t, "rotated-workload", nil, true)
+	if rotationErr := x509Rejected(t, capability, request); !strings.Contains(rotationErr.Error(), "certificate changed") {
+		t.Fatalf("certificate rotation error = %v, want changed-generation refusal", rotationErr)
+	}
+	if got := requests.Load(); got != 1 {
+		t.Errorf("mTLS server received %d requests after unauthorized rotation, want one original request", got)
 	}
 }
 
@@ -279,10 +339,20 @@ func TestX509TransportRejectsUnsafeCredentialAliases(t *testing.T) {
 		{name: "issuer AWS credential", host: x509TransportIssuer, header: "X-Amz-Security-Token", values: []string{"synthetic"}},
 		{name: "issuer forged Host", host: x509TransportIssuer, header: "Host", values: []string{"attacker.test"}},
 		{name: "issuer pseudo authority", host: x509TransportIssuer, header: ":authority", values: []string{"attacker.test"}},
+		{name: "issuer organization", host: x509TransportIssuer, header: "OpenAI-Organization", values: []string{"synthetic-org"}},
+		{name: "issuer organization alias", host: x509TransportIssuer, header: "openai_organization", values: []string{"synthetic-org"}},
+		{name: "issuer project", host: x509TransportIssuer, header: "OpenAI-Project", values: []string{"synthetic-project"}},
+		{name: "issuer project alias", host: x509TransportIssuer, header: "openai_project", values: []string{"synthetic-project"}},
 		{name: "API API key", host: x509TransportAPI, header: "api_key", values: []string{"synthetic"}},
 		{name: "API proxy authorization", host: x509TransportAPI, header: "Proxy_Authorization", values: []string{"synthetic"}},
 		{name: "API cookie", host: x509TransportAPI, header: "Cookie", values: []string{"session=synthetic"}},
 		{name: "multiple API bearers", host: x509TransportAPI, header: "Authorization", values: []string{"Bearer one", "Bearer two"}},
+		{name: "API Basic credential", host: x509TransportAPI, header: "Authorization", values: []string{"Basic synthetic"}},
+		{name: "API comma-separated bearer", host: x509TransportAPI, header: "Authorization", values: []string{"Bearer first,Bearer second"}},
+		{name: "API whitespace bearer", host: x509TransportAPI, header: "Authorization", values: []string{"Bearer token with spaces"}},
+		{name: "API empty bearer", host: x509TransportAPI, header: "Authorization", values: []string{"Bearer "}},
+		{name: "API malformed bearer padding", host: x509TransportAPI, header: "Authorization", values: []string{"Bearer token=unsafe"}},
+		{name: "API padding-only bearer", host: x509TransportAPI, header: "Authorization", values: []string{"Bearer ==="}},
 	}
 
 	for _, test := range tests {
@@ -307,7 +377,7 @@ func TestX509TransportRejectsUnsafeCredentialAliases(t *testing.T) {
 	})
 }
 
-func TestX509TransportUsesCallerOwnedTransportAndRequestContext(t *testing.T) {
+func TestX509TransportUsesIsolatedNativePoolAndCallerOwnedCredentials(t *testing.T) {
 	fixture := newX509TransportFixture(t)
 	type requestRecord struct {
 		host          string
@@ -389,6 +459,162 @@ func TestX509TransportUsesCallerOwnedTransportAndRequestContext(t *testing.T) {
 	}
 	if received[0].authorization != "" || received[1].authorization != "Bearer synthetic-access-token" {
 		t.Errorf("issuer/API authorization = %q/%q", received[0].authorization, received[1].authorization)
+	}
+}
+
+func TestX509TransportIgnoresHiddenRegisteredHTTPSProtocol(t *testing.T) {
+	fixture := newX509TransportFixture(t)
+	var delivered atomic.Int32
+	server := fixture.server(t, http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		if request.Header.Get("Authorization") == "Bearer safe-workload-token" {
+			delivered.Add(1)
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	template := fixture.transport(t, server)
+	var captured atomic.Int32
+	template.RegisterProtocol("https", &closureTransport{fn: func(request *http.Request) (*http.Response, error) {
+		captured.Add(1)
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     make(http.Header),
+			Body:       io.NopCloser(strings.NewReader("{}")),
+			Request:    request,
+		}, nil
+	}})
+	capability := newX509Capability(t, template)
+	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+	request.Header.Set("Authorization", "Bearer safe-workload-token")
+
+	response, err := capability.Do(request)
+	if err != nil {
+		t.Fatalf("dispatch through clean native adapter: %v", err)
+	}
+	if closeErr := response.Body.Close(); closeErr != nil {
+		t.Fatalf("close clean-adapter response: %v", closeErr)
+	}
+	if got := captured.Load(); got != 0 {
+		t.Fatalf("caller template's hidden HTTPS handler captured %d protected requests", got)
+	}
+	if got := delivered.Load(); got != 1 {
+		t.Fatalf("real mutually authenticated server received %d protected requests", got)
+	}
+
+	originalRequest := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/original")
+	originalResponse, err := (&http.Client{Transport: template}).Do(originalRequest)
+	if err != nil {
+		t.Fatalf("caller-owned original transport: %v", err)
+	}
+	if err := originalResponse.Body.Close(); err != nil {
+		t.Fatalf("close original transport response: %v", err)
+	}
+	if got := captured.Load(); got != 1 {
+		t.Errorf("original caller-owned HTTPS handler was changed or removed; calls = %d", got)
+	}
+}
+
+func TestX509TransportSnapshotsRequestBeforeTraceMutation(t *testing.T) {
+	fixture := newX509TransportFixture(t)
+	type observedRequest struct {
+		host          string
+		authorization string
+		serverName    string
+	}
+	observed := make(chan observedRequest, 1)
+	server := fixture.server(t, http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		observed <- observedRequest{
+			host:          request.Host,
+			authorization: request.Header.Get("Authorization"),
+			serverName:    request.TLS.ServerName,
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	capability := newX509Capability(t, fixture.transport(t, server))
+	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+	request.Header.Set("Authorization", "Bearer original-workload-token")
+	trace := &httptrace.ClientTrace{
+		GotConn: func(httptrace.GotConnInfo) {
+			request.URL.Host = "attacker.example.test"
+			request.Host = "attacker.example.test"
+			request.Header.Set("Authorization", "Bearer attacker-replaced-token")
+		},
+	}
+	request = request.WithContext(httptrace.WithClientTrace(request.Context(), trace))
+
+	response, err := capability.Do(request)
+	if err != nil {
+		t.Fatalf("dispatch with late request-mutating trace: %v", err)
+	}
+	if err := response.Body.Close(); err != nil {
+		t.Fatalf("close trace-mutating response: %v", err)
+	}
+	select {
+	case record := <-observed:
+		if record.host != x509TransportAPI || record.serverName != x509TransportAPI {
+			t.Errorf("protected Host/SNI = %q/%q", record.host, record.serverName)
+		}
+		if record.authorization != "Bearer original-workload-token" {
+			t.Errorf("protected bearer was changed by late trace: %q", record.authorization)
+		}
+	default:
+		t.Fatal("real mTLS server did not receive the protected request")
+	}
+	if request.Host != "attacker.example.test" ||
+		request.Header.Get("Authorization") != "Bearer attacker-replaced-token" {
+		t.Fatal("negative-control trace did not mutate the original caller request")
+	}
+}
+
+func TestX509TransportCloseOwnsOnlyItsIsolatedPool(t *testing.T) {
+	fixture := newX509TransportFixture(t)
+	var mu sync.Mutex
+	var connections []string
+	server := fixture.server(t, http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		mu.Lock()
+		connections = append(connections, request.RemoteAddr)
+		mu.Unlock()
+		w.WriteHeader(http.StatusOK)
+	}))
+	template := fixture.transport(t, server)
+	caller := &http.Client{Transport: template}
+	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+	original, err := caller.Do(request)
+	if err != nil {
+		t.Fatalf("initial caller-owned request: %v", err)
+	}
+	if closeErr := original.Body.Close(); closeErr != nil {
+		t.Fatalf("close caller-owned response: %v", closeErr)
+	}
+
+	capability := newX509Capability(t, template)
+	protected, err := capability.Do(request)
+	if err != nil {
+		t.Fatalf("capability-owned request: %v", err)
+	}
+	if closeErr := protected.Body.Close(); closeErr != nil {
+		t.Fatalf("close capability-owned response: %v", closeErr)
+	}
+	if closeErr := capability.Close(); closeErr != nil {
+		t.Fatalf("close capability-owned pool: %v", closeErr)
+	}
+	if closeErr := capability.Close(); closeErr != nil {
+		t.Fatalf("idempotent capability close: %v", closeErr)
+	}
+	if rejectedErr := x509Rejected(t, capability, request); !strings.Contains(rejectedErr.Error(), "closed") {
+		t.Fatalf("closed capability error = %v", rejectedErr)
+	}
+
+	remaining, err := caller.Do(request)
+	if err != nil {
+		t.Fatalf("caller-owned request after capability close: %v", err)
+	}
+	if err := remaining.Body.Close(); err != nil {
+		t.Fatalf("close remaining caller-owned response: %v", err)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if len(connections) != 3 || connections[0] != connections[2] || connections[0] == connections[1] {
+		t.Errorf("original/capability/original connection pools = %v; want original reuse around an isolated pool", connections)
 	}
 }
 
@@ -506,6 +732,11 @@ func newX509Capability(t *testing.T, transport *http.Transport) *auth.X509Transp
 	if err != nil {
 		t.Fatalf("NewX509Transport: %v", err)
 	}
+	t.Cleanup(func() {
+		if err := capability.Close(); err != nil {
+			t.Errorf("close isolated X.509 transport: %v", err)
+		}
+	})
 	return capability
 }
 
@@ -564,14 +795,21 @@ func (fixture *x509TransportFixture) certificate(t *testing.T, name string, host
 	if err != nil {
 		t.Fatalf("generate ephemeral %q serial: %v", name, err)
 	}
+	publicKey, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
+	if err != nil {
+		t.Fatalf("encode ephemeral %q public key: %v", name, err)
+	}
+	keyID := sha256.Sum256(publicKey)
 	template := &x509.Certificate{
-		SerialNumber: serial,
-		Subject:      pkix.Name{CommonName: name},
-		NotBefore:    time.Now().Add(-time.Minute),
-		NotAfter:     time.Now().Add(time.Hour),
-		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		DNSNames:     hostnames,
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		SerialNumber:   serial,
+		Subject:        pkix.Name{CommonName: name},
+		NotBefore:      time.Now().Add(-time.Minute),
+		NotAfter:       time.Now().Add(time.Hour),
+		KeyUsage:       x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
+		DNSNames:       hostnames,
+		ExtKeyUsage:    []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		SubjectKeyId:   keyID[:],
+		AuthorityKeyId: fixture.root.SubjectKeyId,
 	}
 	if client {
 		template.DNSNames = []string{name + ".workload.example.test"}
@@ -584,6 +822,13 @@ func (fixture *x509TransportFixture) certificate(t *testing.T, name string, host
 	certificate, err := x509.ParseCertificate(encoded)
 	if err != nil {
 		t.Fatalf("parse ephemeral %q certificate: %v", name, err)
+	}
+	if client && (len(certificate.DNSNames) == 0 || len(certificate.SubjectKeyId) == 0 ||
+		!bytes.Equal(certificate.AuthorityKeyId, fixture.root.SubjectKeyId) ||
+		certificate.KeyUsage&(x509.KeyUsageDigitalSignature|x509.KeyUsageKeyEncipherment) !=
+			(x509.KeyUsageDigitalSignature|x509.KeyUsageKeyEncipherment) ||
+		len(certificate.ExtKeyUsage) != 1 || certificate.ExtKeyUsage[0] != x509.ExtKeyUsageClientAuth) {
+		t.Fatalf("ephemeral workload certificate %q does not satisfy X.509 enrollment requirements", name)
 	}
 	return tls.Certificate{Certificate: [][]byte{encoded}, PrivateKey: key, Leaf: certificate}
 }
