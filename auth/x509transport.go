@@ -30,6 +30,21 @@ type x509TransportError struct {
 func (err *x509TransportError) Error() string { return "X.509 transport request failed" }
 func (err *x509TransportError) Unwrap() error { return err.cause }
 
+// x509TraceFreeContext preserves cancellation, deadlines, and ordinary context
+// values while preventing a mutable parent from revealing HTTP trace hooks
+// after the request's final security checks.
+type x509TraceFreeContext struct {
+	context.Context
+}
+
+func (ctx x509TraceFreeContext) Value(key any) any {
+	value := ctx.Context.Value(key)
+	if _, ok := value.(*httptrace.ClientTrace); ok {
+		return nil
+	}
+	return value
+}
+
 // X509Transport represents one explicitly attested mTLS configuration
 // generation. Its identity is the capability pointer, not a certificate-bound
 // OAuth token. Rotating credentials requires a new transport and capability.
@@ -97,6 +112,14 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 	}
 	//nolint:staticcheck // Preserve a legacy TCP dialer; unlike DialTLS, it cannot bypass native TLS.
 	transport.Dial = template.Dial
+	if template.Protocols != nil {
+		protocols := *template.Protocols
+		transport.Protocols = &protocols
+	}
+	if template.HTTP2 != nil {
+		configuration := *template.HTTP2
+		transport.HTTP2 = &configuration
+	}
 
 	return &X509Transport{
 		template:          template,
@@ -154,8 +177,16 @@ func validateX509NativeTransport(transport *http.Transport) error {
 	if transport.Proxy != nil {
 		return errors.New("X.509 transport currently supports direct connections only")
 	}
-	if len(transport.TLSNextProto) != 0 {
+	for protocol, handler := range transport.TLSNextProto {
+		if (protocol != "h2" && protocol != "unencrypted_http2") || handler == nil {
+			return errors.New("X.509 transport does not support custom TLS protocol handlers")
+		}
+	}
+	if len(transport.TLSNextProto) != 0 && transport.TLSNextProto["h2"] == nil {
 		return errors.New("X.509 transport does not support custom TLS protocol handlers")
+	}
+	if transport.HTTP2 != nil && transport.HTTP2.CountError != nil {
+		return errors.New("X.509 transport does not support HTTP/2 error callbacks")
 	}
 	if config.InsecureSkipVerify {
 		return errors.New("X.509 transport requires TLS certificate and hostname verification")
@@ -216,19 +247,27 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 	if request == nil {
 		return nil, errors.New("X.509 transport requires a non-nil HTTP request")
 	}
+	body := request.Body
+	bodyTransferred := false
+	defer func() {
+		if !bodyTransferred && body != nil {
+			_ = body.Close()
+		}
+	}()
 	if err := request.Context().Err(); err != nil {
 		return nil, err
 	}
 	if httptrace.ContextClientTrace(request.Context()) != nil {
 		return nil, errors.New("X.509 transport does not support HTTP trace callbacks")
 	}
-	request = request.Clone(request.Context())
+	request = request.Clone(x509TraceFreeContext{request.Context()})
 	if err := transport.validateAttestation(); err != nil {
 		return nil, err
 	}
 	if err := validateX509Request(request); err != nil {
 		return nil, err
 	}
+	bodyTransferred = true
 	response, err := transport.client.Do(request)
 	if err != nil {
 		redacted := &x509TransportError{}
@@ -241,6 +280,15 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 			redacted.cause = context.DeadlineExceeded
 		}
 		return nil, redacted
+	}
+	if response.StatusCode == http.StatusSwitchingProtocols {
+		_ = response.Body.Close()
+		return nil, errors.New("X.509 transport does not support protocol upgrades")
+	}
+	if response.StatusCode >= http.StatusMultipleChoices &&
+		response.StatusCode < http.StatusBadRequest && response.StatusCode != http.StatusNotModified {
+		_ = response.Body.Close()
+		return nil, &x509TransportError{cause: errX509Redirect}
 	}
 	return response, nil
 }
@@ -275,7 +323,8 @@ func validateX509Request(request *http.Request) error {
 			return errors.New("X.509 requests cannot contain alternate credentials, cookies, or authority headers")
 		case "authorization":
 			authorizationCount += len(values)
-			if host == x509AuthenticationHost || authorizationCount != 1 || !validX509BearerHeader(values[0]) {
+			if host == x509AuthenticationHost || len(values) != 1 ||
+				authorizationCount != 1 || !validX509BearerHeader(values[0]) {
 				return errors.New("X.509 requests contain invalid Authorization credentials")
 			}
 		case "openai-organization", "openai-project":
