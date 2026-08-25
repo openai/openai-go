@@ -31,8 +31,8 @@ func TestX509WorkloadIdentityAuthenticatesPublicClientOverMutualTLS(t *testing.T
 	}
 	issuerRequests := issuer.requests()
 	apiRequests := api.requests()
-	if len(issuerRequests) != 2 || len(apiRequests) != 2 {
-		t.Fatalf("pre-cache client made issuer/API requests = %d/%d, want 2/2", len(issuerRequests), len(apiRequests))
+	if len(issuerRequests) != 1 || len(apiRequests) != 2 {
+		t.Fatalf("cached client made issuer/API requests = %d/%d, want 1/2", len(issuerRequests), len(apiRequests))
 	}
 	for _, request := range issuerRequests {
 		if request.authorization != "" || request.host != x509ConformanceIssuerHost ||

@@ -1206,6 +1206,75 @@ client := openai.NewClient(
 )
 ```
 
+### X.509 Workload Identity
+
+An enrolled workload certificate can also be exchanged directly for a
+short-lived OpenAI bearer token. Load and own the certificate and private key in
+your application, configure one static certificate on a native transport, and
+attest that transport before creating the client:
+
+```go
+import (
+	"context"
+	"crypto/tls"
+	"net/http"
+	"time"
+
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/auth"
+	"github.com/openai/openai-go/v3/option"
+)
+
+certificate, err := tls.LoadX509KeyPair("workload.crt", "workload.key")
+if err != nil {
+	return err
+}
+
+transport, err := auth.NewX509Transport(&http.Transport{
+	TLSClientConfig: &tls.Config{
+		MinVersion:   tls.VersionTLS12,
+		Certificates: []tls.Certificate{certificate},
+	},
+})
+if err != nil {
+	return err
+}
+defer transport.Close()
+
+client := openai.NewClient(option.WithX509WorkloadIdentity(auth.X509WorkloadIdentity{
+	IdentityProviderID: "idp-123",
+	ServiceAccountID:   "sa-456",
+	RefreshBuffer:      5 * time.Minute, // Optional; five minutes is the default.
+	Transport:          transport,
+}))
+
+if _, err := client.Models.List(context.Background()); err != nil {
+	return err
+}
+```
+
+The application retains ownership of its certificate, private key, trust roots,
+and original transport. The attested capability creates its own isolated
+connection pool, so call `Close` when it is no longer needed. Rotating the
+certificate requires a newly attested transport and client.
+
+Token exchange is pinned to `https://mtls.auth.openai.com/oauth/token`; API
+requests use `https://mtls.api.openai.com/v1/`. Existing `OPENAI_BASE_URL` and
+explicit endpoint settings must match that global API endpoint. Azure, Amazon
+Bedrock, regional endpoints, HTTPS proxies, dynamic certificate selection, HTTP
+trace hooks, and separate custom HTTP clients are not supported. Organization
+and project metadata remain available on API requests but are not sent to the
+token issuer.
+
+Successful bearer tokens are cached per identity and transport generation.
+Concurrent refreshes share the requesting caller's context, and the effective
+refresh buffer is reduced automatically for short-lived tokens. Transient issuer
+failures receive at most three bounded, cancellable attempts; permanent OAuth
+failures are not retried. A rejected API token is refreshed and replayed at most
+once, and only when the request body can be recreated. The resulting access
+token is an ordinary bearer token; it is not cryptographically bound to a
+client certificate.
+
 ## Amazon Bedrock
 
 Use the `bedrock` package to call OpenAI models through Amazon Bedrock's

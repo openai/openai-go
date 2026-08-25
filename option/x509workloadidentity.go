@@ -74,14 +74,18 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 						errors.New("X.509 workload identity rejected an unsafe final API request"),
 					)
 				}
-				token, err := identity.GetToken(request.Context(), config.Transport)
-				if err != nil {
+				authenticationFailed := true
+				response, err := auth.X509WorkloadIdentityMiddleware(identity, config.Transport, request,
+					func(authenticated *http.Request) (*http.Response, error) {
+						response, dispatchErr := next(authenticated)
+						authenticationFailed = dispatchErr == nil && response != nil &&
+							response.StatusCode == http.StatusUnauthorized
+						return response, dispatchErr
+					})
+				if err != nil && authenticationFailed {
 					return nil, requestconfig.WithNoRetryError(err)
 				}
-				authenticated := request.Clone(request.Context())
-				authenticated.Header.Set("Authorization", "Bearer "+token)
-				response, dispatchErr := next(authenticated)
-				return redactX509Response(response), dispatchErr
+				return redactX509Response(response), err
 			}).Apply(final)
 		}).Apply(cfg)
 	})
