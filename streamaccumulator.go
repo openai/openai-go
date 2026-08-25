@@ -71,7 +71,8 @@ type chatCompletionChoiceStringState struct {
 	content         chatCompletionString
 	refusal         chatCompletionString
 	toolCalls       []weak.Pointer[chatCompletionToolCallStringState]
-	latestToolCall  *chatCompletionToolCallStringState
+	toolOwners      *chatCompletionToolCallOwner
+	toolOwnerDepth  uint8
 	activeToolCalls []int
 	reconcileCursor int
 	finishReason    string
@@ -79,11 +80,10 @@ type chatCompletionChoiceStringState struct {
 }
 
 type chatCompletionToolCallStringState struct {
-	name         chatCompletionString
-	arguments    chatCompletionString
-	id           string
-	typeName     string
-	previousTool *chatCompletionToolCallStringState
+	name      chatCompletionString
+	arguments chatCompletionString
+	id        string
+	typeName  string
 }
 
 type chatCompletionString struct {
@@ -679,8 +679,8 @@ func (choice *chatCompletionChoiceStringState) toolCall(index int, activeTools *
 	choice.toolCalls = expandToFit(choice.toolCalls, index)
 	state := choice.toolCallState(index)
 	if state == nil {
-		state = &chatCompletionToolCallStringState{previousTool: choice.latestToolCall}
-		choice.latestToolCall = state
+		state = &chatCompletionToolCallStringState{}
+		choice.setToolCallOwner(index, state)
 		choice.toolCalls[index] = weak.Make(state)
 		choice.activeToolCalls = append(choice.activeToolCalls, index)
 		(*activeTools)++
@@ -689,31 +689,22 @@ func (choice *chatCompletionChoiceStringState) toolCall(index int, activeTools *
 }
 
 func (choice *chatCompletionChoiceStringState) toolCallState(index int) *chatCompletionToolCallStringState {
-	return choice.toolCalls[index].Value()
+	return chatCompletionToolCallOwnerAt(choice.toolOwners, choice.toolOwnerDepth, index)
 }
 
 func (choice *chatCompletionChoiceStringState) detachToolCallState(index int) *chatCompletionToolCallStringState {
-	choice.toolCalls = cloneAccumulatorSlice(choice.toolCalls)
-	previous := choice.toolCallState(index)
-	state := *previous
-	if choice.latestToolCall == previous {
-		state.previousTool = previous.previousTool
-	} else {
-		choice.toolCalls[index] = weak.Make(&state)
-		choice.rebuildToolCallOwnership()
-		return choice.toolCallState(index)
-	}
-	choice.latestToolCall = &state
+	state := *choice.toolCallState(index)
+	choice.setToolCallOwner(index, &state)
 	choice.toolCalls[index] = weak.Make(&state)
 	return &state
 }
 
 func (choice *chatCompletionChoiceStringState) rebuildToolCallOwnership() {
-	choice.latestToolCall = nil
+	previousOwners, previousDepth := choice.toolOwners, choice.toolOwnerDepth
+	choice.toolOwners, choice.toolOwnerDepth = nil, 0
 	for _, index := range choice.activeToolCalls {
-		state := *choice.toolCallState(index)
-		state.previousTool = choice.latestToolCall
-		choice.latestToolCall = &state
+		state := *chatCompletionToolCallOwnerAt(previousOwners, previousDepth, index)
+		choice.setToolCallOwner(index, &state)
 		choice.toolCalls[index] = weak.Make(&state)
 	}
 }

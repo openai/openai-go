@@ -327,6 +327,35 @@ func TestAccumulatorOlderToolMetadataReplacementReleasesSupersededState(t *testi
 	runtime.KeepAlive(&acc)
 }
 
+func TestAccumulatorDenseToolUpdatesPreserveIndexedBacking(t *testing.T) {
+	const toolCount = 256
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: make([]ChatCompletionChunkChoiceDeltaToolCall, toolCount),
+	})
+	for index := range chunk.Choices[0].Delta.ToolCalls {
+		chunk.Choices[0].Delta.ToolCalls[index] = ChatCompletionChunkChoiceDeltaToolCall{
+			Index:    int64(index),
+			Function: ChatCompletionChunkChoiceDeltaToolCallFunction{Name: "x", Arguments: "y"},
+		}
+	}
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the initial dense tool batch")
+	}
+	backing := unsafe.SliceData(acc.stringState.choices[0].toolCalls)
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected growth across the dense existing tool batch")
+	}
+	if unsafe.SliceData(acc.stringState.choices[0].toolCalls) != backing {
+		t.Fatal("dense tool updates copied the complete indexed tool backing")
+	}
+	for index, tool := range acc.Choices[0].Message.ToolCalls {
+		if tool.Function.Name != "xx" || tool.Function.Arguments != "yy" {
+			t.Fatalf("tool %d text = (%q, %q), want (xx, yy)", index, tool.Function.Name, tool.Function.Arguments)
+		}
+	}
+}
+
 func TestAccumulatorValueCopyDoesNotRetainOriginalPublicTextReplacement(t *testing.T) {
 	var original ChatCompletionAccumulator
 	initial := storageTestChunk(ChatCompletionChunkChoiceDelta{Content: "existing"})

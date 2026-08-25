@@ -2,6 +2,67 @@ package openai
 
 import "weak"
 
+const chatCompletionToolOwnerRadixBits = 4
+
+type chatCompletionToolCallOwner struct {
+	children [1 << chatCompletionToolOwnerRadixBits]*chatCompletionToolCallOwner
+	state    *chatCompletionToolCallStringState
+}
+
+func chatCompletionToolCallOwnerAt(
+	owner *chatCompletionToolCallOwner,
+	depth uint8,
+	index int,
+) *chatCompletionToolCallStringState {
+	if depth == 0 || uint(index)>>(depth*chatCompletionToolOwnerRadixBits) != 0 {
+		return nil
+	}
+	for depth > 0 && owner != nil {
+		depth--
+		digit := (uint(index) >> (depth * chatCompletionToolOwnerRadixBits)) &
+			((1 << chatCompletionToolOwnerRadixBits) - 1)
+		owner = owner.children[digit]
+	}
+	if owner == nil {
+		return nil
+	}
+	return owner.state
+}
+
+func (choice *chatCompletionChoiceStringState) setToolCallOwner(index int, state *chatCompletionToolCallStringState) {
+	if choice.toolOwnerDepth == 0 {
+		choice.toolOwnerDepth = 1
+	}
+	for uint(index)>>(choice.toolOwnerDepth*chatCompletionToolOwnerRadixBits) != 0 {
+		choice.toolOwners = &chatCompletionToolCallOwner{children: [1 << chatCompletionToolOwnerRadixBits]*chatCompletionToolCallOwner{
+			0: choice.toolOwners,
+		}}
+		choice.toolOwnerDepth++
+	}
+	choice.toolOwners = setChatCompletionToolCallOwner(choice.toolOwners, choice.toolOwnerDepth, index, state)
+}
+
+func setChatCompletionToolCallOwner(
+	owner *chatCompletionToolCallOwner,
+	depth uint8,
+	index int,
+	state *chatCompletionToolCallStringState,
+) *chatCompletionToolCallOwner {
+	cloned := &chatCompletionToolCallOwner{}
+	if owner != nil {
+		*cloned = *owner
+	}
+	if depth == 0 {
+		cloned.state = state
+		return cloned
+	}
+	depth--
+	digit := (uint(index) >> (depth * chatCompletionToolOwnerRadixBits)) &
+		((1 << chatCompletionToolOwnerRadixBits) - 1)
+	cloned.children[digit] = setChatCompletionToolCallOwner(cloned.children[digit], depth, index, state)
+	return cloned
+}
+
 func (acc *ChatCompletionAccumulator) privateStateNeedsDetach() bool {
 	return acc.privateStateInitialized && acc.privateStateOwner.Value() != acc
 }
@@ -35,17 +96,16 @@ func (state chatCompletionAccumulatorStringState) cloneForAccumulatorCopy() chat
 		choiceCopy.refusal.shared = len(choiceCopy.refusal.buffer) > 0
 		choiceCopy.toolCalls = cloneAccumulatorSlice(choiceCopy.toolCalls)
 		choiceCopy.activeToolCalls = cloneAccumulatorSlice(choiceCopy.activeToolCalls)
-		choiceCopy.latestToolCall = nil
-		for j, slot := range choiceCopy.toolCalls {
-			toolCall := slot.Value()
+		choiceCopy.toolOwners, choiceCopy.toolOwnerDepth = nil, 0
+		for j := range choiceCopy.toolCalls {
+			toolCall := choice.toolCallState(j)
 			if toolCall == nil {
 				continue
 			}
 			toolCallCopy := *toolCall
 			toolCallCopy.name.shared = len(toolCallCopy.name.buffer) > 0
 			toolCallCopy.arguments.shared = len(toolCallCopy.arguments.buffer) > 0
-			toolCallCopy.previousTool = choiceCopy.latestToolCall
-			choiceCopy.latestToolCall = &toolCallCopy
+			choiceCopy.setToolCallOwner(j, &toolCallCopy)
 			choiceCopy.toolCalls[j] = weak.Make(&toolCallCopy)
 		}
 		state.choices[i] = &choiceCopy
