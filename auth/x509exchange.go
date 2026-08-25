@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,6 +22,7 @@ const (
 	x509SuccessResponseMaximum = 1 << 20
 	x509ErrorResponseMaximum   = 4 << 10
 	x509MaximumTokenLifetime   = 3600
+	x509MaximumRetryAfter      = 8 * time.Second
 )
 
 type x509ExchangedToken struct {
@@ -28,7 +31,9 @@ type x509ExchangedToken struct {
 }
 
 type x509ExchangeHTTPError struct {
-	statusCode int
+	statusCode    int
+	retryAfter    time.Duration
+	hasRetryAfter bool
 }
 
 func (err *x509ExchangeHTTPError) Error() string {
@@ -36,7 +41,9 @@ func (err *x509ExchangeHTTPError) Error() string {
 }
 
 func (err *x509ExchangeHTTPError) retryable() bool {
-	return err.statusCode == http.StatusTooManyRequests ||
+	return err.statusCode == http.StatusRequestTimeout ||
+		err.statusCode == http.StatusConflict ||
+		err.statusCode == http.StatusTooManyRequests ||
 		(err.statusCode >= http.StatusInternalServerError && err.statusCode < 600)
 }
 
@@ -195,7 +202,11 @@ func x509ExchangeStatusError(ctx context.Context, response *http.Response) (resu
 	}()
 	if response.StatusCode != http.StatusBadRequest && response.StatusCode != http.StatusUnauthorized &&
 		response.StatusCode != http.StatusForbidden {
-		return &x509ExchangeHTTPError{statusCode: response.StatusCode}
+		status := &x509ExchangeHTTPError{statusCode: response.StatusCode}
+		if status.retryable() {
+			status.retryAfter, status.hasRetryAfter = x509ParseRetryAfter(response.Header, time.Now())
+		}
+		return status
 	}
 	oauthError := &OAuthError{StatusCode: response.StatusCode}
 	body, err := x509ReadExchangeResponse(ctx, response, x509ErrorResponseMaximum)
@@ -211,7 +222,10 @@ func x509ExchangeStatusError(ctx context.Context, response *http.Response) (resu
 	}
 	var code string
 	if json.Unmarshal(fields["error"], &code) != nil {
-		return oauthError
+		envelope, envelopeErr := x509DecodeObject(fields["error"])
+		if envelopeErr != nil || json.Unmarshal(envelope["code"], &code) != nil {
+			return oauthError
+		}
 	}
 	switch code {
 	case "invalid_request", "invalid_client", "invalid_grant", "invalid_scope", "unauthorized_client",
@@ -219,4 +233,39 @@ func x509ExchangeStatusError(ctx context.Context, response *http.Response) (resu
 		oauthError.ErrorCode = shared.OAuthErrorCode(code)
 	}
 	return oauthError
+}
+
+func x509ParseRetryAfter(headers http.Header, now time.Time) (time.Duration, bool) {
+	for _, header := range []struct {
+		name string
+		unit time.Duration
+	}{
+		{name: "Retry-After-Ms", unit: time.Millisecond},
+		{name: "Retry-After", unit: time.Second},
+	} {
+		value := headers.Get(header.name)
+		if value == "" {
+			continue
+		}
+		if parsed, err := strconv.ParseFloat(value, 64); err == nil {
+			if math.IsNaN(parsed) || math.IsInf(parsed, 0) || parsed < 0 {
+				continue
+			}
+			if parsed >= float64(x509MaximumRetryAfter)/float64(header.unit) {
+				return x509MaximumRetryAfter, true
+			}
+			return time.Duration(parsed * float64(header.unit)), true
+		}
+		if header.name != "Retry-After" {
+			continue
+		}
+		if deadline, err := time.Parse(time.RFC1123, value); err == nil {
+			delay := deadline.Sub(now)
+			if delay <= 0 {
+				return 0, true
+			}
+			return min(delay, x509MaximumRetryAfter), true
+		}
+	}
+	return 0, false
 }

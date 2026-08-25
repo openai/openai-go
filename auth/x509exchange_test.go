@@ -232,6 +232,12 @@ func TestX509ExchangeRedactsAndClassifiesOAuthErrors(t *testing.T) {
 		oversized bool
 		retryable bool
 	}{
+		{name: "bad request nested issuer code", status: 400,
+			body: `{"error":{"code":"invalid_grant","message":"private-nested-issuer-secret"}}`,
+			code: shared.OAuthErrorCodeInvalidGrant, wantTyped: true},
+		{name: "unauthorized nested subject code", status: 401,
+			body: `{"error":{"code":"invalid_subject_token","description":"private-nested-issuer-secret"}}`,
+			code: shared.OAuthErrorCodeInvalidSubjectToken, wantTyped: true},
 		{name: "bad request known code", status: 400, body: `{"error":"invalid_grant","error_description":"private-issuer-secret"}`,
 			code: shared.OAuthErrorCodeInvalidGrant, wantTyped: true},
 		{name: "unauthorized known code", status: 401, body: `{"error":"invalid_subject_token","error_description":"private-issuer-secret"}`,
@@ -240,14 +246,26 @@ func TestX509ExchangeRedactsAndClassifiesOAuthErrors(t *testing.T) {
 			wantTyped: true},
 		{name: "forbidden duplicate code", status: 403, body: `{"error":"invalid_grant","error":"private-attacker-error"}`,
 			wantTyped: true},
+		{name: "nested unknown code", status: 400, body: `{"error":{"code":"private-attacker-error"}}`,
+			wantTyped: true},
+		{name: "nested duplicate code", status: 400,
+			body: `{"error":{"code":"invalid_grant","code":"private-attacker-error"}}`, wantTyped: true},
+		{name: "nested duplicate extension", status: 400,
+			body: `{"error":{"code":"invalid_grant","detail":1,"detail":2}}`, wantTyped: true},
+		{name: "duplicate nested envelope", status: 400,
+			body: `{"error":{"code":"invalid_grant"},"error":{"code":"invalid_subject_token"}}`, wantTyped: true},
+		{name: "nested missing code", status: 400, body: `{"error":{"detail":"private-issuer-secret"}}`, wantTyped: true},
+		{name: "nested non-string code", status: 400, body: `{"error":{"code":123}}`, wantTyped: true},
+		{name: "invalid error envelope", status: 400, body: `{"error":["invalid_grant"]}`, wantTyped: true},
 		{name: "bad request malformed", status: 400, body: `private-issuer-secret`, wantTyped: true},
 		{name: "oversized typed error", status: 401, body: strings.Repeat("private-issuer-secret", x509ErrorResponseMaximum),
 			wantTyped: true, oversized: true},
+		{name: "request timeout", status: 408, body: `{"error":"private-issuer-secret"}`, retryable: true},
+		{name: "temporary conflict", status: 409, body: `{"error":"private-issuer-secret"}`, retryable: true},
 		{name: "rate limited", status: 429, body: `{"error":"private-issuer-secret"}`, retryable: true},
 		{name: "server failure", status: 500, body: `{"error":"private-issuer-secret"}`, retryable: true},
 		{name: "service unavailable", status: 503, body: `{"error":"private-issuer-secret"}`, retryable: true},
 		{name: "not found permanent", status: 404, body: `{"error":"private-issuer-secret"}`},
-		{name: "unexpected redirect", status: 307, body: `{"error":"private-issuer-secret"}`},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -283,6 +301,109 @@ func TestX509ExchangeRedactsAndClassifiesOAuthErrors(t *testing.T) {
 					statusError.statusCode, statusError.retryable(), test.status, test.retryable)
 			}
 		})
+	}
+}
+
+func TestX509ExchangeRejectsRedirectBeforeHTTPStatusClassification(t *testing.T) {
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusTemporaryRedirect)
+		_, _ = io.WriteString(w, "private-redirect-response")
+	}))
+	token, err := x509Exchange(t.Context(), fixture.capability, "idp", "service-account")
+	var transportError *x509TransportError
+	var statusError *x509ExchangeHTTPError
+	if token != (x509ExchangedToken{}) || !errors.As(err, &transportError) ||
+		!errors.Is(err, errX509Redirect) || errors.As(err, &statusError) {
+		t.Fatalf("issuer redirect = token:%v error:%v, want a safe transport redirect refusal", token, err)
+	}
+	if strings.Contains(err.Error(), "private-") {
+		t.Errorf("redirect error disclosed sensitive issuer content: %q", err.Error())
+	}
+}
+
+func TestX509ExchangePreservesOnlySafeBoundedRetryAfterDelays(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		status  int
+		headers http.Header
+		want    time.Duration
+		present bool
+	}{
+		{name: "preferred milliseconds", status: 429,
+			headers: http.Header{"Retry-After-Ms": {"125"}, "Retry-After": {"3"}},
+			want:    125 * time.Millisecond, present: true},
+		{name: "fractional milliseconds", status: 503,
+			headers: http.Header{"Retry-After-Ms": {"1.5"}}, want: 1500 * time.Microsecond, present: true},
+		{name: "fractional seconds", status: 429,
+			headers: http.Header{"Retry-After": {"0.25"}}, want: 250 * time.Millisecond, present: true},
+		{name: "request timeout delay", status: 408,
+			headers: http.Header{"Retry-After-Ms": {"20"}}, want: 20 * time.Millisecond, present: true},
+		{name: "conflict delay", status: 409,
+			headers: http.Header{"Retry-After": {"1"}}, want: time.Second, present: true},
+		{name: "finite huge seconds", status: 503,
+			headers: http.Header{"Retry-After": {"1e100"}}, want: x509MaximumRetryAfter, present: true},
+		{name: "finite scaling overflow", status: 503,
+			headers: http.Header{"Retry-After": {"2" + strings.Repeat("0", 299)}},
+			want:    x509MaximumRetryAfter, present: true},
+		{name: "finite huge milliseconds", status: 429,
+			headers: http.Header{"Retry-After-Ms": {"1e100"}}, want: x509MaximumRetryAfter, present: true},
+		{name: "future HTTP date bounded", status: 503,
+			headers: http.Header{"Retry-After": {time.Now().Add(time.Hour).UTC().Format(time.RFC1123)}},
+			want:    x509MaximumRetryAfter, present: true},
+		{name: "past HTTP date immediate", status: 503,
+			headers: http.Header{"Retry-After": {time.Now().Add(-time.Hour).UTC().Format(time.RFC1123)}}, present: true},
+		{name: "invalid preferred header falls through", status: 429,
+			headers: http.Header{"Retry-After-Ms": {"-1"}, "Retry-After": {"0.5"}},
+			want:    500 * time.Millisecond, present: true},
+		{name: "malformed preferred header falls through", status: 429,
+			headers: http.Header{"Retry-After-Ms": {"private-header-secret"}, "Retry-After": {"0.5"}},
+			want:    500 * time.Millisecond, present: true},
+		{name: "zero seconds", status: 429, headers: http.Header{"Retry-After": {"0"}}, present: true},
+		{name: "zero milliseconds", status: 429, headers: http.Header{"Retry-After-Ms": {"0"}}, present: true},
+		{name: "negative milliseconds", status: 429, headers: http.Header{"Retry-After-Ms": {"-100"}}},
+		{name: "negative seconds", status: 429, headers: http.Header{"Retry-After": {"-0.5"}}},
+		{name: "not a number", status: 429, headers: http.Header{"Retry-After": {"NaN"}}},
+		{name: "positive infinity", status: 429, headers: http.Header{"Retry-After": {"+Inf"}}},
+		{name: "negative infinity", status: 429, headers: http.Header{"Retry-After": {"-Inf"}}},
+		{name: "float overflow", status: 429, headers: http.Header{"Retry-After": {"1e999"}}},
+		{name: "private invalid value", status: 503, headers: http.Header{"Retry-After": {"private-header-secret"}}},
+		{name: "permanent status ignores header", status: 404,
+			headers: http.Header{"Retry-After": {"3"}}},
+		{name: "absent headers", status: 503},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				for name, values := range test.headers {
+					for _, value := range values {
+						w.Header().Add(name, value)
+					}
+				}
+				w.WriteHeader(test.status)
+				_, _ = io.WriteString(w, "private-retry-response-body")
+			}))
+			token, err := x509Exchange(t.Context(), fixture.capability, "idp", "service-account")
+			var status *x509ExchangeHTTPError
+			if token != (x509ExchangedToken{}) || !errors.As(err, &status) {
+				t.Fatalf("issuer failure = token:%v error:%v, want a private HTTP status error", token, err)
+			}
+			if status.retryAfter != test.want || status.hasRetryAfter != test.present {
+				t.Errorf("safe issuer-directed delay = (%s, %t), want (%s, %t)",
+					status.retryAfter, status.hasRetryAfter, test.want, test.present)
+			}
+			for cause := err; cause != nil; cause = errors.Unwrap(cause) {
+				if strings.Contains(cause.Error(), "private-") || strings.Contains(cause.Error(), "Retry-After") {
+					t.Errorf("issuer retry error retained raw private headers or response: %q", cause.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestX509ParseRetryAfterUsesProvidedClockForHTTPDates(t *testing.T) {
+	now := time.Date(2026, time.August, 24, 12, 0, 0, 0, time.UTC)
+	headers := http.Header{"Retry-After": {now.Add(3 * time.Second).Format(time.RFC1123)}}
+	if delay, present := x509ParseRetryAfter(headers, now); !present || delay != 3*time.Second {
+		t.Errorf("clock-relative Retry-After date = (%s, %t), want (3s, true)", delay, present)
 	}
 }
 
