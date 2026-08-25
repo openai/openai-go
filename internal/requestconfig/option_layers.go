@@ -22,6 +22,7 @@ type authenticationState struct {
 	authorizationHeaderLayer *optionLayerIdentity
 	apiKeyHeaderLayer        *optionLayerIdentity
 	headerOverride           bool
+	authorizationExplicit    bool
 	preference               authCredentialPreference
 }
 
@@ -156,7 +157,7 @@ func (cfg *RequestConfig) EndpointProvider() string {
 // AuthorizationHeaderOverridden reports whether an explicit request option
 // selected or deleted the Authorization header.
 func (cfg *RequestConfig) AuthorizationHeaderOverridden() bool {
-	return cfg.authentication.headerOverride
+	return cfg.authentication.headerOverride || cfg.authentication.authorizationExplicit
 }
 
 // ProviderAuthOption identifies one provider authentication mode. Instances are
@@ -207,6 +208,7 @@ func (state *authenticationState) recordHeader(name string) {
 	switch {
 	case strings.EqualFold(name, "Authorization"):
 		state.headerOverride = true
+		state.authorizationExplicit = true
 		state.authorizationHeaderLayer = state.currentLayer
 	case strings.EqualFold(name, "Api-Key"):
 		state.apiKeyHeaderLayer = state.currentLayer
@@ -233,7 +235,8 @@ func (state authenticationState) cloneAsInherited(cfg *RequestConfig) authentica
 	state.authorizationHeaderLayer = nil
 	state.apiKeyHeaderLayer = nil
 
-	hasAuthorizationOverride := state.headerOverride || len(cfg.Request.Header.Values("Authorization")) != 0
+	hasAuthorizationOverride := state.headerOverride || state.authorizationExplicit ||
+		len(cfg.Request.Header.Values("Authorization")) != 0
 	hasAPIKeyHeader := len(cfg.Request.Header.Values("Api-Key")) != 0
 	if cfg.APIKey == "" && cfg.AdminAPIKey == "" && !hasAuthorizationOverride && !hasAPIKeyHeader {
 		return state
@@ -276,6 +279,7 @@ func (cfg *RequestConfig) ClearInheritedAuthentication() {
 		cfg.Request.Header.Del("Authorization")
 		state.authorizationHeaderLayer = nil
 		state.headerOverride = false
+		state.authorizationExplicit = false
 	}
 	if state.apiKeyHeaderLayer != state.currentLayer {
 		cfg.Request.Header.Del("Api-Key")

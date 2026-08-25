@@ -201,6 +201,26 @@ func TestX509WorkloadIdentityRejectsMethodLevelOverridesBeforeExchange(t *testin
 	}
 }
 
+func TestX509WorkloadIdentityPreservesHeaderlessRequestAfterEmptyCredentials(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		opt  option.RequestOption
+	}{
+		{name: "empty API key", opt: option.WithAPIKey("")},
+		{name: "empty admin API key", opt: option.WithAdminAPIKey("")},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			client := openai.NewClient(option.WithX509WorkloadIdentity(config))
+			if _, err := client.Models.List(t.Context(), option.WithHeaderDel("Authorization"), test.opt); err == nil {
+				t.Fatal("empty credentials erased the caller's explicit headerless-request policy")
+			}
+			assertX509WorkloadNoRequests(t, issuer, api)
+		})
+	}
+}
+
 func TestX509WorkloadIdentityRejectsAdminOnlyOperationsBeforeExchange(t *testing.T) {
 	t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
 	config, issuer, api := newX509WorkloadIdentityIntegration(t)

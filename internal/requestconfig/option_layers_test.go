@@ -121,6 +121,33 @@ func TestAuthorizationHeaderOverriddenPreservesExplicitDeletion(t *testing.T) {
 	if !cfg.AuthorizationHeaderOverridden() || len(cfg.Request.Header.Values("Authorization")) != 0 {
 		t.Error("explicit header deletion was not preserved as an Authorization override")
 	}
+	for _, test := range []struct {
+		name string
+		set  func(*RequestConfig)
+	}{
+		{name: "empty API key", set: func(config *RequestConfig) { config.SetAPIKey("") }},
+		{name: "empty admin API key", set: func(config *RequestConfig) { config.SetAdminAPIKey("") }},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			current := RequestConfig{Request: request.Clone(request.Context())}
+			current.DelHeader("Authorization")
+			test.set(&current)
+			if current.authentication.headerOverride || current.authentication.authorizationHeaderLayer != nil {
+				t.Error("negative control did not erase the ordinary override and nil-layer marker")
+			}
+			if !current.AuthorizationHeaderOverridden() {
+				t.Error("empty credential selection erased explicit headerless-request provenance")
+			}
+			cloned := current.Clone(request.Context())
+			if cloned == nil || !cloned.AuthorizationHeaderOverridden() {
+				t.Fatal("request clone lost explicit headerless-request provenance")
+			}
+			cloned.ClearInheritedAuthentication()
+			if cloned.AuthorizationHeaderOverridden() {
+				t.Error("request clone did not clear inherited headerless-request provenance")
+			}
+		})
+	}
 	inherited := RequestConfig{Request: request.Clone(request.Context())}
 	if err := inherited.Apply(InheritedOptions(RequestOptionFunc(func(config *RequestConfig) error {
 		config.DelHeader("Authorization")
