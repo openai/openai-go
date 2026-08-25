@@ -154,9 +154,22 @@ func TestWorkloadIdentityMiddlewareReplacesAllAuthorizationAliases(t *testing.T)
 	if attempts != 2 || exchanges.Load() != 2 {
 		t.Errorf("authenticated attempts/exchanges=%d/%d, want 2/2", attempts, exchanges.Load())
 	}
-	if len(request.Header["Authorization"]) != 2 || len(request.Header["authorization"]) != 1 ||
-		len(request.Header["aUtHoRiZaTiOn"]) != 1 {
-		t.Error("authentication changed caller-owned authorization headers")
+	var callerAuthorizationHeaders int
+	for name, values := range request.Header {
+		if !strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {
+			continue
+		}
+		callerAuthorizationHeaders++
+		want := 1
+		if name == "Authorization" {
+			want = 2
+		}
+		if len(values) != want {
+			t.Errorf("caller-owned authorization header %q values=%q, want %d", name, values, want)
+		}
+	}
+	if callerAuthorizationHeaders != 3 {
+		t.Errorf("caller-owned authorization headers=%d, want three", callerAuthorizationHeaders)
 	}
 	for name := range response.Request.Header {
 		if strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {

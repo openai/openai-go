@@ -181,9 +181,22 @@ func TestWorkloadIdentitySendsExactlyOneTrustedAuthorizationHeader(t *testing.T)
 			req.Header["authorization"] = []string{"Bearer synthetic-lowercase-attacker"}
 			req.Header["aUtHoRiZaTiOn"] = []string{"Bearer synthetic-mixed-case-attacker"}
 			response, err := next(req)
-			if len(req.Header["Authorization"]) != 2 || len(req.Header["authorization"]) != 1 ||
-				len(req.Header["aUtHoRiZaTiOn"]) != 1 {
-				t.Error("signer modified caller-owned request credentials")
+			var callerAuthorizationHeaders int
+			for name, values := range req.Header {
+				if !strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {
+					continue
+				}
+				callerAuthorizationHeaders++
+				want := 1
+				if name == "Authorization" {
+					want = 2
+				}
+				if len(values) != want {
+					t.Errorf("caller-owned authorization header %q values=%q, want %d", name, values, want)
+				}
+			}
+			if callerAuthorizationHeaders != 3 {
+				t.Errorf("caller-owned authorization headers=%d, want three", callerAuthorizationHeaders)
 			}
 			if response != nil && response.Request != nil {
 				for name := range response.Request.Header {
