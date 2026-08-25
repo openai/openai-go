@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -24,7 +25,10 @@ const (
 	x509APIHost            = "mtls.api.openai.com"
 )
 
-var errX509Redirect = errors.New("X.509 workload identity does not follow redirects")
+var (
+	errX509Redirect        = errors.New("X.509 workload identity does not follow redirects")
+	errX509TLSVerification = errors.New("X.509 transport TLS verification failed")
+)
 
 type x509TransportError struct {
 	cause     error
@@ -144,22 +148,33 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 		transport.HTTP2 = &configuration
 	}
 	http1, http2 := x509EffectiveHTTPProtocols(template)
+	verifyPeerCertificate := config.VerifyPeerCertificate
+	if verifyPeerCertificate != nil {
+		config.VerifyPeerCertificate = func(certificates [][]byte, chains [][]*x509.Certificate) error {
+			if err := verifyPeerCertificate(certificates, chains); err != nil {
+				return errX509TLSVerification
+			}
+			return nil
+		}
+	}
 	verifyConnection := config.VerifyConnection
 	config.VerifyConnection = func(state tls.ConnectionState) error {
 		switch state.NegotiatedProtocol {
 		case "h2":
 			if !http2 || transport.TLSNextProto["h2"] == nil {
-				return errors.New("X.509 transport negotiated HTTP/2 without an enabled native handler")
+				return errX509TLSVerification
 			}
 		case "", "http/1.1":
 			if !http1 {
-				return errors.New("X.509 transport negotiated a disabled HTTP/1 connection")
+				return errX509TLSVerification
 			}
 		default:
-			return errors.New("X.509 transport negotiated an unsupported TLS application protocol")
+			return errX509TLSVerification
 		}
 		if verifyConnection != nil {
-			return verifyConnection(state)
+			if err := verifyConnection(state); err != nil {
+				return errX509TLSVerification
+			}
 		}
 		return nil
 	}
@@ -380,6 +395,7 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 	response, err := transport.client.Do(request)
 	if err != nil {
 		redacted := &x509TransportError{}
+		var verificationError *tls.CertificateVerificationError
 		var networkError net.Error
 		if errors.As(err, &networkError) {
 			redacted.timeout = networkError.Timeout()
@@ -394,6 +410,8 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 			redacted.cause = context.Canceled
 		case errors.Is(err, context.DeadlineExceeded):
 			redacted.cause = context.DeadlineExceeded
+		case errors.Is(err, errX509TLSVerification) || errors.As(err, &verificationError):
+			redacted.cause = errX509TLSVerification
 		}
 		return nil, redacted
 	}

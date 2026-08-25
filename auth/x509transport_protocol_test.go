@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"io"
 	"net"
@@ -401,6 +402,10 @@ func TestX509TransportRejectsHTTP2WhenRuntimeDisablesItsNativeHandler(t *testing
 			request.Header.Set("Authorization", "Bearer private-header-token")
 			if test.http2Only {
 				err := x509Rejected(t, capability, request)
+				if cause := errors.Unwrap(err); cause == nil ||
+					cause.Error() != "X.509 transport TLS verification failed" {
+					t.Errorf("runtime-disabled HTTP/2 was not classified as permanent TLS policy: %v", err)
+				}
 				if strings.Contains(err.Error(), "private-") || strings.Contains(err.Error(), "synthetic-secret") {
 					t.Errorf("runtime-disabled protocol error disclosed request credentials: %q", err.Error())
 				}
@@ -453,6 +458,10 @@ func TestX509TransportPreservesCallerTLSConnectionVerification(t *testing.T) {
 				if errors.Is(err, sensitive) || strings.Contains(err.Error(), "private-") {
 					t.Errorf("caller verifier leaked its sensitive rejection: %v", err)
 				}
+				if cause := errors.Unwrap(err); cause == nil ||
+					cause.Error() != "X.509 transport TLS verification failed" {
+					t.Errorf("caller verifier rejection was not classified as permanent TLS policy: %v", err)
+				}
 			} else {
 				response, err := capability.Do(request)
 				if err != nil {
@@ -471,6 +480,68 @@ func TestX509TransportPreservesCallerTLSConnectionVerification(t *testing.T) {
 			}
 			if got := received.Load(); got != want {
 				t.Errorf("caller-verified TLS delivered %d authenticated requests, want %d", got, want)
+			}
+		})
+	}
+}
+
+func TestX509TransportClassifiesTLSVerificationFailuresWithoutLeakingDetails(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		configure func(*http.Transport, error)
+	}{
+		{
+			name: "untrusted server certificate",
+			configure: func(template *http.Transport, _ error) {
+				template.TLSClientConfig.RootCAs = x509.NewCertPool()
+			},
+		},
+		{
+			name: "caller peer-certificate verification",
+			configure: func(template *http.Transport, sensitive error) {
+				template.TLSClientConfig.VerifyPeerCertificate = func([][]byte, [][]*x509.Certificate) error {
+					return sensitive
+				}
+			},
+		},
+		{
+			name: "caller connection verification",
+			configure: func(template *http.Transport, sensitive error) {
+				template.TLSClientConfig.VerifyConnection = func(tls.ConnectionState) error {
+					return sensitive
+				}
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fixture := newX509TransportFixture(t)
+			var received atomic.Int32
+			server := fixture.server(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				received.Add(1)
+				w.WriteHeader(http.StatusOK)
+			}))
+			template := fixture.transport(t, server)
+			sensitive := errors.New("private-certificate-verification-secret")
+			test.configure(template, sensitive)
+			capability := newX509Capability(t, template)
+			request := x509TransportRequest(t, http.MethodGet,
+				"https://"+x509TransportAPI+"/v1/models?private-query-token=synthetic-secret")
+			request.Header.Set("Authorization", "Bearer private-header-token")
+			err := x509Rejected(t, capability, request)
+			cause := errors.Unwrap(err)
+			if cause == nil || cause.Error() != "X.509 transport TLS verification failed" {
+				t.Fatalf("permanent TLS verification failure has unsafe or missing classification: %v", err)
+			}
+			if errors.Unwrap(cause) != nil || errors.Is(err, sensitive) {
+				t.Error("permanent TLS verification retained its sensitive underlying cause")
+			}
+			for current := err; current != nil; current = errors.Unwrap(current) {
+				if strings.Contains(current.Error(), "private-") || strings.Contains(current.Error(), "synthetic-secret") {
+					t.Errorf("permanent TLS classification disclosed request or verification data: %q", current.Error())
+				}
+			}
+			if got := received.Load(); got != 0 {
+				t.Errorf("permanent TLS verification failure delivered %d HTTP requests", got)
 			}
 		})
 	}
