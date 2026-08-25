@@ -12,11 +12,7 @@ func (acc *ChatCompletionAccumulator) detachPrivateStateForCopy() {
 	}
 	acc.stringState = acc.stringState.cloneForAccumulatorCopy()
 	acc.logprobState.choices = cloneAccumulatorSlice(acc.logprobState.choices)
-	for i := range acc.logprobState.choices {
-		choice := &acc.logprobState.choices[i]
-		choice.content.shared = choice.content.length < choice.content.capacity
-		choice.refusal.shared = choice.refusal.length < choice.refusal.capacity
-	}
+	acc.logprobState.markSharedSpareBacking()
 }
 
 func (acc *ChatCompletionAccumulator) claimPrivateStateOwnership() {

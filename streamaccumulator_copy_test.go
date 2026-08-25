@@ -260,6 +260,90 @@ func TestAccumulatorValueCopyLogprobsDetachSharedSpareCapacity(t *testing.T) {
 	}
 }
 
+func TestAccumulatorValueCopyPreservesUntouchedLogprobOwnership(t *testing.T) {
+	for _, firstContent := range []bool{true, false} {
+		name := "content_then_refusal"
+		if !firstContent {
+			name = "refusal_then_content"
+		}
+		t.Run(name, func(t *testing.T) {
+			initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+			initial.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{
+				{Token: "first"}, {Token: "second"}, {Token: "third"},
+			}
+			initial.Choices[0].Logprobs.Refusal = []openai.ChatCompletionTokenLogprob{
+				{Token: "first"}, {Token: "second"}, {Token: "third"},
+			}
+			var original openai.ChatCompletionAccumulator
+			if !original.AddChunk(initial) {
+				t.Fatal("AddChunk rejected the initial Content and Refusal logprobs")
+			}
+			branch := original
+			branch.Choices = slices.Clone(branch.Choices)
+
+			first := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+			second := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+			other := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+			var branchValues func() []openai.ChatCompletionTokenLogprob
+			if firstContent {
+				first.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "first-branch"}}
+				second.Choices[0].Logprobs.Refusal = []openai.ChatCompletionTokenLogprob{{Token: "branch"}}
+				other.Choices[0].Logprobs.Refusal = []openai.ChatCompletionTokenLogprob{{Token: "original"}}
+				branchValues = func() []openai.ChatCompletionTokenLogprob { return branch.Choices[0].Logprobs.Refusal }
+			} else {
+				first.Choices[0].Logprobs.Refusal = []openai.ChatCompletionTokenLogprob{{Token: "first-branch"}}
+				second.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "branch"}}
+				other.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "original"}}
+				branchValues = func() []openai.ChatCompletionTokenLogprob { return branch.Choices[0].Logprobs.Content }
+			}
+			if !branch.AddChunk(first) || !branch.AddChunk(second) {
+				t.Fatal("AddChunk rejected copied logprobs in different fields")
+			}
+			if !original.AddChunk(other) {
+				t.Fatal("AddChunk rejected the original accumulator's untouched-field append")
+			}
+			if got := branchValues()[3].Token; got != "branch" {
+				t.Fatalf("original append changed the copied sibling logprob to %q, want branch", got)
+			}
+		})
+	}
+
+	t.Run("different_choices", func(t *testing.T) {
+		initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+		initial.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{
+			{Token: "first"}, {Token: "second"}, {Token: "third"},
+		}
+		secondChoice := initial.Choices[0]
+		secondChoice.Index = 1
+		secondChoice.Logprobs.Content = slices.Clone(initial.Choices[0].Logprobs.Content)
+		initial.Choices = append(initial.Choices, secondChoice)
+		var original openai.ChatCompletionAccumulator
+		if !original.AddChunk(initial) {
+			t.Fatal("AddChunk rejected initial logprobs for both choices")
+		}
+		branch := original
+		branch.Choices = slices.Clone(branch.Choices)
+		first := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+		first.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "first-branch"}}
+		if !branch.AddChunk(first) {
+			t.Fatal("AddChunk rejected the copied accumulator's first choice")
+		}
+		next := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+		next.Choices[0].Index = 1
+		next.Choices[0].Logprobs.Content = []openai.ChatCompletionTokenLogprob{{Token: "branch"}}
+		if !branch.AddChunk(next) {
+			t.Fatal("AddChunk rejected the copied accumulator's second choice")
+		}
+		next.Choices[0].Logprobs.Content[0].Token = "original"
+		if !original.AddChunk(next) {
+			t.Fatal("AddChunk rejected the original accumulator's second choice")
+		}
+		if got := branch.Choices[1].Logprobs.Content[3].Token; got != "branch" {
+			t.Fatalf("original append changed copied second-choice logprob to %q, want branch", got)
+		}
+	})
+}
+
 func TestAccumulatorValueCopyStringBuffersIsolated(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -192,6 +192,9 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 	}
 	plan.state.choices = make([]chatCompletionChoiceLogprobState, len(acc.Choices))
 	copy(plan.state.choices, state.choices)
+	if copied {
+		plan.state.markSharedSpareBacking()
+	}
 
 	plan.state.bytes = 0
 	for _, i := range indices {
@@ -202,10 +205,7 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 			continue
 		}
 		logprobs := &acc.Choices[i].Logprobs
-		var current chatCompletionChoiceLogprobState
-		if i < len(state.choices) {
-			current = state.choices[i]
-		}
+		current := plan.state.choices[i]
 		content, contentDetach := current.content, false
 		contentCopy := copiedLogprobAppendNeedsDetach(copied || current.content.shared, &contentAppends, i, logprobs.Content)
 		if !current.content.matches(logprobs.Content) || contentCopy {
@@ -258,6 +258,14 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 		}
 	}
 	return true, true
+}
+
+func (state *chatCompletionAccumulatorLogprobState) markSharedSpareBacking() {
+	for i := range state.choices {
+		choice := &state.choices[i]
+		choice.content.shared = choice.content.length < choice.content.capacity
+		choice.refusal.shared = choice.refusal.length < choice.refusal.capacity
+	}
 }
 
 func copiedLogprobAppendNeedsDetach(
