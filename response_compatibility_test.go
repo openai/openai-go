@@ -97,8 +97,8 @@ func TestExecutePreservesLargeStructuredErrorsByDefault(t *testing.T) {
 
 	var response map[string]any
 	err := client.Get(context.Background(), "large-error", nil, &response)
-	apiErr, ok := err.(*openai.Error)
-	if !ok {
+	var apiErr *openai.Error
+	if !errors.As(err, &apiErr) || err != apiErr {
 		t.Fatalf("Get() error type = %T, want unwrapped *openai.Error", err)
 	}
 	if apiErr.Message != "request rejected" {

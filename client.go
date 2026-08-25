@@ -173,9 +173,9 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 // Successful non-streaming responses preserve their existing unbounded size and
 // caller-controlled lifetime unless [option.WithMaxResponseBodyBytes] or
 // [option.WithResponseBodyTimeout] opts into a limit. Error response bodies are
-// bounded by default and can be configured with
-// [option.WithMaxErrorResponseBodyBytes]. Raw [*http.Response] success bodies
-// remain streaming and are not subject to those non-streaming limits.
+// likewise unbounded unless [option.WithMaxErrorResponseBodyBytes] opts into a
+// limit. Raw [*http.Response] success bodies remain streaming and are not
+// subject to those non-streaming limits.
 //
 // For even greater flexibility, see [option.WithResponseInto] and
 // [option.WithResponseBodyInto].
