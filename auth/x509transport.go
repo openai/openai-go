@@ -444,9 +444,20 @@ func validateX509Request(request *http.Request) error {
 	if len(request.TransferEncoding) != 0 {
 		return errors.New("X.509 requests do not support custom HTTP transfer encodings")
 	}
+	if request.RequestURI != "" {
+		return errors.New("X.509 client requests cannot specify an explicit request URI")
+	}
+	if request.Cancel != nil { //nolint:staticcheck // Rejecting caller-controlled legacy cancellation requires its sole, deprecated accessor.
+		return errors.New("X.509 requests require context-based cancellation")
+	}
 	if request.URL == nil || request.URL.Scheme != "https" || request.URL.User != nil ||
 		request.URL.Opaque != "" || request.URL.Fragment != "" || request.URL.RawFragment != "" {
 		return errors.New("X.509 requests require an absolute HTTPS URL without credentials or fragments")
+	}
+	for _, character := range []byte(request.URL.RawQuery) {
+		if character < ' ' || character == 0x7f {
+			return errors.New("X.509 requests cannot contain HTTP control characters in their query")
+		}
 	}
 	host := request.URL.Hostname()
 	if host != x509AuthenticationHost && host != x509APIHost {
@@ -464,6 +475,14 @@ func validateX509Request(request *http.Request) error {
 
 	authorizationCount := 0
 	for name, values := range request.Header {
+		if !validX509HeaderName(name) {
+			return errors.New("X.509 requests require valid HTTP header names")
+		}
+		for _, value := range values {
+			if !validX509HeaderValue(value) {
+				return errors.New("X.509 requests require valid HTTP header values")
+			}
+		}
 		normalized := strings.ToLower(strings.ReplaceAll(name, "_", "-"))
 		switch normalized {
 		case "api-key", "x-api-key", "proxy-authorization", "cookie", "set-cookie", "host", "x-amz-security-token":
@@ -499,6 +518,32 @@ func validateX509Request(request *http.Request) error {
 		return errors.New("X.509 API requests must remain inside the /v1/ path")
 	}
 	return nil
+}
+
+func validX509HeaderName(name string) bool {
+	if name == "" {
+		return false
+	}
+	for _, value := range []byte(name) {
+		switch {
+		case value >= 'A' && value <= 'Z', value >= 'a' && value <= 'z', value >= '0' && value <= '9':
+		case value == '!', value == '#', value == '$', value == '%', value == '&', value == '\'',
+			value == '*', value == '+', value == '-', value == '.', value == '^', value == '_',
+			value == '`', value == '|', value == '~':
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+func validX509HeaderValue(value string) bool {
+	for _, character := range []byte(value) {
+		if (character < ' ' && character != '\t') || character == 0x7f {
+			return false
+		}
+	}
+	return true
 }
 
 func validX509BearerHeader(value string) bool {

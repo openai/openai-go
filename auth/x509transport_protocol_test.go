@@ -41,6 +41,27 @@ func TestX509TransportRejectsTunnelsAndAmbiguousFramingBeforeDial(t *testing.T) 
 		{name: "TRACE tunnel", change: func(request *http.Request) { request.Method = http.MethodTrace }},
 		{name: "HTTP/2 preface", change: func(request *http.Request) { request.Method = "PRI" }},
 		{name: "custom tunnel method", change: func(request *http.Request) { request.Method = "SYNTHETIC-TUNNEL" }},
+		{name: "explicit request URI", change: func(request *http.Request) {
+			request.RequestURI = "/v1/attacker-controlled"
+		}},
+		{name: "deprecated request cancellation channel", change: func(request *http.Request) {
+			request.Cancel = make(chan struct{}) //nolint:staticcheck // Exercising legacy cancellation requires its sole, deprecated accessor.
+		}},
+		{name: "query with carriage return", change: func(request *http.Request) {
+			request.URL.RawQuery = "synthetic=value\rinjected"
+		}},
+		{name: "query with line feed", change: func(request *http.Request) {
+			request.URL.RawQuery = "synthetic=value\ninjected"
+		}},
+		{name: "query with horizontal tab", change: func(request *http.Request) {
+			request.URL.RawQuery = "synthetic=value\tinjected"
+		}},
+		{name: "query with null byte", change: func(request *http.Request) {
+			request.URL.RawQuery = "synthetic=value\x00injected"
+		}},
+		{name: "query with DEL byte", change: func(request *http.Request) {
+			request.URL.RawQuery = "synthetic=value\x7finjected"
+		}},
 		{name: "identity transfer encoding", change: func(request *http.Request) {
 			request.TransferEncoding = []string{"identity"}
 		}},
@@ -85,6 +106,14 @@ func TestX509TransportRejectsTunnelsAndAmbiguousFramingBeforeDial(t *testing.T) 
 		{name: "proxy connection", change: x509UnsafeFramingHeader("proxy_connection", "keep-alive")},
 		{name: "hop-by-hop TE", change: x509UnsafeFramingHeader("te", "trailers")},
 		{name: "lowercase Host alias", change: x509UnsafeFramingHeader("host", "attacker.example.test")},
+		{name: "empty header name", change: x509UnsafeFramingHeader("", "synthetic-value")},
+		{name: "header name with whitespace", change: x509UnsafeFramingHeader("Invalid Name", "synthetic-value")},
+		{name: "header name with colon", change: x509UnsafeFramingHeader("Invalid:Name", "synthetic-value")},
+		{name: "header name with non-ASCII bytes", change: x509UnsafeFramingHeader("Invalid-\u00e9", "synthetic-value")},
+		{name: "header value with carriage return", change: x509UnsafeFramingHeader("Synthetic", "value\rnext")},
+		{name: "header value with line feed", change: x509UnsafeFramingHeader("Synthetic", "value\nnext")},
+		{name: "header value with null byte", change: x509UnsafeFramingHeader("Synthetic", "value\x00next")},
+		{name: "header value with DEL byte", change: x509UnsafeFramingHeader("Synthetic", "value\x7fnext")},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			request := x509TransportRequest(t, http.MethodPost, "https://"+x509TransportAPI+"/v1/models")
@@ -122,6 +151,9 @@ func TestX509TransportPreservesSafelyChunkedStreamingBodies(t *testing.T) {
 	payload := "synthetic stream\r\nGET /v1/stolen HTTP/1.1\r\nHost: attacker.example.test\r\n\r\n"
 	server := fixture.server(t, http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
 		received.Add(1)
+		if got := request.Header.Get("Synthetic-Compatibility"); got != "safe\tvalue\x80" {
+			t.Errorf("valid HTTP header value = %q, want horizontal tab and obs-text bytes", got)
+		}
 		body, err := io.ReadAll(request.Body)
 		if err != nil || string(body) != payload {
 			t.Errorf("safely chunked workload body = %q, error = %v", body, err)
@@ -132,6 +164,7 @@ func TestX509TransportPreservesSafelyChunkedStreamingBodies(t *testing.T) {
 	for _, knownLength := range []bool{false, true} {
 		request := x509TransportRequest(t, http.MethodPost, "https://"+x509TransportAPI+"/v1/models")
 		request.Header.Set("Authorization", "Bearer protected-synthetic-token")
+		request.Header.Set("Synthetic-Compatibility", "safe\tvalue\x80")
 		request.Body = io.NopCloser(strings.NewReader(payload))
 		request.ContentLength = -1
 		if knownLength {
