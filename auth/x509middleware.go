@@ -31,7 +31,7 @@ func X509WorkloadIdentityMiddleware(
 			return nil, errors.New("X.509 workload identity cannot replace existing Authorization credentials")
 		}
 	}
-	hadBody := request.Body != nil
+	hadBody := request.Body != nil && request.Body != http.NoBody
 	token, err := identity.GetToken(request.Context(), httpClient)
 	if err != nil {
 		return nil, err

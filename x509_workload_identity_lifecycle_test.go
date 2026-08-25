@@ -116,8 +116,11 @@ func TestX509WorkloadIdentityUnauthorizedRecoveryReentersSDKAttempt(t *testing.T
 		maximum     int
 		wantCalls   int32
 		wantSuccess bool
+		noBody      bool
 	}{
 		{name: "fresh middleware and attempt timeout", maximum: 1, wantCalls: 2, wantSuccess: true},
+		{name: "http.NoBody replays through caller middleware", maximum: 1,
+			wantCalls: 2, wantSuccess: true, noBody: true},
 		{name: "zero retries prevents unauthorized recovery", maximum: 0, wantCalls: 1},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -148,6 +151,10 @@ func TestX509WorkloadIdentityUnauthorizedRecoveryReentersSDKAttempt(t *testing.T
 				option.WithRequestTimeout(time.Second),
 				option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 					middlewareAttempts.Add(1)
+					if test.noBody {
+						request.Body = http.NoBody
+						request.ContentLength = 0
+					}
 					if deadline, ok := request.Context().Deadline(); ok {
 						mu.Lock()
 						deadlines = append(deadlines, deadline)

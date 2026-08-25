@@ -172,13 +172,18 @@ func TestX509WorkloadIdentityMiddlewareCanReplayUnscopedBodylessRequests(t *test
 }
 
 func TestX509WorkloadIdentityMiddlewareReplaysUnauthorizedResponsesWithoutBodies(t *testing.T) {
-	for _, scoped := range []bool{false, true} {
-		name := "direct middleware"
-		if scoped {
-			name = "request-scoped middleware"
-		}
-		t.Run(name, func(t *testing.T) {
-			var exchanges, dispatched atomic.Int32
+	for _, test := range []struct {
+		name   string
+		scoped bool
+		noBody bool
+	}{
+		{name: "direct middleware"},
+		{name: "request-scoped middleware", scoped: true},
+		{name: "direct middleware with http.NoBody", noBody: true},
+		{name: "request-scoped middleware with http.NoBody", scoped: true, noBody: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var exchanges, dispatched, restored atomic.Int32
 			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				token := fmt.Sprintf("synthetic-bodyless-response-token-%d", exchanges.Add(1))
 				_, _ = io.WriteString(w, strings.Replace(x509ValidExchangeResponse(), x509ExchangeSyntheticToken, token, 1))
@@ -189,7 +194,14 @@ func TestX509WorkloadIdentityMiddlewareReplaysUnauthorizedResponsesWithoutBodies
 			if err != nil {
 				t.Fatalf("construct request for bodyless unauthorized response: %v", err)
 			}
-			if scoped {
+			if test.noBody {
+				request.Body = http.NoBody
+				request.GetBody = func() (io.ReadCloser, error) {
+					restored.Add(1)
+					return io.NopCloser(strings.NewReader("synthetic-removed-private-body")), nil
+				}
+			}
+			if test.scoped {
 				scope := requestconfig.NewRequestRetryScope(1, 0, false, nil)
 				if !scope.BeginAttempt() {
 					t.Fatal("begin initial scoped middleware attempt")
@@ -198,6 +210,9 @@ func TestX509WorkloadIdentityMiddlewareReplaysUnauthorizedResponsesWithoutBodies
 			}
 			response, err := X509WorkloadIdentityMiddleware(identity, fixture.capability, request,
 				func(authenticated *http.Request) (*http.Response, error) {
+					if test.noBody && authenticated.Body != http.NoBody {
+						t.Error("http.NoBody direct middleware request restored a removed payload")
+					}
 					attempt := dispatched.Add(1)
 					want := fmt.Sprintf("Bearer synthetic-bodyless-response-token-%d", attempt)
 					if got := authenticated.Header.Get("Authorization"); got != want {
@@ -216,7 +231,7 @@ func TestX509WorkloadIdentityMiddlewareReplaysUnauthorizedResponsesWithoutBodies
 			}
 			wantStatus := http.StatusOK
 			wantAttempts := int32(2)
-			if scoped {
+			if test.scoped {
 				wantStatus = http.StatusUnauthorized
 				wantAttempts = 1
 				if response == nil || response.Header.Get("x-should-retry") != "true" {
@@ -231,6 +246,9 @@ func TestX509WorkloadIdentityMiddlewareReplaysUnauthorizedResponsesWithoutBodies
 			}
 			if got := request.Header.Get("Authorization"); got != "" {
 				t.Errorf("direct middleware mutated caller-owned request Authorization: %q", got)
+			}
+			if got := restored.Load(); got != 0 {
+				t.Errorf("bodyless middleware request invoked its retained GetBody factory %d times", got)
 			}
 		})
 	}
