@@ -2,6 +2,7 @@ package openai_test
 
 import (
 	"errors"
+	"io"
 	"net/http"
 	"sync/atomic"
 	"testing"
@@ -158,7 +159,6 @@ func TestX509WorkloadIdentityRejectsLateMiddlewareMutationBeforeExchange(t *test
 			var invoked atomic.Int32
 			client := openai.NewClient(
 				option.WithX509WorkloadIdentity(config),
-				option.WithMaxRetries(0),
 				option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 					invoked.Add(1)
 					test.mutate(request)
@@ -186,6 +186,7 @@ func TestX509WorkloadIdentityRejectsMethodLevelOverridesBeforeExchange(t *testin
 		{name: "API key", opt: option.WithAPIKey("synthetic-method-api-key")},
 		{name: "admin API key", opt: option.WithAdminAPIKey("synthetic-method-admin-key")},
 		{name: "custom bearer", opt: option.WithHeader("Authorization", "Bearer synthetic-method-token")},
+		{name: "explicit headerless request", opt: option.WithHeaderDel("Authorization")},
 		{name: "HTTP client", opt: option.WithHTTPClient(&http.Client{})},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -197,6 +198,65 @@ func TestX509WorkloadIdentityRejectsMethodLevelOverridesBeforeExchange(t *testin
 			}
 			assertX509WorkloadNoRequests(t, issuer, api)
 		})
+	}
+}
+
+func TestX509WorkloadIdentityRejectsAdminOnlyOperationsBeforeExchange(t *testing.T) {
+	t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+	config, issuer, api := newX509WorkloadIdentityIntegration(t)
+	client := openai.NewClient(option.WithX509WorkloadIdentity(config))
+	if _, err := client.Admin.Organization.DataRetention.Get(t.Context()); err == nil {
+		t.Fatal("admin-only data-retention endpoint accepted X.509 bearer authentication")
+	}
+	assertX509WorkloadNoRequests(t, issuer, api)
+}
+
+func TestX509WorkloadIdentityDoesNotRetryPermanentIssuerFailure(t *testing.T) {
+	t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+	config, issuer, api := newX509WorkloadIdentityIntegration(t)
+	var requests atomic.Int32
+	issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, `{"error":"invalid_grant","error_description":"synthetic-private-issuer-detail"}`)
+	})
+	client := openai.NewClient(option.WithX509WorkloadIdentity(config))
+	_, err := client.Models.List(t.Context())
+	var oauthError *auth.OAuthError
+	if !errors.As(err, &oauthError) || oauthError.StatusCode != http.StatusBadRequest {
+		t.Fatalf("permanent issuer error lost its typed OAuth identity: %v", err)
+	}
+	if got := requests.Load(); got != 1 {
+		t.Errorf("default SDK retries repeated a permanent issuer failure %d times", got)
+	}
+	if requests := api.requests(); len(requests) != 0 {
+		t.Errorf("permanent issuer failure sent %d protected API requests", len(requests))
+	}
+}
+
+func TestX509WorkloadIdentityDoesNotMutateCallerOwnedRequest(t *testing.T) {
+	t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+	config, issuer, api := newX509WorkloadIdentityIntegration(t)
+	var observed atomic.Int32
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(config),
+		option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			response, err := next(request)
+			if request.Header.Get("Authorization") != "" {
+				t.Error("X.509 authentication wrote a bearer credential into the caller-owned request")
+			}
+			observed.Add(1)
+			return response, err
+		}),
+	)
+	if _, err := client.Models.List(t.Context()); err != nil {
+		t.Fatalf("request with observer middleware: %v", err)
+	}
+	if observed.Load() != 1 || len(issuer.requests()) != 1 || len(api.requests()) != 1 {
+		t.Errorf("request observer/issuer/API calls = %d/%d/%d", observed.Load(), len(issuer.requests()), len(api.requests()))
+	}
+	if request := api.requests()[0]; request.authorization != "Bearer "+x509ConformanceToken {
+		t.Error("cloned API request did not receive its expected bearer credential")
 	}
 }
 

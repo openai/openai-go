@@ -153,6 +153,12 @@ func (cfg *RequestConfig) EndpointProvider() string {
 	return cfg.endpointProvider
 }
 
+// AuthorizationHeaderOverridden reports whether an explicit request option
+// selected or deleted the Authorization header.
+func (cfg *RequestConfig) AuthorizationHeaderOverridden() bool {
+	return cfg.authentication.headerOverride
+}
+
 // ProviderAuthOption identifies one provider authentication mode. Instances are
 // immutable and can be shared across concurrent requests.
 type ProviderAuthOption struct {

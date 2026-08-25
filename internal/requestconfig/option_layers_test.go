@@ -108,6 +108,32 @@ func TestEndpointProviderReportsProviderRouting(t *testing.T) {
 	}
 }
 
+func TestAuthorizationHeaderOverriddenPreservesExplicitDeletion(t *testing.T) {
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://example.com", nil)
+	if err != nil {
+		t.Fatalf("construct synthetic request: %v", err)
+	}
+	cfg := RequestConfig{Request: request}
+	if cfg.AuthorizationHeaderOverridden() {
+		t.Error("unmodified request unexpectedly has an explicit Authorization override")
+	}
+	cfg.DelHeader("Authorization")
+	if !cfg.AuthorizationHeaderOverridden() || len(cfg.Request.Header.Values("Authorization")) != 0 {
+		t.Error("explicit header deletion was not preserved as an Authorization override")
+	}
+	inherited := RequestConfig{Request: request.Clone(request.Context())}
+	if err := inherited.Apply(InheritedOptions(RequestOptionFunc(func(config *RequestConfig) error {
+		config.DelHeader("Authorization")
+		return nil
+	}))...); err != nil {
+		t.Fatalf("configure inherited Authorization override: %v", err)
+	}
+	inherited.ClearInheritedAuthentication()
+	if inherited.AuthorizationHeaderOverridden() {
+		t.Error("inherited Authorization override was not cleared")
+	}
+}
+
 func TestProviderAuthOptionsPreserveConfigurationLayers(t *testing.T) {
 	apiKey := NewProviderAuthOption("Azure", "azure.WithAPIKey")
 	secondAPIKey := NewProviderAuthOption("Azure", "azure.WithAPIKey")

@@ -49,7 +49,11 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 			if final.EndpointProvider() != "" {
 				return errors.New("X.509 workload identity cannot be combined with another API provider")
 			}
-			if final.APIKey != "" || final.AdminAPIKey != "" || unsafeX509CredentialHeaders(final.Request.Header) {
+			if !final.Security.BearerAuth {
+				return errors.New("X.509 workload identity cannot authenticate an admin-only API operation")
+			}
+			if final.APIKey != "" || final.AdminAPIKey != "" || final.AuthorizationHeaderOverridden() ||
+				unsafeX509CredentialHeaders(final.Request.Header) {
 				return errors.New("X.509 workload identity cannot be combined with other credentials")
 			}
 			if final.HTTPClient != originalHTTPClient || final.CustomHTTPDoer != config.Transport {
@@ -64,14 +68,17 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 			}
 			return WithMiddleware(func(request *http.Request, next MiddlewareNext) (*http.Response, error) {
 				if !validX509WorkloadAPIRequest(request) || unsafeX509CredentialHeaders(request.Header) {
-					return nil, errors.New("X.509 workload identity rejected an unsafe final API request")
+					return nil, requestconfig.WithNoRetryError(
+						errors.New("X.509 workload identity rejected an unsafe final API request"),
+					)
 				}
 				token, err := identity.GetToken(request.Context(), config.Transport)
 				if err != nil {
-					return nil, err
+					return nil, requestconfig.WithNoRetryError(err)
 				}
-				request.Header.Set("Authorization", "Bearer "+token)
-				return next(request)
+				authenticated := request.Clone(request.Context())
+				authenticated.Header.Set("Authorization", "Bearer "+token)
+				return next(authenticated)
 			}).Apply(final)
 		}).Apply(cfg)
 	})
