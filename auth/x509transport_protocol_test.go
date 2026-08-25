@@ -368,6 +368,114 @@ func TestX509TransportRejectsALPNDisabledByEffectiveHTTPProtocols(t *testing.T) 
 	}
 }
 
+func TestX509TransportRejectsHTTP2WhenRuntimeDisablesItsNativeHandler(t *testing.T) {
+	t.Setenv("GODEBUG", "http2client=0")
+	for _, test := range []struct {
+		name         string
+		http2Only    bool
+		wantRequests int32
+	}{
+		{name: "HTTP/2 ALPN without runtime handler", http2Only: true},
+		{name: "mixed policy safely falls back to HTTP/1", wantRequests: 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fixture := newX509TransportFixture(t)
+			var received atomic.Int32
+			server := newX509HTTP2TransportServer(t, fixture, http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+				received.Add(1)
+				if request.ProtoMajor != 1 {
+					t.Errorf("runtime-disabled HTTP/2 delivered an HTTP/%d request", request.ProtoMajor)
+				}
+				w.WriteHeader(http.StatusOK)
+			}))
+			template := fixture.transport(t, server)
+			template.ForceAttemptHTTP2 = true
+			if test.http2Only {
+				template.Protocols = new(http.Protocols)
+				template.Protocols.SetHTTP2(true)
+				template.TLSClientConfig.NextProtos = []string{"h2"}
+			}
+			capability := newX509Capability(t, template)
+			request := x509TransportRequest(t, http.MethodGet,
+				"https://"+x509TransportAPI+"/v1/models?private-query-token=synthetic-secret")
+			request.Header.Set("Authorization", "Bearer private-header-token")
+			if test.http2Only {
+				err := x509Rejected(t, capability, request)
+				if strings.Contains(err.Error(), "private-") || strings.Contains(err.Error(), "synthetic-secret") {
+					t.Errorf("runtime-disabled protocol error disclosed request credentials: %q", err.Error())
+				}
+			} else {
+				response, err := capability.Do(request)
+				if err != nil {
+					t.Fatalf("mixed HTTP policy did not safely fall back to HTTP/1: %v", err)
+				}
+				if closeErr := response.Body.Close(); closeErr != nil {
+					t.Fatalf("close fallback HTTP/1 response: %v", closeErr)
+				}
+			}
+			if got := received.Load(); got != test.wantRequests {
+				t.Errorf("runtime-disabled HTTP/2 delivered %d authenticated requests, want %d", got, test.wantRequests)
+			}
+		})
+	}
+}
+
+func TestX509TransportPreservesCallerTLSConnectionVerification(t *testing.T) {
+	for _, reject := range []bool{false, true} {
+		name := "caller certificate verifier succeeds"
+		if reject {
+			name = "caller certificate verifier fails safely"
+		}
+		t.Run(name, func(t *testing.T) {
+			fixture := newX509TransportFixture(t)
+			var received, verified atomic.Int32
+			server := fixture.server(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				received.Add(1)
+				w.WriteHeader(http.StatusOK)
+			}))
+			template := fixture.transport(t, server)
+			sensitive := errors.New("private-caller-verifier-secret")
+			template.TLSClientConfig.VerifyConnection = func(state tls.ConnectionState) error {
+				verified.Add(1)
+				if len(state.PeerCertificates) == 0 {
+					t.Error("caller verifier did not receive a validated server certificate")
+				}
+				if reject {
+					return sensitive
+				}
+				return nil
+			}
+			capability := newX509Capability(t, template)
+			request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+			request.Header.Set("Authorization", "Bearer private-header-token")
+			if reject {
+				err := x509Rejected(t, capability, request)
+				if errors.Is(err, sensitive) || strings.Contains(err.Error(), "private-") {
+					t.Errorf("caller verifier leaked its sensitive rejection: %v", err)
+				}
+			} else {
+				response, err := capability.Do(request)
+				if err != nil {
+					t.Fatalf("mutual TLS with the caller's connection verifier: %v", err)
+				}
+				if closeErr := response.Body.Close(); closeErr != nil {
+					t.Fatalf("close caller-verified response: %v", closeErr)
+				}
+			}
+			if got := verified.Load(); got != 1 {
+				t.Errorf("caller connection verifier invoked %d times, want once", got)
+			}
+			want := int32(1)
+			if reject {
+				want = 0
+			}
+			if got := received.Load(); got != want {
+				t.Errorf("caller-verified TLS delivered %d authenticated requests, want %d", got, want)
+			}
+		})
+	}
+}
+
 func TestX509TransportRequiresPrivateKeySignerWithoutEagerHardwareCalls(t *testing.T) {
 	fixture := newX509TransportFixture(t)
 	var received atomic.Int32

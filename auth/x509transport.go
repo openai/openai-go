@@ -143,6 +143,26 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 		configuration := *template.HTTP2
 		transport.HTTP2 = &configuration
 	}
+	http1, http2 := x509EffectiveHTTPProtocols(template)
+	verifyConnection := config.VerifyConnection
+	config.VerifyConnection = func(state tls.ConnectionState) error {
+		switch state.NegotiatedProtocol {
+		case "h2":
+			if !http2 || transport.TLSNextProto["h2"] == nil {
+				return errors.New("X.509 transport negotiated HTTP/2 without an enabled native handler")
+			}
+		case "", "http/1.1":
+			if !http1 {
+				return errors.New("X.509 transport negotiated a disabled HTTP/1 connection")
+			}
+		default:
+			return errors.New("X.509 transport negotiated an unsupported TLS application protocol")
+		}
+		if verifyConnection != nil {
+			return verifyConnection(state)
+		}
+		return nil
+	}
 
 	return &X509Transport{
 		template:          template,
@@ -236,12 +256,7 @@ func validateX509TLSConfig(config *tls.Config) error {
 }
 
 func validateX509ApplicationProtocols(template *http.Transport) error {
-	http1, http2 := true, template.ForceAttemptHTTP2
-	if template.Protocols != nil {
-		http1, http2 = template.Protocols.HTTP1(), template.Protocols.HTTP2()
-	} else if template.TLSNextProto != nil {
-		http2 = template.TLSNextProto["h2"] != nil
-	}
+	http1, http2 := x509EffectiveHTTPProtocols(template)
 	if !http1 && !http2 {
 		return errors.New("X.509 transport requires an enabled HTTPS-compatible HTTP protocol")
 	}
@@ -254,6 +269,16 @@ func validateX509ApplicationProtocols(template *http.Transport) error {
 		}
 	}
 	return nil
+}
+
+func x509EffectiveHTTPProtocols(template *http.Transport) (bool, bool) {
+	http1, http2 := true, template.ForceAttemptHTTP2
+	if template.Protocols != nil {
+		http1, http2 = template.Protocols.HTTP1(), template.Protocols.HTTP2()
+	} else if template.TLSNextProto != nil {
+		http2 = template.TLSNextProto["h2"] != nil
+	}
+	return http1, http2
 }
 
 func x509PrivateKeyIsNil(key any) bool {
