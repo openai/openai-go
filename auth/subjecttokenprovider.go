@@ -120,6 +120,13 @@ func (p *azureManagedIdentityTokenProvider) GetToken(ctx context.Context, httpCl
 			Cause:    err,
 		}
 	}
+	if resp == nil || resp.Body == nil {
+		return "", &SubjectTokenProviderError{
+			Provider: "azure-imds",
+			Message:  "IMDS returned an invalid response",
+		}
+	}
+	defer func() { _ = resp.Body.Close() }()
 	body, err := readSubjectTokenProviderResponse(ctx, resp, "azure-imds", "IMDS")
 	if err != nil {
 		return "", err
@@ -196,6 +203,13 @@ func (p *gcpIDTokenProvider) GetToken(ctx context.Context, httpClient HTTPDoer) 
 			Cause:    err,
 		}
 	}
+	if resp == nil || resp.Body == nil {
+		return "", &SubjectTokenProviderError{
+			Provider: "gcp-metadata",
+			Message:  "metadata server returned an invalid response",
+		}
+	}
+	defer func() { _ = resp.Body.Close() }()
 	token, err := readSubjectTokenProviderResponse(ctx, resp, "gcp-metadata", "metadata server")
 	if err != nil {
 		return "", err
@@ -217,14 +231,6 @@ func readSubjectTokenProviderResponse(
 	response *http.Response,
 	provider, source string,
 ) ([]byte, error) {
-	if response == nil || response.Body == nil {
-		return nil, &SubjectTokenProviderError{
-			Provider: provider,
-			Message:  fmt.Sprintf("%s returned an invalid response", source),
-		}
-	}
-	defer func() { _ = response.Body.Close() }()
-
 	maximum := int64(x509SuccessResponseMaximum)
 	if response.StatusCode != http.StatusOK {
 		maximum = x509ErrorResponseMaximum
