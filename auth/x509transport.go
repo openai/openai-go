@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptrace"
 	"path"
@@ -25,11 +26,15 @@ const (
 var errX509Redirect = errors.New("X.509 workload identity does not follow redirects")
 
 type x509TransportError struct {
-	cause error
+	cause     error
+	timeout   bool
+	temporary bool
 }
 
-func (err *x509TransportError) Error() string { return "X.509 transport request failed" }
-func (err *x509TransportError) Unwrap() error { return err.cause }
+func (err *x509TransportError) Error() string   { return "X.509 transport request failed" }
+func (err *x509TransportError) Unwrap() error   { return err.cause }
+func (err *x509TransportError) Timeout() bool   { return err.timeout }
+func (err *x509TransportError) Temporary() bool { return err.temporary }
 
 // x509TraceFreeContext preserves cancellation, deadlines, and ordinary context
 // values while preventing a mutable parent from revealing HTTP trace hooks
@@ -74,6 +79,9 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 	if err := validateX509NativeTransport(template); err != nil {
 		return nil, err
 	}
+	if err := validateX509ApplicationProtocols(template.TLSClientConfig.NextProtos); err != nil {
+		return nil, err
+	}
 	if err := validateX509TLSProtocolHandlers(template.TLSNextProto); err != nil {
 		return nil, err
 	}
@@ -81,11 +89,13 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 	config.Certificates = slices.Clone(config.Certificates)
 	for index := range config.Certificates {
 		certificate := &config.Certificates[index]
+		certificate.Leaf = nil
 		certificate.Certificate = slices.Clone(certificate.Certificate)
 		for chainIndex := range certificate.Certificate {
 			certificate.Certificate[chainIndex] = slices.Clone(certificate.Certificate[chainIndex])
 		}
 		certificate.OCSPStaple = slices.Clone(certificate.OCSPStaple)
+		certificate.SupportedSignatureAlgorithms = slices.Clone(certificate.SupportedSignatureAlgorithms)
 		certificate.SignedCertificateTimestamps = slices.Clone(certificate.SignedCertificateTimestamps)
 		for timestampIndex := range certificate.SignedCertificateTimestamps {
 			certificate.SignedCertificateTimestamps[timestampIndex] = slices.Clone(
@@ -97,6 +107,9 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 		config.RootCAs = config.RootCAs.Clone()
 	}
 	config.NextProtos = slices.Clone(config.NextProtos)
+	config.CipherSuites = slices.Clone(config.CipherSuites)
+	config.CurvePreferences = slices.Clone(config.CurvePreferences)
+	config.EncryptedClientHelloConfigList = slices.Clone(config.EncryptedClientHelloConfigList)
 	transport := &http.Transport{
 		DialContext:            template.DialContext,
 		TLSClientConfig:        config,
@@ -165,13 +178,8 @@ func validateX509NativeTransport(transport *http.Transport) error {
 	if transport.TLSClientConfig == nil {
 		return errors.New("X.509 transport requires an explicit TLS configuration")
 	}
-	config := transport.TLSClientConfig
-	if len(config.Certificates) != 1 || len(config.Certificates[0].Certificate) == 0 ||
-		len(config.Certificates[0].Certificate[0]) == 0 || x509PrivateKeyIsNil(config.Certificates[0].PrivateKey) {
-		return errors.New("X.509 transport requires exactly one static certificate and private key")
-	}
-	if config.GetClientCertificate != nil {
-		return errors.New("X.509 transport does not support dynamic client-certificate callbacks")
+	if err := validateX509TLSConfig(transport.TLSClientConfig); err != nil {
+		return err
 	}
 	if transport.DialTLSContext != nil {
 		return errors.New("X.509 transport does not support custom TLS dialers")
@@ -180,20 +188,53 @@ func validateX509NativeTransport(transport *http.Transport) error {
 	if transport.DialTLS != nil {
 		return errors.New("X.509 transport does not support deprecated TLS dialers")
 	}
-	if config.ClientSessionCache != nil {
-		return errors.New("X.509 transport does not support shared TLS session caches")
-	}
 	if transport.Proxy != nil {
 		return errors.New("X.509 transport currently supports direct connections only")
 	}
 	if transport.HTTP2 != nil && transport.HTTP2.CountError != nil {
 		return errors.New("X.509 transport does not support HTTP/2 error callbacks")
 	}
+	return nil
+}
+
+func validateX509TLSConfig(config *tls.Config) error {
+	if len(config.Certificates) != 1 || len(config.Certificates[0].Certificate) == 0 ||
+		len(config.Certificates[0].Certificate[0]) == 0 || x509PrivateKeyIsNil(config.Certificates[0].PrivateKey) {
+		return errors.New("X.509 transport requires exactly one static certificate and private key")
+	}
+	if config.GetClientCertificate != nil {
+		return errors.New("X.509 transport does not support dynamic client-certificate callbacks")
+	}
+	if config.KeyLogWriter != nil {
+		return errors.New("X.509 transport does not support TLS session key logging")
+	}
+	if config.Rand != nil {
+		return errors.New("X.509 transport does not support custom TLS randomness")
+	}
+	if config.Time != nil {
+		return errors.New("X.509 transport does not support a custom TLS verification clock")
+	}
+	if (config.MinVersion != 0 && config.MinVersion < tls.VersionTLS12) ||
+		(config.MaxVersion != 0 && config.MaxVersion < tls.VersionTLS12) {
+		return errors.New("X.509 transport requires TLS version 1.2 or newer")
+	}
+	if config.ClientSessionCache != nil {
+		return errors.New("X.509 transport does not support shared TLS session caches")
+	}
 	if config.InsecureSkipVerify {
 		return errors.New("X.509 transport requires TLS certificate and hostname verification")
 	}
 	if config.ServerName != "" {
 		return errors.New("X.509 transport does not support overriding the TLS server name")
+	}
+	return nil
+}
+
+func validateX509ApplicationProtocols(protocols []string) error {
+	for _, protocol := range protocols {
+		if protocol != "h2" && protocol != "http/1.1" {
+			return errors.New("X.509 transport does not support non-HTTP TLS application protocols")
+		}
 	}
 	return nil
 }
@@ -238,8 +279,8 @@ func (transport *X509Transport) validateAttestation() error {
 		return errors.New("X.509 transport TLS configuration changed after attestation")
 	}
 	for _, config := range []*tls.Config{transport.templateTLS, transport.tlsConfig} {
-		if len(config.Certificates) != 1 {
-			return errors.New("X.509 transport certificate changed after attestation")
+		if err := validateX509TLSConfig(config); err != nil {
+			return fmt.Errorf("X.509 transport TLS configuration changed after attestation: %w", err)
 		}
 		digest := x509CertificateDigest(config.Certificates[0].Certificate)
 		if subtle.ConstantTimeCompare(digest[:], transport.certificateDigest[:]) != 1 {
@@ -297,6 +338,13 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 	response, err := transport.client.Do(request)
 	if err != nil {
 		redacted := &x509TransportError{}
+		var networkError net.Error
+		if errors.As(err, &networkError) {
+			redacted.timeout = networkError.Timeout()
+			if temporary, ok := err.(interface{ Temporary() bool }); ok {
+				redacted.temporary = temporary.Temporary()
+			}
+		}
 		switch {
 		case errors.Is(err, errX509Redirect):
 			redacted.cause = errX509Redirect
@@ -320,8 +368,21 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 }
 
 func validateX509Request(request *http.Request) error {
+	switch request.Method {
+	case http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch,
+		http.MethodDelete, http.MethodHead, http.MethodOptions:
+	default:
+		return errors.New("X.509 requests require a supported non-tunneling HTTP method")
+	}
 	if len(request.Trailer) != 0 {
 		return errors.New("X.509 requests do not support HTTP trailers")
+	}
+	hasBody := request.Body != nil && request.Body != http.NoBody
+	if request.ContentLength < -1 || (!hasBody && request.ContentLength != 0) {
+		return errors.New("X.509 requests require consistent HTTP body framing")
+	}
+	if len(request.TransferEncoding) != 0 {
+		return errors.New("X.509 requests do not support custom HTTP transfer encodings")
 	}
 	if request.URL == nil || request.URL.Scheme != "https" || request.URL.User != nil ||
 		request.URL.Opaque != "" || request.URL.Fragment != "" || request.URL.RawFragment != "" {
@@ -347,6 +408,9 @@ func validateX509Request(request *http.Request) error {
 		switch normalized {
 		case "api-key", "x-api-key", "proxy-authorization", "cookie", "set-cookie", "host", "x-amz-security-token":
 			return errors.New("X.509 requests cannot contain alternate credentials, cookies, or authority headers")
+		case "transfer-encoding", "content-length", "connection", "upgrade", "trailer", "te",
+			"proxy-connection", "keep-alive", "http2-settings":
+			return errors.New("X.509 requests do not support custom HTTP framing or protocol upgrades")
 		case "authorization":
 			authorizationCount += len(values)
 			if host == x509AuthenticationHost || len(values) != 1 ||

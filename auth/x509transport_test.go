@@ -92,6 +92,48 @@ func TestNewX509TransportRequiresStaticNativeConfiguration(t *testing.T) {
 			want: "dynamic client-certificate",
 		},
 		{
+			name: "TLS session key logger",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.KeyLogWriter = new(bytes.Buffer)
+			},
+			want: "session key logging",
+		},
+		{
+			name: "custom TLS randomness",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.Rand = strings.NewReader("synthetic-attacker-controlled-entropy")
+			},
+			want: "TLS randomness",
+		},
+		{
+			name: "custom TLS verification clock",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.Time = func() time.Time { return time.Unix(0, 0) }
+			},
+			want: "verification clock",
+		},
+		{
+			name: "legacy TLS minimum",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.MinVersion = tls.VersionTLS11
+			},
+			want: "version 1.2",
+		},
+		{
+			name: "legacy TLS maximum",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.MaxVersion = tls.VersionTLS11
+			},
+			want: "version 1.2",
+		},
+		{
+			name: "custom TLS application protocol",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.NextProtos = []string{"synthetic-attacker-protocol"}
+			},
+			want: "non-HTTP TLS application protocols",
+		},
+		{
 			name: "custom TLS context dialer",
 			change: func(transport *http.Transport) {
 				transport.DialTLSContext = func(context.Context, string, string) (net.Conn, error) {
@@ -210,6 +252,36 @@ func TestX509TransportAttestationDetectsUnsafeMutations(t *testing.T) {
 			name: "install TLS session cache",
 			change: func(transport *http.Transport) {
 				transport.TLSClientConfig.ClientSessionCache = tls.NewLRUClientSessionCache(1)
+			},
+		},
+		{
+			name: "install TLS session key logger",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.KeyLogWriter = new(bytes.Buffer)
+			},
+		},
+		{
+			name: "install custom TLS randomness",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.Rand = strings.NewReader("synthetic-attacker-controlled-entropy")
+			},
+		},
+		{
+			name: "install custom TLS verification clock",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.Time = func() time.Time { return time.Unix(0, 0) }
+			},
+		},
+		{
+			name: "lower TLS minimum",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.MinVersion = tls.VersionTLS11
+			},
+		},
+		{
+			name: "lower TLS maximum",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.MaxVersion = tls.VersionTLS11
 			},
 		},
 		{

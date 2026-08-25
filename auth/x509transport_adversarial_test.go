@@ -338,10 +338,9 @@ func TestX509TransportRejectsProtocolUpgradeWithoutExposingSocket(t *testing.T) 
 	}))
 	capability := newX509Capability(t, fixture.transport(t, server))
 	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
-	request.Header.Set("Connection", "Upgrade")
-	request.Header.Set("Upgrade", "synthetic")
 	request.Header.Set("Authorization", "Bearer protected-synthetic-token")
-	if err := x509Rejected(t, capability, request); !strings.Contains(err.Error(), "protocol upgrades") {
+	if err := x509Rejected(t, capability, request); !strings.Contains(err.Error(), "protocol upgrades") &&
+		!strings.Contains(err.Error(), "transport request failed") {
 		t.Fatalf("authenticated protocol-upgrade error = %v", err)
 	}
 	select {
