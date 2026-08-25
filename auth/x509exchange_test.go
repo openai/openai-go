@@ -235,11 +235,17 @@ func TestX509ExchangeRedactsAndClassifiesOAuthErrors(t *testing.T) {
 		{name: "bad request nested issuer code", status: 400,
 			body: `{"error":{"code":"invalid_grant","message":"private-nested-issuer-secret"}}`,
 			code: shared.OAuthErrorCodeInvalidGrant, wantTyped: true},
+		{name: "bad request nested invalid target", status: 400,
+			body: `{"error":{"code":"invalid_target","message":"private-nested-issuer-secret"}}`,
+			code: shared.OAuthErrorCode("invalid_target"), wantTyped: true},
 		{name: "unauthorized nested subject code", status: 401,
 			body: `{"error":{"code":"invalid_subject_token","description":"private-nested-issuer-secret"}}`,
 			code: shared.OAuthErrorCodeInvalidSubjectToken, wantTyped: true},
 		{name: "bad request known code", status: 400, body: `{"error":"invalid_grant","error_description":"private-issuer-secret"}`,
 			code: shared.OAuthErrorCodeInvalidGrant, wantTyped: true},
+		{name: "bad request flat invalid target", status: 400,
+			body: `{"error":"invalid_target","error_description":"private-issuer-secret"}`,
+			code: shared.OAuthErrorCode("invalid_target"), wantTyped: true},
 		{name: "unauthorized known code", status: 401, body: `{"error":"invalid_subject_token","error_description":"private-issuer-secret"}`,
 			code: shared.OAuthErrorCodeInvalidSubjectToken, wantTyped: true},
 		{name: "forbidden unknown code", status: 403, body: `{"error":"private-attacker-error","error_description":"private-issuer-secret"}`,
@@ -348,10 +354,10 @@ func TestX509ExchangePreservesOnlySafeBoundedRetryAfterDelays(t *testing.T) {
 		{name: "finite huge milliseconds", status: 429,
 			headers: http.Header{"Retry-After-Ms": {"1e100"}}, want: x509MaximumRetryAfter, present: true},
 		{name: "future HTTP date bounded", status: 503,
-			headers: http.Header{"Retry-After": {time.Now().Add(time.Hour).UTC().Format(time.RFC1123)}},
+			headers: http.Header{"Retry-After": {time.Now().Add(time.Hour).UTC().Format(http.TimeFormat)}},
 			want:    x509MaximumRetryAfter, present: true},
 		{name: "past HTTP date immediate", status: 503,
-			headers: http.Header{"Retry-After": {time.Now().Add(-time.Hour).UTC().Format(time.RFC1123)}}, present: true},
+			headers: http.Header{"Retry-After": {time.Now().Add(-time.Hour).UTC().Format(http.TimeFormat)}}, present: true},
 		{name: "invalid preferred header falls through", status: 429,
 			headers: http.Header{"Retry-After-Ms": {"-1"}, "Retry-After": {"0.5"}},
 			want:    500 * time.Millisecond, present: true},
@@ -401,9 +407,223 @@ func TestX509ExchangePreservesOnlySafeBoundedRetryAfterDelays(t *testing.T) {
 
 func TestX509ParseRetryAfterUsesProvidedClockForHTTPDates(t *testing.T) {
 	now := time.Date(2026, time.August, 24, 12, 0, 0, 0, time.UTC)
-	headers := http.Header{"Retry-After": {now.Add(3 * time.Second).Format(time.RFC1123)}}
-	if delay, present := x509ParseRetryAfter(headers, now); !present || delay != 3*time.Second {
-		t.Errorf("clock-relative Retry-After date = (%s, %t), want (3s, true)", delay, present)
+	for _, test := range []struct {
+		name   string
+		format string
+	}{
+		{name: "IMF-fixdate", format: http.TimeFormat},
+		{name: "obsolete RFC 850", format: time.RFC850},
+		{name: "ANSI C asctime", format: time.ANSIC},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			headers := http.Header{"Retry-After": {now.Add(3 * time.Second).Format(test.format)}}
+			if delay, present := x509ParseRetryAfter(headers, now); !present || delay != 3*time.Second {
+				t.Errorf("clock-relative Retry-After date = (%s, %t), want (3s, true)", delay, present)
+			}
+		})
+	}
+}
+
+func TestX509ExchangeReusesMutualTLSConnectionAfterRetryableStatus(t *testing.T) {
+	for _, status := range []int{
+		http.StatusRequestTimeout,
+		http.StatusConflict,
+		http.StatusTooManyRequests,
+		http.StatusInternalServerError,
+		http.StatusServiceUnavailable,
+	} {
+		t.Run(strconv.Itoa(status), func(t *testing.T) {
+			var requests, connections atomic.Int32
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				if requests.Add(1) == 1 {
+					w.WriteHeader(status)
+					_, _ = io.WriteString(w, "private-retry-response-body")
+					return
+				}
+				_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			}))
+			originalDial := fixture.template.DialContext
+			fixture.template.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+				connections.Add(1)
+				return originalDial(ctx, network, address)
+			}
+			transport, err := NewX509Transport(fixture.template)
+			if err != nil {
+				t.Fatalf("attest counted mutual-TLS transport: %v", err)
+			}
+			t.Cleanup(func() {
+				if closeErr := transport.Close(); closeErr != nil {
+					t.Errorf("close counted mutual-TLS transport: %v", closeErr)
+				}
+			})
+
+			first, err := x509Exchange(t.Context(), transport, "idp", "service-account")
+			var failure *x509ExchangeHTTPError
+			if first != (x509ExchangedToken{}) || !errors.As(err, &failure) || failure.statusCode != status {
+				t.Fatalf("retryable issuer response = token:%v error:%v", first, err)
+			}
+			if strings.Contains(err.Error(), "private-") {
+				t.Errorf("retryable issuer response exposed discarded content: %v", err)
+			}
+			second, err := x509Exchange(t.Context(), transport, "idp", "service-account")
+			if err != nil || second.value != x509ExchangeSyntheticToken {
+				t.Fatalf("exchange after drained issuer response = token:%v error:%v", second, err)
+			}
+			if requests.Load() != 2 || connections.Load() != 1 {
+				t.Errorf("retryable issuer requests/TLS handshakes = %d/%d, want 2/1",
+					requests.Load(), connections.Load())
+			}
+		})
+	}
+}
+
+func TestX509ExchangeBoundsRetryableErrorBodyDraining(t *testing.T) {
+	for _, test := range []struct {
+		name          string
+		declared      bool
+		wantRemaining int
+	}{
+		{name: "declared oversized error", declared: true, wantRemaining: x509ErrorResponseMaximum + 2},
+		{name: "chunked oversized error", wantRemaining: 2},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			body := strings.NewReader(strings.Repeat("x", x509ErrorResponseMaximum+2))
+			response := &http.Response{
+				StatusCode:    http.StatusTooManyRequests,
+				ContentLength: -1,
+				Header:        make(http.Header),
+				Body:          io.NopCloser(body),
+			}
+			if test.declared {
+				response.ContentLength = int64(body.Len())
+			}
+			err := x509ExchangeStatusError(t.Context(), response)
+			var status *x509ExchangeHTTPError
+			if !errors.As(err, &status) || !status.retryable() {
+				t.Fatalf("oversized retryable error classification = %v", err)
+			}
+			if got := body.Len(); got != test.wantRemaining {
+				t.Errorf("oversized retryable body retained %d unread bytes, want %d", got, test.wantRemaining)
+			}
+		})
+	}
+}
+
+func TestX509ExchangeClosesOversizedRetryableMutualTLSResponses(t *testing.T) {
+	for _, declared := range []bool{false, true} {
+		name := "chunked oversized error"
+		if declared {
+			name = "declared oversized error"
+		}
+		t.Run(name, func(t *testing.T) {
+			var requests, connections atomic.Int32
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				if requests.Add(1) == 1 {
+					if declared {
+						w.Header().Set("Content-Length", strconv.Itoa(x509ErrorResponseMaximum+2))
+					}
+					w.WriteHeader(http.StatusTooManyRequests)
+					if !declared {
+						if flush, ok := w.(http.Flusher); ok {
+							flush.Flush()
+						}
+					}
+					_, _ = io.WriteString(w, strings.Repeat("x", x509ErrorResponseMaximum+2))
+					return
+				}
+				_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			}))
+			originalDial := fixture.template.DialContext
+			fixture.template.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+				connections.Add(1)
+				return originalDial(ctx, network, address)
+			}
+			transport, err := NewX509Transport(fixture.template)
+			if err != nil {
+				t.Fatalf("attest oversized-response transport: %v", err)
+			}
+			t.Cleanup(func() {
+				if closeErr := transport.Close(); closeErr != nil {
+					t.Errorf("close oversized-response transport: %v", closeErr)
+				}
+			})
+			if _, exchangeErr := x509Exchange(t.Context(), transport, "idp", "service-account"); exchangeErr == nil {
+				t.Fatal("oversized retryable issuer response unexpectedly succeeded")
+			}
+			token, err := x509Exchange(t.Context(), transport, "idp", "service-account")
+			if err != nil || token.value != x509ExchangeSyntheticToken {
+				t.Fatalf("fresh connection after oversized response = token:%v error:%v", token, err)
+			}
+			if requests.Load() != 2 || connections.Load() != 2 {
+				t.Errorf("oversized issuer requests/TLS handshakes = %d/%d, want 2/2",
+					requests.Load(), connections.Load())
+			}
+		})
+	}
+}
+
+func TestX509ExchangeRedactsRetryableErrorBodyReadFailures(t *testing.T) {
+	sensitiveCause := errors.New("Authorization: Bearer private-retry-read-token")
+	response := &http.Response{
+		StatusCode:    http.StatusServiceUnavailable,
+		ContentLength: -1,
+		Header:        make(http.Header),
+		Body:          io.NopCloser(iotest.ErrReader(sensitiveCause)),
+	}
+	err := x509ExchangeStatusError(t.Context(), response)
+	var readError *x509ExchangeReadError
+	if !errors.As(err, &readError) || !readError.retryable() {
+		t.Fatalf("retryable error-body read failure = %v, want a safe retryable read error", err)
+	}
+	if errors.Is(err, sensitiveCause) || errors.Unwrap(err) != nil || strings.Contains(err.Error(), "private-") {
+		t.Errorf("retryable error-body read retained sensitive content: %v", err)
+	}
+
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Length", "1024")
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = io.WriteString(w, "private-truncated-retry-error")
+	}))
+	token, err := x509Exchange(t.Context(), fixture.capability, "idp", "service-account")
+	readError = nil
+	if token != (x509ExchangedToken{}) || !errors.As(err, &readError) || !readError.retryable() {
+		t.Fatalf("truncated mutual-TLS retryable response = token:%v error:%v", token, err)
+	}
+	if strings.Contains(err.Error(), "private-") || errors.Unwrap(err) != nil {
+		t.Errorf("truncated retryable response exposed sensitive content: %v", err)
+	}
+}
+
+func TestX509ExchangeCancelsRetryableErrorBodyDraining(t *testing.T) {
+	reached := make(chan struct{})
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		if flush, ok := w.(http.Flusher); ok {
+			flush.Flush()
+		}
+		close(reached)
+		<-request.Context().Done()
+	}))
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	result := make(chan error, 1)
+	go func() {
+		_, err := x509Exchange(ctx, fixture.capability, "idp", "service-account")
+		result <- err
+	}()
+	select {
+	case <-reached:
+		cancel()
+	case <-time.After(5 * time.Second):
+		t.Fatal("retryable issuer never began its response body")
+	}
+	select {
+	case err := <-result:
+		if !errors.Is(err, context.Canceled) {
+			t.Errorf("canceled retryable response drain error = %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("retryable response body drain ignored request cancellation")
 	}
 }
 

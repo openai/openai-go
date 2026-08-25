@@ -205,6 +205,9 @@ func x509ExchangeStatusError(ctx context.Context, response *http.Response) (resu
 		status := &x509ExchangeHTTPError{statusCode: response.StatusCode}
 		if status.retryable() {
 			status.retryAfter, status.hasRetryAfter = x509ParseRetryAfter(response.Header, time.Now())
+			if err := x509DrainRetryableResponse(ctx, response); err != nil {
+				return err
+			}
 		}
 		return status
 	}
@@ -228,11 +231,27 @@ func x509ExchangeStatusError(ctx context.Context, response *http.Response) (resu
 		}
 	}
 	switch code {
-	case "invalid_request", "invalid_client", "invalid_grant", "invalid_scope", "unauthorized_client",
+	case "invalid_request", "invalid_client", "invalid_grant", "invalid_scope", "invalid_target", "unauthorized_client",
 		"unsupported_grant_type", "invalid_subject_token", "access_denied", "temporarily_unavailable", "server_error":
 		oauthError.ErrorCode = shared.OAuthErrorCode(code)
 	}
 	return oauthError
+}
+
+func x509DrainRetryableResponse(ctx context.Context, response *http.Response) error {
+	if response.ContentLength > x509ErrorResponseMaximum {
+		return nil
+	}
+	if _, err := io.Copy(io.Discard, io.LimitReader(response.Body, x509ErrorResponseMaximum)); err != nil {
+		if contextErr := ctx.Err(); contextErr != nil {
+			return contextErr
+		}
+		return &x509ExchangeReadError{}
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func x509ParseRetryAfter(headers http.Header, now time.Time) (time.Duration, bool) {
@@ -259,7 +278,7 @@ func x509ParseRetryAfter(headers http.Header, now time.Time) (time.Duration, boo
 		if header.name != "Retry-After" {
 			continue
 		}
-		if deadline, err := time.Parse(time.RFC1123, value); err == nil {
+		if deadline, err := http.ParseTime(value); err == nil {
 			delay := deadline.Sub(now)
 			if delay <= 0 {
 				return 0, true
