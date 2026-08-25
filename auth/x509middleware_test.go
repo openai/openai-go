@@ -87,7 +87,7 @@ func TestX509WorkloadIdentityMiddlewareDoesNotReplayUnscopedTransformedBody(t *t
 }
 
 func TestX509WorkloadIdentityMiddlewareCanReplayUnscopedBodylessRequests(t *testing.T) {
-	var exchanges, dispatched atomic.Int32
+	var exchanges, dispatched, restored atomic.Int32
 	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		token := fmt.Sprintf("synthetic-direct-token-%d", exchanges.Add(1))
 		_, _ = io.WriteString(w, strings.Replace(x509ValidExchangeResponse(), x509ExchangeSyntheticToken, token, 1))
@@ -98,8 +98,15 @@ func TestX509WorkloadIdentityMiddlewareCanReplayUnscopedBodylessRequests(t *test
 	if err != nil {
 		t.Fatalf("construct bodyless direct middleware request: %v", err)
 	}
+	request.GetBody = func() (io.ReadCloser, error) {
+		restored.Add(1)
+		return io.NopCloser(strings.NewReader("synthetic-removed-private-body")), nil
+	}
 	response, err := X509WorkloadIdentityMiddleware(identity, fixture.capability, request,
-		func(*http.Request) (*http.Response, error) {
+		func(authenticated *http.Request) (*http.Response, error) {
+			if authenticated.Body != nil {
+				t.Error("bodyless direct middleware replay restored a removed request body")
+			}
 			status := http.StatusOK
 			if dispatched.Add(1) == 1 {
 				status = http.StatusUnauthorized
@@ -114,5 +121,8 @@ func TestX509WorkloadIdentityMiddlewareCanReplayUnscopedBodylessRequests(t *test
 	}
 	if exchanges.Load() != 2 || dispatched.Load() != 2 {
 		t.Errorf("unscoped bodyless middleware issuer/dispatch attempts = %d/%d", exchanges.Load(), dispatched.Load())
+	}
+	if got := restored.Load(); got != 0 {
+		t.Errorf("bodyless middleware replay invoked its retained GetBody factory %d times", got)
 	}
 }

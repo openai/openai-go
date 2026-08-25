@@ -8,6 +8,12 @@ import (
 
 type requestRetryScopeContextKey struct{}
 
+type requestRetryScopeFactory struct {
+	maximum         int
+	maximumDelay    time.Duration
+	allowBodyReplay bool
+}
+
 // RequestRetryScope shares one retry budget across provider authentication,
 // ordinary SDK request attempts, and a single unauthorized-response replay.
 // This is internal API and may change without notice.
@@ -34,6 +40,27 @@ func NewRequestRetryScope(maximum int, maximumDelay time.Duration, allowBodyRepl
 		allowBodyReplay: allowBodyReplay,
 		onInternalRetry: onInternalRetry,
 	}
+}
+
+// InstallRequestRetryScope attaches a fresh logical-request budget to cfg and
+// ensures configuration clones receive independent budgets and callbacks.
+func (cfg *RequestConfig) InstallRequestRetryScope(allowBodyReplay bool) *RequestRetryScope {
+	factory := &requestRetryScopeFactory{
+		maximum:         cfg.MaxRetries,
+		maximumDelay:    cfg.MaxRetryDelay,
+		allowBodyReplay: allowBodyReplay,
+	}
+	cfg.authentication.retryScopeFactory = factory
+	return factory.install(cfg)
+}
+
+func (factory *requestRetryScopeFactory) install(cfg *RequestConfig) *RequestRetryScope {
+	cfg.MaxRetries = factory.maximum
+	scope := NewRequestRetryScope(factory.maximum, factory.maximumDelay, factory.allowBodyReplay, func(consumed int) {
+		cfg.MaxRetries = factory.maximum - consumed
+	})
+	cfg.Request = cfg.Request.WithContext(WithRequestRetryScope(cfg.Request.Context(), scope))
+	return scope
 }
 
 // WithRequestRetryScope associates a scope with an existing request context.

@@ -19,6 +19,7 @@ func X509WorkloadIdentityMiddleware(
 	if request == nil || request.Header == nil {
 		return nil, errors.New("X.509 workload identity requires a non-nil request and header map")
 	}
+	hadBody := request.Body != nil
 	token, err := identity.GetToken(request.Context(), httpClient)
 	if err != nil {
 		return nil, err
@@ -31,7 +32,7 @@ func X509WorkloadIdentityMiddleware(
 	}
 	identity.invalidateToken(token)
 	scope := requestconfig.RequestRetryScopeFromContext(request.Context())
-	if request.Body != nil && (request.GetBody == nil || scope == nil || !scope.AllowBodyReplay()) {
+	if hadBody && (request.GetBody == nil || scope == nil || !scope.AllowBodyReplay()) {
 		return response, nil
 	}
 	if scope != nil && !scope.TryReplay() {
@@ -39,7 +40,7 @@ func X509WorkloadIdentityMiddleware(
 	}
 	_ = response.Body.Close()
 	replay := request.Clone(request.Context())
-	if request.GetBody != nil {
+	if hadBody {
 		replay.Body, err = request.GetBody()
 		if err != nil {
 			return nil, err

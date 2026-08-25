@@ -1,6 +1,8 @@
 package requestconfig
 
 import (
+	"net/http"
+	"sync"
 	"testing"
 	"time"
 )
@@ -53,5 +55,52 @@ func TestRequestRetryScopePreservesConfiguredMaximumDelay(t *testing.T) {
 	scope := NewRequestRetryScope(2, 7*time.Millisecond, true, nil)
 	if got := scope.MaxRetryDelay(); got != 7*time.Millisecond {
 		t.Errorf("request maximum retry delay = %s, want 7ms", got)
+	}
+}
+
+func TestRequestRetryScopeClonesHaveIndependentBudgetsAndCallbacks(t *testing.T) {
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://example.com", nil)
+	if err != nil {
+		t.Fatalf("construct retry-scope clone request: %v", err)
+	}
+	parent := RequestConfig{Request: request, MaxRetries: 2, MaxRetryDelay: 7 * time.Millisecond}
+	parentScope := parent.InstallRequestRetryScope(true)
+	if !parentScope.BeginAttempt() || !parentScope.TryRetry() || parent.MaxRetries != 1 {
+		t.Fatal("parent retry scope did not consume its own logical budget")
+	}
+	clone := parent.Clone(t.Context())
+	if clone == nil || clone.MaxRetries != 2 {
+		t.Fatalf("cloned logical request maximum = %v, want reset original maximum 2", clone)
+	}
+	cloneScope := RequestRetryScopeFromContext(clone.Request.Context())
+	if cloneScope == nil || cloneScope == parentScope || cloneScope.MaxRetryDelay() != 7*time.Millisecond {
+		t.Fatal("request clone reused its parent's scope or lost its configured maximum delay")
+	}
+	if !cloneScope.BeginAttempt() || !cloneScope.TryRetry() || clone.MaxRetries != 1 {
+		t.Fatal("cloned logical request did not consume its own independent retry")
+	}
+	if parent.MaxRetries != 1 {
+		t.Errorf("cloned retry mutated ancestor MaxRetries = %d", parent.MaxRetries)
+	}
+	var finished sync.WaitGroup
+	const concurrentClones = 12
+	finished.Add(concurrentClones)
+	for range concurrentClones {
+		go func() {
+			defer finished.Done()
+			current := parent.Clone(t.Context())
+			if current == nil {
+				t.Error("concurrent request clone returned nil")
+				return
+			}
+			scope := RequestRetryScopeFromContext(current.Request.Context())
+			if scope == nil || !scope.BeginAttempt() || !scope.TryRetry() || current.MaxRetries != 1 {
+				t.Error("concurrent request clone lost its isolated retry budget")
+			}
+		}()
+	}
+	finished.Wait()
+	if parent.MaxRetries != 1 {
+		t.Errorf("concurrent request clones mutated ancestor MaxRetries = %d", parent.MaxRetries)
 	}
 }

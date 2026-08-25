@@ -467,6 +467,76 @@ func TestX509WorkloadIdentityRetriesRedactedTransientNetworkFailure(t *testing.T
 	}
 }
 
+func TestX509WorkloadIdentityInvalidationWakesObsoleteProactiveRetry(t *testing.T) {
+	var exchanges atomic.Int32
+	waiting := make(chan struct{})
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		switch exchanges.Add(1) {
+		case 1:
+			_, _ = io.WriteString(w, x509ValidExchangeResponse())
+		case 2:
+			w.Header().Set("Retry-After", "8")
+			w.WriteHeader(http.StatusTooManyRequests)
+			if flush, ok := w.(http.Flusher); ok {
+				flush.Flush()
+			}
+			close(waiting)
+		default:
+			_, _ = io.WriteString(w, strings.Replace(x509ValidExchangeResponse(),
+				x509ExchangeSyntheticToken, "synthetic-refreshed-bearer", 1))
+		}
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	rejected, err := identity.GetToken(t.Context(), fixture.capability)
+	if err != nil {
+		t.Fatalf("prime proactive refresh bearer: %v", err)
+	}
+	identity.mu.Lock()
+	identity.refreshAfter = time.Now().Add(-time.Second)
+	identity.mu.Unlock()
+	ctx, cancel := context.WithTimeout(t.Context(), 750*time.Millisecond)
+	defer cancel()
+	result := make(chan error, 1)
+	go func() {
+		token, refreshErr := identity.GetToken(ctx, fixture.capability)
+		if refreshErr == nil && token != "synthetic-refreshed-bearer" {
+			refreshErr = errors.New("woken proactive refresh returned its obsolete bearer")
+		}
+		result <- refreshErr
+	}()
+	select {
+	case <-waiting:
+	case <-ctx.Done():
+		t.Fatal("obsolete proactive refresh never entered issuer-directed backoff")
+	}
+	identity.invalidateToken("synthetic-other-generation")
+	identity.mu.Lock()
+	current := identity.inFlight
+	if current == nil || current.generation != rejected {
+		identity.mu.Unlock()
+		t.Fatal("proactive refresh lost its originating cached bearer generation")
+	}
+	select {
+	case <-current.wake:
+		identity.mu.Unlock()
+		t.Fatal("stale-generation invalidation woke an unrelated proactive refresh")
+	default:
+	}
+	identity.mu.Unlock()
+	identity.invalidateToken(rejected)
+	select {
+	case refreshErr := <-result:
+		if refreshErr != nil {
+			t.Errorf("generation-specific invalidation did not wake issuer-directed backoff: %v", refreshErr)
+		}
+	case <-ctx.Done():
+		t.Fatal("rejected cached bearer remained blocked behind obsolete eight-second issuer backoff")
+	}
+	if got := exchanges.Load(); got != 3 {
+		t.Errorf("prime/obsolete/woken issuer attempts = %d, want 3", got)
+	}
+}
+
 func TestX509WorkloadIdentityPreservesUnexpiredBearerDuringTransientRefreshFailure(t *testing.T) {
 	var exchanges atomic.Int32
 	var failureStatus atomic.Int32

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -153,6 +154,105 @@ func TestX509WorkloadIdentitySharesRetryBudgetAcrossMixedIssuerAPIAndUnauthorize
 					exchanges.Load(), requests.Load(), test.wantIssuer, test.wantAPI)
 			}
 		})
+	}
+}
+
+func TestX509WorkloadIdentityPaginationUsesIndependentLogicalRetryScopes(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		maximum   int
+		failPage  int
+		wantCalls int32
+	}{
+		{name: "zero-retry budget still fetches four pages", maximum: 0, wantCalls: 4},
+		{name: "default budget fetches four pages", maximum: 2, wantCalls: 4},
+		{name: "later page has a fresh retry budget", maximum: 1, failPage: 3, wantCalls: 5},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			var requests atomic.Int32
+			var failed atomic.Bool
+			api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+				requests.Add(1)
+				previous := request.URL.Query().Get("after")
+				page := 1
+				if previous != "" {
+					parsed, err := strconv.Atoi(previous)
+					if err != nil {
+						w.WriteHeader(http.StatusBadRequest)
+						return
+					}
+					page = parsed + 1
+				}
+				w.Header().Set("Content-Type", "application/json")
+				if page == test.failPage && failed.CompareAndSwap(false, true) {
+					w.WriteHeader(http.StatusInternalServerError)
+					_, _ = io.WriteString(w, `{"error":{"message":"synthetic transient page failure"}}`)
+					return
+				}
+				_, _ = fmt.Fprintf(w, `{"data":[{"id":%q}],"has_more":%t}`, strconv.Itoa(page), page < 4)
+			})
+			client := openai.NewClient(option.WithX509WorkloadIdentity(config),
+				option.WithMaxRetries(test.maximum), option.WithMaxRetryDelay(time.Millisecond))
+			pages := client.Batches.ListAutoPaging(t.Context(), openai.BatchListParams{})
+			var received int
+			for pages.Next() {
+				received++
+				if id := pages.Current().ID; id != strconv.Itoa(received) {
+					t.Errorf("auto-paging item %d has ID %q", received, id)
+				}
+			}
+			if err := pages.Err(); err != nil || received != 4 {
+				t.Fatalf("independently scoped auto-paging returned %d pages, error = %v", received, err)
+			}
+			if requests.Load() != test.wantCalls || len(issuer.requests()) != 1 {
+				t.Errorf("auto-paging issuer/API calls = %d/%d, want 1/%d",
+					len(issuer.requests()), requests.Load(), test.wantCalls)
+			}
+		})
+	}
+}
+
+func TestX509WorkloadIdentityConcurrentPageClonesHaveIndependentBudgets(t *testing.T) {
+	t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+	config, issuer, api := newX509WorkloadIdentityIntegration(t)
+	var subsequent atomic.Int32
+	api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if request.URL.Query().Get("after") == "" {
+			_, _ = io.WriteString(w, `{"data":[{"id":"1"}],"has_more":true}`)
+			return
+		}
+		if subsequent.Add(1) <= 2 {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = io.WriteString(w, `{"error":{"message":"synthetic concurrent page failure"}}`)
+			return
+		}
+		_, _ = io.WriteString(w, `{"data":[{"id":"2"}],"has_more":false}`)
+	})
+	client := openai.NewClient(option.WithX509WorkloadIdentity(config), option.WithMaxRetryDelay(time.Millisecond))
+	page, err := client.Batches.List(t.Context(), openai.BatchListParams{})
+	if err != nil {
+		t.Fatalf("load first concurrently cloned page: %v", err)
+	}
+	results := make(chan error, 2)
+	for range 2 {
+		go func() {
+			next, nextErr := page.GetNextPage()
+			if nextErr == nil && (next == nil || len(next.Data) != 1 || next.Data[0].ID != "2") {
+				nextErr = errors.New("concurrent page clone returned an unexpected item")
+			}
+			results <- nextErr
+		}()
+	}
+	for range 2 {
+		if nextErr := <-results; nextErr != nil {
+			t.Errorf("concurrent independently scoped page clone: %v", nextErr)
+		}
+	}
+	if len(issuer.requests()) != 1 {
+		t.Errorf("concurrent page clones minted %d workload tokens", len(issuer.requests()))
 	}
 }
 
@@ -324,6 +424,43 @@ func TestX509WorkloadIdentityDoesNotReplayMiddlewareTransformedBodies(t *testing
 	}
 	if exchanges.Load() != 2 || requests.Load() != 2 {
 		t.Errorf("post-invalidation issuer/API calls = %d/%d, want 2/2", exchanges.Load(), requests.Load())
+	}
+}
+
+func TestX509WorkloadIdentityDoesNotRestoreMiddlewareRemovedBody(t *testing.T) {
+	t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+	config, issuer, api := newX509WorkloadIdentityIntegration(t)
+	var requests atomic.Int32
+	api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		body, err := io.ReadAll(request.Body)
+		if err != nil || len(body) != 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if requests.Add(1) == 1 {
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = io.WriteString(w, `{"error":{"message":"synthetic removed-body rejection"}}`)
+			return
+		}
+		_, _ = io.WriteString(w, `{"data":[]}`)
+	})
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(config),
+		option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			if request.Body != nil {
+				request.Body = nil
+				request.ContentLength = 0
+			}
+			return next(request)
+		}),
+	)
+	if err := client.Execute(t.Context(), http.MethodPost, "models",
+		map[string]string{"secret": "synthetic-removed-payload"}, nil); err != nil {
+		t.Fatalf("bodyless unauthorized replay restored its removed payload: %v", err)
+	}
+	if requests.Load() != 2 || len(issuer.requests()) != 2 {
+		t.Errorf("removed-body issuer/API attempts = %d/%d, want 2/2", len(issuer.requests()), requests.Load())
 	}
 }
 

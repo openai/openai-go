@@ -37,8 +37,10 @@ type X509WorkloadIdentityAuth struct {
 }
 
 type x509TokenRefresh struct {
-	done chan struct{}
-	err  error
+	done       chan struct{}
+	wake       chan struct{}
+	generation string
+	err        error
 }
 
 // NewX509WorkloadIdentityAuth validates and binds a workload identity to one
@@ -107,11 +109,15 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 				return "", current.err
 			}
 		}
-		refresh := &x509TokenRefresh{done: make(chan struct{})}
+		refresh := &x509TokenRefresh{
+			done:       make(chan struct{}),
+			wake:       make(chan struct{}),
+			generation: identity.cached.value,
+		}
 		identity.inFlight = refresh
 		identity.mu.Unlock()
 
-		token, err := identity.exchangeWithRetry(ctx, transport)
+		token, err := identity.exchangeWithRetry(ctx, transport, refresh)
 		identity.mu.Lock()
 		fallback := false
 		if err != nil && retryableX509ExchangeError(err) && identity.cached.value != "" &&
@@ -153,7 +159,10 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 	}
 }
 
-func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(ctx context.Context, transport *X509Transport) (x509ExchangedToken, error) {
+func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(
+	ctx context.Context, transport *X509Transport, refresh *x509TokenRefresh,
+) (x509ExchangedToken, error) {
+	wake := refresh.wake
 	for attempt := 0; ; attempt++ {
 		token, err := x509Exchange(ctx, transport, identity.config.IdentityProviderID, identity.config.ServiceAccountID)
 		if err == nil || !retryableX509ExchangeError(err) || attempt+1 >= x509MaximumAttempts {
@@ -171,6 +180,14 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(ctx context.Context,
 			}
 			return x509ExchangedToken{}, ctx.Err()
 		case <-timer.C:
+		case <-wake:
+			if !timer.Stop() {
+				select {
+				case <-timer.C:
+				default:
+				}
+			}
+			wake = nil
 		}
 	}
 }
@@ -207,5 +224,8 @@ func (identity *X509WorkloadIdentityAuth) invalidateToken(value string) {
 	if identity.cached.value == value {
 		identity.cached = x509ExchangedToken{}
 		identity.refreshAfter = time.Time{}
+		if current := identity.inFlight; current != nil && current.generation == value {
+			close(current.wake)
+		}
 	}
 }

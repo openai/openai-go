@@ -68,21 +68,18 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 				return initializationError
 			}
 			final.CustomHTTPDoer = config.Transport
-			originalRetries := final.MaxRetries
 			allowBodyReplay := len(final.Middlewares) == 0
-			scope := requestconfig.NewRequestRetryScope(originalRetries, final.MaxRetryDelay, allowBodyReplay, func(consumed int) {
-				final.MaxRetries = originalRetries - consumed
-			})
+			final.InstallRequestRetryScope(allowBodyReplay)
 			return WithMiddleware(func(request *http.Request, next MiddlewareNext) (*http.Response, error) {
 				if !validX509WorkloadAPIRequest(request) || unsafeX509CredentialHeaders(request.Header) {
 					return nil, requestconfig.WithNoRetryError(
 						errors.New("X.509 workload identity rejected an unsafe final API request"),
 					)
 				}
-				if !scope.BeginAttempt() {
+				scope := requestconfig.RequestRetryScopeFromContext(request.Context())
+				if scope == nil || !scope.BeginAttempt() {
 					return nil, requestconfig.WithNoRetryError(errors.New("X.509 workload identity retry budget exhausted"))
 				}
-				request = request.WithContext(requestconfig.WithRequestRetryScope(request.Context(), scope))
 				authenticationFailed := true
 				response, err := auth.X509WorkloadIdentityMiddleware(identity, config.Transport, request,
 					func(authenticated *http.Request) (*http.Response, error) {
