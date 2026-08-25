@@ -215,39 +215,48 @@ func TestAccumulatorValueCopyLogprobsDetachSharedSpareCapacity(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
-			test.set(&initial.Choices[0], []openai.ChatCompletionTokenLogprob{
-				{Token: "first"}, {Token: "second"}, {Token: "third"},
+		for _, delayed := range []bool{false, true} {
+			name := "immediate"
+			if delayed {
+				name = "delayed"
+			}
+			t.Run(test.name+"/"+name, func(t *testing.T) {
+				initial := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+				test.set(&initial.Choices[0], []openai.ChatCompletionTokenLogprob{
+					{Token: "first"}, {Token: "second"}, {Token: "third"},
+				})
+				var original openai.ChatCompletionAccumulator
+				if !original.AddChunk(initial) {
+					t.Fatal("AddChunk rejected the initial logprobs")
+				}
+				if logprobs := test.get(&original); len(logprobs) != 3 || cap(logprobs) != 4 {
+					t.Fatalf("initial logprob backing: len %d cap %d, want 3 and 4", len(logprobs), cap(logprobs))
+				}
+
+				branch := original
+				branch.Choices = slices.Clone(branch.Choices)
+				if delayed && !branch.AddChunk(openai.ChatCompletionChunk{ID: initial.ID}) {
+					t.Fatal("AddChunk rejected the copied accumulator's initial empty chunk")
+				}
+				branchChunk := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+				test.set(&branchChunk.Choices[0], []openai.ChatCompletionTokenLogprob{{Token: "branch"}})
+				if !branch.AddChunk(branchChunk) {
+					t.Fatal("AddChunk rejected the copied accumulator's in-capacity append")
+				}
+
+				originalChunk := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
+				test.set(&originalChunk.Choices[0], []openai.ChatCompletionTokenLogprob{{Token: "original"}})
+				if !original.AddChunk(originalChunk) {
+					t.Fatal("AddChunk rejected the original accumulator's in-capacity append")
+				}
+				if got := test.get(&branch)[3].Token; got != "branch" {
+					t.Fatalf("original append changed the copied logprob to %q, want branch", got)
+				}
+				if got := test.get(&original)[3].Token; got != "original" {
+					t.Fatalf("original appended logprob = %q, want original", got)
+				}
 			})
-			var original openai.ChatCompletionAccumulator
-			if !original.AddChunk(initial) {
-				t.Fatal("AddChunk rejected the initial logprobs")
-			}
-			if logprobs := test.get(&original); len(logprobs) != 3 || cap(logprobs) != 4 {
-				t.Fatalf("initial logprob backing: len %d cap %d, want 3 and 4", len(logprobs), cap(logprobs))
-			}
-
-			branch := original
-			branch.Choices = slices.Clone(branch.Choices)
-			branchChunk := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
-			test.set(&branchChunk.Choices[0], []openai.ChatCompletionTokenLogprob{{Token: "branch"}})
-			if !branch.AddChunk(branchChunk) {
-				t.Fatal("AddChunk rejected the copied accumulator's in-capacity append")
-			}
-
-			originalChunk := accumulatorStringChunk(openai.ChatCompletionChunkChoiceDelta{})
-			test.set(&originalChunk.Choices[0], []openai.ChatCompletionTokenLogprob{{Token: "original"}})
-			if !original.AddChunk(originalChunk) {
-				t.Fatal("AddChunk rejected the original accumulator's in-capacity append")
-			}
-			if got := test.get(&branch)[3].Token; got != "branch" {
-				t.Fatalf("original append changed the copied logprob to %q, want branch", got)
-			}
-			if got := test.get(&original)[3].Token; got != "original" {
-				t.Fatalf("original appended logprob = %q, want original", got)
-			}
-		})
+		}
 	}
 }
 

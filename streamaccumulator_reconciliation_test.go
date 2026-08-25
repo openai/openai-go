@@ -3,6 +3,7 @@ package openai
 import (
 	"strings"
 	"testing"
+	"unsafe"
 )
 
 func TestAccumulatorDenseToolReconciliationIsDeltaLocal(t *testing.T) {
@@ -129,5 +130,35 @@ func TestAccumulatorLogprobAccountingRejectsIntegerOverflow(t *testing.T) {
 	total = maxChatCompletionAccumulatorInt - 1
 	if addAccumulatorLogprobStorage(&total, 2, 1) || total != maxChatCompletionAccumulatorInt-1 {
 		t.Fatal("logprob storage accounting accepted or mutated an overflowing total")
+	}
+}
+
+func TestAccumulatorRejectedLogprobCopyDoesNotDetachSharedBacking(t *testing.T) {
+	initial := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	initial.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{
+		{Token: "first"}, {Token: "second"}, {Token: "third"},
+	}
+	var original ChatCompletionAccumulator
+	if !original.AddChunk(initial) {
+		t.Fatal("AddChunk rejected the initial logprob slice")
+	}
+
+	branch := original
+	branch.Choices = cloneAccumulatorSlice(branch.Choices)
+	if !branch.AddChunk(ChatCompletionChunk{ID: initial.ID}) {
+		t.Fatal("AddChunk rejected the copied accumulator's empty chunk")
+	}
+	before := unsafe.SliceData(branch.Choices[0].Logprobs.Content)
+	branch.logprobBytes = maxChatCompletionAccumulatorInt
+	next := storageTestChunk(ChatCompletionChunkChoiceDelta{})
+	next.Choices[0].Logprobs.Content = []ChatCompletionTokenLogprob{{Token: "branch"}}
+	if branch.AddChunk(next) {
+		t.Fatal("AddChunk accepted overflowing copied-logprob accounting")
+	}
+	if got := unsafe.SliceData(branch.Choices[0].Logprobs.Content); got != before {
+		t.Fatal("rejected copied-logprob append detached public backing")
+	}
+	if state := branch.logprobState.choices[0].content; !state.shared || state.data != before {
+		t.Fatal("rejected copied-logprob append changed private ownership state")
 	}
 }

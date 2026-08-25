@@ -40,6 +40,7 @@ type chatCompletionLogprobSliceState struct {
 	length   int
 	capacity int
 	bytes    int
+	shared   bool
 }
 
 type chatCompletionLogprobProjection struct {
@@ -178,8 +179,8 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 		}
 		logprobs := &acc.Choices[i].Logprobs
 		headerChanged = headerChanged || !current.content.matches(logprobs.Content) || !current.refusal.matches(logprobs.Refusal) ||
-			copiedLogprobAppendNeedsDetach(copied, &contentAppends, i, logprobs.Content) ||
-			copiedLogprobAppendNeedsDetach(copied, &refusalAppends, i, logprobs.Refusal)
+			copiedLogprobAppendNeedsDetach(copied || current.content.shared, &contentAppends, i, logprobs.Content) ||
+			copiedLogprobAppendNeedsDetach(copied || current.refusal.shared, &refusalAppends, i, logprobs.Refusal)
 	}
 	if !headerChanged {
 		return false, true
@@ -206,7 +207,7 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 			current = state.choices[i]
 		}
 		content, contentDetach := current.content, false
-		contentCopy := copiedLogprobAppendNeedsDetach(copied, &contentAppends, i, logprobs.Content)
+		contentCopy := copiedLogprobAppendNeedsDetach(copied || current.content.shared, &contentAppends, i, logprobs.Content)
 		if !current.content.matches(logprobs.Content) || contentCopy {
 			var ok bool
 			content, contentDetach, ok = projectChatCompletionLogprobSlice(
@@ -221,7 +222,7 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 			}
 		}
 		refusal, refusalDetach := current.refusal, false
-		refusalCopy := copiedLogprobAppendNeedsDetach(copied, &refusalAppends, i, logprobs.Refusal)
+		refusalCopy := copiedLogprobAppendNeedsDetach(copied || current.refusal.shared, &refusalAppends, i, logprobs.Refusal)
 		if !current.refusal.matches(logprobs.Refusal) || refusalCopy {
 			var ok bool
 			refusal, refusalDetach, ok = projectChatCompletionLogprobSlice(
@@ -521,6 +522,9 @@ func chatCompletionLogprobHeader(logprobs []ChatCompletionTokenLogprob) chatComp
 }
 
 func setChatCompletionLogprobHeader(state *chatCompletionLogprobSliceState, logprobs []ChatCompletionTokenLogprob) {
+	if state.data != unsafe.SliceData(logprobs) {
+		state.shared = false
+	}
 	state.data = unsafe.SliceData(logprobs)
 	state.length = len(logprobs)
 	state.capacity = cap(logprobs)
