@@ -281,7 +281,8 @@ func WithMaxResponseBodyBytes(maxBytes int64) RequestOption {
 // WithMaxErrorResponseBodyBytes returns a RequestOption that limits the number
 // of response-body bytes retained when the server returns an HTTP error. For
 // transparently decompressed gzip responses, compressed wire bytes are bounded
-// by the same limit. The default is 64 KiB.
+// by the same limit. Error responses are unbounded by default to preserve
+// compatibility with complete structured errors and response diagnostics.
 //
 // WithMaxErrorResponseBodyBytes panics unless maxBytes is between 1 and
 // [math.MaxInt64] - 1.

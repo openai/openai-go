@@ -85,6 +85,36 @@ func TestExecutePreservesLargeBinaryDownloadsByDefault(t *testing.T) {
 	}
 }
 
+func TestExecutePreservesLargeStructuredErrorsByDefault(t *testing.T) {
+	const detailBytes = 96 << 10
+	detail := strings.Repeat("x", detailBytes)
+	errorJSON := `{"error":{"message":"request rejected","type":"invalid_request_error","diagnostic":"` + detail + `"}}`
+	client := newResponseLimitClient(
+		io.NopCloser(strings.NewReader(errorJSON)),
+		http.StatusBadRequest,
+		"application/json",
+	)
+
+	var response map[string]any
+	err := client.Get(context.Background(), "large-error", nil, &response)
+	apiErr, ok := err.(*openai.Error)
+	if !ok {
+		t.Fatalf("Get() error type = %T, want unwrapped *openai.Error", err)
+	}
+	if apiErr.Message != "request rejected" {
+		t.Fatalf("API error message = %q, want request rejected", apiErr.Message)
+	}
+	if got := apiErr.JSON.ExtraFields["diagnostic"].Raw(); got != `"`+detail+`"` {
+		t.Fatalf("diagnostic raw length = %d, want %d", len(got), len(detail)+2)
+	}
+	if !strings.Contains(apiErr.RawJSON(), detail) {
+		t.Fatal("RawJSON lost the complete oversized diagnostic")
+	}
+	if !bytes.Contains(apiErr.DumpResponse(true), []byte(errorJSON)) {
+		t.Fatal("DumpResponse lost the complete oversized error response")
+	}
+}
+
 func TestExecutePreservesDisabledCompressionBehindOpaqueTransport(t *testing.T) {
 	for _, customDoer := range []bool{false, true} {
 		name := "HTTP client transport"

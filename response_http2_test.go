@@ -176,6 +176,105 @@ func TestExecuteOverflowDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 	}
 }
 
+func TestExecuteMalformedGzipDoesNotWaitForStalledHTTP2Close(t *testing.T) {
+	releaseClose := make(chan struct{})
+	var releaseOnce sync.Once
+	release := func() { releaseOnce.Do(func() { close(releaseClose) }) }
+
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if req.ProtoMajor != 2 {
+			t.Errorf("request protocol = %s, want HTTP/2", req.Proto)
+		}
+		if got := req.Header.Get("Accept-Encoding"); got != "gzip" {
+			t.Errorf("Accept-Encoding = %q, want gzip", got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Encoding", "gzip")
+		if _, err := io.WriteString(w, "invalid gzip header"+strings.Repeat("x", 256)); err != nil {
+			t.Errorf("write malformed gzip response: %v", err)
+			return
+		}
+		w.(http.Flusher).Flush()
+		<-releaseClose
+	}))
+	server.EnableHTTP2 = true
+	server.StartTLS()
+	defer func() {
+		release()
+		server.Close()
+	}()
+
+	bodyReady := make(chan *stalledHTTP2ResponseBody, 1)
+	nativeTransport := server.Client().Transport
+	transport := managedCompressionRoundTripper{RoundTripper: responseRoundTripperFunc(
+		func(req *http.Request) (*http.Response, error) {
+			res, err := nativeTransport.RoundTrip(req)
+			if err != nil {
+				return nil, err
+			}
+			body, err := wrapStalledHTTP2ResponseBody(req, res, releaseClose)
+			if err != nil {
+				return nil, err
+			}
+			bodyReady <- body
+			return res, nil
+		},
+	)}
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithBaseURL(server.URL+"/"),
+		option.WithMaxRetries(0),
+		option.WithResponseBodyTimeout(20*time.Millisecond),
+		option.WithHTTPClient(&http.Client{Transport: transport}),
+	)
+
+	callerCtx, cancelCaller := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelCaller()
+	done := make(chan error, 1)
+	go func() {
+		var response map[string]any
+		done <- client.Get(callerCtx, "malformed-gzip", nil, &response)
+	}()
+
+	var body *stalledHTTP2ResponseBody
+	select {
+	case body = <-bodyReady:
+	case <-callerCtx.Done():
+		t.Fatal("malformed HTTP/2 response was not received")
+	}
+	select {
+	case <-body.closeStarted:
+	case <-callerCtx.Done():
+		t.Fatal("malformed HTTP/2 response cleanup was not started")
+	}
+
+	var err error
+	returnedBeforeRelease := false
+	select {
+	case err = <-done:
+		returnedBeforeRelease = true
+	case <-time.After(250 * time.Millisecond):
+	}
+	if returnedBeforeRelease && body.attemptCtx.Err() == nil {
+		t.Fatal("malformed gzip returned before canceling the HTTP/2 attempt")
+	}
+	release()
+	if !returnedBeforeRelease {
+		err = <-done
+	}
+	<-body.closeFinished
+
+	if err == nil || !strings.Contains(err.Error(), "gzip: invalid header") {
+		t.Fatalf("Get() error = %v, want malformed gzip error", err)
+	}
+	if !returnedBeforeRelease {
+		t.Fatal("malformed HTTP/2 gzip response waited for a stalled body Close")
+	}
+	if callerCtx.Err() != nil {
+		t.Fatalf("caller context ended before gzip error returned: %v", callerCtx.Err())
+	}
+}
+
 func TestExecuteExpiredContextDoesNotWaitForStalledHTTP2Close(t *testing.T) {
 	tests := []struct {
 		name           string

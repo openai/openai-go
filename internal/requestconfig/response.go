@@ -18,8 +18,6 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-const defaultMaxErrorResponseBodyBytes int64 = 64 << 10
-
 type responseBodyLimitError struct {
 	limit      int64
 	statusCode int
@@ -43,9 +41,9 @@ func (cfg *RequestConfig) handleErrorResponse(res *http.Response, lifecycle *res
 			return readErr
 		}
 
-		// Keep only the bounded diagnostic body so Error.DumpResponse cannot make
-		// another unbounded copy. ContentLength describes the retained body when
-		// the server response was larger than the configured limit.
+		// Preserve the complete diagnostic body by default. An explicit limit
+		// retains only its bounded prefix, including for Error.DumpResponse.
+		// ContentLength describes that retained body after truncation.
 		res.Body = io.NopCloser(bytes.NewReader(contents))
 		if overflow || compressedLimitErr != nil {
 			res.ContentLength = int64(len(contents))
@@ -127,6 +125,7 @@ type responseBodyLifecycle struct {
 	body       io.ReadCloser
 	stop       func()
 	cancelOnce sync.Once
+	reachedEOF bool
 }
 
 func newResponseBodyLifecycle(body io.ReadCloser, stop func()) *responseBodyLifecycle {
@@ -140,7 +139,11 @@ func (l *responseBodyLifecycle) stopAttempt() {
 }
 
 func (l *responseBodyLifecycle) Read(p []byte) (int, error) {
-	return l.body.Read(p)
+	n, err := l.body.Read(p)
+	if err == io.EOF {
+		l.reachedEOF = true
+	}
+	return n, err
 }
 
 func (l *responseBodyLifecycle) Close() error {
@@ -177,19 +180,17 @@ func (cfg *RequestConfig) withResponseBodyTimeout(
 		})
 	}
 
-	err := read(lifecycle.body)
+	err := read(lifecycle)
 	if timer != nil && !timer.Stop() {
 		<-interrupted
 	}
 	if timedOut.Load() {
 		return fmt.Errorf("response body read timed out after %s: %w", cfg.ResponseBodyTimeout, context.DeadlineExceeded)
 	}
-	var bodyLimitErr *responseBodyLimitError
-	var compressedLimitErr *compressedResponseBodyLimitError
-	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) ||
-		errors.As(err, &bodyLimitErr) || errors.As(err, &compressedLimitErr) {
-		// Aborted reads can leave unread bytes, so HTTP/2 Close can block while
-		// resetting its stream. Return the established failure immediately.
+	if err != nil && !lifecycle.reachedEOF {
+		// Any failed read can leave unread bytes, so HTTP/2 Close can block
+		// while resetting its stream. Preserve the established failure without
+		// making foreground completion wait for transport cleanup.
 		lifecycle.abort()
 		return err
 	}

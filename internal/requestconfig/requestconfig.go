@@ -276,13 +276,12 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 		req.Header.Add(k, v)
 	}
 	cfg := RequestConfig{
-		MaxRetries:                2,
-		MaxRetryDelay:             DefaultMaxServerDelay,
-		MaxErrorResponseBodyBytes: defaultMaxErrorResponseBodyBytes,
-		Context:                   ctx,
-		Request:                   req,
-		HTTPClient:                http.DefaultClient,
-		Body:                      reader,
+		MaxRetries:    2,
+		MaxRetryDelay: DefaultMaxServerDelay,
+		Context:       ctx,
+		Request:       req,
+		HTTPClient:    http.DefaultClient,
+		Body:          reader,
 	}
 	cfg.ResponseBodyInto = dst
 	cfg.Security = Security{

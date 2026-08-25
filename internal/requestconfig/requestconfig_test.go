@@ -300,8 +300,8 @@ func TestNewRequestConfigSetsAndClonesResponsePolicies(t *testing.T) {
 	if cfg.MaxResponseBodyBytes != 0 {
 		t.Fatalf("MaxResponseBodyBytes = %d, want disabled by default", cfg.MaxResponseBodyBytes)
 	}
-	if cfg.MaxErrorResponseBodyBytes != defaultMaxErrorResponseBodyBytes {
-		t.Fatalf("MaxErrorResponseBodyBytes = %d, want %d", cfg.MaxErrorResponseBodyBytes, defaultMaxErrorResponseBodyBytes)
+	if cfg.MaxErrorResponseBodyBytes != 0 {
+		t.Fatalf("MaxErrorResponseBodyBytes = %d, want disabled by default", cfg.MaxErrorResponseBodyBytes)
 	}
 	if cfg.ResponseBodyTimeout != 0 {
 		t.Fatalf("ResponseBodyTimeout = %s, want disabled by default", cfg.ResponseBodyTimeout)
