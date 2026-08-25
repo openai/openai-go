@@ -640,7 +640,10 @@ func TestAccumulatorToolActivationStateGrowsAmortized(t *testing.T) {
 	activeToolCallBackingChanges := 0
 	publicToolCallBackingChanges := 0
 	for i := range toolCount {
-		toolCall := ChatCompletionChunkChoiceDeltaToolCall{Index: int64(i)}
+		toolCall := ChatCompletionChunkChoiceDeltaToolCall{
+			Index:    int64(i),
+			Function: ChatCompletionChunkChoiceDeltaToolCallFunction{Name: "x", Arguments: "y"},
+		}
 		chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
 			ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{toolCall, toolCall},
 		})

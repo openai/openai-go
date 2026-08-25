@@ -69,6 +69,40 @@ func TestAccumulatorValueCopyToolActivationDoesNotPopulateDormantSpareBacking(t 
 	}
 }
 
+func TestAccumulatorLiveValueCopiesActivateDenseToolIndependently(t *testing.T) {
+	var original ChatCompletionAccumulator
+	for index := range 3 {
+		chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+			ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{Index: int64(index)}},
+		})
+		if !original.AddChunk(chunk) {
+			t.Fatalf("AddChunk rejected initial tool call %d", index)
+		}
+	}
+	branch := original
+	branch.Choices = cloneAccumulatorSlice(branch.Choices)
+	branch.Choices[0].Message.ToolCalls = cloneAccumulatorSlice(branch.Choices[0].Message.ToolCalls)
+	activation := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{
+			Index:    3,
+			Function: ChatCompletionChunkChoiceDeltaToolCallFunction{Arguments: "original"},
+		}},
+	})
+	if !original.AddChunk(activation) {
+		t.Fatal("AddChunk rejected original dense tool activation")
+	}
+	activation.Choices[0].Delta.ToolCalls[0].Function.Arguments = "branch"
+	if !branch.AddChunk(activation) {
+		t.Fatal("AddChunk rejected copied dense tool activation while the original remains alive")
+	}
+	if got := branch.Choices[0].Message.ToolCalls[3].Function.Arguments; got != "branch" {
+		t.Fatalf("copied tool arguments = %q, want branch", got)
+	}
+	if original.stringState.activeTools != 4 || branch.stringState.activeTools != 4 {
+		t.Fatalf("tool activation counts = (%d, %d), want (4, 4)", original.stringState.activeTools, branch.stringState.activeTools)
+	}
+}
+
 func TestAccumulatorValueCopyDoesNotRetainOriginalLogprobGrowth(t *testing.T) {
 	for _, refusal := range []bool{false, true} {
 		name := "content"
@@ -246,4 +280,70 @@ func TestAccumulatorValueCopyDoesNotRetainOriginalMetadataReplacement(t *testing
 			runtime.KeepAlive(&dormant)
 		})
 	}
+}
+
+func TestAccumulatorToolMetadataReplacementReleasesSupersededState(t *testing.T) {
+	var acc ChatCompletionAccumulator
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{ID: strings.Repeat("a", 32<<10)}},
+	})
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the initial tool metadata")
+	}
+	previous := weak.Make(unsafe.StringData(acc.Choices[0].Message.ToolCalls[0].ID))
+	chunk.Choices[0].Delta.ToolCalls[0].ID = strings.Repeat("b", 32<<10)
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected replacement tool metadata")
+	}
+	runtime.GC()
+	if previous.Value() != nil {
+		t.Fatal("superseded tool metadata remains retained by the current ownership chain")
+	}
+	runtime.KeepAlive(&acc)
+}
+
+func TestAccumulatorOlderToolMetadataReplacementReleasesSupersededState(t *testing.T) {
+	var acc ChatCompletionAccumulator
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{
+			{Index: 0, ID: strings.Repeat("a", 32<<10)},
+			{Index: 1, ID: "second"},
+		},
+	})
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the initial tool metadata")
+	}
+	previous := weak.Make(unsafe.StringData(acc.Choices[0].Message.ToolCalls[0].ID))
+	replacement := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: []ChatCompletionChunkChoiceDeltaToolCall{{Index: 0, ID: strings.Repeat("b", 32<<10)}},
+	})
+	if !acc.AddChunk(replacement) {
+		t.Fatal("AddChunk rejected replacement of older tool metadata")
+	}
+	runtime.GC()
+	if previous.Value() != nil {
+		t.Fatal("superseded older tool metadata remains retained by the current ownership chain")
+	}
+	runtime.KeepAlive(&acc)
+}
+
+func TestAccumulatorValueCopyDoesNotRetainOriginalPublicTextReplacement(t *testing.T) {
+	var original ChatCompletionAccumulator
+	initial := storageTestChunk(ChatCompletionChunkChoiceDelta{Content: "existing"})
+	if !original.AddChunk(initial) {
+		t.Fatal("AddChunk rejected the initial text")
+	}
+	dormant := original
+	dormant.Choices = cloneAccumulatorSlice(dormant.Choices)
+	original.Choices[0].Message.Content = strings.Repeat("x", 32<<10)
+	if !original.AddChunk(ChatCompletionChunk{ID: initial.ID}) {
+		t.Fatal("AddChunk rejected the original accumulator's public text replacement")
+	}
+	lifetime := weak.Make(unsafe.StringData(original.Choices[0].Message.Content))
+	original = ChatCompletionAccumulator{}
+	runtime.GC()
+	if lifetime.Value() != nil {
+		t.Fatal("dormant accumulator copy retained the original accumulator's reconciled public text")
+	}
+	runtime.KeepAlive(&dormant)
 }

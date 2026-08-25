@@ -442,15 +442,17 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 			choice.Message.ToolCalls = expandToFit(choice.Message.ToolCalls, toolCallCount-1)
 		}
 
+		previousToolCallCount := len(choiceStrings.toolCalls)
 		for j := range delta.Delta.ToolCalls {
 			deltaTool := &delta.Delta.ToolCalls[j]
 			toolIndex, _ := checkedToolCallIndex(deltaTool.Index, len(choice.Message.ToolCalls))
 			tool := &choice.Message.ToolCalls[toolIndex]
 			toolStrings := choiceStrings.toolCall(toolIndex, &acc.stringState.activeTools)
-			if accumulatorStringWillGrow(&toolStrings.name, deltaTool.Function.Name) ||
-				accumulatorStringWillGrow(&toolStrings.arguments, deltaTool.Function.Arguments) ||
-				accumulatorMetadataWillChange(toolStrings.id, deltaTool.ID) ||
-				accumulatorMetadataWillChange(toolStrings.typeName, deltaTool.Type) {
+			if toolIndex < previousToolCallCount &&
+				(accumulatorStringWillGrow(&toolStrings.name, deltaTool.Function.Name) ||
+					accumulatorStringWillGrow(&toolStrings.arguments, deltaTool.Function.Arguments) ||
+					accumulatorMetadataWillChange(toolStrings.id, deltaTool.ID) ||
+					accumulatorMetadataWillChange(toolStrings.typeName, deltaTool.Type)) {
 				choiceStrings = acc.stringState.detachChoiceState(choiceIndex)
 				toolStrings = choiceStrings.detachToolCallState(toolIndex)
 			}
@@ -600,6 +602,13 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState(chunk *ChatCompletion
 			stringState.choices[i] = &detachedChoiceState
 			choiceState = &detachedChoiceState
 		}
+		if accumulatorStringNeedsReconciliationDetach(&choiceState.content, message.Content) ||
+			accumulatorStringNeedsReconciliationDetach(&choiceState.refusal, message.Refusal) ||
+			accumulatorMetadataNeedsReconciliationDetach(choiceState.finishReason, completion.Choices[i].FinishReason) ||
+			accumulatorMetadataNeedsReconciliationDetach(choiceState.role, message.Role) {
+			choiceState = stringState.detachChoiceState(i)
+			choicesDetached = true
+		}
 		choiceState.content.reconcile(&message.Content)
 		choiceState.refusal.reconcile(&message.Refusal)
 		reconcileAccumulatorString(&choiceState.finishReason, &completion.Choices[i].FinishReason)
@@ -611,9 +620,17 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState(chunk *ChatCompletion
 		}
 		choiceState.visitReconciledTools(i, message.ToolCalls, chunk, func(j int) bool {
 			toolCallState := choiceState.toolCallState(j)
+			function := &message.ToolCalls[j].Function
+			if accumulatorStringNeedsReconciliationDetach(&toolCallState.name, function.Name) ||
+				accumulatorStringNeedsReconciliationDetach(&toolCallState.arguments, function.Arguments) ||
+				accumulatorMetadataNeedsReconciliationDetach(toolCallState.id, message.ToolCalls[j].ID) ||
+				accumulatorMetadataNeedsReconciliationDetach(toolCallState.typeName, message.ToolCalls[j].Type) {
+				choiceState = stringState.detachChoiceState(i)
+				choicesDetached = true
+				toolCallState = choiceState.detachToolCallState(j)
+			}
 			reconcileAccumulatorString(&toolCallState.id, &message.ToolCalls[j].ID)
 			reconcileAccumulatorString(&toolCallState.typeName, &message.ToolCalls[j].Type)
-			function := &message.ToolCalls[j].Function
 			toolCallState.name.reconcile(&function.Name)
 			toolCallState.arguments.reconcile(&function.Arguments)
 			return true
@@ -677,8 +694,15 @@ func (choice *chatCompletionChoiceStringState) toolCallState(index int) *chatCom
 
 func (choice *chatCompletionChoiceStringState) detachToolCallState(index int) *chatCompletionToolCallStringState {
 	choice.toolCalls = cloneAccumulatorSlice(choice.toolCalls)
-	state := *choice.toolCallState(index)
-	state.previousTool = choice.latestToolCall
+	previous := choice.toolCallState(index)
+	state := *previous
+	if choice.latestToolCall == previous {
+		state.previousTool = previous.previousTool
+	} else {
+		choice.toolCalls[index] = weak.Make(&state)
+		choice.rebuildToolCallOwnership()
+		return choice.toolCallState(index)
+	}
 	choice.latestToolCall = &state
 	choice.toolCalls[index] = weak.Make(&state)
 	return &state
@@ -719,6 +743,14 @@ func accumulatorStringWillGrow(state *chatCompletionString, fragment string) boo
 func accumulatorMetadataWillChange[T ~string](published string, next T) bool {
 	value := string(next)
 	return value != "" && value != published
+}
+
+func accumulatorStringNeedsReconciliationDetach(state *chatCompletionString, current string) bool {
+	return current != state.published && !accumulatorStringUsesPublishedBacking(current, state.published)
+}
+
+func accumulatorMetadataNeedsReconciliationDetach[T ~string](published string, current T) bool {
+	return string(current) != published && !accumulatorStringUsesPublishedBacking(string(current), published)
 }
 
 func (acc *chatCompletionString) reconcile(current *string) {
