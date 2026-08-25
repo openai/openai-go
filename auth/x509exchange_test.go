@@ -21,6 +21,7 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"testing/iotest"
@@ -477,6 +478,105 @@ func TestX509ExchangeReusesMutualTLSConnectionAfterRetryableStatus(t *testing.T)
 	}
 }
 
+func TestX509ExchangeReusesMutualTLSConnectionAtChunkedErrorBoundary(t *testing.T) {
+	for _, test := range []struct {
+		name            string
+		bodyLength      int
+		wantConnections int32
+	}{
+		{name: "below maximum error body", bodyLength: x509ErrorResponseMaximum - 1, wantConnections: 1},
+		{name: "exactly maximum error body", bodyLength: x509ErrorResponseMaximum, wantConnections: 1},
+		{name: "one-byte oversized error body", bodyLength: x509ErrorResponseMaximum + 1, wantConnections: 2},
+		{name: "two-byte oversized error body", bodyLength: x509ErrorResponseMaximum + 2, wantConnections: 2},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var requests, connections atomic.Int32
+			bodyWritten := make(chan struct{})
+			releaseChunkedEOF := make(chan struct{})
+			var releaseOnce sync.Once
+			release := func() { releaseOnce.Do(func() { close(releaseChunkedEOF) }) }
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+				if request.ProtoMajor != 1 {
+					t.Errorf("chunked retryable issuer used HTTP/%d, want HTTP/1", request.ProtoMajor)
+				}
+				if requests.Add(1) == 1 {
+					w.WriteHeader(http.StatusTooManyRequests)
+					if flush, ok := w.(http.Flusher); ok {
+						flush.Flush()
+					}
+					_, _ = io.WriteString(w, strings.Repeat("x", test.bodyLength))
+					if flush, ok := w.(http.Flusher); ok {
+						flush.Flush()
+					}
+					close(bodyWritten)
+					<-releaseChunkedEOF
+					return
+				}
+				_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			}))
+			t.Cleanup(release)
+			originalDial := fixture.template.DialContext
+			fixture.template.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+				connections.Add(1)
+				return originalDial(ctx, network, address)
+			}
+			transport, err := NewX509Transport(fixture.template)
+			if err != nil {
+				t.Fatalf("attest chunked-response mutual-TLS transport: %v", err)
+			}
+			t.Cleanup(func() {
+				if closeErr := transport.Close(); closeErr != nil {
+					t.Errorf("close chunked-response mutual-TLS transport: %v", closeErr)
+				}
+			})
+			type exchangeResult struct {
+				token x509ExchangedToken
+				err   error
+			}
+			finished := make(chan exchangeResult, 1)
+			go func() {
+				token, exchangeErr := x509Exchange(t.Context(), transport, "idp", "service-account")
+				finished <- exchangeResult{token: token, err: exchangeErr}
+			}()
+			select {
+			case <-bodyWritten:
+			case <-time.After(5 * time.Second):
+				t.Fatal("retryable issuer never flushed its chunked error payload")
+			}
+			var result exchangeResult
+			completedBeforeEOF := false
+			select {
+			case result = <-finished:
+				completedBeforeEOF = true
+			case <-time.After(25 * time.Millisecond):
+			}
+			release()
+			if !completedBeforeEOF {
+				select {
+				case result = <-finished:
+				case <-time.After(5 * time.Second):
+					t.Fatal("retryable exchange did not observe the released chunked EOF")
+				}
+			}
+			if test.bodyLength == x509ErrorResponseMaximum && completedBeforeEOF {
+				t.Error("exact-boundary retryable response returned before observing the chunked EOF")
+			}
+			var failure *x509ExchangeHTTPError
+			if result.token != (x509ExchangedToken{}) || !errors.As(result.err, &failure) || !failure.retryable() {
+				t.Fatalf("chunked retryable issuer response = token:%v error:%v", result.token, result.err)
+			}
+			second, err := x509Exchange(t.Context(), transport, "idp", "service-account")
+			if err != nil || second.value != x509ExchangeSyntheticToken {
+				t.Fatalf("exchange after chunked retryable response = token:%v error:%v", second, err)
+			}
+			if requests.Load() != 2 || connections.Load() != test.wantConnections {
+				t.Errorf("chunked issuer requests/TLS handshakes = %d/%d, want 2/%d",
+					requests.Load(), connections.Load(), test.wantConnections)
+			}
+		})
+	}
+}
+
 func TestX509ExchangeBoundsRetryableErrorBodyDraining(t *testing.T) {
 	for _, test := range []struct {
 		name          string
@@ -484,7 +584,7 @@ func TestX509ExchangeBoundsRetryableErrorBodyDraining(t *testing.T) {
 		wantRemaining int
 	}{
 		{name: "declared oversized error", declared: true, wantRemaining: x509ErrorResponseMaximum + 2},
-		{name: "chunked oversized error", wantRemaining: 2},
+		{name: "chunked oversized error", wantRemaining: 1},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			body := strings.NewReader(strings.Repeat("x", x509ErrorResponseMaximum+2))

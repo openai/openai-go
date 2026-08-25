@@ -242,7 +242,8 @@ func x509DrainRetryableResponse(ctx context.Context, response *http.Response) er
 	if response.ContentLength > x509ErrorResponseMaximum {
 		return nil
 	}
-	if _, err := io.Copy(io.Discard, io.LimitReader(response.Body, x509ErrorResponseMaximum)); err != nil {
+	// Probe beyond the boundary so an exact-limit chunked body reaches its real EOF.
+	if _, err := io.Copy(io.Discard, io.LimitReader(response.Body, x509ErrorResponseMaximum+1)); err != nil {
 		if contextErr := ctx.Err(); contextErr != nil {
 			return contextErr
 		}
