@@ -567,6 +567,126 @@ func TestX509WorkloadIdentityUsesOnlyTheLastAuthenticationOption(t *testing.T) {
 	})
 }
 
+func TestX509WorkloadIdentityOnlySelectedAuthenticationControlsEndpoint(t *testing.T) {
+	ordinary := auth.WorkloadIdentity{
+		IdentityProviderID: "synthetic-ordinary-identity-provider",
+		ServiceAccountID:   "synthetic-ordinary-service-account",
+		Provider:           originTestSubjectTokenProvider{},
+	}
+	for _, test := range []struct {
+		name        string
+		environment string
+		methodURL   string
+		wantHost    string
+	}{
+		{name: "ordinary method restores production default", wantHost: "api.openai.com"},
+		{name: "ordinary method preserves explicit environment", environment: "https://gateway.example.test/v1/",
+			wantHost: "gateway.example.test"},
+		{name: "ordinary method preserves explicit method endpoint", methodURL: "https://method.example.test/v1/",
+			wantHost: "method.example.test"},
+		{name: "ordinary method endpoint overrides environment", environment: "https://gateway.example.test/v1/",
+			methodURL: "https://method.example.test/v1/", wantHost: "method.example.test"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv("OPENAI_API_KEY", "")
+			t.Setenv("OPENAI_ADMIN_KEY", "")
+			t.Setenv("OPENAI_CUSTOM_HEADERS", "")
+			t.Setenv("OPENAI_BASE_URL", "synthetic-placeholder")
+			if test.environment == "" {
+				if err := os.Unsetenv("OPENAI_BASE_URL"); err != nil {
+					t.Fatalf("remove configured endpoint before selecting authentication: %v", err)
+				}
+			} else {
+				t.Setenv("OPENAI_BASE_URL", test.environment)
+			}
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			var requests, mtlsCredentials atomic.Int32
+			ordinaryClient := originTestHTTPClient(originTestRoundTripper(
+				func(request *http.Request) (*http.Response, error) {
+					requests.Add(1)
+					if request.URL.Host == x509ConformanceAPIHost && request.Header.Get("Authorization") != "" {
+						mtlsCredentials.Add(1)
+					}
+					if got := request.URL.Host; got != test.wantHost {
+						t.Errorf("ordinary workload API host = %q, want %q", got, test.wantHost)
+					}
+					if got := request.Header.Get("Authorization"); got != "Bearer workload-token" {
+						t.Errorf("ordinary workload authorization = %q, want its selected bearer", got)
+					}
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     http.Header{"Content-Type": {"application/json"}},
+						Body:       io.NopCloser(strings.NewReader(`{"data":[]}`)),
+						Request:    request,
+					}, nil
+				},
+			))
+			client := openai.NewClient(option.WithX509WorkloadIdentity(config), option.WithMaxRetries(0))
+			opts := []option.RequestOption{
+				option.WithWorkloadIdentity(ordinary),
+				option.WithHTTPClient(ordinaryClient),
+			}
+			if test.methodURL != "" {
+				opts = append(opts, option.WithBaseURL(test.methodURL))
+			}
+			if _, err := client.Models.List(t.Context(), opts...); err != nil {
+				t.Fatalf("ordinary method workload did not replace X.509 authentication: %v", err)
+			}
+			if got := requests.Load(); got != 1 {
+				t.Errorf("ordinary workload dispatched %d API requests, want one", got)
+			}
+			if got := mtlsCredentials.Load(); got != 0 {
+				t.Errorf("losing X.509 option routed %d ordinary workload credentials to the mTLS endpoint", got)
+			}
+			assertX509WorkloadNoRequests(t, issuer, api)
+		})
+	}
+
+	t.Run("standalone service preserves its absent endpoint", func(t *testing.T) {
+		config, issuer, api := newX509WorkloadIdentityIntegration(t)
+		var dispatched atomic.Int32
+		ordinaryClient := originTestHTTPClient(originTestRoundTripper(
+			func(request *http.Request) (*http.Response, error) {
+				dispatched.Add(1)
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     http.Header{"Content-Type": {"application/json"}},
+					Body:       io.NopCloser(strings.NewReader(`{"data":[]}`)),
+					Request:    request,
+				}, nil
+			},
+		))
+		service := openai.NewModelService(option.WithX509WorkloadIdentity(config))
+		_, err := service.List(t.Context(), option.WithWorkloadIdentity(ordinary), option.WithHTTPClient(ordinaryClient))
+		if err == nil || !strings.Contains(err.Error(), "base url is not set") {
+			t.Errorf("standalone losing workload endpoint error = %v, want the original missing endpoint", err)
+		}
+		if got := dispatched.Load(); got != 0 {
+			t.Errorf("standalone service without a default endpoint dispatched %d API requests", got)
+		}
+		assertX509WorkloadNoRequests(t, issuer, api)
+	})
+
+	t.Run("method X.509 replaces ordinary workload", func(t *testing.T) {
+		t.Setenv("OPENAI_API_KEY", "")
+		t.Setenv("OPENAI_ADMIN_KEY", "")
+		t.Setenv("OPENAI_CUSTOM_HEADERS", "")
+		t.Setenv("OPENAI_BASE_URL", "synthetic-placeholder")
+		if err := os.Unsetenv("OPENAI_BASE_URL"); err != nil {
+			t.Fatalf("remove configured endpoint before selecting X.509 workload: %v", err)
+		}
+		config, issuer, api := newX509WorkloadIdentityIntegration(t)
+		client := openai.NewClient(option.WithWorkloadIdentity(ordinary), option.WithMaxRetries(0))
+		if _, err := client.Models.List(t.Context(), option.WithX509WorkloadIdentity(config)); err != nil {
+			t.Fatalf("method X.509 workload did not replace ordinary authentication: %v", err)
+		}
+		if len(issuer.requests()) != 1 || len(api.requests()) != 1 {
+			t.Errorf("winning method X.509 issuer/API requests = %d/%d, want 1/1",
+				len(issuer.requests()), len(api.requests()))
+		}
+	})
+}
+
 func TestX509WorkloadIdentityRejectsMethodLevelOverridesBeforeExchange(t *testing.T) {
 	for _, test := range []struct {
 		name string

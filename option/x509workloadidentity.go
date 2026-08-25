@@ -28,9 +28,6 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 			return err
 		}
 		cfg.ClearInheritedAuthentication()
-		if err := requestconfig.WithDefaultBaseURL(x509WorkloadAPIBaseURL).Apply(cfg); err != nil {
-			return err
-		}
 		return requestconfig.WithRequestFinalizer(func(final *requestconfig.RequestConfig) error {
 			if !selected.Selected(final) {
 				return nil
