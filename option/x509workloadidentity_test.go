@@ -54,3 +54,34 @@ func TestX509WorkloadIdentityDetectsCredentialHeaderAliases(t *testing.T) {
 		t.Error("safe API organization metadata was rejected")
 	}
 }
+
+func TestX509WorkloadIdentityRedactsResponseRequestCredentials(t *testing.T) {
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
+		"https://mtls.api.openai.com/v1/models", nil)
+	if err != nil {
+		t.Fatalf("construct synthetic response request: %v", err)
+	}
+	request.Header = http.Header{
+		"Authorization":       {"Bearer synthetic-token"},
+		"authorization":       {"Bearer synthetic-alias"},
+		"proxy_authorization": {"synthetic-proxy"},
+		"api_key":             {"synthetic-api-key"},
+		"Cookie":              {"synthetic-cookie"},
+		"Openai-Project":      {"synthetic-project"},
+	}
+	response := &http.Response{StatusCode: http.StatusUnauthorized, Request: request, Body: http.NoBody}
+	redacted := redactX509Response(response)
+	defer func() { _ = redacted.Body.Close() }()
+	if redacted == response || redacted.Request == request {
+		t.Fatal("response metadata was not independently cloned")
+	}
+	if len(redacted.Request.Header) != 1 || redacted.Request.Header.Get("OpenAI-Project") != "synthetic-project" {
+		t.Errorf("redacted response headers = %v, want only safe project metadata", redacted.Request.Header)
+	}
+	if request.Header.Get("Authorization") != "Bearer synthetic-token" || len(request.Header) != 6 {
+		t.Error("redacting returned metadata changed the original wire request")
+	}
+	if redacted.StatusCode != response.StatusCode || redacted.Request.URL.String() != request.URL.String() {
+		t.Error("response status or request URL changed during metadata redaction")
+	}
+}

@@ -99,6 +99,20 @@ func TestNewX509TransportRequiresStaticNativeConfiguration(t *testing.T) {
 			want: "session key logging",
 		},
 		{
+			name: "encrypted client hello configuration",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.EncryptedClientHelloConfigList = []byte("synthetic configuration")
+			},
+			want: "encrypted client hello",
+		},
+		{
+			name: "encrypted client hello callback",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.EncryptedClientHelloRejectionVerify = func(tls.ConnectionState) error { return nil }
+			},
+			want: "encrypted client hello",
+		},
+		{
 			name: "custom TLS randomness",
 			change: func(transport *http.Transport) {
 				transport.TLSClientConfig.Rand = strings.NewReader("synthetic-attacker-controlled-entropy")
@@ -252,6 +266,18 @@ func TestX509TransportAttestationDetectsUnsafeMutations(t *testing.T) {
 			name: "install TLS session cache",
 			change: func(transport *http.Transport) {
 				transport.TLSClientConfig.ClientSessionCache = tls.NewLRUClientSessionCache(1)
+			},
+		},
+		{
+			name: "install encrypted client hello configuration",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.EncryptedClientHelloConfigList = []byte("synthetic configuration")
+			},
+		},
+		{
+			name: "install encrypted client hello callback",
+			change: func(transport *http.Transport) {
+				transport.TLSClientConfig.EncryptedClientHelloRejectionVerify = func(tls.ConnectionState) error { return nil }
 			},
 		},
 		{

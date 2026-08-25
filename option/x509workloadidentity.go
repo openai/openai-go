@@ -80,10 +80,26 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 				}
 				authenticated := request.Clone(request.Context())
 				authenticated.Header.Set("Authorization", "Bearer "+token)
-				return next(authenticated)
+				response, dispatchErr := next(authenticated)
+				return redactX509Response(response), dispatchErr
 			}).Apply(final)
 		}).Apply(cfg)
 	})
+}
+
+func redactX509Response(response *http.Response) *http.Response {
+	if response == nil || response.Request == nil {
+		return response
+	}
+	redacted := *response
+	redacted.Request = response.Request.Clone(response.Request.Context())
+	for name := range redacted.Request.Header {
+		switch strings.ToLower(strings.ReplaceAll(name, "_", "-")) {
+		case "authorization", "proxy-authorization", "cookie", "set-cookie", "api-key", "x-api-key", "x-amz-security-token":
+			delete(redacted.Request.Header, name)
+		}
+	}
+	return &redacted
 }
 
 func validX509WorkloadAPIBaseURL(base *url.URL) bool {
