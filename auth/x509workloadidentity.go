@@ -17,6 +17,8 @@ const (
 	x509MaximumRetryCooldown = 5 * time.Second
 )
 
+var errX509InvalidatedBearer = errors.New("X.509 token exchange returned an invalidated bearer")
+
 // X509WorkloadIdentity configures an OpenAI workload authenticated with a
 // caller-owned X.509 certificate and an explicitly attested native transport.
 type X509WorkloadIdentity struct {
@@ -29,11 +31,12 @@ type X509WorkloadIdentity struct {
 // X509WorkloadIdentityAuth exchanges a static, attested X.509 workload identity
 // for an ordinary OpenAI bearer token.
 type X509WorkloadIdentityAuth struct {
-	config       X509WorkloadIdentity
-	mu           sync.Mutex
-	cached       x509ExchangedToken
-	refreshAfter time.Time
-	inFlight     *x509TokenRefresh
+	config        X509WorkloadIdentity
+	mu            sync.Mutex
+	cached        x509ExchangedToken
+	rejectedToken string
+	refreshAfter  time.Time
+	inFlight      *x509TokenRefresh
 }
 
 type x509TokenRefresh struct {
@@ -119,6 +122,9 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 
 		token, err := identity.exchangeWithRetry(ctx, transport, refresh)
 		identity.mu.Lock()
+		if err == nil && token.value == identity.rejectedToken {
+			err = errX509InvalidatedBearer
+		}
 		fallback := false
 		if err != nil && retryableX509ExchangeError(err) && identity.cached.value != "" &&
 			time.Now().Before(identity.cached.expiresAt) {
@@ -133,6 +139,7 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 				err = errors.New("X.509 token exchange returned an already expired token")
 			} else {
 				identity.cached = token
+				identity.rejectedToken = ""
 				buffer := identity.config.RefreshBuffer
 				if buffer == 0 {
 					buffer = x509DefaultRefreshBuffer
@@ -165,12 +172,22 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(
 	wake := refresh.wake
 	for attempt := 0; ; attempt++ {
 		token, err := x509Exchange(ctx, transport, identity.config.IdentityProviderID, identity.config.ServiceAccountID)
+		if err == nil {
+			identity.mu.Lock()
+			if token.value == identity.rejectedToken {
+				err = errX509InvalidatedBearer
+			}
+			identity.mu.Unlock()
+		}
 		if err == nil || !retryableX509ExchangeError(err) || attempt+1 >= x509MaximumAttempts {
 			return token, err
 		}
 		scope := requestconfig.RequestRetryScopeFromContext(ctx)
 		if scope != nil && !scope.TryRetry() {
 			return token, err
+		}
+		if errors.Is(err, errX509InvalidatedBearer) {
+			continue
 		}
 		timer := time.NewTimer(x509ExchangeRetryDelay(err, attempt, scope))
 		select {
@@ -206,6 +223,9 @@ func x509ExchangeRetryDelay(err error, attempt int, scope *requestconfig.Request
 }
 
 func retryableX509ExchangeError(err error) bool {
+	if errors.Is(err, errX509InvalidatedBearer) {
+		return true
+	}
 	var oauth *OAuthError
 	if errors.As(err, &oauth) {
 		return oauth.ErrorCode == "temporarily_unavailable" || oauth.ErrorCode == "server_error"
@@ -229,6 +249,7 @@ func (identity *X509WorkloadIdentityAuth) invalidateToken(value string) {
 		identity.cached = x509ExchangedToken{}
 		identity.refreshAfter = time.Time{}
 		if current := identity.inFlight; current != nil && current.generation == value {
+			identity.rejectedToken = value
 			close(current.wake)
 		}
 	}

@@ -383,7 +383,7 @@ func applyMiddleware(middleware middleware, next middlewareNext) middlewareNext 
 
 func shouldRetry(req *http.Request, res *http.Response, err error) bool {
 	// If there is no way to recover the Body, then we shouldn't retry.
-	if req.Body != nil && req.GetBody == nil {
+	if !requestBodyReplayable(req) {
 		return false
 	}
 
@@ -411,6 +411,10 @@ func shouldRetry(req *http.Request, res *http.Response, err error) bool {
 		res.StatusCode == http.StatusConflict ||
 		res.StatusCode == http.StatusTooManyRequests ||
 		res.StatusCode >= http.StatusInternalServerError
+}
+
+func requestBodyReplayable(request *http.Request) bool {
+	return request.Body == nil || request.Body == http.NoBody || request.GetBody != nil
 }
 
 func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (time.Duration, bool) {
@@ -649,7 +653,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 
 		req := cfg.Request.Clone(ctx)
-		if req.Body != nil {
+		if req.Body != nil && req.Body != http.NoBody {
 			req.Body = &closeOnceReadCloser{ReadCloser: req.Body}
 		}
 		if shouldSendRetryCount {
@@ -674,7 +678,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 
 		// Prepare next request and wait for the retry delay
-		if cfg.Request.GetBody != nil {
+		if cfg.Request.Body != nil && cfg.Request.Body != http.NoBody && cfg.Request.GetBody != nil {
 			cfg.Request.Body, err = cfg.Request.GetBody()
 			if err != nil {
 				return err
@@ -682,7 +686,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 
 		// Can't actually refresh the body, so we don't attempt to retry here
-		if cfg.Request.GetBody == nil && cfg.Request.Body != nil {
+		if !requestBodyReplayable(cfg.Request) {
 			break
 		}
 
@@ -798,7 +802,7 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 	}
 	req := cfg.Request.Clone(ctx)
 	var err error
-	if req.Body != nil {
+	if req.Body != nil && req.Body != http.NoBody {
 		req.Body, err = req.GetBody()
 	}
 	if err != nil {

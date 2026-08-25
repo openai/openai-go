@@ -350,27 +350,35 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 		}
 		r.SetAPIKey("")
 
-		r.Middlewares = append(r.Middlewares, func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
-			if !workloadIdentityAuth.Selected(r) {
-				return next(req)
+		middlewareIndex := len(r.Middlewares)
+		return requestconfig.WithRequestFinalizer(func(final *requestconfig.RequestConfig) error {
+			if !workloadIdentityAuth.Selected(final) {
+				return nil
 			}
-			initOnce.Do(func() {
-				wia, initErr = auth.NewWorkloadIdentityAuth(config)
-			})
+			final.Middlewares = append(final.Middlewares, nil)
+			copy(final.Middlewares[middlewareIndex+1:], final.Middlewares[middlewareIndex:])
+			final.Middlewares[middlewareIndex] = func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
+				if !workloadIdentityAuth.Selected(final) {
+					return next(req)
+				}
+				initOnce.Do(func() {
+					wia, initErr = auth.NewWorkloadIdentityAuth(config)
+				})
 
-			if initErr != nil {
-				return nil, initErr
+				if initErr != nil {
+					return nil, initErr
+				}
+
+				var httpDoer auth.HTTPDoer
+				if final.CustomHTTPDoer != nil {
+					httpDoer = final.CustomHTTPDoer
+				} else {
+					httpDoer = final.HTTPClient
+				}
+
+				return auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
 			}
-
-			var httpDoer auth.HTTPDoer
-			if r.CustomHTTPDoer != nil {
-				httpDoer = r.CustomHTTPDoer
-			} else {
-				httpDoer = r.HTTPClient
-			}
-
-			return auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
-		})
-		return nil
+			return nil
+		}).Apply(r)
 	})
 }
