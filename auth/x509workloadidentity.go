@@ -206,6 +206,10 @@ func x509ExchangeRetryDelay(err error, attempt int, scope *requestconfig.Request
 }
 
 func retryableX509ExchangeError(err error) bool {
+	var oauth *OAuthError
+	if errors.As(err, &oauth) {
+		return oauth.ErrorCode == "temporarily_unavailable" || oauth.ErrorCode == "server_error"
+	}
 	var status *x509ExchangeHTTPError
 	if errors.As(err, &status) {
 		return status.retryable()

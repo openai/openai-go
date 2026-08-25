@@ -18,26 +18,68 @@ func TestX509WorkloadIdentityMiddlewareRejectsMalformedRequestsBeforeExchange(t 
 		_, _ = io.WriteString(w, x509ValidExchangeResponse())
 	}))
 	identity := newX509LifecycleIdentity(t, fixture)
-	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
-		"https://"+x509APIHost+"/v1/models", nil)
-	if err != nil {
-		t.Fatalf("construct malformed middleware request: %v", err)
-	}
-	request.Header = nil
-	for _, invalid := range []*http.Request{nil, request} {
-		response, middlewareErr := X509WorkloadIdentityMiddleware(identity, fixture.capability, invalid,
-			func(*http.Request) (*http.Response, error) {
-				t.Error("malformed request reached the authenticated middleware dispatch")
-				return nil, nil
-			})
-		if response != nil && response.Body != nil {
-			if closeErr := response.Body.Close(); closeErr != nil {
-				t.Errorf("close unexpected malformed middleware response: %v", closeErr)
+	for _, test := range []struct {
+		name   string
+		mutate func(*http.Request) *http.Request
+	}{
+		{name: "nil request", mutate: func(*http.Request) *http.Request { return nil }},
+		{name: "nil headers", mutate: func(request *http.Request) *http.Request {
+			request.Header = nil
+			return request
+		}},
+		{name: "attacker origin", mutate: func(request *http.Request) *http.Request {
+			request.URL.Host = "attacker.example.test"
+			return request
+		}},
+		{name: "approved issuer is not API origin", mutate: func(request *http.Request) *http.Request {
+			request.URL.Host = x509AuthenticationHost
+			return request
+		}},
+		{name: "path traversal", mutate: func(request *http.Request) *http.Request {
+			request.URL.Path = "/v1/../attacker"
+			return request
+		}},
+		{name: "existing valid bearer", mutate: func(request *http.Request) *http.Request {
+			request.Header.Set("Authorization", "Bearer synthetic-existing-token")
+			return request
+		}},
+		{name: "credential alias", mutate: func(request *http.Request) *http.Request {
+			request.Header.Set("X_API_KEY", "synthetic-existing-key")
+			return request
+		}},
+		{name: "unsupported CONNECT method", mutate: func(request *http.Request) *http.Request {
+			request.Method = http.MethodConnect
+			return request
+		}},
+		{name: "custom HTTP framing", mutate: func(request *http.Request) *http.Request {
+			request.Header.Set("Connection", "upgrade")
+			return request
+		}},
+		{name: "custom transfer encoding", mutate: func(request *http.Request) *http.Request {
+			request.TransferEncoding = []string{"chunked"}
+			return request
+		}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
+				"https://"+x509APIHost+"/v1/models", nil)
+			if err != nil {
+				t.Fatalf("construct malformed middleware request: %v", err)
 			}
-		}
-		if response != nil || middlewareErr == nil {
-			t.Errorf("malformed direct middleware request = response:%v error:%v", response, middlewareErr)
-		}
+			response, middlewareErr := X509WorkloadIdentityMiddleware(identity, fixture.capability, test.mutate(request),
+				func(*http.Request) (*http.Response, error) {
+					t.Error("malformed request reached the authenticated middleware dispatch")
+					return nil, nil
+				})
+			if response != nil && response.Body != nil {
+				if closeErr := response.Body.Close(); closeErr != nil {
+					t.Errorf("close unexpected malformed middleware response: %v", closeErr)
+				}
+			}
+			if response != nil || middlewareErr == nil {
+				t.Errorf("malformed direct middleware request = response:%v error:%v", response, middlewareErr)
+			}
+		})
 	}
 	if got := exchanges.Load(); got != 0 {
 		t.Errorf("malformed direct middleware requests minted %d tokens", got)
@@ -172,10 +214,19 @@ func TestX509WorkloadIdentityMiddlewareReplaysUnauthorizedResponsesWithoutBodies
 					t.Errorf("close unexpected synthetic response body: %v", closeErr)
 				}
 			}
-			if err != nil || response == nil || response.StatusCode != http.StatusOK || response.Body != nil {
+			wantStatus := http.StatusOK
+			wantAttempts := int32(2)
+			if scoped {
+				wantStatus = http.StatusUnauthorized
+				wantAttempts = 1
+				if response == nil || response.Header.Get("x-should-retry") != "true" {
+					t.Error("scoped unauthorized response did not request a complete outer SDK retry")
+				}
+			}
+			if err != nil || response == nil || response.StatusCode != wantStatus || response.Body != nil {
 				t.Fatalf("bodyless unauthorized response replay = response:%v error:%v", response, err)
 			}
-			if exchanges.Load() != 2 || dispatched.Load() != 2 {
+			if exchanges.Load() != wantAttempts || dispatched.Load() != wantAttempts {
 				t.Errorf("bodyless unauthorized response issuer/dispatch attempts = %d/%d", exchanges.Load(), dispatched.Load())
 			}
 			if got := request.Header.Get("Authorization"); got != "" {

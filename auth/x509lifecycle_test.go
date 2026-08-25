@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"io"
 	"net"
@@ -317,6 +319,7 @@ func TestX509WorkloadIdentityRetriesOnlyBoundedTransientIssuerFailures(t *testin
 	for _, test := range []struct {
 		name         string
 		status       int
+		oauthCode    string
 		failures     int32
 		wantAttempts int32
 		wantSuccess  bool
@@ -328,6 +331,10 @@ func TestX509WorkloadIdentityRetriesOnlyBoundedTransientIssuerFailures(t *testin
 		{name: "server error then succeeds", status: 500, failures: 2, wantAttempts: 3, wantSuccess: true},
 		{name: "service unavailable exhausts budget", status: 503, failures: 3, wantAttempts: 3},
 		{name: "body read failure then succeeds", failures: 2, wantAttempts: 3, wantSuccess: true, truncated: true},
+		{name: "temporarily unavailable OAuth error then succeeds", status: 400,
+			oauthCode: "temporarily_unavailable", failures: 2, wantAttempts: 3, wantSuccess: true},
+		{name: "server error OAuth error then succeeds", status: 401,
+			oauthCode: "server_error", failures: 2, wantAttempts: 3, wantSuccess: true},
 		{name: "permanent OAuth failure", status: 400, failures: 3, wantAttempts: 1},
 		{name: "permanent HTTP status", status: 404, failures: 3, wantAttempts: 1},
 	} {
@@ -342,7 +349,11 @@ func TestX509WorkloadIdentityRetriesOnlyBoundedTransientIssuerFailures(t *testin
 						return
 					}
 					w.WriteHeader(test.status)
-					_, _ = io.WriteString(w, `{"error":"invalid_grant"}`)
+					code := test.oauthCode
+					if code == "" {
+						code = "invalid_grant"
+					}
+					_, _ = io.WriteString(w, `{"error":"`+code+`"}`)
 					return
 				}
 				_, _ = io.WriteString(w, x509ValidExchangeResponse())
@@ -464,6 +475,107 @@ func TestX509WorkloadIdentityRetriesRedactedTransientNetworkFailure(t *testing.T
 		if retryableX509ExchangeError(&x509TransportError{cause: permanent}) {
 			t.Errorf("non-transient native transport cause was retried: %v", permanent)
 		}
+	}
+}
+
+func TestX509WorkloadIdentityDoesNotRetryPermanentTLSVerificationFailures(t *testing.T) {
+	const privateVerificationError = "Authorization: Bearer synthetic-private-verification-token"
+	for _, test := range []struct {
+		name              string
+		configure         func(*tls.Config, *atomic.Int32)
+		wantVerifications int32
+		cached            bool
+	}{
+		{
+			name: "caller connection verification",
+			configure: func(config *tls.Config, verifications *atomic.Int32) {
+				config.VerifyConnection = func(tls.ConnectionState) error {
+					verifications.Add(1)
+					return errors.New(privateVerificationError)
+				}
+			},
+			wantVerifications: 1,
+		},
+		{
+			name: "caller peer certificate verification",
+			configure: func(config *tls.Config, verifications *atomic.Int32) {
+				config.VerifyPeerCertificate = func([][]byte, [][]*x509.Certificate) error {
+					verifications.Add(1)
+					return errors.New(privateVerificationError)
+				}
+			},
+			wantVerifications: 1,
+		},
+		{
+			name: "native untrusted issuer certificate",
+			configure: func(config *tls.Config, _ *atomic.Int32) {
+				config.RootCAs = x509.NewCertPool()
+			},
+		},
+		{
+			name: "permanent verification failure does not reuse cached token",
+			configure: func(config *tls.Config, verifications *atomic.Int32) {
+				config.VerifyConnection = func(tls.ConnectionState) error {
+					verifications.Add(1)
+					return errors.New(privateVerificationError)
+				}
+			},
+			wantVerifications: 1,
+			cached:            true,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var exchanges, attempts, verifications atomic.Int32
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				exchanges.Add(1)
+				_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			}))
+			test.configure(fixture.template.TLSClientConfig, &verifications)
+			originalDial := fixture.template.DialContext
+			fixture.template.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+				attempts.Add(1)
+				return originalDial(ctx, network, address)
+			}
+			transport, err := NewX509Transport(fixture.template)
+			if err != nil {
+				t.Fatalf("attest TLS-verification workload transport: %v", err)
+			}
+			t.Cleanup(func() { _ = transport.Close() })
+			identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
+				IdentityProviderID: "synthetic-identity-provider",
+				ServiceAccountID:   "synthetic-service-account",
+				Transport:          transport,
+			})
+			if err != nil {
+				t.Fatalf("construct TLS-verification workload identity: %v", err)
+			}
+			if test.cached {
+				identity.cached = x509ExchangedToken{
+					value:     x509ExchangeSyntheticToken,
+					expiresAt: time.Now().Add(time.Minute),
+				}
+				identity.refreshAfter = time.Now().Add(-time.Second)
+			}
+			token, exchangeErr := identity.GetToken(t.Context(), transport)
+			if exchangeErr == nil || token != "" {
+				t.Errorf("permanent TLS-verification failure returned token=%q error=%v", token, exchangeErr)
+			}
+			for cause := exchangeErr; cause != nil; cause = errors.Unwrap(cause) {
+				if strings.Contains(cause.Error(), privateVerificationError) ||
+					strings.Contains(cause.Error(), "Authorization") {
+					t.Errorf("TLS verification error disclosed caller-private credentials: %v", cause)
+				}
+			}
+			if got := attempts.Load(); got != 1 {
+				t.Errorf("permanent TLS-verification failure attempted %d issuer handshakes, want 1", got)
+			}
+			if got := verifications.Load(); got != test.wantVerifications {
+				t.Errorf("TLS verification callback executed %d times, want %d", got, test.wantVerifications)
+			}
+			if got := exchanges.Load(); got != 0 {
+				t.Errorf("failed TLS verification reached the issuer handler %d times", got)
+			}
+		})
 	}
 }
 

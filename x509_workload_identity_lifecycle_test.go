@@ -1,6 +1,7 @@
 package openai_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -49,6 +50,176 @@ func TestX509WorkloadIdentityBoundsIssuerRetriesAcrossSDKRetries(t *testing.T) {
 			}
 			if got := int32(len(api.requests())); got != test.wantAPI {
 				t.Errorf("API attempts = %d, want %d", got, test.wantAPI)
+			}
+		})
+	}
+}
+
+func TestX509WorkloadIdentityCountsShortCircuitedCallerMiddlewareAttempts(t *testing.T) {
+	t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+	config, issuer, api := newX509WorkloadIdentityIntegration(t)
+	var middlewareAttempts, exchanges, dispatched atomic.Int32
+	issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if exchanges.Add(1) == 1 {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		_, _ = io.WriteString(w, x509IntegrationTokenResponse("synthetic-shared-attempt-token"))
+	})
+	api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		dispatched.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"data":[]}`)
+	})
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(config),
+		option.WithMaxRetries(2),
+		option.WithMaxRetryDelay(time.Millisecond),
+		option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			if middlewareAttempts.Add(1) == 1 {
+				return &http.Response{
+					StatusCode: http.StatusInternalServerError,
+					Header:     make(http.Header),
+					Body:       io.NopCloser(strings.NewReader(`{"error":{"message":"synthetic caller failure"}}`)),
+				}, nil
+			}
+			return next(request)
+		}),
+	)
+	if _, err := client.Models.List(t.Context()); err != nil {
+		t.Fatalf("shared caller-middleware and issuer retry budget did not recover: %v", err)
+	}
+	if middlewareAttempts.Load() != 2 || exchanges.Load() != 2 || dispatched.Load() != 1 {
+		t.Errorf("caller/issuer/API attempts = %d/%d/%d, want 2/2/1 within one shared budget",
+			middlewareAttempts.Load(), exchanges.Load(), dispatched.Load())
+	}
+}
+
+func TestX509WorkloadIdentityRejectsCallerMiddlewareRemovingRetryScope(t *testing.T) {
+	t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+	config, issuer, api := newX509WorkloadIdentityIntegration(t)
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(config),
+		option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			return next(request.WithContext(context.Background()))
+		}),
+	)
+	if _, err := client.Models.List(t.Context()); err == nil {
+		t.Fatal("caller middleware removed the request-owned retry scope")
+	}
+	assertX509WorkloadNoRequests(t, issuer, api)
+}
+
+func TestX509WorkloadIdentityUnauthorizedRecoveryReentersSDKAttempt(t *testing.T) {
+	for _, test := range []struct {
+		name        string
+		maximum     int
+		wantCalls   int32
+		wantSuccess bool
+	}{
+		{name: "fresh middleware and attempt timeout", maximum: 1, wantCalls: 2, wantSuccess: true},
+		{name: "zero retries prevents unauthorized recovery", maximum: 0, wantCalls: 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			var middlewareAttempts, exchanges, dispatched atomic.Int32
+			var mu sync.Mutex
+			var deadlines []time.Time
+			issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = io.WriteString(w, x509IntegrationTokenResponse(
+					fmt.Sprintf("synthetic-outer-recovery-%d", exchanges.Add(1)),
+				))
+			})
+			api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if dispatched.Add(1) == 1 {
+					time.Sleep(10 * time.Millisecond)
+					w.WriteHeader(http.StatusUnauthorized)
+					_, _ = io.WriteString(w, `{"error":{"message":"synthetic rejected bearer"}}`)
+					return
+				}
+				_, _ = io.WriteString(w, `{"data":[]}`)
+			})
+			client := openai.NewClient(
+				option.WithX509WorkloadIdentity(config),
+				option.WithMaxRetries(test.maximum),
+				option.WithMaxRetryDelay(time.Millisecond),
+				option.WithRequestTimeout(time.Second),
+				option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+					middlewareAttempts.Add(1)
+					if deadline, ok := request.Context().Deadline(); ok {
+						mu.Lock()
+						deadlines = append(deadlines, deadline)
+						mu.Unlock()
+					}
+					return next(request)
+				}),
+			)
+			_, err := client.Models.List(t.Context())
+			if (err == nil) != test.wantSuccess {
+				t.Errorf("outer unauthorized recovery error = %v, want success %v", err, test.wantSuccess)
+			}
+			if middlewareAttempts.Load() != test.wantCalls || exchanges.Load() != test.wantCalls ||
+				dispatched.Load() != test.wantCalls {
+				t.Errorf("caller/issuer/API attempts = %d/%d/%d, want %d/%d/%d",
+					middlewareAttempts.Load(), exchanges.Load(), dispatched.Load(),
+					test.wantCalls, test.wantCalls, test.wantCalls)
+			}
+			mu.Lock()
+			defer mu.Unlock()
+			if len(deadlines) != int(test.wantCalls) {
+				t.Fatalf("caller middleware observed %d per-attempt deadlines, want %d", len(deadlines), test.wantCalls)
+			}
+			if len(deadlines) == 2 && !deadlines[1].After(deadlines[0].Add(5*time.Millisecond)) {
+				t.Errorf("unauthorized recovery reused its first attempt deadline: %s then %s", deadlines[0], deadlines[1])
+			}
+		})
+	}
+}
+
+func TestX509WorkloadIdentityRetriesOnlyTransientOAuthErrorCodes(t *testing.T) {
+	for _, test := range []struct {
+		name        string
+		code        string
+		status      int
+		wantCalls   int32
+		wantSuccess bool
+	}{
+		{name: "temporarily unavailable", code: "temporarily_unavailable", status: 400, wantCalls: 2, wantSuccess: true},
+		{name: "server error", code: "server_error", status: 401, wantCalls: 2, wantSuccess: true},
+		{name: "invalid grant remains permanent", code: "invalid_grant", status: 400, wantCalls: 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			var exchanges atomic.Int32
+			issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				if exchanges.Add(1) == 1 {
+					w.WriteHeader(test.status)
+					_, _ = fmt.Fprintf(w, `{"error":%q,"error_description":"synthetic-private-issuer-detail"}`, test.code)
+					return
+				}
+				_, _ = io.WriteString(w, x509IntegrationTokenResponse("synthetic-recovered-oauth-token"))
+			})
+			client := openai.NewClient(option.WithX509WorkloadIdentity(config),
+				option.WithMaxRetries(1), option.WithMaxRetryDelay(time.Millisecond))
+			_, err := client.Models.List(t.Context())
+			if (err == nil) != test.wantSuccess {
+				t.Errorf("OAuth error %q produced error=%v, want success %v", test.code, err, test.wantSuccess)
+			}
+			if err != nil && strings.Contains(err.Error(), "synthetic-private-issuer-detail") {
+				t.Errorf("OAuth error disclosed sensitive issuer details: %v", err)
+			}
+			if got := exchanges.Load(); got != test.wantCalls {
+				t.Errorf("OAuth error %q caused %d issuer attempts, want %d", test.code, got, test.wantCalls)
+			}
+			wantAPI := 0
+			if test.wantSuccess {
+				wantAPI = 1
+			}
+			if got := len(api.requests()); got != wantAPI {
+				t.Errorf("OAuth error %q dispatched %d API requests, want %d", test.code, got, wantAPI)
 			}
 		})
 	}

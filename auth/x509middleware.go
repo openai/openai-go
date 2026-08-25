@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
@@ -16,8 +17,19 @@ func X509WorkloadIdentityMiddleware(
 	request *http.Request,
 	next func(*http.Request) (*http.Response, error),
 ) (*http.Response, error) {
-	if request == nil || request.Header == nil {
+	if request == nil || request.Header == nil || next == nil {
 		return nil, errors.New("X.509 workload identity requires a non-nil request and header map")
+	}
+	if err := validateX509Request(request); err != nil {
+		return nil, err
+	}
+	if request.URL.Host != x509APIHost {
+		return nil, errors.New("X.509 workload identity requires the global OpenAI mTLS API origin")
+	}
+	for name := range request.Header {
+		if strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {
+			return nil, errors.New("X.509 workload identity cannot replace existing Authorization credentials")
+		}
 	}
 	hadBody := request.Body != nil
 	token, err := identity.GetToken(request.Context(), httpClient)
@@ -32,27 +44,25 @@ func X509WorkloadIdentityMiddleware(
 	}
 	identity.invalidateToken(token)
 	scope := requestconfig.RequestRetryScopeFromContext(request.Context())
-	if hadBody && (request.GetBody == nil || scope == nil || !scope.AllowBodyReplay()) {
+	if scope != nil {
+		replayable := !hadBody || (request.GetBody != nil && scope.AllowBodyReplay())
+		if replayable && scope.TryOuterReplay() {
+			return x509UnauthorizedRetryResponse(response, true), nil
+		}
+		if response.Header.Get("x-should-retry") == "true" {
+			return x509UnauthorizedRetryResponse(response, false), nil
+		}
 		return response, nil
 	}
-	if scope != nil && !scope.TryReplay() {
+	if hadBody {
 		return response, nil
 	}
 	if response.Body != nil {
 		_ = response.Body.Close()
 	}
 	replay := request.Clone(request.Context())
-	if hadBody {
-		replay.Body, err = request.GetBody()
-		if err != nil {
-			return nil, err
-		}
-	}
 	token, err = identity.GetToken(request.Context(), httpClient)
 	if err != nil {
-		if replay.Body != nil {
-			_ = replay.Body.Close()
-		}
 		return nil, err
 	}
 	replay.Header.Set("Authorization", "Bearer "+token)
@@ -61,4 +71,18 @@ func X509WorkloadIdentityMiddleware(
 		identity.invalidateToken(token)
 	}
 	return response, err
+}
+
+func x509UnauthorizedRetryResponse(response *http.Response, retry bool) *http.Response {
+	clone := *response
+	clone.Header = response.Header.Clone()
+	if clone.Header == nil {
+		clone.Header = make(http.Header)
+	}
+	if retry {
+		clone.Header.Set("x-should-retry", "true")
+	} else {
+		clone.Header.Set("x-should-retry", "false")
+	}
+	return &clone
 }

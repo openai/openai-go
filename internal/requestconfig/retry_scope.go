@@ -2,6 +2,8 @@ package requestconfig
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -54,6 +56,22 @@ func (cfg *RequestConfig) InstallRequestRetryScope(allowBodyReplay bool) *Reques
 	return factory.install(cfg)
 }
 
+// InstallRequestAttemptMiddleware counts complete SDK attempts before caller
+// middleware can short-circuit authentication. Configuration clones inherit
+// this middleware and resolve their own independently installed scope.
+func (cfg *RequestConfig) InstallRequestAttemptMiddleware() {
+	cfg.Middlewares = append([]middleware{func(request *http.Request, next middlewareNext) (*http.Response, error) {
+		if request == nil {
+			return nil, WithNoRetryError(errors.New("X.509 workload identity requires a non-nil request"))
+		}
+		scope := RequestRetryScopeFromContext(request.Context())
+		if scope == nil || !scope.BeginAttempt() {
+			return nil, WithNoRetryError(errors.New("X.509 workload identity retry budget exhausted"))
+		}
+		return next(request)
+	}}, cfg.Middlewares...)
+}
+
 func (factory *requestRetryScopeFactory) install(cfg *RequestConfig) *RequestRetryScope {
 	cfg.MaxRetries = factory.maximum
 	scope := NewRequestRetryScope(factory.maximum, factory.maximumDelay, factory.allowBodyReplay, func(consumed int) {
@@ -95,12 +113,12 @@ func (scope *RequestRetryScope) TryRetry() bool {
 	return scope.tryInternalRetry()
 }
 
-// TryReplay consumes one retry for the only allowed unauthorized-response
-// replay associated with this logical request.
-func (scope *RequestRetryScope) TryReplay() bool {
+// TryOuterReplay reserves the sole unauthorized recovery without consuming a
+// retry. The SDK's next complete attempt accounts for the retry instead.
+func (scope *RequestRetryScope) TryOuterReplay() bool {
 	scope.mu.Lock()
 	defer scope.mu.Unlock()
-	if scope.replayUsed || !scope.tryInternalRetry() {
+	if scope.replayUsed || scope.outerRetries+scope.internalRetries >= scope.maximum {
 		return false
 	}
 	scope.replayUsed = true

@@ -15,14 +15,14 @@ func TestRequestRetryScopeSharesLogicalAttemptBudget(t *testing.T) {
 			t.Fatal("initial request and first outer retry were not admitted")
 		}
 	}
-	if !scope.TryReplay() {
+	if !scope.TryOuterReplay() {
 		t.Fatal("remaining retry budget did not admit the first 401 replay")
 	}
-	if scope.TryReplay() || scope.TryRetry() || scope.BeginAttempt() {
+	if scope.TryOuterReplay() || !scope.BeginAttempt() || scope.TryRetry() || scope.BeginAttempt() {
 		t.Error("combined retry scope admitted an attempt beyond its logical budget")
 	}
-	if len(consumed) != 1 || consumed[0] != 1 {
-		t.Errorf("internal retry callbacks = %v, want [1]", consumed)
+	if len(consumed) != 0 {
+		t.Errorf("outer retry incorrectly consumed internal retry callbacks: %v", consumed)
 	}
 }
 
@@ -48,6 +48,82 @@ func TestRequestRetryScopePreservesContextAndReplayPolicy(t *testing.T) {
 	}
 	if scope.TryRetry() {
 		t.Error("issuer retries did not stop at the logical request budget")
+	}
+}
+
+func TestRequestRetryScopeReservesOnlyOneCompleteUnauthorizedAttempt(t *testing.T) {
+	var consumed []int
+	scope := NewRequestRetryScope(2, time.Second, true, func(value int) { consumed = append(consumed, value) })
+	if !scope.BeginAttempt() || !scope.TryOuterReplay() {
+		t.Fatal("initial attempt did not reserve its unauthorized outer retry")
+	}
+	if scope.TryOuterReplay() {
+		t.Error("one logical request reserved multiple unauthorized recoveries")
+	}
+	if len(consumed) != 0 {
+		t.Errorf("outer recovery incorrectly consumed an internal retry: %v", consumed)
+	}
+	if !scope.BeginAttempt() || !scope.TryRetry() {
+		t.Error("reserved outer attempt did not preserve the remaining issuer retry")
+	}
+	if scope.BeginAttempt() || scope.TryRetry() {
+		t.Error("outer recovery exceeded its shared logical retry budget")
+	}
+	if len(consumed) != 1 || consumed[0] != 1 {
+		t.Errorf("mixed outer/internal retry callbacks = %v, want [1]", consumed)
+	}
+	zero := NewRequestRetryScope(0, time.Second, true, nil)
+	if !zero.BeginAttempt() || zero.TryOuterReplay() {
+		t.Error("zero-retry scope incorrectly reserved an unauthorized recovery")
+	}
+}
+
+func TestRequestAttemptMiddlewarePreservesIndependentCloneScopes(t *testing.T) {
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://example.com", nil)
+	if err != nil {
+		t.Fatalf("construct counted request: %v", err)
+	}
+	parent := RequestConfig{Request: request, MaxRetries: 1}
+	parentScope := parent.InstallRequestRetryScope(true)
+	parent.InstallRequestAttemptMiddleware()
+	if len(parent.Middlewares) != 1 {
+		t.Fatalf("parent installed %d attempt counters, want exactly one", len(parent.Middlewares))
+	}
+	var calls int
+	next := func(*http.Request) (*http.Response, error) {
+		calls++
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	}
+	attempt := func(cfg *RequestConfig) error {
+		response, attemptErr := cfg.Middlewares[0](cfg.Request, next)
+		if response != nil && response.Body != nil {
+			if closeErr := response.Body.Close(); closeErr != nil {
+				t.Errorf("close synthetic counted-attempt response: %v", closeErr)
+			}
+		}
+		return attemptErr
+	}
+	for range 2 {
+		if attemptErr := attempt(&parent); attemptErr != nil {
+			t.Fatalf("counted parent attempt failed: %v", attemptErr)
+		}
+	}
+	if attemptErr := attempt(&parent); attemptErr == nil {
+		t.Error("attempt counter accepted a caller-middleware short circuit beyond its budget")
+	}
+	clone := parent.Clone(t.Context())
+	if clone == nil || len(clone.Middlewares) != 1 {
+		t.Fatalf("cloned request duplicated its outer attempt counter: %v", clone)
+	}
+	cloneScope := RequestRetryScopeFromContext(clone.Request.Context())
+	if cloneScope == nil || cloneScope == parentScope {
+		t.Fatal("cloned outer attempt counter reused its parent's scope")
+	}
+	if attemptErr := attempt(clone); attemptErr != nil {
+		t.Fatalf("cloned attempt counter did not resolve its fresh context scope: %v", attemptErr)
+	}
+	if calls != 3 {
+		t.Errorf("parent and clone dispatched %d admitted attempts, want 3", calls)
 	}
 }
 
