@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto"
 	"crypto/sha256"
 	"crypto/subtle"
 	"crypto/tls"
@@ -79,7 +80,7 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 	if err := validateX509NativeTransport(template); err != nil {
 		return nil, err
 	}
-	if err := validateX509ApplicationProtocols(template.TLSClientConfig.NextProtos); err != nil {
+	if err := validateX509ApplicationProtocols(template); err != nil {
 		return nil, err
 	}
 	if err := validateX509TLSProtocolHandlers(template.TLSNextProto); err != nil {
@@ -198,8 +199,12 @@ func validateX509NativeTransport(transport *http.Transport) error {
 }
 
 func validateX509TLSConfig(config *tls.Config) error {
+	var signer crypto.Signer
+	if len(config.Certificates) == 1 {
+		signer, _ = config.Certificates[0].PrivateKey.(crypto.Signer)
+	}
 	if len(config.Certificates) != 1 || len(config.Certificates[0].Certificate) == 0 ||
-		len(config.Certificates[0].Certificate[0]) == 0 || x509PrivateKeyIsNil(config.Certificates[0].PrivateKey) {
+		len(config.Certificates[0].Certificate[0]) == 0 || x509PrivateKeyIsNil(signer) {
 		return errors.New("X.509 transport requires exactly one static certificate and private key")
 	}
 	if config.GetClientCertificate != nil {
@@ -230,10 +235,22 @@ func validateX509TLSConfig(config *tls.Config) error {
 	return nil
 }
 
-func validateX509ApplicationProtocols(protocols []string) error {
-	for _, protocol := range protocols {
+func validateX509ApplicationProtocols(template *http.Transport) error {
+	http1, http2 := true, template.ForceAttemptHTTP2
+	if template.Protocols != nil {
+		http1, http2 = template.Protocols.HTTP1(), template.Protocols.HTTP2()
+	} else if template.TLSNextProto != nil {
+		http2 = template.TLSNextProto["h2"] != nil
+	}
+	if !http1 && !http2 {
+		return errors.New("X.509 transport requires an enabled HTTPS-compatible HTTP protocol")
+	}
+	for _, protocol := range template.TLSClientConfig.NextProtos {
 		if protocol != "h2" && protocol != "http/1.1" {
 			return errors.New("X.509 transport does not support non-HTTP TLS application protocols")
+		}
+		if (protocol == "h2" && !http2) || (protocol == "http/1.1" && !http1) {
+			return errors.New("X.509 transport TLS application protocol is disabled by its HTTP configuration")
 		}
 	}
 	return nil

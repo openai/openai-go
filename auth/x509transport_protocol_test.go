@@ -3,6 +3,7 @@ package auth_test
 import (
 	"bytes"
 	"context"
+	"crypto"
 	"crypto/tls"
 	"errors"
 	"io"
@@ -255,6 +256,178 @@ func TestX509TransportFreezesMutableTLSPolicySlices(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestX509TransportRejectsALPNDisabledByEffectiveHTTPProtocols(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		configure func(*http.Transport)
+		wantMajor int
+	}{
+		{
+			name: "HTTP/2 ALPN with explicit HTTP/1 only",
+			configure: func(template *http.Transport) {
+				template.Protocols = new(http.Protocols)
+				template.Protocols.SetHTTP1(true)
+				template.TLSClientConfig.NextProtos = []string{"h2"}
+			},
+		},
+		{
+			name: "HTTP/2 ALPN with protocol map disabling forced HTTP/2",
+			configure: func(template *http.Transport) {
+				template.ForceAttemptHTTP2 = true
+				template.TLSNextProto = make(map[string]func(string, *tls.Conn) http.RoundTripper)
+				template.TLSClientConfig.NextProtos = []string{"h2"}
+			},
+		},
+		{
+			name: "HTTP/1 ALPN with explicit HTTP/2 only",
+			configure: func(template *http.Transport) {
+				template.Protocols = new(http.Protocols)
+				template.Protocols.SetHTTP2(true)
+				template.TLSClientConfig.NextProtos = []string{"http/1.1"}
+			},
+		},
+		{
+			name: "plaintext-only HTTP/2 protocols",
+			configure: func(template *http.Transport) {
+				template.Protocols = new(http.Protocols)
+				template.Protocols.SetUnencryptedHTTP2(true)
+			},
+		},
+		{
+			name: "explicit compatible HTTP/2 ALPN",
+			configure: func(template *http.Transport) {
+				template.Protocols = new(http.Protocols)
+				template.Protocols.SetHTTP2(true)
+				template.TLSClientConfig.NextProtos = []string{"h2"}
+			},
+			wantMajor: 2,
+		},
+		{
+			name: "implicit compatible HTTP/2 ALPN",
+			configure: func(template *http.Transport) {
+				template.ForceAttemptHTTP2 = true
+				template.TLSClientConfig.NextProtos = []string{"h2"}
+			},
+			wantMajor: 2,
+		},
+		{
+			name: "explicit compatible HTTP/1 ALPN",
+			configure: func(template *http.Transport) {
+				template.Protocols = new(http.Protocols)
+				template.Protocols.SetHTTP1(true)
+				template.TLSClientConfig.NextProtos = []string{"http/1.1"}
+			},
+			wantMajor: 1,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fixture := newX509TransportFixture(t)
+			var received atomic.Int32
+			server := newX509HTTP2TransportServer(t, fixture, http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+				received.Add(1)
+				if request.ProtoMajor != test.wantMajor {
+					t.Errorf("negotiated HTTPS protocol = HTTP/%d, want HTTP/%d", request.ProtoMajor, test.wantMajor)
+				}
+				w.WriteHeader(http.StatusOK)
+			}))
+			template := fixture.transport(t, server)
+			test.configure(template)
+			capability, err := auth.NewX509Transport(template)
+			if test.wantMajor == 0 {
+				if err == nil || capability != nil {
+					t.Fatalf("inconsistent TLS/HTTP protocol configuration was accepted: capability:%v error:%v", capability, err)
+				}
+				if got := received.Load(); got != 0 {
+					t.Errorf("inconsistent protocol negotiation leaked %d authenticated requests", got)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("attest compatible TLS/HTTP protocols: %v", err)
+			}
+			t.Cleanup(func() {
+				if closeErr := capability.Close(); closeErr != nil {
+					t.Errorf("close protocol-compatible capability: %v", closeErr)
+				}
+			})
+			request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+			request.Header.Set("Authorization", "Bearer protected-synthetic-token")
+			response, err := capability.Do(request)
+			if err != nil {
+				t.Fatalf("dispatch with consistent TLS/HTTP negotiation: %v", err)
+			}
+			if closeErr := response.Body.Close(); closeErr != nil {
+				t.Fatalf("close protocol-compatible response: %v", closeErr)
+			}
+			if got := received.Load(); got != 1 {
+				t.Errorf("compatible negotiated protocol delivered %d authenticated requests", got)
+			}
+		})
+	}
+}
+
+func TestX509TransportRequiresPrivateKeySignerWithoutEagerHardwareCalls(t *testing.T) {
+	fixture := newX509TransportFixture(t)
+	var received atomic.Int32
+	server := fixture.server(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		received.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	template := fixture.transport(t, server)
+	original := template.TLSClientConfig.Certificates[0].PrivateKey
+	template.TLSClientConfig.Certificates[0].PrivateKey = struct{}{}
+	if capability, err := auth.NewX509Transport(template); capability != nil || err == nil ||
+		!strings.Contains(err.Error(), "static certificate and private key") {
+		t.Fatalf("non-signer private key was accepted: capability:%v error:%v", capability, err)
+	}
+	signer, ok := original.(crypto.Signer)
+	if !ok {
+		t.Fatal("synthetic workload key does not implement crypto.Signer")
+	}
+	observed := &x509ObservedSigner{signer: signer}
+	template.TLSClientConfig.Certificates[0].PrivateKey = observed
+	capability := newX509Capability(t, template)
+	if observed.publicCalls.Load() != 0 || observed.signCalls.Load() != 0 {
+		t.Fatalf("attestation eagerly invoked a caller-owned signer Public/Sign %d/%d times",
+			observed.publicCalls.Load(), observed.signCalls.Load())
+	}
+	template.TLSClientConfig.Certificates[0].PrivateKey = struct{}{}
+	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+	request.Header.Set("Authorization", "Bearer protected-synthetic-token")
+	_ = x509Rejected(t, capability, request)
+	if got := received.Load(); got != 0 {
+		t.Errorf("post-attestation non-signer delivered %d authenticated requests", got)
+	}
+	template.TLSClientConfig.Certificates[0].PrivateKey = observed
+	response, err := capability.Do(request)
+	if err != nil {
+		t.Fatalf("mutual TLS using a caller-owned hardware-style crypto.Signer: %v", err)
+	}
+	if closeErr := response.Body.Close(); closeErr != nil {
+		t.Fatalf("close caller-owned signer response: %v", closeErr)
+	}
+	if observed.publicCalls.Load() == 0 || observed.signCalls.Load() == 0 || received.Load() != 1 {
+		t.Errorf("caller-owned signer Public/Sign/API invocations = %d/%d/%d",
+			observed.publicCalls.Load(), observed.signCalls.Load(), received.Load())
+	}
+}
+
+type x509ObservedSigner struct {
+	signer      crypto.Signer
+	publicCalls atomic.Int32
+	signCalls   atomic.Int32
+}
+
+func (signer *x509ObservedSigner) Public() crypto.PublicKey {
+	signer.publicCalls.Add(1)
+	return signer.signer.Public()
+}
+
+func (signer *x509ObservedSigner) Sign(random io.Reader, digest []byte, options crypto.SignerOpts) ([]byte, error) {
+	signer.signCalls.Add(1)
+	return signer.signer.Sign(random, digest, options)
 }
 
 func TestX509TransportPreservesSanitizedNetworkTimeoutClassification(t *testing.T) {
