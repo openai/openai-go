@@ -336,6 +336,49 @@ func TestNewRequestConfigLeavesResponseBodyTimeoutDisabledByDefault(t *testing.T
 	}
 }
 
+func TestResponseBodyTimeoutStopsAfterBufferedReads(t *testing.T) {
+	const bodyTimeout = 15 * time.Millisecond
+	postReadError := errors.New("API error parsing completed")
+	tests := []struct {
+		name         string
+		limit        int64
+		wantOverflow bool
+	}{
+		{name: "complete success or error response"},
+		{name: "configured limit overflow", limit: 1, wantOverflow: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			lifecycle := newResponseBodyLifecycle(io.NopCloser(strings.NewReader(`{"ok":true}`)), cancel)
+			cfg := RequestConfig{ResponseBodyTimeout: bodyTimeout}
+			contextErrAfterRead := error(nil)
+
+			err := cfg.withResponseBodyTimeout(lifecycle, func(body *responseBodyLifecycle) error {
+				_, overflow, readErr := readBodyUpTo(body, test.limit)
+				if readErr != nil {
+					return readErr
+				}
+				if overflow != test.wantOverflow {
+					t.Fatalf("read overflow = %v, want %v", overflow, test.wantOverflow)
+				}
+				<-time.After(3 * bodyTimeout)
+				contextErrAfterRead = ctx.Err()
+				return postReadError
+			})
+
+			if !errors.Is(err, postReadError) {
+				t.Fatalf("response error = %v, want post-read error %v", err, postReadError)
+			}
+			if contextErrAfterRead != nil {
+				t.Fatalf("attempt context during parsing = %v, want active context", contextErrAfterRead)
+			}
+		})
+	}
+}
+
 func TestExecuteClosesAttemptBodyOnHandlerError(t *testing.T) {
 	t.Run("no retry", func(t *testing.T) {
 		body := newTrackedFileBody(t)

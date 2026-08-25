@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
@@ -26,6 +27,83 @@ func (managedCompressionRoundTripper) CompressionDisabled() bool { return false 
 type responseReadResult struct {
 	contents string
 	err      error
+}
+
+type delayedJSONResponse struct {
+	started chan struct{}
+	release <-chan struct{}
+	decoded bool
+}
+
+func (response *delayedJSONResponse) UnmarshalJSON([]byte) error {
+	close(response.started)
+	<-response.release
+	response.decoded = true
+	return nil
+}
+
+func TestExecuteBodyTimeoutStopsBeforeJSONDecoding(t *testing.T) {
+	const bodyTimeout = 20 * time.Millisecond
+
+	for _, limit := range []int64{0, 64} {
+		name := "default body limit"
+		if limit != 0 {
+			name = "explicit body limit"
+		}
+		t.Run(name, func(t *testing.T) {
+			attemptContext := make(chan context.Context, 1)
+			opts := []option.RequestOption{
+				option.WithAPIKey("test-key"),
+				option.WithMaxRetries(0),
+				option.WithResponseBodyTimeout(bodyTimeout),
+				option.WithHTTPClient(responseDoerFunc(func(req *http.Request) (*http.Response, error) {
+					attemptContext <- req.Context()
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     http.Header{"Content-Type": {"application/json"}},
+						Body:       io.NopCloser(strings.NewReader(`{"ok":true}`)),
+						Request:    req,
+					}, nil
+				})),
+			}
+			if limit != 0 {
+				opts = append(opts, option.WithMaxResponseBodyBytes(limit))
+			}
+			client := openai.NewClient(opts...)
+			release := make(chan struct{})
+			response := delayedJSONResponse{started: make(chan struct{}), release: release}
+			result := make(chan error, 1)
+			go func() {
+				result <- client.Get(context.Background(), "slow-json", nil, &response)
+			}()
+
+			select {
+			case <-response.started:
+			case <-time.After(time.Second):
+				close(release)
+				t.Fatal("JSON decoding did not start")
+			}
+			ctx := <-attemptContext
+			<-time.After(3 * bodyTimeout)
+			contextErrDuringDecode := ctx.Err()
+			close(release)
+
+			select {
+			case err := <-result:
+				if err != nil {
+					t.Fatalf("Get() error = %v, want JSON decoding after timely body read", err)
+				}
+			case <-time.After(time.Second):
+				t.Fatal("Get() did not finish decoding")
+			}
+			if contextErrDuringDecode != nil {
+				t.Fatalf("attempt context during JSON decoding = %v, want active context", contextErrDuringDecode)
+			}
+			if !response.decoded {
+				t.Fatal("successful response did not populate its destination")
+			}
+		})
+	}
 }
 
 func TestExecutePreservesJSONResponseReadErrors(t *testing.T) {

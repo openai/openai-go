@@ -34,7 +34,7 @@ func (e *responseBodyLimitError) Error() string {
 func (e *responseBodyLimitError) Unwrap() error { return e.cause }
 
 func (cfg *RequestConfig) handleErrorResponse(res *http.Response, lifecycle *responseBodyLifecycle) error {
-	return cfg.withResponseBodyTimeout(lifecycle, func(body io.Reader) error {
+	return cfg.withResponseBodyTimeout(lifecycle, func(body *responseBodyLifecycle) error {
 		contents, overflow, readErr := readBodyUpTo(body, cfg.MaxErrorResponseBodyBytes)
 		var compressedLimitErr *compressedResponseBodyLimitError
 		if readErr != nil && !errors.As(readErr, &compressedLimitErr) {
@@ -73,7 +73,7 @@ func (cfg *RequestConfig) handleErrorResponse(res *http.Response, lifecycle *res
 }
 
 func (cfg *RequestConfig) handleSuccessResponse(res *http.Response, lifecycle *responseBodyLifecycle) error {
-	return cfg.withResponseBodyTimeout(lifecycle, func(body io.Reader) error {
+	return cfg.withResponseBodyTimeout(lifecycle, func(body *responseBodyLifecycle) error {
 		contentType := res.Header.Get("content-type")
 		mediaType, _, _ := mime.ParseMediaType(contentType)
 		isJSON := strings.Contains(mediaType, "application/json") || strings.HasSuffix(mediaType, "+json")
@@ -122,10 +122,11 @@ func (cfg *RequestConfig) handleSuccessResponse(res *http.Response, lifecycle *r
 }
 
 type responseBodyLifecycle struct {
-	body       io.ReadCloser
-	stop       func()
-	cancelOnce sync.Once
-	reachedEOF bool
+	body          io.ReadCloser
+	stop          func()
+	stopReadTimer func()
+	cancelOnce    sync.Once
+	reachedEOF    bool
 }
 
 func newResponseBodyLifecycle(body io.ReadCloser, stop func()) *responseBodyLifecycle {
@@ -142,8 +143,15 @@ func (l *responseBodyLifecycle) Read(p []byte) (int, error) {
 	n, err := l.body.Read(p)
 	if err == io.EOF {
 		l.reachedEOF = true
+		l.finishReading()
 	}
 	return n, err
+}
+
+func (l *responseBodyLifecycle) finishReading() {
+	if l.stopReadTimer != nil {
+		l.stopReadTimer()
+	}
 }
 
 func (l *responseBodyLifecycle) Close() error {
@@ -167,23 +175,27 @@ func (l *responseBodyLifecycle) abort() {
 
 func (cfg *RequestConfig) withResponseBodyTimeout(
 	lifecycle *responseBodyLifecycle,
-	read func(io.Reader) error,
+	read func(*responseBodyLifecycle) error,
 ) error {
 	var timedOut atomic.Bool
-	var timer *time.Timer
-	var interrupted chan struct{}
 	if cfg.ResponseBodyTimeout > 0 {
-		interrupted = make(chan struct{})
-		timer = time.AfterFunc(cfg.ResponseBodyTimeout, func() {
+		interrupted := make(chan struct{})
+		timer := time.AfterFunc(cfg.ResponseBodyTimeout, func() {
 			timedOut.Store(true)
 			lifecycle.interrupt(interrupted)
 		})
+		var stopOnce sync.Once
+		lifecycle.stopReadTimer = func() {
+			stopOnce.Do(func() {
+				if !timer.Stop() {
+					<-interrupted
+				}
+			})
+		}
 	}
 
 	err := read(lifecycle)
-	if timer != nil && !timer.Stop() {
-		<-interrupted
-	}
+	lifecycle.finishReading()
 	if timedOut.Load() {
 		return fmt.Errorf("response body read timed out after %s: %w", cfg.ResponseBodyTimeout, context.DeadlineExceeded)
 	}
@@ -198,7 +210,8 @@ func (cfg *RequestConfig) withResponseBodyTimeout(
 	return err
 }
 
-func readBodyUpTo(body io.Reader, limit int64) (contents []byte, overflow bool, err error) {
+func readBodyUpTo(body *responseBodyLifecycle, limit int64) (contents []byte, overflow bool, err error) {
+	defer body.finishReading()
 	if limit == 0 {
 		contents, err = io.ReadAll(body)
 		return contents, false, err
@@ -210,7 +223,7 @@ func readBodyUpTo(body io.Reader, limit int64) (contents []byte, overflow bool, 
 	return contents, false, err
 }
 
-func decodeJSONUpTo(body io.Reader, limit int64, dst any) (overflow bool, err error) {
+func decodeJSONUpTo(body *responseBodyLifecycle, limit int64, dst any) (overflow bool, err error) {
 	contents, overflow, readErr := readBodyUpTo(body, limit)
 	if overflow {
 		return true, nil
