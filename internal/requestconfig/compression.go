@@ -119,6 +119,9 @@ func (cfg *RequestConfig) compressionPolicy(req *http.Request) responseCompressi
 		if transport == nil {
 			transport = http.DefaultTransport
 		}
+		if guarded, ok := UnwrapCredentialRedirectGuard(transport); ok {
+			transport = guarded
+		}
 		switch transport := transport.(type) {
 		case *http.Transport:
 			if transport.DisableCompression {
