@@ -18,12 +18,12 @@ const x509WorkloadAPIBaseURL = "https://mtls.api.openai.com/v1/"
 // attested workload certificate for short-lived bearer credentials. Only the
 // global OpenAI mTLS endpoint and the configured transport are supported.
 func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
-	selected := requestconfig.NewProviderAuthOption("OpenAI", "option.WithX509WorkloadIdentity")
 	var initialize sync.Once
 	var identity *auth.X509WorkloadIdentityAuth
 	var initializationError error
 
 	return requestconfig.RequestOptionFunc(func(cfg *requestconfig.RequestConfig) error {
+		selected := requestconfig.NewProviderAuthOption("OpenAI", "option.WithX509WorkloadIdentity")
 		if err := selected.Apply(cfg); err != nil {
 			return err
 		}
@@ -32,13 +32,12 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 			return err
 		}
 		originalHTTPClient := cfg.HTTPClient
-		customHTTPClient := cfg.HTTPClientExplicitlySelected()
 		return requestconfig.WithRequestFinalizer(func(final *requestconfig.RequestConfig) error {
 			if !selected.Selected(final) {
 				return nil
 			}
 			if final.HTTPClient == nil || final.HTTPClient != originalHTTPClient || final.CustomHTTPDoer != nil ||
-				customHTTPClient || final.HTTPClientExplicitlySelected() {
+				final.HTTPClientExplicitlySelected() {
 				return errors.New("X.509 workload identity requires its attested transport without custom HTTP clients")
 			}
 			if final.EndpointProvider() != "" {

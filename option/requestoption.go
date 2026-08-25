@@ -63,12 +63,23 @@ func WithHTTPClient(client HTTPClient) RequestOption {
 			return fmt.Errorf("requestoption: custom http client cannot be nil")
 		}
 
-		r.RecordHTTPClientSelection()
-		if c, ok := client.(*http.Client); ok {
-			// Prefer the native client if possible.
-			r.HTTPClient = c
+		switch selected := client.(type) {
+		case *requestconfig.DefaultHTTPClient:
+			if selected == nil || selected.Client == nil {
+				return fmt.Errorf("requestoption: custom http client cannot be nil")
+			}
+			r.RecordHTTPClientSelection(true)
+			r.HTTPClient = selected.Client
 			r.CustomHTTPDoer = nil
-		} else {
+		case *http.Client:
+			if selected == nil {
+				return fmt.Errorf("requestoption: custom http client cannot be nil")
+			}
+			r.RecordHTTPClientSelection(false)
+			r.HTTPClient = selected
+			r.CustomHTTPDoer = nil
+		default:
+			r.RecordHTTPClientSelection(false)
 			r.CustomHTTPDoer = client
 		}
 

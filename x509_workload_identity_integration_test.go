@@ -212,6 +212,16 @@ func TestX509WorkloadIdentityPreservesStandaloneHTTPClientProvenance(t *testing.
 			},
 		},
 		{
+			name: "deeply nested standalone custom client",
+			service: func(auth.X509WorkloadIdentity) openai.ModelService {
+				inner := openai.NewModelService(option.WithHTTPClient(&http.Client{}))
+				return openai.NewModelService(inner.Options...)
+			},
+			method: func(config auth.X509WorkloadIdentity) []option.RequestOption {
+				return []option.RequestOption{option.WithX509WorkloadIdentity(config)}
+			},
+		},
+		{
 			name: "standalone later custom client",
 			service: func(config auth.X509WorkloadIdentity) openai.ModelService {
 				return openai.NewModelService(option.WithX509WorkloadIdentity(config), option.WithHTTPClient(&http.Client{}))
@@ -244,6 +254,53 @@ func TestX509WorkloadIdentityPreservesStandaloneHTTPClientProvenance(t *testing.
 }
 
 func TestX509WorkloadIdentityUsesOnlyTheLastAuthenticationOption(t *testing.T) {
+	t.Run("same option reused in one layer", func(t *testing.T) {
+		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+		config, issuer, api := newX509WorkloadIdentityIntegration(t)
+		selected := option.WithX509WorkloadIdentity(config)
+		client := openai.NewClient(selected, selected)
+		if _, err := client.Models.List(t.Context()); err != nil {
+			t.Fatalf("reused same-layer X.509 option did not select only its last application: %v", err)
+		}
+		if len(issuer.requests()) != 1 || len(api.requests()) != 1 {
+			t.Errorf("reused X.509 option issuer/API calls = %d/%d", len(issuer.requests()), len(api.requests()))
+		}
+	})
+	t.Run("same option reused as a method override", func(t *testing.T) {
+		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+		config, issuer, api := newX509WorkloadIdentityIntegration(t)
+		selected := option.WithX509WorkloadIdentity(config)
+		client := openai.NewClient(selected)
+		if _, err := client.Models.List(t.Context(), selected); err != nil {
+			t.Fatalf("reused method X.509 option did not replace its inherited application: %v", err)
+		}
+		if len(issuer.requests()) != 1 || len(api.requests()) != 1 {
+			t.Errorf("reused method X.509 option issuer/API calls = %d/%d", len(issuer.requests()), len(api.requests()))
+		}
+	})
+	t.Run("same option reused concurrently", func(t *testing.T) {
+		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+		config, issuer, api := newX509WorkloadIdentityIntegration(t)
+		selected := option.WithX509WorkloadIdentity(config)
+		client := openai.NewClient(selected, selected)
+		const requests = 8
+		results := make(chan error, requests)
+		for range requests {
+			go func() {
+				_, err := client.Models.List(t.Context(), selected)
+				results <- err
+			}()
+		}
+		for range requests {
+			if err := <-results; err != nil {
+				t.Errorf("concurrent reused X.509 option request: %v", err)
+			}
+		}
+		if len(issuer.requests()) != requests || len(api.requests()) != requests {
+			t.Errorf("concurrently reused X.509 option issuer/API calls = %d/%d",
+				len(issuer.requests()), len(api.requests()))
+		}
+	})
 	t.Run("invalid earlier identity is never initialized", func(t *testing.T) {
 		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
 		config, issuer, api := newX509WorkloadIdentityIntegration(t)

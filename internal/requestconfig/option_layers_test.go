@@ -162,8 +162,12 @@ func TestAuthorizationHeaderOverriddenPreservesExplicitDeletion(t *testing.T) {
 }
 
 func TestHTTPClientSelectionProvenanceDistinguishesDefaultsAndOverrides(t *testing.T) {
-	record := RequestOptionFunc(func(cfg *RequestConfig) error {
-		cfg.RecordHTTPClientSelection()
+	trusted := RequestOptionFunc(func(cfg *RequestConfig) error {
+		cfg.RecordHTTPClientSelection(true)
+		return nil
+	})
+	explicit := RequestOptionFunc(func(cfg *RequestConfig) error {
+		cfg.RecordHTTPClientSelection(false)
 		return nil
 	})
 	t.Run("implicit native default", func(t *testing.T) {
@@ -172,44 +176,49 @@ func TestHTTPClientSelectionProvenanceDistinguishesDefaultsAndOverrides(t *testi
 			t.Error("unselected implicit native HTTP client was classified as explicit")
 		}
 	})
-	t.Run("nested generated default", func(t *testing.T) {
+	t.Run("marked generated default", func(t *testing.T) {
 		cfg := RequestConfig{}
-		if err := cfg.Apply(InheritedOptions(InheritedOptions(record)...)...); err != nil {
-			t.Fatalf("apply nested generated HTTP client default: %v", err)
+		if err := cfg.Apply(InheritedOptions(InheritedOptions(trusted)...)...); err != nil {
+			t.Fatalf("apply marked generated HTTP client default: %v", err)
 		}
 		if cfg.HTTPClientExplicitlySelected() {
-			t.Error("one nested generated HTTP client default was classified as explicit")
+			t.Error("marked generated HTTP client default was classified as explicit")
 		}
 	})
 	t.Run("standalone inherited custom client", func(t *testing.T) {
 		cfg := RequestConfig{}
-		if err := cfg.Apply(InheritedOptions(record)...); err != nil {
+		if err := cfg.Apply(InheritedOptions(explicit)...); err != nil {
 			t.Fatalf("apply standalone inherited custom HTTP client: %v", err)
 		}
 		if !cfg.HTTPClientExplicitlySelected() {
 			t.Error("standalone inherited custom HTTP client lost its explicit provenance")
 		}
 	})
-	t.Run("same nested layer", func(t *testing.T) {
+	t.Run("arbitrarily nested custom client", func(t *testing.T) {
 		cfg := RequestConfig{}
-		check := RequestOptionFunc(func(current *RequestConfig) error {
-			if !current.HTTPClientExplicitlySelected() {
-				t.Error("same-layer custom HTTP client was classified as an inherited default")
-			}
-			return nil
-		})
-		if err := cfg.Apply(InheritedOptions(InheritedOptions(record, check)...)...); err != nil {
-			t.Fatalf("apply same-layer custom HTTP client: %v", err)
+		if err := cfg.Apply(InheritedOptions(InheritedOptions(InheritedOptions(explicit)...)...)...); err != nil {
+			t.Fatalf("apply arbitrarily nested custom HTTP client: %v", err)
+		}
+		if !cfg.HTTPClientExplicitlySelected() {
+			t.Error("nested custom HTTP client was misclassified as a trusted SDK default")
 		}
 	})
-	t.Run("explicit override after nested default", func(t *testing.T) {
+	t.Run("explicit override after marked default", func(t *testing.T) {
 		cfg := RequestConfig{}
-		if err := cfg.Apply(InheritedOptions(InheritedOptions(record)...)...); err != nil {
-			t.Fatalf("apply nested HTTP client default: %v", err)
+		if err := cfg.Apply(InheritedOptions(trusted)...); err != nil {
+			t.Fatalf("apply marked HTTP client default: %v", err)
 		}
-		cfg.RecordHTTPClientSelection()
+		cfg.RecordHTTPClientSelection(false)
 		if !cfg.HTTPClientExplicitlySelected() {
-			t.Error("second HTTP client selection was not classified as explicit")
+			t.Error("HTTP client override was not classified as explicit")
+		}
+	})
+	t.Run("later default cannot erase explicit client", func(t *testing.T) {
+		cfg := RequestConfig{}
+		cfg.RecordHTTPClientSelection(false)
+		cfg.RecordHTTPClientSelection(true)
+		if !cfg.HTTPClientExplicitlySelected() {
+			t.Error("later trusted default erased explicit HTTP client provenance")
 		}
 	})
 	t.Run("clone preserves custom-client provenance", func(t *testing.T) {
@@ -218,7 +227,7 @@ func TestHTTPClientSelectionProvenanceDistinguishesDefaultsAndOverrides(t *testi
 			t.Fatalf("construct clone provenance request: %v", err)
 		}
 		cfg := RequestConfig{Request: request}
-		cfg.RecordHTTPClientSelection()
+		cfg.RecordHTTPClientSelection(false)
 		cloned := cfg.Clone(t.Context())
 		if cloned == nil || !cloned.HTTPClientExplicitlySelected() {
 			t.Fatal("request clone lost explicit HTTP client selection provenance")
