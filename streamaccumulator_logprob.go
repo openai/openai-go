@@ -3,6 +3,7 @@ package openai
 import (
 	"strings"
 	"unsafe"
+	"weak"
 
 	"github.com/openai/openai-go/v3/packages/respjson"
 )
@@ -33,10 +34,9 @@ type chatCompletionChoiceLogprobState struct {
 }
 
 type chatCompletionLogprobSliceState struct {
-	// Keep the published outer allocation alive so allocator address reuse cannot
-	// make a replacement look identical before reconciliation. bytes accounts for
-	// this retained backing until an accepted chunk updates the state.
-	data     *ChatCompletionTokenLogprob
+	// The public logprob slice owns its backing. A weak handle preserves allocation
+	// identity without allowing a dormant accumulator copy to retain later backing.
+	data     weak.Pointer[ChatCompletionTokenLogprob]
 	length   int
 	capacity int
 	bytes    int
@@ -278,8 +278,7 @@ func copiedLogprobAppendNeedsDetach(
 }
 
 func (state chatCompletionLogprobSliceState) matches(logprobs []ChatCompletionTokenLogprob) bool {
-	header := chatCompletionLogprobHeader(logprobs)
-	return state.data == header.data && state.length == header.length && state.capacity == header.capacity
+	return state.data.Value() == unsafe.SliceData(logprobs) && state.length == len(logprobs) && state.capacity == cap(logprobs)
 }
 
 func projectChatCompletionLogprobSlice(
@@ -523,17 +522,18 @@ func projectedLogprobCapacity(current int, required int, maximum int) int {
 
 func chatCompletionLogprobHeader(logprobs []ChatCompletionTokenLogprob) chatCompletionLogprobSliceState {
 	return chatCompletionLogprobSliceState{
-		data:     unsafe.SliceData(logprobs),
+		data:     weak.Make(unsafe.SliceData(logprobs)),
 		length:   len(logprobs),
 		capacity: cap(logprobs),
 	}
 }
 
 func setChatCompletionLogprobHeader(state *chatCompletionLogprobSliceState, logprobs []ChatCompletionTokenLogprob) {
-	if state.data != unsafe.SliceData(logprobs) {
+	data := unsafe.SliceData(logprobs)
+	if state.data.Value() != data {
 		state.shared = false
+		state.data = weak.Make(data)
 	}
-	state.data = unsafe.SliceData(logprobs)
 	state.length = len(logprobs)
 	state.capacity = cap(logprobs)
 }

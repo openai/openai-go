@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 	"unsafe"
+	"weak"
 )
 
 func TestAccumulatorReleasesClearedStringStorageBeforeNextChunk(t *testing.T) {
@@ -45,7 +46,7 @@ func TestAccumulatorReleasesClearedStringStorageBeforeNextChunk(t *testing.T) {
 				return &acc.Choices[0].Message.ToolCalls[0].Function.Name
 			},
 			state: func(acc *ChatCompletionAccumulator) *chatCompletionString {
-				return &acc.stringState.choices[0].toolCalls[0].name
+				return &acc.stringState.choices[0].toolCallState(0).name
 			},
 		},
 		{
@@ -59,7 +60,7 @@ func TestAccumulatorReleasesClearedStringStorageBeforeNextChunk(t *testing.T) {
 				return &acc.Choices[0].Message.ToolCalls[0].Function.Arguments
 			},
 			state: func(acc *ChatCompletionAccumulator) *chatCompletionString {
-				return &acc.stringState.choices[0].toolCalls[0].arguments
+				return &acc.stringState.choices[0].toolCallState(0).arguments
 			},
 		},
 	}
@@ -603,7 +604,7 @@ func TestAccumulatorValueCopyToolActivationStateIsolated(t *testing.T) {
 					choiceState.activeToolCalls,
 				)
 			}
-			if choiceState.toolCalls[0] != nil {
+			if choiceState.toolCallState(0) != nil {
 				t.Fatal("copy populated an inactive private tool slot on the unmodified accumulator")
 			}
 			if !unmodified.AddChunk(activation) {
@@ -632,7 +633,7 @@ func TestAccumulatorToolActivationStateGrowsAmortized(t *testing.T) {
 	const toolCount = 128
 
 	var acc ChatCompletionAccumulator
-	var previousToolCalls **chatCompletionToolCallStringState
+	var previousToolCalls *weak.Pointer[chatCompletionToolCallStringState]
 	var previousActiveToolCalls *int
 	var previousPublicToolCalls *ChatCompletionMessageToolCallUnion
 	toolCallBackingChanges := 0

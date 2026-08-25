@@ -17,7 +17,7 @@ func (choice *chatCompletionChoiceStringState) visitReconciledTools(
 	swept := choice.activeToolCalls[cursor]
 	for offset := range choice.reconciliationSweepCount(choiceIndex, chunk) {
 		index := choice.activeToolCalls[(cursor+offset)%len(choice.activeToolCalls)]
-		if index < len(public) && index < len(choice.toolCalls) && choice.toolCalls[index] != nil && !visit(index) {
+		if index < len(public) && index < len(choice.toolCalls) && choice.toolCallState(index) != nil && !visit(index) {
 			return false
 		}
 	}
@@ -31,7 +31,7 @@ func (choice *chatCompletionChoiceStringState) visitReconciledTools(
 		for j := range delta.Delta.ToolCalls {
 			index := preflightedToolCallIndex(delta.Delta.ToolCalls[j].Index)
 			if index == swept || index == previous || index >= len(public) || index >= len(choice.toolCalls) ||
-				choice.toolCalls[index] == nil {
+				choice.toolCallState(index) == nil {
 				continue
 			}
 			if !visit(index) {
@@ -58,7 +58,7 @@ func (choice *chatCompletionChoiceStringState) reconciliationSweepCount(
 		}
 		for j := range delta.Delta.ToolCalls {
 			index := preflightedToolCallIndex(delta.Delta.ToolCalls[j].Index)
-			if index >= len(choice.toolCalls) || choice.toolCalls[index] == nil {
+			if index >= len(choice.toolCalls) || choice.toolCallState(index) == nil {
 				count++
 			}
 		}

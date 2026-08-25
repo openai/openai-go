@@ -362,12 +362,13 @@ func (acc *ChatCompletionAccumulator) addChatCompletionToolMetadataWork(work *in
 			projection := lookupChatCompletionToolMetadataProjection(&seen, choiceIndex, toolIndex)
 			id, typeName := "", ""
 			hasPublicTool := choiceState != nil &&
-				toolIndex < len(choiceState.toolCalls) && choiceState.toolCalls[toolIndex] != nil &&
+				toolIndex < len(choiceState.toolCalls) && choiceState.toolCallState(toolIndex) != nil &&
 				choiceIndex < len(completion.Choices) &&
 				toolIndex < len(completion.Choices[choiceIndex].Message.ToolCalls)
 			if hasPublicTool {
-				id = choiceState.toolCalls[toolIndex].id
-				typeName = choiceState.toolCalls[toolIndex].typeName
+				toolState := choiceState.toolCallState(toolIndex)
+				id = toolState.id
+				typeName = toolState.typeName
 				current := &completion.Choices[choiceIndex].Message.ToolCalls[toolIndex]
 				if tool.ID != "" && projection.fields&projectedToolID == 0 &&
 					!addAccumulatorStringAssignmentAfterPublicReconciliation(work, tool.ID, current.ID, id) {

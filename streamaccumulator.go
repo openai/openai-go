@@ -70,7 +70,8 @@ type chatCompletionAccumulatorStringState struct {
 type chatCompletionChoiceStringState struct {
 	content         chatCompletionString
 	refusal         chatCompletionString
-	toolCalls       []*chatCompletionToolCallStringState
+	toolCalls       []weak.Pointer[chatCompletionToolCallStringState]
+	latestToolCall  *chatCompletionToolCallStringState
 	activeToolCalls []int
 	reconcileCursor int
 	finishReason    string
@@ -78,10 +79,11 @@ type chatCompletionChoiceStringState struct {
 }
 
 type chatCompletionToolCallStringState struct {
-	name      chatCompletionString
-	arguments chatCompletionString
-	id        string
-	typeName  string
+	name         chatCompletionString
+	arguments    chatCompletionString
+	id           string
+	typeName     string
+	previousTool *chatCompletionToolCallStringState
 }
 
 type chatCompletionString struct {
@@ -412,6 +414,12 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 		cc.Choices = expandToFit(cc.Choices, choiceIndex)
 		choice := &cc.Choices[choiceIndex]
 		choiceStrings := acc.stringState.choice(choiceIndex)
+		if accumulatorStringWillGrow(&choiceStrings.content, delta.Delta.Content) ||
+			accumulatorStringWillGrow(&choiceStrings.refusal, delta.Delta.Refusal) ||
+			accumulatorMetadataWillChange(choiceStrings.finishReason, delta.FinishReason) ||
+			accumulatorMetadataWillChange(choiceStrings.role, delta.Delta.Role) {
+			choiceStrings = acc.stringState.detachChoiceState(choiceIndex)
+		}
 
 		choice.Index = delta.Index
 		assignAccumulatorString(&choiceStrings.finishReason, &choice.FinishReason, delta.FinishReason)
@@ -439,6 +447,13 @@ func (acc *ChatCompletionAccumulator) accumulateDelta(chunk *ChatCompletionChunk
 			toolIndex, _ := checkedToolCallIndex(deltaTool.Index, len(choice.Message.ToolCalls))
 			tool := &choice.Message.ToolCalls[toolIndex]
 			toolStrings := choiceStrings.toolCall(toolIndex, &acc.stringState.activeTools)
+			if accumulatorStringWillGrow(&toolStrings.name, deltaTool.Function.Name) ||
+				accumulatorStringWillGrow(&toolStrings.arguments, deltaTool.Function.Arguments) ||
+				accumulatorMetadataWillChange(toolStrings.id, deltaTool.ID) ||
+				accumulatorMetadataWillChange(toolStrings.typeName, deltaTool.Type) {
+				choiceStrings = acc.stringState.detachChoiceState(choiceIndex)
+				toolStrings = choiceStrings.detachToolCallState(toolIndex)
+			}
 
 			if deltaTool.ID != "" {
 				assignAccumulatorString(&toolStrings.id, &tool.ID, deltaTool.ID)
@@ -488,7 +503,7 @@ func (acc *chatCompletionAccumulatorStringState) detachToolActivationState(chunk
 		choiceState := acc.choices[choiceIndex]
 		for j := range choice.Delta.ToolCalls {
 			toolIndex := preflightedToolCallIndex(choice.Delta.ToolCalls[j].Index)
-			if toolIndex < len(choiceState.toolCalls) && choiceState.toolCalls[toolIndex] != nil {
+			if toolIndex < len(choiceState.toolCalls) && choiceState.toolCallState(toolIndex) != nil {
 				continue
 			}
 			detachChoice[choiceIndex] = true
@@ -514,16 +529,23 @@ func (acc *chatCompletionAccumulatorStringState) detachToolActivationState(chunk
 }
 
 func (acc *chatCompletionAccumulatorStringState) choice(index int) *chatCompletionChoiceStringState {
-	previousLength := len(acc.choices)
+	previousCapacity := cap(acc.choices)
 	acc.choices = expandToFit(acc.choices, index)
 	if acc.choices[index] == nil {
-		if index < previousLength {
+		if index < previousCapacity {
 			acc.choices = cloneAccumulatorSlice(acc.choices)
 		}
 		acc.choices[index] = &chatCompletionChoiceStringState{}
 		acc.activeChoices = append(acc.activeChoices, index)
 	}
 	return acc.choices[index]
+}
+
+func (acc *chatCompletionAccumulatorStringState) detachChoiceState(index int) *chatCompletionChoiceStringState {
+	acc.choices = cloneAccumulatorSlice(acc.choices)
+	state := *acc.choices[index]
+	acc.choices[index] = &state
+	return &state
 }
 
 func (acc *ChatCompletionAccumulator) reconcilePublicState(chunk *ChatCompletionChunk) {
@@ -573,6 +595,7 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState(chunk *ChatCompletion
 			detachedChoiceState.activeToolCalls = cloneAccumulatorSlice(
 				retainAccumulatorIndices(choiceState.activeToolCalls, len(message.ToolCalls)),
 			)
+			detachedChoiceState.rebuildToolCallOwnership()
 			stringState.activeTools -= len(choiceState.activeToolCalls) - len(detachedChoiceState.activeToolCalls)
 			stringState.choices[i] = &detachedChoiceState
 			choiceState = &detachedChoiceState
@@ -587,7 +610,7 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState(chunk *ChatCompletion
 			invalidateRemovedToolCallState(&acc.choiceChatCompletionStates, i, len(message.ToolCalls))
 		}
 		choiceState.visitReconciledTools(i, message.ToolCalls, chunk, func(j int) bool {
-			toolCallState := choiceState.toolCalls[j]
+			toolCallState := choiceState.toolCallState(j)
 			reconcileAccumulatorString(&toolCallState.id, &message.ToolCalls[j].ID)
 			reconcileAccumulatorString(&toolCallState.typeName, &message.ToolCalls[j].Type)
 			function := &message.ToolCalls[j].Function
@@ -637,12 +660,38 @@ func truncateResponseStates(states *[maxStreamAccumulatorChoiceIndex + 1]chatCom
 
 func (choice *chatCompletionChoiceStringState) toolCall(index int, activeTools *int) *chatCompletionToolCallStringState {
 	choice.toolCalls = expandToFit(choice.toolCalls, index)
-	if choice.toolCalls[index] == nil {
-		choice.toolCalls[index] = &chatCompletionToolCallStringState{}
+	state := choice.toolCallState(index)
+	if state == nil {
+		state = &chatCompletionToolCallStringState{previousTool: choice.latestToolCall}
+		choice.latestToolCall = state
+		choice.toolCalls[index] = weak.Make(state)
 		choice.activeToolCalls = append(choice.activeToolCalls, index)
 		(*activeTools)++
 	}
-	return choice.toolCalls[index]
+	return state
+}
+
+func (choice *chatCompletionChoiceStringState) toolCallState(index int) *chatCompletionToolCallStringState {
+	return choice.toolCalls[index].Value()
+}
+
+func (choice *chatCompletionChoiceStringState) detachToolCallState(index int) *chatCompletionToolCallStringState {
+	choice.toolCalls = cloneAccumulatorSlice(choice.toolCalls)
+	state := *choice.toolCallState(index)
+	state.previousTool = choice.latestToolCall
+	choice.latestToolCall = &state
+	choice.toolCalls[index] = weak.Make(&state)
+	return &state
+}
+
+func (choice *chatCompletionChoiceStringState) rebuildToolCallOwnership() {
+	choice.latestToolCall = nil
+	for _, index := range choice.activeToolCalls {
+		state := *choice.toolCallState(index)
+		state.previousTool = choice.latestToolCall
+		choice.latestToolCall = &state
+		choice.toolCalls[index] = weak.Make(&state)
+	}
 }
 
 func (acc *chatCompletionString) append(current *string, fragment string) {
@@ -661,6 +710,15 @@ func (acc *chatCompletionString) append(current *string, fragment string) {
 	acc.buffer = append(acc.buffer, fragment...)
 	acc.published = accumulatorBufferString(acc.buffer)
 	*current = acc.published
+}
+
+func accumulatorStringWillGrow(state *chatCompletionString, fragment string) bool {
+	return fragment != "" && (state.shared || len(fragment) > cap(state.buffer)-len(state.buffer))
+}
+
+func accumulatorMetadataWillChange[T ~string](published string, next T) bool {
+	value := string(next)
+	return value != "" && value != published
 }
 
 func (acc *chatCompletionString) reconcile(current *string) {
@@ -728,7 +786,7 @@ func (acc *ChatCompletionAccumulator) addChatCompletionTextBytes(total int, work
 		}
 		if !choiceState.visitReconciledTools(i, message.ToolCalls, chunk, func(j int) bool {
 			function := &message.ToolCalls[j].Function
-			toolState := choiceState.toolCalls[j]
+			toolState := choiceState.toolCallState(j)
 			nameAppend, argumentsAppend := false, false
 			if !accumulatorStringUsesPublishedBacking(function.Name, toolState.name.published) ||
 				!accumulatorStringUsesPublishedBacking(function.Arguments, toolState.arguments.published) {
@@ -814,7 +872,7 @@ func (acc *ChatCompletionAccumulator) addChatCompletionMetadataBytes(total int, 
 		}
 		if !choiceState.visitReconciledTools(i, choice.Message.ToolCalls, chunk, func(j int) bool {
 			toolCall := &choice.Message.ToolCalls[j]
-			toolState := choiceState.toolCalls[j]
+			toolState := choiceState.toolCallState(j)
 			if !addAccumulatorMetadataBytes(&total, toolCall.ID) ||
 				!addAccumulatorMetadataBytes(&total, toolCall.Type) ||
 				!addAccumulatorStringReconciliationWork(work, toolCall.ID, toolState.id) ||

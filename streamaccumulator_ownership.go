@@ -35,14 +35,18 @@ func (state chatCompletionAccumulatorStringState) cloneForAccumulatorCopy() chat
 		choiceCopy.refusal.shared = len(choiceCopy.refusal.buffer) > 0
 		choiceCopy.toolCalls = cloneAccumulatorSlice(choiceCopy.toolCalls)
 		choiceCopy.activeToolCalls = cloneAccumulatorSlice(choiceCopy.activeToolCalls)
-		for j, toolCall := range choiceCopy.toolCalls {
+		choiceCopy.latestToolCall = nil
+		for j, slot := range choiceCopy.toolCalls {
+			toolCall := slot.Value()
 			if toolCall == nil {
 				continue
 			}
 			toolCallCopy := *toolCall
 			toolCallCopy.name.shared = len(toolCallCopy.name.buffer) > 0
 			toolCallCopy.arguments.shared = len(toolCallCopy.arguments.buffer) > 0
-			choiceCopy.toolCalls[j] = &toolCallCopy
+			toolCallCopy.previousTool = choiceCopy.latestToolCall
+			choiceCopy.latestToolCall = &toolCallCopy
+			choiceCopy.toolCalls[j] = weak.Make(&toolCallCopy)
 		}
 		state.choices[i] = &choiceCopy
 	}
@@ -62,7 +66,7 @@ func (acc *ChatCompletionAccumulator) privateStateCopyWork() int {
 		work++
 		work += 2*len(choice.toolCalls) + len(choice.activeToolCalls)
 		for _, toolCall := range choice.toolCalls {
-			if toolCall != nil {
+			if toolCall.Value() != nil {
 				work++
 			}
 		}
@@ -97,7 +101,7 @@ func (acc *ChatCompletionAccumulator) addCopiedTextBufferWork(work *int, chunk *
 			if toolIndex >= len(message.ToolCalls) || toolIndex >= len(choiceState.toolCalls) {
 				continue
 			}
-			toolState := choiceState.toolCalls[toolIndex]
+			toolState := choiceState.toolCallState(toolIndex)
 			if toolState == nil {
 				continue
 			}

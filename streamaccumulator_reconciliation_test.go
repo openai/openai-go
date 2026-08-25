@@ -47,7 +47,7 @@ func TestAccumulatorRoundRobinReleasesUntouchedToolBacking(t *testing.T) {
 			t.Fatal("AddChunk rejected a bounded tool-reconciliation sweep")
 		}
 	}
-	if state := &acc.stringState.choices[0].toolCalls[3].arguments; cap(state.buffer) != 0 || state.published != "" {
+	if state := &acc.stringState.choices[0].toolCallState(3).arguments; cap(state.buffer) != 0 || state.published != "" {
 		t.Fatalf("untouched cleared tool backing remained: capacity %d, published length %d", cap(state.buffer), len(state.published))
 	}
 }
@@ -78,7 +78,7 @@ func TestAccumulatorReleasesClearedToolBackingAtIncomingGrowthRate(t *testing.T)
 		t.Fatal("AddChunk rejected the next dense tool batch")
 	}
 	for i := range toolCount {
-		state := acc.stringState.choices[0].toolCalls[i]
+		state := acc.stringState.choices[0].toolCallState(i)
 		if cap(state.name.buffer) != 0 || cap(state.arguments.buffer) != 0 {
 			t.Fatalf("cleared tool %d retains name capacity %d and arguments capacity %d", i,
 				cap(state.name.buffer), cap(state.arguments.buffer))
@@ -158,7 +158,7 @@ func TestAccumulatorRejectedLogprobCopyDoesNotDetachSharedBacking(t *testing.T) 
 	if got := unsafe.SliceData(branch.Choices[0].Logprobs.Content); got != before {
 		t.Fatal("rejected copied-logprob append detached public backing")
 	}
-	if state := branch.logprobState.choices[0].content; !state.shared || state.data != before {
+	if state := branch.logprobState.choices[0].content; !state.shared || state.data.Value() != before {
 		t.Fatal("rejected copied-logprob append changed private ownership state")
 	}
 }
