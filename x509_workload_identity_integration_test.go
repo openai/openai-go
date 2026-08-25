@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"sync/atomic"
 	"testing"
 
@@ -44,6 +45,52 @@ func TestX509WorkloadIdentityAuthenticatesPublicClientOverMutualTLS(t *testing.T
 			request.peerCommonName != "integrated-workload" {
 			t.Errorf("API received unsafe workload request: %+v", request)
 		}
+	}
+}
+
+func TestX509WorkloadIdentityPreservesNativeHTTPBodyFraming(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		streaming bool
+	}{
+		{name: "known-length POST"},
+		{name: "implicitly chunked streaming POST", streaming: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			client := openai.NewClient(
+				option.WithX509WorkloadIdentity(config),
+				option.WithMaxRetries(0),
+				option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+					if test.streaming {
+						if err := request.Body.Close(); err != nil {
+							return nil, err
+						}
+						request.Body = io.NopCloser(strings.NewReader(`{"synthetic":"streaming-body"}`))
+						request.GetBody = nil
+						request.ContentLength = -1
+					}
+					if request.Body == nil || request.Body == http.NoBody || len(request.TransferEncoding) != 0 {
+						t.Error("public POST did not retain a natively framed request body")
+					}
+					if !test.streaming && request.ContentLength <= 0 {
+						t.Errorf("known-length POST content length = %d, want positive", request.ContentLength)
+					}
+					return next(request)
+				}),
+			)
+			if err := client.Post(t.Context(), "models", map[string]string{"synthetic": "body"}, nil); err != nil {
+				t.Fatalf("public POST rejected native HTTP body framing: %v", err)
+			}
+			if got := len(issuer.requests()); got != 1 {
+				t.Errorf("successful POST made %d token exchanges, want one", got)
+			}
+			requests := api.requests()
+			if len(requests) != 1 || requests[0].method != http.MethodPost {
+				t.Errorf("mutually authenticated API received requests = %+v, want one POST", requests)
+			}
+		})
 	}
 }
 
@@ -140,12 +187,65 @@ func TestX509WorkloadIdentityRejectsConflictingCredentialsAndClients(t *testing.
 }
 
 func TestX509WorkloadIdentityRejectsLateMiddlewareMutationBeforeExchange(t *testing.T) {
+	unsafeHeader := func(name, value string) func(*http.Request) {
+		return func(request *http.Request) {
+			request.Header[name] = []string{value}
+		}
+	}
 	for _, test := range []struct {
-		name   string
-		mutate func(*http.Request)
+		name       string
+		mutate     func(*http.Request)
+		nilRequest bool
 	}{
+		{name: "nil request", nilRequest: true},
+		{name: "nil URL", mutate: func(request *http.Request) { request.URL = nil }},
+		{name: "plaintext URL", mutate: func(request *http.Request) { request.URL.Scheme = "http" }},
 		{name: "attacker host", mutate: func(request *http.Request) { request.URL.Host = "attacker.example.test" }},
+		{name: "explicit authority port", mutate: func(request *http.Request) { request.URL.Host = "mtls.api.openai.com:443" }},
 		{name: "attacker Host header", mutate: func(request *http.Request) { request.Host = "attacker.example.test" }},
+		{name: "URL fragment", mutate: func(request *http.Request) { request.URL.Fragment = "attacker" }},
+		{name: "opaque URL", mutate: func(request *http.Request) { request.URL.Opaque = "//attacker.example.test/v1/models" }},
+		{name: "CONNECT tunnel", mutate: func(request *http.Request) { request.Method = http.MethodConnect }},
+		{name: "TRACE tunnel", mutate: func(request *http.Request) { request.Method = http.MethodTrace }},
+		{name: "HTTP/2 preface", mutate: func(request *http.Request) { request.Method = "PRI" }},
+		{name: "custom tunnel method", mutate: func(request *http.Request) { request.Method = "SYNTHETIC-TUNNEL" }},
+		{name: "identity transfer encoding", mutate: func(request *http.Request) {
+			request.TransferEncoding = []string{"identity"}
+		}},
+		{name: "explicit chunked transfer encoding", mutate: func(request *http.Request) {
+			request.TransferEncoding = []string{"chunked"}
+		}},
+		{name: "multiple transfer encodings", mutate: func(request *http.Request) {
+			request.TransferEncoding = []string{"chunked", "identity"}
+		}},
+		{name: "invalid negative content length", mutate: func(request *http.Request) { request.ContentLength = -2 }},
+		{name: "nil body with content length", mutate: func(request *http.Request) {
+			request.Body = nil
+			request.ContentLength = 5
+		}},
+		{name: "nil body with unknown content length", mutate: func(request *http.Request) {
+			request.Body = nil
+			request.ContentLength = -1
+		}},
+		{name: "NoBody with content length", mutate: func(request *http.Request) {
+			request.Body = http.NoBody
+			request.ContentLength = 5
+		}},
+		{name: "canonical transfer encoding header", mutate: unsafeHeader("Transfer-Encoding", "identity")},
+		{name: "lowercase transfer encoding alias", mutate: unsafeHeader("transfer-encoding", "identity")},
+		{name: "underscore transfer encoding alias", mutate: unsafeHeader("transfer_encoding", "identity")},
+		{name: "canonical content length header", mutate: unsafeHeader("Content-Length", "0")},
+		{name: "lowercase content length alias", mutate: unsafeHeader("content-length", "0")},
+		{name: "underscore content length alias", mutate: unsafeHeader("content_length", "0")},
+		{name: "connection upgrade", mutate: unsafeHeader("connection", "Upgrade")},
+		{name: "protocol upgrade", mutate: unsafeHeader("Upgrade", "attacker-protocol")},
+		{name: "HTTP/2 upgrade settings", mutate: unsafeHeader("http2_settings", "attacker-settings")},
+		{name: "proxy connection", mutate: unsafeHeader("proxy_connection", "keep-alive")},
+		{name: "keep-alive framing", mutate: unsafeHeader("Keep-Alive", "timeout=5")},
+		{name: "hop-by-hop TE", mutate: unsafeHeader("te", "trailers")},
+		{name: "framing trailer header", mutate: unsafeHeader("trailer", "Authorization")},
+		{name: "lowercase Host alias", mutate: unsafeHeader("host", "attacker.example.test")},
+		{name: "authority pseudo-header", mutate: unsafeHeader(":authority", "attacker.example.test")},
 		{name: "attacker Authorization", mutate: func(request *http.Request) {
 			request.Header.Set("Authorization", "Bearer attacker-token")
 		}},
@@ -168,6 +268,9 @@ func TestX509WorkloadIdentityRejectsLateMiddlewareMutationBeforeExchange(t *test
 				option.WithX509WorkloadIdentity(config),
 				option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
 					invoked.Add(1)
+					if test.nilRequest {
+						return next(nil)
+					}
 					test.mutate(request)
 					return next(request)
 				}),

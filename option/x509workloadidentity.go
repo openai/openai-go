@@ -99,8 +99,26 @@ func validX509WorkloadAPIRequest(request *http.Request) bool {
 	if request == nil || request.Header == nil || request.URL == nil || request.URL.Scheme != "https" ||
 		request.URL.Host != "mtls.api.openai.com" || request.URL.User != nil ||
 		request.URL.Fragment != "" || request.URL.RawFragment != "" || request.URL.Opaque != "" ||
-		(request.Host != "" && request.Host != request.URL.Host) || len(request.Trailer) != 0 {
+		(request.Host != "" && request.Host != request.URL.Host) || len(request.Trailer) != 0 ||
+		len(request.TransferEncoding) != 0 {
 		return false
+	}
+	switch request.Method {
+	case http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch,
+		http.MethodDelete, http.MethodHead, http.MethodOptions:
+	default:
+		return false
+	}
+	hasBody := request.Body != nil && request.Body != http.NoBody
+	if request.ContentLength < -1 || (!hasBody && request.ContentLength != 0) {
+		return false
+	}
+	for name := range request.Header {
+		switch strings.ToLower(strings.ReplaceAll(name, "_", "-")) {
+		case "transfer-encoding", "content-length", "connection", "upgrade", "trailer", "te",
+			"proxy-connection", "keep-alive", "http2-settings":
+			return false
+		}
 	}
 	return strings.HasPrefix(request.URL.Path, "/v1/") && strings.HasPrefix(request.URL.EscapedPath(), "/v1/") &&
 		path.Clean(request.URL.Path) == request.URL.Path
