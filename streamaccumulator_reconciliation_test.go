@@ -51,6 +51,40 @@ func TestAccumulatorRoundRobinReleasesUntouchedToolBacking(t *testing.T) {
 	}
 }
 
+func TestAccumulatorReleasesClearedToolBackingAtIncomingGrowthRate(t *testing.T) {
+	const toolCount = 16
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: make([]ChatCompletionChunkChoiceDeltaToolCall, toolCount),
+	})
+	for i := range chunk.Choices[0].Delta.ToolCalls {
+		chunk.Choices[0].Delta.ToolCalls[i].Index = int64(i)
+		chunk.Choices[0].Delta.ToolCalls[i].Function.Name = strings.Repeat("x", 1<<10)
+		chunk.Choices[0].Delta.ToolCalls[i].Function.Arguments = strings.Repeat("x", 1<<10)
+	}
+
+	var acc ChatCompletionAccumulator
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the initial dense tool batch")
+	}
+	for i := range acc.Choices[0].Message.ToolCalls {
+		acc.Choices[0].Message.ToolCalls[i].Function.Name = ""
+		acc.Choices[0].Message.ToolCalls[i].Function.Arguments = ""
+	}
+	for i := range chunk.Choices[0].Delta.ToolCalls {
+		chunk.Choices[0].Delta.ToolCalls[i].Index = int64(toolCount + i)
+	}
+	if !acc.AddChunk(chunk) {
+		t.Fatal("AddChunk rejected the next dense tool batch")
+	}
+	for i := range toolCount {
+		state := acc.stringState.choices[0].toolCalls[i]
+		if cap(state.name.buffer) != 0 || cap(state.arguments.buffer) != 0 {
+			t.Fatalf("cleared tool %d retains name capacity %d and arguments capacity %d", i,
+				cap(state.name.buffer), cap(state.arguments.buffer))
+		}
+	}
+}
+
 func TestAccumulatorToolProjectionUsesDistinctChoiceAndDenseIndices(t *testing.T) {
 	var projections chatCompletionToolProjectionTable
 	first := lookupChatCompletionToolMetadataProjection(&projections, 0, 1_024)

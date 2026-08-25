@@ -596,7 +596,8 @@ func (acc *ChatCompletionAccumulator) reconcilePublicState(chunk *ChatCompletion
 			return true
 		})
 		if len(choiceState.activeToolCalls) > 0 {
-			choiceState.reconcileCursor = (choiceState.reconcileCursor + 1) % len(choiceState.activeToolCalls)
+			choiceState.reconcileCursor =
+				(choiceState.reconcileCursor + choiceState.reconciliationSweepCount(i, chunk)) % len(choiceState.activeToolCalls)
 		}
 	}
 	truncateResponseStates(&acc.legacyChoiceChatCompletionStates, choiceCount)

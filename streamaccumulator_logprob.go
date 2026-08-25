@@ -154,6 +154,7 @@ func cloneAccumulatorFields(src map[string]respjson.Field) map[string]respjson.F
 func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatCompletionLogprobReconcilePlan, work *int, chunk *ChatCompletionChunk) (bool, bool) {
 	state := &acc.logprobState
 	indices := acc.stringState.activeChoices
+	copied := acc.privateStateNeedsDetach()
 	var contentAppends, refusalAppends [2]uint64
 	for i := range chunk.Choices {
 		choice := &chunk.Choices[i]
@@ -176,7 +177,9 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 			current = state.choices[i]
 		}
 		logprobs := &acc.Choices[i].Logprobs
-		headerChanged = headerChanged || !current.content.matches(logprobs.Content) || !current.refusal.matches(logprobs.Refusal)
+		headerChanged = headerChanged || !current.content.matches(logprobs.Content) || !current.refusal.matches(logprobs.Refusal) ||
+			copiedLogprobAppendNeedsDetach(copied, &contentAppends, i, logprobs.Content) ||
+			copiedLogprobAppendNeedsDetach(copied, &refusalAppends, i, logprobs.Refusal)
 	}
 	if !headerChanged {
 		return false, true
@@ -203,12 +206,14 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 			current = state.choices[i]
 		}
 		content, contentDetach := current.content, false
-		if !current.content.matches(logprobs.Content) {
+		contentCopy := copiedLogprobAppendNeedsDetach(copied, &contentAppends, i, logprobs.Content)
+		if !current.content.matches(logprobs.Content) || contentCopy {
 			var ok bool
 			content, contentDetach, ok = projectChatCompletionLogprobSlice(
 				current.content,
 				logprobs.Content,
 				chatCompletionTextAppendMarked(&contentAppends, i),
+				contentCopy,
 				work,
 			)
 			if !ok {
@@ -216,12 +221,14 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 			}
 		}
 		refusal, refusalDetach := current.refusal, false
-		if !current.refusal.matches(logprobs.Refusal) {
+		refusalCopy := copiedLogprobAppendNeedsDetach(copied, &refusalAppends, i, logprobs.Refusal)
+		if !current.refusal.matches(logprobs.Refusal) || refusalCopy {
 			var ok bool
 			refusal, refusalDetach, ok = projectChatCompletionLogprobSlice(
 				current.refusal,
 				logprobs.Refusal,
 				chatCompletionTextAppendMarked(&refusalAppends, i),
+				refusalCopy,
 				work,
 			)
 			if !ok {
@@ -252,6 +259,15 @@ func (acc *ChatCompletionAccumulator) planLogprobReconciliation(plan *chatComple
 	return true, true
 }
 
+func copiedLogprobAppendNeedsDetach(
+	copied bool,
+	appends *[2]uint64,
+	choiceIndex int,
+	logprobs []ChatCompletionTokenLogprob,
+) bool {
+	return copied && chatCompletionTextAppendMarked(appends, choiceIndex) && logprobs != nil && len(logprobs) < cap(logprobs)
+}
+
 func (state chatCompletionLogprobSliceState) matches(logprobs []ChatCompletionTokenLogprob) bool {
 	header := chatCompletionLogprobHeader(logprobs)
 	return state.data == header.data && state.length == header.length && state.capacity == header.capacity
@@ -261,10 +277,11 @@ func projectChatCompletionLogprobSlice(
 	current chatCompletionLogprobSliceState,
 	logprobs []ChatCompletionTokenLogprob,
 	mayAppend bool,
+	forceDetach bool,
 	work *int,
 ) (chatCompletionLogprobSliceState, bool, bool) {
 	header := chatCompletionLogprobHeader(logprobs)
-	detach := !current.matches(logprobs) && logprobs != nil
+	detach := (!current.matches(logprobs) || forceDetach) && logprobs != nil
 
 	bytes := 0
 	retained := true
