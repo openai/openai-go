@@ -459,8 +459,8 @@ func TestOAuthErrorHandling(t *testing.T) {
 			if oauthErr.ErrorCode != "invalid_grant" {
 				t.Errorf("ErrorCode = %q, want %q", oauthErr.ErrorCode, "invalid_grant")
 			}
-			if oauthErr.ErrorDescription != "Token exchange failed" {
-				t.Errorf("ErrorDescription = %q, want %q", oauthErr.ErrorDescription, "Token exchange failed")
+			if oauthErr.ErrorDescription != "" {
+				t.Errorf("ErrorDescription = %q, want redacted issuer description", oauthErr.ErrorDescription)
 			}
 		}
 	}

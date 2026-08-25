@@ -4,22 +4,30 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 	"github.com/openai/openai-go/v3/shared"
 )
 
 const (
-	TokenExchangeGrantType = "urn:ietf:params:oauth:grant-type:token-exchange"
-	JWTTokenType           = "urn:ietf:params:oauth:token-type:jwt"
-	IDTokenType            = "urn:ietf:params:oauth:token-type:id_token"
-	DefaultTokenExpiry     = 60 * time.Minute
-	DefaultRefreshBuffer   = 20 * time.Minute
-	TokenExchangeURL       = "https://auth.openai.com/oauth/token"
+	TokenExchangeGrantType         = "urn:ietf:params:oauth:grant-type:token-exchange"
+	JWTTokenType                   = "urn:ietf:params:oauth:token-type:jwt"
+	IDTokenType                    = "urn:ietf:params:oauth:token-type:id_token"
+	DefaultTokenExpiry             = 60 * time.Minute
+	DefaultRefreshBuffer           = 20 * time.Minute
+	TokenExchangeURL               = "https://auth.openai.com/oauth/token"
+	workloadMaximumRefreshAttempts = 3
+)
+
+var (
+	errInvalidatedWorkloadBearer = errors.New("workload identity token exchange returned an invalidated bearer")
+	errWorkloadIdentityRedirect  = errors.New("workload identity does not follow redirects")
 )
 
 type WorkloadIdentityAuth struct {
@@ -28,6 +36,7 @@ type WorkloadIdentityAuth struct {
 	// Protects cachedToken, tokenExpiry, and refreshInFlight
 	mu              sync.Mutex
 	cachedToken     string
+	rejectedToken   string
 	tokenExpiry     time.Time
 	refreshInFlight *tokenRefreshState
 }
@@ -40,8 +49,9 @@ type tokenRefreshResult struct {
 // Coordinates concurrent access to a single in-flight refresh operation
 // done channel signals completion to all waiting goroutines
 type tokenRefreshState struct {
-	done   chan struct{}
-	result tokenRefreshResult
+	done       chan struct{}
+	generation string
+	result     tokenRefreshResult
 }
 
 type tokenExchangeRequest struct {
@@ -126,22 +136,28 @@ func (w *WorkloadIdentityAuth) handleLockedRefresh(ctx context.Context, httpClie
 	return w.waitForRefresh(ctx, state)
 }
 
-func (w *WorkloadIdentityAuth) invalidateToken() {
+func (w *WorkloadIdentityAuth) invalidateToken(value string) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
+	if w.cachedToken != value {
+		return
+	}
 	w.cachedToken = ""
 	w.tokenExpiry = time.Time{}
+	if current := w.refreshInFlight; current != nil && current.generation == value {
+		w.rejectedToken = value
+	}
 }
 
 func (w *WorkloadIdentityAuth) beginRefreshLocked() *tokenRefreshState {
-	w.refreshInFlight = &tokenRefreshState{done: make(chan struct{})}
+	w.refreshInFlight = &tokenRefreshState{done: make(chan struct{}), generation: w.cachedToken}
 	return w.refreshInFlight
 }
 
 func (w *WorkloadIdentityAuth) completeForegroundRefresh(ctx context.Context, state *tokenRefreshState, httpClient HTTPDoer) (string, error) {
 	token, err := w.refreshToken(ctx, httpClient)
 	w.finishRefresh(state, token, err)
-	return token, err
+	return state.result.token, state.result.err
 }
 
 // Atomically publishes refresh result and signals all waiting goroutines via channel close
@@ -150,6 +166,14 @@ func (w *WorkloadIdentityAuth) finishRefresh(state *tokenRefreshState, token str
 	defer w.mu.Unlock()
 	if w.refreshInFlight != state {
 		return
+	}
+	if err == nil && token == w.rejectedToken {
+		if w.cachedToken == token {
+			w.cachedToken = ""
+			w.tokenExpiry = time.Time{}
+		}
+		token = ""
+		err = errInvalidatedWorkloadBearer
 	}
 	state.result = tokenRefreshResult{token: token, err: err}
 	close(state.done) // Broadcasts completion to all waiters
@@ -167,13 +191,43 @@ func (w *WorkloadIdentityAuth) waitForRefresh(ctx context.Context, state *tokenR
 }
 
 func (w *WorkloadIdentityAuth) refreshToken(ctx context.Context, httpClient HTTPDoer) (string, error) {
+	for attempt := 0; attempt < workloadMaximumRefreshAttempts; attempt++ {
+		token, expiry, err := w.exchangeToken(ctx, httpClient)
+		if err != nil {
+			return "", err
+		}
+
+		w.mu.Lock()
+		if token != w.rejectedToken {
+			w.cachedToken = token
+			w.tokenExpiry = expiry
+			w.rejectedToken = ""
+			w.mu.Unlock()
+			return token, nil
+		}
+		w.mu.Unlock()
+
+		if attempt+1 >= workloadMaximumRefreshAttempts {
+			return "", errInvalidatedWorkloadBearer
+		}
+		if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil && !scope.TryRetry() {
+			return "", errInvalidatedWorkloadBearer
+		}
+		if err := ctx.Err(); err != nil {
+			return "", err
+		}
+	}
+	return "", errInvalidatedWorkloadBearer
+}
+
+func (w *WorkloadIdentityAuth) exchangeToken(ctx context.Context, httpClient HTTPDoer) (string, time.Time, error) {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 
 	subjectToken, err := w.config.Provider.GetToken(ctx, httpClient)
 	if err != nil {
-		return "", err
+		return "", time.Time{}, err
 	}
 
 	subjectTokenType := w.config.Provider.TokenType()
@@ -184,7 +238,7 @@ func (w *WorkloadIdentityAuth) refreshToken(ctx context.Context, httpClient HTTP
 	case SubjectTokenTypeID:
 		subjectTokenTypeURN = IDTokenType
 	default:
-		return "", fmt.Errorf("unsupported subject token type %q", subjectTokenType)
+		return "", time.Time{}, fmt.Errorf("unsupported subject token type %q", subjectTokenType)
 	}
 
 	requestBody := tokenExchangeRequest{
@@ -198,51 +252,74 @@ func (w *WorkloadIdentityAuth) refreshToken(ctx context.Context, httpClient HTTP
 
 	jsonBody, err := json.Marshal(requestBody)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal token exchange request: %w", err)
+		return "", time.Time{}, fmt.Errorf("failed to marshal token exchange request: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", TokenExchangeURL, bytes.NewReader(jsonBody))
 	if err != nil {
-		return "", fmt.Errorf("failed to create token exchange request: %w", err)
+		return "", time.Time{}, fmt.Errorf("failed to create token exchange request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := httpClient.Do(req)
+	resp, err := workloadIdentityDo(httpClient, req)
 	if err != nil {
-		return "", fmt.Errorf("failed to exchange token: %w", err)
+		if errors.Is(err, errWorkloadIdentityRedirect) {
+			return "", time.Time{}, err
+		}
+		return "", time.Time{}, fmt.Errorf("failed to exchange token: %w", err)
+	}
+	if resp == nil || resp.Body == nil {
+		return "", time.Time{}, errors.New("token exchange returned an invalid response")
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	body, err := io.ReadAll(resp.Body)
+	maximum := int64(x509SuccessResponseMaximum)
+	if resp.StatusCode != http.StatusOK {
+		maximum = x509ErrorResponseMaximum
+	}
+	if resp.ContentLength > maximum {
+		return "", time.Time{}, errors.New("token exchange response exceeds its size limit")
+	}
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maximum+1))
 	if err != nil {
-		return "", fmt.Errorf("failed to read token exchange response: %w", err)
+		if contextErr := ctx.Err(); contextErr != nil {
+			return "", time.Time{}, contextErr
+		}
+		return "", time.Time{}, errors.New("failed to read token exchange response")
+	}
+	if int64(len(body)) > maximum {
+		return "", time.Time{}, errors.New("token exchange response exceeds its size limit")
 	}
 
 	if resp.StatusCode == http.StatusBadRequest || resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		var oauthErr struct {
-			Error            string `json:"error"`
-			ErrorDescription string `json:"error_description"`
+			Error string `json:"error"`
 		}
 		if json.Unmarshal(body, &oauthErr) == nil {
-			return "", &OAuthError{
-				StatusCode:       resp.StatusCode,
-				ErrorCode:        shared.OAuthErrorCode(oauthErr.Error),
-				ErrorDescription: oauthErr.ErrorDescription,
+			result := &OAuthError{
+				StatusCode: resp.StatusCode,
 			}
+			switch oauthErr.Error {
+			case "invalid_request", "invalid_client", "invalid_grant", "invalid_scope", "invalid_target",
+				"unauthorized_client", "unsupported_grant_type", "invalid_subject_token", "access_denied",
+				"temporarily_unavailable", "server_error":
+				result.ErrorCode = shared.OAuthErrorCode(oauthErr.Error)
+			}
+			return "", time.Time{}, result
 		}
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("token exchange failed with status %d: %s", resp.StatusCode, string(body))
+		return "", time.Time{}, fmt.Errorf("token exchange failed with status %d", resp.StatusCode)
 	}
 
 	var tokenResp TokenExchangeResponse
 	if err := json.Unmarshal(body, &tokenResp); err != nil {
-		return "", fmt.Errorf("failed to decode token exchange response: %w", err)
+		return "", time.Time{}, errors.New("failed to decode token exchange response")
 	}
 
 	if tokenResp.AccessToken == "" {
-		return "", fmt.Errorf("token exchange response missing 'access_token' field. Response: %s", string(body))
+		return "", time.Time{}, errors.New("token exchange response missing 'access_token' field")
 	}
 
 	expiresIn := int(DefaultTokenExpiry / time.Second)
@@ -250,11 +327,30 @@ func (w *WorkloadIdentityAuth) refreshToken(ctx context.Context, httpClient HTTP
 		expiresIn = *tokenResp.ExpiresIn
 	}
 
-	// Atomically update cached token and expiry
-	w.mu.Lock()
-	w.cachedToken = tokenResp.AccessToken
-	w.tokenExpiry = time.Now().Add(time.Duration(expiresIn) * time.Second)
-	w.mu.Unlock()
+	return tokenResp.AccessToken, time.Now().Add(time.Duration(expiresIn) * time.Second), nil
+}
 
-	return tokenResp.AccessToken, nil
+func workloadIdentityDo(client HTTPDoer, request *http.Request) (*http.Response, error) {
+	if native, ok := client.(*http.Client); ok {
+		isolated := *native
+		isolated.CheckRedirect = func(*http.Request, []*http.Request) error {
+			return errWorkloadIdentityRedirect
+		}
+		client = &isolated
+	}
+	response, err := client.Do(request)
+	if err != nil {
+		if errors.Is(err, errWorkloadIdentityRedirect) {
+			return nil, requestconfig.WithNoRetryError(errWorkloadIdentityRedirect)
+		}
+		return response, err
+	}
+	if response != nil && response.StatusCode >= http.StatusMultipleChoices &&
+		response.StatusCode < http.StatusBadRequest {
+		if response.Body != nil {
+			_ = response.Body.Close()
+		}
+		return nil, requestconfig.WithNoRetryError(errWorkloadIdentityRedirect)
+	}
+	return response, nil
 }

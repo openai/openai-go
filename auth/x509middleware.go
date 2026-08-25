@@ -48,10 +48,10 @@ func X509WorkloadIdentityMiddleware(
 	if scope != nil {
 		replayable := !hadBody || (request.GetBody != nil && scope.AllowBodyReplay())
 		if replayable && scope.TryOuterReplay() {
-			return x509UnauthorizedRetryResponse(response, true), nil
+			return unauthorizedRetryResponse(response, true), nil
 		}
 		if response.Header.Get("x-should-retry") == "true" {
-			return x509UnauthorizedRetryResponse(response, false), nil
+			return unauthorizedRetryResponse(response, false), nil
 		}
 		return response, nil
 	}
@@ -95,7 +95,7 @@ func x509UnsignedResponse(response *http.Response) *http.Response {
 	return response
 }
 
-func x509UnauthorizedRetryResponse(response *http.Response, retry bool) *http.Response {
+func unauthorizedRetryResponse(response *http.Response, retry bool) *http.Response {
 	clone := *response
 	clone.Header = response.Header.Clone()
 	if clone.Header == nil {

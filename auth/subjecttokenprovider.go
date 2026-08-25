@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -111,7 +112,7 @@ func (p *azureManagedIdentityTokenProvider) GetToken(ctx context.Context, httpCl
 	}
 	req.Header.Set("Metadata", "true")
 
-	resp, err := httpClient.Do(req)
+	resp, err := workloadIdentityDo(httpClient, req)
 	if err != nil {
 		return "", &SubjectTokenProviderError{
 			Provider: "azure-imds",
@@ -119,32 +120,25 @@ func (p *azureManagedIdentityTokenProvider) GetToken(ctx context.Context, httpCl
 			Cause:    err,
 		}
 	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		body, readErr := io.ReadAll(resp.Body)
-		msg := fmt.Sprintf("IMDS returned status %d", resp.StatusCode)
-
-		if readErr != nil {
-			msg = fmt.Sprintf("%s (failed to read body: %v)", msg, readErr)
-		} else if len(body) > 0 {
-			msg = fmt.Sprintf("%s: %s", msg, string(body))
-		}
-
+	if resp == nil || resp.Body == nil {
 		return "", &SubjectTokenProviderError{
 			Provider: "azure-imds",
-			Message:  msg,
+			Message:  "IMDS returned an invalid response",
 		}
+	}
+	defer func() { _ = resp.Body.Close() }()
+	body, err := readSubjectTokenProviderResponse(ctx, resp, "azure-imds", "IMDS")
+	if err != nil {
+		return "", err
 	}
 
 	var result struct {
 		AccessToken string `json:"access_token"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.NewDecoder(bytes.NewReader(body)).Decode(&result); err != nil {
 		return "", &SubjectTokenProviderError{
 			Provider: "azure-imds",
 			Message:  "failed to decode IMDS response",
-			Cause:    err,
 		}
 	}
 
@@ -201,7 +195,7 @@ func (p *gcpIDTokenProvider) GetToken(ctx context.Context, httpClient HTTPDoer) 
 	}
 	req.Header.Set("Metadata-Flavor", "Google")
 
-	resp, err := httpClient.Do(req)
+	resp, err := workloadIdentityDo(httpClient, req)
 	if err != nil {
 		return "", &SubjectTokenProviderError{
 			Provider: "gcp-metadata",
@@ -209,23 +203,16 @@ func (p *gcpIDTokenProvider) GetToken(ctx context.Context, httpClient HTTPDoer) 
 			Cause:    err,
 		}
 	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
+	if resp == nil || resp.Body == nil {
 		return "", &SubjectTokenProviderError{
 			Provider: "gcp-metadata",
-			Message:  fmt.Sprintf("metadata server returned status %d: %s", resp.StatusCode, string(body)),
+			Message:  "metadata server returned an invalid response",
 		}
 	}
-
-	token, err := io.ReadAll(resp.Body)
+	defer func() { _ = resp.Body.Close() }()
+	token, err := readSubjectTokenProviderResponse(ctx, resp, "gcp-metadata", "metadata server")
 	if err != nil {
-		return "", &SubjectTokenProviderError{
-			Provider: "gcp-metadata",
-			Message:  "failed to read response body",
-			Cause:    err,
-		}
+		return "", err
 	}
 
 	tokenStr := strings.TrimSpace(string(token))
@@ -237,4 +224,42 @@ func (p *gcpIDTokenProvider) GetToken(ctx context.Context, httpClient HTTPDoer) 
 	}
 
 	return tokenStr, nil
+}
+
+func readSubjectTokenProviderResponse(
+	ctx context.Context,
+	response *http.Response,
+	provider, source string,
+) ([]byte, error) {
+	maximum := int64(x509SuccessResponseMaximum)
+	if response.StatusCode != http.StatusOK {
+		maximum = x509ErrorResponseMaximum
+	}
+	if response.ContentLength > maximum {
+		return nil, &SubjectTokenProviderError{
+			Provider: provider,
+			Message:  fmt.Sprintf("%s response exceeds its size limit", source),
+		}
+	}
+	body, err := io.ReadAll(io.LimitReader(response.Body, maximum+1))
+	if err != nil {
+		return nil, &SubjectTokenProviderError{
+			Provider: provider,
+			Message:  fmt.Sprintf("failed to read %s response", source),
+			Cause:    ctx.Err(),
+		}
+	}
+	if int64(len(body)) > maximum {
+		return nil, &SubjectTokenProviderError{
+			Provider: provider,
+			Message:  fmt.Sprintf("%s response exceeds its size limit", source),
+		}
+	}
+	if response.StatusCode != http.StatusOK {
+		return nil, &SubjectTokenProviderError{
+			Provider: provider,
+			Message:  fmt.Sprintf("%s returned status %d", source, response.StatusCode),
+		}
+	}
+	return body, nil
 }

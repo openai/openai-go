@@ -2,6 +2,7 @@ package option
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -348,6 +349,7 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 		if err := workloadIdentityAuth.Apply(r); err != nil {
 			return err
 		}
+		r.ClearInheritedAuthentication()
 		r.SetAPIKey("")
 
 		middlewareIndex := len(r.Middlewares)
@@ -355,11 +357,22 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 			if !workloadIdentityAuth.Selected(final) {
 				return nil
 			}
+			if !final.Security.BearerAuth {
+				return errors.New("workload identity cannot authenticate an admin-only API operation")
+			}
+			if final.APIKey != "" || final.AdminAPIKey != "" || final.AuthorizationHeaderOverridden() {
+				return errors.New("workload identity cannot be combined with other Authorization credentials")
+			}
 			final.Middlewares = append(final.Middlewares, nil)
 			copy(final.Middlewares[middlewareIndex+1:], final.Middlewares[middlewareIndex:])
 			final.Middlewares[middlewareIndex] = func(req *http.Request, next func(*http.Request) (*http.Response, error)) (*http.Response, error) {
 				if !workloadIdentityAuth.Selected(final) {
 					return next(req)
+				}
+				if req == nil || requestconfig.RequestRetryScopeFromContext(req.Context()) == nil {
+					return nil, requestconfig.WithNoRetryError(
+						errors.New("workload identity requires its request-owned retry scope"),
+					)
 				}
 				initOnce.Do(func() {
 					wia, initErr = auth.NewWorkloadIdentityAuth(config)
@@ -376,8 +389,17 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 					httpDoer = final.HTTPClient
 				}
 
-				return auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
+				response, err := auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
+				var oauthError *auth.OAuthError
+				if errors.As(err, &oauthError) && oauthError.ErrorCode != "temporarily_unavailable" &&
+					oauthError.ErrorCode != "server_error" {
+					return response, requestconfig.WithNoRetryError(err)
+				}
+				return response, err
 			}
+			allowBodyReplay := len(final.Middlewares) == 1
+			final.InstallRequestRetryScope(allowBodyReplay)
+			final.InstallRequestAttemptMiddleware()
 			return nil
 		}).Apply(r)
 	})

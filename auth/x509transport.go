@@ -18,11 +18,17 @@ import (
 	"slices"
 	"strings"
 	"sync/atomic"
+	"time"
+
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
 
 const (
-	x509AuthenticationHost = "mtls.auth.openai.com"
-	x509APIHost            = "mtls.api.openai.com"
+	x509AuthenticationHost           = "mtls.auth.openai.com"
+	x509APIHost                      = "mtls.api.openai.com"
+	x509DefaultDialTimeout           = 30 * time.Second
+	x509DefaultTLSHandshakeTimeout   = 10 * time.Second
+	x509DefaultResponseHeaderTimeout = 10 * time.Minute
 )
 
 var (
@@ -73,6 +79,7 @@ type X509Transport struct {
 	transport         *http.Transport
 	tlsConfig         *tls.Config
 	certificateDigest [sha256.Size]byte
+	certificateSelect uintptr
 	client            *http.Client
 	closed            atomic.Bool
 }
@@ -115,6 +122,11 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 	config.CipherSuites = slices.Clone(config.CipherSuites)
 	config.CurvePreferences = slices.Clone(config.CurvePreferences)
 	config.EncryptedClientHelloConfigList = slices.Clone(config.EncryptedClientHelloConfigList)
+	// The sole attested certificate remains static even when the server advertises
+	// an unrelated acceptable-CA hint. Caller-controlled selectors remain forbidden.
+	config.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+		return &config.Certificates[0], nil
+	}
 	transport := &http.Transport{
 		DialContext:            template.DialContext,
 		TLSClientConfig:        config,
@@ -133,7 +145,18 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 		ForceAttemptHTTP2:      template.ForceAttemptHTTP2,
 	}
 	//nolint:staticcheck // Preserve a legacy TCP dialer; unlike DialTLS, it cannot bypass native TLS.
-	transport.Dial = template.Dial
+	if transport.Dial = template.Dial; transport.Dial == nil && transport.DialContext == nil {
+		transport.DialContext = (&net.Dialer{
+			Timeout:   x509DefaultDialTimeout,
+			KeepAlive: x509DefaultDialTimeout,
+		}).DialContext
+	}
+	if transport.TLSHandshakeTimeout == 0 {
+		transport.TLSHandshakeTimeout = x509DefaultTLSHandshakeTimeout
+	}
+	if transport.ResponseHeaderTimeout == 0 {
+		transport.ResponseHeaderTimeout = x509DefaultResponseHeaderTimeout
+	}
 	if template.Protocols != nil {
 		protocols := *template.Protocols
 		transport.Protocols = &protocols
@@ -185,6 +208,7 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 		transport:         transport,
 		tlsConfig:         config,
 		certificateDigest: x509CertificateDigest(config.Certificates[0].Certificate),
+		certificateSelect: reflect.ValueOf(config.GetClientCertificate).Pointer(),
 		client: &http.Client{
 			Transport: transport,
 			CheckRedirect: func(*http.Request, []*http.Request) error {
@@ -234,6 +258,13 @@ func validateX509NativeTransport(transport *http.Transport) error {
 }
 
 func validateX509TLSConfig(config *tls.Config) error {
+	if config.GetClientCertificate != nil {
+		return errors.New("X.509 transport does not support dynamic client-certificate callbacks")
+	}
+	return validateX509StaticTLSConfig(config)
+}
+
+func validateX509StaticTLSConfig(config *tls.Config) error {
 	var signer crypto.Signer
 	if len(config.Certificates) == 1 {
 		signer, _ = config.Certificates[0].PrivateKey.(crypto.Signer)
@@ -241,9 +272,6 @@ func validateX509TLSConfig(config *tls.Config) error {
 	if len(config.Certificates) != 1 || len(config.Certificates[0].Certificate) == 0 ||
 		len(config.Certificates[0].Certificate[0]) == 0 || x509PrivateKeyIsNil(signer) {
 		return errors.New("X.509 transport requires exactly one static certificate and private key")
-	}
-	if config.GetClientCertificate != nil {
-		return errors.New("X.509 transport does not support dynamic client-certificate callbacks")
 	}
 	if len(config.EncryptedClientHelloConfigList) != 0 || config.EncryptedClientHelloRejectionVerify != nil {
 		return errors.New("X.509 transport does not support encrypted client hello")
@@ -338,10 +366,18 @@ func (transport *X509Transport) validateAttestation() error {
 		transport.transport.TLSClientConfig != transport.tlsConfig {
 		return errors.New("X.509 transport TLS configuration changed after attestation")
 	}
+	if err := validateX509StaticTLSConfig(transport.tlsConfig); err != nil {
+		return fmt.Errorf("X.509 transport TLS configuration changed after attestation: %w", err)
+	}
+	selector := transport.tlsConfig.GetClientCertificate
+	if selector == nil || reflect.ValueOf(selector).Pointer() != transport.certificateSelect {
+		return errors.New("X.509 transport client-certificate selection changed after attestation")
+	}
+	selected, err := selector(new(tls.CertificateRequestInfo))
+	if err != nil || selected != &transport.tlsConfig.Certificates[0] {
+		return errors.New("X.509 transport client-certificate selection changed after attestation")
+	}
 	for _, config := range []*tls.Config{transport.templateTLS, transport.tlsConfig} {
-		if err := validateX509TLSConfig(config); err != nil {
-			return fmt.Errorf("X.509 transport TLS configuration changed after attestation: %w", err)
-		}
 		digest := x509CertificateDigest(config.Certificates[0].Certificate)
 		if subtle.ConstantTimeCompare(digest[:], transport.certificateDigest[:]) != 1 {
 			return errors.New("X.509 transport certificate changed after attestation")
@@ -413,7 +449,8 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 			redacted.cause = context.Canceled
 		case errors.Is(err, context.DeadlineExceeded):
 			redacted.cause = context.DeadlineExceeded
-		case errors.Is(err, errX509TLSVerification) || errors.As(err, &verificationError):
+		case errors.Is(err, errX509TLSVerification) || errors.As(err, &verificationError) ||
+			x509PermanentClientCertificateAlert(err):
 			redacted.cause = errX509TLSVerification
 		}
 		return nil, redacted
@@ -428,6 +465,22 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 		return nil, &x509TransportError{cause: errX509Redirect}
 	}
 	return response, nil
+}
+
+func x509PermanentClientCertificateAlert(err error) bool {
+	var operation *net.OpError
+	if !errors.As(err, &operation) || operation.Op != "remote error" || operation.Err == nil {
+		return false
+	}
+	switch operation.Err.Error() {
+	case "tls: bad certificate", "tls: unsupported certificate", "tls: revoked certificate",
+		"tls: expired certificate", "tls: unknown certificate", "tls: unknown certificate authority",
+		"tls: bad certificate status response", "tls: bad certificate hash value",
+		"tls: certificate unobtainable", "tls: certificate required":
+		return true
+	default:
+		return false
+	}
 }
 
 func validateX509Request(request *http.Request) error {
@@ -478,11 +531,11 @@ func validateX509Request(request *http.Request) error {
 
 	authorizationCount := 0
 	for name, values := range request.Header {
-		if !validX509HeaderName(name) {
+		if !requestconfig.ValidHTTPHeaderName(name) {
 			return errors.New("X.509 requests require valid HTTP header names")
 		}
 		for _, value := range values {
-			if !validX509HeaderValue(value) {
+			if !requestconfig.ValidHTTPHeaderValue(value) {
 				return errors.New("X.509 requests require valid HTTP header values")
 			}
 		}
@@ -521,32 +574,6 @@ func validateX509Request(request *http.Request) error {
 		return errors.New("X.509 API requests must remain inside the /v1/ path")
 	}
 	return nil
-}
-
-func validX509HeaderName(name string) bool {
-	if name == "" {
-		return false
-	}
-	for _, value := range []byte(name) {
-		switch {
-		case value >= 'A' && value <= 'Z', value >= 'a' && value <= 'z', value >= '0' && value <= '9':
-		case value == '!', value == '#', value == '$', value == '%', value == '&', value == '\'',
-			value == '*', value == '+', value == '-', value == '.', value == '^', value == '_',
-			value == '`', value == '|', value == '~':
-		default:
-			return false
-		}
-	}
-	return true
-}
-
-func validX509HeaderValue(value string) bool {
-	for _, character := range []byte(value) {
-		if (character < ' ' && character != '\t') || character == 0x7f {
-			return false
-		}
-	}
-	return true
 }
 
 func validX509BearerHeader(value string) bool {

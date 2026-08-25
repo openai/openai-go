@@ -343,6 +343,7 @@ type RequestConfig struct {
 	configuredProviderEndpoint string
 	dataResidencyEndpoint      bool
 	authentication             authenticationState
+	cloneError                 error
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL *url.URL
@@ -578,6 +579,9 @@ func WaitForDelay(ctx context.Context, delay time.Duration) error {
 }
 
 func (cfg *RequestConfig) Execute() (err error) {
+	if cfg.cloneError != nil {
+		return cfg.cloneError
+	}
 	if cfg.BaseURL == nil {
 		if cfg.DefaultBaseURL != nil {
 			cfg.BaseURL = cfg.DefaultBaseURL
@@ -794,28 +798,6 @@ func ExecuteNewRequest(ctx context.Context, method string, u string, body any, d
 		return err
 	}
 	return cfg.Execute()
-}
-
-func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
-	if cfg == nil {
-		return nil
-	}
-	req := cfg.Request.Clone(ctx)
-	var err error
-	if req.Body != nil && req.Body != http.NoBody {
-		req.Body, err = req.GetBody()
-	}
-	if err != nil {
-		return nil
-	}
-	clone := *cfg
-	clone.Context = ctx
-	clone.Request = req
-	clone.Middlewares = append([]middleware(nil), cfg.Middlewares...)
-	clone.finalizers = append([]requestFinalizer(nil), cfg.finalizers...)
-	clone.authentication = cfg.authentication.cloneAsInherited(&clone)
-
-	return &clone
 }
 
 func (cfg *RequestConfig) SetHeader(key, value string) {
