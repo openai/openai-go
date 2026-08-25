@@ -211,21 +211,14 @@ func readBodyUpTo(body io.Reader, limit int64) (contents []byte, overflow bool, 
 }
 
 func decodeJSONUpTo(body io.Reader, limit int64, dst any) (overflow bool, err error) {
-	reader := body
-	var limited *io.LimitedReader
-	if limit > 0 {
-		limited = &io.LimitedReader{R: body, N: limit + 1}
-		reader = limited
-	}
-	decodeErr := json.NewDecoder(reader).Decode(dst)
-	_, readErr := io.Copy(io.Discard, reader)
-	if limited != nil && limited.N == 0 {
+	contents, overflow, readErr := readBodyUpTo(body, limit)
+	if overflow {
 		return true, nil
 	}
 	if readErr != nil {
 		return false, fmt.Errorf("error reading response body: %w", readErr)
 	}
-	if decodeErr != nil {
+	if decodeErr := json.NewDecoder(bytes.NewReader(contents)).Decode(dst); decodeErr != nil {
 		return false, fmt.Errorf("error parsing response json: %w", decodeErr)
 	}
 	return false, nil

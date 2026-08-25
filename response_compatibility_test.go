@@ -23,6 +23,213 @@ type managedCompressionRoundTripper struct {
 
 func (managedCompressionRoundTripper) CompressionDisabled() bool { return false }
 
+type responseReadResult struct {
+	contents string
+	err      error
+}
+
+func TestExecutePreservesJSONResponseReadErrors(t *testing.T) {
+	readFailure := errors.New("injected response read failure")
+	tests := []struct {
+		name  string
+		reads []responseReadResult
+		limit int64
+		want  error
+	}{
+		{
+			name:  "data and unexpected EOF with defaults",
+			reads: []responseReadResult{{contents: `{"ok":true}`, err: io.ErrUnexpectedEOF}},
+			want:  io.ErrUnexpectedEOF,
+		},
+		{
+			name:  "data and unexpected EOF with explicit limit",
+			reads: []responseReadResult{{contents: `{"ok":true}`, err: io.ErrUnexpectedEOF}},
+			limit: 64,
+			want:  io.ErrUnexpectedEOF,
+		},
+		{
+			name:  "data and custom error with defaults",
+			reads: []responseReadResult{{contents: `{"ok":true}`, err: readFailure}},
+			want:  readFailure,
+		},
+		{
+			name: "complete JSON followed by read error",
+			reads: []responseReadResult{
+				{contents: `{"ok":true}`},
+				{err: readFailure},
+			},
+			want: readFailure,
+		},
+		{
+			name:  "read error takes precedence over malformed JSON",
+			reads: []responseReadResult{{contents: `{"ok":`, err: readFailure}},
+			want:  readFailure,
+		},
+		{
+			name:  "data and ordinary EOF with defaults",
+			reads: []responseReadResult{{contents: `{"ok":true}`, err: io.EOF}},
+		},
+		{
+			name:  "data and ordinary EOF with explicit limit",
+			reads: []responseReadResult{{contents: `{"ok":true}`, err: io.EOF}},
+			limit: 64,
+		},
+		{
+			name:  "trailing data remains compatible",
+			reads: []responseReadResult{{contents: `{"ok":true} ignored trailing data`, err: io.EOF}},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			reads := append([]responseReadResult(nil), test.reads...)
+			body := readerFunc(func(p []byte) (int, error) {
+				if len(reads) == 0 {
+					return 0, io.EOF
+				}
+				read := &reads[0]
+				n := copy(p, read.contents)
+				read.contents = read.contents[n:]
+				if len(read.contents) != 0 {
+					return n, nil
+				}
+				err := read.err
+				reads = reads[1:]
+				return n, err
+			})
+			var opts []option.RequestOption
+			if test.limit != 0 {
+				opts = append(opts, option.WithMaxResponseBodyBytes(test.limit))
+			}
+			client := newResponseLimitClient(
+				body,
+				http.StatusOK,
+				"application/json",
+				opts...,
+			)
+			var response struct {
+				OK bool `json:"ok"`
+			}
+
+			err := client.Get(context.Background(), "read-error", nil, &response)
+			if test.want != nil {
+				if !errors.Is(err, test.want) {
+					t.Fatalf("Get() error = %v, want wrapped %v", err, test.want)
+				}
+				if !strings.Contains(err.Error(), "error reading response body") {
+					t.Fatalf("Get() error = %v, want response body read error", err)
+				}
+				if response.OK {
+					t.Fatal("failed response mutated its destination")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Get() error = %v, want successful response", err)
+			}
+			if !response.OK {
+				t.Fatal("successful response did not populate its destination")
+			}
+		})
+	}
+}
+
+func TestResponsesPreservesJSONReadFailures(t *testing.T) {
+	readFailure := errors.New("injected response read failure")
+	read := false
+	body := readerFunc(func(p []byte) (int, error) {
+		if read {
+			return 0, io.EOF
+		}
+		read = true
+		return copy(p, `{"id":"resp_test","object":"response"}`), readFailure
+	})
+	client := newResponseLimitClient(body, http.StatusOK, "application/json")
+
+	response, err := client.Responses.New(
+		context.Background(),
+		responses.ResponseNewParams{Model: "gpt-4o-mini"},
+	)
+	if !errors.Is(err, readFailure) {
+		t.Fatalf("Responses.New() error = %v, want wrapped %v", err, readFailure)
+	}
+	if response != nil {
+		t.Fatal("failed response returned a partially decoded model")
+	}
+}
+
+func TestExecuteDoesNotPopulateOverflowingJSONResponse(t *testing.T) {
+	const completeJSON = `{"ok":true}`
+	client := newResponseLimitClient(
+		io.NopCloser(strings.NewReader(completeJSON+" trailing data")),
+		http.StatusOK,
+		"application/json",
+		option.WithMaxResponseBodyBytes(int64(len(completeJSON))),
+	)
+	var response struct {
+		OK bool `json:"ok"`
+	}
+
+	err := client.Get(context.Background(), "overflow", nil, &response)
+	if err == nil || !strings.Contains(err.Error(), "exceeded configured limit") {
+		t.Fatalf("Get() error = %v, want response body limit error", err)
+	}
+	if response.OK {
+		t.Fatal("oversized response mutated its destination")
+	}
+}
+
+func TestExecuteRejectsCorruptedGzipJSONResponse(t *testing.T) {
+	var compressed bytes.Buffer
+	writer := gzip.NewWriter(&compressed)
+	if _, err := io.WriteString(writer, `{"ok":true}`); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	compressed.Bytes()[compressed.Len()-8] ^= 0xff
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Encoding", "gzip")
+		if _, err := w.Write(compressed.Bytes()); err != nil {
+			t.Errorf("write corrupted gzip response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	for _, limit := range []int64{0, 256} {
+		name := "default transparent decompression"
+		if limit != 0 {
+			name = "explicitly bounded decompression"
+		}
+		t.Run(name, func(t *testing.T) {
+			opts := []option.RequestOption{
+				option.WithAPIKey("test-key"),
+				option.WithBaseURL(server.URL + "/"),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(server.Client()),
+			}
+			if limit != 0 {
+				opts = append(opts, option.WithMaxResponseBodyBytes(limit))
+			}
+			client := openai.NewClient(opts...)
+			var response struct {
+				OK bool `json:"ok"`
+			}
+
+			err := client.Get(context.Background(), "corrupted-gzip", nil, &response)
+			if !errors.Is(err, gzip.ErrChecksum) {
+				t.Fatalf("Get() error = %v, want wrapped gzip checksum failure", err)
+			}
+			if response.OK {
+				t.Fatal("corrupted gzip response mutated its destination")
+			}
+		})
+	}
+}
+
 func TestResponsesPreservesLargeImageGenerationOutputsByDefault(t *testing.T) {
 	const imageCount = 3
 	const encodedImageBytes int64 = 24 << 20
