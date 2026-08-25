@@ -492,6 +492,51 @@ func TestX509TransportPreservesExplicitHTTP2ProtocolPolicy(t *testing.T) {
 	}
 }
 
+func TestX509TransportPreservesImplicitTLSNextProtoHTTP2Policy(t *testing.T) {
+	for _, test := range []struct {
+		name       string
+		forceHTTP2 bool
+		handler    bool
+		want       int32
+	}{
+		{name: "empty protocol map disables forced HTTP/2", forceHTTP2: true, want: 1},
+		{name: "HTTP/2 handler enables HTTP/2 without force", handler: true, want: 2},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fixture := newX509TransportFixture(t)
+			var observed, intercepted atomic.Int32
+			server := newX509HTTP2TransportServer(t, fixture, http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+				observed.Store(int32(request.ProtoMajor))
+				w.WriteHeader(http.StatusOK)
+			}))
+			template := fixture.transport(t, server)
+			template.ForceAttemptHTTP2 = test.forceHTTP2
+			template.TLSNextProto = make(map[string]func(string, *tls.Conn) http.RoundTripper)
+			if test.handler {
+				template.TLSNextProto["h2"] = func(string, *tls.Conn) http.RoundTripper {
+					intercepted.Add(1)
+					return nil
+				}
+			}
+			capability := newX509Capability(t, template)
+			request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+			response, err := capability.Do(request)
+			if err != nil {
+				t.Fatalf("dispatch with implicit TLS protocol policy: %v", err)
+			}
+			if closeErr := response.Body.Close(); closeErr != nil {
+				t.Fatalf("close implicit TLS protocol response: %v", closeErr)
+			}
+			if got := observed.Load(); got != test.want {
+				t.Errorf("implicit TLS protocol policy negotiated HTTP/%d, want HTTP/%d", got, test.want)
+			}
+			if got := intercepted.Load(); got != 0 {
+				t.Errorf("caller-owned TLS protocol handlers intercepted %d requests", got)
+			}
+		})
+	}
+}
+
 func TestX509TransportAcceptsNativeInitializedHTTP2Templates(t *testing.T) {
 	for _, initializeBefore := range []bool{false, true} {
 		name := "initialized after attestation"

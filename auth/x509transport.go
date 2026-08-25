@@ -115,6 +115,11 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 	if template.Protocols != nil {
 		protocols := *template.Protocols
 		transport.Protocols = &protocols
+	} else if template.TLSNextProto != nil {
+		protocols := new(http.Protocols)
+		protocols.SetHTTP1(true)
+		protocols.SetHTTP2(template.TLSNextProto["h2"] != nil)
+		transport.Protocols = protocols
 	}
 	if template.HTTP2 != nil {
 		configuration := *template.HTTP2
