@@ -49,3 +49,29 @@ func TestExecuteDoesNotRecreateHTTPNoBodyFromStaleFactory(t *testing.T) {
 		t.Errorf("empty request attempts = %d, want two", attempts)
 	}
 }
+
+func TestClonePreservesHTTPNoBodyWithoutCallingItsFactory(t *testing.T) {
+	for _, test := range []struct {
+		name         string
+		staleFactory bool
+	}{
+		{name: "nil factory"},
+		{name: "stale factory", staleFactory: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			cfg := newBodyCloseRequestConfig(t, http.NoBody)
+			cfg.Request.Body = http.NoBody
+			cfg.Request.GetBody = nil
+			if test.staleFactory {
+				cfg.Request.GetBody = func() (io.ReadCloser, error) {
+					t.Fatal("stale GetBody factory recreated a cloned empty request body")
+					return nil, nil
+				}
+			}
+			clone := cfg.Clone(t.Context())
+			if clone == nil || clone.Request.Body != http.NoBody {
+				t.Fatalf("cloned canonical empty body = %#v, want http.NoBody", clone)
+			}
+		})
+	}
+}
