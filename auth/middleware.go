@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
@@ -23,7 +24,7 @@ func WorkloadIdentityMiddleware(
 	}
 
 	authenticated := req.Clone(req.Context())
-	authenticated.Header.Set("Authorization", "Bearer "+token)
+	setWorkloadIdentityAuthorization(authenticated, token)
 
 	resp, err := next(authenticated)
 	resp = x509UnsignedResponse(resp)
@@ -58,7 +59,7 @@ func WorkloadIdentityMiddleware(
 		}
 		return nil, err
 	}
-	retryReq.Header.Set("Authorization", "Bearer "+token)
+	setWorkloadIdentityAuthorization(retryReq, token)
 
 	if resp.Body != nil {
 		_ = resp.Body.Close()
@@ -68,4 +69,13 @@ func WorkloadIdentityMiddleware(
 		wia.invalidateToken(token)
 	}
 	return x509UnsignedResponse(resp), err
+}
+
+func setWorkloadIdentityAuthorization(request *http.Request, token string) {
+	for name := range request.Header {
+		if strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {
+			delete(request.Header, name)
+		}
+	}
+	request.Header.Set("Authorization", "Bearer "+token)
 }

@@ -362,6 +362,11 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 				if !workloadIdentityAuth.Selected(final) {
 					return next(req)
 				}
+				if req == nil || requestconfig.RequestRetryScopeFromContext(req.Context()) == nil {
+					return nil, requestconfig.WithNoRetryError(
+						errors.New("workload identity requires its request-owned retry scope"),
+					)
+				}
 				initOnce.Do(func() {
 					wia, initErr = auth.NewWorkloadIdentityAuth(config)
 				})

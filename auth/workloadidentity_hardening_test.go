@@ -99,6 +99,72 @@ func TestWorkloadIdentityMiddlewareRejectsUnprovableBodyReplay(t *testing.T) {
 	}
 }
 
+func TestWorkloadIdentityMiddlewareReplacesAllAuthorizationAliases(t *testing.T) {
+	identity := newOrdinaryWorkloadIdentity(t)
+	var exchanges atomic.Int32
+	httpClient := ordinaryWorkloadIssuer(t, func() string {
+		return fmt.Sprintf("synthetic-trusted-bearer-%d", exchanges.Add(1))
+	})
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
+		"https://api.openai.com/v1/models", nil)
+	if err != nil {
+		t.Fatalf("construct request with ambiguous credentials: %v", err)
+	}
+	request.Header["Authorization"] = []string{"Bearer synthetic-canonical-attacker", "Bearer synthetic-extra-attacker"}
+	request.Header["authorization"] = []string{"Bearer synthetic-lowercase-attacker"}
+	request.Header["aUtHoRiZaTiOn"] = []string{"Bearer synthetic-mixed-case-attacker"}
+	request.Header.Set("X-Synthetic-Metadata", "preserved")
+
+	var attempts int
+	response, err := auth.WorkloadIdentityMiddleware(identity, httpClient, request,
+		func(authenticated *http.Request) (*http.Response, error) {
+			attempts++
+			var authorizationHeaders int
+			for name, values := range authenticated.Header {
+				if !strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {
+					continue
+				}
+				authorizationHeaders++
+				want := fmt.Sprintf("Bearer synthetic-trusted-bearer-%d", attempts)
+				if name != "Authorization" || len(values) != 1 || values[0] != want {
+					t.Errorf("attempt %d authorization header %q=%q, want exactly %q",
+						attempts, name, values, want)
+				}
+			}
+			if authorizationHeaders != 1 {
+				t.Errorf("attempt %d authorization headers=%d, want one", attempts, authorizationHeaders)
+			}
+			if got := authenticated.Header.Get("X-Synthetic-Metadata"); got != "preserved" {
+				t.Errorf("attempt %d dropped unrelated header: %q", attempts, got)
+			}
+			status := http.StatusOK
+			if attempts == 1 {
+				status = http.StatusUnauthorized
+			}
+			response := ordinaryWorkloadResponse(status, `{}`)
+			response.Request = authenticated
+			return response, nil
+		})
+	if err != nil || response == nil || response.StatusCode != http.StatusOK {
+		t.Fatalf("ambiguous-credential replay response=%v error=%v", response, err)
+	}
+	if closeErr := response.Body.Close(); closeErr != nil {
+		t.Fatalf("close ambiguous-credential response: %v", closeErr)
+	}
+	if attempts != 2 || exchanges.Load() != 2 {
+		t.Errorf("authenticated attempts/exchanges=%d/%d, want 2/2", attempts, exchanges.Load())
+	}
+	if len(request.Header["Authorization"]) != 2 || len(request.Header["authorization"]) != 1 ||
+		len(request.Header["aUtHoRiZaTiOn"]) != 1 {
+		t.Error("authentication changed caller-owned authorization headers")
+	}
+	for name := range response.Request.Header {
+		if strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {
+			t.Errorf("returned response exposed authorization alias %q", name)
+		}
+	}
+}
+
 func TestWorkloadIdentityMiddlewareClosesOnlyPresentUnauthorizedBodies(t *testing.T) {
 	identity := newOrdinaryWorkloadIdentity(t)
 	httpClient := ordinaryWorkloadIssuer(t, func() string { return "synthetic-bearer" })

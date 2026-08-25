@@ -1,6 +1,7 @@
 package openai_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -83,6 +84,134 @@ func TestWorkloadIdentityUnauthorizedRecoveryRunsCompleteMiddlewareChain(t *test
 					test.wantAttempts, test.wantAttempts, test.wantIssuerCalls)
 			}
 		})
+	}
+}
+
+func TestWorkloadIdentityRejectsRequestsWithoutOwnedRetryScope(t *testing.T) {
+	for _, test := range []struct {
+		name           string
+		maximumRetries int
+		nilRequest     bool
+	}{
+		{name: "caller removes retry scope with retries disabled"},
+		{name: "caller removes retry scope with retries enabled", maximumRetries: 2},
+		{name: "caller replaces request with nil", maximumRetries: 2, nilRequest: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var issuerCalls, apiCalls, middlewareCalls int
+			httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+				if req.URL.Host == "auth.openai.com" {
+					issuerCalls++
+					return rootWorkloadResponse(http.StatusOK,
+						`{"access_token":"synthetic-private-bearer","expires_in":3600}`), nil
+				}
+				apiCalls++
+				return rootWorkloadResponse(http.StatusOK, `{"data":[]}`), nil
+			}}}
+			provider := &mockSubjectTokenProvider{
+				token: "synthetic-subject", tokenType: auth.SubjectTokenTypeJWT,
+			}
+			client := openai.NewClient(
+				option.WithHTTPClient(httpClient),
+				option.WithMaxRetries(test.maximumRetries),
+				option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+					middlewareCalls++
+					if test.nilRequest {
+						return next(nil)
+					}
+					return next(req.WithContext(context.Background()))
+				}),
+				option.WithWorkloadIdentity(testWorkloadIdentity(provider)),
+			)
+
+			_, err := client.Models.List(t.Context())
+			if err == nil || !strings.Contains(err.Error(), "request-owned retry scope") {
+				t.Fatalf("missing request-owned scope error=%v", err)
+			}
+			if issuerCalls != 0 || apiCalls != 0 || middlewareCalls != 1 {
+				t.Errorf("issuer/API/middleware attempts=%d/%d/%d, want 0/0/1",
+					issuerCalls, apiCalls, middlewareCalls)
+			}
+		})
+	}
+}
+
+func TestWorkloadIdentitySendsExactlyOneTrustedAuthorizationHeader(t *testing.T) {
+	var issuerCalls, apiCalls, middlewareCalls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if req.URL.Path == "/oauth/token" {
+			call := issuerCalls.Add(1)
+			_, _ = fmt.Fprintf(w, `{"access_token":"synthetic-trusted-bearer-%d","expires_in":3600}`, call)
+			return
+		}
+		call := apiCalls.Add(1)
+		values := req.Header.Values("Authorization")
+		want := fmt.Sprintf("Bearer synthetic-trusted-bearer-%d", call)
+		if len(values) != 1 || values[0] != want {
+			t.Errorf("real-wire API attempt %d Authorization values=%q, want exactly %q", call, values, want)
+		}
+		if call == 1 {
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = io.WriteString(w, `{"error":{"message":"synthetic rejected bearer"}}`)
+			return
+		}
+		_, _ = io.WriteString(w, `{"data":[]}`)
+	}))
+	t.Cleanup(server.Close)
+	httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+		if req.URL.Host == "auth.openai.com" {
+			req = req.Clone(req.Context())
+			req.URL.Scheme = "http"
+			req.URL.Host = server.Listener.Addr().String()
+		}
+		return http.DefaultTransport.RoundTrip(req)
+	}}}
+	provider := &mockSubjectTokenProvider{
+		token: "synthetic-subject", tokenType: auth.SubjectTokenTypeJWT,
+	}
+	var captured *http.Response
+	client := openai.NewClient(
+		option.WithBaseURL(server.URL+"/v1/"),
+		option.WithHTTPClient(httpClient),
+		option.WithMaxRetries(1),
+		option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			middlewareCalls.Add(1)
+			req.Header["Authorization"] = []string{"Bearer synthetic-canonical-attacker", "Bearer synthetic-extra-attacker"}
+			req.Header["authorization"] = []string{"Bearer synthetic-lowercase-attacker"}
+			req.Header["aUtHoRiZaTiOn"] = []string{"Bearer synthetic-mixed-case-attacker"}
+			response, err := next(req)
+			if len(req.Header["Authorization"]) != 2 || len(req.Header["authorization"]) != 1 ||
+				len(req.Header["aUtHoRiZaTiOn"]) != 1 {
+				t.Error("signer modified caller-owned request credentials")
+			}
+			if response != nil && response.Request != nil {
+				for name := range response.Request.Header {
+					if strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {
+						t.Errorf("outer middleware observed response authorization alias %q", name)
+					}
+				}
+			}
+			return response, err
+		}),
+		option.WithWorkloadIdentity(testWorkloadIdentity(provider)),
+	)
+
+	_, err := client.Models.List(t.Context(), option.WithResponseInto(&captured))
+	if err != nil {
+		t.Fatalf("public workload authentication with ambiguous credentials: %v", err)
+	}
+	if issuerCalls.Load() != 2 || apiCalls.Load() != 2 || middlewareCalls.Load() != 2 {
+		t.Errorf("issuer/API/middleware attempts=%d/%d/%d, want 2/2/2",
+			issuerCalls.Load(), apiCalls.Load(), middlewareCalls.Load())
+	}
+	if captured == nil || captured.Request == nil {
+		t.Fatal("public response did not preserve its unsigned request metadata")
+	}
+	for name := range captured.Request.Header {
+		if strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {
+			t.Errorf("WithResponseInto exposed authorization alias %q", name)
+		}
 	}
 }
 
