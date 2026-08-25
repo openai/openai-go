@@ -1270,8 +1270,13 @@ Successful bearer tokens are cached per identity and transport generation.
 Concurrent refreshes share the requesting caller's context, and the effective
 refresh buffer is reduced automatically for short-lived tokens. Transient issuer
 failures receive at most three bounded, cancellable attempts; permanent OAuth
-failures are not retried. A rejected API token is refreshed and replayed at most
-once, and only when the request body can be recreated. The resulting access
+failures are not retried. Issuer retries, ordinary API retries, and unauthorized
+recovery share the client's single request retry budget. A rejected API token is
+refreshed and replayed at most once, and only when the request body can be
+recreated; body-bearing requests with caller middleware are not replayed because
+that middleware may have transformed their bytes. During a temporary proactive
+refresh failure, an unexpired cached token remains usable for a bounded cooldown.
+The resulting access
 token is an ordinary bearer token; it is not cryptographically bound to a
 client certificate.
 

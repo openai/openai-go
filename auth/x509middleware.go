@@ -2,6 +2,8 @@ package auth
 
 import (
 	"net/http"
+
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
 
 // X509WorkloadIdentityMiddleware authenticates a request using its attested
@@ -23,11 +25,15 @@ func X509WorkloadIdentityMiddleware(
 	if err != nil || response == nil || response.StatusCode != http.StatusUnauthorized {
 		return response, err
 	}
-	if request.Body != nil && request.GetBody == nil {
+	identity.invalidateToken(token)
+	scope := requestconfig.RequestRetryScopeFromContext(request.Context())
+	if request.Body != nil && (request.GetBody == nil || (scope != nil && !scope.AllowBodyReplay())) {
+		return response, nil
+	}
+	if scope != nil && !scope.TryReplay() {
 		return response, nil
 	}
 	_ = response.Body.Close()
-	identity.invalidateToken(token)
 	replay := request.Clone(request.Context())
 	if request.GetBody != nil {
 		replay.Body, err = request.GetBody()
@@ -43,5 +49,9 @@ func X509WorkloadIdentityMiddleware(
 		return nil, err
 	}
 	replay.Header.Set("Authorization", "Bearer "+token)
-	return next(replay)
+	response, err = next(replay)
+	if err == nil && response != nil && response.StatusCode == http.StatusUnauthorized {
+		identity.invalidateToken(token)
+	}
+	return response, err
 }

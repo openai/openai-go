@@ -53,6 +53,53 @@ func TestX509WorkloadIdentityBoundsIssuerRetriesAcrossSDKRetries(t *testing.T) {
 	}
 }
 
+func TestX509WorkloadIdentitySharesRetryBudgetAcrossMixedIssuerAPIAndUnauthorized(t *testing.T) {
+	for _, test := range []struct {
+		name        string
+		issuerFails int32
+		statuses    []int
+		wantIssuer  int32
+		wantAPI     int32
+	}{
+		{name: "API 500 then 401 replay then 500", statuses: []int{500, 401, 500}, wantIssuer: 2, wantAPI: 3},
+		{name: "issuer exhausts retries before 401", issuerFails: 2, statuses: []int{401}, wantIssuer: 3, wantAPI: 1},
+		{name: "401 replay then 500 then second 401", statuses: []int{401, 500, 401}, wantIssuer: 2, wantAPI: 3},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			var exchanges, requests atomic.Int32
+			issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				number := exchanges.Add(1)
+				if number <= test.issuerFails {
+					w.WriteHeader(http.StatusServiceUnavailable)
+					return
+				}
+				_, _ = io.WriteString(w, x509IntegrationTokenResponse(fmt.Sprintf("synthetic-scope-%d", number)))
+			})
+			api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				number := int(requests.Add(1)) - 1
+				w.Header().Set("Content-Type", "application/json")
+				if number >= len(test.statuses) {
+					w.WriteHeader(http.StatusInternalServerError)
+					_, _ = io.WriteString(w, `{"error":{"message":"unexpected extra attempt"}}`)
+					return
+				}
+				w.WriteHeader(test.statuses[number])
+				_, _ = io.WriteString(w, `{"error":{"message":"synthetic mixed-sequence failure"}}`)
+			})
+			client := openai.NewClient(option.WithX509WorkloadIdentity(config), option.WithMaxRetryDelay(time.Millisecond))
+			if _, err := client.Models.List(t.Context()); err == nil {
+				t.Fatal("mixed issuer/API failure unexpectedly succeeded")
+			}
+			if exchanges.Load() != test.wantIssuer || requests.Load() != test.wantAPI {
+				t.Errorf("mixed issuer/API attempts = %d/%d, want %d/%d within one logical retry budget",
+					exchanges.Load(), requests.Load(), test.wantIssuer, test.wantAPI)
+			}
+		})
+	}
+}
+
 func TestX509WorkloadIdentityRefreshesUnauthorizedReplayableRequestsOnce(t *testing.T) {
 	for _, test := range []struct {
 		name         string
@@ -119,6 +166,108 @@ func TestX509WorkloadIdentityRefreshesUnauthorizedReplayableRequestsOnce(t *test
 				t.Errorf("401 replay changed its request body: %q versus %q", bodies[0], bodies[1])
 			}
 		})
+	}
+}
+
+func TestX509WorkloadIdentityInvalidatesNonreplayableAndRepeatedUnauthorizedBearers(t *testing.T) {
+	for _, test := range []struct {
+		name          string
+		body          any
+		firstStatuses int32
+		wantIssuer    int32
+		wantAPI       int32
+	}{
+		{name: "non-replayable first body", body: strings.NewReader("synthetic-streaming-body"),
+			firstStatuses: 1, wantIssuer: 2, wantAPI: 2},
+		{name: "replayed bearer also rejected", firstStatuses: 2, wantIssuer: 3, wantAPI: 3},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			var exchanges, requests atomic.Int32
+			issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = io.WriteString(w, x509IntegrationTokenResponse(
+					fmt.Sprintf("synthetic-invalidated-%d", exchanges.Add(1)),
+				))
+			})
+			api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if requests.Add(1) <= test.firstStatuses {
+					w.WriteHeader(http.StatusUnauthorized)
+					_, _ = io.WriteString(w, `{"error":{"message":"synthetic rejected bearer"}}`)
+					return
+				}
+				_, _ = io.WriteString(w, `{"data":[]}`)
+			})
+			client := openai.NewClient(option.WithX509WorkloadIdentity(config))
+			var err error
+			if test.body == nil {
+				_, err = client.Models.List(t.Context())
+			} else {
+				err = client.Execute(t.Context(), http.MethodPost, "models", test.body, nil)
+			}
+			if err == nil {
+				t.Fatal("initial unauthorized request unexpectedly succeeded")
+			}
+			if _, err := client.Models.List(t.Context()); err != nil {
+				t.Fatalf("fresh request reused an invalidated bearer: %v", err)
+			}
+			if exchanges.Load() != test.wantIssuer || requests.Load() != test.wantAPI {
+				t.Errorf("rejected bearer issuer/API requests = %d/%d, want %d/%d",
+					exchanges.Load(), requests.Load(), test.wantIssuer, test.wantAPI)
+			}
+		})
+	}
+}
+
+func TestX509WorkloadIdentityDoesNotReplayMiddlewareTransformedBodies(t *testing.T) {
+	t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+	config, issuer, api := newX509WorkloadIdentityIntegration(t)
+	var exchanges, requests atomic.Int32
+	var observed string
+	var mu sync.Mutex
+	issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, x509IntegrationTokenResponse(fmt.Sprintf("synthetic-transform-%d", exchanges.Add(1))))
+	})
+	api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		body, _ := io.ReadAll(request.Body)
+		mu.Lock()
+		observed = string(body)
+		mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		if requests.Add(1) == 1 {
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = io.WriteString(w, `{"error":{"message":"synthetic transformed bearer rejection"}}`)
+			return
+		}
+		_, _ = io.WriteString(w, `{"data":[]}`)
+	})
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(config),
+		option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			if request.Body != nil {
+				request.Body = io.NopCloser(strings.NewReader("middleware-transformed-body"))
+				request.ContentLength = int64(len("middleware-transformed-body"))
+			}
+			return next(request)
+		}),
+	)
+	if err := client.Execute(t.Context(), http.MethodPost, "models", map[string]string{"input": "original"}, nil); err == nil {
+		t.Fatal("body transformed by caller middleware was replayed after unauthorized")
+	}
+	mu.Lock()
+	if observed != "middleware-transformed-body" {
+		t.Errorf("first wire body = %q, want caller-transformed bytes", observed)
+	}
+	mu.Unlock()
+	if exchanges.Load() != 1 || requests.Load() != 1 {
+		t.Errorf("transformed request issuer/API calls = %d/%d, want 1/1", exchanges.Load(), requests.Load())
+	}
+	if _, err := client.Models.List(t.Context()); err != nil {
+		t.Fatalf("bodyless request did not recover after transformed-body invalidation: %v", err)
+	}
+	if exchanges.Load() != 2 || requests.Load() != 2 {
+		t.Errorf("post-invalidation issuer/API calls = %d/%d, want 2/2", exchanges.Load(), requests.Load())
 	}
 }
 

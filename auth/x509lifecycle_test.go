@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -216,6 +217,125 @@ func TestX509WorkloadIdentityCancelsRetryBackoff(t *testing.T) {
 	}
 	if got := attempts.Load(); got != 1 {
 		t.Errorf("canceled retry backoff made %d issuer attempts", got)
+	}
+}
+
+func TestX509WorkloadIdentityRetriesRedactedTransientNetworkFailure(t *testing.T) {
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, x509ValidExchangeResponse())
+	}))
+	originalDial := fixture.template.DialContext
+	var attempts atomic.Int32
+	fixture.template.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+		if attempts.Add(1) == 1 {
+			return nil, errors.New("synthetic-private-first-dial-failure")
+		}
+		return originalDial(ctx, network, address)
+	}
+	transport, err := NewX509Transport(fixture.template)
+	if err != nil {
+		t.Fatalf("attest transient-dial workload transport: %v", err)
+	}
+	t.Cleanup(func() { _ = transport.Close() })
+	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
+		IdentityProviderID: "synthetic-identity-provider",
+		ServiceAccountID:   "synthetic-service-account",
+		Transport:          transport,
+	})
+	if err != nil {
+		t.Fatalf("construct transient-dial workload identity: %v", err)
+	}
+	token, err := identity.GetToken(t.Context(), transport)
+	if err != nil || token != x509ExchangeSyntheticToken || attempts.Load() != 2 {
+		t.Errorf("transient native dial token=%q attempts=%d error=%v", token, attempts.Load(), err)
+	}
+	for _, permanent := range []error{errX509Redirect, context.Canceled, context.DeadlineExceeded} {
+		if retryableX509ExchangeError(&x509TransportError{cause: permanent}) {
+			t.Errorf("non-transient native transport cause was retried: %v", permanent)
+		}
+	}
+}
+
+func TestX509WorkloadIdentityPreservesUnexpiredBearerDuringTransientRefreshFailure(t *testing.T) {
+	var exchanges atomic.Int32
+	var failureStatus atomic.Int32
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		exchanges.Add(1)
+		if status := failureStatus.Load(); status != 0 {
+			w.WriteHeader(int(status))
+			_, _ = io.WriteString(w, `{"error":"invalid_grant"}`)
+			return
+		}
+		_, _ = io.WriteString(w, x509ValidExchangeResponse())
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	initial, err := identity.GetToken(t.Context(), fixture.capability)
+	if err != nil {
+		t.Fatalf("prime proactive-refresh token cache: %v", err)
+	}
+	failureStatus.Store(http.StatusServiceUnavailable)
+	identity.mu.Lock()
+	identity.refreshAfter = time.Now().Add(-time.Second)
+	identity.mu.Unlock()
+	fallback, err := identity.GetToken(t.Context(), fixture.capability)
+	if err != nil || fallback != initial || exchanges.Load() != 4 {
+		t.Fatalf("transient proactive refresh fallback=%q exchanges=%d error=%v", fallback, exchanges.Load(), err)
+	}
+	identity.mu.Lock()
+	cooldown, expiry := identity.refreshAfter, identity.cached.expiresAt
+	identity.mu.Unlock()
+	if !cooldown.After(time.Now()) || cooldown.After(expiry) {
+		t.Errorf("proactive retry cooldown = %v, token expiry = %v", cooldown, expiry)
+	}
+	if cached, cachedErr := identity.GetToken(t.Context(), fixture.capability); cachedErr != nil || cached != initial ||
+		exchanges.Load() != 4 {
+		t.Errorf("cooldown did not protect still-valid bearer: token=%q exchanges=%d error=%v",
+			cached, exchanges.Load(), cachedErr)
+	}
+	identity.mu.Lock()
+	identity.cached.expiresAt = time.Now().Add(-time.Second)
+	identity.refreshAfter = time.Now().Add(-time.Second)
+	identity.mu.Unlock()
+	if token, exchangeErr := identity.GetToken(t.Context(), fixture.capability); token != "" || exchangeErr == nil {
+		t.Errorf("expired bearer was used after refresh failure: token=%q error=%v", token, exchangeErr)
+	}
+}
+
+func TestX509WorkloadIdentityNeverFallsBackAfterPermanentOrInvalidatedFailure(t *testing.T) {
+	for _, test := range []struct {
+		name       string
+		status     int
+		invalidate bool
+	}{
+		{name: "permanent invalid grant", status: http.StatusBadRequest},
+		{name: "invalidated bearer", status: http.StatusServiceUnavailable, invalidate: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var failing atomic.Bool
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				if failing.Load() {
+					w.WriteHeader(test.status)
+					_, _ = io.WriteString(w, `{"error":"invalid_grant"}`)
+					return
+				}
+				_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			}))
+			identity := newX509LifecycleIdentity(t, fixture)
+			token, err := identity.GetToken(t.Context(), fixture.capability)
+			if err != nil {
+				t.Fatalf("prime X.509 failure cache: %v", err)
+			}
+			identity.mu.Lock()
+			identity.refreshAfter = time.Now().Add(-time.Second)
+			identity.mu.Unlock()
+			if test.invalidate {
+				identity.invalidateToken(token)
+			}
+			failing.Store(true)
+			if cached, exchangeErr := identity.GetToken(t.Context(), fixture.capability); cached != "" || exchangeErr == nil {
+				t.Errorf("unsafe fallback returned bearer=%q error=%v", cached, exchangeErr)
+			}
+		})
 	}
 }
 

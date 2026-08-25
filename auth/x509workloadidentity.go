@@ -6,12 +6,15 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
 
 const (
 	x509DefaultRefreshBuffer = 5 * time.Minute
 	x509MaximumAttempts      = 3
 	x509InitialRetryDelay    = 25 * time.Millisecond
+	x509MaximumRetryCooldown = 5 * time.Second
 )
 
 // X509WorkloadIdentity configures an OpenAI workload authenticated with a
@@ -104,7 +107,15 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 
 		token, err := identity.exchangeWithRetry(ctx, transport)
 		identity.mu.Lock()
-		if err == nil {
+		fallback := false
+		if err != nil && retryableX509ExchangeError(err) && identity.cached.value != "" &&
+			time.Now().Before(identity.cached.expiresAt) {
+			cooldown := min(x509MaximumRetryCooldown, time.Until(identity.cached.expiresAt)/2)
+			identity.refreshAfter = time.Now().Add(cooldown)
+			token, err = identity.cached, nil
+			fallback = true
+		}
+		if err == nil && !fallback {
 			identity.cached = token
 			buffer := identity.config.RefreshBuffer
 			if buffer == 0 {
@@ -130,6 +141,9 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(ctx context.Context,
 		if err == nil || !retryableX509ExchangeError(err) || attempt+1 >= x509MaximumAttempts {
 			return token, err
 		}
+		if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil && !scope.TryRetry() {
+			return token, err
+		}
 		timer := time.NewTimer(x509InitialRetryDelay << attempt)
 		select {
 		case <-ctx.Done():
@@ -148,7 +162,11 @@ func retryableX509ExchangeError(err error) bool {
 		return status.retryable()
 	}
 	var read *x509ExchangeReadError
-	return errors.As(err, &read) && read.retryable()
+	if errors.As(err, &read) {
+		return read.retryable()
+	}
+	var transport *x509TransportError
+	return errors.As(err, &transport) && transport.cause == nil
 }
 
 func (identity *X509WorkloadIdentityAuth) invalidateToken(value string) {
