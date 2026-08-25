@@ -358,6 +358,62 @@ func TestAzureAuthenticationPreservesDisabledNativeCompression(t *testing.T) {
 	}
 }
 
+func TestAzureAuthenticationPreservesLoopbackCompressionWithoutLimits(t *testing.T) {
+	authModes := []struct {
+		name string
+		auth option.RequestOption
+	}{
+		{name: "API key", auth: WithAPIKey("azure-api-key")},
+		{name: "token credential", auth: WithTokenCredential(&fake.TokenCredential{})},
+	}
+	transports := []struct {
+		name             string
+		disableNative    bool
+		declareDisabled  bool
+		wantAcceptHeader string
+	}{
+		{name: "opaque enabled", wantAcceptHeader: "gzip"},
+		{name: "declared disabled", disableNative: true, declareDisabled: true},
+	}
+
+	for _, authMode := range authModes {
+		for _, transportMode := range transports {
+			t.Run(authMode.name+"/"+transportMode.name, func(t *testing.T) {
+				var acceptEncoding atomicString
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					acceptEncoding.Store(req.Header.Get("Accept-Encoding"))
+					w.Header().Set("Content-Type", "application/json")
+					if _, err := io.WriteString(w, "{}"); err != nil {
+						t.Errorf("write response: %v", err)
+					}
+				}))
+				t.Cleanup(server.Close)
+
+				transport := server.Client().Transport.(*http.Transport).Clone()
+				transport.DisableCompression = transportMode.disableNative
+				var selected http.RoundTripper = roundTripFunc(transport.RoundTrip)
+				if transportMode.declareDisabled {
+					selected = compressionDisabledRoundTripper{RoundTripper: transport}
+				}
+				client := openai.NewClient(
+					WithEndpoint(server.URL, "2024-10-21"),
+					authMode.auth,
+					WithUnsafeAllowHTTP(),
+					option.WithMaxRetries(0),
+					option.WithHTTPClient(&http.Client{Transport: selected}),
+				)
+				var response map[string]any
+				if err := client.Get(context.Background(), "models", nil, &response); err != nil {
+					t.Fatalf("Get() error = %v", err)
+				}
+				if got := acceptEncoding.Load(); got != transportMode.wantAcceptHeader {
+					t.Fatalf("Accept-Encoding = %q, want %q", got, transportMode.wantAcceptHeader)
+				}
+			})
+		}
+	}
+}
+
 func TestAzureAuthenticationIsolatesOpenAIEnvironment(t *testing.T) {
 	environments := []struct {
 		name        string

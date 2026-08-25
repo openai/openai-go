@@ -274,6 +274,7 @@ func TestWorkloadIdentity401RetryPreservesManagedGzip(t *testing.T) {
 		option.WithWorkloadIdentity(testWorkloadIdentity(provider)),
 		option.WithHTTPClient(mockHTTPClient),
 		option.WithMaxRetries(0),
+		option.WithMaxResponseBodyBytes(1024),
 	)
 	var response struct {
 		OK bool `json:"ok"`

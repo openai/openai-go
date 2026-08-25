@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -98,7 +99,7 @@ func TestExecutePreservesLargeStructuredErrorsByDefault(t *testing.T) {
 	var response map[string]any
 	err := client.Get(context.Background(), "large-error", nil, &response)
 	var apiErr *openai.Error
-	if !errors.As(err, &apiErr) || err != apiErr {
+	if reflect.TypeOf(err) != reflect.TypeOf(apiErr) || !errors.As(err, &apiErr) {
 		t.Fatalf("Get() error type = %T, want unwrapped *openai.Error", err)
 	}
 	if apiErr.Message != "request rejected" {
@@ -112,6 +113,83 @@ func TestExecutePreservesLargeStructuredErrorsByDefault(t *testing.T) {
 	}
 	if !bytes.Contains(apiErr.DumpResponse(true), []byte(errorJSON)) {
 		t.Fatal("DumpResponse lost the complete oversized error response")
+	}
+}
+
+func TestExecutePreservesOpaqueTransportCompressionWithoutApplicableLimit(t *testing.T) {
+	tests := []struct {
+		name         string
+		customDoer   bool
+		raw          bool
+		successLimit bool
+	}{
+		{name: "HTTP client typed response"},
+		{name: "custom doer typed response", customDoer: true},
+		{name: "HTTP client raw response", raw: true},
+		{name: "custom doer raw response", customDoer: true, raw: true},
+		{name: "HTTP client raw response with inapplicable success limit", raw: true, successLimit: true},
+		{name: "custom doer raw response with inapplicable success limit", customDoer: true, raw: true, successLimit: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			acceptEncoding := make(chan string, 1)
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				acceptEncoding <- req.Header.Get("Accept-Encoding")
+				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Content-Encoding", "gzip")
+				compressed := gzip.NewWriter(w)
+				if _, err := io.WriteString(compressed, "{}"); err != nil {
+					t.Errorf("write gzip response: %v", err)
+				}
+				if err := compressed.Close(); err != nil {
+					t.Errorf("close gzip response: %v", err)
+				}
+			}))
+			defer server.Close()
+
+			native := server.Client().Transport
+			httpClient := &http.Client{Transport: responseRoundTripperFunc(native.RoundTrip)}
+			var selectedClient option.HTTPClient = httpClient
+			if test.customDoer {
+				selectedClient = responseDoerFunc(httpClient.Do)
+			}
+			opts := []option.RequestOption{
+				option.WithAPIKey("test-key"),
+				option.WithBaseURL(server.URL + "/"),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(selectedClient),
+			}
+			if test.successLimit {
+				opts = append(opts, option.WithMaxResponseBodyBytes(1))
+			}
+			client := openai.NewClient(opts...)
+
+			if test.raw {
+				var raw *http.Response
+				if err := client.Get(context.Background(), "default-gzip", nil, &raw); err != nil {
+					t.Fatalf("Get() raw error = %v", err)
+				}
+				decoded, err := io.ReadAll(raw.Body)
+				if err != nil {
+					t.Fatalf("read raw response: %v", err)
+				}
+				if err := raw.Body.Close(); err != nil {
+					t.Fatalf("close raw response: %v", err)
+				}
+				if string(decoded) != "{}" {
+					t.Fatalf("raw decoded response = %q, want {}", decoded)
+				}
+			} else {
+				var response map[string]any
+				if err := client.Get(context.Background(), "default-gzip", nil, &response); err != nil {
+					t.Fatalf("Get() typed error = %v", err)
+				}
+			}
+			if got := <-acceptEncoding; got != "gzip" {
+				t.Fatalf("Accept-Encoding = %q, want native gzip preserved", got)
+			}
+		})
 	}
 }
 

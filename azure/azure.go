@@ -342,8 +342,7 @@ func newAzureCredentialTransport(base http.RoundTripper, directTransports *azure
 // there would defeat keep-alive reuse and retain ordinary HTTPS overrides.
 type azureDirectLoopbackTransportCache struct {
 	transports sync.Map // map[*http.Transport]*http.Transport
-	fallback   sync.Once
-	direct     *http.Transport
+	fallback   sync.Map // map[bool]*http.Transport, keyed by disabled compression
 }
 
 func (c *azureDirectLoopbackTransportCache) get(base http.RoundTripper) *http.Transport {
@@ -356,10 +355,16 @@ func (c *azureDirectLoopbackTransportCache) get(base http.RoundTripper) *http.Tr
 		return cached.(*http.Transport)
 	}
 
-	c.fallback.Do(func() {
-		c.direct = newAzureDirectLoopbackHTTPTransport(base)
-	})
-	return c.direct
+	disabled := false
+	if policy, ok := base.(interface{ CompressionDisabled() bool }); ok {
+		disabled = policy.CompressionDisabled()
+	}
+	if cached, ok := c.fallback.Load(disabled); ok {
+		return cached.(*http.Transport)
+	}
+	direct := newAzureDirectLoopbackHTTPTransport(base)
+	cached, _ := c.fallback.LoadOrStore(disabled, direct)
+	return cached.(*http.Transport)
 }
 
 const (
@@ -374,10 +379,10 @@ func newAzureDirectLoopbackHTTPTransport(base http.RoundTripper) *http.Transport
 	if baseTransport, ok := base.(*http.Transport); ok {
 		transport = baseTransport.Clone()
 	} else {
-		// Opaque wrappers are intentionally bypassed for hardened loopback
-		// dialing. Leave compression negotiation to the SDK so their policy
-		// cannot be contradicted by this shared fallback transport.
-		transport = &http.Transport{DisableCompression: true}
+		transport = &http.Transport{}
+		if policy, ok := base.(interface{ CompressionDisabled() bool }); ok {
+			transport.DisableCompression = policy.CompressionDisabled()
+		}
 	}
 
 	transport.Proxy = nil

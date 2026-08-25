@@ -149,6 +149,13 @@ func (cfg *RequestConfig) compressionPolicy(req *http.Request) responseCompressi
 }
 
 func (cfg *RequestConfig) withManagedGzip(next middlewareNext) middlewareNext {
+	if cfg.MaxErrorResponseBodyBytes == 0 &&
+		(cfg.MaxResponseBodyBytes == 0 || !cfg.ownsSuccessResponseBody()) {
+		// Without an applicable wire limit, preserve native transport
+		// negotiation and caller-owned raw streaming exactly as before.
+		return next
+	}
+
 	return func(req *http.Request) (*http.Response, error) {
 		policy := cfg.compressionPolicy(req)
 		manageGzip := policy == responseCompressionManaged
