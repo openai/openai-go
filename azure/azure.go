@@ -182,13 +182,19 @@ func WithTokenCredential(tokenCredential azcore.TokenCredential, options ...Toke
 			if azureCredentialHTTPAllowed(req) {
 				tokenPolicy = unsafeBearerTokenPolicy
 			}
+			// The shared request pipeline owns retries and request-body replay.
+			// Apply this both to the pipeline and the request context because azcore
+			// permits a context value to override the pipeline's retry options.
+			retryOptions := policy.RetryOptions{MaxRetries: -1}
 			pipeline := runtime.NewPipeline("azopenai-extensions", version, runtime.PipelineOptions{}, &policy.ClientOptions{
+				Retry: retryOptions,
 				PerRetryPolicies: []policy.Policy{
 					tokenPolicy,
 					policyAdapter(next),
 				},
 			})
 
+			req = req.WithContext(policy.WithRetryOptions(req.Context(), retryOptions))
 			req2, err := runtime.NewRequestFromRequest(req)
 
 			if err != nil {
@@ -295,7 +301,9 @@ func withAzureCredentialMiddleware(authenticate option.Middleware, directTranspo
 		if transport == nil {
 			transport = http.DefaultTransport
 		}
-		client.Transport = newAzureCredentialTransport(transport, directTransports)
+		client.Transport = requestconfig.WithCredentialRedirectGuard(
+			newAzureCredentialTransport(transport, directTransports),
+		)
 		rc.HTTPClient = &client
 
 		return option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
@@ -316,6 +324,9 @@ type azureCredentialTransport struct {
 }
 
 func newAzureCredentialTransport(base http.RoundTripper, directTransports *azureDirectLoopbackTransportCache) azureCredentialTransport {
+	if guarded, ok := requestconfig.UnwrapCredentialRedirectGuard(base); ok {
+		base = guarded
+	}
 	if transport, ok := base.(azureCredentialTransport); ok {
 		return transport
 	}

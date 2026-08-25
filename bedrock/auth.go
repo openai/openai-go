@@ -573,7 +573,7 @@ func materializeReplayableBody(req *http.Request) ([]byte, error) {
 }
 
 func validateProviderRequest(req *http.Request, baseURL *url.URL) error {
-	if req.URL == nil || !sameOrigin(req.URL, baseURL) {
+	if !requestconfig.RequestHasOrigin(req, baseURL) {
 		return errors.New("bedrock: provider authentication cannot send credentials to an origin other than the configured provider URL")
 	}
 	return nil
@@ -584,24 +584,4 @@ func sameBaseURL(left, right *url.URL) bool {
 		return left == right
 	}
 	return normalizeBaseURL(left).String() == normalizeBaseURL(right).String()
-}
-
-func sameOrigin(left, right *url.URL) bool {
-	if left == nil || right == nil || !strings.EqualFold(left.Scheme, right.Scheme) || !strings.EqualFold(left.Hostname(), right.Hostname()) {
-		return false
-	}
-	return effectivePort(left) == effectivePort(right)
-}
-
-func effectivePort(value *url.URL) string {
-	if port := value.Port(); port != "" {
-		return port
-	}
-	if strings.EqualFold(value.Scheme, "https") {
-		return "443"
-	}
-	if strings.EqualFold(value.Scheme, "http") {
-		return "80"
-	}
-	return ""
 }
