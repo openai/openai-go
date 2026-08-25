@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
 
 func TestX509WorkloadIdentityMiddlewareRejectsMalformedRequestsBeforeExchange(t *testing.T) {
@@ -124,5 +126,61 @@ func TestX509WorkloadIdentityMiddlewareCanReplayUnscopedBodylessRequests(t *test
 	}
 	if got := restored.Load(); got != 0 {
 		t.Errorf("bodyless middleware replay invoked its retained GetBody factory %d times", got)
+	}
+}
+
+func TestX509WorkloadIdentityMiddlewareReplaysUnauthorizedResponsesWithoutBodies(t *testing.T) {
+	for _, scoped := range []bool{false, true} {
+		name := "direct middleware"
+		if scoped {
+			name = "request-scoped middleware"
+		}
+		t.Run(name, func(t *testing.T) {
+			var exchanges, dispatched atomic.Int32
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				token := fmt.Sprintf("synthetic-bodyless-response-token-%d", exchanges.Add(1))
+				_, _ = io.WriteString(w, strings.Replace(x509ValidExchangeResponse(), x509ExchangeSyntheticToken, token, 1))
+			}))
+			identity := newX509LifecycleIdentity(t, fixture)
+			request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
+				"https://"+x509APIHost+"/v1/models", nil)
+			if err != nil {
+				t.Fatalf("construct request for bodyless unauthorized response: %v", err)
+			}
+			if scoped {
+				scope := requestconfig.NewRequestRetryScope(1, 0, false, nil)
+				if !scope.BeginAttempt() {
+					t.Fatal("begin initial scoped middleware attempt")
+				}
+				request = request.WithContext(requestconfig.WithRequestRetryScope(request.Context(), scope))
+			}
+			response, err := X509WorkloadIdentityMiddleware(identity, fixture.capability, request,
+				func(authenticated *http.Request) (*http.Response, error) {
+					attempt := dispatched.Add(1)
+					want := fmt.Sprintf("Bearer synthetic-bodyless-response-token-%d", attempt)
+					if got := authenticated.Header.Get("Authorization"); got != want {
+						t.Errorf("authenticated bodyless response attempt %d bearer = %q, want %q", attempt, got, want)
+					}
+					status := http.StatusOK
+					if attempt == 1 {
+						status = http.StatusUnauthorized
+					}
+					return &http.Response{StatusCode: status}, nil
+				})
+			if response != nil && response.Body != nil {
+				if closeErr := response.Body.Close(); closeErr != nil {
+					t.Errorf("close unexpected synthetic response body: %v", closeErr)
+				}
+			}
+			if err != nil || response == nil || response.StatusCode != http.StatusOK || response.Body != nil {
+				t.Fatalf("bodyless unauthorized response replay = response:%v error:%v", response, err)
+			}
+			if exchanges.Load() != 2 || dispatched.Load() != 2 {
+				t.Errorf("bodyless unauthorized response issuer/dispatch attempts = %d/%d", exchanges.Load(), dispatched.Load())
+			}
+			if got := request.Header.Get("Authorization"); got != "" {
+				t.Errorf("direct middleware mutated caller-owned request Authorization: %q", got)
+			}
+		})
 	}
 }

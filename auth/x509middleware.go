@@ -38,7 +38,9 @@ func X509WorkloadIdentityMiddleware(
 	if scope != nil && !scope.TryReplay() {
 		return response, nil
 	}
-	_ = response.Body.Close()
+	if response.Body != nil {
+		_ = response.Body.Close()
+	}
 	replay := request.Clone(request.Context())
 	if hadBody {
 		replay.Body, err = request.GetBody()
