@@ -125,10 +125,7 @@ func (r *CursorPage[T]) GetNextPage() (res *CursorPage[T], err error) {
 		return nil, nil
 	}
 	items := r.Data
-	cfg, err := r.cfg.CloneWithError(r.cfg.Context)
-	if err != nil {
-		return nil, err
-	}
+	cfg := r.cfg.Clone(r.cfg.Context)
 	value := reflect.ValueOf(items[len(items)-1])
 	field := value.FieldByName("ID")
 	err = cfg.Apply(option.WithQuery("after", field.Interface().(string)))
@@ -236,10 +233,7 @@ func (r *ConversationCursorPage[T]) GetNextPage() (res *ConversationCursorPage[T
 	if len(next) == 0 {
 		return nil, nil
 	}
-	cfg, err := r.cfg.CloneWithError(r.cfg.Context)
-	if err != nil {
-		return nil, err
-	}
+	cfg := r.cfg.Clone(r.cfg.Context)
 	err = cfg.Apply(option.WithQuery("after", next))
 	if err != nil {
 		return nil, err
@@ -345,10 +339,7 @@ func (r *NextCursorPage[T]) GetNextPage() (res *NextCursorPage[T], err error) {
 	if len(next) == 0 {
 		return nil, nil
 	}
-	cfg, err := r.cfg.CloneWithError(r.cfg.Context)
-	if err != nil {
-		return nil, err
-	}
+	cfg := r.cfg.Clone(r.cfg.Context)
 	err = cfg.Apply(option.WithQuery("after", next))
 	if err != nil {
 		return nil, err

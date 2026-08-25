@@ -343,6 +343,7 @@ type RequestConfig struct {
 	configuredProviderEndpoint string
 	dataResidencyEndpoint      bool
 	authentication             authenticationState
+	cloneError                 error
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
 	DefaultBaseURL *url.URL
@@ -578,6 +579,9 @@ func WaitForDelay(ctx context.Context, delay time.Duration) error {
 }
 
 func (cfg *RequestConfig) Execute() (err error) {
+	if cfg.cloneError != nil {
+		return cfg.cloneError
+	}
 	if cfg.BaseURL == nil {
 		if cfg.DefaultBaseURL != nil {
 			cfg.BaseURL = cfg.DefaultBaseURL

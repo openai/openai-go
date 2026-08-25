@@ -2,6 +2,7 @@ package option
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -376,7 +377,13 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 					httpDoer = final.HTTPClient
 				}
 
-				return auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
+				response, err := auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
+				var oauthError *auth.OAuthError
+				if errors.As(err, &oauthError) && oauthError.ErrorCode != "temporarily_unavailable" &&
+					oauthError.ErrorCode != "server_error" {
+					return response, requestconfig.WithNoRetryError(err)
+				}
+				return response, err
 			}
 			allowBodyReplay := len(final.Middlewares) == 1
 			final.InstallRequestRetryScope(allowBodyReplay)

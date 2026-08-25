@@ -1,10 +1,13 @@
 package openai_test
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -152,6 +155,167 @@ func TestWorkloadIdentityNeverReplaysCallerTransformedBody(t *testing.T) {
 			if apiAttempts != test.wantAttempts || middlewareCalls != test.wantAttempts {
 				t.Errorf("API/middleware attempts=%d/%d, want %d/%d",
 					apiAttempts, middlewareCalls, test.wantAttempts, test.wantAttempts)
+			}
+		})
+	}
+}
+
+func TestWorkloadIdentityNeverExposesSignedResponseMetadata(t *testing.T) {
+	for _, test := range []struct {
+		name          string
+		status        int
+		unauthorized  bool
+		wantAPICalls  int32
+		wantClientErr bool
+	}{
+		{name: "successful response", status: http.StatusOK, wantAPICalls: 1},
+		{name: "API error response", status: http.StatusForbidden, wantAPICalls: 1, wantClientErr: true},
+		{name: "unauthorized outer retry", status: http.StatusOK, unauthorized: true, wantAPICalls: 2},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var issuerCalls, apiCalls, observed atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if req.URL.Path == "/oauth/token" {
+					call := issuerCalls.Add(1)
+					_, _ = fmt.Fprintf(w, `{"access_token":"synthetic-private-bearer-%d","expires_in":3600}`, call)
+					return
+				}
+				call := apiCalls.Add(1)
+				if got, want := req.Header.Get("Authorization"),
+					fmt.Sprintf("Bearer synthetic-private-bearer-%d", call); got != want {
+					t.Errorf("real-wire API attempt %d Authorization=%q, want %q", call, got, want)
+				}
+				status := test.status
+				if test.unauthorized && call == 1 {
+					status = http.StatusUnauthorized
+				}
+				w.WriteHeader(status)
+				if status >= http.StatusBadRequest {
+					_, _ = io.WriteString(w, `{"error":{"message":"synthetic API failure"}}`)
+					return
+				}
+				_, _ = io.WriteString(w, `{"data":[]}`)
+			}))
+			t.Cleanup(server.Close)
+			httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+				if req.URL.Host == "auth.openai.com" {
+					req = req.Clone(req.Context())
+					req.URL.Scheme = "http"
+					req.URL.Host = server.Listener.Addr().String()
+				}
+				return http.DefaultTransport.RoundTrip(req)
+			}}}
+			provider := &mockSubjectTokenProvider{
+				token: "synthetic-subject", tokenType: auth.SubjectTokenTypeJWT,
+			}
+			var captured *http.Response
+			client := openai.NewClient(
+				option.WithBaseURL(server.URL+"/v1/"),
+				option.WithHTTPClient(httpClient),
+				option.WithMaxRetries(1),
+				option.WithMiddleware(func(req *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+					if got := req.Header.Get("Authorization"); got != "" {
+						t.Errorf("outer caller request exposed credentials before authentication: %q", got)
+					}
+					response, err := next(req)
+					if got := req.Header.Get("Authorization"); got != "" {
+						t.Errorf("ordinary signer modified caller-owned request headers: %q", got)
+					}
+					if response != nil && response.Request != nil {
+						observed.Add(1)
+						if got := response.Request.Header.Get("Authorization"); got != "" {
+							t.Errorf("outer caller observed response bearer credentials: %q", got)
+						}
+					}
+					return response, err
+				}),
+				option.WithWorkloadIdentity(testWorkloadIdentity(provider)),
+			)
+			_, err := client.Models.List(t.Context(), option.WithResponseInto(&captured))
+			if (err != nil) != test.wantClientErr {
+				t.Errorf("public workload request error=%v, want error=%t", err, test.wantClientErr)
+			}
+			if captured == nil || captured.Request == nil {
+				t.Fatal("WithResponseInto did not preserve its response and request metadata")
+			}
+			if got := captured.Request.Header.Get("Authorization"); got != "" {
+				t.Errorf("WithResponseInto exposed private bearer credentials: %q", got)
+			}
+			if got := apiCalls.Load(); got != test.wantAPICalls {
+				t.Errorf("real-wire API requests=%d, want %d", got, test.wantAPICalls)
+			}
+			if got := observed.Load(); got != test.wantAPICalls {
+				t.Errorf("outer caller response observations=%d, want %d", got, test.wantAPICalls)
+			}
+		})
+	}
+}
+
+func TestWorkloadIdentityRetriesOnlyTransientIssuerOAuthFailures(t *testing.T) {
+	for _, test := range []struct {
+		name            string
+		status          int
+		code            string
+		transient       bool
+		wantIssuerCalls int32
+	}{
+		{name: "permanent bad request", status: http.StatusBadRequest,
+			code: "invalid_grant", wantIssuerCalls: 1},
+		{name: "permanent unauthorized", status: http.StatusUnauthorized,
+			code: "invalid_client", wantIssuerCalls: 1},
+		{name: "permanent forbidden", status: http.StatusForbidden,
+			code: "access_denied", wantIssuerCalls: 1},
+		{name: "unknown OAuth rejection", status: http.StatusBadRequest,
+			code: "synthetic-unknown-code", wantIssuerCalls: 1},
+		{name: "temporarily unavailable", status: http.StatusBadRequest,
+			code: "temporarily_unavailable", transient: true, wantIssuerCalls: 2},
+		{name: "temporary server error", status: http.StatusForbidden,
+			code: "server_error", transient: true, wantIssuerCalls: 2},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var issuerCalls, apiCalls atomic.Int32
+			httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
+				if req.URL.Host == "auth.openai.com" {
+					call := issuerCalls.Add(1)
+					if !test.transient || call == 1 {
+						return rootWorkloadResponse(test.status,
+							fmt.Sprintf(`{"error":%q,"error_description":"synthetic-private-description"}`, test.code)), nil
+					}
+					return rootWorkloadResponse(http.StatusOK,
+						`{"access_token":"synthetic-refreshed-bearer","expires_in":3600}`), nil
+				}
+				apiCalls.Add(1)
+				return rootWorkloadResponse(http.StatusOK, `{"data":[]}`), nil
+			}}}
+			provider := &mockSubjectTokenProvider{
+				token: "synthetic-subject", tokenType: auth.SubjectTokenTypeJWT,
+			}
+			client := openai.NewClient(
+				option.WithWorkloadIdentity(testWorkloadIdentity(provider)),
+				option.WithHTTPClient(httpClient),
+				option.WithMaxRetries(2),
+				option.WithMaxRetryDelay(time.Millisecond),
+			)
+			_, err := client.Models.List(t.Context())
+			if test.transient {
+				if err != nil || apiCalls.Load() != 1 {
+					t.Errorf("transient OAuth recovery error=%v API requests=%d", err, apiCalls.Load())
+				}
+			} else {
+				var oauthError *auth.OAuthError
+				if !errors.As(err, &oauthError) || oauthError.StatusCode != test.status {
+					t.Errorf("permanent OAuth error lost its typed public status: %v", err)
+				}
+				if err != nil && strings.Contains(err.Error(), "synthetic-private-description") {
+					t.Error("permanent OAuth error exposed its issuer description")
+				}
+				if apiCalls.Load() != 0 {
+					t.Errorf("permanently rejected workload dispatched %d API requests", apiCalls.Load())
+				}
+			}
+			if got := issuerCalls.Load(); got != test.wantIssuerCalls {
+				t.Errorf("issuer exchanges=%d, want %d", got, test.wantIssuerCalls)
 			}
 		})
 	}

@@ -125,6 +125,143 @@ func TestWorkloadIdentityMiddlewareClosesOnlyPresentUnauthorizedBodies(t *testin
 	}
 }
 
+func TestWorkloadIdentityMiddlewareInvalidatesRejectedReplayBearer(t *testing.T) {
+	identity := newOrdinaryWorkloadIdentity(t)
+	var exchanges atomic.Int32
+	httpClient := ordinaryWorkloadIssuer(t, func() string {
+		return fmt.Sprintf("synthetic-bearer-%d", exchanges.Add(1))
+	})
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
+		"https://api.openai.com/v1/models", nil)
+	if err != nil {
+		t.Fatalf("construct repeatedly unauthorized request: %v", err)
+	}
+	var rejected int
+	response, err := auth.WorkloadIdentityMiddleware(identity, httpClient, request,
+		func(*http.Request) (*http.Response, error) {
+			rejected++
+			return ordinaryWorkloadResponse(http.StatusUnauthorized, `{}`), nil
+		})
+	if err != nil || response == nil || response.StatusCode != http.StatusUnauthorized || rejected != 2 {
+		t.Fatalf("repeatedly unauthorized response=%v attempts=%d error=%v", response, rejected, err)
+	}
+	if closeErr := response.Body.Close(); closeErr != nil {
+		t.Fatalf("close repeatedly unauthorized response: %v", closeErr)
+	}
+
+	response, err = auth.WorkloadIdentityMiddleware(identity, httpClient, request,
+		func(sent *http.Request) (*http.Response, error) {
+			if got := sent.Header.Get("Authorization"); got != "Bearer synthetic-bearer-3" {
+				t.Errorf("new request reused a previously rejected bearer: %q", got)
+			}
+			return ordinaryWorkloadResponse(http.StatusOK, `{}`), nil
+		})
+	if err != nil || response == nil || response.StatusCode != http.StatusOK {
+		t.Fatalf("request after rejected replay response=%v error=%v", response, err)
+	}
+	if closeErr := response.Body.Close(); closeErr != nil {
+		t.Fatalf("close refreshed response: %v", closeErr)
+	}
+	if got := exchanges.Load(); got != 3 {
+		t.Errorf("rejected-replay issuer exchanges=%d, want three", got)
+	}
+}
+
+func TestWorkloadIdentityMiddlewareNeverReturnsSignedRequestMetadata(t *testing.T) {
+	for _, test := range []struct {
+		name          string
+		status        int
+		dispatchError bool
+		unauthorized  bool
+		nilRequest    bool
+		nilHeader     bool
+		wantAttempts  int
+	}{
+		{name: "successful response", status: http.StatusOK, wantAttempts: 1},
+		{name: "API error response", status: http.StatusForbidden, wantAttempts: 1},
+		{name: "response with dispatch error", status: http.StatusOK, dispatchError: true, wantAttempts: 1},
+		{name: "unsigned unauthorized replay", status: http.StatusOK, unauthorized: true, wantAttempts: 2},
+		{name: "response without request", status: http.StatusOK, nilRequest: true, wantAttempts: 1},
+		{name: "response request without headers", status: http.StatusOK, nilHeader: true, wantAttempts: 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			identity := newOrdinaryWorkloadIdentity(t)
+			var exchanges atomic.Int32
+			httpClient := ordinaryWorkloadIssuer(t, func() string {
+				return fmt.Sprintf("synthetic-private-bearer-%d", exchanges.Add(1))
+			})
+			request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
+				"https://api.openai.com/v1/models", nil)
+			if err != nil {
+				t.Fatalf("construct unsigned workload request: %v", err)
+			}
+			request.Header.Set("X-Synthetic-Metadata", "preserved")
+			failure := errors.New("synthetic dispatch error")
+			var attempts int
+			var wire []*http.Response
+			response, dispatchErr := auth.WorkloadIdentityMiddleware(identity, httpClient, request,
+				func(authenticated *http.Request) (*http.Response, error) {
+					attempts++
+					if got, want := authenticated.Header.Get("Authorization"),
+						fmt.Sprintf("Bearer synthetic-private-bearer-%d", attempts); got != want {
+						t.Errorf("wire bearer on attempt %d = %q, want %q", attempts, got, want)
+					}
+					status := test.status
+					if test.unauthorized && attempts == 1 {
+						status = http.StatusUnauthorized
+					}
+					result := ordinaryWorkloadResponse(status, `{}`)
+					result.Request = authenticated
+					if test.nilRequest {
+						result.Request = nil
+					} else if test.nilHeader {
+						result.Request = authenticated.Clone(authenticated.Context())
+						result.Request.Header = nil
+					} else {
+						result.Request.Header["aUtHoRiZaTiOn"] = []string{"Bearer synthetic-private-alias"}
+					}
+					wire = append(wire, result)
+					if test.dispatchError {
+						return result, failure
+					}
+					return result, nil
+				})
+			if response == nil || response.StatusCode != test.status {
+				t.Fatalf("unsigned response = %v, error = %v", response, dispatchErr)
+			}
+			if closeErr := response.Body.Close(); closeErr != nil {
+				t.Fatalf("close unsigned workload response: %v", closeErr)
+			}
+			if got := errors.Is(dispatchErr, failure); got != test.dispatchError {
+				t.Errorf("dispatch error preservation = %v, want %v", got, test.dispatchError)
+			}
+			if got := request.Header.Get("Authorization"); got != "" {
+				t.Errorf("caller-owned request retained a private bearer: %q", got)
+			}
+			if response.Request != nil && response.Request.Header != nil {
+				for name, values := range response.Request.Header {
+					if strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {
+						t.Errorf("returned response exposed credential header %q: %q", name, values)
+					}
+				}
+				if got := response.Request.Header.Get("X-Synthetic-Metadata"); got != "preserved" {
+					t.Errorf("returned response dropped unrelated metadata: %q", got)
+				}
+			}
+			if !test.nilRequest && !test.nilHeader {
+				for _, original := range wire {
+					if original.Request.Header.Get("Authorization") == "" {
+						t.Error("response redaction modified the live authenticated wire request")
+					}
+				}
+			}
+			if attempts != test.wantAttempts {
+				t.Errorf("authenticated API attempts = %d, want %d", attempts, test.wantAttempts)
+			}
+		})
+	}
+}
+
 func TestWorkloadIdentityIssuerErrorsRemainBoundedAndRedacted(t *testing.T) {
 	const sensitive = "synthetic-private-issuer-bearer"
 	for _, test := range []struct {

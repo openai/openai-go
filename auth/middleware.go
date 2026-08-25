@@ -22,9 +22,11 @@ func WorkloadIdentityMiddleware(
 		return nil, err
 	}
 
-	req.Header.Set("Authorization", "Bearer "+token)
+	authenticated := req.Clone(req.Context())
+	authenticated.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err := next(req)
+	resp, err := next(authenticated)
+	resp = x509UnsignedResponse(resp)
 	if err != nil || resp == nil || resp.StatusCode != http.StatusUnauthorized {
 		return resp, err
 	}
@@ -61,5 +63,9 @@ func WorkloadIdentityMiddleware(
 	if resp.Body != nil {
 		_ = resp.Body.Close()
 	}
-	return next(retryReq)
+	resp, err = next(retryReq)
+	if err == nil && resp != nil && resp.StatusCode == http.StatusUnauthorized {
+		wia.invalidateToken(token)
+	}
+	return x509UnsignedResponse(resp), err
 }

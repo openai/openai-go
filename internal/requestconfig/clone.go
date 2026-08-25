@@ -7,8 +7,23 @@ import (
 )
 
 func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
-	clone, _ := cfg.CloneWithError(ctx)
-	return clone
+	clone, err := cfg.CloneWithError(ctx)
+	if err == nil || cfg == nil || cfg.Request == nil || ctx == nil {
+		return clone
+	}
+
+	failed := *cfg
+	failed.Context = ctx
+	failed.Request = cfg.Request.Clone(ctx)
+	failed.Request.Body = nil
+	failed.Request.GetBody = nil
+	failed.Request.ContentLength = 0
+	failed.Body = nil
+	failed.cloneError = err
+	failed.Middlewares = append([]middleware(nil), cfg.Middlewares...)
+	failed.finalizers = append([]requestFinalizer(nil), cfg.finalizers...)
+	failed.authentication = cfg.authentication.cloneAsInherited(&failed)
+	return &failed
 }
 
 // CloneWithError copies request configuration while reporting body-replay
@@ -17,6 +32,9 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 func (cfg *RequestConfig) CloneWithError(ctx context.Context) (*RequestConfig, error) {
 	if cfg == nil {
 		return nil, errors.New("requestconfig: cannot clone a nil request configuration")
+	}
+	if cfg.cloneError != nil {
+		return nil, cfg.cloneError
 	}
 	if cfg.Request == nil {
 		return nil, errors.New("requestconfig: cannot clone a nil request")

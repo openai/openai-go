@@ -52,8 +52,18 @@ func TestCloneWithErrorRejectsNonReplayableRequestBodies(t *testing.T) {
 			if strings.Contains(err.Error(), "synthetic-private") {
 				t.Errorf("clone error disclosed sensitive request or body-factory content: %q", err.Error())
 			}
-			if legacy := cfg.Clone(t.Context()); legacy != nil {
-				t.Errorf("legacy Clone returned %v for an unrecoverable request body", legacy)
+			legacy := cfg.Clone(t.Context())
+			if legacy == nil {
+				t.Fatal("legacy Clone returned nil instead of a safely failed configuration")
+			}
+			if legacy.Request.Body != nil || legacy.Request.GetBody != nil || legacy.Body != nil {
+				t.Error("failed clone retained a caller-owned request body or body factory")
+			}
+			if cloneErr := legacy.Execute(); cloneErr == nil || !strings.Contains(cloneErr.Error(), test.want) {
+				t.Errorf("failed clone Execute error = %v, want %q", cloneErr, test.want)
+			}
+			if descendant := legacy.Clone(t.Context()); descendant == nil || descendant.cloneError == nil {
+				t.Error("failed cloning state was not preserved by a subsequent Clone")
 			}
 		})
 	}
