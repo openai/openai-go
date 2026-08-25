@@ -253,6 +253,74 @@ func TestX509WorkloadIdentityPreservesStandaloneHTTPClientProvenance(t *testing.
 	}
 }
 
+func TestX509WorkloadIdentityComposesCopiedClientOptionsSafely(t *testing.T) {
+	for _, test := range []struct {
+		name          string
+		baseOptions   []option.RequestOption
+		workloadFirst bool
+		wantCalls     bool
+	}{
+		{name: "workload before copied SDK defaults", workloadFirst: true, wantCalls: true},
+		{name: "workload after copied SDK defaults", wantCalls: true},
+		{
+			name:          "copied explicit native client after workload",
+			baseOptions:   []option.RequestOption{option.WithHTTPClient(&http.Client{})},
+			workloadFirst: true,
+		},
+		{
+			name:          "copied explicit opaque client after workload",
+			baseOptions:   []option.RequestOption{option.WithHTTPClient(x509WorkloadRejectedDoer{})},
+			workloadFirst: true,
+		},
+		{
+			name:        "copied explicit native client before workload",
+			baseOptions: []option.RequestOption{option.WithHTTPClient(&http.Client{})},
+		},
+		{
+			name:        "copied explicit opaque client before workload",
+			baseOptions: []option.RequestOption{option.WithHTTPClient(x509WorkloadRejectedDoer{})},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv("OPENAI_API_KEY", "")
+			t.Setenv("OPENAI_ADMIN_KEY", "")
+			t.Setenv("OPENAI_CUSTOM_HEADERS", "")
+			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			base := openai.NewClient(test.baseOptions...)
+			var opts []option.RequestOption
+			if test.workloadFirst {
+				opts = append(opts, option.WithX509WorkloadIdentity(config))
+			}
+			opts = append(opts, base.Options...)
+			if !test.workloadFirst {
+				opts = append(opts, option.WithX509WorkloadIdentity(config))
+			}
+			client := openai.NewClient(opts...)
+			_, err := client.Models.List(t.Context())
+			if !test.wantCalls {
+				if err == nil {
+					t.Fatal("copied client options accepted an explicit custom HTTP client")
+				}
+				assertX509WorkloadNoRequests(t, issuer, api)
+				return
+			}
+			if err != nil {
+				t.Fatalf("copied SDK-owned HTTP client defaults: %v", err)
+			}
+			issuerRequests := issuer.requests()
+			apiRequests := api.requests()
+			if len(issuerRequests) != 1 || len(apiRequests) != 1 {
+				t.Fatalf("composed client issuer/API calls = %d/%d, want 1/1", len(issuerRequests), len(apiRequests))
+			}
+			if issuerRequests[0].peerCommonName != "integrated-workload" ||
+				apiRequests[0].peerCommonName != "integrated-workload" {
+				t.Error("composed client did not present its attested workload certificate")
+			}
+		})
+	}
+}
+
 func TestX509WorkloadIdentityUsesOnlyTheLastAuthenticationOption(t *testing.T) {
 	t.Run("same option reused in one layer", func(t *testing.T) {
 		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")

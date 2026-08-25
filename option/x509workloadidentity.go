@@ -31,12 +31,11 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 		if err := requestconfig.WithDefaultBaseURL(x509WorkloadAPIBaseURL).Apply(cfg); err != nil {
 			return err
 		}
-		originalHTTPClient := cfg.HTTPClient
 		return requestconfig.WithRequestFinalizer(func(final *requestconfig.RequestConfig) error {
 			if !selected.Selected(final) {
 				return nil
 			}
-			if final.HTTPClient == nil || final.HTTPClient != originalHTTPClient || final.CustomHTTPDoer != nil ||
+			if final.HTTPClient == nil || final.CustomHTTPDoer != nil ||
 				final.HTTPClientExplicitlySelected() {
 				return errors.New("X.509 workload identity requires its attested transport without custom HTTP clients")
 			}
