@@ -651,6 +651,71 @@ func TestAzureCredentialTransportSecurityRedirects(t *testing.T) {
 			})
 		}
 
+		redirectTargetMutations := map[string]func(*http.Request){
+			"Host override": func(req *http.Request) {
+				req.Host = "attacker.invalid"
+			},
+			"opaque target": func(req *http.Request) {
+				req.URL.Opaque = "//attacker.invalid/final"
+			},
+		}
+		for mutationName, mutate := range redirectTargetMutations {
+			t.Run(authName+"/rejects redirect "+mutationName, func(t *testing.T) {
+				redirectBodyClosed := make(chan struct{}, 1)
+				var finalReached atomic.Bool
+				server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					if req.URL.Path == "/final" {
+						finalReached.Store(true)
+						w.Header().Set("Content-Type", "application/json")
+						_, _ = w.Write([]byte(`{"ok":true}`))
+						return
+					}
+					http.Redirect(w, req, "/final", http.StatusTemporaryRedirect)
+				}))
+				t.Cleanup(server.Close)
+
+				httpClient := server.Client()
+				baseTransport := httpClient.Transport
+				var transportCalls atomic.Int32
+				httpClient.Transport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+					transportCalls.Add(1)
+					return baseTransport.RoundTrip(req)
+				})
+				httpClient.CheckRedirect = func(req *http.Request, _ []*http.Request) error {
+					mutate(req)
+					req.Body = &closeTrackingBody{
+						Reader: strings.NewReader(`{"model":"test"}`),
+						closed: redirectBodyClosed,
+					}
+					return nil
+				}
+
+				client := openai.NewClient(
+					WithEndpoint(server.URL, "2024-10-21"),
+					auth.option(),
+					option.WithMaxRetries(0),
+					option.WithHTTPClient(httpClient),
+				)
+
+				var res map[string]any
+				err := client.Execute(context.Background(), http.MethodPost, "models", []byte(`{"model":"test"}`), &res)
+				if err == nil || !strings.Contains(err.Error(), "request URL origin must match the configured base URL") {
+					t.Fatalf("expected canonical target error, got %v", err)
+				}
+				if got := transportCalls.Load(); got != 1 {
+					t.Fatalf("underlying transport calls = %d, want 1", got)
+				}
+				if finalReached.Load() {
+					t.Fatal("mutated redirect target reached the server")
+				}
+				select {
+				case <-redirectBodyClosed:
+				default:
+					t.Fatal("rejected redirect body was not closed")
+				}
+			})
+		}
+
 		t.Run(authName+"/unsafe remote HTTPS cannot redirect to loopback HTTP", func(t *testing.T) {
 			var targetReached atomic.Bool
 			target := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
@@ -1128,36 +1193,51 @@ func TestAzureUnsafeHTTPPreservesResponseHeaderTimeout(t *testing.T) {
 	t.Setenv("OPENAI_API_KEY", "")
 	t.Setenv("OPENAI_ADMIN_KEY", "")
 
-	origin := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, req *http.Request) {
-		<-req.Context().Done()
-	}))
-	t.Cleanup(origin.Close)
-	originURL, err := url.Parse(origin.URL)
-	if err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		name        string
+		requestOpts []option.RequestOption
+	}{
+		{name: "client authentication"},
+		{
+			name:        "request authentication override",
+			requestOpts: []option.RequestOption{WithAPIKey("request-api-key")},
+		},
 	}
 
-	const responseHeaderTimeout = 50 * time.Millisecond
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.ResponseHeaderTimeout = responseHeaderTimeout
-	client := openai.NewClient(
-		WithEndpoint("http://localhost:"+originURL.Port(), "2024-10-21"),
-		WithAPIKey("azure-api-key"),
-		WithUnsafeAllowHTTP(),
-		option.WithMaxRetries(0),
-		option.WithHTTPClient(&http.Client{Transport: transport}),
-	)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			origin := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, req *http.Request) {
+				<-req.Context().Done()
+			}))
+			t.Cleanup(origin.Close)
+			originURL, err := url.Parse(origin.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	started := time.Now()
-	var res map[string]any
-	err = client.Execute(ctx, http.MethodGet, "models", nil, &res)
-	if err == nil || !strings.Contains(err.Error(), "timeout awaiting response headers") {
-		t.Fatalf("expected response header timeout, got %v", err)
-	}
-	if elapsed := time.Since(started); elapsed >= time.Second {
-		t.Fatalf("response header timeout took %v, want less than 1s", elapsed)
+			const responseHeaderTimeout = 50 * time.Millisecond
+			transport := http.DefaultTransport.(*http.Transport).Clone()
+			transport.ResponseHeaderTimeout = responseHeaderTimeout
+			client := openai.NewClient(
+				WithEndpoint("http://localhost:"+originURL.Port(), "2024-10-21"),
+				WithAPIKey("azure-api-key"),
+				WithUnsafeAllowHTTP(),
+				option.WithMaxRetries(0),
+				option.WithHTTPClient(&http.Client{Transport: transport}),
+			)
+
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			started := time.Now()
+			var res map[string]any
+			err = client.Execute(ctx, http.MethodGet, "models", nil, &res, test.requestOpts...)
+			if err == nil || !strings.Contains(err.Error(), "timeout awaiting response headers") {
+				t.Fatalf("expected response header timeout, got %v", err)
+			}
+			if elapsed := time.Since(started); elapsed >= time.Second {
+				t.Fatalf("response header timeout took %v, want less than 1s", elapsed)
+			}
+		})
 	}
 }
 

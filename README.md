@@ -1027,6 +1027,13 @@ You may also replace the default `http.Client` with
 accepted (this overwrites any previous client) and receives requests after any
 middleware has been applied.
 
+When `client` is a native `*http.Client`, the SDK keeps its credential-origin
+checks in the redirect path, including when the client uses a custom
+`http.RoundTripper`. A bespoke implementation of `option.HTTPClient` owns any
+redirects it performs inside `Do` and must keep credentialed requests on the
+configured origin. Prefer a native `*http.Client` with a custom transport when
+possible.
+
 ### Mutual TLS with a custom HTTP client
 
 For API-key authenticated HTTP requests that require mutual TLS, configure a
