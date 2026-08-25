@@ -170,7 +170,7 @@ func x509DecodeExchangedToken(ctx context.Context, body []byte, started time.Tim
 		!validX509BearerHeader("Bearer "+accessToken) {
 		return x509ExchangedToken{}, errors.New("X.509 token exchange returned an invalid access token")
 	}
-	if json.Unmarshal(fields["token_type"], &tokenType) != nil || tokenType != "Bearer" {
+	if json.Unmarshal(fields["token_type"], &tokenType) != nil || !strings.EqualFold(tokenType, "Bearer") {
 		return x509ExchangedToken{}, errors.New("X.509 token exchange returned an invalid token type")
 	}
 	if json.Unmarshal(fields["issued_token_type"], &issuedTokenType) != nil ||

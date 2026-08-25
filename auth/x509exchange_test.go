@@ -136,7 +136,9 @@ func TestX509ExchangeRejectsMalformedOrAmbiguousResponses(t *testing.T) {
 		{name: "token interior padding", body: replace(x509ExchangeSyntheticToken, "synthetic=token")},
 		{name: "missing token type", body: replace(`"token_type":"Bearer",`, "")},
 		{name: "null token type", body: replace(`"token_type":"Bearer"`, `"token_type":null`)},
-		{name: "lowercase token type", body: replace(`"token_type":"Bearer"`, `"token_type":"bearer"`)},
+		{name: "incorrect token type", body: replace(`"token_type":"Bearer"`, `"token_type":"Basic"`)},
+		{name: "token type leading whitespace", body: replace(`"token_type":"Bearer"`, `"token_type":" bearer"`)},
+		{name: "token type trailing whitespace", body: replace(`"token_type":"Bearer"`, `"token_type":"BEARER "`)},
 		{name: "missing issued type", body: replace(`"issued_token_type":"`+x509IssuedAccessTokenType+`",`, "")},
 		{name: "incorrect issued type", body: replace(x509IssuedAccessTokenType, "urn:attacker:token")},
 		{name: "missing expiry", body: replace(`,"expires_in":60`, "")},
@@ -160,6 +162,22 @@ func TestX509ExchangeRejectsMalformedOrAmbiguousResponses(t *testing.T) {
 			}
 			if strings.Contains(err.Error(), "private-") || strings.Contains(err.Error(), x509ExchangeSyntheticToken) {
 				t.Errorf("malformed response error exposed sensitive issuer content: %q", err.Error())
+			}
+		})
+	}
+}
+
+func TestX509ExchangeAcceptsCaseInsensitiveBearerTokenTypes(t *testing.T) {
+	for _, tokenType := range []string{"Bearer", "bearer", "BEARER", "bEaReR"} {
+		t.Run(tokenType, func(t *testing.T) {
+			body := strings.Replace(x509ValidExchangeResponse(),
+				`"token_type":"Bearer"`, `"token_type":"`+tokenType+`"`, 1)
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = io.WriteString(w, body)
+			}))
+			token, err := x509Exchange(t.Context(), fixture.capability, "idp", "service-account")
+			if err != nil || token.value != x509ExchangeSyntheticToken {
+				t.Fatalf("%q bearer exchange returned token=%v error=%v", tokenType, token, err)
 			}
 		})
 	}
