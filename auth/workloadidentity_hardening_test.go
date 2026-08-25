@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -341,6 +342,99 @@ func TestWorkloadIdentityMiddlewareNeverReturnsSignedRequestMetadata(t *testing.
 	}
 }
 
+func TestWorkloadIdentityNativeIssuerRejectsRedirectsWithoutMutatingItsClient(t *testing.T) {
+	for _, status := range []int{
+		http.StatusMovedPermanently,
+		http.StatusFound,
+		http.StatusSeeOther,
+		http.StatusTemporaryRedirect,
+		http.StatusPermanentRedirect,
+	} {
+		t.Run(fmt.Sprintf("HTTP %d", status), func(t *testing.T) {
+			var issuerRequests, redirectedRequests, callerRedirectChecks atomic.Int32
+			target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				redirectedRequests.Add(1)
+				w.WriteHeader(http.StatusOK)
+			}))
+			t.Cleanup(target.Close)
+			issuer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+				issuerRequests.Add(1)
+				body, err := io.ReadAll(request.Body)
+				if err != nil || !strings.Contains(string(body), "synthetic-subject") {
+					t.Errorf("original issuer did not receive its expected subject token: body=%q error=%v", body, err)
+				}
+				w.Header().Set("Location", target.URL+"/steal?credential=synthetic-private-redirect-location")
+				w.WriteHeader(status)
+			}))
+			t.Cleanup(issuer.Close)
+			caller := &http.Client{
+				Transport: &closureTransport{fn: func(request *http.Request) (*http.Response, error) {
+					if request.URL.Host == "auth.openai.com" {
+						request = request.Clone(request.Context())
+						request.URL.Scheme = "http"
+						request.URL.Host = issuer.Listener.Addr().String()
+					}
+					return http.DefaultTransport.RoundTrip(request)
+				}},
+				CheckRedirect: func(*http.Request, []*http.Request) error {
+					callerRedirectChecks.Add(1)
+					return nil
+				},
+			}
+			identity := newOrdinaryWorkloadIdentity(t)
+
+			token, err := identity.GetToken(t.Context(), caller)
+			if token != "" || err == nil || !strings.Contains(err.Error(), "does not follow redirects") {
+				t.Fatalf("redirected token exchange returned token=%q error=%v", token, err)
+			}
+			if strings.Contains(err.Error(), "synthetic-private") || strings.Contains(err.Error(), target.URL) {
+				t.Errorf("issuer redirect error disclosed its attacker-controlled destination: %q", err.Error())
+			}
+			if issuerRequests.Load() != 1 || redirectedRequests.Load() != 0 || callerRedirectChecks.Load() != 0 {
+				t.Errorf("issuer/redirect/caller-policy requests=%d/%d/%d, want 1/0/0",
+					issuerRequests.Load(), redirectedRequests.Load(), callerRedirectChecks.Load())
+			}
+			if caller.CheckRedirect == nil {
+				t.Fatal("isolated issuer exchange removed the caller's redirect policy")
+			}
+			if err := caller.CheckRedirect(nil, nil); err != nil || callerRedirectChecks.Load() != 1 {
+				t.Errorf("isolated issuer exchange modified its caller-owned redirect policy: %v", err)
+			}
+		})
+	}
+}
+
+func TestWorkloadIdentityRejectsOpaqueIssuerRedirectResponses(t *testing.T) {
+	for _, status := range []int{
+		http.StatusMovedPermanently,
+		http.StatusFound,
+		http.StatusSeeOther,
+		http.StatusTemporaryRedirect,
+		http.StatusPermanentRedirect,
+	} {
+		t.Run(fmt.Sprintf("HTTP %d", status), func(t *testing.T) {
+			body := &ordinaryObservedBody{}
+			var requests atomic.Int32
+			doer := ordinaryOpaqueHTTPDoer(func(*http.Request) (*http.Response, error) {
+				requests.Add(1)
+				return &http.Response{
+					StatusCode: status,
+					Header:     http.Header{"Location": []string{"https://synthetic.invalid/private"}},
+					Body:       body,
+				}, nil
+			})
+			token, err := newOrdinaryWorkloadIdentity(t).GetToken(t.Context(), doer)
+			if token != "" || err == nil || !strings.Contains(err.Error(), "does not follow redirects") {
+				t.Fatalf("opaque redirect response token=%q error=%v", token, err)
+			}
+			if requests.Load() != 1 || body.reads.Load() != 0 || body.closes.Load() != 1 {
+				t.Errorf("opaque issuer requests/body reads/closes=%d/%d/%d, want 1/0/1",
+					requests.Load(), body.reads.Load(), body.closes.Load())
+			}
+		})
+	}
+}
+
 func TestWorkloadIdentityIssuerErrorsRemainBoundedAndRedacted(t *testing.T) {
 	const sensitive = "synthetic-private-issuer-bearer"
 	for _, test := range []struct {
@@ -555,6 +649,12 @@ type ordinaryObservedBody struct {
 	reads     atomic.Int32
 	closes    atomic.Int32
 	readError error
+}
+
+type ordinaryOpaqueHTTPDoer func(*http.Request) (*http.Response, error)
+
+func (do ordinaryOpaqueHTTPDoer) Do(request *http.Request) (*http.Response, error) {
+	return do(request)
 }
 
 func (body *ordinaryObservedBody) Read([]byte) (int, error) {

@@ -25,7 +25,10 @@ const (
 	workloadMaximumRefreshAttempts = 3
 )
 
-var errInvalidatedWorkloadBearer = errors.New("workload identity token exchange returned an invalidated bearer")
+var (
+	errInvalidatedWorkloadBearer = errors.New("workload identity token exchange returned an invalidated bearer")
+	errWorkloadIdentityRedirect  = errors.New("workload identity does not follow redirects")
+)
 
 type WorkloadIdentityAuth struct {
 	config WorkloadIdentity
@@ -258,8 +261,11 @@ func (w *WorkloadIdentityAuth) exchangeToken(ctx context.Context, httpClient HTT
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := httpClient.Do(req)
+	resp, err := workloadIdentityDo(httpClient, req)
 	if err != nil {
+		if errors.Is(err, errWorkloadIdentityRedirect) {
+			return "", time.Time{}, err
+		}
 		return "", time.Time{}, fmt.Errorf("failed to exchange token: %w", err)
 	}
 	if resp == nil || resp.Body == nil {
@@ -322,4 +328,29 @@ func (w *WorkloadIdentityAuth) exchangeToken(ctx context.Context, httpClient HTT
 	}
 
 	return tokenResp.AccessToken, time.Now().Add(time.Duration(expiresIn) * time.Second), nil
+}
+
+func workloadIdentityDo(client HTTPDoer, request *http.Request) (*http.Response, error) {
+	if native, ok := client.(*http.Client); ok {
+		isolated := *native
+		isolated.CheckRedirect = func(*http.Request, []*http.Request) error {
+			return errWorkloadIdentityRedirect
+		}
+		client = &isolated
+	}
+	response, err := client.Do(request)
+	if err != nil {
+		if errors.Is(err, errWorkloadIdentityRedirect) {
+			return nil, requestconfig.WithNoRetryError(errWorkloadIdentityRedirect)
+		}
+		return response, err
+	}
+	if response != nil && response.StatusCode >= http.StatusMultipleChoices &&
+		response.StatusCode < http.StatusBadRequest {
+		if response.Body != nil {
+			_ = response.Body.Close()
+		}
+		return nil, requestconfig.WithNoRetryError(errWorkloadIdentityRedirect)
+	}
+	return response, nil
 }

@@ -349,12 +349,19 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 		if err := workloadIdentityAuth.Apply(r); err != nil {
 			return err
 		}
+		r.ClearInheritedAuthentication()
 		r.SetAPIKey("")
 
 		middlewareIndex := len(r.Middlewares)
 		return requestconfig.WithRequestFinalizer(func(final *requestconfig.RequestConfig) error {
 			if !workloadIdentityAuth.Selected(final) {
 				return nil
+			}
+			if !final.Security.BearerAuth {
+				return errors.New("workload identity cannot authenticate an admin-only API operation")
+			}
+			if final.APIKey != "" || final.AdminAPIKey != "" || final.AuthorizationHeaderOverridden() {
+				return errors.New("workload identity cannot be combined with other Authorization credentials")
 			}
 			final.Middlewares = append(final.Middlewares, nil)
 			copy(final.Middlewares[middlewareIndex+1:], final.Middlewares[middlewareIndex:])
