@@ -97,11 +97,21 @@ func validX509WorkloadAPIBaseURL(base *url.URL) bool {
 
 func validX509WorkloadAPIRequest(request *http.Request) bool {
 	if request == nil || request.Header == nil || request.URL == nil || request.URL.Scheme != "https" ||
-		request.URL.Host != "mtls.api.openai.com" || request.URL.User != nil ||
+		request.URL.Host != "mtls.api.openai.com" || request.URL.User != nil || request.RequestURI != "" ||
 		request.URL.Fragment != "" || request.URL.RawFragment != "" || request.URL.Opaque != "" ||
 		(request.Host != "" && request.Host != request.URL.Host) || len(request.Trailer) != 0 ||
 		len(request.TransferEncoding) != 0 {
 		return false
+	}
+	//nolint:staticcheck // Legacy cancellation bypasses the issuer context and has no nondeprecated accessor.
+	if request.Cancel != nil {
+		return false
+	}
+	for index := 0; index < len(request.URL.RawQuery); index++ {
+		value := request.URL.RawQuery[index]
+		if value < ' ' || value == 0x7f {
+			return false
+		}
 	}
 	switch request.Method {
 	case http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch,
@@ -113,7 +123,15 @@ func validX509WorkloadAPIRequest(request *http.Request) bool {
 	if request.ContentLength < -1 || (!hasBody && request.ContentLength != 0) {
 		return false
 	}
-	for name := range request.Header {
+	for name, values := range request.Header {
+		if !validX509HeaderName(name) {
+			return false
+		}
+		for _, value := range values {
+			if !validX509HeaderValue(value) {
+				return false
+			}
+		}
 		switch strings.ToLower(strings.ReplaceAll(name, "_", "-")) {
 		case "transfer-encoding", "content-length", "connection", "upgrade", "trailer", "te",
 			"proxy-connection", "keep-alive", "http2-settings":
@@ -122,6 +140,31 @@ func validX509WorkloadAPIRequest(request *http.Request) bool {
 	}
 	return strings.HasPrefix(request.URL.Path, "/v1/") && strings.HasPrefix(request.URL.EscapedPath(), "/v1/") &&
 		path.Clean(request.URL.Path) == request.URL.Path
+}
+
+func validX509HeaderName(name string) bool {
+	if name == "" {
+		return false
+	}
+	for index := 0; index < len(name); index++ {
+		value := name[index]
+		if value >= 'A' && value <= 'Z' || value >= 'a' && value <= 'z' || value >= '0' && value <= '9' {
+			continue
+		}
+		if !strings.ContainsRune("!#$%&'*+-.^_`|~", rune(value)) {
+			return false
+		}
+	}
+	return true
+}
+
+func validX509HeaderValue(value string) bool {
+	for index := 0; index < len(value); index++ {
+		if value[index] < ' ' && value[index] != '\t' || value[index] == 0x7f {
+			return false
+		}
+	}
+	return true
 }
 
 func unsafeX509CredentialHeaders(headers http.Header) bool {

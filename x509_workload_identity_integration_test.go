@@ -63,6 +63,8 @@ func TestX509WorkloadIdentityPreservesNativeHTTPBodyFraming(t *testing.T) {
 				option.WithX509WorkloadIdentity(config),
 				option.WithMaxRetries(0),
 				option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+					request.Header.Set("X-Synthetic-Metadata", "synthetic\tmetadata\xff")
+					request.URL.RawQuery = "synthetic=safe%20value"
 					if test.streaming {
 						if err := request.Body.Close(); err != nil {
 							return nil, err
@@ -203,6 +205,24 @@ func TestX509WorkloadIdentityRejectsLateMiddlewareMutationBeforeExchange(t *test
 		{name: "attacker host", mutate: func(request *http.Request) { request.URL.Host = "attacker.example.test" }},
 		{name: "explicit authority port", mutate: func(request *http.Request) { request.URL.Host = "mtls.api.openai.com:443" }},
 		{name: "attacker Host header", mutate: func(request *http.Request) { request.Host = "attacker.example.test" }},
+		{name: "relative RequestURI override", mutate: func(request *http.Request) { request.RequestURI = "/v1/attacker" }},
+		{name: "absolute RequestURI override", mutate: func(request *http.Request) {
+			request.RequestURI = "https://attacker.example.test/v1/models"
+		}},
+		{name: "query newline", mutate: func(request *http.Request) { request.URL.RawQuery = "synthetic=line\nnext" }},
+		{name: "query carriage return", mutate: func(request *http.Request) { request.URL.RawQuery = "synthetic=line\rnext" }},
+		{name: "query NUL", mutate: func(request *http.Request) { request.URL.RawQuery = "synthetic=line\x00next" }},
+		{name: "query DEL", mutate: func(request *http.Request) { request.URL.RawQuery = "synthetic=line\x7fnext" }},
+		{name: "closed legacy cancellation", mutate: func(request *http.Request) {
+			canceled := make(chan struct{})
+			close(canceled)
+			//nolint:staticcheck // Exercise legacy cancellation, which bypasses context and has no replacement accessor.
+			request.Cancel = canceled
+		}},
+		{name: "open legacy cancellation", mutate: func(request *http.Request) {
+			//nolint:staticcheck // Exercise legacy cancellation, which bypasses context and has no replacement accessor.
+			request.Cancel = make(chan struct{})
+		}},
 		{name: "URL fragment", mutate: func(request *http.Request) { request.URL.Fragment = "attacker" }},
 		{name: "opaque URL", mutate: func(request *http.Request) { request.URL.Opaque = "//attacker.example.test/v1/models" }},
 		{name: "CONNECT tunnel", mutate: func(request *http.Request) { request.Method = http.MethodConnect }},
@@ -244,6 +264,18 @@ func TestX509WorkloadIdentityRejectsLateMiddlewareMutationBeforeExchange(t *test
 		{name: "keep-alive framing", mutate: unsafeHeader("Keep-Alive", "timeout=5")},
 		{name: "hop-by-hop TE", mutate: unsafeHeader("te", "trailers")},
 		{name: "framing trailer header", mutate: unsafeHeader("trailer", "Authorization")},
+		{name: "empty header name", mutate: unsafeHeader("", "synthetic")},
+		{name: "header name space", mutate: unsafeHeader("Invalid Header", "synthetic")},
+		{name: "header name colon", mutate: unsafeHeader("Invalid:Header", "synthetic")},
+		{name: "header name NUL", mutate: unsafeHeader("Invalid\x00Header", "synthetic")},
+		{name: "non-ASCII header name", mutate: unsafeHeader("Invalid-\u00e9", "synthetic")},
+		{name: "header value CRLF bearer injection", mutate: unsafeHeader(
+			"X-Synthetic", "line1\r\nAuthorization: Bearer injected",
+		)},
+		{name: "header value newline", mutate: unsafeHeader("X-Synthetic", "line1\nline2")},
+		{name: "header value NUL", mutate: unsafeHeader("X-Synthetic", "line1\x00line2")},
+		{name: "header value vertical tab", mutate: unsafeHeader("X-Synthetic", "line1\vline2")},
+		{name: "header value DEL", mutate: unsafeHeader("X-Synthetic", "line1\x7fline2")},
 		{name: "lowercase Host alias", mutate: unsafeHeader("host", "attacker.example.test")},
 		{name: "authority pseudo-header", mutate: unsafeHeader(":authority", "attacker.example.test")},
 		{name: "attacker Authorization", mutate: func(request *http.Request) {
