@@ -847,7 +847,7 @@ func (u VectorStoreSearchParamsFiltersUnion) GetValue() *shared.ComparisonFilter
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u VectorStoreSearchParamsFiltersUnion) GetFilters() []shared.ComparisonFilterParam {
+func (u VectorStoreSearchParamsFiltersUnion) GetFilters() []shared.CompoundFilterFilterUnionParam {
 	if vt := u.OfCompoundFilter; vt != nil {
 		return vt.Filters
 	}

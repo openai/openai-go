@@ -2384,7 +2384,7 @@ type BetaFileSearchToolFiltersUnion struct {
 	// This field is from variant [BetaFileSearchToolFiltersComparisonFilter].
 	Value BetaFileSearchToolFiltersComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [BetaFileSearchToolFiltersCompoundFilter].
-	Filters []BetaFileSearchToolFiltersCompoundFilterFilter `json:"filters"`
+	Filters []BetaFileSearchToolFiltersCompoundFilterFilterUnion `json:"filters"`
 	JSON    struct {
 		Key     respjson.Field
 		Type    respjson.Field
@@ -2547,7 +2547,7 @@ func (r *BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnion) Unmarshal
 type BetaFileSearchToolFiltersCompoundFilter struct {
 	// Array of filters to combine. Items can be `ComparisonFilter` or
 	// `CompoundFilter`.
-	Filters []BetaFileSearchToolFiltersCompoundFilterFilter `json:"filters" api:"required"`
+	Filters []BetaFileSearchToolFiltersCompoundFilterFilterUnion `json:"filters" api:"required"`
 	// Type of operation: `and` or `or`.
 	//
 	// Any of "and", "or".
@@ -2564,6 +2564,45 @@ type BetaFileSearchToolFiltersCompoundFilter struct {
 // Returns the unmodified JSON received from the API
 func (r BetaFileSearchToolFiltersCompoundFilter) RawJSON() string { return r.JSON.raw }
 func (r *BetaFileSearchToolFiltersCompoundFilter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// BetaFileSearchToolFiltersCompoundFilterFilterUnion contains all possible
+// properties and values from [BetaFileSearchToolFiltersCompoundFilterFilter],
+// [BetaFileSearchToolFiltersCompoundFilter].
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaFileSearchToolFiltersCompoundFilterFilterUnion struct {
+	// This field is from variant [BetaFileSearchToolFiltersCompoundFilterFilter].
+	Key string `json:"key"`
+	// This field is from variant [BetaFileSearchToolFiltersCompoundFilterFilter].
+	Type string `json:"type"`
+	// This field is from variant [BetaFileSearchToolFiltersCompoundFilterFilter].
+	Value                                     BetaFileSearchToolFiltersCompoundFilterFilterValueUnion `json:"value"`
+	OfBetaFileSearchToolFiltersCompoundFilter BetaFileSearchToolFiltersCompoundFilter                 `json:",inline"`
+	JSON                                      struct {
+		Key                                       respjson.Field
+		Type                                      respjson.Field
+		Value                                     respjson.Field
+		OfBetaFileSearchToolFiltersCompoundFilter respjson.Field
+		raw                                       string
+	} `json:"-"`
+}
+
+func (u BetaFileSearchToolFiltersCompoundFilterFilterUnion) AsFileSearchToolFiltersCompound() (v BetaFileSearchToolFiltersCompoundFilterFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaFileSearchToolFiltersCompoundFilterFilterUnion) AsBetaFileSearchToolFiltersCompoundFilter() (v BetaFileSearchToolFiltersCompoundFilter) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaFileSearchToolFiltersCompoundFilterFilterUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaFileSearchToolFiltersCompoundFilterFilterUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
@@ -2822,7 +2861,7 @@ func (u BetaFileSearchToolFiltersUnionParam) GetValue() *BetaFileSearchToolFilte
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u BetaFileSearchToolFiltersUnionParam) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterParam {
+func (u BetaFileSearchToolFiltersUnionParam) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
 	if vt := u.OfCompoundFilter; vt != nil {
 		return vt.Filters
 	}
@@ -2920,7 +2959,7 @@ func (u *BetaFileSearchToolFiltersComparisonFilterValueArrayItemUnionParam) Unma
 type BetaFileSearchToolFiltersCompoundFilterParam struct {
 	// Array of filters to combine. Items can be `ComparisonFilter` or
 	// `CompoundFilter`.
-	Filters []BetaFileSearchToolFiltersCompoundFilterFilterParam `json:"filters,omitzero" api:"required"`
+	Filters []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam `json:"filters,omitzero" api:"required"`
 	// Type of operation: `and` or `or`.
 	//
 	// Any of "and", "or".
@@ -2939,6 +2978,72 @@ func (r *BetaFileSearchToolFiltersCompoundFilterParam) UnmarshalJSON(data []byte
 func init() {
 	apijson.RegisterFieldValidator[BetaFileSearchToolFiltersCompoundFilterParam](
 		"type", "and", "or",
+	)
+}
+
+// Only one field can be non-zero.
+//
+// Use [param.IsOmitted] to confirm if a field is set.
+type BetaFileSearchToolFiltersCompoundFilterFilterUnionParam struct {
+	OfFileSearchToolFiltersCompound *BetaFileSearchToolFiltersCompoundFilterFilterParam `json:",omitzero,inline"`
+	OfFilter                        *BetaFileSearchToolFiltersCompoundFilterParam       `json:",omitzero,inline"`
+	paramUnion
+}
+
+func (u BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfFileSearchToolFiltersCompound, u.OfFilter)
+}
+func (u *BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, u)
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) GetKey() *string {
+	if vt := u.OfFileSearchToolFiltersCompound; vt != nil {
+		return &vt.Key
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) GetValue() *BetaFileSearchToolFiltersCompoundFilterFilterValueUnionParam {
+	if vt := u.OfFileSearchToolFiltersCompound; vt != nil {
+		return &vt.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
+	if vt := u.OfFilter; vt != nil {
+		return vt.Filters
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u BetaFileSearchToolFiltersCompoundFilterFilterUnionParam) GetType() *string {
+	if vt := u.OfFileSearchToolFiltersCompound; vt != nil {
+		return (*string)(&vt.Type)
+	} else if vt := u.OfFilter; vt != nil {
+		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+func init() {
+	apijson.RegisterUnion[BetaFileSearchToolFiltersCompoundFilterFilterUnionParam](
+		"type",
+		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("eq"),
+		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("ne"),
+		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("gt"),
+		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("gte"),
+		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("lt"),
+		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("lte"),
+		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("in"),
+		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterFilterParam]("nin"),
+		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterParam]("and"),
+		apijson.Discriminator[BetaFileSearchToolFiltersCompoundFilterParam]("or"),
 	)
 }
 
@@ -29515,7 +29620,7 @@ type BetaToolUnionFilters struct {
 	// This field is from variant [BetaFileSearchToolFiltersUnion].
 	Value BetaFileSearchToolFiltersComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [BetaFileSearchToolFiltersUnion].
-	Filters []BetaFileSearchToolFiltersCompoundFilterFilter `json:"filters"`
+	Filters []BetaFileSearchToolFiltersCompoundFilterFilterUnion `json:"filters"`
 	// This field is from variant [BetaWebSearchToolFilters].
 	AllowedDomains []string `json:"allowed_domains"`
 	JSON           struct {
@@ -30774,7 +30879,7 @@ func (u betaToolUnionParamFilters) GetValue() *BetaFileSearchToolFiltersComparis
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u betaToolUnionParamFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterParam {
+func (u betaToolUnionParamFilters) GetFilters() []BetaFileSearchToolFiltersCompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
 	case *BetaFileSearchToolFiltersUnionParam:
 		return vt.GetFilters()

@@ -2119,7 +2119,7 @@ type FileSearchToolFiltersUnion struct {
 	// This field is from variant [shared.ComparisonFilter].
 	Value shared.ComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [shared.CompoundFilter].
-	Filters []shared.ComparisonFilter `json:"filters"`
+	Filters []shared.CompoundFilterFilterUnion `json:"filters"`
 	JSON    struct {
 		Key     respjson.Field
 		Type    respjson.Field
@@ -2269,7 +2269,7 @@ func (u FileSearchToolFiltersUnionParam) GetValue() *shared.ComparisonFilterValu
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u FileSearchToolFiltersUnionParam) GetFilters() []shared.ComparisonFilterParam {
+func (u FileSearchToolFiltersUnionParam) GetFilters() []shared.CompoundFilterFilterUnionParam {
 	if vt := u.OfCompoundFilter; vt != nil {
 		return vt.Filters
 	}
@@ -23653,7 +23653,7 @@ type ToolUnionFilters struct {
 	// This field is from variant [FileSearchToolFiltersUnion].
 	Value shared.ComparisonFilterValueUnion `json:"value"`
 	// This field is from variant [FileSearchToolFiltersUnion].
-	Filters []shared.ComparisonFilter `json:"filters"`
+	Filters []shared.CompoundFilterFilterUnion `json:"filters"`
 	// This field is from variant [WebSearchToolFilters].
 	AllowedDomains []string `json:"allowed_domains"`
 	JSON           struct {
@@ -24908,7 +24908,7 @@ func (u toolUnionParamFilters) GetValue() *shared.ComparisonFilterValueUnionPara
 }
 
 // Returns a pointer to the underlying variant's property, if present.
-func (u toolUnionParamFilters) GetFilters() []shared.ComparisonFilterParam {
+func (u toolUnionParamFilters) GetFilters() []shared.CompoundFilterFilterUnionParam {
 	switch vt := u.any.(type) {
 	case *FileSearchToolFiltersUnionParam:
 		return vt.GetFilters()
