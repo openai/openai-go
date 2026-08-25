@@ -948,6 +948,7 @@ Methods:
 
 Response Types:
 
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#CostQuantityUnit">CostQuantityUnit</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageAudioSpeechesResponse">AdminOrganizationUsageAudioSpeechesResponse</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageAudioTranscriptionsResponse">AdminOrganizationUsageAudioTranscriptionsResponse</a>
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#AdminOrganizationUsageCodeInterpreterSessionsResponse">AdminOrganizationUsageCodeInterpreterSessionsResponse</a>
@@ -1142,9 +1143,14 @@ Methods:
 
 ### Projects
 
+Params Types:
+
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ProjectResidency">ProjectResidency</a>
+
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#Project">Project</a>
+- <a href="https://pkg.go.dev/github.com/openai/openai-go/v3">openai</a>.<a href="https://pkg.go.dev/github.com/openai/openai-go/v3#ProjectResidency">ProjectResidency</a>
 
 Methods:
 
