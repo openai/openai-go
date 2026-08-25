@@ -63,6 +63,27 @@ func TestAccumulatorToolProjectionUsesDistinctChoiceAndDenseIndices(t *testing.T
 	}
 }
 
+func TestAccumulatorProjectsOnlyToolsWithMetadata(t *testing.T) {
+	const toolCount = 2*chatCompletionAccumulatorInlineProjectionSlots + 1
+	chunk := storageTestChunk(ChatCompletionChunkChoiceDelta{
+		ToolCalls: make([]ChatCompletionChunkChoiceDeltaToolCall, toolCount),
+	})
+	for i := range chunk.Choices[0].Delta.ToolCalls {
+		chunk.Choices[0].Delta.ToolCalls[i].Index = int64(i)
+	}
+	chunk.Choices[0].Delta.ToolCalls[toolCount-1].ID = "tool-id"
+	var acc ChatCompletionAccumulator
+	allocations := testing.AllocsPerRun(5, func() {
+		work := 0
+		if !acc.addChatCompletionToolMetadataWork(&work, &chunk) {
+			panic("metadata projection rejected a valid dense tool collection")
+		}
+	})
+	if allocations >= 10 {
+		t.Fatalf("sparse metadata projection allocated %.0f times for one metadata-bearing tool", allocations)
+	}
+}
+
 func TestAccumulatorLogprobAccountingRejectsIntegerOverflow(t *testing.T) {
 	total := maxChatCompletionAccumulatorInt - 1
 	if !addAccumulatorLogprobBytes(&total, 1) || total != maxChatCompletionAccumulatorInt {

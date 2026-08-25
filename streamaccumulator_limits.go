@@ -355,6 +355,9 @@ func (acc *ChatCompletionAccumulator) addChatCompletionToolMetadataWork(work *in
 		}
 		for j := range choice.Delta.ToolCalls {
 			tool := &choice.Delta.ToolCalls[j]
+			if tool.ID == "" && tool.Type == "" {
+				continue
+			}
 			toolIndex := preflightedToolCallIndex(tool.Index)
 			projection := lookupChatCompletionToolMetadataProjection(&seen, choiceIndex, toolIndex)
 			id, typeName := "", ""
