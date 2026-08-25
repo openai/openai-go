@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
 	"sync/atomic"
 	"testing"
 
@@ -280,12 +281,33 @@ func TestX509WorkloadIdentityComposesCopiedClientOptionsSafely(t *testing.T) {
 			name:        "copied explicit opaque client before workload",
 			baseOptions: []option.RequestOption{option.WithHTTPClient(x509WorkloadRejectedDoer{})},
 		},
+		{
+			name:          "copied explicit production endpoint after workload",
+			baseOptions:   []option.RequestOption{option.WithBaseURL("https://api.openai.com/v1/")},
+			workloadFirst: true,
+		},
+		{
+			name:          "copied explicit regional endpoint after workload",
+			baseOptions:   []option.RequestOption{option.WithBaseURL("https://eu.api.openai.com/v1/")},
+			workloadFirst: true,
+		},
+		{
+			name:        "copied explicit production endpoint before workload",
+			baseOptions: []option.RequestOption{option.WithBaseURL("https://api.openai.com/v1/")},
+		},
+		{
+			name:        "copied explicit regional endpoint before workload",
+			baseOptions: []option.RequestOption{option.WithBaseURL("https://eu.api.openai.com/v1/")},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			t.Setenv("OPENAI_API_KEY", "")
 			t.Setenv("OPENAI_ADMIN_KEY", "")
 			t.Setenv("OPENAI_CUSTOM_HEADERS", "")
-			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			t.Setenv("OPENAI_BASE_URL", "synthetic-placeholder")
+			if err := os.Unsetenv("OPENAI_BASE_URL"); err != nil {
+				t.Fatalf("remove configured endpoint before copying SDK defaults: %v", err)
+			}
 			config, issuer, api := newX509WorkloadIdentityIntegration(t)
 			base := openai.NewClient(test.baseOptions...)
 			var opts []option.RequestOption
@@ -300,7 +322,7 @@ func TestX509WorkloadIdentityComposesCopiedClientOptionsSafely(t *testing.T) {
 			_, err := client.Models.List(t.Context())
 			if !test.wantCalls {
 				if err == nil {
-					t.Fatal("copied client options accepted an explicit custom HTTP client")
+					t.Fatal("copied client options accepted an explicit custom HTTP client or unsafe endpoint")
 				}
 				assertX509WorkloadNoRequests(t, issuer, api)
 				return

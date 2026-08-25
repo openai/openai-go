@@ -52,6 +52,11 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 				unsafeX509CredentialHeaders(final.Request.Header) {
 				return errors.New("X.509 workload identity cannot be combined with other credentials")
 			}
+			if final.BaseURL == nil {
+				if err := requestconfig.WithDefaultBaseURL(x509WorkloadAPIBaseURL).Apply(final); err != nil {
+					return err
+				}
+			}
 			base := final.BaseURL
 			if base == nil {
 				base = final.DefaultBaseURL
