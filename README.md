@@ -1248,7 +1248,10 @@ client := openai.NewClient(option.WithX509WorkloadIdentity(auth.X509WorkloadIden
 	Transport:          transport,
 }))
 
-if _, err := client.Models.List(context.Background()); err != nil {
+requestContext, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+defer cancel()
+
+if _, err := client.Models.List(requestContext); err != nil {
 	return err
 }
 ```
@@ -1257,6 +1260,15 @@ The application retains ownership of its certificate, private key, trust roots,
 and original transport. The attested capability creates its own isolated
 connection pool, so call `Close` when it is no longer needed. Rotating the
 certificate requires a newly attested transport and client.
+
+The capability always presents its one attested certificate, including when a
+server advertises unrelated acceptable certificate-authority hints. It does not
+accept caller-provided certificate-selection callbacks. When the transport
+template does not specify its own values, the isolated connection pool applies
+a 30-second TCP dial timeout, a 10-second TLS handshake timeout, and the SDK's
+10-minute response-header timeout. Set a request context deadline or use
+`option.WithRequestTimeout` to bound the complete operation; response bodies are
+not given a deadline so long-running streams remain supported.
 
 Token exchange is pinned to `https://mtls.auth.openai.com/oauth/token`; API
 requests use `https://mtls.api.openai.com/v1/`. Existing `OPENAI_BASE_URL` and

@@ -149,11 +149,11 @@ func validX509WorkloadAPIRequest(request *http.Request) bool {
 		return false
 	}
 	for name, values := range request.Header {
-		if !validX509HeaderName(name) {
+		if !requestconfig.ValidHTTPHeaderName(name) {
 			return false
 		}
 		for _, value := range values {
-			if !validX509HeaderValue(value) {
+			if !requestconfig.ValidHTTPHeaderValue(value) {
 				return false
 			}
 		}
@@ -165,31 +165,6 @@ func validX509WorkloadAPIRequest(request *http.Request) bool {
 	}
 	return strings.HasPrefix(request.URL.Path, "/v1/") && strings.HasPrefix(request.URL.EscapedPath(), "/v1/") &&
 		path.Clean(request.URL.Path) == request.URL.Path
-}
-
-func validX509HeaderName(name string) bool {
-	if name == "" {
-		return false
-	}
-	for index := 0; index < len(name); index++ {
-		value := name[index]
-		if value >= 'A' && value <= 'Z' || value >= 'a' && value <= 'z' || value >= '0' && value <= '9' {
-			continue
-		}
-		if !strings.ContainsRune("!#$%&'*+-.^_`|~", rune(value)) {
-			return false
-		}
-	}
-	return true
-}
-
-func validX509HeaderValue(value string) bool {
-	for index := 0; index < len(value); index++ {
-		if value[index] < ' ' && value[index] != '\t' || value[index] == 0x7f {
-			return false
-		}
-	}
-	return true
 }
 
 func unsafeX509CredentialHeaders(headers http.Header) bool {

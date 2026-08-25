@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
+
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
 
 func WorkloadIdentityMiddleware(
@@ -10,6 +13,10 @@ func WorkloadIdentityMiddleware(
 	req *http.Request,
 	next func(*http.Request) (*http.Response, error),
 ) (*http.Response, error) {
+	if req == nil || req.Header == nil || next == nil {
+		return nil, errors.New("workload identity requires a non-nil request, header map, and handler")
+	}
+	hadBody := req.Body != nil && req.Body != http.NoBody
 	token, err := wia.GetToken(req.Context(), httpClient)
 	if err != nil {
 		return nil, err
@@ -22,9 +29,21 @@ func WorkloadIdentityMiddleware(
 		return resp, err
 	}
 
-	wia.invalidateToken()
+	wia.invalidateToken(token)
 
-	if req.Body != nil && req.GetBody == nil {
+	if scope := requestconfig.RequestRetryScopeFromContext(req.Context()); scope != nil {
+		replayable := !hadBody || (req.GetBody != nil && scope.AllowBodyReplay())
+		if replayable && scope.TryOuterReplay() {
+			return unauthorizedRetryResponse(resp, true), nil
+		}
+		if resp.Header.Get("x-should-retry") == "true" {
+			return unauthorizedRetryResponse(resp, false), nil
+		}
+		return resp, nil
+	}
+	// Direct callers have no original SDK request from which to safely rebuild
+	// a body after caller middleware may have transformed or removed it.
+	if hadBody {
 		return resp, nil
 	}
 
@@ -32,19 +51,15 @@ func WorkloadIdentityMiddleware(
 
 	token, err = wia.GetToken(req.Context(), httpClient)
 	if err != nil {
-		_ = resp.Body.Close()
+		if resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		return nil, err
 	}
 	retryReq.Header.Set("Authorization", "Bearer "+token)
 
-	if req.GetBody != nil {
-		retryReq.Body, err = req.GetBody()
-		if err != nil {
-			_ = resp.Body.Close()
-			return nil, err
-		}
+	if resp.Body != nil {
+		_ = resp.Body.Close()
 	}
-
-	_ = resp.Body.Close()
 	return next(retryReq)
 }

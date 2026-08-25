@@ -796,28 +796,6 @@ func ExecuteNewRequest(ctx context.Context, method string, u string, body any, d
 	return cfg.Execute()
 }
 
-func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
-	if cfg == nil {
-		return nil
-	}
-	req := cfg.Request.Clone(ctx)
-	var err error
-	if req.Body != nil && req.Body != http.NoBody {
-		req.Body, err = req.GetBody()
-	}
-	if err != nil {
-		return nil
-	}
-	clone := *cfg
-	clone.Context = ctx
-	clone.Request = req
-	clone.Middlewares = append([]middleware(nil), cfg.Middlewares...)
-	clone.finalizers = append([]requestFinalizer(nil), cfg.finalizers...)
-	clone.authentication = cfg.authentication.cloneAsInherited(&clone)
-
-	return &clone
-}
-
 func (cfg *RequestConfig) SetHeader(key, value string) {
 	cfg.Request.Header.Set(key, value)
 	cfg.authentication.recordHeader(key)

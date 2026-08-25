@@ -378,6 +378,9 @@ func WithWorkloadIdentity(config auth.WorkloadIdentity) RequestOption {
 
 				return auth.WorkloadIdentityMiddleware(wia, httpDoer, req, next)
 			}
+			allowBodyReplay := len(final.Middlewares) == 1
+			final.InstallRequestRetryScope(allowBodyReplay)
+			final.InstallRequestAttemptMiddleware()
 			return nil
 		}).Apply(r)
 	})
