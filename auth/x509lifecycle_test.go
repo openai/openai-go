@@ -12,6 +12,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
 
 func TestX509WorkloadIdentitySharesConcurrentRefreshes(t *testing.T) {
@@ -112,6 +114,177 @@ func TestX509WorkloadIdentityRecoversAfterCanceledRefreshLeader(t *testing.T) {
 	}
 }
 
+func TestX509WorkloadIdentityFollowersUseTheirOwnRetryBudgets(t *testing.T) {
+	for _, test := range []struct {
+		name          string
+		status        int
+		followerLimit int
+		wantExchanges int32
+		wantSuccess   bool
+	}{
+		{name: "retry-enabled follower recovers", status: http.StatusServiceUnavailable,
+			followerLimit: 2, wantExchanges: 2, wantSuccess: true},
+		{name: "zero-retry follower fails", status: http.StatusServiceUnavailable, wantExchanges: 1},
+		{name: "permanent failure is not retried", status: http.StatusBadRequest,
+			followerLimit: 2, wantExchanges: 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var exchanges atomic.Int32
+			firstReached := make(chan struct{})
+			releaseFirst := make(chan struct{})
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				if exchanges.Add(1) == 1 {
+					close(firstReached)
+					<-releaseFirst
+					w.WriteHeader(test.status)
+					_, _ = io.WriteString(w, `{"error":{"code":"invalid_grant"}}`)
+					return
+				}
+				_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			}))
+			identity := newX509LifecycleIdentity(t, fixture)
+			leaderScope := requestconfig.NewRequestRetryScope(0, time.Millisecond, true, nil)
+			leaderContext := requestconfig.WithRequestRetryScope(t.Context(), leaderScope)
+			if !leaderScope.BeginAttempt() {
+				t.Fatal("zero-retry leader initial attempt was rejected")
+			}
+			leaderResult := make(chan error, 1)
+			go func() {
+				_, err := identity.GetToken(leaderContext, fixture.capability)
+				leaderResult <- err
+			}()
+			select {
+			case <-firstReached:
+			case <-time.After(5 * time.Second):
+				t.Fatal("zero-retry refresh leader never reached the issuer")
+			}
+			followerScope := requestconfig.NewRequestRetryScope(test.followerLimit, time.Millisecond, true, nil)
+			followerParent := requestconfig.WithRequestRetryScope(t.Context(), followerScope)
+			if !followerScope.BeginAttempt() {
+				t.Fatal("follower initial attempt was rejected")
+			}
+			waiting := make(chan struct{})
+			followerContext := &x509ObservedDoneContext{Context: followerParent, observed: waiting}
+			followerResult := make(chan error, 1)
+			go func() {
+				token, err := identity.GetToken(followerContext, fixture.capability)
+				if err == nil && token != x509ExchangeSyntheticToken {
+					err = errors.New("retry-enabled follower received an unexpected bearer")
+				}
+				followerResult <- err
+			}()
+			select {
+			case <-waiting:
+				close(releaseFirst)
+			case <-time.After(5 * time.Second):
+				t.Fatal("refresh follower never waited for its shared leader")
+			}
+			select {
+			case err := <-leaderResult:
+				if err == nil {
+					t.Error("zero-retry refresh leader unexpectedly recovered")
+				}
+			case <-time.After(5 * time.Second):
+				t.Fatal("zero-retry refresh leader did not finish")
+			}
+			select {
+			case err := <-followerResult:
+				if (err == nil) != test.wantSuccess {
+					t.Errorf("shared-failure follower error = %v, want success %t", err, test.wantSuccess)
+				}
+			case <-time.After(5 * time.Second):
+				t.Fatal("refresh follower did not finish after its shared failure")
+			}
+			if got := exchanges.Load(); got != test.wantExchanges {
+				t.Errorf("leader/follower issuer attempts = %d, want %d", got, test.wantExchanges)
+			}
+		})
+	}
+}
+
+type x509ObservedDoneContext struct {
+	context.Context
+	observed chan struct{}
+	once     sync.Once
+}
+
+func (ctx *x509ObservedDoneContext) Done() <-chan struct{} {
+	ctx.once.Do(func() { close(ctx.observed) })
+	return ctx.Context.Done()
+}
+
+func TestX509WorkloadIdentityNeverCachesExpiredExchange(t *testing.T) {
+	reached := make(chan struct{})
+	release := make(chan struct{})
+	written := make(chan struct{})
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		close(reached)
+		<-release
+		body := strings.Replace(x509ValidExchangeResponse(), `"expires_in":60`, `"expires_in":1`, 1)
+		_, _ = io.WriteString(w, body)
+		if flush, ok := w.(http.Flusher); ok {
+			flush.Flush()
+		}
+		close(written)
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	started := time.Now()
+	result := make(chan error, 1)
+	go func() {
+		token, err := identity.GetToken(t.Context(), fixture.capability)
+		if token != "" {
+			err = errors.New("expired exchange returned a bearer")
+		}
+		result <- err
+	}()
+	select {
+	case <-reached:
+	case <-time.After(5 * time.Second):
+		t.Fatal("short-lived exchange never reached the issuer")
+	}
+	identity.mu.Lock()
+	close(release)
+	select {
+	case <-written:
+	case <-time.After(5 * time.Second):
+		identity.mu.Unlock()
+		t.Fatal("short-lived issuer did not finish its response")
+	}
+	timer := time.NewTimer(time.Until(started.Add(1200 * time.Millisecond)))
+	<-timer.C
+	identity.mu.Unlock()
+	select {
+	case err := <-result:
+		if err == nil || !strings.Contains(err.Error(), "expired") {
+			t.Errorf("exchange expiring before cache insertion returned error = %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("expired exchange did not finish")
+	}
+	identity.mu.Lock()
+	if identity.cached.value != "" || !identity.refreshAfter.IsZero() {
+		t.Error("already-expired exchange was inserted into the workload token cache")
+	}
+	identity.mu.Unlock()
+}
+
+func TestX509WorkloadIdentityRejectsExpiredCachedTokenDespiteFutureRefresh(t *testing.T) {
+	var exchanges atomic.Int32
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		exchanges.Add(1)
+		_, _ = io.WriteString(w, x509ValidExchangeResponse())
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	identity.mu.Lock()
+	identity.cached = x509ExchangedToken{value: "expired-synthetic-bearer", expiresAt: time.Now().Add(-time.Second)}
+	identity.refreshAfter = time.Now().Add(time.Hour)
+	identity.mu.Unlock()
+	token, err := identity.GetToken(t.Context(), fixture.capability)
+	if err != nil || token != x509ExchangeSyntheticToken || exchanges.Load() != 1 {
+		t.Errorf("expired cached bearer result = %q, exchanges = %d, error = %v", token, exchanges.Load(), err)
+	}
+}
+
 func TestX509WorkloadIdentityRefreshBufferHandlesShortLifetimes(t *testing.T) {
 	var exchanges atomic.Int32
 	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -149,6 +322,8 @@ func TestX509WorkloadIdentityRetriesOnlyBoundedTransientIssuerFailures(t *testin
 		wantSuccess  bool
 		truncated    bool
 	}{
+		{name: "request timeout then succeeds", status: 408, failures: 2, wantAttempts: 3, wantSuccess: true},
+		{name: "conflict then succeeds", status: 409, failures: 2, wantAttempts: 3, wantSuccess: true},
 		{name: "rate limited then succeeds", status: 429, failures: 2, wantAttempts: 3, wantSuccess: true},
 		{name: "server error then succeeds", status: 500, failures: 2, wantAttempts: 3, wantSuccess: true},
 		{name: "service unavailable exhausts budget", status: 503, failures: 3, wantAttempts: 3},
@@ -184,14 +359,50 @@ func TestX509WorkloadIdentityRetriesOnlyBoundedTransientIssuerFailures(t *testin
 	}
 }
 
+func TestX509WorkloadIdentitySelectsBoundedIssuerRetryDelays(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		err     error
+		attempt int
+		scope   *requestconfig.RequestRetryScope
+		want    time.Duration
+	}{
+		{name: "ordinary exponential delay", err: &x509ExchangeHTTPError{statusCode: 503},
+			attempt: 1, want: 2 * x509InitialRetryDelay},
+		{name: "issuer-directed delay", err: &x509ExchangeHTTPError{
+			statusCode: 429, retryAfter: 70 * time.Millisecond, hasRetryAfter: true},
+			want: 70 * time.Millisecond},
+		{name: "explicit zero is immediate", err: &x509ExchangeHTTPError{
+			statusCode: 429, retryAfter: 0, hasRetryAfter: true}},
+		{name: "issuer hint obeys caller maximum", err: &x509ExchangeHTTPError{
+			statusCode: 503, retryAfter: time.Second, hasRetryAfter: true},
+			scope: requestconfig.NewRequestRetryScope(2, 7*time.Millisecond, true, nil), want: 7 * time.Millisecond},
+		{name: "ordinary delay obeys caller maximum", err: &x509ExchangeReadError{},
+			scope: requestconfig.NewRequestRetryScope(2, time.Millisecond, true, nil), want: time.Millisecond},
+		{name: "standalone delay remains bounded", err: &x509ExchangeHTTPError{
+			statusCode: 429, retryAfter: time.Hour, hasRetryAfter: true}, want: x509MaximumRetryAfter},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := x509ExchangeRetryDelay(test.err, test.attempt, test.scope); got != test.want {
+				t.Errorf("issuer retry delay = %s, want %s", got, test.want)
+			}
+		})
+	}
+}
+
 func TestX509WorkloadIdentityCancelsRetryBackoff(t *testing.T) {
 	var attempts atomic.Int32
 	reached := make(chan struct{})
 	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		if attempts.Add(1) == 1 {
+		attempt := attempts.Add(1)
+		w.Header().Set("Retry-After", "8")
+		w.WriteHeader(http.StatusTooManyRequests)
+		if flush, ok := w.(http.Flusher); ok {
+			flush.Flush()
+		}
+		if attempt == 1 {
 			close(reached)
 		}
-		w.WriteHeader(http.StatusTooManyRequests)
 	}))
 	identity := newX509LifecycleIdentity(t, fixture)
 	ctx, cancel := context.WithCancel(t.Context())

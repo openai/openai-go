@@ -1,10 +1,13 @@
 package requestconfig
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestRequestRetryScopeSharesLogicalAttemptBudget(t *testing.T) {
 	var consumed []int
-	scope := NewRequestRetryScope(2, true, func(value int) { consumed = append(consumed, value) })
+	scope := NewRequestRetryScope(2, time.Second, true, func(value int) { consumed = append(consumed, value) })
 	for range 2 {
 		if !scope.BeginAttempt() {
 			t.Fatal("initial request and first outer retry were not admitted")
@@ -22,13 +25,16 @@ func TestRequestRetryScopeSharesLogicalAttemptBudget(t *testing.T) {
 }
 
 func TestRequestRetryScopePreservesContextAndReplayPolicy(t *testing.T) {
-	scope := NewRequestRetryScope(2, false, nil)
+	scope := NewRequestRetryScope(2, 0, false, nil)
 	ctx := WithRequestRetryScope(t.Context(), scope)
 	if RequestRetryScopeFromContext(ctx) != scope || scope.AllowBodyReplay() {
 		t.Error("request context lost its retry scope or transformed-body replay policy")
 	}
 	if RequestRetryScopeFromContext(t.Context()) != nil {
 		t.Error("ordinary contexts unexpectedly acquired an X.509 retry scope")
+	}
+	if scope.MaxRetryDelay() != DefaultMaxServerDelay {
+		t.Errorf("default maximum retry delay = %s, want %s", scope.MaxRetryDelay(), DefaultMaxServerDelay)
 	}
 	if !scope.BeginAttempt() {
 		t.Fatal("initial issuer attempt was rejected")
@@ -40,5 +46,12 @@ func TestRequestRetryScopePreservesContextAndReplayPolicy(t *testing.T) {
 	}
 	if scope.TryRetry() {
 		t.Error("issuer retries did not stop at the logical request budget")
+	}
+}
+
+func TestRequestRetryScopePreservesConfiguredMaximumDelay(t *testing.T) {
+	scope := NewRequestRetryScope(2, 7*time.Millisecond, true, nil)
+	if got := scope.MaxRetryDelay(); got != 7*time.Millisecond {
+		t.Errorf("request maximum retry delay = %s, want 7ms", got)
 	}
 }

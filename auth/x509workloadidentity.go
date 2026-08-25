@@ -83,7 +83,8 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 			return "", err
 		}
 		identity.mu.Lock()
-		if identity.cached.value != "" && time.Now().Before(identity.refreshAfter) {
+		now := time.Now()
+		if identity.cached.value != "" && now.Before(identity.refreshAfter) && now.Before(identity.cached.expiresAt) {
 			token := identity.cached.value
 			identity.mu.Unlock()
 			return token, nil
@@ -97,6 +98,11 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 				if current.err == nil || errors.Is(current.err, context.Canceled) ||
 					errors.Is(current.err, context.DeadlineExceeded) {
 					continue
+				}
+				if retryableX509ExchangeError(current.err) {
+					if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil && scope.TryRetry() {
+						continue
+					}
 				}
 				return "", current.err
 			}
@@ -116,13 +122,25 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 			fallback = true
 		}
 		if err == nil && !fallback {
-			identity.cached = token
-			buffer := identity.config.RefreshBuffer
-			if buffer == 0 {
-				buffer = x509DefaultRefreshBuffer
+			remaining := time.Until(token.expiresAt)
+			if remaining <= 0 {
+				err = errors.New("X.509 token exchange returned an already expired token")
+			} else {
+				identity.cached = token
+				buffer := identity.config.RefreshBuffer
+				if buffer == 0 {
+					buffer = x509DefaultRefreshBuffer
+				}
+				buffer = min(buffer, remaining/2)
+				identity.refreshAfter = token.expiresAt.Add(-buffer)
 			}
-			buffer = min(buffer, time.Until(token.expiresAt)/2)
-			identity.refreshAfter = token.expiresAt.Add(-buffer)
+		}
+		if err == nil && !time.Now().Before(token.expiresAt) {
+			err = errors.New("X.509 token exchange returned an already expired token")
+			if identity.cached.value == token.value {
+				identity.cached = x509ExchangedToken{}
+				identity.refreshAfter = time.Time{}
+			}
 		}
 		refresh.err = err
 		identity.inFlight = nil
@@ -141,10 +159,11 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(ctx context.Context,
 		if err == nil || !retryableX509ExchangeError(err) || attempt+1 >= x509MaximumAttempts {
 			return token, err
 		}
-		if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil && !scope.TryRetry() {
+		scope := requestconfig.RequestRetryScopeFromContext(ctx)
+		if scope != nil && !scope.TryRetry() {
 			return token, err
 		}
-		timer := time.NewTimer(x509InitialRetryDelay << attempt)
+		timer := time.NewTimer(x509ExchangeRetryDelay(err, attempt, scope))
 		select {
 		case <-ctx.Done():
 			if !timer.Stop() {
@@ -154,6 +173,19 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(ctx context.Context,
 		case <-timer.C:
 		}
 	}
+}
+
+func x509ExchangeRetryDelay(err error, attempt int, scope *requestconfig.RequestRetryScope) time.Duration {
+	delay := x509InitialRetryDelay << attempt
+	var status *x509ExchangeHTTPError
+	if errors.As(err, &status) && status.hasRetryAfter {
+		delay = status.retryAfter
+	}
+	maximum := x509MaximumRetryAfter
+	if scope != nil {
+		maximum = scope.MaxRetryDelay()
+	}
+	return min(delay, maximum)
 }
 
 func retryableX509ExchangeError(err error) bool {

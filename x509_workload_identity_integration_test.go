@@ -521,7 +521,7 @@ func TestX509WorkloadIdentityUsesOnlyTheLastAuthenticationOption(t *testing.T) {
 				t.Errorf("concurrent reused X.509 option request: %v", err)
 			}
 		}
-		if len(issuer.requests()) != requests || len(api.requests()) != requests {
+		if len(issuer.requests()) != 1 || len(api.requests()) != requests {
 			t.Errorf("concurrently reused X.509 option issuer/API calls = %d/%d",
 				len(issuer.requests()), len(api.requests()))
 		}

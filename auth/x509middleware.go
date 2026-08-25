@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/openai/openai-go/v3/internal/requestconfig"
@@ -15,6 +16,9 @@ func X509WorkloadIdentityMiddleware(
 	request *http.Request,
 	next func(*http.Request) (*http.Response, error),
 ) (*http.Response, error) {
+	if request == nil || request.Header == nil {
+		return nil, errors.New("X.509 workload identity requires a non-nil request and header map")
+	}
 	token, err := identity.GetToken(request.Context(), httpClient)
 	if err != nil {
 		return nil, err
@@ -27,7 +31,7 @@ func X509WorkloadIdentityMiddleware(
 	}
 	identity.invalidateToken(token)
 	scope := requestconfig.RequestRetryScopeFromContext(request.Context())
-	if request.Body != nil && (request.GetBody == nil || (scope != nil && !scope.AllowBodyReplay())) {
+	if request.Body != nil && (request.GetBody == nil || scope == nil || !scope.AllowBodyReplay()) {
 		return response, nil
 	}
 	if scope != nil && !scope.TryReplay() {

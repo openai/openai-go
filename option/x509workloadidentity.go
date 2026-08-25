@@ -70,7 +70,7 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 			final.CustomHTTPDoer = config.Transport
 			originalRetries := final.MaxRetries
 			allowBodyReplay := len(final.Middlewares) == 0
-			scope := requestconfig.NewRequestRetryScope(originalRetries, allowBodyReplay, func(consumed int) {
+			scope := requestconfig.NewRequestRetryScope(originalRetries, final.MaxRetryDelay, allowBodyReplay, func(consumed int) {
 				final.MaxRetries = originalRetries - consumed
 			})
 			return WithMiddleware(func(request *http.Request, next MiddlewareNext) (*http.Response, error) {

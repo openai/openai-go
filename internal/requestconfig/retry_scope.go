@@ -3,6 +3,7 @@ package requestconfig
 import (
 	"context"
 	"sync"
+	"time"
 )
 
 type requestRetryScopeContextKey struct{}
@@ -13,6 +14,7 @@ type requestRetryScopeContextKey struct{}
 type RequestRetryScope struct {
 	mu              sync.Mutex
 	maximum         int
+	maximumDelay    time.Duration
 	outerRetries    int
 	internalRetries int
 	attempts        int
@@ -22,9 +24,13 @@ type RequestRetryScope struct {
 }
 
 // NewRequestRetryScope creates the retry scope for one logical SDK request.
-func NewRequestRetryScope(maximum int, allowBodyReplay bool, onInternalRetry func(int)) *RequestRetryScope {
+func NewRequestRetryScope(maximum int, maximumDelay time.Duration, allowBodyReplay bool, onInternalRetry func(int)) *RequestRetryScope {
+	if maximumDelay <= 0 {
+		maximumDelay = DefaultMaxServerDelay
+	}
 	return &RequestRetryScope{
 		maximum:         max(0, maximum),
+		maximumDelay:    maximumDelay,
 		allowBodyReplay: allowBodyReplay,
 		onInternalRetry: onInternalRetry,
 	}
@@ -78,6 +84,12 @@ func (scope *RequestRetryScope) TryReplay() bool {
 // body after it became replayable.
 func (scope *RequestRetryScope) AllowBodyReplay() bool {
 	return scope.allowBodyReplay
+}
+
+// MaxRetryDelay bounds issuer-directed and SDK-selected retry waits for this
+// logical request.
+func (scope *RequestRetryScope) MaxRetryDelay() time.Duration {
+	return scope.maximumDelay
 }
 
 func (scope *RequestRetryScope) tryInternalRetry() bool {

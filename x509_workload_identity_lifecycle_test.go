@@ -53,6 +53,62 @@ func TestX509WorkloadIdentityBoundsIssuerRetriesAcrossSDKRetries(t *testing.T) {
 	}
 }
 
+func TestX509WorkloadIdentityHonorsBoundedIssuerRetryAfter(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		status  int
+		header  string
+		value   string
+		maximum time.Duration
+		minimum time.Duration
+		ceiling time.Duration
+	}{
+		{name: "request timeout", status: http.StatusRequestTimeout,
+			header: "Retry-After-Ms", value: "40", maximum: 200 * time.Millisecond, minimum: 30 * time.Millisecond},
+		{name: "conflict", status: http.StatusConflict,
+			header: "Retry-After-Ms", value: "40", maximum: 200 * time.Millisecond, minimum: 30 * time.Millisecond},
+		{name: "rate limited", status: http.StatusTooManyRequests,
+			header: "Retry-After", value: "0.04", maximum: 200 * time.Millisecond, minimum: 30 * time.Millisecond},
+		{name: "service unavailable", status: http.StatusServiceUnavailable,
+			header: "Retry-After-Ms", value: "40", maximum: 200 * time.Millisecond, minimum: 30 * time.Millisecond},
+		{name: "caller delay clamps issuer hint", status: http.StatusTooManyRequests,
+			header: "Retry-After", value: "8", maximum: 5 * time.Millisecond, ceiling: 250 * time.Millisecond},
+		{name: "explicit zero is immediate", status: http.StatusServiceUnavailable,
+			header: "Retry-After-Ms", value: "0", maximum: time.Second, ceiling: 250 * time.Millisecond},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			var exchanges atomic.Int32
+			attempted := make(chan time.Time, 2)
+			issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				attempted <- time.Now()
+				if exchanges.Add(1) == 1 {
+					w.Header().Set(test.header, test.value)
+					w.WriteHeader(test.status)
+					return
+				}
+				_, _ = io.WriteString(w, x509IntegrationTokenResponse("synthetic-retry-after-bearer"))
+			})
+			client := openai.NewClient(option.WithX509WorkloadIdentity(config), option.WithMaxRetryDelay(test.maximum))
+			if _, err := client.Models.List(t.Context()); err != nil {
+				t.Fatalf("issuer-directed retry failed: %v", err)
+			}
+			first, second := <-attempted, <-attempted
+			delay := second.Sub(first)
+			if delay < test.minimum {
+				t.Errorf("issuer-directed retry waited %s, want at least %s", delay, test.minimum)
+			}
+			if test.ceiling > 0 && delay > test.ceiling {
+				t.Errorf("bounded issuer-directed retry waited %s, want no more than %s", delay, test.ceiling)
+			}
+			if exchanges.Load() != 2 || len(api.requests()) != 1 {
+				t.Errorf("issuer-directed retry issuer/API attempts = %d/%d", exchanges.Load(), len(api.requests()))
+			}
+		})
+	}
+}
+
 func TestX509WorkloadIdentitySharesRetryBudgetAcrossMixedIssuerAPIAndUnauthorized(t *testing.T) {
 	for _, test := range []struct {
 		name        string
