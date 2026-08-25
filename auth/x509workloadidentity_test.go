@@ -66,8 +66,8 @@ func TestX509WorkloadIdentityAuthExchangesOnlyOnItsAttestedTransport(t *testing.
 			t.Fatalf("exchange on attested transport token=%q error=%v", token, tokenErr)
 		}
 	}
-	if got := exchanges.Load(); got != 2 {
-		t.Errorf("pre-cache integration made %d exchanges, want one per GetToken call", got)
+	if got := exchanges.Load(); got != 1 {
+		t.Errorf("cached workload identity made %d exchanges, want one per transport generation", got)
 	}
 	for _, doer := range []HTTPDoer{nil, http.DefaultClient} {
 		if token, tokenErr := identity.GetToken(t.Context(), doer); token != "" || tokenErr == nil {
@@ -92,7 +92,7 @@ func TestX509WorkloadIdentityAuthExchangesOnlyOnItsAttestedTransport(t *testing.
 		tokenErr == nil || !strings.Contains(tokenErr.Error(), "invalid") {
 		t.Errorf("nil X.509 identity returned token=%q error=%v", token, tokenErr)
 	}
-	if got := exchanges.Load(); got != 2 {
+	if got := exchanges.Load(); got != 1 {
 		t.Errorf("rejected transports/cancellation caused unexpected exchanges: %d", got)
 	}
 }

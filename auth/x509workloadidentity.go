@@ -4,7 +4,17 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/openai/openai-go/v3/internal/requestconfig"
+)
+
+const (
+	x509DefaultRefreshBuffer = 5 * time.Minute
+	x509MaximumAttempts      = 3
+	x509InitialRetryDelay    = 25 * time.Millisecond
+	x509MaximumRetryCooldown = 5 * time.Second
 )
 
 // X509WorkloadIdentity configures an OpenAI workload authenticated with a
@@ -19,7 +29,18 @@ type X509WorkloadIdentity struct {
 // X509WorkloadIdentityAuth exchanges a static, attested X.509 workload identity
 // for an ordinary OpenAI bearer token.
 type X509WorkloadIdentityAuth struct {
-	config X509WorkloadIdentity
+	config       X509WorkloadIdentity
+	mu           sync.Mutex
+	cached       x509ExchangedToken
+	refreshAfter time.Time
+	inFlight     *x509TokenRefresh
+}
+
+type x509TokenRefresh struct {
+	done       chan struct{}
+	wake       chan struct{}
+	generation string
+	err        error
 }
 
 // NewX509WorkloadIdentityAuth validates and binds a workload identity to one
@@ -46,13 +67,169 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 	if identity == nil {
 		return "", errors.New("X.509 workload identity authentication is invalid")
 	}
+	if ctx == nil {
+		return "", errors.New("X.509 workload identity requires a non-nil context")
+	}
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
 	transport, ok := doer.(*X509Transport)
 	if !ok || transport != identity.config.Transport {
 		return "", errors.New("X.509 workload identity requires its exact attested transport")
 	}
-	token, err := x509Exchange(ctx, transport, identity.config.IdentityProviderID, identity.config.ServiceAccountID)
-	if err != nil {
+	if err := transport.validateAttestation(); err != nil {
 		return "", err
 	}
-	return token.value, nil
+	for {
+		if err := ctx.Err(); err != nil {
+			return "", err
+		}
+		identity.mu.Lock()
+		now := time.Now()
+		if identity.cached.value != "" && now.Before(identity.refreshAfter) && now.Before(identity.cached.expiresAt) {
+			token := identity.cached.value
+			identity.mu.Unlock()
+			return token, nil
+		}
+		if current := identity.inFlight; current != nil {
+			identity.mu.Unlock()
+			select {
+			case <-ctx.Done():
+				return "", ctx.Err()
+			case <-current.done:
+				if current.err == nil || errors.Is(current.err, context.Canceled) ||
+					errors.Is(current.err, context.DeadlineExceeded) {
+					continue
+				}
+				if retryableX509ExchangeError(current.err) {
+					if scope := requestconfig.RequestRetryScopeFromContext(ctx); scope != nil && scope.TryRetry() {
+						continue
+					}
+				}
+				return "", current.err
+			}
+		}
+		refresh := &x509TokenRefresh{
+			done:       make(chan struct{}),
+			wake:       make(chan struct{}),
+			generation: identity.cached.value,
+		}
+		identity.inFlight = refresh
+		identity.mu.Unlock()
+
+		token, err := identity.exchangeWithRetry(ctx, transport, refresh)
+		identity.mu.Lock()
+		fallback := false
+		if err != nil && retryableX509ExchangeError(err) && identity.cached.value != "" &&
+			time.Now().Before(identity.cached.expiresAt) {
+			cooldown := min(x509MaximumRetryCooldown, time.Until(identity.cached.expiresAt)/2)
+			identity.refreshAfter = time.Now().Add(cooldown)
+			token, err = identity.cached, nil
+			fallback = true
+		}
+		if err == nil && !fallback {
+			remaining := time.Until(token.expiresAt)
+			if remaining <= 0 {
+				err = errors.New("X.509 token exchange returned an already expired token")
+			} else {
+				identity.cached = token
+				buffer := identity.config.RefreshBuffer
+				if buffer == 0 {
+					buffer = x509DefaultRefreshBuffer
+				}
+				buffer = min(buffer, remaining/2)
+				identity.refreshAfter = token.expiresAt.Add(-buffer)
+			}
+		}
+		if err == nil && !time.Now().Before(token.expiresAt) {
+			err = errors.New("X.509 token exchange returned an already expired token")
+			if identity.cached.value == token.value {
+				identity.cached = x509ExchangedToken{}
+				identity.refreshAfter = time.Time{}
+			}
+		}
+		refresh.err = err
+		identity.inFlight = nil
+		close(refresh.done)
+		identity.mu.Unlock()
+		if err != nil {
+			return "", err
+		}
+		return token.value, nil
+	}
+}
+
+func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(
+	ctx context.Context, transport *X509Transport, refresh *x509TokenRefresh,
+) (x509ExchangedToken, error) {
+	wake := refresh.wake
+	for attempt := 0; ; attempt++ {
+		token, err := x509Exchange(ctx, transport, identity.config.IdentityProviderID, identity.config.ServiceAccountID)
+		if err == nil || !retryableX509ExchangeError(err) || attempt+1 >= x509MaximumAttempts {
+			return token, err
+		}
+		scope := requestconfig.RequestRetryScopeFromContext(ctx)
+		if scope != nil && !scope.TryRetry() {
+			return token, err
+		}
+		timer := time.NewTimer(x509ExchangeRetryDelay(err, attempt, scope))
+		select {
+		case <-ctx.Done():
+			if !timer.Stop() {
+				<-timer.C
+			}
+			return x509ExchangedToken{}, ctx.Err()
+		case <-timer.C:
+		case <-wake:
+			if !timer.Stop() {
+				select {
+				case <-timer.C:
+				default:
+				}
+			}
+			wake = nil
+		}
+	}
+}
+
+func x509ExchangeRetryDelay(err error, attempt int, scope *requestconfig.RequestRetryScope) time.Duration {
+	delay := x509InitialRetryDelay << attempt
+	var status *x509ExchangeHTTPError
+	if errors.As(err, &status) && status.hasRetryAfter {
+		delay = status.retryAfter
+	}
+	maximum := x509MaximumRetryAfter
+	if scope != nil {
+		maximum = scope.MaxRetryDelay()
+	}
+	return min(delay, maximum)
+}
+
+func retryableX509ExchangeError(err error) bool {
+	var oauth *OAuthError
+	if errors.As(err, &oauth) {
+		return oauth.ErrorCode == "temporarily_unavailable" || oauth.ErrorCode == "server_error"
+	}
+	var status *x509ExchangeHTTPError
+	if errors.As(err, &status) {
+		return status.retryable()
+	}
+	var read *x509ExchangeReadError
+	if errors.As(err, &read) {
+		return read.retryable()
+	}
+	var transport *x509TransportError
+	return errors.As(err, &transport) && transport.cause == nil
+}
+
+func (identity *X509WorkloadIdentityAuth) invalidateToken(value string) {
+	identity.mu.Lock()
+	defer identity.mu.Unlock()
+	if identity.cached.value == value {
+		identity.cached = x509ExchangedToken{}
+		identity.refreshAfter = time.Time{}
+		if current := identity.inFlight; current != nil && current.generation == value {
+			close(current.wake)
+		}
+	}
 }

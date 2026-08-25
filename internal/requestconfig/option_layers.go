@@ -18,6 +18,7 @@ type authenticationState struct {
 	currentLayer             *optionLayerIdentity
 	providerInCurrentLayer   *ProviderAuthOption
 	selectedProvider         *ProviderAuthOption
+	retryScopeFactory        *requestRetryScopeFactory
 	httpClientExplicit       bool
 	apiKeyLayer              *optionLayerIdentity
 	adminAPIKeyLayer         *optionLayerIdentity
@@ -256,6 +257,9 @@ func (state authenticationState) cloneAsInherited(cfg *RequestConfig) authentica
 	state.adminAPIKeyLayer = nil
 	state.authorizationHeaderLayer = nil
 	state.apiKeyHeaderLayer = nil
+	if state.retryScopeFactory != nil {
+		state.retryScopeFactory.install(cfg)
+	}
 
 	hasAuthorizationOverride := state.headerOverride || state.authorizationExplicit ||
 		len(cfg.Request.Header.Values("Authorization")) != 0
