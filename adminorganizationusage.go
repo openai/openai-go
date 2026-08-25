@@ -136,6 +136,21 @@ func (r *AdminOrganizationUsageService) WebSearchCalls(ctx context.Context, quer
 	return res, err
 }
 
+// The unit of the `quantity` value. If no single supported unit applies to the
+// result, this field is `null`.
+type CostQuantityUnit string
+
+const (
+	CostQuantityUnitTokens          CostQuantityUnit = "tokens"
+	CostQuantityUnit1000Tokens      CostQuantityUnit = "1000_tokens"
+	CostQuantityUnitDurationSeconds CostQuantityUnit = "duration_seconds"
+	CostQuantityUnitDurationMinutes CostQuantityUnit = "duration_minutes"
+	CostQuantityUnitDurationHours   CostQuantityUnit = "duration_hours"
+	CostQuantityUnitGibibyteHours   CostQuantityUnit = "gibibyte_hours"
+	CostQuantityUnitImages          CostQuantityUnit = "images"
+	CostQuantityUnitCharacters      CostQuantityUnit = "characters"
+)
+
 type AdminOrganizationUsageAudioSpeechesResponse struct {
 	Data     []AdminOrganizationUsageAudioSpeechesResponseData `json:"data" api:"required"`
 	HasMore  bool                                              `json:"has_more" api:"required"`
@@ -298,7 +313,7 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultUnion struct {
 	Quantity float64 `json:"quantity"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResult].
-	QuantityUnit string `json:"quantity_unit"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
@@ -943,7 +958,7 @@ type AdminOrganizationUsageAudioSpeechesResponseDataResultOrganizationCostsResul
 	Quantity float64 `json:"quantity" api:"nullable"`
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
-	QuantityUnit string `json:"quantity_unit" api:"nullable"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
@@ -1151,7 +1166,7 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultUnion struct {
 	Quantity float64 `json:"quantity"`
 	// This field is from variant
 	// [AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCostsResult].
-	QuantityUnit string `json:"quantity_unit"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
@@ -1797,7 +1812,7 @@ type AdminOrganizationUsageAudioTranscriptionsResponseDataResultOrganizationCost
 	Quantity float64 `json:"quantity" api:"nullable"`
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
-	QuantityUnit string `json:"quantity_unit" api:"nullable"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
@@ -2008,7 +2023,7 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultUnion struct
 	Quantity float64 `json:"quantity"`
 	// This field is from variant
 	// [AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganizationCostsResult].
-	QuantityUnit string `json:"quantity_unit"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
@@ -2654,7 +2669,7 @@ type AdminOrganizationUsageCodeInterpreterSessionsResponseDataResultOrganization
 	Quantity float64 `json:"quantity" api:"nullable"`
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
-	QuantityUnit string `json:"quantity_unit" api:"nullable"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
@@ -2862,7 +2877,7 @@ type AdminOrganizationUsageCompletionsResponseDataResultUnion struct {
 	Quantity float64 `json:"quantity"`
 	// This field is from variant
 	// [AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult].
-	QuantityUnit string `json:"quantity_unit"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
@@ -3505,7 +3520,7 @@ type AdminOrganizationUsageCompletionsResponseDataResultOrganizationCostsResult 
 	Quantity float64 `json:"quantity" api:"nullable"`
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
-	QuantityUnit string `json:"quantity_unit" api:"nullable"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
@@ -3713,7 +3728,7 @@ type AdminOrganizationUsageCostsResponseDataResultUnion struct {
 	Quantity float64 `json:"quantity"`
 	// This field is from variant
 	// [AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult].
-	QuantityUnit string `json:"quantity_unit"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
@@ -4355,7 +4370,7 @@ type AdminOrganizationUsageCostsResponseDataResultOrganizationCostsResult struct
 	Quantity float64 `json:"quantity" api:"nullable"`
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
-	QuantityUnit string `json:"quantity_unit" api:"nullable"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
@@ -4563,7 +4578,7 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultUnion struct {
 	Quantity float64 `json:"quantity"`
 	// This field is from variant
 	// [AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult].
-	QuantityUnit string `json:"quantity_unit"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
@@ -5206,7 +5221,7 @@ type AdminOrganizationUsageEmbeddingsResponseDataResultOrganizationCostsResult s
 	Quantity float64 `json:"quantity" api:"nullable"`
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
-	QuantityUnit string `json:"quantity_unit" api:"nullable"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
@@ -5414,7 +5429,7 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultUnion struct {
 	Quantity float64 `json:"quantity"`
 	// This field is from variant
 	// [AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsResult].
-	QuantityUnit string `json:"quantity_unit"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
@@ -6059,7 +6074,7 @@ type AdminOrganizationUsageFileSearchCallsResponseDataResultOrganizationCostsRes
 	Quantity float64 `json:"quantity" api:"nullable"`
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
-	QuantityUnit string `json:"quantity_unit" api:"nullable"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
@@ -6267,7 +6282,7 @@ type AdminOrganizationUsageImagesResponseDataResultUnion struct {
 	Quantity float64 `json:"quantity"`
 	// This field is from variant
 	// [AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult].
-	QuantityUnit string `json:"quantity_unit"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
@@ -6909,7 +6924,7 @@ type AdminOrganizationUsageImagesResponseDataResultOrganizationCostsResult struc
 	Quantity float64 `json:"quantity" api:"nullable"`
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
-	QuantityUnit string `json:"quantity_unit" api:"nullable"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
@@ -7117,7 +7132,7 @@ type AdminOrganizationUsageModerationsResponseDataResultUnion struct {
 	Quantity float64 `json:"quantity"`
 	// This field is from variant
 	// [AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult].
-	QuantityUnit string `json:"quantity_unit"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
@@ -7760,7 +7775,7 @@ type AdminOrganizationUsageModerationsResponseDataResultOrganizationCostsResult 
 	Quantity float64 `json:"quantity" api:"nullable"`
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
-	QuantityUnit string `json:"quantity_unit" api:"nullable"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
@@ -7968,7 +7983,7 @@ type AdminOrganizationUsageVectorStoresResponseDataResultUnion struct {
 	Quantity float64 `json:"quantity"`
 	// This field is from variant
 	// [AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult].
-	QuantityUnit string `json:"quantity_unit"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
@@ -8613,7 +8628,7 @@ type AdminOrganizationUsageVectorStoresResponseDataResultOrganizationCostsResult
 	Quantity float64 `json:"quantity" api:"nullable"`
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
-	QuantityUnit string `json:"quantity_unit" api:"nullable"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field
@@ -8821,7 +8836,7 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultUnion struct {
 	Quantity float64 `json:"quantity"`
 	// This field is from variant
 	// [AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResult].
-	QuantityUnit string `json:"quantity_unit"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit"`
 	JSON         struct {
 		InputTokens            respjson.Field
 		NumModelRequests       respjson.Field
@@ -9466,7 +9481,7 @@ type AdminOrganizationUsageWebSearchCallsResponseDataResultOrganizationCostsResu
 	Quantity float64 `json:"quantity" api:"nullable"`
 	// The unit of the `quantity` value. If no single supported unit applies to the
 	// result, this field is `null`.
-	QuantityUnit string `json:"quantity_unit" api:"nullable"`
+	QuantityUnit CostQuantityUnit `json:"quantity_unit" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Object       respjson.Field

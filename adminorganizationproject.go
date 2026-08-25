@@ -179,7 +179,6 @@ func (r *Project) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The residency configuration for the project.
 type ProjectResidency string
 
 const (
@@ -217,7 +216,7 @@ type AdminOrganizationProjectNewParams struct {
 	// Any of "GLOBAL", "US_STORAGE_PROCESSING", "EU_STORAGE_PROCESSING", "JP_STORAGE",
 	// "KR_STORAGE", "CA_STORAGE", "SG_STORAGE", "IN_STORAGE", "AU_STORAGE",
 	// "GB_STORAGE", "AE_STORAGE", "AE_STORAGE_PROCESSING".
-	Residency AdminOrganizationProjectNewParamsResidency `json:"residency,omitzero"`
+	Residency ProjectResidency `json:"residency,omitzero"`
 	paramObj
 }
 
@@ -228,28 +227,6 @@ func (r AdminOrganizationProjectNewParams) MarshalJSON() (data []byte, err error
 func (r *AdminOrganizationProjectNewParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-// Create the project with the specified residency configuration. Your organization
-// must have access to the requested residency configuration in order to use it.
-// See
-// [data residency controls](https://platform.openai.com/docs/guides/your-data#data-residency-controls)
-// to review the functionality and limitations of setting this field.
-type AdminOrganizationProjectNewParamsResidency string
-
-const (
-	AdminOrganizationProjectNewParamsResidencyGlobal              AdminOrganizationProjectNewParamsResidency = "GLOBAL"
-	AdminOrganizationProjectNewParamsResidencyUsStorageProcessing AdminOrganizationProjectNewParamsResidency = "US_STORAGE_PROCESSING"
-	AdminOrganizationProjectNewParamsResidencyEuStorageProcessing AdminOrganizationProjectNewParamsResidency = "EU_STORAGE_PROCESSING"
-	AdminOrganizationProjectNewParamsResidencyJpStorage           AdminOrganizationProjectNewParamsResidency = "JP_STORAGE"
-	AdminOrganizationProjectNewParamsResidencyKrStorage           AdminOrganizationProjectNewParamsResidency = "KR_STORAGE"
-	AdminOrganizationProjectNewParamsResidencyCaStorage           AdminOrganizationProjectNewParamsResidency = "CA_STORAGE"
-	AdminOrganizationProjectNewParamsResidencySgStorage           AdminOrganizationProjectNewParamsResidency = "SG_STORAGE"
-	AdminOrganizationProjectNewParamsResidencyInStorage           AdminOrganizationProjectNewParamsResidency = "IN_STORAGE"
-	AdminOrganizationProjectNewParamsResidencyAuStorage           AdminOrganizationProjectNewParamsResidency = "AU_STORAGE"
-	AdminOrganizationProjectNewParamsResidencyGBStorage           AdminOrganizationProjectNewParamsResidency = "GB_STORAGE"
-	AdminOrganizationProjectNewParamsResidencyAeStorage           AdminOrganizationProjectNewParamsResidency = "AE_STORAGE"
-	AdminOrganizationProjectNewParamsResidencyAeStorageProcessing AdminOrganizationProjectNewParamsResidency = "AE_STORAGE_PROCESSING"
-)
 
 type AdminOrganizationProjectUpdateParams struct {
 	// External key ID to associate with the project.
