@@ -75,6 +75,14 @@ func TestNewX509TransportRequiresStaticNativeConfiguration(t *testing.T) {
 			want:   "exactly one static certificate",
 		},
 		{
+			name: "typed nil private key",
+			change: func(transport *http.Transport) {
+				var privateKey *ecdsa.PrivateKey
+				transport.TLSClientConfig.Certificates[0].PrivateKey = privateKey
+			},
+			want: "exactly one static certificate",
+		},
+		{
 			name: "dynamic certificate callback",
 			change: func(transport *http.Transport) {
 				transport.TLSClientConfig.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
@@ -184,6 +192,13 @@ func TestX509TransportAttestationDetectsUnsafeMutations(t *testing.T) {
 			},
 		},
 		{
+			name: "replace private key with typed nil",
+			change: func(transport *http.Transport) {
+				var privateKey *ecdsa.PrivateKey
+				transport.TLSClientConfig.Certificates[0].PrivateKey = privateKey
+			},
+		},
+		{
 			name: "install dynamic certificate callback",
 			change: func(transport *http.Transport) {
 				transport.TLSClientConfig.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
@@ -208,14 +223,6 @@ func TestX509TransportAttestationDetectsUnsafeMutations(t *testing.T) {
 			change: func(transport *http.Transport) {
 				transport.DialTLSContext = func(context.Context, string, string) (net.Conn, error) {
 					return nil, errors.New("synthetic TLS dialer")
-				}
-			},
-		},
-		{
-			name: "install custom TLS protocol handler",
-			change: func(transport *http.Transport) {
-				transport.TLSNextProto = map[string]func(string, *tls.Conn) http.RoundTripper{
-					"attacker": func(string, *tls.Conn) http.RoundTripper { return nil },
 				}
 			},
 		},

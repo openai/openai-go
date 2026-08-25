@@ -587,6 +587,61 @@ func TestX509TransportAcceptsNativeInitializedHTTP2Templates(t *testing.T) {
 	}
 }
 
+func TestX509TransportDoesNotRaceConcurrentNativeHTTP2Initialization(t *testing.T) {
+	fixture := newX509TransportFixture(t)
+	var received atomic.Int32
+	server := newX509HTTP2TransportServer(t, fixture, http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		if request.ProtoMajor == 2 {
+			received.Add(1)
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	template := fixture.transport(t, server)
+	template.ForceAttemptHTTP2 = true
+	capability := newX509Capability(t, template)
+	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+
+	const isolatedRequests = 32
+	ready := make(chan struct{}, isolatedRequests+1)
+	start := make(chan struct{})
+	results := make(chan error, isolatedRequests+1)
+	go func() {
+		ready <- struct{}{}
+		<-start
+		response, err := (&http.Client{Transport: template}).Do(request.Clone(request.Context()))
+		if err == nil {
+			err = response.Body.Close()
+		}
+		results <- err
+	}()
+	for range isolatedRequests {
+		go func() {
+			ready <- struct{}{}
+			<-start
+			response, err := capability.Do(request.Clone(request.Context()))
+			if err == nil {
+				err = response.Body.Close()
+			}
+			results <- err
+		}()
+	}
+	for range isolatedRequests + 1 {
+		<-ready
+	}
+	close(start)
+	for range isolatedRequests + 1 {
+		if err := <-results; err != nil {
+			t.Errorf("concurrent native or isolated HTTP/2 request: %v", err)
+		}
+	}
+	if template.TLSNextProto["h2"] == nil {
+		t.Fatal("caller-owned transport did not initialize its native HTTP/2 protocol map")
+	}
+	if got := received.Load(); got != isolatedRequests+1 {
+		t.Errorf("native and isolated mutually authenticated HTTP/2 requests = %d, want %d", got, isolatedRequests+1)
+	}
+}
+
 func TestX509TransportDoesNotInheritNativeShapedHTTP2Handlers(t *testing.T) {
 	fixture := newX509TransportFixture(t)
 	server := newX509HTTP2TransportServer(t, fixture, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -616,6 +671,38 @@ func TestX509TransportDoesNotInheritNativeShapedHTTP2Handlers(t *testing.T) {
 	}
 	if got := intercepted.Load(); got != 0 {
 		t.Errorf("caller-owned native-shaped HTTP/2 handlers intercepted %d requests", got)
+	}
+}
+
+func TestX509TransportDoesNotInheritLaterCallerTLSProtocolHandlers(t *testing.T) {
+	fixture := newX509TransportFixture(t)
+	var received, intercepted atomic.Int32
+	server := newX509HTTP2TransportServer(t, fixture, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		received.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	template := fixture.transport(t, server)
+	template.ForceAttemptHTTP2 = true
+	capability := newX509Capability(t, template)
+	template.TLSNextProto = map[string]func(string, *tls.Conn) http.RoundTripper{
+		"attacker": func(string, *tls.Conn) http.RoundTripper {
+			intercepted.Add(1)
+			return nil
+		},
+	}
+	request := x509TransportRequest(t, http.MethodGet, "https://"+x509TransportAPI+"/v1/models")
+	response, err := capability.Do(request)
+	if err != nil {
+		t.Fatalf("dispatch after an isolated caller TLS protocol handler was installed: %v", err)
+	}
+	if err := response.Body.Close(); err != nil {
+		t.Fatalf("close isolated caller protocol response: %v", err)
+	}
+	if got := intercepted.Load(); got != 0 {
+		t.Errorf("caller-owned post-attestation TLS protocol handler intercepted %d requests", got)
+	}
+	if got := received.Load(); got != 1 {
+		t.Errorf("isolated post-attestation TLS protocol request reached the API %d times", got)
 	}
 }
 

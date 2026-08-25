@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptrace"
 	"path"
+	"reflect"
 	"slices"
 	"strings"
 	"sync/atomic"
@@ -71,6 +72,9 @@ type X509Transport struct {
 // caller-owned; the returned capability owns a separate clean connection pool.
 func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 	if err := validateX509NativeTransport(template); err != nil {
+		return nil, err
+	}
+	if err := validateX509TLSProtocolHandlers(template.TLSNextProto); err != nil {
 		return nil, err
 	}
 	config := template.TLSClientConfig.Clone()
@@ -163,7 +167,7 @@ func validateX509NativeTransport(transport *http.Transport) error {
 	}
 	config := transport.TLSClientConfig
 	if len(config.Certificates) != 1 || len(config.Certificates[0].Certificate) == 0 ||
-		len(config.Certificates[0].Certificate[0]) == 0 || config.Certificates[0].PrivateKey == nil {
+		len(config.Certificates[0].Certificate[0]) == 0 || x509PrivateKeyIsNil(config.Certificates[0].PrivateKey) {
 		return errors.New("X.509 transport requires exactly one static certificate and private key")
 	}
 	if config.GetClientCertificate != nil {
@@ -182,14 +186,6 @@ func validateX509NativeTransport(transport *http.Transport) error {
 	if transport.Proxy != nil {
 		return errors.New("X.509 transport currently supports direct connections only")
 	}
-	for protocol, handler := range transport.TLSNextProto {
-		if (protocol != "h2" && protocol != "unencrypted_http2") || handler == nil {
-			return errors.New("X.509 transport does not support custom TLS protocol handlers")
-		}
-	}
-	if len(transport.TLSNextProto) != 0 && transport.TLSNextProto["h2"] == nil {
-		return errors.New("X.509 transport does not support custom TLS protocol handlers")
-	}
 	if transport.HTTP2 != nil && transport.HTTP2.CountError != nil {
 		return errors.New("X.509 transport does not support HTTP/2 error callbacks")
 	}
@@ -198,6 +194,31 @@ func validateX509NativeTransport(transport *http.Transport) error {
 	}
 	if config.ServerName != "" {
 		return errors.New("X.509 transport does not support overriding the TLS server name")
+	}
+	return nil
+}
+
+func x509PrivateKeyIsNil(key any) bool {
+	if key == nil {
+		return true
+	}
+	value := reflect.ValueOf(key)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice, reflect.UnsafePointer:
+		return value.IsNil()
+	default:
+		return false
+	}
+}
+
+func validateX509TLSProtocolHandlers(handlers map[string]func(string, *tls.Conn) http.RoundTripper) error {
+	for protocol, handler := range handlers {
+		if (protocol != "h2" && protocol != "unencrypted_http2") || handler == nil {
+			return errors.New("X.509 transport does not support custom TLS protocol handlers")
+		}
+	}
+	if len(handlers) != 0 && handlers["h2"] == nil {
+		return errors.New("X.509 transport does not support custom TLS protocol handlers")
 	}
 	return nil
 }
