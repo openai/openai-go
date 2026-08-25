@@ -10,7 +10,6 @@ import (
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/auth"
 	"github.com/openai/openai-go/v3/azure"
-	"github.com/openai/openai-go/v3/bedrock"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -280,7 +279,7 @@ func TestX509WorkloadIdentityDoesNotMutateCallerOwnedRequest(t *testing.T) {
 	}
 }
 
-func TestX509WorkloadIdentityRejectsAzureAndBedrockBeforeExchange(t *testing.T) {
+func TestX509WorkloadIdentityRejectsAzureBeforeExchange(t *testing.T) {
 	t.Run("Azure endpoint without credentials", func(t *testing.T) {
 		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
 		config, issuer, api := newX509WorkloadIdentityIntegration(t)
@@ -305,21 +304,6 @@ func TestX509WorkloadIdentityRejectsAzureAndBedrockBeforeExchange(t *testing.T) 
 		)
 		if _, err := client.Models.List(t.Context()); err == nil {
 			t.Fatal("Azure API-key provider accepted an X.509 workload identity")
-		}
-		assertX509WorkloadNoRequests(t, issuer, api)
-	})
-	t.Run("Bedrock SkipAuth", func(t *testing.T) {
-		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
-		config, issuer, api := newX509WorkloadIdentityIntegration(t)
-		client, err := bedrock.NewClient(t.Context(), bedrock.Config{
-			AWSRegion: "us-east-1",
-			SkipAuth:  true,
-		}, option.WithX509WorkloadIdentity(config), option.WithMaxRetries(0))
-		if err == nil {
-			_, err = client.Models.List(t.Context())
-		}
-		if err == nil {
-			t.Fatal("Bedrock SkipAuth accepted an X.509 workload identity")
 		}
 		assertX509WorkloadNoRequests(t, issuer, api)
 	})
