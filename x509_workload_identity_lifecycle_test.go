@@ -185,6 +185,49 @@ func TestX509WorkloadIdentityUnauthorizedRecoveryReentersSDKAttempt(t *testing.T
 	}
 }
 
+func TestX509WorkloadIdentityUnauthorizedRecoverySkipsOrdinaryRetryBackoff(t *testing.T) {
+	t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+	config, issuer, api := newX509WorkloadIdentityIntegration(t)
+	var exchanges, dispatches, middlewareAttempts atomic.Int32
+	issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, x509IntegrationTokenResponse(
+			fmt.Sprintf("synthetic-immediate-recovery-%d", exchanges.Add(1)),
+		))
+	})
+	api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if dispatches.Add(1) == 1 {
+			time.Sleep(35 * time.Millisecond)
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = io.WriteString(w, `{"error":{"message":"synthetic rejected bearer"}}`)
+			return
+		}
+		_, _ = io.WriteString(w, `{"data":[]}`)
+	})
+	client := openai.NewClient(
+		option.WithX509WorkloadIdentity(config),
+		option.WithMaxRetries(1),
+		option.WithRequestTimeout(100*time.Millisecond),
+		option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+			middlewareAttempts.Add(1)
+			return next(request)
+		}),
+	)
+	parent, cancel := context.WithTimeout(t.Context(), 2*time.Second)
+	defer cancel()
+	started := time.Now()
+	if _, err := client.Models.List(parent); err != nil {
+		t.Fatalf("unauthorized recovery used ordinary retry backoff under a short attempt timeout: %v", err)
+	}
+	if elapsed := time.Since(started); elapsed >= 300*time.Millisecond {
+		t.Errorf("unauthorized recovery waited %s for ordinary server backoff", elapsed)
+	}
+	if exchanges.Load() != 2 || dispatches.Load() != 2 || middlewareAttempts.Load() != 2 {
+		t.Errorf("immediate recovery issuer/API/middleware attempts = %d/%d/%d, want 2/2/2",
+			exchanges.Load(), dispatches.Load(), middlewareAttempts.Load())
+	}
+}
+
 func TestX509WorkloadIdentityRetriesOnlyTransientOAuthErrorCodes(t *testing.T) {
 	for _, test := range []struct {
 		name        string

@@ -39,6 +39,7 @@ func X509WorkloadIdentityMiddleware(
 	authenticated := request.Clone(request.Context())
 	authenticated.Header.Set("Authorization", "Bearer "+token)
 	response, err := next(authenticated)
+	response = x509UnsignedResponse(response)
 	if err != nil || response == nil || response.StatusCode != http.StatusUnauthorized {
 		return response, err
 	}
@@ -67,10 +68,31 @@ func X509WorkloadIdentityMiddleware(
 	}
 	replay.Header.Set("Authorization", "Bearer "+token)
 	response, err = next(replay)
+	response = x509UnsignedResponse(response)
 	if err == nil && response != nil && response.StatusCode == http.StatusUnauthorized {
 		identity.invalidateToken(token)
 	}
 	return response, err
+}
+
+func x509UnsignedResponse(response *http.Response) *http.Response {
+	if response == nil || response.Request == nil || response.Request.Header == nil {
+		return response
+	}
+	for name := range response.Request.Header {
+		if !strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {
+			continue
+		}
+		clone := *response
+		clone.Request = response.Request.Clone(response.Request.Context())
+		for credential := range clone.Request.Header {
+			if strings.EqualFold(strings.ReplaceAll(credential, "_", "-"), "authorization") {
+				delete(clone.Request.Header, credential)
+			}
+		}
+		return &clone
+	}
+	return response
 }
 
 func x509UnauthorizedRetryResponse(response *http.Response, retry bool) *http.Response {
@@ -81,6 +103,7 @@ func x509UnauthorizedRetryResponse(response *http.Response, retry bool) *http.Re
 	}
 	if retry {
 		clone.Header.Set("x-should-retry", "true")
+		clone.Header.Set("Retry-After-Ms", "0")
 	} else {
 		clone.Header.Set("x-should-retry", "false")
 	}

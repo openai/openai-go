@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -249,6 +250,126 @@ func TestX509WorkloadIdentityMiddlewareReplaysUnauthorizedResponsesWithoutBodies
 			}
 			if got := restored.Load(); got != 0 {
 				t.Errorf("bodyless middleware request invoked its retained GetBody factory %d times", got)
+			}
+		})
+	}
+}
+
+func TestX509WorkloadIdentityMiddlewareNeverReturnsSignedResponseRequests(t *testing.T) {
+	for _, test := range []struct {
+		name           string
+		status         int
+		dispatchError  bool
+		scoped         bool
+		nilRequest     bool
+		nilHeader      bool
+		unauthorized   bool
+		wantDispatches int32
+	}{
+		{name: "successful response", status: http.StatusOK, wantDispatches: 1},
+		{name: "API error response", status: http.StatusForbidden, wantDispatches: 1},
+		{name: "response and transport error", status: http.StatusOK, dispatchError: true, wantDispatches: 1},
+		{name: "response without request", status: http.StatusOK, nilRequest: true, wantDispatches: 1},
+		{name: "response request without headers", status: http.StatusOK, nilHeader: true, wantDispatches: 1},
+		{name: "scoped unauthorized response", status: http.StatusUnauthorized, scoped: true, wantDispatches: 1},
+		{name: "unscoped unauthorized replay", status: http.StatusOK, unauthorized: true, wantDispatches: 2},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var exchanges, dispatches atomic.Int32
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				token := fmt.Sprintf("synthetic-private-response-token-%d", exchanges.Add(1))
+				_, _ = io.WriteString(w, strings.Replace(x509ValidExchangeResponse(), x509ExchangeSyntheticToken, token, 1))
+			}))
+			identity := newX509LifecycleIdentity(t, fixture)
+			request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
+				"https://"+x509APIHost+"/v1/models", nil)
+			if err != nil {
+				t.Fatalf("construct unsigned middleware request: %v", err)
+			}
+			request.Header.Set("X-Synthetic-Metadata", "preserved")
+			if test.scoped {
+				scope := requestconfig.NewRequestRetryScope(1, 0, true, nil)
+				if !scope.BeginAttempt() {
+					t.Fatal("begin request-scoped authentication attempt")
+				}
+				request = request.WithContext(requestconfig.WithRequestRetryScope(request.Context(), scope))
+			}
+
+			var wireResponses []*http.Response
+			var returnedError = errors.New("synthetic dispatch failure")
+			response, middlewareErr := X509WorkloadIdentityMiddleware(identity, fixture.capability, request,
+				func(authenticated *http.Request) (*http.Response, error) {
+					attempt := dispatches.Add(1)
+					if got := authenticated.Header.Get("Authorization"); got != fmt.Sprintf("Bearer synthetic-private-response-token-%d", attempt) {
+						t.Errorf("authenticated wire attempt %d bearer = %q", attempt, got)
+					}
+					status := test.status
+					if test.unauthorized && attempt == 1 {
+						status = http.StatusUnauthorized
+					}
+					wire := &http.Response{
+						StatusCode: status,
+						Header:     http.Header{"X-Synthetic-Response": {"preserved"}},
+						Body:       io.NopCloser(strings.NewReader("synthetic-response-body")),
+						Request:    authenticated,
+					}
+					if test.nilRequest {
+						wire.Request = nil
+					} else if test.nilHeader {
+						wire.Request = authenticated.Clone(authenticated.Context())
+						wire.Request.Header = nil
+					} else {
+						wire.Request.Header["aUtHoRiZaTiOn"] = []string{"Bearer synthetic-private-alias"}
+					}
+					wireResponses = append(wireResponses, wire)
+					if test.dispatchError {
+						return wire, returnedError
+					}
+					return wire, nil
+				})
+			if response == nil {
+				t.Fatalf("signed middleware response unexpectedly nil: %v", middlewareErr)
+			}
+			if closeErr := response.Body.Close(); closeErr != nil {
+				t.Errorf("close returned middleware response: %v", closeErr)
+			}
+			if test.dispatchError != errors.Is(middlewareErr, returnedError) {
+				t.Errorf("middleware dispatch error = %v", middlewareErr)
+			}
+			if response.StatusCode != test.status || response.Header.Get("X-Synthetic-Response") != "preserved" {
+				t.Errorf("returned response lost its status or headers: %v", response)
+			}
+			if test.nilRequest {
+				if response.Request != nil {
+					t.Error("response unexpectedly acquired a request")
+				}
+			} else if test.nilHeader {
+				if response.Request == nil || response.Request.Header != nil {
+					t.Error("response request unexpectedly acquired a header map")
+				}
+			} else {
+				if response.Request == nil || response.Request.Header.Get("X-Synthetic-Metadata") != "preserved" {
+					t.Fatal("response lost its unsigned request metadata")
+				}
+				for name := range response.Request.Header {
+					if strings.EqualFold(strings.ReplaceAll(name, "_", "-"), "authorization") {
+						t.Errorf("returned response exposed signed %q request credentials", name)
+					}
+				}
+				for _, wire := range wireResponses {
+					if wire.Request == nil || wire.Request.Header.Get("Authorization") == "" {
+						t.Error("sanitizing the returned response modified its original signed wire request")
+					}
+				}
+			}
+			if test.scoped && response.Header.Get("x-should-retry") != "true" {
+				t.Error("scoped unauthorized response lost its outer-retry signal")
+			}
+			if got := dispatches.Load(); got != test.wantDispatches {
+				t.Errorf("authenticated dispatches = %d, want %d", got, test.wantDispatches)
+			}
+			if request.Header.Get("Authorization") != "" {
+				t.Error("authentication modified the original unsigned caller request")
 			}
 		})
 	}
