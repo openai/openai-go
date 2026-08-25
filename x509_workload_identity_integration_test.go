@@ -31,8 +31,8 @@ func TestX509WorkloadIdentityAuthenticatesPublicClientOverMutualTLS(t *testing.T
 	}
 	issuerRequests := issuer.requests()
 	apiRequests := api.requests()
-	if len(issuerRequests) != 2 || len(apiRequests) != 2 {
-		t.Fatalf("pre-cache client made issuer/API requests = %d/%d, want 2/2", len(issuerRequests), len(apiRequests))
+	if len(issuerRequests) != 1 || len(apiRequests) != 2 {
+		t.Fatalf("cached client made issuer/API requests = %d/%d, want 1/2", len(issuerRequests), len(apiRequests))
 	}
 	for _, request := range issuerRequests {
 		if request.authorization != "" || request.host != x509ConformanceIssuerHost ||
@@ -521,7 +521,7 @@ func TestX509WorkloadIdentityUsesOnlyTheLastAuthenticationOption(t *testing.T) {
 				t.Errorf("concurrent reused X.509 option request: %v", err)
 			}
 		}
-		if len(issuer.requests()) != requests || len(api.requests()) != requests {
+		if len(issuer.requests()) != 1 || len(api.requests()) != requests {
 			t.Errorf("concurrently reused X.509 option issuer/API calls = %d/%d",
 				len(issuer.requests()), len(api.requests()))
 		}
