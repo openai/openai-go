@@ -245,6 +245,9 @@ func validateX509TLSConfig(config *tls.Config) error {
 	if config.GetClientCertificate != nil {
 		return errors.New("X.509 transport does not support dynamic client-certificate callbacks")
 	}
+	if len(config.EncryptedClientHelloConfigList) != 0 || config.EncryptedClientHelloRejectionVerify != nil {
+		return errors.New("X.509 transport does not support encrypted client hello")
+	}
 	if config.KeyLogWriter != nil {
 		return errors.New("X.509 transport does not support TLS session key logging")
 	}

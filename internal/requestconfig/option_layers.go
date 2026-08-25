@@ -2,6 +2,7 @@ package requestconfig
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"slices"
 	"strings"
@@ -17,11 +18,13 @@ type authenticationState struct {
 	currentLayer             *optionLayerIdentity
 	providerInCurrentLayer   *ProviderAuthOption
 	selectedProvider         *ProviderAuthOption
+	httpClientExplicit       bool
 	apiKeyLayer              *optionLayerIdentity
 	adminAPIKeyLayer         *optionLayerIdentity
 	authorizationHeaderLayer *optionLayerIdentity
 	apiKeyHeaderLayer        *optionLayerIdentity
 	headerOverride           bool
+	authorizationExplicit    bool
 	preference               authCredentialPreference
 }
 
@@ -147,6 +150,38 @@ func (cfg *RequestConfig) ProviderEndpointConfigured(provider string) bool {
 	return cfg.configuredProviderEndpoint == provider
 }
 
+// EndpointProvider reports the third-party provider associated with this
+// request's routing, including providers that intentionally skip authentication.
+func (cfg *RequestConfig) EndpointProvider() string {
+	return cfg.endpointProvider
+}
+
+// AuthorizationHeaderOverridden reports whether an explicit request option
+// selected or deleted the Authorization header.
+func (cfg *RequestConfig) AuthorizationHeaderOverridden() bool {
+	return cfg.authentication.headerOverride || cfg.authentication.authorizationExplicit
+}
+
+// DefaultHTTPClient marks a native client created by the SDK's own defaults.
+// Applications outside the SDK cannot construct this internal marker.
+type DefaultHTTPClient struct {
+	*http.Client
+}
+
+// RecordHTTPClientSelection records whether an HTTP client was explicitly
+// supplied. A trusted SDK default never clears an earlier explicit selection.
+func (cfg *RequestConfig) RecordHTTPClientSelection(trustedDefault bool) {
+	if !trustedDefault {
+		cfg.authentication.httpClientExplicit = true
+	}
+}
+
+// HTTPClientExplicitlySelected reports whether any caller supplied a native or
+// custom client, regardless of option-layer nesting or later SDK defaults.
+func (cfg *RequestConfig) HTTPClientExplicitlySelected() bool {
+	return cfg.authentication.httpClientExplicit
+}
+
 // ProviderAuthOption identifies one provider authentication mode. Instances are
 // immutable and can be shared across concurrent requests.
 type ProviderAuthOption struct {
@@ -195,6 +230,7 @@ func (state *authenticationState) recordHeader(name string) {
 	switch {
 	case strings.EqualFold(name, "Authorization"):
 		state.headerOverride = true
+		state.authorizationExplicit = true
 		state.authorizationHeaderLayer = state.currentLayer
 	case strings.EqualFold(name, "Api-Key"):
 		state.apiKeyHeaderLayer = state.currentLayer
@@ -221,7 +257,8 @@ func (state authenticationState) cloneAsInherited(cfg *RequestConfig) authentica
 	state.authorizationHeaderLayer = nil
 	state.apiKeyHeaderLayer = nil
 
-	hasAuthorizationOverride := state.headerOverride || len(cfg.Request.Header.Values("Authorization")) != 0
+	hasAuthorizationOverride := state.headerOverride || state.authorizationExplicit ||
+		len(cfg.Request.Header.Values("Authorization")) != 0
 	hasAPIKeyHeader := len(cfg.Request.Header.Values("Api-Key")) != 0
 	if cfg.APIKey == "" && cfg.AdminAPIKey == "" && !hasAuthorizationOverride && !hasAPIKeyHeader {
 		return state
@@ -264,6 +301,7 @@ func (cfg *RequestConfig) ClearInheritedAuthentication() {
 		cfg.Request.Header.Del("Authorization")
 		state.authorizationHeaderLayer = nil
 		state.headerOverride = false
+		state.authorizationExplicit = false
 	}
 	if state.apiKeyHeaderLayer != state.currentLayer {
 		cfg.Request.Header.Del("Api-Key")

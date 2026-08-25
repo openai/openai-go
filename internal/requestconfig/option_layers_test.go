@@ -92,6 +92,149 @@ func TestEnvironmentDefaultsDisabledWrapperPreservesOptionBehavior(t *testing.T)
 	}
 }
 
+func TestEndpointProviderReportsProviderRouting(t *testing.T) {
+	for _, provider := range []string{"", "Azure", "Bedrock"} {
+		t.Run(provider, func(t *testing.T) {
+			cfg := RequestConfig{}
+			if provider != "" {
+				if err := WithEndpointProvider(provider).Apply(&cfg); err != nil {
+					t.Fatalf("configure provider routing: %v", err)
+				}
+			}
+			if got := cfg.EndpointProvider(); got != provider {
+				t.Errorf("endpoint provider = %q, want %q", got, provider)
+			}
+		})
+	}
+}
+
+func TestAuthorizationHeaderOverriddenPreservesExplicitDeletion(t *testing.T) {
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://example.com", nil)
+	if err != nil {
+		t.Fatalf("construct synthetic request: %v", err)
+	}
+	cfg := RequestConfig{Request: request}
+	if cfg.AuthorizationHeaderOverridden() {
+		t.Error("unmodified request unexpectedly has an explicit Authorization override")
+	}
+	cfg.DelHeader("Authorization")
+	if !cfg.AuthorizationHeaderOverridden() || len(cfg.Request.Header.Values("Authorization")) != 0 {
+		t.Error("explicit header deletion was not preserved as an Authorization override")
+	}
+	for _, test := range []struct {
+		name string
+		set  func(*RequestConfig)
+	}{
+		{name: "empty API key", set: func(config *RequestConfig) { config.SetAPIKey("") }},
+		{name: "empty admin API key", set: func(config *RequestConfig) { config.SetAdminAPIKey("") }},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			current := RequestConfig{Request: request.Clone(request.Context())}
+			current.DelHeader("Authorization")
+			test.set(&current)
+			if current.authentication.headerOverride || current.authentication.authorizationHeaderLayer != nil {
+				t.Error("negative control did not erase the ordinary override and nil-layer marker")
+			}
+			if !current.AuthorizationHeaderOverridden() {
+				t.Error("empty credential selection erased explicit headerless-request provenance")
+			}
+			cloned := current.Clone(request.Context())
+			if cloned == nil || !cloned.AuthorizationHeaderOverridden() {
+				t.Fatal("request clone lost explicit headerless-request provenance")
+			}
+			cloned.ClearInheritedAuthentication()
+			if cloned.AuthorizationHeaderOverridden() {
+				t.Error("request clone did not clear inherited headerless-request provenance")
+			}
+		})
+	}
+	inherited := RequestConfig{Request: request.Clone(request.Context())}
+	if err := inherited.Apply(InheritedOptions(RequestOptionFunc(func(config *RequestConfig) error {
+		config.DelHeader("Authorization")
+		return nil
+	}))...); err != nil {
+		t.Fatalf("configure inherited Authorization override: %v", err)
+	}
+	inherited.ClearInheritedAuthentication()
+	if inherited.AuthorizationHeaderOverridden() {
+		t.Error("inherited Authorization override was not cleared")
+	}
+}
+
+func TestHTTPClientSelectionProvenanceDistinguishesDefaultsAndOverrides(t *testing.T) {
+	trusted := RequestOptionFunc(func(cfg *RequestConfig) error {
+		cfg.RecordHTTPClientSelection(true)
+		return nil
+	})
+	explicit := RequestOptionFunc(func(cfg *RequestConfig) error {
+		cfg.RecordHTTPClientSelection(false)
+		return nil
+	})
+	t.Run("implicit native default", func(t *testing.T) {
+		cfg := RequestConfig{}
+		if cfg.HTTPClientExplicitlySelected() {
+			t.Error("unselected implicit native HTTP client was classified as explicit")
+		}
+	})
+	t.Run("marked generated default", func(t *testing.T) {
+		cfg := RequestConfig{}
+		if err := cfg.Apply(InheritedOptions(InheritedOptions(trusted)...)...); err != nil {
+			t.Fatalf("apply marked generated HTTP client default: %v", err)
+		}
+		if cfg.HTTPClientExplicitlySelected() {
+			t.Error("marked generated HTTP client default was classified as explicit")
+		}
+	})
+	t.Run("standalone inherited custom client", func(t *testing.T) {
+		cfg := RequestConfig{}
+		if err := cfg.Apply(InheritedOptions(explicit)...); err != nil {
+			t.Fatalf("apply standalone inherited custom HTTP client: %v", err)
+		}
+		if !cfg.HTTPClientExplicitlySelected() {
+			t.Error("standalone inherited custom HTTP client lost its explicit provenance")
+		}
+	})
+	t.Run("arbitrarily nested custom client", func(t *testing.T) {
+		cfg := RequestConfig{}
+		if err := cfg.Apply(InheritedOptions(InheritedOptions(InheritedOptions(explicit)...)...)...); err != nil {
+			t.Fatalf("apply arbitrarily nested custom HTTP client: %v", err)
+		}
+		if !cfg.HTTPClientExplicitlySelected() {
+			t.Error("nested custom HTTP client was misclassified as a trusted SDK default")
+		}
+	})
+	t.Run("explicit override after marked default", func(t *testing.T) {
+		cfg := RequestConfig{}
+		if err := cfg.Apply(InheritedOptions(trusted)...); err != nil {
+			t.Fatalf("apply marked HTTP client default: %v", err)
+		}
+		cfg.RecordHTTPClientSelection(false)
+		if !cfg.HTTPClientExplicitlySelected() {
+			t.Error("HTTP client override was not classified as explicit")
+		}
+	})
+	t.Run("later default cannot erase explicit client", func(t *testing.T) {
+		cfg := RequestConfig{}
+		cfg.RecordHTTPClientSelection(false)
+		cfg.RecordHTTPClientSelection(true)
+		if !cfg.HTTPClientExplicitlySelected() {
+			t.Error("later trusted default erased explicit HTTP client provenance")
+		}
+	})
+	t.Run("clone preserves custom-client provenance", func(t *testing.T) {
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://example.com", nil)
+		if err != nil {
+			t.Fatalf("construct clone provenance request: %v", err)
+		}
+		cfg := RequestConfig{Request: request}
+		cfg.RecordHTTPClientSelection(false)
+		cloned := cfg.Clone(t.Context())
+		if cloned == nil || !cloned.HTTPClientExplicitlySelected() {
+			t.Fatal("request clone lost explicit HTTP client selection provenance")
+		}
+	})
+}
+
 func TestProviderAuthOptionsPreserveConfigurationLayers(t *testing.T) {
 	apiKey := NewProviderAuthOption("Azure", "azure.WithAPIKey")
 	secondAPIKey := NewProviderAuthOption("Azure", "azure.WithAPIKey")
