@@ -24,15 +24,6 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 	var initializationError error
 
 	return requestconfig.RequestOptionFunc(func(cfg *requestconfig.RequestConfig) error {
-		initialize.Do(func() {
-			identity, initializationError = auth.NewX509WorkloadIdentityAuth(config)
-		})
-		if initializationError != nil {
-			return initializationError
-		}
-		if cfg.HTTPClient == nil || cfg.CustomHTTPDoer != nil {
-			return errors.New("X.509 workload identity requires its attested transport without custom HTTP clients")
-		}
 		if err := selected.Apply(cfg); err != nil {
 			return err
 		}
@@ -41,10 +32,14 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 			return err
 		}
 		originalHTTPClient := cfg.HTTPClient
-		cfg.CustomHTTPDoer = config.Transport
+		customHTTPClient := cfg.HTTPClientExplicitlySelected()
 		return requestconfig.WithRequestFinalizer(func(final *requestconfig.RequestConfig) error {
 			if !selected.Selected(final) {
 				return nil
+			}
+			if final.HTTPClient == nil || final.HTTPClient != originalHTTPClient || final.CustomHTTPDoer != nil ||
+				customHTTPClient || final.HTTPClientExplicitlySelected() {
+				return errors.New("X.509 workload identity requires its attested transport without custom HTTP clients")
 			}
 			if final.EndpointProvider() != "" {
 				return errors.New("X.509 workload identity cannot be combined with another API provider")
@@ -52,12 +47,12 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 			if !final.Security.BearerAuth {
 				return errors.New("X.509 workload identity cannot authenticate an admin-only API operation")
 			}
+			if final.Request == nil || final.Request.Header == nil {
+				return errors.New("X.509 workload identity requires a non-nil request and header map")
+			}
 			if final.APIKey != "" || final.AdminAPIKey != "" || final.AuthorizationHeaderOverridden() ||
 				unsafeX509CredentialHeaders(final.Request.Header) {
 				return errors.New("X.509 workload identity cannot be combined with other credentials")
-			}
-			if final.HTTPClient != originalHTTPClient || final.CustomHTTPDoer != config.Transport {
-				return errors.New("X.509 workload identity requires its exact attested transport")
 			}
 			base := final.BaseURL
 			if base == nil {
@@ -66,6 +61,13 @@ func WithX509WorkloadIdentity(config auth.X509WorkloadIdentity) RequestOption {
 			if !validX509WorkloadAPIBaseURL(base) {
 				return errors.New("X.509 workload identity requires the global OpenAI mTLS API endpoint")
 			}
+			initialize.Do(func() {
+				identity, initializationError = auth.NewX509WorkloadIdentityAuth(config)
+			})
+			if initializationError != nil {
+				return initializationError
+			}
+			final.CustomHTTPDoer = config.Transport
 			return WithMiddleware(func(request *http.Request, next MiddlewareNext) (*http.Response, error) {
 				if !validX509WorkloadAPIRequest(request) || unsafeX509CredentialHeaders(request.Header) {
 					return nil, requestconfig.WithNoRetryError(
@@ -91,7 +93,7 @@ func validX509WorkloadAPIBaseURL(base *url.URL) bool {
 }
 
 func validX509WorkloadAPIRequest(request *http.Request) bool {
-	if request == nil || request.URL == nil || request.URL.Scheme != "https" ||
+	if request == nil || request.Header == nil || request.URL == nil || request.URL.Scheme != "https" ||
 		request.URL.Host != "mtls.api.openai.com" || request.URL.User != nil ||
 		request.URL.Fragment != "" || request.URL.RawFragment != "" || request.URL.Opaque != "" ||
 		(request.Host != "" && request.Host != request.URL.Host) || len(request.Trailer) != 0 {

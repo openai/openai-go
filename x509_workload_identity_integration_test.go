@@ -102,7 +102,13 @@ func TestX509WorkloadIdentityRejectsConflictingCredentialsAndClients(t *testing.
 		{name: "native HTTP client override", after: func(auth.X509WorkloadIdentity) []option.RequestOption {
 			return []option.RequestOption{option.WithHTTPClient(&http.Client{})}
 		}},
+		{name: "earlier native HTTP client override", before: func(auth.X509WorkloadIdentity) []option.RequestOption {
+			return []option.RequestOption{option.WithHTTPClient(&http.Client{})}
+		}},
 		{name: "opaque HTTP client override", after: func(auth.X509WorkloadIdentity) []option.RequestOption {
+			return []option.RequestOption{option.WithHTTPClient(x509WorkloadRejectedDoer{})}
+		}},
+		{name: "earlier opaque HTTP client override", before: func(auth.X509WorkloadIdentity) []option.RequestOption {
 			return []option.RequestOption{option.WithHTTPClient(x509WorkloadRejectedDoer{})}
 		}},
 		{name: "other workload identity", after: func(config auth.X509WorkloadIdentity) []option.RequestOption {
@@ -151,6 +157,7 @@ func TestX509WorkloadIdentityRejectsLateMiddlewareMutationBeforeExchange(t *test
 		{name: "credential trailer", mutate: func(request *http.Request) {
 			request.Trailer = http.Header{"Authorization": []string{"Bearer attacker-token"}}
 		}},
+		{name: "nil header map", mutate: func(request *http.Request) { request.Header = nil }},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
@@ -173,6 +180,109 @@ func TestX509WorkloadIdentityRejectsLateMiddlewareMutationBeforeExchange(t *test
 			assertX509WorkloadNoRequests(t, issuer, api)
 		})
 	}
+}
+
+func TestX509WorkloadIdentityPreservesStandaloneHTTPClientProvenance(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		service   func(auth.X509WorkloadIdentity) openai.ModelService
+		method    func(auth.X509WorkloadIdentity) []option.RequestOption
+		wantCalls bool
+	}{
+		{
+			name: "standalone implicit native default",
+			service: func(config auth.X509WorkloadIdentity) openai.ModelService {
+				return openai.NewModelService(option.WithX509WorkloadIdentity(config))
+			},
+			wantCalls: true,
+		},
+		{
+			name: "standalone same-layer custom client",
+			service: func(config auth.X509WorkloadIdentity) openai.ModelService {
+				return openai.NewModelService(option.WithHTTPClient(&http.Client{}), option.WithX509WorkloadIdentity(config))
+			},
+		},
+		{
+			name: "standalone inherited custom client",
+			service: func(auth.X509WorkloadIdentity) openai.ModelService {
+				return openai.NewModelService(option.WithHTTPClient(&http.Client{}))
+			},
+			method: func(config auth.X509WorkloadIdentity) []option.RequestOption {
+				return []option.RequestOption{option.WithX509WorkloadIdentity(config)}
+			},
+		},
+		{
+			name: "standalone later custom client",
+			service: func(config auth.X509WorkloadIdentity) openai.ModelService {
+				return openai.NewModelService(option.WithX509WorkloadIdentity(config), option.WithHTTPClient(&http.Client{}))
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			service := test.service(config)
+			var opts []option.RequestOption
+			if test.method != nil {
+				opts = test.method(config)
+			}
+			_, err := service.List(t.Context(), opts...)
+			if test.wantCalls {
+				if err != nil {
+					t.Fatalf("standalone model service with its implicit native default: %v", err)
+				}
+				if len(issuer.requests()) != 1 || len(api.requests()) != 1 {
+					t.Errorf("standalone model service issuer/API calls = %d/%d", len(issuer.requests()), len(api.requests()))
+				}
+				return
+			}
+			if err == nil {
+				t.Fatal("standalone X.509 service accepted an explicit custom HTTP client")
+			}
+			assertX509WorkloadNoRequests(t, issuer, api)
+		})
+	}
+}
+
+func TestX509WorkloadIdentityUsesOnlyTheLastAuthenticationOption(t *testing.T) {
+	t.Run("invalid earlier identity is never initialized", func(t *testing.T) {
+		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+		config, issuer, api := newX509WorkloadIdentityIntegration(t)
+		invalid := config
+		invalid.IdentityProviderID = ""
+		client := openai.NewClient(option.WithX509WorkloadIdentity(invalid), option.WithX509WorkloadIdentity(config))
+		if _, err := client.Models.List(t.Context()); err != nil {
+			t.Fatalf("later valid X.509 option did not replace an invalid earlier identity: %v", err)
+		}
+		if len(issuer.requests()) != 1 || len(api.requests()) != 1 {
+			t.Errorf("winning X.509 option issuer/API calls = %d/%d", len(issuer.requests()), len(api.requests()))
+		}
+	})
+	t.Run("later client identity owns exchange and dispatch", func(t *testing.T) {
+		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+		first, firstIssuer, firstAPI := newX509WorkloadIdentityIntegration(t)
+		second, secondIssuer, secondAPI := newX509WorkloadIdentityIntegration(t)
+		client := openai.NewClient(option.WithX509WorkloadIdentity(first), option.WithX509WorkloadIdentity(second))
+		if _, err := client.Models.List(t.Context()); err != nil {
+			t.Fatalf("later X.509 transport did not replace an earlier generation: %v", err)
+		}
+		assertX509WorkloadNoRequests(t, firstIssuer, firstAPI)
+		if len(secondIssuer.requests()) != 1 || len(secondAPI.requests()) != 1 {
+			t.Errorf("winning X.509 transport issuer/API calls = %d/%d", len(secondIssuer.requests()), len(secondAPI.requests()))
+		}
+	})
+	t.Run("method identity replaces inherited identity", func(t *testing.T) {
+		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+		first, firstIssuer, firstAPI := newX509WorkloadIdentityIntegration(t)
+		second, secondIssuer, secondAPI := newX509WorkloadIdentityIntegration(t)
+		client := openai.NewClient(option.WithX509WorkloadIdentity(first))
+		if _, err := client.Models.List(t.Context(), option.WithX509WorkloadIdentity(second)); err != nil {
+			t.Fatalf("method-level X.509 transport did not replace its inherited generation: %v", err)
+		}
+		assertX509WorkloadNoRequests(t, firstIssuer, firstAPI)
+		if len(secondIssuer.requests()) != 1 || len(secondAPI.requests()) != 1 {
+			t.Errorf("winning method X.509 transport issuer/API calls = %d/%d", len(secondIssuer.requests()), len(secondAPI.requests()))
+		}
+	})
 }
 
 func TestX509WorkloadIdentityRejectsMethodLevelOverridesBeforeExchange(t *testing.T) {

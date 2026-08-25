@@ -15,8 +15,12 @@ type optionLayerIdentity byte
 
 type authenticationState struct {
 	currentLayer             *optionLayerIdentity
+	layerDepth               int
 	providerInCurrentLayer   *ProviderAuthOption
 	selectedProvider         *ProviderAuthOption
+	httpClientSelections     int
+	httpClientLayer          *optionLayerIdentity
+	httpClientNested         bool
 	apiKeyLayer              *optionLayerIdentity
 	adminAPIKeyLayer         *optionLayerIdentity
 	authorizationHeaderLayer *optionLayerIdentity
@@ -28,11 +32,14 @@ type authenticationState struct {
 
 func (state *authenticationState) enterLayer() func() {
 	previousLayer := state.currentLayer
+	previousDepth := state.layerDepth
 	previousProvider := state.providerInCurrentLayer
 	state.currentLayer = new(optionLayerIdentity)
+	state.layerDepth++
 	state.providerInCurrentLayer = nil
 	return func() {
 		state.currentLayer = previousLayer
+		state.layerDepth = previousDepth
 		state.providerInCurrentLayer = previousProvider
 	}
 }
@@ -160,6 +167,23 @@ func (cfg *RequestConfig) AuthorizationHeaderOverridden() bool {
 	return cfg.authentication.headerOverride || cfg.authentication.authorizationExplicit
 }
 
+// RecordHTTPClientSelection records the request-option provenance of a native
+// or custom HTTP client without inspecting or wrapping the caller-owned client.
+func (cfg *RequestConfig) RecordHTTPClientSelection() {
+	state := &cfg.authentication
+	state.httpClientSelections++
+	state.httpClientLayer = state.currentLayer
+	state.httpClientNested = state.layerDepth > 1
+}
+
+// HTTPClientExplicitlySelected distinguishes the generated client's one nested
+// default from explicit caller selections, including standalone services.
+func (cfg *RequestConfig) HTTPClientExplicitlySelected() bool {
+	state := &cfg.authentication
+	return state.httpClientSelections > 1 || state.httpClientSelections == 1 &&
+		(!state.httpClientNested || state.httpClientLayer == state.currentLayer)
+}
+
 // ProviderAuthOption identifies one provider authentication mode. Instances are
 // immutable and can be shared across concurrent requests.
 type ProviderAuthOption struct {
@@ -229,6 +253,7 @@ func (state *authenticationState) recordAdminAPIKey() {
 
 func (state authenticationState) cloneAsInherited(cfg *RequestConfig) authenticationState {
 	state.currentLayer = nil
+	state.layerDepth = 0
 	state.providerInCurrentLayer = nil
 	state.apiKeyLayer = nil
 	state.adminAPIKeyLayer = nil
