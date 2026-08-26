@@ -67,12 +67,12 @@ func (ctx x509TraceFreeContext) Value(key any) any {
 // OAuth token. Rotating credentials requires a new transport and capability.
 //
 // The application owns its template transport, certificate, private key, and
-// trust roots. The template is never used, modified, or closed by this
-// capability. X509Transport creates an isolated native connection pool that
-// cannot inherit privately registered HTTPS handlers; call Close to release
-// that pool. The template and its TLS configuration must remain unchanged after
-// attestation. HTTPS proxies are unsupported because net/http uses the same
-// client TLS configuration for a proxy and its origin.
+// trust roots. The template is never used for network I/O, modified, or closed
+// by this capability. X509Transport creates an isolated native connection pool
+// that cannot inherit privately registered HTTPS handlers; call Close to
+// release that pool. The template and its TLS configuration are revalidated and
+// must remain unchanged after attestation. HTTPS proxies are unsupported because
+// net/http uses the same client TLS configuration for a proxy and its origin.
 type X509Transport struct {
 	template          *http.Transport
 	templateTLS       *tls.Config
@@ -144,8 +144,7 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 		ReadBufferSize:         template.ReadBufferSize,
 		ForceAttemptHTTP2:      template.ForceAttemptHTTP2,
 	}
-	//nolint:staticcheck // Preserve a legacy TCP dialer; unlike DialTLS, it cannot bypass native TLS.
-	if transport.Dial = template.Dial; transport.Dial == nil && transport.DialContext == nil {
+	if transport.DialContext == nil {
 		transport.DialContext = (&net.Dialer{
 			Timeout:   x509DefaultDialTimeout,
 			KeepAlive: x509DefaultDialTimeout,
@@ -243,6 +242,10 @@ func validateX509NativeTransport(transport *http.Transport) error {
 	}
 	if transport.DialTLSContext != nil {
 		return errors.New("X.509 transport does not support custom TLS dialers")
+	}
+	//nolint:staticcheck // Deprecated Dial must be inspected so context-unaware dials can be rejected.
+	if transport.Dial != nil {
+		return errors.New("X.509 transport does not support deprecated context-unaware TCP dialers")
 	}
 	//nolint:staticcheck // Deprecated DialTLS still bypasses TLSClientConfig and must be rejected.
 	if transport.DialTLS != nil {
@@ -387,7 +390,10 @@ func (transport *X509Transport) validateAttestation() error {
 }
 
 // Close releases this capability's isolated idle connections. It is
-// idempotent, never closes the caller's template, and prevents future requests.
+// idempotent, never closes the caller's template, and causes Do calls made
+// after Close returns to fail. Close does not cancel or wait for calls already
+// in progress; an in-progress request may be sent or complete after Close
+// returns.
 func (transport *X509Transport) Close() error {
 	if transport == nil || transport.transport == nil {
 		return errors.New("X.509 transport capability is invalid")

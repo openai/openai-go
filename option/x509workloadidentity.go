@@ -115,14 +115,14 @@ func redactX509Response(response *http.Response) *http.Response {
 }
 
 func validX509WorkloadAPIBaseURL(base *url.URL) bool {
-	return base != nil && base.Scheme == "https" && base.Host == "mtls.api.openai.com" &&
+	return base != nil && base.Scheme == "https" && validX509WorkloadAPIAuthority(base) &&
 		base.Path == "/v1/" && base.EscapedPath() == "/v1/" && base.User == nil &&
 		base.RawQuery == "" && !base.ForceQuery && base.Fragment == "" && base.RawFragment == "" && base.Opaque == ""
 }
 
 func validX509WorkloadAPIRequest(request *http.Request) bool {
 	if request == nil || request.Header == nil || request.URL == nil || request.URL.Scheme != "https" ||
-		request.URL.Host != "mtls.api.openai.com" || request.URL.User != nil || request.RequestURI != "" ||
+		!validX509WorkloadAPIAuthority(request.URL) || request.URL.User != nil || request.RequestURI != "" ||
 		request.URL.Fragment != "" || request.URL.RawFragment != "" || request.URL.Opaque != "" ||
 		(request.Host != "" && request.Host != request.URL.Host) || len(request.Trailer) != 0 ||
 		len(request.TransferEncoding) != 0 {
@@ -165,6 +165,15 @@ func validX509WorkloadAPIRequest(request *http.Request) bool {
 	}
 	return strings.HasPrefix(request.URL.Path, "/v1/") && strings.HasPrefix(request.URL.EscapedPath(), "/v1/") &&
 		path.Clean(request.URL.Path) == request.URL.Path
+}
+
+func validX509WorkloadAPIAuthority(target *url.URL) bool {
+	if target == nil || target.Hostname() != "mtls.api.openai.com" {
+		return false
+	}
+	port := target.Port()
+	return (port == "" || port == "443") &&
+		(target.Host == "mtls.api.openai.com" || target.Host == "mtls.api.openai.com:443")
 }
 
 func unsafeX509CredentialHeaders(headers http.Header) bool {

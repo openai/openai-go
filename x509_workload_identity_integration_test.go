@@ -203,7 +203,6 @@ func TestX509WorkloadIdentityRejectsLateMiddlewareMutationBeforeExchange(t *test
 		{name: "nil URL", mutate: func(request *http.Request) { request.URL = nil }},
 		{name: "plaintext URL", mutate: func(request *http.Request) { request.URL.Scheme = "http" }},
 		{name: "attacker host", mutate: func(request *http.Request) { request.URL.Host = "attacker.example.test" }},
-		{name: "explicit authority port", mutate: func(request *http.Request) { request.URL.Host = "mtls.api.openai.com:443" }},
 		{name: "attacker Host header", mutate: func(request *http.Request) { request.Host = "attacker.example.test" }},
 		{name: "relative RequestURI override", mutate: func(request *http.Request) { request.RequestURI = "/v1/attacker" }},
 		{name: "absolute RequestURI override", mutate: func(request *http.Request) {

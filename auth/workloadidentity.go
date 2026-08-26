@@ -144,9 +144,7 @@ func (w *WorkloadIdentityAuth) invalidateToken(value string) {
 	}
 	w.cachedToken = ""
 	w.tokenExpiry = time.Time{}
-	if current := w.refreshInFlight; current != nil && current.generation == value {
-		w.rejectedToken = value
-	}
+	w.rejectedToken = value
 }
 
 func (w *WorkloadIdentityAuth) beginRefreshLocked() *tokenRefreshState {

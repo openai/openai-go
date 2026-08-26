@@ -87,6 +87,31 @@ func TestX509WorkloadIdentityMiddlewareRejectsMalformedRequestsBeforeExchange(t 
 	}
 }
 
+func TestX509WorkloadIdentityMiddlewareAcceptsExplicitDefaultHTTPSPort(t *testing.T) {
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, x509ValidExchangeResponse())
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
+		"https://"+x509APIHost+":443/v1/models", nil)
+	if err != nil {
+		t.Fatalf("construct explicit-port middleware request: %v", err)
+	}
+	response, err := X509WorkloadIdentityMiddleware(identity, fixture.capability, request,
+		func(authenticated *http.Request) (*http.Response, error) {
+			if got := authenticated.Header.Get("Authorization"); got != "Bearer "+x509ExchangeSyntheticToken {
+				t.Errorf("explicit-port middleware bearer = %q", got)
+			}
+			return &http.Response{StatusCode: http.StatusOK, Body: http.NoBody}, nil
+		})
+	if err != nil || response == nil || response.StatusCode != http.StatusOK {
+		t.Fatalf("explicit-port middleware response=%v error=%v", response, err)
+	}
+	if closeErr := response.Body.Close(); closeErr != nil {
+		t.Fatalf("close explicit-port middleware response: %v", closeErr)
+	}
+}
+
 func TestX509WorkloadIdentityMiddlewareDoesNotReplayUnscopedTransformedBody(t *testing.T) {
 	var exchanges, dispatched atomic.Int32
 	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

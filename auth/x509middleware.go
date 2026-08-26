@@ -23,7 +23,7 @@ func X509WorkloadIdentityMiddleware(
 	if err := validateX509Request(request); err != nil {
 		return nil, err
 	}
-	if request.URL.Host != x509APIHost {
+	if request.URL.Hostname() != x509APIHost {
 		return nil, errors.New("X.509 workload identity requires the global OpenAI mTLS API origin")
 	}
 	for name := range request.Header {

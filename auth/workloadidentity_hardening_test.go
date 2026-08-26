@@ -181,7 +181,10 @@ func TestWorkloadIdentityMiddlewareReplacesAllAuthorizationAliases(t *testing.T)
 
 func TestWorkloadIdentityMiddlewareClosesOnlyPresentUnauthorizedBodies(t *testing.T) {
 	identity := newOrdinaryWorkloadIdentity(t)
-	httpClient := ordinaryWorkloadIssuer(t, func() string { return "synthetic-bearer" })
+	var exchanges atomic.Int32
+	httpClient := ordinaryWorkloadIssuer(t, func() string {
+		return fmt.Sprintf("synthetic-bearer-%d", exchanges.Add(1))
+	})
 	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
 		"https://api.openai.com/v1/models", nil)
 	if err != nil {

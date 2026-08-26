@@ -651,7 +651,11 @@ func TestX509WorkloadIdentityDoesNotReplayMiddlewareTransformedBodies(t *testing
 func TestX509WorkloadIdentityDoesNotRestoreMiddlewareRemovedBody(t *testing.T) {
 	t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
 	config, issuer, api := newX509WorkloadIdentityIntegration(t)
-	var requests atomic.Int32
+	var exchanges, requests atomic.Int32
+	issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, x509IntegrationTokenResponse(
+			fmt.Sprintf("synthetic-removed-body-%d", exchanges.Add(1))))
+	})
 	api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
 		body, err := io.ReadAll(request.Body)
 		if err != nil || len(body) != 0 {
@@ -680,8 +684,8 @@ func TestX509WorkloadIdentityDoesNotRestoreMiddlewareRemovedBody(t *testing.T) {
 		map[string]string{"secret": "synthetic-removed-payload"}, nil); err != nil {
 		t.Fatalf("bodyless unauthorized replay restored its removed payload: %v", err)
 	}
-	if requests.Load() != 2 || len(issuer.requests()) != 2 {
-		t.Errorf("removed-body issuer/API attempts = %d/%d, want 2/2", len(issuer.requests()), requests.Load())
+	if requests.Load() != 2 || exchanges.Load() != 2 {
+		t.Errorf("removed-body issuer/API attempts = %d/%d, want 2/2", exchanges.Load(), requests.Load())
 	}
 }
 

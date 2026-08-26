@@ -537,11 +537,12 @@ func TestWorkloadIdentityNeverReplaysCallerTransformedBody(t *testing.T) {
 		{name: "explicitly removed body remains empty", remove: true, wantAttempts: 2},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			var apiAttempts, middlewareCalls int
+			var apiAttempts, issuerCalls, middlewareCalls int
 			httpClient := &http.Client{Transport: &closureTransport{fn: func(req *http.Request) (*http.Response, error) {
 				if req.URL.Host == "auth.openai.com" {
+					issuerCalls++
 					return rootWorkloadResponse(http.StatusOK,
-						`{"access_token":"synthetic-bearer","expires_in":3600}`), nil
+						fmt.Sprintf(`{"access_token":"synthetic-bearer-%d","expires_in":3600}`, issuerCalls)), nil
 				}
 				apiAttempts++
 				var payload []byte

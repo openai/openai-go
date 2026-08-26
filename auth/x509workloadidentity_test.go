@@ -34,6 +34,9 @@ func TestNewX509WorkloadIdentityAuthValidatesConfiguration(t *testing.T) {
 		{name: "missing transport", change: func(config *X509WorkloadIdentity) { config.Transport = nil }},
 		{name: "negative refresh buffer", change: func(config *X509WorkloadIdentity) { config.RefreshBuffer = -time.Second }},
 		{name: "excessive refresh buffer", change: func(config *X509WorkloadIdentity) { config.RefreshBuffer = time.Hour }},
+		{name: "negative token exchange timeout", change: func(config *X509WorkloadIdentity) {
+			config.TokenExchangeTimeout = -time.Second
+		}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			config := valid
@@ -44,8 +47,22 @@ func TestNewX509WorkloadIdentityAuthValidatesConfiguration(t *testing.T) {
 			}
 		})
 	}
-	if _, err := NewX509WorkloadIdentityAuth(valid); err != nil {
+	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
+		IdentityProviderID: "  synthetic-identity-provider\t",
+		ServiceAccountID:   "\nsynthetic-service-account ",
+		Transport:          fixture.capability,
+	})
+	if err != nil {
 		t.Fatalf("valid X.509 workload configuration: %v", err)
+	}
+	if identity.config.IdentityProviderID != "synthetic-identity-provider" ||
+		identity.config.ServiceAccountID != "synthetic-service-account" {
+		t.Errorf("normalized identity identifiers = %q/%q", identity.config.IdentityProviderID,
+			identity.config.ServiceAccountID)
+	}
+	if identity.config.TokenExchangeTimeout != x509DefaultTokenExchangeTimeout {
+		t.Errorf("default token exchange timeout = %s, want %s", identity.config.TokenExchangeTimeout,
+			x509DefaultTokenExchangeTimeout)
 	}
 }
 
@@ -97,6 +114,70 @@ func TestX509WorkloadIdentityAuthExchangesOnlyOnItsAttestedTransport(t *testing.
 	}
 	if got := exchanges.Load(); got != 1 {
 		t.Errorf("rejected transports/cancellation caused unexpected exchanges: %d", got)
+	}
+}
+
+func TestX509WorkloadIdentityNeverReusesRejectedBearerWithoutRefreshInFlight(t *testing.T) {
+	var exchanges atomic.Int32
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		exchanges.Add(1)
+		_, _ = io.WriteString(w, x509ValidExchangeResponse())
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+	rejected, err := identity.GetToken(t.Context(), fixture.capability)
+	if err != nil || rejected != x509ExchangeSyntheticToken {
+		t.Fatalf("prime rejected X.509 bearer = %q, error = %v", rejected, err)
+	}
+
+	identity.invalidateToken(rejected)
+	identity.mu.Lock()
+	if identity.cached.value != "" || identity.rejectedToken != rejected || identity.inFlight != nil {
+		identity.mu.Unlock()
+		t.Fatal("ordinary 401 did not retain the rejected bearer generation")
+	}
+	identity.mu.Unlock()
+
+	token, err := identity.GetToken(t.Context(), fixture.capability)
+	if token != "" || !errors.Is(err, errX509InvalidatedBearer) {
+		t.Errorf("issuer repeatedly returned rejected bearer: token=%q error=%v", token, err)
+	}
+	if got, want := exchanges.Load(), int32(1+x509MaximumAttempts); got != want {
+		t.Errorf("prime and bounded replacement exchanges = %d, want %d", got, want)
+	}
+}
+
+func TestX509WorkloadIdentityBoundsCompleteTokenExchange(t *testing.T) {
+	reached := make(chan struct{})
+	release := make(chan struct{})
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(_ http.ResponseWriter, request *http.Request) {
+		close(reached)
+		select {
+		case <-request.Context().Done():
+		case <-release:
+		}
+	}))
+	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
+		IdentityProviderID:   "synthetic-identity-provider",
+		ServiceAccountID:     "synthetic-service-account",
+		TokenExchangeTimeout: 50 * time.Millisecond,
+		Transport:            fixture.capability,
+	})
+	if err != nil {
+		t.Fatalf("construct bounded X.509 workload identity: %v", err)
+	}
+	started := time.Now()
+	token, err := identity.GetToken(context.Background(), fixture.capability)
+	close(release)
+	if token != "" || !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("bounded X.509 exchange token=%q error=%v", token, err)
+	}
+	if elapsed := time.Since(started); elapsed > time.Second {
+		t.Errorf("bounded X.509 exchange took %s, want less than one second", elapsed)
+	}
+	select {
+	case <-reached:
+	default:
+		t.Error("bounded X.509 exchange did not reach its issuer")
 	}
 }
 
