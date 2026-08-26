@@ -273,7 +273,7 @@ func TestWorkloadIdentity401RetryPreservesManagedGzip(t *testing.T) {
 	client := openai.NewClient(
 		option.WithWorkloadIdentity(testWorkloadIdentity(provider)),
 		option.WithHTTPClient(mockHTTPClient),
-		option.WithMaxRetries(0),
+		option.WithMaxRetries(1),
 		option.WithMaxResponseBodyBytes(1024),
 	)
 	var response struct {
