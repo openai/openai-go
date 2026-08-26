@@ -1242,11 +1242,10 @@ if err != nil {
 defer transport.Close()
 
 client := openai.NewClient(option.WithX509WorkloadIdentity(auth.X509WorkloadIdentity{
-	IdentityProviderID:   "idp-123",
-	ServiceAccountID:     "sa-456",
-	RefreshBuffer:        5 * time.Minute,  // Optional; five minutes is the default.
-	TokenExchangeTimeout: 30 * time.Second, // Optional; 30 seconds is the default.
-	Transport:            transport,
+	IdentityProviderID: "idp-123",
+	ServiceAccountID:   "sa-456",
+	RefreshBuffer:      5 * time.Minute, // Optional; five minutes is the default.
+	Transport:          transport,
 }))
 
 requestContext, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
@@ -1281,8 +1280,8 @@ template does not specify its own values, the isolated connection pool applies
 a 30-second TCP dial timeout, a 10-second TLS handshake timeout, and the SDK's
 10-minute response-header timeout. Each `GetToken` call, including time spent
 waiting for a concurrent exchange and all issuer retries, has a 30-second
-overall default controlled by `TokenExchangeTimeout`; an earlier caller context
-deadline takes priority. Set a request context deadline or use
+overall limit; an earlier caller context deadline takes priority. Set a request
+context deadline or use
 `option.WithRequestTimeout` to bound the complete API operation. Response bodies
 are not given a deadline so long-running streams remain supported.
 
@@ -1290,8 +1289,10 @@ Token exchange is pinned to `https://mtls.auth.openai.com/oauth/token`; API
 requests use `https://mtls.api.openai.com/v1/`. Existing `OPENAI_BASE_URL` and
 explicit endpoint settings must match that global API endpoint; an explicit
 default `:443` port is equivalent. Azure, Amazon Bedrock, regional endpoints,
-HTTPS proxies, deprecated context-unaware TCP dialers, dynamic certificate
-selection, HTTP trace hooks, and separate custom HTTP clients are not supported.
+HTTPS proxies, dynamic certificate selection, HTTP trace hooks, and separate
+custom HTTP clients are not supported. A legacy `http.Transport.Dial` remains
+supported for compatibility when `DialContext` is unset, but its in-progress
+dial call cannot itself be interrupted by context cancellation.
 Organization and project metadata remain available on API requests but are not
 sent to the token issuer. Surrounding whitespace in identity-provider and
 service-account IDs is discarded during configuration.

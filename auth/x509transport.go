@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptrace"
@@ -17,6 +18,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -81,7 +83,16 @@ type X509Transport struct {
 	certificateDigest [sha256.Size]byte
 	certificateSelect uintptr
 	client            *http.Client
-	closed            atomic.Bool
+	lifecycle         *x509TransportLifecycle
+}
+
+type x509TransportLifecycle struct {
+	closed         atomic.Bool
+	mu             sync.Mutex
+	activeRequests int
+	connections    map[*x509TrackedConnection]struct{}
+	dialContext    func(context.Context, string, string) (net.Conn, error)
+	transport      *http.Transport
 }
 
 // NewX509Transport attests a direct, native HTTP transport template configured
@@ -127,8 +138,22 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 	config.GetClientCertificate = func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
 		return &config.Certificates[0], nil
 	}
+	dialContext := template.DialContext
+	if dialContext == nil {
+		//nolint:staticcheck // Preserve the legacy TCP dialer accepted by the original X.509 contract.
+		if legacyDial := template.Dial; legacyDial != nil {
+			dialContext = func(_ context.Context, network, address string) (net.Conn, error) {
+				return legacyDial(network, address)
+			}
+		} else {
+			dialContext = (&net.Dialer{
+				Timeout:   x509DefaultDialTimeout,
+				KeepAlive: x509DefaultDialTimeout,
+			}).DialContext
+		}
+	}
 	transport := &http.Transport{
-		DialContext:            template.DialContext,
+		DialContext:            dialContext,
 		TLSClientConfig:        config,
 		TLSHandshakeTimeout:    template.TLSHandshakeTimeout,
 		DisableKeepAlives:      template.DisableKeepAlives,
@@ -143,12 +168,6 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 		WriteBufferSize:        template.WriteBufferSize,
 		ReadBufferSize:         template.ReadBufferSize,
 		ForceAttemptHTTP2:      template.ForceAttemptHTTP2,
-	}
-	if transport.DialContext == nil {
-		transport.DialContext = (&net.Dialer{
-			Timeout:   x509DefaultDialTimeout,
-			KeepAlive: x509DefaultDialTimeout,
-		}).DialContext
 	}
 	if transport.TLSHandshakeTimeout == 0 {
 		transport.TLSHandshakeTimeout = x509DefaultTLSHandshakeTimeout
@@ -201,7 +220,12 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 		return nil
 	}
 
-	return &X509Transport{
+	lifecycle := &x509TransportLifecycle{
+		connections: make(map[*x509TrackedConnection]struct{}),
+		dialContext: transport.DialContext,
+		transport:   transport,
+	}
+	capability := &X509Transport{
 		template:          template,
 		templateTLS:       template.TLSClientConfig,
 		transport:         transport,
@@ -214,7 +238,10 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 				return errX509Redirect
 			},
 		},
-	}, nil
+		lifecycle: lifecycle,
+	}
+	transport.DialContext = lifecycle.dialTrackedConnection
+	return capability, nil
 }
 
 func x509CertificateDigest(chain [][]byte) [sha256.Size]byte {
@@ -242,10 +269,6 @@ func validateX509NativeTransport(transport *http.Transport) error {
 	}
 	if transport.DialTLSContext != nil {
 		return errors.New("X.509 transport does not support custom TLS dialers")
-	}
-	//nolint:staticcheck // Deprecated Dial must be inspected so context-unaware dials can be rejected.
-	if transport.Dial != nil {
-		return errors.New("X.509 transport does not support deprecated context-unaware TCP dialers")
 	}
 	//nolint:staticcheck // Deprecated DialTLS still bypasses TLSClientConfig and must be rejected.
 	if transport.DialTLS != nil {
@@ -356,10 +379,11 @@ func validateX509TLSProtocolHandlers(handlers map[string]func(string, *tls.Conn)
 }
 
 func (transport *X509Transport) validateAttestation() error {
-	if transport == nil || transport.client == nil || transport.transport == nil || transport.template == nil {
+	if transport == nil || transport.client == nil || transport.transport == nil || transport.template == nil ||
+		transport.lifecycle == nil {
 		return errors.New("X.509 transport capability is invalid")
 	}
-	if transport.closed.Load() {
+	if transport.lifecycle.closed.Load() {
 		return errors.New("X.509 transport capability is closed")
 	}
 	if err := validateX509NativeTransport(transport.template); err != nil {
@@ -393,15 +417,142 @@ func (transport *X509Transport) validateAttestation() error {
 // idempotent, never closes the caller's template, and causes Do calls made
 // after Close returns to fail. Close does not cancel or wait for calls already
 // in progress; an in-progress request may be sent or complete after Close
-// returns.
+// returns, at which point its connection is removed from the isolated pool.
 func (transport *X509Transport) Close() error {
-	if transport == nil || transport.transport == nil {
+	if transport == nil || transport.transport == nil || transport.lifecycle == nil {
 		return errors.New("X.509 transport capability is invalid")
 	}
-	if transport.closed.CompareAndSwap(false, true) {
-		transport.transport.CloseIdleConnections()
-	}
+	transport.lifecycle.close()
 	return nil
+}
+
+type x509TrackedConnection struct {
+	net.Conn
+	lifecycle *x509TransportLifecycle
+	once      sync.Once
+	err       error
+}
+
+func (connection *x509TrackedConnection) Close() error {
+	connection.once.Do(func() {
+		connection.err = connection.Conn.Close()
+		connection.lifecycle.mu.Lock()
+		delete(connection.lifecycle.connections, connection)
+		connection.lifecycle.mu.Unlock()
+	})
+	return connection.err
+}
+
+func (lifecycle *x509TransportLifecycle) dialTrackedConnection(
+	ctx context.Context, network, address string,
+) (net.Conn, error) {
+	connection, err := lifecycle.dialContext(ctx, network, address)
+	if err != nil {
+		if !x509ConnectionIsNil(connection) {
+			_ = connection.Close()
+		}
+		return nil, err
+	}
+	if x509ConnectionIsNil(connection) {
+		return nil, errors.New("X.509 transport dialer returned a nil connection")
+	}
+	tracked := &x509TrackedConnection{Conn: connection, lifecycle: lifecycle}
+	lifecycle.mu.Lock()
+	if lifecycle.closed.Load() && lifecycle.activeRequests == 0 {
+		lifecycle.mu.Unlock()
+		_ = connection.Close()
+		return nil, errors.New("X.509 transport capability closed before its dial completed")
+	}
+	lifecycle.connections[tracked] = struct{}{}
+	lifecycle.mu.Unlock()
+	return tracked, nil
+}
+
+func x509ConnectionIsNil(connection net.Conn) bool {
+	if connection == nil {
+		return true
+	}
+	value := reflect.ValueOf(connection)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice,
+		reflect.UnsafePointer:
+		return value.IsNil()
+	default:
+		return false
+	}
+}
+
+func (lifecycle *x509TransportLifecycle) beginRequest() bool {
+	lifecycle.mu.Lock()
+	defer lifecycle.mu.Unlock()
+	if lifecycle.closed.Load() {
+		return false
+	}
+	lifecycle.activeRequests++
+	return true
+}
+
+func (lifecycle *x509TransportLifecycle) endRequest() {
+	lifecycle.mu.Lock()
+	lifecycle.activeRequests--
+	idle := lifecycle.activeRequests == 0
+	lifecycle.mu.Unlock()
+	closed := lifecycle.closed.Load()
+	if closed {
+		lifecycle.transport.CloseIdleConnections()
+	}
+	if idle && closed {
+		lifecycle.closeTrackedConnectionsIfIdle()
+	}
+}
+
+func (lifecycle *x509TransportLifecycle) close() {
+	lifecycle.mu.Lock()
+	lifecycle.closed.Store(true)
+	lifecycle.mu.Unlock()
+	lifecycle.transport.CloseIdleConnections()
+	lifecycle.closeTrackedConnectionsIfIdle()
+}
+
+func (lifecycle *x509TransportLifecycle) closeTrackedConnectionsIfIdle() {
+	lifecycle.mu.Lock()
+	if lifecycle.activeRequests != 0 {
+		lifecycle.mu.Unlock()
+		return
+	}
+	connections := make([]*x509TrackedConnection, 0, len(lifecycle.connections))
+	for connection := range lifecycle.connections {
+		connections = append(connections, connection)
+		delete(lifecycle.connections, connection)
+	}
+	lifecycle.mu.Unlock()
+	for _, connection := range connections {
+		_ = connection.Close()
+	}
+}
+
+type x509ResponseBody struct {
+	io.ReadCloser
+	lifecycle *x509TransportLifecycle
+	finish    sync.Once
+}
+
+func (body *x509ResponseBody) Read(data []byte) (int, error) {
+	read, err := body.ReadCloser.Read(data)
+	if err != nil {
+		body.finishRequest()
+	}
+	return read, err
+}
+
+func (body *x509ResponseBody) Close() error {
+	err := body.ReadCloser.Close()
+	body.finishRequest()
+	return err
+}
+
+func (body *x509ResponseBody) finishRequest() {
+	body.finish.Do(body.lifecycle.endRequest)
 }
 
 // Do sends a request to an approved global OpenAI mTLS endpoint without
@@ -436,10 +587,20 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 	if err := validateX509Request(request); err != nil {
 		return nil, err
 	}
+	if !transport.lifecycle.beginRequest() {
+		return nil, errors.New("X.509 transport capability is closed")
+	}
+	requestActive := true
+	defer func() {
+		if requestActive {
+			transport.lifecycle.endRequest()
+		}
+	}()
 	bodyTransferred = true
 	response, err := transport.client.Do(request)
 	if err != nil {
 		redacted := &x509TransportError{}
+		requestContextErr := request.Context().Err()
 		var verificationError *tls.CertificateVerificationError
 		var networkError net.Error
 		if errors.As(err, &networkError) {
@@ -452,15 +613,27 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 		case errors.Is(err, errX509Redirect):
 			redacted.cause = errX509Redirect
 		case errors.Is(err, context.Canceled):
-			redacted.cause = context.Canceled
+			if requestContextErr != nil {
+				redacted.cause = requestContextErr
+			} else {
+				redacted.cause = context.Canceled
+			}
 		case errors.Is(err, context.DeadlineExceeded):
-			redacted.cause = context.DeadlineExceeded
+			if requestContextErr != nil {
+				redacted.cause = requestContextErr
+			}
 		case errors.Is(err, errX509TLSVerification) || errors.As(err, &verificationError) ||
 			x509PermanentClientCertificateAlert(err):
 			redacted.cause = errX509TLSVerification
 		}
 		return nil, redacted
 	}
+	if response.Body == nil {
+		transport.lifecycle.endRequest()
+	} else {
+		response.Body = &x509ResponseBody{ReadCloser: response.Body, lifecycle: transport.lifecycle}
+	}
+	requestActive = false
 	if response.StatusCode == http.StatusSwitchingProtocols {
 		_ = response.Body.Close()
 		return nil, errors.New("X.509 transport does not support protocol upgrades")

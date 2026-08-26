@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -34,9 +35,6 @@ func TestNewX509WorkloadIdentityAuthValidatesConfiguration(t *testing.T) {
 		{name: "missing transport", change: func(config *X509WorkloadIdentity) { config.Transport = nil }},
 		{name: "negative refresh buffer", change: func(config *X509WorkloadIdentity) { config.RefreshBuffer = -time.Second }},
 		{name: "excessive refresh buffer", change: func(config *X509WorkloadIdentity) { config.RefreshBuffer = time.Hour }},
-		{name: "negative token exchange timeout", change: func(config *X509WorkloadIdentity) {
-			config.TokenExchangeTimeout = -time.Second
-		}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			config := valid
@@ -60,8 +58,8 @@ func TestNewX509WorkloadIdentityAuthValidatesConfiguration(t *testing.T) {
 		t.Errorf("normalized identity identifiers = %q/%q", identity.config.IdentityProviderID,
 			identity.config.ServiceAccountID)
 	}
-	if identity.config.TokenExchangeTimeout != x509DefaultTokenExchangeTimeout {
-		t.Errorf("default token exchange timeout = %s, want %s", identity.config.TokenExchangeTimeout,
+	if identity.tokenExchangeTimeout != x509DefaultTokenExchangeTimeout {
+		t.Errorf("default token exchange timeout = %s, want %s", identity.tokenExchangeTimeout,
 			x509DefaultTokenExchangeTimeout)
 	}
 }
@@ -149,25 +147,52 @@ func TestX509WorkloadIdentityNeverReusesRejectedBearerWithoutRefreshInFlight(t *
 func TestX509WorkloadIdentityBoundsCompleteTokenExchange(t *testing.T) {
 	reached := make(chan struct{})
 	release := make(chan struct{})
+	var reachedOnce sync.Once
+	var releaseOnce sync.Once
+	releaseHandler := func() { releaseOnce.Do(func() { close(release) }) }
+	defer releaseHandler()
 	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(_ http.ResponseWriter, request *http.Request) {
-		close(reached)
+		reachedOnce.Do(func() { close(reached) })
 		select {
 		case <-request.Context().Done():
 		case <-release:
 		}
 	}))
 	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
-		IdentityProviderID:   "synthetic-identity-provider",
-		ServiceAccountID:     "synthetic-service-account",
-		TokenExchangeTimeout: 50 * time.Millisecond,
-		Transport:            fixture.capability,
+		IdentityProviderID: "synthetic-identity-provider",
+		ServiceAccountID:   "synthetic-service-account",
+		Transport:          fixture.capability,
 	})
 	if err != nil {
 		t.Fatalf("construct bounded X.509 workload identity: %v", err)
 	}
+	identity.tokenExchangeTimeout = 250 * time.Millisecond
+	watchdogCtx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
+	defer cancel()
+	result := make(chan struct {
+		token string
+		err   error
+	}, 1)
 	started := time.Now()
-	token, err := identity.GetToken(context.Background(), fixture.capability)
-	close(release)
+	go func() {
+		token, tokenErr := identity.GetToken(watchdogCtx, fixture.capability)
+		result <- struct {
+			token string
+			err   error
+		}{token, tokenErr}
+	}()
+	var tokenResult struct {
+		token string
+		err   error
+	}
+	select {
+	case tokenResult = <-result:
+	case <-time.After(4 * time.Second):
+		releaseHandler()
+		t.Fatal("bounded X.509 exchange ignored both its internal timeout and caller watchdog")
+	}
+	releaseHandler()
+	token, err := tokenResult.token, tokenResult.err
 	if token != "" || !errors.Is(err, context.DeadlineExceeded) {
 		t.Errorf("bounded X.509 exchange token=%q error=%v", token, err)
 	}
@@ -178,6 +203,183 @@ func TestX509WorkloadIdentityBoundsCompleteTokenExchange(t *testing.T) {
 	case <-reached:
 	default:
 		t.Error("bounded X.509 exchange did not reach its issuer")
+	}
+}
+
+func TestX509WorkloadIdentityFallsBackOnlyAfterInternalExchangeTimeout(t *testing.T) {
+	var exchanges atomic.Int32
+	release := make(chan struct{})
+	var releaseOnce sync.Once
+	releaseHandler := func() { releaseOnce.Do(func() { close(release) }) }
+	defer releaseHandler()
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if exchanges.Add(1) == 1 {
+			_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			return
+		}
+		<-release
+	}))
+	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
+		IdentityProviderID: "synthetic-identity-provider",
+		ServiceAccountID:   "synthetic-service-account",
+		Transport:          fixture.capability,
+	})
+	if err != nil {
+		t.Fatalf("construct bounded X.509 workload identity: %v", err)
+	}
+	identity.tokenExchangeTimeout = 250 * time.Millisecond
+	initial, err := identity.GetToken(t.Context(), fixture.capability)
+	if err != nil {
+		t.Fatalf("prime proactive-refresh token cache: %v", err)
+	}
+	identity.mu.Lock()
+	identity.refreshAfter = time.Now().Add(-time.Second)
+	identity.mu.Unlock()
+
+	watchdogCtx, watchdogCancel := context.WithTimeout(t.Context(), 3*time.Second)
+	defer watchdogCancel()
+	type tokenResult struct {
+		token string
+		err   error
+	}
+	getToken := func(ctx context.Context) <-chan tokenResult {
+		result := make(chan tokenResult, 1)
+		go func() {
+			token, tokenErr := identity.GetToken(ctx, fixture.capability)
+			result <- tokenResult{token: token, err: tokenErr}
+		}()
+		return result
+	}
+	var refreshed tokenResult
+	select {
+	case refreshed = <-getToken(watchdogCtx):
+	case <-time.After(4 * time.Second):
+		releaseHandler()
+		t.Fatal("proactive refresh ignored both its internal timeout and caller watchdog")
+	}
+	if refreshed.err != nil || refreshed.token != initial {
+		t.Fatalf("internal exchange timeout fallback=%q, want %q; error=%v",
+			refreshed.token, initial, refreshed.err)
+	}
+
+	identity.tokenExchangeTimeout = 2 * time.Second
+	identity.mu.Lock()
+	identity.refreshAfter = time.Now().Add(-time.Second)
+	identity.mu.Unlock()
+	callerCtx, cancel := context.WithTimeout(t.Context(), 250*time.Millisecond)
+	defer cancel()
+	var caller tokenResult
+	select {
+	case caller = <-getToken(callerCtx):
+	case <-time.After(4 * time.Second):
+		releaseHandler()
+		t.Fatal("caller timeout did not release its token exchange")
+	}
+	if caller.token != "" || !errors.Is(caller.err, context.DeadlineExceeded) {
+		t.Errorf("caller timeout returned token=%q error=%v", caller.token, caller.err)
+	}
+	if got := exchanges.Load(); got != 3 {
+		t.Errorf("prime and timed exchange attempts = %d, want 3", got)
+	}
+}
+
+func TestX509WorkloadIdentityCachedFallbackHonorsCallerCancellation(t *testing.T) {
+	retryable := &x509ExchangeHTTPError{statusCode: http.StatusServiceUnavailable}
+	active := context.Background()
+	if !x509CanFallBackToCachedToken(retryable, active, active) {
+		t.Error("active caller was denied fallback after a retryable exchange failure")
+	}
+
+	canceled, cancel := context.WithCancel(active)
+	cancel()
+	if x509CanFallBackToCachedToken(retryable, canceled, canceled) {
+		t.Error("canceled caller was allowed fallback after a retryable exchange failure")
+	}
+	deadline, cancelDeadline := context.WithTimeout(active, 0)
+	defer cancelDeadline()
+	<-deadline.Done()
+	if x509CanFallBackToCachedToken(retryable, deadline, deadline) {
+		t.Error("expired caller deadline was allowed fallback after a retryable exchange failure")
+	}
+
+	internal, cancelInternal := context.WithTimeoutCause(active, 0, errX509TokenExchangeTimeout)
+	defer cancelInternal()
+	<-internal.Done()
+	if !x509CanFallBackToCachedToken(context.DeadlineExceeded, internal, active) {
+		t.Error("active caller was denied fallback after the internal exchange timeout")
+	}
+}
+
+func TestX509WorkloadIdentityFollowerUsesCacheAfterInternalTimeout(t *testing.T) {
+	var exchanges atomic.Int32
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		exchanges.Add(1)
+		_, _ = io.WriteString(w, x509ValidExchangeResponse())
+	}))
+	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
+		IdentityProviderID: "synthetic-identity-provider",
+		ServiceAccountID:   "synthetic-service-account",
+		Transport:          fixture.capability,
+	})
+	if err != nil {
+		t.Fatalf("construct concurrent X.509 workload identity: %v", err)
+	}
+	identity.tokenExchangeTimeout = 50 * time.Millisecond
+	const cached = "synthetic-cached-bearer"
+	refresh := &x509TokenRefresh{
+		done:       make(chan struct{}),
+		wake:       make(chan struct{}),
+		generation: cached,
+	}
+	identity.mu.Lock()
+	identity.cached = x509ExchangedToken{value: cached, expiresAt: time.Now().Add(time.Minute)}
+	identity.refreshAfter = time.Now().Add(-time.Second)
+	identity.inFlight = refresh
+	identity.mu.Unlock()
+	finishLeader := make(chan struct{})
+	leaderFinished := make(chan struct{})
+	var finishOnce sync.Once
+	finish := func() { finishOnce.Do(func() { close(finishLeader) }) }
+	go func() {
+		<-finishLeader
+		identity.mu.Lock()
+		if identity.inFlight == refresh {
+			identity.inFlight = nil
+			refresh.err = context.DeadlineExceeded
+			close(refresh.done)
+		}
+		identity.mu.Unlock()
+		close(leaderFinished)
+	}()
+	defer func() {
+		finish()
+		<-leaderFinished
+	}()
+
+	followerCtx, followerCancel := context.WithTimeout(t.Context(), 3*time.Second)
+	defer followerCancel()
+	if token, followerErr := identity.GetToken(followerCtx, fixture.capability); followerErr != nil || token != cached {
+		t.Errorf("internally timed-out refresh follower token=%q, want %q; error=%v", token, cached, followerErr)
+	}
+	if got := exchanges.Load(); got != 0 {
+		t.Errorf("timed-out refresh follower made %d redundant exchanges, want 0", got)
+	}
+	finish()
+	select {
+	case <-leaderFinished:
+	case <-time.After(3 * time.Second):
+		t.Fatal("synthetic refresh leader did not publish completion")
+	}
+	identity.mu.Lock()
+	inFlight := identity.inFlight
+	identity.mu.Unlock()
+	if inFlight != nil {
+		t.Error("synthetic refresh leader did not clear the in-flight refresh")
+	}
+	select {
+	case <-refresh.done:
+	default:
+		t.Error("synthetic refresh leader did not release refresh followers")
 	}
 }
 
@@ -226,15 +428,16 @@ func TestX509WorkloadIdentityNeverRepublishesBearerInvalidatedDuringRefresh(t *t
 	case <-t.Context().Done():
 		t.Fatal("proactive refresh never reached its synchronized issuer response")
 	}
+	identity.mu.Lock()
 	follower := &x509ObservedDoneContext{Context: t.Context(), observed: make(chan struct{})}
 	go refresh(follower)
 	select {
 	case <-follower.observed:
-	case <-t.Context().Done():
-		t.Fatal("concurrent refresh follower never waited for the in-flight issuer response")
+	case <-time.After(3 * time.Second):
+		identity.mu.Unlock()
+		t.Fatal("concurrent refresh follower never reached the synchronized identity state")
 	}
-	identity.invalidateToken(rejected)
-	identity.mu.Lock()
+	identity.invalidateTokenLocked(rejected)
 	if identity.cached.value != "" || identity.inFlight == nil || identity.inFlight.generation != rejected {
 		identity.mu.Unlock()
 		t.Fatal("rejected bearer was not invalidated while its proactive refresh remained in flight")

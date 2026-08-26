@@ -157,16 +157,6 @@ func TestNewX509TransportRequiresStaticNativeConfiguration(t *testing.T) {
 			want: "custom TLS dialers",
 		},
 		{
-			name: "deprecated context-unaware TCP dialer",
-			change: func(transport *http.Transport) {
-				//nolint:staticcheck // The regression must exercise the deprecated context-unaware dialer.
-				transport.Dial = func(string, string) (net.Conn, error) {
-					return nil, errors.New("synthetic deprecated TCP dialer")
-				}
-			},
-			want: "context-unaware TCP dialers",
-		},
-		{
 			name: "deprecated TLS dialer",
 			change: func(transport *http.Transport) {
 				//nolint:staticcheck // The regression must exercise the deprecated dialer that bypasses TLSClientConfig.
