@@ -635,21 +635,49 @@ func TestExecuteClosesConsumedBodyBeforeCancelingAttemptContext(t *testing.T) {
 }
 
 func TestExecuteClosesSuccessResponseWithoutOwner(t *testing.T) {
-	client, doer := newCloseContextResponseClient(nil)
+	bodyReady := make(chan *blockingCloseContextResponseBody, 1)
+	client := openai.NewClient(
+		option.WithAPIKey("test-key"),
+		option.WithMaxRetries(0),
+		option.WithHTTPClient(responseDoerFunc(func(req *http.Request) (*http.Response, error) {
+			body := newBlockingCloseContextResponseBody(req.Context())
+			bodyReady <- body
+			return &http.Response{
+				StatusCode:    http.StatusOK,
+				ContentLength: 0,
+				Header:        http.Header{"Content-Type": {"application/json"}},
+				Body:          body,
+				Request:       req,
+			}, nil
+		})),
+	)
+	done := make(chan error, 1)
+	go func() {
+		done <- client.Get(context.Background(), "test", nil, nil)
+	}()
+	body := <-bodyReady
 
-	if err := client.Get(context.Background(), "test", nil, nil); err != nil {
+	var err error
+	returnedBeforeRelease := false
+	select {
+	case err = <-done:
+		returnedBeforeRelease = true
+	case <-time.After(250 * time.Millisecond):
+	}
+	close(body.releaseClose)
+	if !returnedBeforeRelease {
+		err = <-done
+	}
+	<-body.closeFinished
+
+	if err != nil {
 		t.Fatal(err)
 	}
-	if !doer.body.closed {
-		t.Fatal("unowned success response body was not closed")
+	if !returnedBeforeRelease {
+		t.Fatal("unowned empty response waited for blocking Close")
 	}
-	if doer.body.contextDoneOnClose {
-		t.Fatal("attempt context was canceled before the unowned body was closed")
-	}
-	select {
-	case <-doer.ctx.Done():
-	case <-time.After(time.Second):
-		t.Fatal("unowned success response did not end the attempt context lifecycle")
+	if !body.contextDoneOnClose {
+		t.Fatal("unowned empty response Close began before the attempt context was canceled")
 	}
 }
 

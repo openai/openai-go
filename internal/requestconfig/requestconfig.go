@@ -727,11 +727,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	}
 
 	if cfg.ResponseInto == nil && !intoCustomResponseBody {
-		if res.ContentLength == 0 {
-			_ = lifecycle.Close()
-		} else {
-			lifecycle.abort()
-		}
+		lifecycle.abort()
 		return nil
 	}
 
