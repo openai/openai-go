@@ -134,6 +134,14 @@ func TestRegisterDecoderNormalizesLogicalCaseInsensitiveParameters(t *testing.T)
 			registered: "multipart/related; Type=\"Application/X-Test\"",
 			response:   "Multipart/Related; type=\"application/x-test\"",
 		},
+		"multipart signed protocol": {
+			registered: "multipart/signed; Protocol=\"Application/PGP-Signature\"",
+			response:   "Multipart/Signed; protocol=\"application/pgp-signature\"",
+		},
+		"multipart encrypted protocol": {
+			registered: "multipart/encrypted; Protocol=\"Application/PGP-Encrypted\"",
+			response:   "Multipart/Encrypted; protocol=\"application/pgp-encrypted\"",
+		},
 		"unencoded format continuation": {
 			registered: "text/plain; Format*0=FLO; Format*1=WED",
 			response:   "Text/Plain; format*0=flo; format*1=wed",
@@ -193,6 +201,46 @@ func TestRegisterDecoderExtendedParameterPreservesUnescapedValueCase(t *testing.
 		},
 		"distinct unescaped value case": {
 			contentType: variantv1,
+			want:        wantDefault,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			decoder := NewDecoder(&http.Response{
+				Header: http.Header{"Content-Type": {test.contentType}},
+				Body:   io.NopCloser(strings.NewReader("")),
+			})
+			if decoder != test.want {
+				t.Fatalf("decoder = %T, want registered decoder", decoder)
+			}
+		})
+	}
+}
+
+func TestRegisterDecoderEncodedContinuationPreservesLaterSegmentValueCase(t *testing.T) {
+	const (
+		mediaType = "application/x-openai-go-test-registration-encoded-continuation"
+		titleV1   = mediaType + "; title*0*=us-ascii''prefix; title*1*=Bob%2D's'V1"
+		titlev1   = mediaType + "; title*0*=us-ascii''prefix; title*1*=bob%2d's'V1"
+	)
+	wantDefault := &testDecoder{}
+	wantTitle := &testDecoder{}
+	RegisterDecoder(mediaType, func(io.ReadCloser) Decoder { return wantDefault })
+	RegisterDecoder(titleV1, func(io.ReadCloser) Decoder { return wantTitle })
+	t.Cleanup(func() {
+		delete(decoderTypes, decoderContentTypeKey(mediaType))
+		delete(decoderTypes, decoderContentTypeKey(titleV1))
+	})
+
+	for name, test := range map[string]struct {
+		contentType string
+		want        Decoder
+	}{
+		"equivalent percent encoding case": {
+			contentType: mediaType + "; title*0*=us-ascii''prefix; title*1*=Bob%2d's'V1",
+			want:        wantTitle,
+		},
+		"distinct later segment data case": {
+			contentType: titlev1,
 			want:        wantDefault,
 		},
 	} {

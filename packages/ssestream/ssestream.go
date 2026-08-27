@@ -132,7 +132,7 @@ func normalizeMediaParameter(mediaType string, param string) string {
 	switch {
 	case isCaseInsensitiveMediaParameterValue(mediaType, logicalName):
 		if strings.HasSuffix(name, "*") {
-			normalized.WriteString(normalizeCaseInsensitiveExtendedParameterValue(value))
+			normalized.WriteString(normalizeCaseInsensitiveExtendedParameterValue(value, extendedMediaParameterHasMetadata(name)))
 		} else {
 			valueStart, valueEnd := trimOWSBounds(value)
 			normalized.WriteString(value[:valueStart])
@@ -140,7 +140,7 @@ func normalizeMediaParameter(mediaType string, param string) string {
 			normalized.WriteString(value[valueEnd:])
 		}
 	case strings.HasSuffix(name, "*"):
-		normalized.WriteString(normalizeExtendedParameterValue(value))
+		normalized.WriteString(normalizeExtendedParameterValue(value, extendedMediaParameterHasMetadata(name)))
 	default:
 		normalized.WriteString(value)
 	}
@@ -155,6 +155,19 @@ func mediaParameterLogicalName(name string) string {
 		return logicalName
 	}
 	return logicalName[:section]
+}
+
+func extendedMediaParameterHasMetadata(name string) bool {
+	if !strings.HasSuffix(name, "*") {
+		return false
+	}
+
+	encodedName := strings.TrimSuffix(name, "*")
+	section := strings.LastIndexByte(encodedName, '*')
+	if section < 0 {
+		return true
+	}
+	return encodedName[section+1:] == "0"
 }
 
 func isRFC2231Section(section string) bool {
@@ -183,6 +196,8 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string) bool {
 		case "access-type", "permission", "mode":
 			return true
 		}
+	case "multipart/encrypted", "multipart/signed":
+		return strings.EqualFold(name, "protocol")
 	case "multipart/related":
 		return strings.EqualFold(name, "type")
 	case "text/plain":
@@ -194,15 +209,15 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string) bool {
 	return false
 }
 
-func normalizeCaseInsensitiveExtendedParameterValue(value string) string {
-	return normalizeExtendedParameterValueWithData(value, normalizeCaseInsensitiveExtendedData)
+func normalizeCaseInsensitiveExtendedParameterValue(value string, hasMetadata bool) string {
+	return normalizeExtendedParameterValueWithData(value, hasMetadata, normalizeCaseInsensitiveExtendedData)
 }
 
-func normalizeExtendedParameterValue(value string) string {
-	return normalizeExtendedParameterValueWithData(value, normalizePercentEncoding)
+func normalizeExtendedParameterValue(value string, hasMetadata bool) string {
+	return normalizeExtendedParameterValueWithData(value, hasMetadata, normalizePercentEncoding)
 }
 
-func normalizeExtendedParameterValueWithData(value string, normalizeData func(string) string) string {
+func normalizeExtendedParameterValueWithData(value string, hasMetadata bool, normalizeData func(string) string) string {
 	valueStart, valueEnd := trimOWSBounds(value)
 	core := value[valueStart:valueEnd]
 	quoted := false
@@ -215,11 +230,14 @@ func normalizeExtendedParameterValueWithData(value string, normalizeData func(st
 		quoted = true
 	}
 
-	firstQuote := strings.IndexByte(core, '\'')
+	firstQuote := -1
 	secondQuote := -1
-	if firstQuote >= 0 {
-		if offset := strings.IndexByte(core[firstQuote+1:], '\''); offset >= 0 {
-			secondQuote = firstQuote + 1 + offset
+	if hasMetadata {
+		firstQuote = strings.IndexByte(core, '\'')
+		if firstQuote >= 0 {
+			if offset := strings.IndexByte(core[firstQuote+1:], '\''); offset >= 0 {
+				secondQuote = firstQuote + 1 + offset
+			}
 		}
 	}
 
