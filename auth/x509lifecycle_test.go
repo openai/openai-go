@@ -694,6 +694,81 @@ func TestX509WorkloadIdentityPreservesUnexpiredBearerDuringTransientRefreshFailu
 	}
 }
 
+func TestX509WorkloadIdentityPreservesBearerAfterLiveContextResponseHeaderTimeout(t *testing.T) {
+	var exchanges atomic.Int32
+	refreshStarted := make(chan struct{})
+	releaseRefresh := make(chan struct{})
+	defer close(releaseRefresh)
+	var refreshOnce sync.Once
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if exchanges.Add(1) == 1 {
+			_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			return
+		}
+		refreshOnce.Do(func() { close(refreshStarted) })
+		<-releaseRefresh
+	}))
+	fixture.template.ResponseHeaderTimeout = 50 * time.Millisecond
+	transport, err := NewX509Transport(fixture.template)
+	if err != nil {
+		t.Fatalf("attest response-timeout workload transport: %v", err)
+	}
+	t.Cleanup(func() { _ = transport.Close() })
+	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
+		IdentityProviderID: "synthetic-identity-provider",
+		ServiceAccountID:   "synthetic-service-account",
+		Transport:          transport,
+	})
+	if err != nil {
+		t.Fatalf("construct response-timeout workload identity: %v", err)
+	}
+	initial, err := identity.GetToken(t.Context(), transport)
+	if err != nil {
+		t.Fatalf("prime response-timeout token cache: %v", err)
+	}
+	identity.mu.Lock()
+	identity.refreshAfter = time.Now().Add(-time.Second)
+	identity.mu.Unlock()
+
+	const callers = 8
+	results := make(chan error, callers)
+	refresh := func() {
+		scope := requestconfig.NewRequestRetryScope(0, time.Millisecond, true, nil)
+		if !scope.BeginAttempt() {
+			results <- errors.New("zero-retry caller could not begin its initial attempt")
+			return
+		}
+		ctx := requestconfig.WithRequestRetryScope(t.Context(), scope)
+		token, tokenErr := identity.GetToken(ctx, transport)
+		if tokenErr == nil && token != initial {
+			tokenErr = errors.New("response-timeout refresh returned an unexpected bearer")
+		}
+		results <- tokenErr
+	}
+	go refresh()
+	select {
+	case <-refreshStarted:
+	case <-time.After(5 * time.Second):
+		t.Fatal("response-timeout refresh never reached the issuer")
+	}
+	for range callers - 1 {
+		go refresh()
+	}
+	for range callers {
+		select {
+		case refreshErr := <-results:
+			if refreshErr != nil {
+				t.Errorf("response-timeout refresh did not reuse its valid cached bearer: %v", refreshErr)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("response-timeout refresh caller did not finish")
+		}
+	}
+	if got := exchanges.Load(); got != 2 {
+		t.Errorf("prime and zero-retry response-timeout exchanges = %d, want 2", got)
+	}
+}
+
 func TestX509WorkloadIdentityNeverFallsBackAfterPermanentOrInvalidatedFailure(t *testing.T) {
 	for _, test := range []struct {
 		name       string

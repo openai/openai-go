@@ -1258,25 +1258,48 @@ if _, err := client.Models.List(requestContext); err != nil {
 
 The application retains ownership of its certificate, private key, trust roots,
 and original transport. The attested capability creates its own isolated
-connection pool, so call `Close` when it is no longer needed. Rotating the
-certificate requires a newly attested transport and client.
+connection pool, so call `Close` when it is no longer needed. `Close` rejects
+new calls but does not cancel or wait for requests already in progress; an
+in-progress request may finish after `Close` returns. Rotating the certificate
+requires a newly attested transport and client.
+
+Transport attestation validates the native transport and TLS policy and
+snapshots the certificate bytes. It is not proof that the certificate is
+currently valid or enrolled, or that an arbitrary manually assembled private
+key matches it; the TLS handshake and issuer enforce those properties. The
+capability retains the `crypto.Signer` supplied at construction, so a
+hardware-backed or custom signer must remain usable and safe for concurrent
+TLS handshakes. Keep the original transport and its TLS configuration unchanged
+while the capability is in use; their attested policy is revalidated before
+requests.
 
 The capability always presents its one attested certificate, including when a
 server advertises unrelated acceptable certificate-authority hints. It does not
 accept caller-provided certificate-selection callbacks. When the transport
 template does not specify its own values, the isolated connection pool applies
 a 30-second TCP dial timeout, a 10-second TLS handshake timeout, and the SDK's
-10-minute response-header timeout. Set a request context deadline or use
-`option.WithRequestTimeout` to bound the complete operation; response bodies are
-not given a deadline so long-running streams remain supported.
+10-minute response-header timeout. Each `GetToken` call without a caller
+deadline, including time spent waiting for a concurrent exchange and all issuer
+retries, uses a 30-second default. An explicit caller deadline is authoritative,
+even when later. Use `option.WithRequestTimeout` to bound each request attempt,
+including token acquisition and response handling, or a caller context deadline
+to bound the entire call across retries. The default exchange timeout does not
+add a deadline to API response bodies, so long-running streams remain supported.
 
 Token exchange is pinned to `https://mtls.auth.openai.com/oauth/token`; API
 requests use `https://mtls.api.openai.com/v1/`. Existing `OPENAI_BASE_URL` and
-explicit endpoint settings must match that global API endpoint. Azure, Amazon
-Bedrock, regional endpoints, HTTPS proxies, dynamic certificate selection, HTTP
-trace hooks, and separate custom HTTP clients are not supported. Organization
-and project metadata remain available on API requests but are not sent to the
-token issuer.
+explicit endpoint settings must match that global API endpoint; an explicit
+default `:443` port is equivalent. Azure, Amazon Bedrock, regional endpoints,
+HTTPS proxies, dynamic certificate selection, HTTP trace hooks, and separate
+custom HTTP clients are not supported. A legacy `http.Transport.Dial` remains
+supported for compatibility when `DialContext` is unset, but its in-progress
+dial call cannot itself be interrupted by context cancellation. The capability
+admits at most 32 concurrent dial calls; additional live requests wait for
+admission, while canceled or completed requests release their waiters. This
+prevents a non-cooperative custom dialer from growing without bound. The native
+transport still applies `MaxConnsPerHost` independently to each host.
+Organization and project metadata remain available on API requests but are not
+sent to the token issuer.
 
 Successful bearer tokens are cached per identity and transport generation.
 Concurrent refreshes share the requesting caller's context, and the effective
@@ -1288,9 +1311,21 @@ refreshed and replayed at most once, and only when the request body can be
 recreated; body-bearing requests with caller middleware are not replayed because
 that middleware may have transformed their bytes. During a temporary proactive
 refresh failure, an unexpired cached token remains usable for a bounded cooldown.
+Bearer generations rejected by the API remain tombstoned until their original
+expiry, including late rejections that arrive after a replacement is cached.
+An identity retains at most 1,024 simultaneously unexpired bearer generations
+and fails closed before publishing a bearer whose expiry cannot be tracked.
 The resulting access
 token is an ordinary bearer token; it is not cryptographically bound to a
-client certificate.
+client certificate. Rotating or revoking a certificate does not by itself
+invalidate bearer tokens already minted from that certificate; server-side
+identity mapping, token revocation, and audit policy are outside the SDK. Treat
+both the private key and minted bearers as credentials.
+
+Issuer-provided OAuth error descriptions are intentionally redacted because
+they may contain sensitive details. Use `OAuthError.StatusCode` and
+`OAuthError.ErrorCode` for programmatic handling. `OAuthError.ErrorDescription`
+is retained for compatibility but is normally empty.
 
 ## Amazon Bedrock
 
