@@ -183,6 +183,8 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string) bool {
 		case "access-type", "permission", "mode":
 			return true
 		}
+	case "multipart/related":
+		return strings.EqualFold(name, "type")
 	case "text/plain":
 		switch strings.ToLower(name) {
 		case "format", "delsp":
@@ -193,10 +195,24 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string) bool {
 }
 
 func normalizeCaseInsensitiveExtendedParameterValue(value string) string {
+	return normalizeExtendedParameterValueWithData(value, normalizeCaseInsensitiveExtendedData)
+}
+
+func normalizeExtendedParameterValue(value string) string {
+	return normalizeExtendedParameterValueWithData(value, normalizePercentEncoding)
+}
+
+func normalizeExtendedParameterValueWithData(value string, normalizeData func(string) string) string {
 	valueStart, valueEnd := trimOWSBounds(value)
 	core := value[valueStart:valueEnd]
+	quoted := false
 	if strings.HasPrefix(core, "\"") {
-		return value
+		var ok bool
+		core, ok = quotedMediaParameterContents(core)
+		if !ok {
+			return value
+		}
+		quoted = true
 	}
 
 	firstQuote := strings.IndexByte(core, '\'')
@@ -211,12 +227,40 @@ func normalizeCaseInsensitiveExtendedParameterValue(value string) string {
 	if firstQuote >= 0 && secondQuote >= 0 {
 		normalized = strings.ToLower(core[:firstQuote]) + "'" +
 			strings.ToLower(core[firstQuote+1:secondQuote]) + "'" +
-			normalizeCaseInsensitiveExtendedData(core[secondQuote+1:])
+			normalizeData(core[secondQuote+1:])
 	} else {
-		normalized = normalizeCaseInsensitiveExtendedData(core)
+		normalized = normalizeData(core)
+	}
+	if quoted {
+		normalized = "\"" + normalized + "\""
 	}
 
 	return value[:valueStart] + normalized + value[valueEnd:]
+}
+
+func quotedMediaParameterContents(value string) (string, bool) {
+	if len(value) < 2 || value[0] != '"' || value[len(value)-1] != '"' {
+		return "", false
+	}
+
+	escaped := false
+	for i := 1; i < len(value)-1; i++ {
+		switch value[i] {
+		case '\\':
+			escaped = !escaped
+		case '"':
+			if !escaped {
+				return "", false
+			}
+			escaped = false
+		default:
+			escaped = false
+		}
+	}
+	if escaped {
+		return "", false
+	}
+	return value[1 : len(value)-1], true
 }
 
 func normalizeCaseInsensitiveExtendedData(value string) string {
@@ -255,33 +299,6 @@ func hexDigit(value byte) byte {
 		return '0' + value
 	}
 	return 'a' + value - 10
-}
-
-func normalizeExtendedParameterValue(value string) string {
-	valueStart, valueEnd := trimOWSBounds(value)
-	core := value[valueStart:valueEnd]
-	if strings.HasPrefix(core, "\"") {
-		return value
-	}
-
-	firstQuote := strings.IndexByte(core, '\'')
-	secondQuote := -1
-	if firstQuote >= 0 {
-		if offset := strings.IndexByte(core[firstQuote+1:], '\''); offset >= 0 {
-			secondQuote = firstQuote + 1 + offset
-		}
-	}
-
-	var normalized string
-	if firstQuote >= 0 && secondQuote >= 0 {
-		normalized = strings.ToLower(core[:firstQuote]) + "'" +
-			strings.ToLower(core[firstQuote+1:secondQuote]) + "'" +
-			normalizePercentEncoding(core[secondQuote+1:])
-	} else {
-		normalized = normalizePercentEncoding(core)
-	}
-
-	return value[:valueStart] + normalized + value[valueEnd:]
 }
 
 func normalizePercentEncoding(value string) string {

@@ -126,6 +126,14 @@ func TestRegisterDecoderNormalizesLogicalCaseInsensitiveParameters(t *testing.T)
 			registered: "text/plain; Charset*=US-ASCII'EN'%55TF-8",
 			response:   "Text/Plain; charset*=us-ascii'en'%75tf-8",
 		},
+		"quoted encoded charset": {
+			registered: "text/plain; Charset*=\"US-ASCII'EN'UTF%2D8\"",
+			response:   "Text/Plain; charset*=\"us-ascii'en'utf%2d8\"",
+		},
+		"multipart related type": {
+			registered: "multipart/related; Type=\"Application/X-Test\"",
+			response:   "Multipart/Related; type=\"application/x-test\"",
+		},
 		"unencoded format continuation": {
 			registered: "text/plain; Format*0=FLO; Format*1=WED",
 			response:   "Text/Plain; format*0=flo; format*1=wed",
