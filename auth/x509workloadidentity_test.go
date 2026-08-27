@@ -35,6 +35,9 @@ func TestNewX509WorkloadIdentityAuthValidatesConfiguration(t *testing.T) {
 		{name: "missing transport", change: func(config *X509WorkloadIdentity) { config.Transport = nil }},
 		{name: "negative refresh buffer", change: func(config *X509WorkloadIdentity) { config.RefreshBuffer = -time.Second }},
 		{name: "excessive refresh buffer", change: func(config *X509WorkloadIdentity) { config.RefreshBuffer = time.Hour }},
+		{name: "negative token exchange timeout", change: func(config *X509WorkloadIdentity) {
+			config.TokenExchangeTimeout = -time.Second
+		}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			config := valid
@@ -61,6 +64,16 @@ func TestNewX509WorkloadIdentityAuthValidatesConfiguration(t *testing.T) {
 	if identity.tokenExchangeTimeout != x509DefaultTokenExchangeTimeout {
 		t.Errorf("default token exchange timeout = %s, want %s", identity.tokenExchangeTimeout,
 			x509DefaultTokenExchangeTimeout)
+	}
+	custom := valid
+	custom.TokenExchangeTimeout = 17 * time.Second
+	configured, err := NewX509WorkloadIdentityAuth(custom)
+	if err != nil {
+		t.Fatalf("custom X.509 token exchange timeout: %v", err)
+	}
+	if configured.tokenExchangeTimeout != custom.TokenExchangeTimeout {
+		t.Errorf("custom token exchange timeout = %s, want %s", configured.tokenExchangeTimeout,
+			custom.TokenExchangeTimeout)
 	}
 }
 
@@ -129,7 +142,7 @@ func TestX509WorkloadIdentityNeverReusesRejectedBearerWithoutRefreshInFlight(t *
 
 	identity.invalidateToken(rejected)
 	identity.mu.Lock()
-	if identity.cached.value != "" || identity.rejectedToken != rejected || identity.inFlight != nil {
+	if identity.cached.value != "" || !identity.bearers.isRejected(rejected, time.Now()) || identity.inFlight != nil {
 		identity.mu.Unlock()
 		t.Fatal("ordinary 401 did not retain the rejected bearer generation")
 	}
@@ -141,6 +154,59 @@ func TestX509WorkloadIdentityNeverReusesRejectedBearerWithoutRefreshInFlight(t *
 	}
 	if got, want := exchanges.Load(), int32(1+x509MaximumAttempts); got != want {
 		t.Errorf("prime and bounded replacement exchanges = %d, want %d", got, want)
+	}
+}
+
+func TestX509WorkloadIdentityRetainsLateRejectionAcrossRotations(t *testing.T) {
+	const (
+		first  = "synthetic-first-bearer"
+		second = "synthetic-second-bearer"
+		third  = "synthetic-third-bearer"
+	)
+	tokens := []string{first, second, first, third}
+	var exchanges atomic.Int32
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		index := int(exchanges.Add(1)) - 1
+		if index >= len(tokens) {
+			http.Error(w, "unexpected exchange", http.StatusInternalServerError)
+			return
+		}
+		_, _ = io.WriteString(w, strings.Replace(x509ValidExchangeResponse(),
+			x509ExchangeSyntheticToken, tokens[index], 1))
+	}))
+	identity := newX509LifecycleIdentity(t, fixture)
+
+	prime, err := identity.GetToken(t.Context(), fixture.capability)
+	if err != nil || prime != first {
+		t.Fatalf("prime first X.509 bearer = %q, error = %v", prime, err)
+	}
+	forceRefresh := func() string {
+		identity.mu.Lock()
+		identity.refreshAfter = time.Now().Add(-time.Second)
+		identity.mu.Unlock()
+		token, refreshErr := identity.GetToken(t.Context(), fixture.capability)
+		if refreshErr != nil {
+			t.Fatalf("force X.509 bearer refresh: %v", refreshErr)
+		}
+		return token
+	}
+	if token := forceRefresh(); token != second {
+		t.Fatalf("rotated X.509 bearer = %q, want %q", token, second)
+	}
+
+	identity.invalidateToken(first)
+	identity.mu.Lock()
+	secondRemainsCached := identity.cached.value == second
+	firstRemainsRejected := identity.bearers.isRejected(first, time.Now())
+	identity.mu.Unlock()
+	if !secondRemainsCached || !firstRemainsRejected {
+		t.Fatal("late first-generation rejection evicted its replacement or lost its tombstone")
+	}
+	if token := forceRefresh(); token != third {
+		t.Errorf("reissued rejected X.509 bearer was accepted: token=%q, want %q", token, third)
+	}
+	if got := exchanges.Load(); got != int32(len(tokens)) {
+		t.Errorf("X.509 rotation exchanges = %d, want %d", got, len(tokens))
 	}
 }
 
@@ -159,14 +225,14 @@ func TestX509WorkloadIdentityBoundsCompleteTokenExchange(t *testing.T) {
 		}
 	}))
 	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
-		IdentityProviderID: "synthetic-identity-provider",
-		ServiceAccountID:   "synthetic-service-account",
-		Transport:          fixture.capability,
+		IdentityProviderID:   "synthetic-identity-provider",
+		ServiceAccountID:     "synthetic-service-account",
+		TokenExchangeTimeout: 250 * time.Millisecond,
+		Transport:            fixture.capability,
 	})
 	if err != nil {
 		t.Fatalf("construct bounded X.509 workload identity: %v", err)
 	}
-	identity.tokenExchangeTimeout = 250 * time.Millisecond
 	watchdogCtx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
 	defer cancel()
 	result := make(chan struct {
@@ -220,14 +286,14 @@ func TestX509WorkloadIdentityFallsBackOnlyAfterInternalExchangeTimeout(t *testin
 		<-release
 	}))
 	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
-		IdentityProviderID: "synthetic-identity-provider",
-		ServiceAccountID:   "synthetic-service-account",
-		Transport:          fixture.capability,
+		IdentityProviderID:   "synthetic-identity-provider",
+		ServiceAccountID:     "synthetic-service-account",
+		TokenExchangeTimeout: 250 * time.Millisecond,
+		Transport:            fixture.capability,
 	})
 	if err != nil {
 		t.Fatalf("construct bounded X.509 workload identity: %v", err)
 	}
-	identity.tokenExchangeTimeout = 250 * time.Millisecond
 	initial, err := identity.GetToken(t.Context(), fixture.capability)
 	if err != nil {
 		t.Fatalf("prime proactive-refresh token cache: %v", err)
@@ -317,14 +383,14 @@ func TestX509WorkloadIdentityFollowerUsesCacheAfterInternalTimeout(t *testing.T)
 		_, _ = io.WriteString(w, x509ValidExchangeResponse())
 	}))
 	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
-		IdentityProviderID: "synthetic-identity-provider",
-		ServiceAccountID:   "synthetic-service-account",
-		Transport:          fixture.capability,
+		IdentityProviderID:   "synthetic-identity-provider",
+		ServiceAccountID:     "synthetic-service-account",
+		TokenExchangeTimeout: 50 * time.Millisecond,
+		Transport:            fixture.capability,
 	})
 	if err != nil {
 		t.Fatalf("construct concurrent X.509 workload identity: %v", err)
 	}
-	identity.tokenExchangeTimeout = 50 * time.Millisecond
 	const cached = "synthetic-cached-bearer"
 	refresh := &x509TokenRefresh{
 		done:       make(chan struct{}),
@@ -380,6 +446,26 @@ func TestX509WorkloadIdentityFollowerUsesCacheAfterInternalTimeout(t *testing.T)
 	case <-refresh.done:
 	default:
 		t.Error("synthetic refresh leader did not release refresh followers")
+	}
+}
+
+func TestX509WorkloadIdentityInvalidationKeepsWakeChannelStable(t *testing.T) {
+	const bearer = "synthetic-bearer"
+	wake := make(chan struct{})
+	refresh := &x509TokenRefresh{wake: wake, generation: bearer}
+	identity := &X509WorkloadIdentityAuth{
+		cached:   x509ExchangedToken{value: bearer, expiresAt: time.Now().Add(time.Minute)},
+		inFlight: refresh,
+	}
+
+	identity.invalidateToken(bearer)
+	if refresh.wake != wake {
+		t.Fatal("bearer invalidation mutated the refresh wake channel")
+	}
+	select {
+	case <-wake:
+	default:
+		t.Fatal("bearer invalidation did not wake its refresh generation")
 	}
 }
 
@@ -457,8 +543,9 @@ func TestX509WorkloadIdentityNeverRepublishesBearerInvalidatedDuringRefresh(t *t
 		}
 	}
 	identity.mu.Lock()
-	if identity.cached.value != replacement || identity.rejectedToken != "" || identity.inFlight != nil {
-		t.Error("distinct replacement bearer was not safely published and cleared its rejected generation")
+	if identity.cached.value != replacement || !identity.bearers.isRejected(rejected, time.Now()) ||
+		identity.inFlight != nil {
+		t.Error("distinct replacement bearer was not safely published while retaining its rejected predecessor")
 	}
 	identity.mu.Unlock()
 	if got := exchanges.Load(); got != 3 {
@@ -546,7 +633,7 @@ func TestX509WorkloadIdentityBoundsRepeatedInvalidatedBearerResponses(t *testing
 				t.Errorf("bounded repeated-bearer issuer exchanges = %d, want %d", got, want)
 			}
 			identity.mu.Lock()
-			if identity.cached.value != "" || identity.rejectedToken != rejected ||
+			if identity.cached.value != "" || !identity.bearers.isRejected(rejected, time.Now()) ||
 				!identity.refreshAfter.IsZero() || identity.inFlight != nil {
 				t.Error("repeatedly rejected bearer was republished or lost its invalidation record")
 			}

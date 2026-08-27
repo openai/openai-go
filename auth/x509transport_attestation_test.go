@@ -44,6 +44,62 @@ func TestX509TransportUsesBoundedNativeDefaultsWithoutMutatingItsTemplate(t *tes
 	}
 }
 
+func TestX509TransportDialAdmissionIsGlobalAndReleasesCompletedRequestWaiters(t *testing.T) {
+	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+	fixture.template.MaxConnsPerHost = 1
+	capability, err := NewX509Transport(fixture.template)
+	if err != nil {
+		t.Fatalf("attest transport with per-host connection limit: %v", err)
+	}
+	t.Cleanup(func() { _ = capability.Close() })
+	if got := cap(capability.lifecycle.dialSemaphore); got != x509MaximumConcurrentDials {
+		t.Fatalf("global dial admission capacity = %d, want %d", got, x509MaximumConcurrentDials)
+	}
+
+	called := atomic.Bool{}
+	lifecycle := &x509TransportLifecycle{
+		connections:   make(map[*x509TrackedConnection]struct{}),
+		dialSemaphore: make(chan struct{}, x509MaximumConcurrentDials),
+		dialContext: func(context.Context, string, string) (net.Conn, error) {
+			called.Store(true)
+			return nil, errors.New("saturated dial admission invoked its dialer")
+		},
+	}
+	completed := make(chan struct{})
+	close(completed)
+	completedContext := context.WithValue(
+		t.Context(), x509DialAdmissionContextKey{}, (<-chan struct{})(completed),
+	)
+	if _, dialErr := lifecycle.dialTrackedConnection(completedContext, "tcp", "unused"); !errors.Is(dialErr, context.Canceled) {
+		t.Errorf("completed request with available dial capacity error = %v, want %v", dialErr, context.Canceled)
+	}
+	if called.Load() {
+		t.Fatal("completed request with available dial capacity invoked its dialer")
+	}
+	for range x509MaximumConcurrentDials {
+		lifecycle.dialSemaphore <- struct{}{}
+	}
+	requestDone := make(chan struct{})
+	ctx := context.WithValue(t.Context(), x509DialAdmissionContextKey{}, (<-chan struct{})(requestDone))
+	result := make(chan error, 1)
+	go func() {
+		_, dialErr := lifecycle.dialTrackedConnection(ctx, "tcp", "unused")
+		result <- dialErr
+	}()
+	close(requestDone)
+	select {
+	case dialErr := <-result:
+		if !errors.Is(dialErr, context.Canceled) {
+			t.Errorf("completed-request dial waiter error = %v, want %v", dialErr, context.Canceled)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("completed request left a persistent dial-admission waiter")
+	}
+	if called.Load() {
+		t.Error("completed-request dial waiter invoked its dialer")
+	}
+}
+
 func TestX509TransportPreservesExplicitNativeTimeoutAndDialConfiguration(t *testing.T) {
 	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = io.WriteString(w, x509ValidExchangeResponse())

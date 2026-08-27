@@ -69,6 +69,56 @@ func TestWorkloadIdentityMiddlewarePreservesBodylessRequests(t *testing.T) {
 	}
 }
 
+func TestWorkloadIdentityRetainsRejectedBearersAcrossRotations(t *testing.T) {
+	const (
+		first  = "synthetic-first-bearer"
+		second = "synthetic-second-bearer"
+		third  = "synthetic-third-bearer"
+	)
+	tokens := []string{first, second, first, third}
+	var exchanges atomic.Int32
+	identity := newOrdinaryWorkloadIdentity(t)
+	httpClient := ordinaryWorkloadIssuer(t, func() string {
+		index := int(exchanges.Add(1)) - 1
+		if index >= len(tokens) {
+			return "unexpected-extra-bearer"
+		}
+		return tokens[index]
+	})
+
+	for index, expected := range []string{second, third} {
+		request, err := http.NewRequestWithContext(t.Context(), http.MethodGet,
+			"https://api.openai.com/v1/models", nil)
+		if err != nil {
+			t.Fatalf("construct rotation request %d: %v", index, err)
+		}
+		attempts := 0
+		replayed := ""
+		response, authErr := auth.WorkloadIdentityMiddleware(identity, httpClient, request,
+			func(sent *http.Request) (*http.Response, error) {
+				attempts++
+				if attempts == 1 {
+					return ordinaryWorkloadResponse(http.StatusUnauthorized, `{}`), nil
+				}
+				replayed = strings.TrimPrefix(sent.Header.Get("Authorization"), "Bearer ")
+				return ordinaryWorkloadResponse(http.StatusOK, `{}`), nil
+			})
+		if authErr != nil || response == nil || response.StatusCode != http.StatusOK {
+			t.Fatalf("rotation request %d response=%v error=%v", index, response, authErr)
+		}
+		if closeErr := response.Body.Close(); closeErr != nil {
+			t.Fatalf("close rotation response %d: %v", index, closeErr)
+		}
+		if attempts != 2 || replayed != expected {
+			t.Errorf("rotation request %d attempts/replayed=%d/%q, want 2/%q",
+				index, attempts, replayed, expected)
+		}
+	}
+	if got := exchanges.Load(); got != int32(len(tokens)) {
+		t.Errorf("ordinary workload rotation exchanges = %d, want %d", got, len(tokens))
+	}
+}
+
 func TestWorkloadIdentityMiddlewareRejectsUnprovableBodyReplay(t *testing.T) {
 	identity := newOrdinaryWorkloadIdentity(t)
 	httpClient := ordinaryWorkloadIssuer(t, func() string { return "synthetic-bearer" })

@@ -6,9 +6,9 @@ import (
 	"github.com/openai/openai-go/v3/auth"
 )
 
-func TestOAuthErrorFormattingOmitsEmptyRedactedDescription(t *testing.T) {
+func TestOAuthErrorFormattingPreservesEmptyDescriptionCompatibility(t *testing.T) {
 	withoutDescription := (&auth.OAuthError{StatusCode: 401, ErrorCode: "invalid_grant"}).Error()
-	if withoutDescription != "OAuth error (status 401): invalid_grant" {
+	if withoutDescription != "OAuth error (status 401): invalid_grant - " {
 		t.Errorf("redacted OAuth error = %q", withoutDescription)
 	}
 

@@ -1242,10 +1242,11 @@ if err != nil {
 defer transport.Close()
 
 client := openai.NewClient(option.WithX509WorkloadIdentity(auth.X509WorkloadIdentity{
-	IdentityProviderID: "idp-123",
-	ServiceAccountID:   "sa-456",
-	RefreshBuffer:      5 * time.Minute, // Optional; five minutes is the default.
-	Transport:          transport,
+	IdentityProviderID:   "idp-123",
+	ServiceAccountID:     "sa-456",
+	RefreshBuffer:        5 * time.Minute,  // Optional; five minutes is the default.
+	TokenExchangeTimeout: 45 * time.Second, // Optional; 30 seconds is the default.
+	Transport:            transport,
 }))
 
 requestContext, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
@@ -1279,9 +1280,9 @@ accept caller-provided certificate-selection callbacks. When the transport
 template does not specify its own values, the isolated connection pool applies
 a 30-second TCP dial timeout, a 10-second TLS handshake timeout, and the SDK's
 10-minute response-header timeout. Each `GetToken` call, including time spent
-waiting for a concurrent exchange and all issuer retries, has a 30-second
-overall limit; an earlier caller context deadline takes priority. Set a request
-context deadline or use
+waiting for a concurrent exchange and all issuer retries, uses the configured
+`TokenExchangeTimeout`; zero selects 30 seconds and an earlier caller context
+deadline takes priority. Set a request context deadline or use
 `option.WithRequestTimeout` to bound the complete API operation. Response bodies
 are not given a deadline so long-running streams remain supported.
 
@@ -1292,7 +1293,11 @@ default `:443` port is equivalent. Azure, Amazon Bedrock, regional endpoints,
 HTTPS proxies, dynamic certificate selection, HTTP trace hooks, and separate
 custom HTTP clients are not supported. A legacy `http.Transport.Dial` remains
 supported for compatibility when `DialContext` is unset, but its in-progress
-dial call cannot itself be interrupted by context cancellation.
+dial call cannot itself be interrupted by context cancellation. The capability
+admits at most 32 concurrent dial calls; additional live requests wait for
+admission, while canceled or completed requests release their waiters. This
+prevents a non-cooperative custom dialer from growing without bound. The native
+transport still applies `MaxConnsPerHost` independently to each host.
 Organization and project metadata remain available on API requests but are not
 sent to the token issuer. Surrounding whitespace in identity-provider and
 service-account IDs is discarded during configuration.
@@ -1307,6 +1312,10 @@ refreshed and replayed at most once, and only when the request body can be
 recreated; body-bearing requests with caller middleware are not replayed because
 that middleware may have transformed their bytes. During a temporary proactive
 refresh failure, an unexpired cached token remains usable for a bounded cooldown.
+Bearer generations rejected by the API remain tombstoned until their original
+expiry, including late rejections that arrive after a replacement is cached.
+An identity retains at most 1,024 simultaneously unexpired bearer generations
+and fails closed before publishing a bearer whose expiry cannot be tracked.
 The resulting access
 token is an ordinary bearer token; it is not cryptographically bound to a
 client certificate. Rotating or revoking a certificate does not by itself

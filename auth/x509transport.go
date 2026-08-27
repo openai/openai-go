@@ -31,6 +31,7 @@ const (
 	x509DefaultDialTimeout           = 30 * time.Second
 	x509DefaultTLSHandshakeTimeout   = 10 * time.Second
 	x509DefaultResponseHeaderTimeout = 10 * time.Minute
+	x509MaximumConcurrentDials       = 32
 )
 
 var (
@@ -38,10 +39,13 @@ var (
 	errX509TLSVerification = errors.New("X.509 transport TLS verification failed")
 )
 
+type x509DialAdmissionContextKey struct{}
+
 type x509TransportError struct {
 	cause     error
 	timeout   bool
 	temporary bool
+	retryable bool
 }
 
 func (err *x509TransportError) Error() string   { return "X.509 transport request failed" }
@@ -91,6 +95,7 @@ type x509TransportLifecycle struct {
 	mu             sync.Mutex
 	activeRequests int
 	connections    map[*x509TrackedConnection]struct{}
+	dialSemaphore  chan struct{}
 	dialContext    func(context.Context, string, string) (net.Conn, error)
 	transport      *http.Transport
 }
@@ -221,9 +226,10 @@ func NewX509Transport(template *http.Transport) (*X509Transport, error) {
 	}
 
 	lifecycle := &x509TransportLifecycle{
-		connections: make(map[*x509TrackedConnection]struct{}),
-		dialContext: transport.DialContext,
-		transport:   transport,
+		connections:   make(map[*x509TrackedConnection]struct{}),
+		dialSemaphore: make(chan struct{}, x509MaximumConcurrentDials),
+		dialContext:   transport.DialContext,
+		transport:     transport,
 	}
 	capability := &X509Transport{
 		template:          template,
@@ -446,6 +452,33 @@ func (connection *x509TrackedConnection) Close() error {
 func (lifecycle *x509TransportLifecycle) dialTrackedConnection(
 	ctx context.Context, network, address string,
 ) (net.Conn, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	requestDone, _ := ctx.Value(x509DialAdmissionContextKey{}).(<-chan struct{})
+	select {
+	case <-requestDone:
+		return nil, context.Canceled
+	default:
+	}
+	select {
+	case lifecycle.dialSemaphore <- struct{}{}:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-requestDone:
+		return nil, context.Canceled
+	}
+	if err := ctx.Err(); err != nil {
+		<-lifecycle.dialSemaphore
+		return nil, err
+	}
+	select {
+	case <-requestDone:
+		<-lifecycle.dialSemaphore
+		return nil, context.Canceled
+	default:
+	}
+	defer func() { <-lifecycle.dialSemaphore }()
 	connection, err := lifecycle.dialContext(ctx, network, address)
 	if err != nil {
 		if !x509ConnectionIsNil(connection) {
@@ -580,7 +613,12 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 	if httptrace.ContextClientTrace(request.Context()) != nil {
 		return nil, errors.New("X.509 transport does not support HTTP trace callbacks")
 	}
-	request = request.Clone(x509TraceFreeContext{request.Context()})
+	dialAdmissionDone := make(chan struct{})
+	defer close(dialAdmissionDone)
+	requestContext := context.WithValue(
+		request.Context(), x509DialAdmissionContextKey{}, (<-chan struct{})(dialAdmissionDone),
+	)
+	request = request.Clone(x509TraceFreeContext{requestContext})
 	if err := transport.validateAttestation(); err != nil {
 		return nil, err
 	}
@@ -619,12 +657,14 @@ func (transport *X509Transport) Do(request *http.Request) (*http.Response, error
 				redacted.cause = context.Canceled
 			}
 		case errors.Is(err, context.DeadlineExceeded):
-			if requestContextErr != nil {
-				redacted.cause = requestContextErr
-			}
+			redacted.cause = context.DeadlineExceeded
+			redacted.retryable = requestContextErr == nil
 		case errors.Is(err, errX509TLSVerification) || errors.As(err, &verificationError) ||
 			x509PermanentClientCertificateAlert(err):
 			redacted.cause = errX509TLSVerification
+		}
+		if redacted.cause == nil {
+			redacted.retryable = true
 		}
 		return nil, redacted
 	}

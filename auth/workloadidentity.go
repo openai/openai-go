@@ -33,11 +33,11 @@ var (
 type WorkloadIdentityAuth struct {
 	config WorkloadIdentity
 
-	// Protects cachedToken, tokenExpiry, and refreshInFlight
+	// Protects cachedToken, tokenExpiry, bearers, and refreshInFlight.
 	mu              sync.Mutex
 	cachedToken     string
-	rejectedToken   string
 	tokenExpiry     time.Time
+	bearers         *workloadBearerHistory
 	refreshInFlight *tokenRefreshState
 }
 
@@ -76,9 +76,7 @@ func NewWorkloadIdentityAuth(config WorkloadIdentity) (*WorkloadIdentityAuth, er
 	if config.RefreshBufferSeconds < 0 {
 		return nil, fmt.Errorf("WorkloadIdentity: RefreshBufferSeconds must be non-negative")
 	}
-	return &WorkloadIdentityAuth{
-		config: config,
-	}, nil
+	return &WorkloadIdentityAuth{config: config}, nil
 }
 
 func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer) (string, error) {
@@ -139,12 +137,17 @@ func (w *WorkloadIdentityAuth) handleLockedRefresh(ctx context.Context, httpClie
 func (w *WorkloadIdentityAuth) invalidateToken(value string) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
+	now := time.Now()
+	knownExpiry := time.Time{}
+	if w.cachedToken == value {
+		knownExpiry = w.tokenExpiry
+	}
+	ensureWorkloadBearerHistory(&w.bearers).reject(value, knownExpiry, now)
 	if w.cachedToken != value {
 		return
 	}
 	w.cachedToken = ""
 	w.tokenExpiry = time.Time{}
-	w.rejectedToken = value
 }
 
 func (w *WorkloadIdentityAuth) beginRefreshLocked() *tokenRefreshState {
@@ -165,7 +168,7 @@ func (w *WorkloadIdentityAuth) finishRefresh(state *tokenRefreshState, token str
 	if w.refreshInFlight != state {
 		return
 	}
-	if err == nil && token == w.rejectedToken {
+	if err == nil && w.bearers.isRejected(token, time.Now()) {
 		if w.cachedToken == token {
 			w.cachedToken = ""
 			w.tokenExpiry = time.Time{}
@@ -196,10 +199,14 @@ func (w *WorkloadIdentityAuth) refreshToken(ctx context.Context, httpClient HTTP
 		}
 
 		w.mu.Lock()
-		if token != w.rejectedToken {
+		now := time.Now()
+		if !w.bearers.isRejected(token, now) {
+			if err := ensureWorkloadBearerHistory(&w.bearers).recordIssued(token, expiry, now); err != nil {
+				w.mu.Unlock()
+				return "", err
+			}
 			w.cachedToken = token
 			w.tokenExpiry = expiry
-			w.rejectedToken = ""
 			w.mu.Unlock()
 			return token, nil
 		}
