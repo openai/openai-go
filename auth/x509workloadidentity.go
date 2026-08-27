@@ -33,9 +33,6 @@ type X509WorkloadIdentity struct {
 	// RefreshBuffer controls how early cached bearer tokens are refreshed. Zero
 	// uses a five-minute default, capped at half the token's remaining lifetime.
 	RefreshBuffer time.Duration
-	// TokenExchangeTimeout bounds one complete token acquisition, including
-	// single-flight waiting and issuer retries. Zero uses a 30-second default.
-	TokenExchangeTimeout time.Duration
 	// Transport is the exact attested transport used for token exchange and API
 	// requests.
 	Transport *X509Transport
@@ -65,30 +62,21 @@ type x509TokenRefresh struct {
 // NewX509WorkloadIdentityAuth validates and binds a workload identity to one
 // attested X.509 transport generation.
 func NewX509WorkloadIdentityAuth(config X509WorkloadIdentity) (*X509WorkloadIdentityAuth, error) {
-	config.IdentityProviderID = strings.TrimSpace(config.IdentityProviderID)
-	if config.IdentityProviderID == "" {
+	if strings.TrimSpace(config.IdentityProviderID) == "" {
 		return nil, errors.New("X.509 workload identity requires an identity-provider ID")
 	}
-	config.ServiceAccountID = strings.TrimSpace(config.ServiceAccountID)
-	if config.ServiceAccountID == "" {
+	if strings.TrimSpace(config.ServiceAccountID) == "" {
 		return nil, errors.New("X.509 workload identity requires a service-account ID")
 	}
 	if config.RefreshBuffer < 0 || config.RefreshBuffer >= x509MaximumTokenLifetime*time.Second {
 		return nil, errors.New("X.509 workload identity requires a non-negative refresh buffer shorter than one hour")
 	}
-	if config.TokenExchangeTimeout < 0 {
-		return nil, errors.New("X.509 workload identity requires a non-negative token exchange timeout")
-	}
 	if err := config.Transport.validateAttestation(); err != nil {
 		return nil, err
 	}
-	tokenExchangeTimeout := config.TokenExchangeTimeout
-	if tokenExchangeTimeout == 0 {
-		tokenExchangeTimeout = x509DefaultTokenExchangeTimeout
-	}
 	return &X509WorkloadIdentityAuth{
 		config:               config,
-		tokenExchangeTimeout: tokenExchangeTimeout,
+		tokenExchangeTimeout: x509DefaultTokenExchangeTimeout,
 	}, nil
 }
 
@@ -121,7 +109,7 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 		identity.mu.Unlock()
 	}
 	callerCtx := ctx
-	ctx, cancel := context.WithTimeoutCause(ctx, identity.tokenExchangeTimeout, errX509TokenExchangeTimeout)
+	ctx, cancel := identity.exchangeContext(ctx)
 	defer cancel()
 	for {
 		if ctx.Err() != nil {
@@ -208,8 +196,20 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 		if err != nil {
 			return "", err
 		}
+		if fallback {
+			if callerErr := callerCtx.Err(); callerErr != nil {
+				return "", callerErr
+			}
+		}
 		return token.value, nil
 	}
+}
+
+func (identity *X509WorkloadIdentityAuth) exchangeContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	if _, hasDeadline := ctx.Deadline(); hasDeadline {
+		return context.WithCancel(ctx)
+	}
+	return context.WithTimeoutCause(ctx, identity.tokenExchangeTimeout, errX509TokenExchangeTimeout)
 }
 
 func (identity *X509WorkloadIdentityAuth) tokenAfterExchangeContextDone(
@@ -221,6 +221,9 @@ func (identity *X509WorkloadIdentityAuth) tokenAfterExchangeContextDone(
 	}
 	identity.mu.Lock()
 	defer identity.mu.Unlock()
+	if callerErr := callerCtx.Err(); callerErr != nil {
+		return "", callerErr
+	}
 	if identity.cached.value == "" || identity.bearers.isRejected(identity.cached.value, time.Now()) ||
 		!time.Now().Before(identity.cached.expiresAt) {
 		return "", err

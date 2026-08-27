@@ -2,8 +2,8 @@ package auth_test
 
 import "github.com/openai/openai-go/v3/auth"
 
-// Lock the final pre-release field order and arity against accidental changes.
-var _ = auth.X509WorkloadIdentity{"identity-provider", "service-account", 0, 0, nil}
+// Lock the released field order and arity against accidental changes.
+var _ = auth.X509WorkloadIdentity{"identity-provider", "service-account", 0, nil}
 
 // Private revocation state must not make the exported authentication handles
 // unusable as map keys or in interface equality checks.

@@ -15,6 +15,17 @@ import (
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
 
+type x509ObservedErrorContext struct {
+	context.Context
+	errObserved chan struct{}
+	once        sync.Once
+}
+
+func (ctx *x509ObservedErrorContext) Err() error {
+	ctx.once.Do(func() { close(ctx.errObserved) })
+	return ctx.Context.Err()
+}
+
 func TestNewX509WorkloadIdentityAuthValidatesConfiguration(t *testing.T) {
 	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = io.WriteString(w, x509ValidExchangeResponse())
@@ -35,9 +46,6 @@ func TestNewX509WorkloadIdentityAuthValidatesConfiguration(t *testing.T) {
 		{name: "missing transport", change: func(config *X509WorkloadIdentity) { config.Transport = nil }},
 		{name: "negative refresh buffer", change: func(config *X509WorkloadIdentity) { config.RefreshBuffer = -time.Second }},
 		{name: "excessive refresh buffer", change: func(config *X509WorkloadIdentity) { config.RefreshBuffer = time.Hour }},
-		{name: "negative token exchange timeout", change: func(config *X509WorkloadIdentity) {
-			config.TokenExchangeTimeout = -time.Second
-		}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			config := valid
@@ -56,24 +64,35 @@ func TestNewX509WorkloadIdentityAuthValidatesConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("valid X.509 workload configuration: %v", err)
 	}
-	if identity.config.IdentityProviderID != "synthetic-identity-provider" ||
-		identity.config.ServiceAccountID != "synthetic-service-account" {
-		t.Errorf("normalized identity identifiers = %q/%q", identity.config.IdentityProviderID,
+	if identity.config.IdentityProviderID != "  synthetic-identity-provider\t" ||
+		identity.config.ServiceAccountID != "\nsynthetic-service-account " {
+		t.Errorf("configured identity identifiers changed to %q/%q", identity.config.IdentityProviderID,
 			identity.config.ServiceAccountID)
 	}
 	if identity.tokenExchangeTimeout != x509DefaultTokenExchangeTimeout {
 		t.Errorf("default token exchange timeout = %s, want %s", identity.tokenExchangeTimeout,
 			x509DefaultTokenExchangeTimeout)
 	}
-	custom := valid
-	custom.TokenExchangeTimeout = 17 * time.Second
-	configured, err := NewX509WorkloadIdentityAuth(custom)
-	if err != nil {
-		t.Fatalf("custom X.509 token exchange timeout: %v", err)
+	if x509DefaultTokenExchangeTimeout != 30*time.Second {
+		t.Errorf("X.509 token exchange default = %s, want 30s", x509DefaultTokenExchangeTimeout)
 	}
-	if configured.tokenExchangeTimeout != custom.TokenExchangeTimeout {
-		t.Errorf("custom token exchange timeout = %s, want %s", configured.tokenExchangeTimeout,
-			custom.TokenExchangeTimeout)
+
+	defaultCtx, cancelDefault := identity.exchangeContext(context.Background())
+	defer cancelDefault()
+	defaultDeadline, hasDefaultDeadline := defaultCtx.Deadline()
+	if remaining := time.Until(defaultDeadline); !hasDefaultDeadline ||
+		remaining <= x509DefaultTokenExchangeTimeout-time.Second || remaining > x509DefaultTokenExchangeTimeout {
+		t.Errorf("default exchange deadline remaining = %s, present = %t", remaining, hasDefaultDeadline)
+	}
+
+	callerCtx, cancelCaller := context.WithTimeout(context.Background(), 2*x509DefaultTokenExchangeTimeout)
+	defer cancelCaller()
+	callerDeadline, _ := callerCtx.Deadline()
+	exchangeCtx, cancelExchange := identity.exchangeContext(callerCtx)
+	defer cancelExchange()
+	exchangeDeadline, hasExchangeDeadline := exchangeCtx.Deadline()
+	if !hasExchangeDeadline || !exchangeDeadline.Equal(callerDeadline) {
+		t.Errorf("explicit caller deadline changed from %s to %s", callerDeadline, exchangeDeadline)
 	}
 }
 
@@ -225,23 +244,21 @@ func TestX509WorkloadIdentityBoundsCompleteTokenExchange(t *testing.T) {
 		}
 	}))
 	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
-		IdentityProviderID:   "synthetic-identity-provider",
-		ServiceAccountID:     "synthetic-service-account",
-		TokenExchangeTimeout: 250 * time.Millisecond,
-		Transport:            fixture.capability,
+		IdentityProviderID: "synthetic-identity-provider",
+		ServiceAccountID:   "synthetic-service-account",
+		Transport:          fixture.capability,
 	})
 	if err != nil {
 		t.Fatalf("construct bounded X.509 workload identity: %v", err)
 	}
-	watchdogCtx, cancel := context.WithTimeout(t.Context(), 3*time.Second)
-	defer cancel()
+	identity.tokenExchangeTimeout = 250 * time.Millisecond
 	result := make(chan struct {
 		token string
 		err   error
 	}, 1)
 	started := time.Now()
 	go func() {
-		token, tokenErr := identity.GetToken(watchdogCtx, fixture.capability)
+		token, tokenErr := identity.GetToken(context.Background(), fixture.capability)
 		result <- struct {
 			token string
 			err   error
@@ -286,14 +303,14 @@ func TestX509WorkloadIdentityFallsBackOnlyAfterInternalExchangeTimeout(t *testin
 		<-release
 	}))
 	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
-		IdentityProviderID:   "synthetic-identity-provider",
-		ServiceAccountID:     "synthetic-service-account",
-		TokenExchangeTimeout: 250 * time.Millisecond,
-		Transport:            fixture.capability,
+		IdentityProviderID: "synthetic-identity-provider",
+		ServiceAccountID:   "synthetic-service-account",
+		Transport:          fixture.capability,
 	})
 	if err != nil {
 		t.Fatalf("construct bounded X.509 workload identity: %v", err)
 	}
+	identity.tokenExchangeTimeout = 250 * time.Millisecond
 	initial, err := identity.GetToken(t.Context(), fixture.capability)
 	if err != nil {
 		t.Fatalf("prime proactive-refresh token cache: %v", err)
@@ -302,8 +319,6 @@ func TestX509WorkloadIdentityFallsBackOnlyAfterInternalExchangeTimeout(t *testin
 	identity.refreshAfter = time.Now().Add(-time.Second)
 	identity.mu.Unlock()
 
-	watchdogCtx, watchdogCancel := context.WithTimeout(t.Context(), 3*time.Second)
-	defer watchdogCancel()
 	type tokenResult struct {
 		token string
 		err   error
@@ -318,7 +333,7 @@ func TestX509WorkloadIdentityFallsBackOnlyAfterInternalExchangeTimeout(t *testin
 	}
 	var refreshed tokenResult
 	select {
-	case refreshed = <-getToken(watchdogCtx):
+	case refreshed = <-getToken(context.Background()):
 	case <-time.After(4 * time.Second):
 		releaseHandler()
 		t.Fatal("proactive refresh ignored both its internal timeout and caller watchdog")
@@ -376,6 +391,46 @@ func TestX509WorkloadIdentityCachedFallbackHonorsCallerCancellation(t *testing.T
 	}
 }
 
+func TestX509WorkloadIdentityCachedFallbackRechecksCallerAfterLock(t *testing.T) {
+	baseCaller, cancelCaller := context.WithCancel(context.Background())
+	caller := &x509ObservedErrorContext{
+		Context:     baseCaller,
+		errObserved: make(chan struct{}),
+	}
+	exchange, cancelExchange := context.WithTimeoutCause(
+		context.Background(), 0, errX509TokenExchangeTimeout,
+	)
+	defer cancelExchange()
+	<-exchange.Done()
+
+	identity := &X509WorkloadIdentityAuth{
+		cached: x509ExchangedToken{
+			value:     "synthetic-cached-bearer",
+			expiresAt: time.Now().Add(time.Hour),
+		},
+	}
+	identity.mu.Lock()
+	result := make(chan struct {
+		token string
+		err   error
+	}, 1)
+	go func() {
+		token, err := identity.tokenAfterExchangeContextDone(exchange, caller)
+		result <- struct {
+			token string
+			err   error
+		}{token: token, err: err}
+	}()
+	<-caller.errObserved
+	cancelCaller()
+	identity.mu.Unlock()
+
+	got := <-result
+	if got.token != "" || !errors.Is(got.err, context.Canceled) {
+		t.Errorf("fallback after caller cancellation = token:%q error:%v", got.token, got.err)
+	}
+}
+
 func TestX509WorkloadIdentityFollowerUsesCacheAfterInternalTimeout(t *testing.T) {
 	var exchanges atomic.Int32
 	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -383,14 +438,14 @@ func TestX509WorkloadIdentityFollowerUsesCacheAfterInternalTimeout(t *testing.T)
 		_, _ = io.WriteString(w, x509ValidExchangeResponse())
 	}))
 	identity, err := NewX509WorkloadIdentityAuth(X509WorkloadIdentity{
-		IdentityProviderID:   "synthetic-identity-provider",
-		ServiceAccountID:     "synthetic-service-account",
-		TokenExchangeTimeout: 50 * time.Millisecond,
-		Transport:            fixture.capability,
+		IdentityProviderID: "synthetic-identity-provider",
+		ServiceAccountID:   "synthetic-service-account",
+		Transport:          fixture.capability,
 	})
 	if err != nil {
 		t.Fatalf("construct concurrent X.509 workload identity: %v", err)
 	}
+	identity.tokenExchangeTimeout = 50 * time.Millisecond
 	const cached = "synthetic-cached-bearer"
 	refresh := &x509TokenRefresh{
 		done:       make(chan struct{}),
@@ -422,10 +477,26 @@ func TestX509WorkloadIdentityFollowerUsesCacheAfterInternalTimeout(t *testing.T)
 		<-leaderFinished
 	}()
 
-	followerCtx, followerCancel := context.WithTimeout(t.Context(), 3*time.Second)
+	followerCtx, followerCancel := context.WithCancel(context.Background())
 	defer followerCancel()
-	if token, followerErr := identity.GetToken(followerCtx, fixture.capability); followerErr != nil || token != cached {
-		t.Errorf("internally timed-out refresh follower token=%q, want %q; error=%v", token, cached, followerErr)
+	type followerTokenResult struct {
+		token string
+		err   error
+	}
+	followerResult := make(chan followerTokenResult, 1)
+	go func() {
+		token, followerErr := identity.GetToken(followerCtx, fixture.capability)
+		followerResult <- followerTokenResult{token: token, err: followerErr}
+	}()
+	select {
+	case result := <-followerResult:
+		if result.err != nil || result.token != cached {
+			t.Errorf("internally timed-out refresh follower token=%q, want %q; error=%v",
+				result.token, cached, result.err)
+		}
+	case <-time.After(3 * time.Second):
+		followerCancel()
+		t.Fatal("internally timed-out refresh follower did not return")
 	}
 	if got := exchanges.Load(); got != 0 {
 		t.Errorf("timed-out refresh follower made %d redundant exchanges, want 0", got)

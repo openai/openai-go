@@ -228,7 +228,7 @@ func TestWorkloadIdentitySingleRetry(t *testing.T) {
 				if strings.Contains(req.URL.String(), "/oauth/token") {
 					oauthCallCount++
 					tokenResp := map[string]interface{}{
-						"access_token": fmt.Sprintf("test-token-%d", oauthCallCount),
+						"access_token": "test-token",
 						"expires_in":   3600,
 					}
 					body, err := json.Marshal(tokenResp)
