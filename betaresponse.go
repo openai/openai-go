@@ -29118,6 +29118,8 @@ type BetaResponseUsage struct {
 	OutputTokensDetails BetaResponseUsageOutputTokensDetails `json:"output_tokens_details" api:"required"`
 	// The total number of tokens used.
 	TotalTokens int64 `json:"total_tokens" api:"required"`
+	// Compute units for the request. Currently null when available.
+	ComputeUnits int64 `json:"compute_units" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		InputTokens         respjson.Field
@@ -29125,6 +29127,7 @@ type BetaResponseUsage struct {
 		OutputTokens        respjson.Field
 		OutputTokensDetails respjson.Field
 		TotalTokens         respjson.Field
+		ComputeUnits        respjson.Field
 		ExtraFields         map[string]respjson.Field
 		raw                 string
 	} `json:"-"`
