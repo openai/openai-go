@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.54.0](https://github.com/openai/openai-go/compare/v3.53.0...v3.54.0) (2026-08-27)
+
+
+### Features
+
+* **api:** make function call output call IDs optional ([#864](https://github.com/openai/openai-go/issues/864)) ([7095c46](https://github.com/openai/openai-go/commit/7095c4615c3033d78c460e7bac646ba8062e0e16))
+
+
+### Bug Fixes
+
+* **auth:** harden X.509 workload identity contract ([#863](https://github.com/openai/openai-go/issues/863)) ([adefcb3](https://github.com/openai/openai-go/commit/adefcb377ad07600d995d964c80f15d13fefd468))
+
 ## [3.53.0](https://github.com/openai/openai-go/compare/v3.52.0...v3.53.0) (2026-08-25)
 
 
