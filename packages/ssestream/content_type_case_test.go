@@ -138,6 +138,10 @@ func TestRegisterDecoderNormalizesLogicalCaseInsensitiveParameters(t *testing.T)
 			registered: "multipart/signed; Protocol=\"Application/PGP-Signature\"",
 			response:   "Multipart/Signed; protocol=\"application/pgp-signature\"",
 		},
+		"multipart signed micalg": {
+			registered: "multipart/signed; Micalg=PGP-SHA256",
+			response:   "Multipart/Signed; micalg=pgp-sha256",
+		},
 		"multipart encrypted protocol": {
 			registered: "multipart/encrypted; Protocol=\"Application/PGP-Encrypted\"",
 			response:   "Multipart/Encrypted; protocol=\"application/pgp-encrypted\"",
@@ -193,6 +197,10 @@ func TestDecoderContentTypeKeyKeepsContextualValuesCaseSensitive(t *testing.T) {
 		"header outside text csv": {
 			contentType: "text/plain; Header=PRESENT",
 			want:        "text/plain; header=PRESENT",
+		},
+		"micalg outside multipart signed": {
+			contentType: "multipart/encrypted; Micalg=PGP-SHA256",
+			want:        "multipart/encrypted; micalg=PGP-SHA256",
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
