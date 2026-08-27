@@ -142,6 +142,14 @@ func TestRegisterDecoderNormalizesLogicalCaseInsensitiveParameters(t *testing.T)
 			registered: "multipart/encrypted; Protocol=\"Application/PGP-Encrypted\"",
 			response:   "Multipart/Encrypted; protocol=\"application/pgp-encrypted\"",
 		},
+		"multipart report type": {
+			registered: "multipart/report; Report-Type=DELIVERY-STATUS",
+			response:   "Multipart/Report; report-type=delivery-status",
+		},
+		"text csv header": {
+			registered: "text/csv; Header=PRESENT",
+			response:   "Text/CSV; header=present",
+		},
 		"unencoded format continuation": {
 			registered: "text/plain; Format*0=FLO; Format*1=WED",
 			response:   "Text/Plain; format*0=flo; format*1=wed",
@@ -170,9 +178,28 @@ func TestRegisterDecoderNormalizesLogicalCaseInsensitiveParameters(t *testing.T)
 }
 
 func TestDecoderContentTypeKeyKeepsContextualValuesCaseSensitive(t *testing.T) {
-	const contentType = "text/html; Format=FLOWED"
-	if got := decoderContentTypeKey(contentType); got != "text/html; format=FLOWED" {
-		t.Fatalf("decoder content type key = %q, want context-specific value case preserved", got)
+	for name, test := range map[string]struct {
+		contentType string
+		want        string
+	}{
+		"format outside text plain": {
+			contentType: "text/html; Format=FLOWED",
+			want:        "text/html; format=FLOWED",
+		},
+		"report type outside multipart report": {
+			contentType: "multipart/mixed; Report-Type=DELIVERY-STATUS",
+			want:        "multipart/mixed; report-type=DELIVERY-STATUS",
+		},
+		"header outside text csv": {
+			contentType: "text/plain; Header=PRESENT",
+			want:        "text/plain; header=PRESENT",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := decoderContentTypeKey(test.contentType); got != test.want {
+				t.Fatalf("decoder content type key = %q, want %q", got, test.want)
+			}
+		})
 	}
 }
 

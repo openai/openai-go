@@ -198,8 +198,12 @@ func isCaseInsensitiveMediaParameterValue(mediaType string, name string) bool {
 		}
 	case "multipart/encrypted", "multipart/signed":
 		return strings.EqualFold(name, "protocol")
+	case "multipart/report":
+		return strings.EqualFold(name, "report-type")
 	case "multipart/related":
 		return strings.EqualFold(name, "type")
+	case "text/csv":
+		return strings.EqualFold(name, "header")
 	case "text/plain":
 		switch strings.ToLower(name) {
 		case "format", "delsp":
