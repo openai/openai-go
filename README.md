@@ -179,8 +179,14 @@ stream := client.Responses.NewStreaming(ctx, responses.ResponseNewParams{
 defer func() { _ = stream.Close() }()
 
 for stream.Next() {
-	event := stream.Current()
-	print(event.Delta)
+	switch event := stream.Current().AsAny().(type) {
+	case responses.ResponseTextDeltaEvent:
+		print(event.Delta)
+	case responses.ResponseErrorEvent:
+		println("stream error event:", event.Message, "param="+event.Param, "code="+event.Code)
+	case responses.ResponseFailedEvent:
+		println("response failed:", event.Response.ID)
+	}
 }
 
 if stream.Err() != nil {
@@ -188,7 +194,7 @@ if stream.Err() != nil {
 }
 ```
 
-> See the [full streaming example](./examples/responses-streaming/main.go)
+> See the [full streaming example](./examples/responses-streaming/main.go). Typed `responses.ResponseErrorEvent` and `responses.ResponseFailedEvent` values come through `stream.Current().AsAny()`, while transport/API-level streaming failures can instead surface via `stream.Err()`.
 
 </details>
 
