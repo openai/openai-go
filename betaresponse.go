@@ -4393,9 +4393,9 @@ type BetaResponse struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata map[string]string `json:"metadata" api:"required"`
-	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
+	// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
 	// available models.
 	Model BetaResponseModel `json:"model" api:"required"`
@@ -4504,8 +4504,6 @@ type BetaResponse struct {
 	//
 	// Deprecated: deprecated
 	PromptCacheRetention BetaResponsePromptCacheRetention `json:"prompt_cache_retention" api:"nullable"`
-	// **gpt-5 and o-series models only**
-	//
 	// Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 	Reasoning BetaResponseReasoning `json:"reasoning" api:"nullable"`
@@ -4631,7 +4629,7 @@ func (r *BetaResponse) UnmarshalJSON(data []byte) error {
 type BetaResponseIncompleteDetails struct {
 	// The reason why the response is incomplete.
 	//
-	// Any of "max_output_tokens", "content_filter".
+	// Any of "max_output_tokens", "max_messages", "content_filter".
 	Reason string `json:"reason"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -4684,9 +4682,9 @@ func (r *BetaResponseInstructionsUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
-// wide range of models with different capabilities, performance characteristics,
-// and price points. Refer to the
+// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+// range of models with different capabilities, performance characteristics, and
+// price points. Refer to the
 // [model guide](https://platform.openai.com/docs/models) to browse and compare
 // available models.
 type BetaResponseModel string
@@ -5275,8 +5273,6 @@ const (
 	BetaResponsePromptCacheRetention24h      BetaResponsePromptCacheRetention = "24h"
 )
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type BetaResponseReasoning struct {
@@ -29128,8 +29124,6 @@ type BetaResponseUsage struct {
 	OutputTokensDetails BetaResponseUsageOutputTokensDetails `json:"output_tokens_details" api:"required"`
 	// The total number of tokens used.
 	TotalTokens int64 `json:"total_tokens" api:"required"`
-	// Compute units for the request. Currently null when available.
-	ComputeUnits int64 `json:"compute_units" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		InputTokens         respjson.Field
@@ -29137,7 +29131,6 @@ type BetaResponseUsage struct {
 		OutputTokens        respjson.Field
 		OutputTokensDetails respjson.Field
 		TotalTokens         respjson.Field
-		ComputeUnits        respjson.Field
 		ExtraFields         map[string]respjson.Field
 		raw                 string
 	} `json:"-"`
@@ -32636,8 +32629,6 @@ type BetaResponseNewParams struct {
 	//
 	// Any of "in_memory", "24h".
 	PromptCacheRetention BetaResponseNewParamsPromptCacheRetention `json:"prompt_cache_retention,omitzero"`
-	// **gpt-5 and o-series models only**
-	//
 	// Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 	Reasoning BetaResponseNewParamsReasoning `json:"reasoning,omitzero"`
@@ -32690,9 +32681,9 @@ type BetaResponseNewParams struct {
 	// - [Conversation state](https://platform.openai.com/docs/guides/conversation-state)
 	// - [Function calling](https://platform.openai.com/docs/guides/function-calling)
 	Input BetaResponseNewParamsInputUnion `json:"input,omitzero"`
-	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
+	// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
 	// available models.
 	Model BetaResponseNewParamsModel `json:"model,omitzero"`
@@ -32798,9 +32789,9 @@ func (u *BetaResponseNewParamsInputUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, u)
 }
 
-// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
-// wide range of models with different capabilities, performance characteristics,
-// and price points. Refer to the
+// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+// range of models with different capabilities, performance characteristics, and
+// price points. Refer to the
 // [model guide](https://platform.openai.com/docs/models) to browse and compare
 // available models.
 type BetaResponseNewParamsModel string
@@ -33086,8 +33077,6 @@ const (
 	BetaResponseNewParamsPromptCacheRetention24h      BetaResponseNewParamsPromptCacheRetention = "24h"
 )
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type BetaResponseNewParamsReasoning struct {
@@ -33379,9 +33368,9 @@ type BetaResponseCancelParams struct {
 }
 
 type BetaResponseCompactParams struct {
-	// Model ID used to generate the response, like `gpt-5` or `o3`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
+	// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
 	// available models.
 	Model BetaResponseCompactParamsModel `json:"model,omitzero" api:"required"`
@@ -33444,9 +33433,9 @@ func (r *BetaResponseCompactParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Model ID used to generate the response, like `gpt-5` or `o3`. OpenAI offers a
-// wide range of models with different capabilities, performance characteristics,
-// and price points. Refer to the
+// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+// range of models with different capabilities, performance characteristics, and
+// price points. Refer to the
 // [model guide](https://platform.openai.com/docs/models) to browse and compare
 // available models.
 type BetaResponseCompactParamsModel string

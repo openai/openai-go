@@ -36,7 +36,7 @@ func TestChatCompletionNewWithOptionalParams(t *testing.T) {
 				Name: openai.String("name"),
 			},
 		}},
-		Model: shared.ChatModelGPT5_4,
+		Model: shared.ChatModelGPT5_6Sol,
 		Audio: openai.ChatCompletionAudioParam{
 			Format: openai.ChatCompletionAudioParamFormatWAV,
 			Voice: openai.ChatCompletionAudioParamVoiceUnion{

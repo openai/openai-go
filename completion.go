@@ -179,8 +179,6 @@ type CompletionUsage struct {
 	TotalTokens int64 `json:"total_tokens" api:"required"`
 	// Breakdown of tokens used in a completion.
 	CompletionTokensDetails CompletionUsageCompletionTokensDetails `json:"completion_tokens_details"`
-	// Compute units for the request. Currently null when available.
-	ComputeUnits int64 `json:"compute_units" api:"nullable"`
 	// Breakdown of tokens used in the prompt.
 	PromptTokensDetails CompletionUsagePromptTokensDetails `json:"prompt_tokens_details"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
@@ -189,7 +187,6 @@ type CompletionUsage struct {
 		PromptTokens            respjson.Field
 		TotalTokens             respjson.Field
 		CompletionTokensDetails respjson.Field
-		ComputeUnits            respjson.Field
 		PromptTokensDetails     respjson.Field
 		ExtraFields             map[string]respjson.Field
 		raw                     string

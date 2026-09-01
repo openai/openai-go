@@ -361,7 +361,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 					},
 				},
 			}},
-			Model: shared.ChatModelGPT5_4,
+			Model: shared.ChatModelGPT5_6Sol,
 		})
 		for stream.Next() {
 			_ = stream.Current()
@@ -418,7 +418,7 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 						},
 					},
 				}},
-				Model: shared.ChatModelGPT5_4,
+				Model: shared.ChatModelGPT5_6Sol,
 			},
 			option.WithRequestTimeout((100 * time.Millisecond)),
 		)

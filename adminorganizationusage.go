@@ -9764,6 +9764,9 @@ type AdminOrganizationUsageCostsParams struct {
 	//
 	// Any of "project_id", "line_item", "api_key_id".
 	GroupBy []string `query:"group_by,omitzero" json:"-"`
+	// Return only costs for these exact line item names. Each value must match the
+	// complete `line_item` value, for example `gpt-5.6-sol, input_tokens`.
+	LineItems []string `query:"line_items,omitzero" json:"-"`
 	// Return only costs for these projects.
 	ProjectIDs []string `query:"project_ids,omitzero" json:"-"`
 	paramObj

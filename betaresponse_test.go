@@ -45,7 +45,7 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 		Metadata: map[string]string{
 			"foo": "string",
 		},
-		Model: openai.BetaResponseNewParamsModelGPT5_1,
+		Model: openai.BetaResponseNewParamsModelGPT5_6Sol,
 		Moderation: openai.BetaResponseNewParamsModeration{
 			Model: "model",
 			Policy: openai.BetaResponseNewParamsModerationPolicy{
