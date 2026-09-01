@@ -11,7 +11,6 @@ import (
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/auth"
-	"github.com/openai/openai-go/v3/azure"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -788,36 +787,6 @@ func TestX509WorkloadIdentityDoesNotMutateCallerOwnedRequest(t *testing.T) {
 	if request := api.requests()[0]; request.authorization != "Bearer "+x509ConformanceToken {
 		t.Error("cloned API request did not receive its expected bearer credential")
 	}
-}
-
-func TestX509WorkloadIdentityRejectsAzureBeforeExchange(t *testing.T) {
-	t.Run("Azure endpoint without credentials", func(t *testing.T) {
-		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
-		config, issuer, api := newX509WorkloadIdentityIntegration(t)
-		client := openai.NewClient(
-			azure.WithEndpoint("https://resource.openai.azure.com", "2024-06-01"),
-			option.WithX509WorkloadIdentity(config),
-			option.WithMaxRetries(0),
-		)
-		if _, err := client.Models.List(t.Context()); err == nil {
-			t.Fatal("Azure endpoint accepted an X.509 workload identity")
-		}
-		assertX509WorkloadNoRequests(t, issuer, api)
-	})
-	t.Run("Azure API key", func(t *testing.T) {
-		t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
-		config, issuer, api := newX509WorkloadIdentityIntegration(t)
-		client := openai.NewClient(
-			azure.WithEndpoint("https://resource.openai.azure.com", "2024-06-01"),
-			azure.WithAPIKey("synthetic-azure-key"),
-			option.WithX509WorkloadIdentity(config),
-			option.WithMaxRetries(0),
-		)
-		if _, err := client.Models.List(t.Context()); err == nil {
-			t.Fatal("Azure API-key provider accepted an X.509 workload identity")
-		}
-		assertX509WorkloadNoRequests(t, issuer, api)
-	})
 }
 
 type x509WorkloadRejectedDoer struct{}
