@@ -496,8 +496,6 @@ const OAuthErrorCodeInvalidGrant = shared.OAuthErrorCodeInvalidGrant
 // Equals "invalid_subject_token"
 const OAuthErrorCodeInvalidSubjectToken = shared.OAuthErrorCodeInvalidSubjectToken
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 //
@@ -573,8 +571,6 @@ const ReasoningSummaryConcise = shared.ReasoningSummaryConcise
 // Equals "detailed"
 const ReasoningSummaryDetailed = shared.ReasoningSummaryDetailed
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 //

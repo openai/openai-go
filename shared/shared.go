@@ -873,8 +873,6 @@ const (
 	OAuthErrorCodeInvalidSubjectToken OAuthErrorCode = "invalid_subject_token"
 )
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type Reasoning struct {
@@ -997,8 +995,6 @@ const (
 	ReasoningSummaryDetailed ReasoningSummary = "detailed"
 )
 
-// **gpt-5 and o-series models only**
-//
 // Configuration options for
 // [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 type ReasoningParam struct {

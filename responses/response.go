@@ -3552,9 +3552,9 @@ type Response struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata" api:"required"`
-	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
+	// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
 	// available models.
 	Model shared.ResponsesModel `json:"model" api:"required"`
@@ -3663,8 +3663,6 @@ type Response struct {
 	//
 	// Deprecated: deprecated
 	PromptCacheRetention ResponsePromptCacheRetention `json:"prompt_cache_retention" api:"nullable"`
-	// **gpt-5 and o-series models only**
-	//
 	// Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 	Reasoning shared.Reasoning `json:"reasoning" api:"nullable"`
@@ -3790,7 +3788,7 @@ func (r *Response) UnmarshalJSON(data []byte) error {
 type ResponseIncompleteDetails struct {
 	// The reason why the response is incomplete.
 	//
-	// Any of "max_output_tokens", "content_filter".
+	// Any of "max_output_tokens", "max_messages", "content_filter".
 	Reason string `json:"reason"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -23219,8 +23217,6 @@ type ResponseUsage struct {
 	OutputTokensDetails ResponseUsageOutputTokensDetails `json:"output_tokens_details" api:"required"`
 	// The total number of tokens used.
 	TotalTokens int64 `json:"total_tokens" api:"required"`
-	// Compute units for the request. Currently null when available.
-	ComputeUnits int64 `json:"compute_units" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		InputTokens         respjson.Field
@@ -23228,7 +23224,6 @@ type ResponseUsage struct {
 		OutputTokens        respjson.Field
 		OutputTokensDetails respjson.Field
 		TotalTokens         respjson.Field
-		ComputeUnits        respjson.Field
 		ExtraFields         map[string]respjson.Field
 		raw                 string
 	} `json:"-"`
@@ -26698,9 +26693,9 @@ type ResponseNewParams struct {
 	// - [Conversation state](https://platform.openai.com/docs/guides/conversation-state)
 	// - [Function calling](https://platform.openai.com/docs/guides/function-calling)
 	Input ResponseNewParamsInputUnion `json:"input,omitzero"`
-	// Model ID used to generate the response, like `gpt-4o` or `o3`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
+	// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
 	// available models.
 	Model shared.ResponsesModel `json:"model,omitzero"`
@@ -26714,8 +26709,6 @@ type ResponseNewParams struct {
 	// [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
 	// for current details.
 	PromptCacheOptions ResponseNewParamsPromptCacheOptions `json:"prompt_cache_options,omitzero"`
-	// **gpt-5 and o-series models only**
-	//
 	// Configuration options for
 	// [reasoning models](https://platform.openai.com/docs/guides/reasoning).
 	Reasoning shared.ReasoningParam `json:"reasoning,omitzero"`
@@ -27168,9 +27161,9 @@ func (r ResponseGetParams) URLQuery() (v url.Values, err error) {
 }
 
 type ResponseCompactParams struct {
-	// Model ID used to generate the response, like `gpt-5` or `o3`. OpenAI offers a
-	// wide range of models with different capabilities, performance characteristics,
-	// and price points. Refer to the
+	// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+	// range of models with different capabilities, performance characteristics, and
+	// price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
 	// available models.
 	Model ResponseCompactParamsModel `json:"model,omitzero" api:"required"`
@@ -27231,9 +27224,9 @@ func (r *ResponseCompactParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Model ID used to generate the response, like `gpt-5` or `o3`. OpenAI offers a
-// wide range of models with different capabilities, performance characteristics,
-// and price points. Refer to the
+// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+// range of models with different capabilities, performance characteristics, and
+// price points. Refer to the
 // [model guide](https://platform.openai.com/docs/models) to browse and compare
 // available models.
 type ResponseCompactParamsModel string
