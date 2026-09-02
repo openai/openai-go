@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.55.0](https://github.com/openai/openai-go/compare/v3.54.0...v3.55.0) (2026-09-02)
+
+
+### Features
+
+* **api:** add compute_units to Responses and Chat Completions usage ([#866](https://github.com/openai/openai-go/issues/866)) ([4d06294](https://github.com/openai/openai-go/commit/4d062949c62507e56514af8c7beb186dc09ac075))
+* **api:** update usage APIs and documentation ([#876](https://github.com/openai/openai-go/issues/876)) ([d8a7e6c](https://github.com/openai/openai-go/commit/d8a7e6c70d1bf67e744ea8e4fb617b622372ca0e))
+
+
+### Bug Fixes
+
+* isolate provider dependencies from root consumers ([#874](https://github.com/openai/openai-go/issues/874)) ([8de3444](https://github.com/openai/openai-go/commit/8de344439ca10236fc958a468bfbd5807737a15f))
+
 ## [3.54.0](https://github.com/openai/openai-go/compare/v3.53.0...v3.54.0) (2026-08-27)
 
 
