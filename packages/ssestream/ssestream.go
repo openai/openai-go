@@ -49,18 +49,321 @@ func NewDecoder(res *http.Response) Decoder {
 var decoderTypes = map[string](func(io.ReadCloser) Decoder){}
 
 func RegisterDecoder(contentType string, decoder func(io.ReadCloser) Decoder) {
-	decoderTypes[strings.ToLower(contentType)] = decoder
+	decoderTypes[decoderContentTypeKey(contentType)] = decoder
 }
 
 func decoderContentTypes(contentType string) (string, string) {
-	base, _, _ := strings.Cut(contentType, ";")
-	exactType := strings.ToLower(base) + contentType[len(base):]
+	exactType := decoderContentTypeKey(contentType)
 
 	mediaType, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
 		return exactType, ""
 	}
 	return exactType, mediaType
+}
+
+// decoderContentTypeKey normalizes only MIME components whose case is
+// semantically insignificant. Parameter values remain case-sensitive unless
+// their parameter defines otherwise. Extended parameter percent-encoding is
+// normalized without changing unescaped value bytes.
+func decoderContentTypeKey(contentType string) string {
+	base, params, found := strings.Cut(contentType, ";")
+	if !found {
+		return strings.ToLower(contentType)
+	}
+	normalizedBase := strings.ToLower(base)
+	return normalizedBase + ";" + normalizeMediaParameterTail(normalizedBase, params)
+}
+
+func normalizeMediaParameterTail(mediaType string, params string) string {
+	var normalized strings.Builder
+	segmentStart := 0
+	inQuotes := false
+	escaped := false
+
+	for i := 0; i <= len(params); i++ {
+		if i == len(params) || (!inQuotes && params[i] == ';') {
+			normalized.WriteString(normalizeMediaParameter(mediaType, params[segmentStart:i]))
+			if i < len(params) {
+				normalized.WriteByte(';')
+			}
+			segmentStart = i + 1
+			continue
+		}
+
+		switch params[i] {
+		case '\\':
+			if inQuotes && !escaped {
+				escaped = true
+				continue
+			}
+		case '"':
+			if !escaped {
+				inQuotes = !inQuotes
+			}
+		}
+		escaped = false
+	}
+
+	return normalized.String()
+}
+
+func normalizeMediaParameter(mediaType string, param string) string {
+	equals := strings.IndexByte(param, '=')
+	if equals < 0 {
+		return param
+	}
+
+	namePart := param[:equals]
+	nameStart, nameEnd := trimOWSBounds(namePart)
+	if nameStart == nameEnd {
+		return param
+	}
+	name := namePart[nameStart:nameEnd]
+	logicalName := mediaParameterLogicalName(name)
+
+	var normalized strings.Builder
+	normalized.WriteString(namePart[:nameStart])
+	normalized.WriteString(strings.ToLower(name))
+	normalized.WriteString(namePart[nameEnd:])
+	normalized.WriteByte('=')
+
+	value := param[equals+1:]
+	switch {
+	case isCaseInsensitiveMediaParameterValue(mediaType, logicalName):
+		if strings.HasSuffix(name, "*") {
+			normalized.WriteString(normalizeCaseInsensitiveExtendedParameterValue(value, extendedMediaParameterHasMetadata(name)))
+		} else {
+			valueStart, valueEnd := trimOWSBounds(value)
+			normalized.WriteString(value[:valueStart])
+			normalized.WriteString(strings.ToLower(value[valueStart:valueEnd]))
+			normalized.WriteString(value[valueEnd:])
+		}
+	case strings.HasSuffix(name, "*"):
+		normalized.WriteString(normalizeExtendedParameterValue(value, extendedMediaParameterHasMetadata(name)))
+	default:
+		normalized.WriteString(value)
+	}
+
+	return normalized.String()
+}
+
+func mediaParameterLogicalName(name string) string {
+	logicalName := strings.TrimSuffix(name, "*")
+	section := strings.LastIndexByte(logicalName, '*')
+	if section < 0 || !isRFC2231Section(logicalName[section+1:]) {
+		return logicalName
+	}
+	return logicalName[:section]
+}
+
+func extendedMediaParameterHasMetadata(name string) bool {
+	if !strings.HasSuffix(name, "*") {
+		return false
+	}
+
+	encodedName := strings.TrimSuffix(name, "*")
+	section := strings.LastIndexByte(encodedName, '*')
+	if section < 0 {
+		return true
+	}
+	return encodedName[section+1:] == "0"
+}
+
+func isRFC2231Section(section string) bool {
+	if section == "0" {
+		return true
+	}
+	if len(section) == 0 || section[0] < '1' || section[0] > '9' {
+		return false
+	}
+	for i := 1; i < len(section); i++ {
+		if section[i] < '0' || section[i] > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func isCaseInsensitiveMediaParameterValue(mediaType string, name string) bool {
+	if strings.EqualFold(name, "charset") {
+		return true
+	}
+
+	switch strings.ToLower(strings.TrimSpace(mediaType)) {
+	case "message/external-body":
+		switch strings.ToLower(name) {
+		case "access-type", "permission", "mode":
+			return true
+		}
+	case "multipart/encrypted":
+		return strings.EqualFold(name, "protocol")
+	case "multipart/signed":
+		switch strings.ToLower(name) {
+		case "protocol", "micalg":
+			return true
+		}
+	case "multipart/report":
+		return strings.EqualFold(name, "report-type")
+	case "multipart/related":
+		return strings.EqualFold(name, "type")
+	case "text/csv":
+		return strings.EqualFold(name, "header")
+	case "text/plain":
+		switch strings.ToLower(name) {
+		case "format", "delsp":
+			return true
+		}
+	}
+	return false
+}
+
+func normalizeCaseInsensitiveExtendedParameterValue(value string, hasMetadata bool) string {
+	return normalizeExtendedParameterValueWithData(value, hasMetadata, normalizeCaseInsensitiveExtendedData)
+}
+
+func normalizeExtendedParameterValue(value string, hasMetadata bool) string {
+	return normalizeExtendedParameterValueWithData(value, hasMetadata, normalizePercentEncoding)
+}
+
+func normalizeExtendedParameterValueWithData(value string, hasMetadata bool, normalizeData func(string) string) string {
+	valueStart, valueEnd := trimOWSBounds(value)
+	core := value[valueStart:valueEnd]
+	quoted := false
+	if strings.HasPrefix(core, "\"") {
+		var ok bool
+		core, ok = quotedMediaParameterContents(core)
+		if !ok {
+			return value
+		}
+		quoted = true
+	}
+
+	firstQuote := -1
+	secondQuote := -1
+	if hasMetadata {
+		firstQuote = strings.IndexByte(core, '\'')
+		if firstQuote >= 0 {
+			if offset := strings.IndexByte(core[firstQuote+1:], '\''); offset >= 0 {
+				secondQuote = firstQuote + 1 + offset
+			}
+		}
+	}
+
+	var normalized string
+	if firstQuote >= 0 && secondQuote >= 0 {
+		normalized = strings.ToLower(core[:firstQuote]) + "'" +
+			strings.ToLower(core[firstQuote+1:secondQuote]) + "'" +
+			normalizeData(core[secondQuote+1:])
+	} else {
+		normalized = normalizeData(core)
+	}
+	if quoted {
+		normalized = "\"" + normalized + "\""
+	}
+
+	return value[:valueStart] + normalized + value[valueEnd:]
+}
+
+func quotedMediaParameterContents(value string) (string, bool) {
+	if len(value) < 2 || value[0] != '"' || value[len(value)-1] != '"' {
+		return "", false
+	}
+
+	escaped := false
+	for i := 1; i < len(value)-1; i++ {
+		switch value[i] {
+		case '\\':
+			escaped = !escaped
+		case '"':
+			if !escaped {
+				return "", false
+			}
+			escaped = false
+		default:
+			escaped = false
+		}
+	}
+	if escaped {
+		return "", false
+	}
+	return value[1 : len(value)-1], true
+}
+
+func normalizeCaseInsensitiveExtendedData(value string) string {
+	bytes := []byte(value)
+	for i := 0; i < len(bytes); i++ {
+		if bytes[i] == '%' && i+2 < len(bytes) && isHexDigit(bytes[i+1]) && isHexDigit(bytes[i+2]) {
+			decoded := hexValue(bytes[i+1])<<4 | hexValue(bytes[i+2])
+			if decoded >= 'A' && decoded <= 'Z' {
+				decoded += 'a' - 'A'
+			}
+			bytes[i+1] = hexDigit(decoded >> 4)
+			bytes[i+2] = hexDigit(decoded & 0x0f)
+			i += 2
+			continue
+		}
+		if bytes[i] >= 'A' && bytes[i] <= 'Z' {
+			bytes[i] += 'a' - 'A'
+		}
+	}
+	return string(bytes)
+}
+
+func hexValue(value byte) byte {
+	switch {
+	case value >= '0' && value <= '9':
+		return value - '0'
+	case value >= 'a' && value <= 'f':
+		return value - 'a' + 10
+	default:
+		return value - 'A' + 10
+	}
+}
+
+func hexDigit(value byte) byte {
+	if value < 10 {
+		return '0' + value
+	}
+	return 'a' + value - 10
+}
+
+func normalizePercentEncoding(value string) string {
+	bytes := []byte(value)
+	for i := 0; i+2 < len(bytes); i++ {
+		if bytes[i] != '%' || !isHexDigit(bytes[i+1]) || !isHexDigit(bytes[i+2]) {
+			continue
+		}
+		bytes[i+1] = lowerHexDigit(bytes[i+1])
+		bytes[i+2] = lowerHexDigit(bytes[i+2])
+		i += 2
+	}
+	return string(bytes)
+}
+
+func isHexDigit(value byte) bool {
+	return value >= '0' && value <= '9' ||
+		value >= 'a' && value <= 'f' ||
+		value >= 'A' && value <= 'F'
+}
+
+func lowerHexDigit(value byte) byte {
+	if value >= 'A' && value <= 'F' {
+		return value + ('a' - 'A')
+	}
+	return value
+}
+
+func trimOWSBounds(value string) (int, int) {
+	start := 0
+	end := len(value)
+	for start < end && (value[start] == ' ' || value[start] == '\t') {
+		start++
+	}
+	for end > start && (value[end-1] == ' ' || value[end-1] == '\t') {
+		end--
+	}
+	return start, end
 }
 
 type Event struct {
