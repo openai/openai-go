@@ -26,7 +26,7 @@ func TestModelGet(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
-	_, err := client.Models.Get(context.TODO(), "gpt-4o-mini")
+	_, err := client.Models.Get(context.TODO(), "gpt-5.6-sol")
 	if err != nil {
 		var apierr *openai.Error
 		if errors.As(err, &apierr) {

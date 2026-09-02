@@ -47,7 +47,7 @@ func TestResponseNewWithOptionalParams(t *testing.T) {
 		Metadata: shared.Metadata{
 			"foo": "string",
 		},
-		Model: shared.ResponsesModel("gpt-5.1"),
+		Model: shared.ResponsesModel("gpt-5.6-sol"),
 		Moderation: responses.ResponseNewParamsModeration{
 			Model: "model",
 			Policy: responses.ResponseNewParamsModerationPolicy{
