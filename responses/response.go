@@ -13021,10 +13021,22 @@ func (r *ResponseInputItemAdditionalTools) UnmarshalJSON(data []byte) error {
 
 // An image generation request made by the model.
 type ResponseInputItemImageGenerationCall struct {
+	// The action that produced the generated image.
+	Action string `json:"action"`
+	// The background setting for the generated image.
+	Background string `json:"background"`
 	// The unique ID of the image generation call.
 	ID string `json:"id" api:"required"`
+	// The output format of the generated image.
+	OutputFormat string `json:"output_format"`
+	// The quality setting for the generated image.
+	Quality string `json:"quality"`
 	// The generated image encoded in base64.
 	Result string `json:"result" api:"required"`
+	// The revised prompt used to generate the image.
+	RevisedPrompt string `json:"revised_prompt"`
+	// The size of the generated image.
+	Size string `json:"size"`
 	// The status of the image generation call.
 	//
 	// Any of "in_progress", "completed", "generating", "failed".
@@ -13033,12 +13045,18 @@ type ResponseInputItemImageGenerationCall struct {
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Action        respjson.Field
+		Background    respjson.Field
+		ID            respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		Result        respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -18041,10 +18059,22 @@ func (r *ResponseItemProgramOutput) UnmarshalJSON(data []byte) error {
 
 // An image generation request made by the model.
 type ResponseItemImageGenerationCall struct {
+	// The action that produced the generated image.
+	Action string `json:"action"`
+	// The background setting for the generated image.
+	Background string `json:"background"`
 	// The unique ID of the image generation call.
 	ID string `json:"id" api:"required"`
+	// The output format of the generated image.
+	OutputFormat string `json:"output_format"`
+	// The quality setting for the generated image.
+	Quality string `json:"quality"`
 	// The generated image encoded in base64.
 	Result string `json:"result" api:"required"`
+	// The revised prompt used to generate the image.
+	RevisedPrompt string `json:"revised_prompt"`
+	// The size of the generated image.
+	Size string `json:"size"`
 	// The status of the image generation call.
 	//
 	// Any of "in_progress", "completed", "generating", "failed".
@@ -18053,12 +18083,18 @@ type ResponseItemImageGenerationCall struct {
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Action        respjson.Field
+		Background    respjson.Field
+		ID            respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		Result        respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
@@ -19296,10 +19332,22 @@ func (r *ResponseOutputItemAdditionalTools) UnmarshalJSON(data []byte) error {
 
 // An image generation request made by the model.
 type ResponseOutputItemImageGenerationCall struct {
+	// The action that produced the generated image.
+	Action string `json:"action"`
+	// The background setting for the generated image.
+	Background string `json:"background"`
 	// The unique ID of the image generation call.
 	ID string `json:"id" api:"required"`
+	// The output format of the generated image.
+	OutputFormat string `json:"output_format"`
+	// The quality setting for the generated image.
+	Quality string `json:"quality"`
 	// The generated image encoded in base64.
 	Result string `json:"result" api:"required"`
+	// The revised prompt used to generate the image.
+	RevisedPrompt string `json:"revised_prompt"`
+	// The size of the generated image.
+	Size string `json:"size"`
 	// The status of the image generation call.
 	//
 	// Any of "in_progress", "completed", "generating", "failed".
@@ -19308,12 +19356,18 @@ type ResponseOutputItemImageGenerationCall struct {
 	Type constant.ImageGenerationCall `json:"type" default:"image_generation_call"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID          respjson.Field
-		Result      respjson.Field
-		Status      respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Action        respjson.Field
+		Background    respjson.Field
+		ID            respjson.Field
+		OutputFormat  respjson.Field
+		Quality       respjson.Field
+		Result        respjson.Field
+		RevisedPrompt respjson.Field
+		Size          respjson.Field
+		Status        respjson.Field
+		Type          respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
 	} `json:"-"`
 }
 
