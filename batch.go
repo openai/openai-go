@@ -145,7 +145,7 @@ type Batch struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata" api:"nullable"`
-	// Model ID used to process the batch, like `gpt-5.6-sol`. OpenAI offers a wide
+	// Model ID used to process the batch, like `gpt-6-astra`. OpenAI offers a wide
 	// range of models with different capabilities, performance characteristics, and
 	// price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare

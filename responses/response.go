@@ -1820,6 +1820,9 @@ type CustomTool struct {
 	//
 	// Any of "direct", "programmatic".
 	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async bool `json:"async"`
 	// Whether this tool should be deferred and discovered via tool search.
 	DeferLoading bool `json:"defer_loading"`
 	// Optional description of the custom tool, used to provide more context.
@@ -1831,6 +1834,7 @@ type CustomTool struct {
 		Name           respjson.Field
 		Type           respjson.Field
 		AllowedCallers respjson.Field
+		Async          respjson.Field
 		DeferLoading   respjson.Field
 		Description    respjson.Field
 		Format         respjson.Field
@@ -1861,6 +1865,9 @@ func (r CustomTool) ToParam() CustomToolParam {
 type CustomToolParam struct {
 	// The name of the custom tool, used to identify it in tool calls.
 	Name string `json:"name" api:"required"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async param.Opt[bool] `json:"async,omitzero"`
 	// Whether this tool should be deferred and discovered via tool search.
 	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
 	// Optional description of the custom tool, used to provide more context.
@@ -2629,6 +2636,7 @@ type FunctionTool struct {
 	//
 	// Any of "direct", "programmatic".
 	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	Async          bool     `json:"async"`
 	// Whether this function is deferred and loaded via tool search.
 	DeferLoading bool `json:"defer_loading"`
 	// A description of the function. Used by the model to determine whether or not to
@@ -2644,6 +2652,7 @@ type FunctionTool struct {
 		Strict         respjson.Field
 		Type           respjson.Field
 		AllowedCallers respjson.Field
+		Async          respjson.Field
 		DeferLoading   respjson.Field
 		Description    respjson.Field
 		OutputSchema   respjson.Field
@@ -2682,6 +2691,7 @@ type FunctionToolParam struct {
 	// A description of the function. Used by the model to determine whether or not to
 	// call the function.
 	Description param.Opt[string] `json:"description,omitzero"`
+	Async       param.Opt[bool]   `json:"async,omitzero"`
 	// Whether this function is deferred and loaded via tool search.
 	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
 	// The tool invocation context(s).
@@ -3260,6 +3270,7 @@ type NamespaceToolToolUnion struct {
 	// Any of "function", "custom".
 	Type           string   `json:"type"`
 	AllowedCallers []string `json:"allowed_callers"`
+	Async          bool     `json:"async"`
 	DeferLoading   bool     `json:"defer_loading"`
 	Description    string   `json:"description"`
 	// This field is from variant [NamespaceToolToolFunction].
@@ -3274,6 +3285,7 @@ type NamespaceToolToolUnion struct {
 		Name           respjson.Field
 		Type           respjson.Field
 		AllowedCallers respjson.Field
+		Async          respjson.Field
 		DeferLoading   respjson.Field
 		Description    respjson.Field
 		OutputSchema   respjson.Field
@@ -3335,6 +3347,9 @@ type NamespaceToolToolFunction struct {
 	//
 	// Any of "direct", "programmatic".
 	AllowedCallers []string `json:"allowed_callers" api:"nullable"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async bool `json:"async"`
 	// Whether this function should be deferred and discovered via tool search.
 	DeferLoading bool   `json:"defer_loading"`
 	Description  string `json:"description" api:"nullable"`
@@ -3351,6 +3366,7 @@ type NamespaceToolToolFunction struct {
 		Name           respjson.Field
 		Type           respjson.Field
 		AllowedCallers respjson.Field
+		Async          respjson.Field
 		DeferLoading   respjson.Field
 		Description    respjson.Field
 		OutputSchema   respjson.Field
@@ -3461,6 +3477,16 @@ func (u NamespaceToolToolUnionParam) GetType() *string {
 }
 
 // Returns a pointer to the underlying variant's property, if present.
+func (u NamespaceToolToolUnionParam) GetAsync() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
 func (u NamespaceToolToolUnionParam) GetDeferLoading() *bool {
 	if vt := u.OfFunction; vt != nil && vt.DeferLoading.Valid() {
 		return &vt.DeferLoading.Value
@@ -3507,6 +3533,9 @@ type NamespaceToolToolFunctionParam struct {
 	// to use strict validation when the schema is compatible, and falls back to
 	// non-strict validation otherwise.
 	Strict param.Opt[bool] `json:"strict,omitzero"`
+	// Whether the tool response can be returned asynchronously versus immediately
+	// returned on next response creation.
+	Async param.Opt[bool] `json:"async,omitzero"`
 	// Whether this function should be deferred and discovered via tool search.
 	DeferLoading param.Opt[bool] `json:"defer_loading,omitzero"`
 	// The tool invocation context(s).
@@ -3552,7 +3581,7 @@ type Response struct {
 	// Keys are strings with a maximum length of 64 characters. Values are strings with
 	// a maximum length of 512 characters.
 	Metadata shared.Metadata `json:"metadata" api:"required"`
-	// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
 	// range of models with different capabilities, performance characteristics, and
 	// price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
@@ -3790,9 +3819,11 @@ func (r *Response) UnmarshalJSON(data []byte) error {
 
 // Details about why the response is incomplete.
 type ResponseIncompleteDetails struct {
-	// The reason why the response is incomplete.
+	// The reason why the response is incomplete. `steered` means the response stopped
+	// at a safe output boundary after a WebSocket `response.steer` event. The server
+	// can then create a successor response automatically with the queued input.
 	//
-	// Any of "max_output_tokens", "max_messages", "content_filter".
+	// Any of "max_output_tokens", "max_messages", "content_filter", "steered".
 	Reason string `json:"reason"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
@@ -6611,6 +6642,155 @@ func (r *ResponseComputerToolCallOutputScreenshotParam) UnmarshalJSON(data []byt
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// A configuration update that applies to subsequent responses until it is replaced
+// by another configuration update.
+type ResponseConfigurationUpdateItem struct {
+	// The unique ID of the configuration update item.
+	ID string `json:"id" api:"required"`
+	// The item type. Always `configuration_update`.
+	Type constant.ConfigurationUpdate `json:"type" default:"configuration_update"`
+	// The reasoning configuration applied by this update.
+	Reasoning ResponseConfigurationUpdateItemReasoning `json:"reasoning"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Type        respjson.Field
+		Reasoning   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseConfigurationUpdateItem) RawJSON() string { return r.JSON.raw }
+func (r *ResponseConfigurationUpdateItem) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (ResponseConfigurationUpdateItem) ImplConversationItemUnion() {}
+
+// The reasoning configuration applied by this update.
+type ResponseConfigurationUpdateItemReasoning struct {
+	// The reasoning effort used for subsequent responses until another configuration
+	// update replaces it.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort shared.ReasoningEffort `json:"effort" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Effort      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseConfigurationUpdateItemReasoning) RawJSON() string { return r.JSON.raw }
+func (r *ResponseConfigurationUpdateItemReasoning) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An update to the conversation's response configuration. The configuration
+// remains in effect for subsequent responses until it is replaced by another
+// configuration update.
+type ResponseConfigurationUpdateItemParamResp struct {
+	// The item type. Always `configuration_update`.
+	Type constant.ConfigurationUpdate `json:"type" default:"configuration_update"`
+	// The unique ID of the configuration update item.
+	ID string `json:"id" api:"nullable"`
+	// Updates to reasoning configuration. Only effort is supported.
+	Reasoning ResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ID          respjson.Field
+		Reasoning   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseConfigurationUpdateItemParamResp) RawJSON() string { return r.JSON.raw }
+func (r *ResponseConfigurationUpdateItemParamResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// ToParam converts this ResponseConfigurationUpdateItemParamResp to a
+// ResponseConfigurationUpdateItemParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// ResponseConfigurationUpdateItemParam.Overrides()
+func (r ResponseConfigurationUpdateItemParamResp) ToParam() ResponseConfigurationUpdateItemParam {
+	return param.Override[ResponseConfigurationUpdateItemParam](json.RawMessage(r.RawJSON()))
+}
+
+// Updates to reasoning configuration. Only effort is supported.
+type ResponseConfigurationUpdateItemParamReasoningResp struct {
+	// The reasoning effort to use for subsequent responses until another configuration
+	// update replaces it.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort shared.ReasoningEffort `json:"effort" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Effort      respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseConfigurationUpdateItemParamReasoningResp) RawJSON() string { return r.JSON.raw }
+func (r *ResponseConfigurationUpdateItemParamReasoningResp) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An update to the conversation's response configuration. The configuration
+// remains in effect for subsequent responses until it is replaced by another
+// configuration update.
+//
+// The property Type is required.
+type ResponseConfigurationUpdateItemParam struct {
+	// The unique ID of the configuration update item.
+	ID param.Opt[string] `json:"id,omitzero"`
+	// Updates to reasoning configuration. Only effort is supported.
+	Reasoning ResponseConfigurationUpdateItemParamReasoning `json:"reasoning,omitzero"`
+	// The item type. Always `configuration_update`.
+	//
+	// This field can be elided, and will marshal its zero value as
+	// "configuration_update".
+	Type constant.ConfigurationUpdate `json:"type" default:"configuration_update"`
+	paramObj
+}
+
+func (r ResponseConfigurationUpdateItemParam) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseConfigurationUpdateItemParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseConfigurationUpdateItemParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Updates to reasoning configuration. Only effort is supported.
+type ResponseConfigurationUpdateItemParamReasoning struct {
+	// The reasoning effort to use for subsequent responses until another configuration
+	// update replaces it.
+	//
+	// Any of "none", "minimal", "low", "medium", "high", "xhigh", "max".
+	Effort shared.ReasoningEffort `json:"effort,omitzero"`
+	paramObj
+}
+
+func (r ResponseConfigurationUpdateItemParamReasoning) MarshalJSON() (data []byte, err error) {
+	type shadow ResponseConfigurationUpdateItemParamReasoning
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *ResponseConfigurationUpdateItemParamReasoning) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // Represents a container created with /v1/containers.
 type ResponseContainerReference struct {
 	ContainerID string `json:"container_id" api:"required"`
@@ -6956,6 +7136,8 @@ type ResponseCustomToolCall struct {
 	Type constant.CustomToolCall `json:"type" default:"custom_tool_call"`
 	// The unique ID of the custom tool call in the OpenAI platform.
 	ID string `json:"id"`
+	// Whether the custom tool call runs asynchronously.
+	Async bool `json:"async"`
 	// The execution context that produced this tool call.
 	Caller ResponseCustomToolCallCallerUnion `json:"caller" api:"nullable"`
 	// The namespace of the custom tool being called.
@@ -6967,6 +7149,7 @@ type ResponseCustomToolCall struct {
 		Name        respjson.Field
 		Type        respjson.Field
 		ID          respjson.Field
+		Async       respjson.Field
 		Caller      respjson.Field
 		Namespace   respjson.Field
 		ExtraFields map[string]respjson.Field
@@ -7103,6 +7286,8 @@ type ResponseCustomToolCallParam struct {
 	Name string `json:"name" api:"required"`
 	// The unique ID of the custom tool call in the OpenAI platform.
 	ID param.Opt[string] `json:"id,omitzero"`
+	// Whether the custom tool call runs asynchronously.
+	Async param.Opt[bool] `json:"async,omitzero"`
 	// The namespace of the custom tool being called.
 	Namespace param.Opt[string] `json:"namespace,omitzero"`
 	// The execution context that produced this tool call.
@@ -7924,21 +8109,23 @@ type ResponseError struct {
 	// The error code for the response.
 	//
 	// Any of "server_error", "rate_limit_exceeded", "invalid_prompt",
-	// "data_residency_mismatch", "bio_policy", "vector_store_timeout",
-	// "invalid_image", "invalid_image_format", "invalid_base64_image",
-	// "invalid_image_url", "image_too_large", "image_too_small", "image_parse_error",
-	// "image_content_policy_violation", "invalid_image_mode", "image_file_too_large",
-	// "unsupported_image_media_type", "empty_image_file", "failed_to_download_image",
-	// "image_file_not_found".
+	// "data_residency_mismatch", "bio_policy", "misalignment_policy_violation",
+	// "vector_store_timeout", "invalid_image", "invalid_image_format",
+	// "invalid_base64_image", "invalid_image_url", "image_too_large",
+	// "image_too_small", "image_parse_error", "image_content_policy_violation",
+	// "invalid_image_mode", "image_file_too_large", "unsupported_image_media_type",
+	// "empty_image_file", "failed_to_download_image", "image_file_not_found".
 	Code ResponseErrorCode `json:"code" api:"required"`
 	// A human-readable description of the error.
-	Message string `json:"message" api:"required"`
+	Message      string                    `json:"message" api:"required"`
+	Misalignment ResponseErrorMisalignment `json:"misalignment"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        respjson.Field
-		Message     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Code         respjson.Field
+		Message      respjson.Field
+		Misalignment respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
@@ -7957,6 +8144,7 @@ const (
 	ResponseErrorCodeInvalidPrompt               ResponseErrorCode = "invalid_prompt"
 	ResponseErrorCodeDataResidencyMismatch       ResponseErrorCode = "data_residency_mismatch"
 	ResponseErrorCodeBioPolicy                   ResponseErrorCode = "bio_policy"
+	ResponseErrorCodeMisalignmentPolicyViolation ResponseErrorCode = "misalignment_policy_violation"
 	ResponseErrorCodeVectorStoreTimeout          ResponseErrorCode = "vector_store_timeout"
 	ResponseErrorCodeInvalidImage                ResponseErrorCode = "invalid_image"
 	ResponseErrorCodeInvalidImageFormat          ResponseErrorCode = "invalid_image_format"
@@ -7973,6 +8161,47 @@ const (
 	ResponseErrorCodeFailedToDownloadImage       ResponseErrorCode = "failed_to_download_image"
 	ResponseErrorCodeImageFileNotFound           ResponseErrorCode = "image_file_not_found"
 )
+
+type ResponseErrorMisalignment struct {
+	// The public explanation for this block.
+	DetailedExplanation string `json:"detailed_explanation"`
+	// An optional classification; clients must accept additional values.
+	ErrorType string `json:"error_type"`
+	// An optional public continuation instruction.
+	Steer ResponseErrorMisalignmentSteer `json:"steer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		DetailedExplanation respjson.Field
+		ErrorType           respjson.Field
+		Steer               respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseErrorMisalignment) RawJSON() string { return r.JSON.raw }
+func (r *ResponseErrorMisalignment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An optional public continuation instruction.
+type ResponseErrorMisalignmentSteer struct {
+	// The public continuation instruction.
+	Message string `json:"message" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ResponseErrorMisalignmentSteer) RawJSON() string { return r.JSON.raw }
+func (r *ResponseErrorMisalignmentSteer) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
 // Emitted when an error occurs.
 type ResponseErrorEvent struct {
@@ -9711,6 +9940,8 @@ type ResponseFunctionToolCall struct {
 	Type constant.FunctionCall `json:"type" default:"function_call"`
 	// The unique ID of the function tool call.
 	ID string `json:"id"`
+	// Whether the function tool call runs asynchronously.
+	Async bool `json:"async"`
 	// The execution context that produced this tool call.
 	Caller ResponseFunctionToolCallCallerUnion `json:"caller" api:"nullable"`
 	// The namespace of the function to run.
@@ -9727,6 +9958,7 @@ type ResponseFunctionToolCall struct {
 		Name        respjson.Field
 		Type        respjson.Field
 		ID          respjson.Field
+		Async       respjson.Field
 		Caller      respjson.Field
 		Namespace   respjson.Field
 		Status      respjson.Field
@@ -9875,6 +10107,8 @@ type ResponseFunctionToolCallParam struct {
 	Name string `json:"name" api:"required"`
 	// The unique ID of the function tool call.
 	ID param.Opt[string] `json:"id,omitzero"`
+	// Whether the function tool call runs asynchronously.
+	Async param.Opt[bool] `json:"async,omitzero"`
 	// The namespace of the function to run.
 	Namespace param.Opt[string] `json:"namespace,omitzero"`
 	// The execution context that produced this tool call.
@@ -10976,6 +11210,10 @@ const (
 )
 
 // An event that is emitted when a response finishes as incomplete.
+//
+// Over WebSocket, steering can finish a response with
+// `response.incomplete_details.reason` set to `steered`, followed automatically by
+// a successor `response.created` that commits the queued steering input.
 type ResponseIncompleteEvent struct {
 	// The response that was incomplete.
 	Response Response `json:"response" api:"required"`
@@ -11960,17 +12198,17 @@ func (r *ResponseInputImageContentPromptCacheBreakpointParam) UnmarshalJSON(data
 // [ResponseInputItemComputerCallOutput], [ResponseFunctionWebSearch],
 // [ResponseFunctionToolCall], [ResponseInputItemFunctionCallOutput],
 // [ResponseInputItemToolSearchCall], [ResponseToolSearchOutputItemParamResp],
-// [ResponseInputItemAdditionalTools], [ResponseReasoningItem],
-// [ResponseCompactionItemParamResp], [ResponseInputItemImageGenerationCall],
-// [ResponseCodeInterpreterToolCall], [ResponseInputItemLocalShellCall],
-// [ResponseInputItemLocalShellCallOutput], [ResponseInputItemShellCall],
-// [ResponseInputItemShellCallOutput], [ResponseInputItemApplyPatchCall],
-// [ResponseInputItemApplyPatchCallOutput], [ResponseInputItemMcpListTools],
-// [ResponseInputItemMcpApprovalRequest], [ResponseInputItemMcpApprovalResponse],
-// [ResponseInputItemMcpCall], [ResponseCustomToolCallOutput],
-// [ResponseCustomToolCall], [ResponseInputItemCompactionTrigger],
-// [ResponseInputItemItemReference], [ResponseInputItemProgram],
-// [ResponseInputItemProgramOutput].
+// [ResponseInputItemAdditionalTools], [ResponseConfigurationUpdateItemParamResp],
+// [ResponseReasoningItem], [ResponseCompactionItemParamResp],
+// [ResponseInputItemImageGenerationCall], [ResponseCodeInterpreterToolCall],
+// [ResponseInputItemLocalShellCall], [ResponseInputItemLocalShellCallOutput],
+// [ResponseInputItemShellCall], [ResponseInputItemShellCallOutput],
+// [ResponseInputItemApplyPatchCall], [ResponseInputItemApplyPatchCallOutput],
+// [ResponseInputItemMcpListTools], [ResponseInputItemMcpApprovalRequest],
+// [ResponseInputItemMcpApprovalResponse], [ResponseInputItemMcpCall],
+// [ResponseCustomToolCallOutput], [ResponseCustomToolCall],
+// [ResponseInputItemCompactionTrigger], [ResponseInputItemItemReference],
+// [ResponseInputItemProgram], [ResponseInputItemProgramOutput].
 //
 // Use the [ResponseInputItemUnion.AsAny] method to switch on the variant.
 //
@@ -11985,13 +12223,13 @@ type ResponseInputItemUnion struct {
 	// Any of "message", "message", "message", "file_search_call", "computer_call",
 	// "computer_call_output", "web_search_call", "function_call",
 	// "function_call_output", "tool_search_call", "tool_search_output",
-	// "additional_tools", "reasoning", "compaction", "image_generation_call",
-	// "code_interpreter_call", "local_shell_call", "local_shell_call_output",
-	// "shell_call", "shell_call_output", "apply_patch_call",
-	// "apply_patch_call_output", "mcp_list_tools", "mcp_approval_request",
-	// "mcp_approval_response", "mcp_call", "custom_tool_call_output",
-	// "custom_tool_call", "compaction_trigger", "item_reference", "program",
-	// "program_output".
+	// "additional_tools", "configuration_update", "reasoning", "compaction",
+	// "image_generation_call", "code_interpreter_call", "local_shell_call",
+	// "local_shell_call_output", "shell_call", "shell_call_output",
+	// "apply_patch_call", "apply_patch_call_output", "mcp_list_tools",
+	// "mcp_approval_request", "mcp_approval_response", "mcp_call",
+	// "custom_tool_call_output", "custom_tool_call", "compaction_trigger",
+	// "item_reference", "program", "program_output".
 	Type   string `json:"type"`
 	Status string `json:"status"`
 	ID     string `json:"id"`
@@ -12018,6 +12256,7 @@ type ResponseInputItemUnion struct {
 	// This field is a union of [string], [any], [string], [string]
 	Arguments ResponseInputItemUnionArguments `json:"arguments"`
 	Name      string                          `json:"name"`
+	Async     bool                            `json:"async"`
 	// This field is a union of [ResponseFunctionToolCallCallerUnion],
 	// [ResponseInputItemFunctionCallOutputCallerUnion],
 	// [ResponseInputItemShellCallCallerUnion],
@@ -12031,6 +12270,8 @@ type ResponseInputItemUnion struct {
 	// This field is a union of [[]ToolUnion], [[]ToolUnion],
 	// [[]ResponseInputItemMcpListToolsTool]
 	Tools ResponseInputItemUnionTools `json:"tools"`
+	// This field is from variant [ResponseConfigurationUpdateItemParamResp].
+	Reasoning ResponseConfigurationUpdateItemParamReasoningResp `json:"reasoning"`
 	// This field is from variant [ResponseReasoningItem].
 	Summary          []ResponseReasoningItemSummary `json:"summary"`
 	EncryptedContent string                         `json:"encrypted_content"`
@@ -12075,10 +12316,12 @@ type ResponseInputItemUnion struct {
 		AcknowledgedSafetyChecks respjson.Field
 		Arguments                respjson.Field
 		Name                     respjson.Field
+		Async                    respjson.Field
 		Caller                   respjson.Field
 		Namespace                respjson.Field
 		Execution                respjson.Field
 		Tools                    respjson.Field
+		Reasoning                respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Result                   respjson.Field
@@ -12105,38 +12348,39 @@ type anyResponseInputItem interface {
 	implResponseInputItemUnion()
 }
 
-func (EasyInputMessage) implResponseInputItemUnion()                      {}
-func (ResponseInputItemMessage) implResponseInputItemUnion()              {}
-func (ResponseOutputMessage) implResponseInputItemUnion()                 {}
-func (ResponseFileSearchToolCall) implResponseInputItemUnion()            {}
-func (ResponseComputerToolCall) implResponseInputItemUnion()              {}
-func (ResponseInputItemComputerCallOutput) implResponseInputItemUnion()   {}
-func (ResponseFunctionWebSearch) implResponseInputItemUnion()             {}
-func (ResponseFunctionToolCall) implResponseInputItemUnion()              {}
-func (ResponseInputItemFunctionCallOutput) implResponseInputItemUnion()   {}
-func (ResponseInputItemToolSearchCall) implResponseInputItemUnion()       {}
-func (ResponseToolSearchOutputItemParamResp) implResponseInputItemUnion() {}
-func (ResponseInputItemAdditionalTools) implResponseInputItemUnion()      {}
-func (ResponseReasoningItem) implResponseInputItemUnion()                 {}
-func (ResponseCompactionItemParamResp) implResponseInputItemUnion()       {}
-func (ResponseInputItemImageGenerationCall) implResponseInputItemUnion()  {}
-func (ResponseCodeInterpreterToolCall) implResponseInputItemUnion()       {}
-func (ResponseInputItemLocalShellCall) implResponseInputItemUnion()       {}
-func (ResponseInputItemLocalShellCallOutput) implResponseInputItemUnion() {}
-func (ResponseInputItemShellCall) implResponseInputItemUnion()            {}
-func (ResponseInputItemShellCallOutput) implResponseInputItemUnion()      {}
-func (ResponseInputItemApplyPatchCall) implResponseInputItemUnion()       {}
-func (ResponseInputItemApplyPatchCallOutput) implResponseInputItemUnion() {}
-func (ResponseInputItemMcpListTools) implResponseInputItemUnion()         {}
-func (ResponseInputItemMcpApprovalRequest) implResponseInputItemUnion()   {}
-func (ResponseInputItemMcpApprovalResponse) implResponseInputItemUnion()  {}
-func (ResponseInputItemMcpCall) implResponseInputItemUnion()              {}
-func (ResponseCustomToolCallOutput) implResponseInputItemUnion()          {}
-func (ResponseCustomToolCall) implResponseInputItemUnion()                {}
-func (ResponseInputItemCompactionTrigger) implResponseInputItemUnion()    {}
-func (ResponseInputItemItemReference) implResponseInputItemUnion()        {}
-func (ResponseInputItemProgram) implResponseInputItemUnion()              {}
-func (ResponseInputItemProgramOutput) implResponseInputItemUnion()        {}
+func (EasyInputMessage) implResponseInputItemUnion()                         {}
+func (ResponseInputItemMessage) implResponseInputItemUnion()                 {}
+func (ResponseOutputMessage) implResponseInputItemUnion()                    {}
+func (ResponseFileSearchToolCall) implResponseInputItemUnion()               {}
+func (ResponseComputerToolCall) implResponseInputItemUnion()                 {}
+func (ResponseInputItemComputerCallOutput) implResponseInputItemUnion()      {}
+func (ResponseFunctionWebSearch) implResponseInputItemUnion()                {}
+func (ResponseFunctionToolCall) implResponseInputItemUnion()                 {}
+func (ResponseInputItemFunctionCallOutput) implResponseInputItemUnion()      {}
+func (ResponseInputItemToolSearchCall) implResponseInputItemUnion()          {}
+func (ResponseToolSearchOutputItemParamResp) implResponseInputItemUnion()    {}
+func (ResponseInputItemAdditionalTools) implResponseInputItemUnion()         {}
+func (ResponseConfigurationUpdateItemParamResp) implResponseInputItemUnion() {}
+func (ResponseReasoningItem) implResponseInputItemUnion()                    {}
+func (ResponseCompactionItemParamResp) implResponseInputItemUnion()          {}
+func (ResponseInputItemImageGenerationCall) implResponseInputItemUnion()     {}
+func (ResponseCodeInterpreterToolCall) implResponseInputItemUnion()          {}
+func (ResponseInputItemLocalShellCall) implResponseInputItemUnion()          {}
+func (ResponseInputItemLocalShellCallOutput) implResponseInputItemUnion()    {}
+func (ResponseInputItemShellCall) implResponseInputItemUnion()               {}
+func (ResponseInputItemShellCallOutput) implResponseInputItemUnion()         {}
+func (ResponseInputItemApplyPatchCall) implResponseInputItemUnion()          {}
+func (ResponseInputItemApplyPatchCallOutput) implResponseInputItemUnion()    {}
+func (ResponseInputItemMcpListTools) implResponseInputItemUnion()            {}
+func (ResponseInputItemMcpApprovalRequest) implResponseInputItemUnion()      {}
+func (ResponseInputItemMcpApprovalResponse) implResponseInputItemUnion()     {}
+func (ResponseInputItemMcpCall) implResponseInputItemUnion()                 {}
+func (ResponseCustomToolCallOutput) implResponseInputItemUnion()             {}
+func (ResponseCustomToolCall) implResponseInputItemUnion()                   {}
+func (ResponseInputItemCompactionTrigger) implResponseInputItemUnion()       {}
+func (ResponseInputItemItemReference) implResponseInputItemUnion()           {}
+func (ResponseInputItemProgram) implResponseInputItemUnion()                 {}
+func (ResponseInputItemProgramOutput) implResponseInputItemUnion()           {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -12153,6 +12397,7 @@ func (ResponseInputItemProgramOutput) implResponseInputItemUnion()        {}
 //	case responses.ResponseInputItemToolSearchCall:
 //	case responses.ResponseToolSearchOutputItemParamResp:
 //	case responses.ResponseInputItemAdditionalTools:
+//	case responses.ResponseConfigurationUpdateItemParamResp:
 //	case responses.ResponseReasoningItem:
 //	case responses.ResponseCompactionItemParamResp:
 //	case responses.ResponseInputItemImageGenerationCall:
@@ -12198,6 +12443,8 @@ func (u ResponseInputItemUnion) AsAny() anyResponseInputItem {
 		return u.AsToolSearchOutput()
 	case "additional_tools":
 		return u.AsAdditionalTools()
+	case "configuration_update":
+		return u.AsConfigurationUpdate()
 	case "reasoning":
 		return u.AsReasoning()
 	case "compaction":
@@ -12298,6 +12545,11 @@ func (u ResponseInputItemUnion) AsToolSearchOutput() (v ResponseToolSearchOutput
 }
 
 func (u ResponseInputItemUnion) AsAdditionalTools() (v ResponseInputItemAdditionalTools) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseInputItemUnion) AsConfigurationUpdate() (v ResponseConfigurationUpdateItemParamResp) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -14437,6 +14689,7 @@ type ResponseInputItemUnionParam struct {
 	OfToolSearchCall       *ResponseInputItemToolSearchCallParam       `json:",omitzero,inline"`
 	OfToolSearchOutput     *ResponseToolSearchOutputItemParam          `json:",omitzero,inline"`
 	OfAdditionalTools      *ResponseInputItemAdditionalToolsParam      `json:",omitzero,inline"`
+	OfConfigurationUpdate  *ResponseConfigurationUpdateItemParam       `json:",omitzero,inline"`
 	OfReasoning            *ResponseReasoningItemParam                 `json:",omitzero,inline"`
 	OfCompaction           *ResponseCompactionItemParam                `json:",omitzero,inline"`
 	OfImageGenerationCall  *ResponseInputItemImageGenerationCallParam  `json:",omitzero,inline"`
@@ -14473,6 +14726,7 @@ func (u ResponseInputItemUnionParam) MarshalJSON() ([]byte, error) {
 		u.OfToolSearchCall,
 		u.OfToolSearchOutput,
 		u.OfAdditionalTools,
+		u.OfConfigurationUpdate,
 		u.OfReasoning,
 		u.OfCompaction,
 		u.OfImageGenerationCall,
@@ -14534,6 +14788,14 @@ func (u ResponseInputItemUnionParam) GetActions() ComputerActionListParam {
 func (u ResponseInputItemUnionParam) GetAcknowledgedSafetyChecks() []ResponseInputItemComputerCallOutputAcknowledgedSafetyCheckParam {
 	if vt := u.OfComputerCallOutput; vt != nil {
 		return vt.AcknowledgedSafetyChecks
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetReasoning() *ResponseConfigurationUpdateItemParamReasoning {
+	if vt := u.OfConfigurationUpdate; vt != nil {
+		return &vt.Reasoning
 	}
 	return nil
 }
@@ -14668,6 +14930,8 @@ func (u ResponseInputItemUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfAdditionalTools; vt != nil {
 		return (*string)(&vt.Type)
+	} else if vt := u.OfConfigurationUpdate; vt != nil {
+		return (*string)(&vt.Type)
 	} else if vt := u.OfReasoning; vt != nil {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfCompaction; vt != nil {
@@ -14782,6 +15046,8 @@ func (u ResponseInputItemUnionParam) GetID() *string {
 		return &vt.ID.Value
 	} else if vt := u.OfAdditionalTools; vt != nil && vt.ID.Valid() {
 		return &vt.ID.Value
+	} else if vt := u.OfConfigurationUpdate; vt != nil && vt.ID.Valid() {
+		return &vt.ID.Value
 	} else if vt := u.OfReasoning; vt != nil {
 		return (*string)(&vt.ID)
 	} else if vt := u.OfCompaction; vt != nil && vt.ID.Valid() {
@@ -14872,6 +15138,16 @@ func (u ResponseInputItemUnionParam) GetName() *string {
 		return (*string)(&vt.Name)
 	} else if vt := u.OfCustomToolCall; vt != nil {
 		return (*string)(&vt.Name)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ResponseInputItemUnionParam) GetAsync() *bool {
+	if vt := u.OfFunctionCall; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	} else if vt := u.OfCustomToolCall; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
 	}
 	return nil
 }
@@ -15521,6 +15797,7 @@ func init() {
 		apijson.Discriminator[ResponseInputItemToolSearchCallParam]("tool_search_call"),
 		apijson.Discriminator[ResponseToolSearchOutputItemParam]("tool_search_output"),
 		apijson.Discriminator[ResponseInputItemAdditionalToolsParam]("additional_tools"),
+		apijson.Discriminator[ResponseConfigurationUpdateItemParam]("configuration_update"),
 		apijson.Discriminator[ResponseReasoningItemParam]("reasoning"),
 		apijson.Discriminator[ResponseCompactionItemParam]("compaction"),
 		apijson.Discriminator[ResponseInputItemImageGenerationCallParam]("image_generation_call"),
@@ -17279,15 +17556,16 @@ func (r *ResponseInputTextContentPromptCacheBreakpointParam) UnmarshalJSON(data 
 // [ResponseComputerToolCallOutputItem], [ResponseFunctionWebSearch],
 // [ResponseFunctionToolCallItem], [ResponseFunctionToolCallOutputItem],
 // [ResponseToolSearchCall], [ResponseToolSearchOutputItem],
-// [ResponseItemAdditionalTools], [ResponseReasoningItem], [ResponseItemProgram],
-// [ResponseItemProgramOutput], [ResponseCompactionItem],
-// [ResponseItemImageGenerationCall], [ResponseCodeInterpreterToolCall],
-// [ResponseItemLocalShellCall], [ResponseItemLocalShellCallOutput],
-// [ResponseFunctionShellToolCall], [ResponseFunctionShellToolCallOutput],
-// [ResponseApplyPatchToolCall], [ResponseApplyPatchToolCallOutput],
-// [ResponseItemMcpListTools], [ResponseItemMcpApprovalRequest],
-// [ResponseItemMcpApprovalResponse], [ResponseItemMcpCall],
-// [ResponseCustomToolCallItem], [ResponseCustomToolCallOutputItem].
+// [ResponseItemAdditionalTools], [ResponseConfigurationUpdateItem],
+// [ResponseReasoningItem], [ResponseItemProgram], [ResponseItemProgramOutput],
+// [ResponseCompactionItem], [ResponseItemImageGenerationCall],
+// [ResponseCodeInterpreterToolCall], [ResponseItemLocalShellCall],
+// [ResponseItemLocalShellCallOutput], [ResponseFunctionShellToolCall],
+// [ResponseFunctionShellToolCallOutput], [ResponseApplyPatchToolCall],
+// [ResponseApplyPatchToolCallOutput], [ResponseItemMcpListTools],
+// [ResponseItemMcpApprovalRequest], [ResponseItemMcpApprovalResponse],
+// [ResponseItemMcpCall], [ResponseCustomToolCallItem],
+// [ResponseCustomToolCallOutputItem].
 //
 // Use the [ResponseItemUnion.AsAny] method to switch on the variant.
 //
@@ -17301,11 +17579,12 @@ type ResponseItemUnion struct {
 	// Any of "message", "message", "file_search_call", "computer_call",
 	// "computer_call_output", "web_search_call", "function_call",
 	// "function_call_output", "tool_search_call", "tool_search_output",
-	// "additional_tools", "reasoning", "program", "program_output", "compaction",
-	// "image_generation_call", "code_interpreter_call", "local_shell_call",
-	// "local_shell_call_output", "shell_call", "shell_call_output",
-	// "apply_patch_call", "apply_patch_call_output", "mcp_list_tools",
-	// "mcp_approval_request", "mcp_approval_response", "mcp_call", "custom_tool_call",
+	// "additional_tools", "configuration_update", "reasoning", "program",
+	// "program_output", "compaction", "image_generation_call",
+	// "code_interpreter_call", "local_shell_call", "local_shell_call_output",
+	// "shell_call", "shell_call_output", "apply_patch_call",
+	// "apply_patch_call_output", "mcp_list_tools", "mcp_approval_request",
+	// "mcp_approval_response", "mcp_call", "custom_tool_call",
 	// "custom_tool_call_output".
 	Type   string `json:"type"`
 	Status string `json:"status"`
@@ -17335,6 +17614,7 @@ type ResponseItemUnion struct {
 	// This field is a union of [string], [any], [string], [string]
 	Arguments ResponseItemUnionArguments `json:"arguments"`
 	Name      string                     `json:"name"`
+	Async     bool                       `json:"async"`
 	// This field is a union of [ResponseFunctionToolCallCallerUnion],
 	// [ResponseFunctionToolCallOutputItemCallerUnion],
 	// [ResponseFunctionShellToolCallCallerUnion],
@@ -17348,6 +17628,8 @@ type ResponseItemUnion struct {
 	// This field is a union of [[]ToolUnion], [[]ToolUnion],
 	// [[]ResponseItemMcpListToolsTool]
 	Tools ResponseItemUnionTools `json:"tools"`
+	// This field is from variant [ResponseConfigurationUpdateItem].
+	Reasoning ResponseConfigurationUpdateItemReasoning `json:"reasoning"`
 	// This field is from variant [ResponseReasoningItem].
 	Summary          []ResponseReasoningItemSummary `json:"summary"`
 	EncryptedContent string                         `json:"encrypted_content"`
@@ -17393,10 +17675,12 @@ type ResponseItemUnion struct {
 		CreatedBy                respjson.Field
 		Arguments                respjson.Field
 		Name                     respjson.Field
+		Async                    respjson.Field
 		Caller                   respjson.Field
 		Namespace                respjson.Field
 		Execution                respjson.Field
 		Tools                    respjson.Field
+		Reasoning                respjson.Field
 		Summary                  respjson.Field
 		EncryptedContent         respjson.Field
 		Code                     respjson.Field
@@ -17434,6 +17718,7 @@ func (ResponseFunctionToolCallOutputItem) implResponseItemUnion()  {}
 func (ResponseToolSearchCall) implResponseItemUnion()              {}
 func (ResponseToolSearchOutputItem) implResponseItemUnion()        {}
 func (ResponseItemAdditionalTools) implResponseItemUnion()         {}
+func (ResponseConfigurationUpdateItem) implResponseItemUnion()     {}
 func (ResponseReasoningItem) implResponseItemUnion()               {}
 func (ResponseItemProgram) implResponseItemUnion()                 {}
 func (ResponseItemProgramOutput) implResponseItemUnion()           {}
@@ -17467,6 +17752,7 @@ func (ResponseCustomToolCallOutputItem) implResponseItemUnion()    {}
 //	case responses.ResponseToolSearchCall:
 //	case responses.ResponseToolSearchOutputItem:
 //	case responses.ResponseItemAdditionalTools:
+//	case responses.ResponseConfigurationUpdateItem:
 //	case responses.ResponseReasoningItem:
 //	case responses.ResponseItemProgram:
 //	case responses.ResponseItemProgramOutput:
@@ -17510,6 +17796,8 @@ func (u ResponseItemUnion) AsAny() anyResponseItem {
 		return u.AsToolSearchOutput()
 	case "additional_tools":
 		return u.AsAdditionalTools()
+	case "configuration_update":
+		return u.AsConfigurationUpdate()
 	case "reasoning":
 		return u.AsReasoning()
 	case "program":
@@ -17601,6 +17889,11 @@ func (u ResponseItemUnion) AsToolSearchOutput() (v ResponseToolSearchOutputItem)
 }
 
 func (u ResponseItemUnion) AsAdditionalTools() (v ResponseItemAdditionalTools) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ResponseItemUnion) AsConfigurationUpdate() (v ResponseConfigurationUpdateItem) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }
@@ -18612,6 +18905,7 @@ type ResponseOutputItemUnion struct {
 	Arguments ResponseOutputItemUnionArguments `json:"arguments"`
 	CallID    string                           `json:"call_id"`
 	Name      string                           `json:"name"`
+	Async     bool                             `json:"async"`
 	// This field is a union of [ResponseFunctionToolCallCallerUnion],
 	// [ResponseFunctionToolCallOutputItemCallerUnion],
 	// [ResponseFunctionShellToolCallCallerUnion],
@@ -18680,6 +18974,7 @@ type ResponseOutputItemUnion struct {
 		Arguments                respjson.Field
 		CallID                   respjson.Field
 		Name                     respjson.Field
+		Async                    respjson.Field
 		Caller                   respjson.Field
 		Namespace                respjson.Field
 		Output                   respjson.Field
@@ -21939,6 +22234,43 @@ const (
 	ResponseStatusIncomplete ResponseStatus = "incomplete"
 )
 
+// A machine-readable steering error code. Clients should handle unknown values
+// because additional codes may be introduced. Known values include:
+//
+//   - `response_not_found`: The target response is not available on this connection.
+//   - `invalid_input`: The event or input failed validation.
+//   - `steering_not_supported`: The model or response execution mode does not
+//     support steering.
+//   - `too_many_pending_steers`: Too much steering input is pending for the
+//     response.
+//   - `response_already_completed`: The response completed and is no longer
+//     accepting steering input.
+//   - `response_not_active`: The response is no longer accepting steering input.
+//   - `successor_creation_failed`: The successor response could not be created.
+type ResponseSteerErrorCode = string
+
+const (
+	ResponseSteerErrorCodeResponseNotFound         ResponseSteerErrorCode = "response_not_found"
+	ResponseSteerErrorCodeInvalidInput             ResponseSteerErrorCode = "invalid_input"
+	ResponseSteerErrorCodeSteeringNotSupported     ResponseSteerErrorCode = "steering_not_supported"
+	ResponseSteerErrorCodeTooManyPendingSteers     ResponseSteerErrorCode = "too_many_pending_steers"
+	ResponseSteerErrorCodeResponseAlreadyCompleted ResponseSteerErrorCode = "response_already_completed"
+	ResponseSteerErrorCodeResponseNotActive        ResponseSteerErrorCode = "response_not_active"
+	ResponseSteerErrorCodeSuccessorCreationFailed  ResponseSteerErrorCode = "successor_creation_failed"
+)
+
+// An extensible enum describing why accepted steering input is still queued.
+// Clients should handle unknown values because additional reasons may be
+// introduced. Known values include:
+//
+//   - `waiting_for_required_input`: The response is waiting for the tool results or
+//     approval decisions identified by `required_input`.
+type ResponseSteerPendingReason = string
+
+const (
+	ResponseSteerPendingReasonWaitingForRequiredInput ResponseSteerPendingReason = "waiting_for_required_input"
+)
+
 // ResponseStreamEventUnion contains all possible properties and values from
 // [ResponseAudioDeltaEvent], [ResponseAudioDoneEvent],
 // [ResponseAudioTranscriptDeltaEvent], [ResponseAudioTranscriptDoneEvent],
@@ -23413,6 +23745,7 @@ type ToolUnion struct {
 	// "apply_patch".
 	Type           string   `json:"type"`
 	AllowedCallers []string `json:"allowed_callers"`
+	Async          bool     `json:"async"`
 	DeferLoading   bool     `json:"defer_loading"`
 	Description    string   `json:"description"`
 	// This field is from variant [FunctionTool].
@@ -23494,6 +23827,7 @@ type ToolUnion struct {
 		Strict             respjson.Field
 		Type               respjson.Field
 		AllowedCallers     respjson.Field
+		Async              respjson.Field
 		DeferLoading       respjson.Field
 		Description        respjson.Field
 		OutputSchema       respjson.Field
@@ -24759,6 +25093,16 @@ func (u ToolUnionParam) GetType() *string {
 		return (*string)(&vt.Type)
 	} else if vt := u.OfApplyPatch; vt != nil {
 		return (*string)(&vt.Type)
+	}
+	return nil
+}
+
+// Returns a pointer to the underlying variant's property, if present.
+func (u ToolUnionParam) GetAsync() *bool {
+	if vt := u.OfFunction; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
+	} else if vt := u.OfCustom; vt != nil && vt.Async.Valid() {
+		return &vt.Async.Value
 	}
 	return nil
 }
@@ -26677,7 +27021,7 @@ type ResponseNewParams struct {
 	// - [Conversation state](https://platform.openai.com/docs/guides/conversation-state)
 	// - [Function calling](https://platform.openai.com/docs/guides/function-calling)
 	Input ResponseNewParamsInputUnion `json:"input,omitzero"`
-	// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
 	// range of models with different capabilities, performance characteristics, and
 	// price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
@@ -27145,7 +27489,7 @@ func (r ResponseGetParams) URLQuery() (v url.Values, err error) {
 }
 
 type ResponseCompactParams struct {
-	// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+	// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
 	// range of models with different capabilities, performance characteristics, and
 	// price points. Refer to the
 	// [model guide](https://platform.openai.com/docs/models) to browse and compare
@@ -27208,7 +27552,7 @@ func (r *ResponseCompactParams) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// Model ID used to generate the response, like `gpt-5.6-sol`. OpenAI offers a wide
+// Model ID used to generate the response, like `gpt-6-astra`. OpenAI offers a wide
 // range of models with different capabilities, performance characteristics, and
 // price points. Refer to the
 // [model guide](https://platform.openai.com/docs/models) to browse and compare
@@ -27216,6 +27560,7 @@ func (r *ResponseCompactParams) UnmarshalJSON(data []byte) error {
 type ResponseCompactParamsModel string
 
 const (
+	ResponseCompactParamsModelGPT6Astra                        ResponseCompactParamsModel = "gpt-6-astra"
 	ResponseCompactParamsModelGPT5_6Sol                        ResponseCompactParamsModel = "gpt-5.6-sol"
 	ResponseCompactParamsModelGPT5_6Terra                      ResponseCompactParamsModel = "gpt-5.6-terra"
 	ResponseCompactParamsModelGPT5_6Luna                       ResponseCompactParamsModel = "gpt-5.6-luna"

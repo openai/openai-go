@@ -677,7 +677,9 @@ type AssistantStreamEventUnionData struct {
 	Message string `json:"message"`
 	// This field is from variant [shared.ErrorObject].
 	Param string `json:"param"`
-	JSON  struct {
+	// This field is from variant [shared.ErrorObject].
+	Misalignment shared.ErrorObjectMisalignment `json:"misalignment"`
+	JSON         struct {
 		ID                  respjson.Field
 		CreatedAt           respjson.Field
 		Metadata            respjson.Field
@@ -718,6 +720,7 @@ type AssistantStreamEventUnionData struct {
 		Code                respjson.Field
 		Message             respjson.Field
 		Param               respjson.Field
+		Misalignment        respjson.Field
 		raw                 string
 	} `json:"-"`
 }
