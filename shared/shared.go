@@ -46,6 +46,7 @@ const (
 type ChatModel = string
 
 const (
+	ChatModelGPT6Astra                        ChatModel = "gpt-6-astra"
 	ChatModelGPT5_6Sol                        ChatModel = "gpt-5.6-sol"
 	ChatModelGPT5_6Terra                      ChatModel = "gpt-5.6-terra"
 	ChatModelGPT5_6Luna                       ChatModel = "gpt-5.6-luna"
@@ -761,24 +762,67 @@ func init() {
 }
 
 type ErrorObject struct {
-	Code    string `json:"code" api:"required"`
-	Message string `json:"message" api:"required"`
-	Param   string `json:"param" api:"required"`
-	Type    string `json:"type" api:"required"`
+	Code         string                  `json:"code" api:"required"`
+	Message      string                  `json:"message" api:"required"`
+	Param        string                  `json:"param" api:"required"`
+	Type         string                  `json:"type" api:"required"`
+	Misalignment ErrorObjectMisalignment `json:"misalignment"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        respjson.Field
-		Message     respjson.Field
-		Param       respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Code         respjson.Field
+		Message      respjson.Field
+		Param        respjson.Field
+		Type         respjson.Field
+		Misalignment respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
 	} `json:"-"`
 }
 
 // Returns the unmodified JSON received from the API
 func (r ErrorObject) RawJSON() string { return r.JSON.raw }
 func (r *ErrorObject) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type ErrorObjectMisalignment struct {
+	// The public explanation for this block.
+	DetailedExplanation string `json:"detailed_explanation"`
+	// An optional classification; clients must accept additional values.
+	ErrorType string `json:"error_type"`
+	// An optional public continuation instruction.
+	Steer ErrorObjectMisalignmentSteer `json:"steer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		DetailedExplanation respjson.Field
+		ErrorType           respjson.Field
+		Steer               respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ErrorObjectMisalignment) RawJSON() string { return r.JSON.raw }
+func (r *ErrorObjectMisalignment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An optional public continuation instruction.
+type ErrorObjectMisalignmentSteer struct {
+	// The public continuation instruction.
+	Message string `json:"message" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Message     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r ErrorObjectMisalignmentSteer) RawJSON() string { return r.JSON.raw }
+func (r *ErrorObjectMisalignmentSteer) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

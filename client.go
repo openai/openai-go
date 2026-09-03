@@ -44,6 +44,7 @@ type Client struct {
 	FineTuning   FineTuningService
 	Graders      GraderService
 	VectorStores VectorStoreService
+	Safety       SafetyService
 	Webhooks     webhooks.WebhookService
 	Beta         BetaService
 	// Create large batches of API requests to run asynchronously.
@@ -126,6 +127,7 @@ func NewClient(opts ...option.RequestOption) (r Client) {
 	r.FineTuning = NewFineTuningService(opts...)
 	r.Graders = NewGraderService(opts...)
 	r.VectorStores = NewVectorStoreService(opts...)
+	r.Safety = NewSafetyService(opts...)
 	r.Webhooks = webhooks.NewWebhookService(opts...)
 	r.Beta = NewBetaService(opts...)
 	r.Batches = NewBatchService(opts...)

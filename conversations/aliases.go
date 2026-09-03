@@ -76,6 +76,9 @@ const AllModelsGPT5_6Cyber = shared.AllModelsGPT5_6Cyber
 // This is an alias to an internal type.
 type ChatModel = shared.ChatModel
 
+// Equals "gpt-6-astra"
+const ChatModelGPT6Astra = shared.ChatModelGPT6Astra
+
 // Equals "gpt-5.6-sol"
 const ChatModelGPT5_6Sol = shared.ChatModelGPT5_6Sol
 
@@ -459,6 +462,14 @@ type CustomToolInputFormatGrammarParam = shared.CustomToolInputFormatGrammarPara
 
 // This is an alias to an internal type.
 type ErrorObject = shared.ErrorObject
+
+// This is an alias to an internal type.
+type ErrorObjectMisalignment = shared.ErrorObjectMisalignment
+
+// An optional public continuation instruction.
+//
+// This is an alias to an internal type.
+type ErrorObjectMisalignmentSteer = shared.ErrorObjectMisalignmentSteer
 
 // This is an alias to an internal type.
 type FunctionDefinition = shared.FunctionDefinition
