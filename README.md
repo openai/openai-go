@@ -893,6 +893,13 @@ Certain errors will be automatically retried 2 times by default, with a short ex
 We retry by default all connection errors, 408 Request Timeout, 409 Conflict, 429 Rate Limit,
 and >=500 Internal errors.
 
+API responses can specify a minimum wait with `Retry-After` or `Retry-After-Ms`.
+If that wait exceeds `option.WithMaxRetryDelay()` (8 seconds by default), the
+client returns the response error without another attempt. It does not shorten
+the server's requested wait. The error retains its response headers so your
+application can schedule a later attempt. You can increase the maximum delay
+when a longer automatic wait is appropriate.
+
 You can use the `WithMaxRetries` option to configure or disable this:
 
 ```go

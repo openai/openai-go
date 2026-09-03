@@ -214,11 +214,12 @@ func TestCloneDoesNotAliasMiddlewareSlice(t *testing.T) {
 	}
 }
 
-func TestParseRetryAfterHeaderBoundsRemoteDelays(t *testing.T) {
+func TestParseRetryAfterHeaderIdentifiesExcessiveDelays(t *testing.T) {
 	tests := map[string]struct {
-		header http.Header
-		want   time.Duration
-		ok     bool
+		header     http.Header
+		want       time.Duration
+		ok         bool
+		exceedsMax bool
 	}{
 		"milliseconds": {
 			header: http.Header{"Retry-After-Ms": {"125"}},
@@ -231,19 +232,22 @@ func TestParseRetryAfterHeaderBoundsRemoteDelays(t *testing.T) {
 			ok:     true,
 		},
 		"huge value": {
-			header: http.Header{"Retry-After": {"1e100"}},
-			want:   DefaultMaxServerDelay,
-			ok:     true,
+			header:     http.Header{"Retry-After": {"1e100"}},
+			want:       DefaultMaxServerDelay,
+			ok:         true,
+			exceedsMax: true,
 		},
 		"finite scaling overflow": {
-			header: http.Header{"Retry-After": {"2" + strings.Repeat("0", 299)}},
-			want:   DefaultMaxServerDelay,
-			ok:     true,
+			header:     http.Header{"Retry-After": {"2" + strings.Repeat("0", 299)}},
+			want:       DefaultMaxServerDelay,
+			ok:         true,
+			exceedsMax: true,
 		},
 		"far future date": {
-			header: http.Header{"Retry-After": {time.Now().Add(time.Hour).UTC().Format(time.RFC1123)}},
-			want:   DefaultMaxServerDelay,
-			ok:     true,
+			header:     http.Header{"Retry-After": {time.Now().Add(time.Hour).UTC().Format(time.RFC1123)}},
+			want:       DefaultMaxServerDelay,
+			ok:         true,
+			exceedsMax: true,
 		},
 		"invalid preferred header falls back": {
 			header: http.Header{"Retry-After-Ms": {"-1"}, "Retry-After": {"0.5"}},
@@ -275,9 +279,9 @@ func TestParseRetryAfterHeaderBoundsRemoteDelays(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, ok := parseRetryAfterHeader(&http.Response{Header: test.header}, DefaultMaxServerDelay)
-			if ok != test.ok || got != test.want {
-				t.Fatalf("parseRetryAfterHeader() = (%s, %t), want (%s, %t)", got, ok, test.want, test.ok)
+			got, ok, exceedsMax := parseRetryAfterHeader(&http.Response{Header: test.header}, DefaultMaxServerDelay)
+			if ok != test.ok || got != test.want || exceedsMax != test.exceedsMax {
+				t.Fatalf("parseRetryAfterHeader(%v) = (%s, %t, %t), want (%s, %t, %t)", test.header, got, ok, exceedsMax, test.want, test.ok, test.exceedsMax)
 			}
 		})
 	}

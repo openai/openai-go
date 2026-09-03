@@ -123,7 +123,9 @@ func WithMaxRetries(retries int) RequestOption {
 
 // WithMaxRetryDelay returns a RequestOption that sets the maximum delay between
 // retry attempts. This bounds both server-directed retry delays and the client's
-// exponential backoff. The default maximum is 8 seconds.
+// exponential backoff. The default maximum is 8 seconds. If an API response
+// requests a longer retry delay, the client returns the response error without
+// retrying instead of waiting less than the server requested.
 //
 // WithMaxRetryDelay panics when delay is not positive.
 func WithMaxRetryDelay(delay time.Duration) RequestOption {

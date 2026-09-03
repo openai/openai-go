@@ -418,9 +418,11 @@ func requestBodyReplayable(request *http.Request) bool {
 	return request.Body == nil || request.Body == http.NoBody || request.GetBody != nil
 }
 
-func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (time.Duration, bool) {
+// parseRetryAfterHeader distinguishes an absent or invalid hint from a valid hint
+// that exceeds maxDelay. A valid server minimum must never be shortened.
+func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (delay time.Duration, ok, exceedsMax bool) {
 	if resp == nil {
-		return 0, false
+		return 0, false, false
 	}
 	if maxDelay <= 0 {
 		maxDelay = DefaultMaxServerDelay
@@ -470,19 +472,19 @@ func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (time.Du
 				continue
 			}
 			if retryAfter >= float64(maxDelay)/float64(retry.units) {
-				return maxDelay, true
+				return maxDelay, true, retryAfter > float64(maxDelay)/float64(retry.units)
 			}
-			return time.Duration(retryAfter * float64(retry.units)), true
+			return time.Duration(retryAfter * float64(retry.units)), true, false
 		}
 		if d, ok := retry.custom(v); ok {
 			if d <= 0 {
-				return 0, true
+				return 0, true, false
 			}
-			return min(d, maxDelay), true
+			return min(d, maxDelay), true, d > maxDelay
 		}
 	}
 
-	return 0, false
+	return 0, false, false
 }
 
 // isBeforeContextDeadline reports whether the non-zero Time t is
@@ -536,14 +538,14 @@ func (b *closeOnceReadCloser) Close() error {
 	return b.err
 }
 
-func retryDelay(res *http.Response, retryCount int, maxDelay time.Duration) time.Duration {
+func retryDelay(res *http.Response, retryCount int, maxDelay time.Duration) (time.Duration, bool) {
 	if maxDelay <= 0 {
 		maxDelay = DefaultMaxServerDelay
 	}
 
 	// If the backend tells us to wait a certain amount of time, use that value
-	if retryAfterDelay, ok := parseRetryAfterHeader(res, maxDelay); ok {
-		return retryAfterDelay
+	if retryAfterDelay, ok, exceedsMax := parseRetryAfterHeader(res, maxDelay); ok {
+		return retryAfterDelay, !exceedsMax
 	}
 
 	backoff := 0.5 * float64(time.Second) * math.Pow(2, float64(retryCount))
@@ -557,7 +559,7 @@ func retryDelay(res *http.Response, retryCount int, maxDelay time.Duration) time
 	if jitterRange := int64(delay / 4); jitterRange > 0 {
 		delay -= time.Duration(rand.Int63n(jitterRange))
 	}
-	return delay
+	return delay, true
 }
 
 // WaitForDelay waits for delay to elapse or for ctx to be cancelled, whichever
@@ -681,6 +683,11 @@ func (cfg *RequestConfig) Execute() (err error) {
 			break
 		}
 
+		delay, retry := retryDelay(res, retryCount, cfg.MaxRetryDelay)
+		if !retry {
+			break
+		}
+
 		// Prepare next request and wait for the retry delay
 		if cfg.Request.Body != nil && cfg.Request.Body != http.NoBody && cfg.Request.GetBody != nil {
 			cfg.Request.Body, err = cfg.Request.GetBody()
@@ -699,7 +706,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 			_ = res.Body.Close()
 		}
 
-		if waitErr := WaitForDelay(ctx, retryDelay(res, retryCount, cfg.MaxRetryDelay)); waitErr != nil {
+		if waitErr := WaitForDelay(ctx, delay); waitErr != nil {
 			return waitErr
 		}
 	}
