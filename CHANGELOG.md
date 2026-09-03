@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.56.0](https://github.com/openai/openai-go/compare/v3.55.0...v3.56.0) (2026-09-03)
+
+
+### Features
+
+* **api:** add gpt-6-astra and related features ([#880](https://github.com/openai/openai-go/issues/880)) ([94a240c](https://github.com/openai/openai-go/commit/94a240c1d3f0c70a80436d4a29ec6c1de83b943f))
+
 ## [3.55.0](https://github.com/openai/openai-go/compare/v3.54.0...v3.55.0) (2026-09-02)
 
 
