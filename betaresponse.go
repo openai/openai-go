@@ -11792,7 +11792,7 @@ type BetaResponseFunctionWebSearch struct {
 	Action BetaResponseFunctionWebSearchActionUnion `json:"action" api:"required"`
 	// The status of the web search tool call.
 	//
-	// Any of "in_progress", "searching", "completed", "failed".
+	// Any of "in_progress", "searching", "completed", "failed", "incomplete".
 	Status BetaResponseFunctionWebSearchStatus `json:"status" api:"required"`
 	// The type of the web search tool call. Always `web_search_call`.
 	Type constant.WebSearchCall `json:"type" default:"web_search_call"`
@@ -12015,6 +12015,7 @@ const (
 	BetaResponseFunctionWebSearchStatusSearching  BetaResponseFunctionWebSearchStatus = "searching"
 	BetaResponseFunctionWebSearchStatusCompleted  BetaResponseFunctionWebSearchStatus = "completed"
 	BetaResponseFunctionWebSearchStatusFailed     BetaResponseFunctionWebSearchStatus = "failed"
+	BetaResponseFunctionWebSearchStatusIncomplete BetaResponseFunctionWebSearchStatus = "incomplete"
 )
 
 // The agent that produced this item.
@@ -12048,7 +12049,7 @@ type BetaResponseFunctionWebSearchParam struct {
 	Action BetaResponseFunctionWebSearchActionUnionParam `json:"action,omitzero" api:"required"`
 	// The status of the web search tool call.
 	//
-	// Any of "in_progress", "searching", "completed", "failed".
+	// Any of "in_progress", "searching", "completed", "failed", "incomplete".
 	Status BetaResponseFunctionWebSearchStatus `json:"status,omitzero" api:"required"`
 	// The agent that produced this item.
 	Agent BetaResponseFunctionWebSearchAgentParam `json:"agent,omitzero"`
