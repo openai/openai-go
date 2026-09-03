@@ -8609,7 +8609,7 @@ type ResponseFunctionCallArgumentsDoneEvent struct {
 	// The ID of the item.
 	ItemID string `json:"item_id" api:"required"`
 	// The name of the function that was called.
-	Name string `json:"name" api:"required"`
+	Name string `json:"name"`
 	// The index of the output item.
 	OutputIndex int64 `json:"output_index" api:"required"`
 	// The sequence number of this event.
