@@ -14,10 +14,8 @@ $ ./scripts/lint
 This will install all the required dependencies and build the SDK.
 
 Contributors need [Go 1.25 or later](https://go.dev/doc/install) and
-[Node.js 14 or later with npm 7 or later](https://nodejs.org/). Homebrew can
-install both from the repository's `Brewfile`; they can also be installed
-manually. npm 7 is the minimum version compatible with the committed Steady
-lockfile.
+[Node.js 14 or later](https://nodejs.org/). Homebrew can install both from
+the repository's `Brewfile`; they can also be installed manually.
 CI tests every supported Go release line with `GOTOOLCHAIN=local`, so
 contributors should not rely on automatic toolchain downloads to satisfy the
 repository's minimum version.
@@ -64,7 +62,7 @@ local checks, trusted CI, and activation instructions.
 - Review direct and transitive dependency changes in `go.mod` and `go.sum`
   across the root, `examples`, `api_reference`, `internal/testdata/consumer`,
   and `tools` modules. Review new `replace` directives, dependency origins,
-  installation scripts, code generators, and npm-based mock tooling before
+  installation scripts, code generators, and source-based mock tooling before
   running them; preserve Go checksum verification and run the existing
   vulnerability checks.
 - Keep third-party GitHub Actions pinned to reviewed full commit SHAs, grant
@@ -108,16 +106,24 @@ $ go mod edit -replace github.com/openai/openai-go=/path/to/openai-go
 
 ## Running tests
 
-Most tests require you to [set up a mock server](https://github.com/dgellow/steady) against the OpenAPI spec to run the tests.
+The mock server uses [the OpenAI Steady fork](https://github.com/openai-oss-forks/steady).
+`scripts/steady/settings` pins its full Git commit and Deno 2.7.11 runtime
+checksums. `./scripts/steady/install` fetches that source, verifies the runtime,
+and caches dependencies using the fork's frozen Deno lockfile. It requires
+Git, Node.js, curl, unzip, and sha256sum or shasum. The installation supports
+macOS and Linux on x64/ARM64, and Windows x64 through Git Bash.
 
-`./scripts/bootstrap` installs the exact Steady release recorded in
-`scripts/steady/package.json`. Its committed npm lockfile verifies the exact
-packages for each supported platform, and installation disables npm lifecycle
-scripts. Bootstrap and `./scripts/mock` share the same installation checks,
-including the required Node.js/npm versions and a real invocation of Steady's
-platform-native executable. Before every launch, `./scripts/mock` reinstalls
-Steady from the lockfile so stale or modified local executables are never
-trusted. Dependabot proposes Steady updates separately from Go dependencies.
+`./scripts/run-steady` verifies the local source and runtime, then runs without
+downloading dependencies. Pass a local OpenAPI specification path. To update
+Steady, review the fork commit and change `STEADY_REVISION`; review the release
+checksums when changing Deno. Run `node scripts/steady/test.cjs` to check the
+installation, integrity checks, and mock-server lifecycle.
+
+
+Most tests require you to [set up a mock server](https://github.com/openai-oss-forks/steady) against the OpenAPI spec to run the tests.
+
+`./scripts/bootstrap` and `./scripts/mock` install the pinned Steady source
+and runtime with `./scripts/steady/install`.
 
 ```sh
 $ ./scripts/mock
