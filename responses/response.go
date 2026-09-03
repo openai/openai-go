@@ -8604,21 +8604,21 @@ type ResponseFunctionCallArgumentsDoneEvent struct {
 	Arguments string `json:"arguments" api:"required"`
 	// The ID of the item.
 	ItemID string `json:"item_id" api:"required"`
-	// The name of the function that was called.
-	Name string `json:"name" api:"required"`
 	// The index of the output item.
 	OutputIndex int64 `json:"output_index" api:"required"`
 	// The sequence number of this event.
 	SequenceNumber int64                                      `json:"sequence_number" api:"required"`
 	Type           constant.ResponseFunctionCallArgumentsDone `json:"type" default:"response.function_call_arguments.done"`
+	// The name of the function that was called.
+	Name string `json:"name"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
 		Arguments      respjson.Field
 		ItemID         respjson.Field
-		Name           respjson.Field
 		OutputIndex    respjson.Field
 		SequenceNumber respjson.Field
 		Type           respjson.Field
+		Name           respjson.Field
 		ExtraFields    map[string]respjson.Field
 		raw            string
 	} `json:"-"`
