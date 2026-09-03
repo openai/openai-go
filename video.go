@@ -314,10 +314,53 @@ type VideoCreateError struct {
 	// A machine-readable error code that was returned.
 	Code string `json:"code" api:"required"`
 	// A human-readable description of the error that was returned.
+	Message      string                       `json:"message" api:"required"`
+	Misalignment VideoCreateErrorMisalignment `json:"misalignment"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code         respjson.Field
+		Message      respjson.Field
+		Misalignment respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r VideoCreateError) RawJSON() string { return r.JSON.raw }
+func (r *VideoCreateError) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type VideoCreateErrorMisalignment struct {
+	// The public explanation for this block.
+	DetailedExplanation string `json:"detailed_explanation"`
+	// An optional classification; clients must accept additional values.
+	ErrorType string `json:"error_type"`
+	// An optional public continuation instruction.
+	Steer VideoCreateErrorMisalignmentSteer `json:"steer"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		DetailedExplanation respjson.Field
+		ErrorType           respjson.Field
+		Steer               respjson.Field
+		ExtraFields         map[string]respjson.Field
+		raw                 string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r VideoCreateErrorMisalignment) RawJSON() string { return r.JSON.raw }
+func (r *VideoCreateErrorMisalignment) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// An optional public continuation instruction.
+type VideoCreateErrorMisalignmentSteer struct {
+	// The public continuation instruction.
 	Message string `json:"message" api:"required"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Code        respjson.Field
 		Message     respjson.Field
 		ExtraFields map[string]respjson.Field
 		raw         string
@@ -325,8 +368,8 @@ type VideoCreateError struct {
 }
 
 // Returns the unmodified JSON received from the API
-func (r VideoCreateError) RawJSON() string { return r.JSON.raw }
-func (r *VideoCreateError) UnmarshalJSON(data []byte) error {
+func (r VideoCreateErrorMisalignmentSteer) RawJSON() string { return r.JSON.raw }
+func (r *VideoCreateErrorMisalignmentSteer) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 

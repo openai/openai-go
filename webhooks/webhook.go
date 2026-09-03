@@ -1039,6 +1039,98 @@ const (
 	ResponseIncompleteWebhookEventObjectEvent ResponseIncompleteWebhookEventObject = "event"
 )
 
+// Sent when an approved safety alert is available for an API project.
+type SafetyAlertCreatedWebhookEvent struct {
+	// The unique ID of the webhook event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp in seconds when the event was created.
+	CreatedAt int64                              `json:"created_at" api:"required" format:"unixtime"`
+	Data      SafetyAlertCreatedWebhookEventData `json:"data" api:"required"`
+	// Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// Always `safety.alert.created`.
+	Type constant.SafetyAlertCreated `json:"type" default:"safety.alert.created"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyAlertCreatedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *SafetyAlertCreatedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type SafetyAlertCreatedWebhookEventData struct {
+	// The safety alert ID to pass to `GET /v1/safety/alerts/{id}`.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyAlertCreatedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *SafetyAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+// Sent when an approved safety alert is available for an enterprise workspace.
+type SafetyOrgAlertCreatedWebhookEvent struct {
+	// The unique ID of the webhook event.
+	ID string `json:"id" api:"required"`
+	// The Unix timestamp in seconds when the event was created.
+	CreatedAt int64                                 `json:"created_at" api:"required" format:"unixtime"`
+	Data      SafetyOrgAlertCreatedWebhookEventData `json:"data" api:"required"`
+	// Always `event`.
+	Object constant.Event `json:"object" default:"event"`
+	// Always `safety.org_alert.created`.
+	Type constant.SafetyOrgAlertCreated `json:"type" default:"safety.org_alert.created"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		CreatedAt   respjson.Field
+		Data        respjson.Field
+		Object      respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyOrgAlertCreatedWebhookEvent) RawJSON() string { return r.JSON.raw }
+func (r *SafetyOrgAlertCreatedWebhookEvent) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type SafetyOrgAlertCreatedWebhookEventData struct {
+	// The safety alert ID to pass to `GET /v1/safety/alerts/{id}`.
+	ID string `json:"id" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r SafetyOrgAlertCreatedWebhookEventData) RawJSON() string { return r.JSON.raw }
+func (r *SafetyOrgAlertCreatedWebhookEventData) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // UnwrapWebhookEventUnion contains all possible properties and values from
 // [BatchCancelledWebhookEvent], [BatchCompletedWebhookEvent],
 // [BatchExpiredWebhookEvent], [BatchFailedWebhookEvent],
@@ -1047,7 +1139,8 @@ const (
 // [FineTuningJobFailedWebhookEvent], [FineTuningJobSucceededWebhookEvent],
 // [LiveCallIncomingWebhookEvent], [RealtimeCallIncomingWebhookEvent],
 // [ResponseCancelledWebhookEvent], [ResponseCompletedWebhookEvent],
-// [ResponseFailedWebhookEvent], [ResponseIncompleteWebhookEvent].
+// [ResponseFailedWebhookEvent], [ResponseIncompleteWebhookEvent],
+// [SafetyAlertCreatedWebhookEvent], [SafetyOrgAlertCreatedWebhookEvent].
 //
 // Use the [UnwrapWebhookEventUnion.AsAny] method to switch on the variant.
 //
@@ -1063,14 +1156,15 @@ type UnwrapWebhookEventUnion struct {
 	// [FineTuningJobSucceededWebhookEventData], [LiveCallIncomingWebhookEventData],
 	// [RealtimeCallIncomingWebhookEventData], [ResponseCancelledWebhookEventData],
 	// [ResponseCompletedWebhookEventData], [ResponseFailedWebhookEventData],
-	// [ResponseIncompleteWebhookEventData]
+	// [ResponseIncompleteWebhookEventData], [SafetyAlertCreatedWebhookEventData],
+	// [SafetyOrgAlertCreatedWebhookEventData]
 	Data UnwrapWebhookEventUnionData `json:"data"`
 	// Any of "batch.cancelled", "batch.completed", "batch.expired", "batch.failed",
 	// "eval.run.canceled", "eval.run.failed", "eval.run.succeeded",
 	// "fine_tuning.job.cancelled", "fine_tuning.job.failed",
 	// "fine_tuning.job.succeeded", "live.call.incoming", "realtime.call.incoming",
 	// "response.cancelled", "response.completed", "response.failed",
-	// "response.incomplete".
+	// "response.incomplete", "safety.alert.created", "safety.org_alert.created".
 	Type   string `json:"type"`
 	Object string `json:"object"`
 	JSON   struct {
@@ -1106,6 +1200,8 @@ func (ResponseCancelledWebhookEvent) implUnwrapWebhookEventUnion()      {}
 func (ResponseCompletedWebhookEvent) implUnwrapWebhookEventUnion()      {}
 func (ResponseFailedWebhookEvent) implUnwrapWebhookEventUnion()         {}
 func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (SafetyAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()     {}
+func (SafetyOrgAlertCreatedWebhookEvent) implUnwrapWebhookEventUnion()  {}
 
 // Use the following switch statement to find the correct variant
 //
@@ -1126,6 +1222,8 @@ func (ResponseIncompleteWebhookEvent) implUnwrapWebhookEventUnion()     {}
 //	case webhooks.ResponseCompletedWebhookEvent:
 //	case webhooks.ResponseFailedWebhookEvent:
 //	case webhooks.ResponseIncompleteWebhookEvent:
+//	case webhooks.SafetyAlertCreatedWebhookEvent:
+//	case webhooks.SafetyOrgAlertCreatedWebhookEvent:
 //	default:
 //	  fmt.Errorf("no variant present")
 //	}
@@ -1163,6 +1261,10 @@ func (u UnwrapWebhookEventUnion) AsAny() anyUnwrapWebhookEvent {
 		return u.AsResponseFailed()
 	case "response.incomplete":
 		return u.AsResponseIncomplete()
+	case "safety.alert.created":
+		return u.AsSafetyAlertCreated()
+	case "safety.org_alert.created":
+		return u.AsSafetyOrgAlertCreated()
 	}
 	return nil
 }
@@ -1243,6 +1345,16 @@ func (u UnwrapWebhookEventUnion) AsResponseFailed() (v ResponseFailedWebhookEven
 }
 
 func (u UnwrapWebhookEventUnion) AsResponseIncomplete() (v ResponseIncompleteWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsSafetyAlertCreated() (v SafetyAlertCreatedWebhookEvent) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u UnwrapWebhookEventUnion) AsSafetyOrgAlertCreated() (v SafetyOrgAlertCreatedWebhookEvent) {
 	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
 	return
 }

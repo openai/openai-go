@@ -45,7 +45,7 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 		Metadata: map[string]string{
 			"foo": "string",
 		},
-		Model: openai.BetaResponseNewParamsModelGPT5_6Sol,
+		Model: openai.BetaResponseNewParamsModelGPT6Astra,
 		Moderation: openai.BetaResponseNewParamsModeration{
 			Model: "model",
 			Policy: openai.BetaResponseNewParamsModerationPolicy{
@@ -109,6 +109,7 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 				},
 				Strict:         openai.Bool(true),
 				AllowedCallers: []string{"direct"},
+				Async:          openai.Bool(true),
 				DeferLoading:   openai.Bool(true),
 				Description:    openai.String("description"),
 				OutputSchema: map[string]any{
@@ -235,7 +236,7 @@ func TestBetaResponseCompactWithOptionalParams(t *testing.T) {
 		option.WithAdminAPIKey("My Admin API Key"),
 	)
 	_, err := client.Beta.Responses.Compact(context.TODO(), openai.BetaResponseCompactParams{
-		Model: openai.BetaResponseCompactParamsModelGPT5_6Sol,
+		Model: openai.BetaResponseCompactParamsModelGPT6Astra,
 		Input: openai.BetaResponseCompactParamsInputUnion{
 			OfString: openai.String("string"),
 		},

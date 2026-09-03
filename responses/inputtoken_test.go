@@ -64,6 +64,7 @@ func TestInputTokenCountWithOptionalParams(t *testing.T) {
 				},
 				Strict:         openai.Bool(true),
 				AllowedCallers: []string{"direct"},
+				Async:          openai.Bool(true),
 				DeferLoading:   openai.Bool(true),
 				Description:    openai.String("description"),
 				OutputSchema: map[string]any{
