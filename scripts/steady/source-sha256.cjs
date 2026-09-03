@@ -1,8 +1,8 @@
 'use strict';
 
-const { createHash } = require('node:crypto');
-const fs = require('node:fs');
-const path = require('node:path');
+const { createHash } = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 const files = [];
 function visit(directory, relative = '') {
