@@ -1,6 +1,7 @@
 package pagination
 
 import (
+	"errors"
 	"net/http"
 	"reflect"
 
@@ -360,11 +361,12 @@ func (r *NextCursorPage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res 
 }
 
 type NextCursorPageAutoPager[T any] struct {
-	page *NextCursorPage[T]
-	cur  T
-	idx  int
-	run  int
-	err  error
+	page       *NextCursorPage[T]
+	cur        T
+	idx        int
+	run        int
+	err        error
+	lastCursor string
 	paramObj
 }
 
@@ -383,6 +385,11 @@ func (r *NextCursorPageAutoPager[T]) Next() bool {
 			r.idx += 1
 			return true
 		}
+		if r.page.Next != "" && r.page.Next == r.lastCursor {
+			r.err = errors.New("pagination cursor did not advance")
+			return false
+		}
+		r.lastCursor = r.page.Next
 		r.idx = 0
 		r.page, r.err = r.page.GetNextPage()
 		if r.err != nil {

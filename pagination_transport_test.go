@@ -122,3 +122,36 @@ func TestNextCursorPaginationContinuesAfterEmptyPage(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestNextCursorPaginationStopsOnRepeatedEmptyCursor(t *testing.T) {
+	calls := 0
+	customClient := paginationHTTPDoerFunc(func(req *http.Request) (*http.Response, error) {
+		calls++
+		body := `{"data":[],"has_more":true,"next":"cursor-1"}`
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{"Content-Type": {"application/json"}},
+			Body:       io.NopCloser(strings.NewReader(body)),
+			Request:    req,
+		}, nil
+	})
+
+	client := openai.NewClient(
+		option.WithBaseURL("https://example.com/v1"),
+		option.WithAPIKey("test-key"),
+		option.WithAdminAPIKey("admin-test-key"),
+		option.WithMaxRetries(0),
+		option.WithHTTPClient(customClient),
+	)
+	pager := client.Admin.Organization.Groups.ListAutoPaging(context.Background(), openai.AdminOrganizationGroupListParams{})
+
+	if pager.Next() {
+		t.Fatal("pager returned an item from an empty page")
+	}
+	if err := pager.Err(); err == nil || err.Error() != "pagination cursor did not advance" {
+		t.Fatalf("pager error = %v, want repeated cursor error", err)
+	}
+	if calls != 2 {
+		t.Fatalf("HTTP calls = %d, want 2", calls)
+	}
+}
