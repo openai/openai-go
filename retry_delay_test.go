@@ -21,6 +21,48 @@ func (f retryDelayRoundTripperFunc) RoundTrip(req *http.Request) (*http.Response
 	return f(req)
 }
 
+type retryDelayResponseBody struct {
+	io.Reader
+	closes int
+}
+
+func (b *retryDelayResponseBody) Close() error {
+	b.closes++
+	return nil
+}
+
+func TestRetryAfterExceedingMaximumClosesTransportErrorResponse(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		body := &retryDelayResponseBody{Reader: strings.NewReader("retry later")}
+		transportErr := errors.New("transport failed after receiving headers")
+		attempts := 0
+		client := openai.NewClient(
+			option.WithAPIKey("test-key"),
+			option.WithMaxRetries(1),
+			option.WithMiddleware(func(req *http.Request, _ option.MiddlewareNext) (*http.Response, error) {
+				attempts++
+				return &http.Response{
+					StatusCode: http.StatusTooManyRequests,
+					Header:     http.Header{"Retry-After": {"90"}},
+					Body:       body,
+					Request:    req,
+				}, transportErr
+			}),
+		)
+		started := time.Now()
+		err := client.Get(t.Context(), "/models/test", nil, nil)
+		if !errors.Is(err, transportErr) {
+			t.Errorf("Get() error = %v, want %v", err, transportErr)
+		}
+		if attempts != 1 || time.Since(started) != 0 {
+			t.Errorf("Get() attempts = %d, elapsed = %s; want 1, 0s", attempts, time.Since(started))
+		}
+		if body.closes != 1 {
+			t.Errorf("response body closed %d times, want 1", body.closes)
+		}
+	})
+}
+
 func TestRetryAfterExceedingMaximumPreservesAPIError(t *testing.T) {
 	for _, test := range []struct {
 		status   int

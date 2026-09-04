@@ -685,6 +685,9 @@ func (cfg *RequestConfig) Execute() (err error) {
 
 		delay, retry := retryDelay(res, retryCount, cfg.MaxRetryDelay)
 		if !retry {
+			if err != nil && res != nil && res.Body != nil {
+				_ = res.Body.Close()
+			}
 			break
 		}
 
