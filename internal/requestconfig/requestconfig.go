@@ -143,6 +143,51 @@ func WithNoRetryError(err error) error {
 	return &noRetryError{err: err}
 }
 
+type retryAfterError struct {
+	err             error
+	requested       time.Duration
+	notBefore       time.Time
+	unrepresentable bool
+}
+
+func (e *retryAfterError) Error() string { return e.err.Error() }
+func (e *retryAfterError) Unwrap() error { return e.err }
+
+// CaptureRetryAfterError snapshots a server minimum before response cleanup.
+// The returned wrapper preserves the error identity without retaining the
+// issuer response, credentials, or body. Missing or invalid hints do not wrap.
+func CaptureRetryAfterError(response *http.Response) func(error) error {
+	delay, valid, exceeds := parseRetryAfterHeader(response, time.Duration(math.MaxInt64))
+	notBefore := time.Now().Add(delay)
+	return func(err error) error {
+		if err == nil || !valid {
+			return err
+		}
+		return &retryAfterError{err: err, requested: delay, notBefore: notBefore, unrepresentable: exceeds}
+	}
+}
+
+func (e *retryAfterError) retryDelay(maximum time.Duration) (time.Duration, bool) {
+	if maximum <= 0 {
+		maximum = DefaultMaxServerDelay
+	}
+	if e.unrepresentable || e.requested > maximum {
+		return 0, false
+	}
+	return max(0, time.Until(e.notBefore)), true
+}
+
+// AuthenticationRetryErrorDelay returns the remaining minimum captured from an
+// issuer error, without exposing the original response or changing error identity.
+func AuthenticationRetryErrorDelay(err error, maximum time.Duration) (delay time.Duration, hasHint, allowed bool) {
+	var issuerError *retryAfterError
+	if !errors.As(err, &issuerError) {
+		return 0, false, true
+	}
+	delay, allowed = issuerError.retryDelay(maximum)
+	return delay, true, allowed
+}
+
 func (o requestFinalizerOption) Apply(cfg *RequestConfig) error {
 	cfg.finalizers = append(cfg.finalizers, o.finalize)
 	return nil
@@ -434,10 +479,10 @@ func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (delay t
 
 		// custom is used when the regular algorithm failed and is optional.
 		// the returned duration is used verbatim (units is not applied).
-		custom func(string) (time.Duration, bool)
+		custom func(string) (time.Duration, bool, bool)
 	}
 
-	nop := func(string) (time.Duration, bool) { return 0, false }
+	nop := func(string) (time.Duration, bool, bool) { return 0, false, false }
 
 	// the headers are listed in order of preference
 	retries := []retryData{
@@ -452,12 +497,17 @@ func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (delay t
 
 			// retry-after values are expressed in either number of
 			// seconds or an HTTP-date indicating when to try again
-			custom: func(ra string) (time.Duration, bool) {
+			custom: func(ra string) (time.Duration, bool, bool) {
 				t, err := time.Parse(time.RFC1123, ra)
 				if err != nil {
-					return 0, false
+					return 0, false, false
 				}
-				return time.Until(t), true
+				now := time.Now()
+				// Compare deadlines before Sub can saturate an excessive date to MaxInt64.
+				if t.After(now.Add(maxDelay)) {
+					return maxDelay, true, true
+				}
+				return t.Sub(now), true, false
 			},
 		},
 	}
@@ -480,11 +530,11 @@ func parseRetryAfterHeader(resp *http.Response, maxDelay time.Duration) (delay t
 			}
 			return time.Duration(math.Ceil(retryAfter * float64(retry.units))), true, false
 		}
-		if d, ok := retry.custom(v); ok {
+		if d, ok, exceeds := retry.custom(v); ok {
 			if d <= 0 {
 				return 0, true, false
 			}
-			return min(d, maxDelay), true, d > maxDelay
+			return min(d, maxDelay), true, exceeds || d > maxDelay
 		}
 	}
 
@@ -688,6 +738,10 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 
 		delay, retry := retryDelay(res, retryCount, cfg.MaxRetryDelay)
+		var issuerError *retryAfterError
+		if res == nil && errors.As(err, &issuerError) {
+			delay, retry = issuerError.retryDelay(cfg.MaxRetryDelay)
+		}
 		if !retry {
 			if err != nil && res != nil && res.Body != nil {
 				_ = res.Body.Close()

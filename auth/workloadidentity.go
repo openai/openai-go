@@ -52,6 +52,8 @@ type tokenRefreshState struct {
 	done       chan struct{}
 	generation string
 	result     tokenRefreshResult
+	// Cached-token requests that observed this generation, protected by w.mu.
+	participants map[*requestconfig.AuthenticationRetryState]struct{}
 }
 
 type tokenExchangeRequest struct {
@@ -85,9 +87,39 @@ func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
+	refusalScope := requestconfig.RequestRetryScopeFromContext(ctx)
+	if refusalScope == nil {
+		refusalScope, _ = ctx.Value(workloadIssuerRefusalContextKey{}).(*requestconfig.RequestRetryScope)
+	}
 
 	// Lock for entire decision: check cache, decide refresh strategy, potentially start background refresh
-	w.mu.Lock()
+	for {
+		w.mu.Lock()
+		if refusalScope == nil {
+			break
+		}
+		refusal := refusalScope.AuthenticationRetryRefusal()
+		if refusal == nil {
+			break
+		}
+		if err := ctx.Err(); err != nil {
+			w.mu.Unlock()
+			return "", err
+		}
+		if w.cachedToken != "" && time.Now().Before(w.tokenExpiry) {
+			token := w.cachedToken
+			w.mu.Unlock()
+			return token, nil
+		}
+		w.mu.Unlock()
+		delay, _, allowed := requestconfig.AuthenticationRetryErrorDelay(refusal, refusalScope.MaxRetryDelay())
+		if !allowed {
+			return "", refusal
+		}
+		if err := requestconfig.WaitForDelay(ctx, delay); err != nil {
+			return "", err
+		}
+	}
 
 	if w.cachedToken == "" {
 		return w.handleLockedRefresh(ctx, httpClient)
@@ -114,6 +146,12 @@ func (w *WorkloadIdentityAuth) GetToken(ctx context.Context, httpClient HTTPDoer
 			token, err := w.refreshToken(refreshCtx, httpClient)
 			w.finishRefresh(state, token, err)
 		}()
+	}
+	if state := w.refreshInFlight; state != nil && refusalScope != nil {
+		if state.participants == nil {
+			state.participants = make(map[*requestconfig.AuthenticationRetryState]struct{})
+		}
+		state.participants[refusalScope.AuthenticationRetryState()] = struct{}{}
 	}
 
 	token := w.cachedToken
@@ -176,6 +214,16 @@ func (w *WorkloadIdentityAuth) finishRefresh(state *tokenRefreshState, token str
 		err = errInvalidatedWorkloadBearer
 	}
 	state.result = tokenRefreshResult{token: token, err: err}
+	for scope := range state.participants {
+		delay, hasHint, allowed := requestconfig.AuthenticationRetryErrorDelay(err, scope.MaxRetryDelay())
+		if hasHint {
+			var notBefore time.Time
+			if allowed {
+				notBefore = time.Now().Add(delay)
+			}
+			scope.RefuseAuthenticationRetry(err, notBefore)
+		}
+	}
 	close(state.done) // Broadcasts completion to all waiters
 	w.refreshInFlight = nil
 }
@@ -220,7 +268,7 @@ func (w *WorkloadIdentityAuth) refreshToken(ctx context.Context, httpClient HTTP
 	return "", errInvalidatedWorkloadBearer
 }
 
-func (w *WorkloadIdentityAuth) exchangeToken(ctx context.Context, httpClient HTTPDoer) (string, time.Time, error) {
+func (w *WorkloadIdentityAuth) exchangeToken(ctx context.Context, httpClient HTTPDoer) (token string, expiresAt time.Time, err error) {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
@@ -272,6 +320,10 @@ func (w *WorkloadIdentityAuth) exchangeToken(ctx context.Context, httpClient HTT
 		return "", time.Time{}, errors.New("token exchange returned an invalid response")
 	}
 	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		withRetryAfter := requestconfig.CaptureRetryAfterError(resp)
+		defer func() { err = withRetryAfter(err) }()
+	}
 
 	maximum := int64(x509SuccessResponseMaximum)
 	if resp.StatusCode != http.StatusOK {

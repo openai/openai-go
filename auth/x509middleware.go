@@ -68,6 +68,11 @@ func X509WorkloadIdentityMiddleware(
 	if hadBody {
 		return response, nil
 	}
+	if retry, waitErr := waitForUnauthorizedReplay(request.Context(), response); waitErr != nil {
+		return nil, waitErr
+	} else if !retry {
+		return response, nil
+	}
 	if response.Body != nil {
 		_ = response.Body.Close()
 	}
@@ -113,9 +118,29 @@ func unauthorizedRetryResponse(response *http.Response, retry bool) *http.Respon
 	}
 	if retry {
 		clone.Header.Set("x-should-retry", "true")
-		clone.Header.Set("Retry-After-Ms", "0")
+		if _, hasHint, _ := requestconfig.AuthenticationRetryDelay(response, 0); !hasHint {
+			clone.Header.Set("Retry-After-Ms", "0")
+		}
 	} else {
 		clone.Header.Set("x-should-retry", "false")
 	}
 	return &clone
+}
+
+func waitForUnauthorizedReplay(ctx context.Context, response *http.Response) (bool, error) {
+	err := ctx.Err()
+	if err == nil {
+		delay, _, allowed := requestconfig.AuthenticationRetryDelay(response, 0)
+		if !allowed {
+			return false, nil
+		}
+		err = requestconfig.WaitForDelay(ctx, delay)
+	}
+	if err != nil {
+		if response.Body != nil {
+			_ = response.Body.Close()
+		}
+		return false, err
+	}
+	return true, nil
 }

@@ -104,11 +104,6 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 	if refusalScope == nil {
 		refusalScope, _ = ctx.Value(x509IssuerRefusalContextKey{}).(*requestconfig.RequestRetryScope)
 	}
-	if refusalScope != nil {
-		if refusal := refusalScope.AuthenticationRetryRefusal(); refusal != nil {
-			return identity.cachedTokenAfterIssuerRefusal(ctx, refusal)
-		}
-	}
 	if identity.mu.TryLock() {
 		now := time.Now()
 		if identity.cached.value != "" && now.Before(identity.refreshAfter) && now.Before(identity.cached.expiresAt) {
@@ -129,7 +124,18 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 		if refusalScope != nil {
 			if refusal := refusalScope.AuthenticationRetryRefusal(); refusal != nil {
 				identity.mu.Unlock()
-				return identity.cachedTokenAfterIssuerRefusal(callerCtx, refusal)
+				token, err := identity.cachedTokenAfterIssuerRefusal(callerCtx, refusal)
+				if err == nil || callerCtx.Err() != nil {
+					return token, err
+				}
+				notBefore := x509IssuerRetryNotBefore(refusal, refusalScope)
+				if notBefore.IsZero() {
+					return "", refusal
+				}
+				if err := requestconfig.WaitForDelay(ctx, time.Until(notBefore)); err != nil {
+					return identity.tokenAfterExchangeContextDone(ctx, callerCtx)
+				}
+				continue
 			}
 		}
 		now := time.Now()
@@ -152,9 +158,22 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 				var status *x509ExchangeHTTPError
 				if errors.As(current.err, &status) && status.hasRetryAfter && status.retryAfter > 0 {
 					if refusalScope != nil {
-						refusalScope.RefuseAuthenticationRetry(status)
+						refusalScope.RefuseAuthenticationRetry(status, x509IssuerRetryNotBefore(status, refusalScope))
 					}
-					return identity.cachedTokenAfterIssuerRefusal(callerCtx, status)
+					token, err := identity.cachedTokenAfterIssuerRefusal(callerCtx, status)
+					if err == nil || callerCtx.Err() != nil {
+						return token, err
+					}
+					notBefore := x509IssuerRetryNotBefore(status, refusalScope)
+					ownerCanceled := current.ownerContextErr != nil && errors.Is(current.err, current.ownerContextErr)
+					if notBefore.IsZero() || !ownerCanceled &&
+						(!retryableX509ExchangeError(current.err) || scope == nil || !scope.TryRetry()) {
+						return "", status
+					}
+					if err := requestconfig.WaitForDelay(ctx, time.Until(notBefore)); err != nil {
+						return identity.tokenAfterExchangeContextDone(ctx, callerCtx)
+					}
+					continue
 				}
 				if current.err == nil || current.ownerContextErr != nil &&
 					errors.Is(current.err, current.ownerContextErr) {
@@ -183,7 +202,7 @@ func (identity *X509WorkloadIdentityAuth) GetToken(ctx context.Context, doer HTT
 		if !errors.As(err, &refusal) || !refusal.hasRetryAfter || refusal.retryAfter <= 0 {
 			refusal = nil
 		} else if refusalScope != nil {
-			refusalScope.RefuseAuthenticationRetry(refusal)
+			refusalScope.RefuseAuthenticationRetry(refusal, x509IssuerRetryNotBefore(refusal, refusalScope))
 		}
 		identity.mu.Lock()
 		refresh.ownerContextErr = ctx.Err()
@@ -353,6 +372,16 @@ func (identity *X509WorkloadIdentityAuth) exchangeWithRetry(
 	}
 }
 
+// x509IssuerRetryNotBefore keeps the response's original minimum for leaders and
+// followers. An excessive hint remains a refusal for the entire logical request.
+func x509IssuerRetryNotBefore(err error, scope *requestconfig.RequestRetryScope) time.Time {
+	var status *x509ExchangeHTTPError
+	if !errors.As(err, &status) || x509RetryAfterExceedsMaximum(err, scope) {
+		return time.Time{}
+	}
+	return status.retryNotBefore
+}
+
 func x509RetryAfterExceedsMaximum(err error, scope *requestconfig.RequestRetryScope) bool {
 	var status *x509ExchangeHTTPError
 	if !errors.As(err, &status) || !status.hasRetryAfter {
@@ -369,6 +398,9 @@ func x509ExchangeRetryDelay(err error, attempt int, scope *requestconfig.Request
 	delay := x509InitialRetryDelay << attempt
 	var status *x509ExchangeHTTPError
 	if errors.As(err, &status) && status.hasRetryAfter {
+		if !status.retryNotBefore.IsZero() {
+			return max(0, time.Until(status.retryNotBefore))
+		}
 		return status.retryAfter
 	}
 	maximum := x509MaximumRetryAfter

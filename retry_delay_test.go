@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strings"
 	"testing"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/auth"
 	"github.com/openai/openai-go/v3/option"
 )
 
@@ -211,5 +213,69 @@ func TestRetryAfterContextErrors(t *testing.T) {
 				}
 			})
 		})
+	}
+}
+
+func TestRetryAfterDateBeyondDurationRange(t *testing.T) {
+	for _, issuer := range []bool{false, true} {
+		for _, status := range []int{http.StatusTooManyRequests, http.StatusServiceUnavailable} {
+			t.Run(fmt.Sprintf("issuer=%t/status=%d", issuer, status), func(t *testing.T) {
+				synctest.Test(t, func(t *testing.T) {
+					ctx, cancel := context.WithCancel(t.Context())
+					defer cancel()
+					attempts := 0
+					hint := time.Date(9999, time.December, 31, 0, 0, 0, 0, time.UTC).Format(time.RFC1123)
+					body := &retryDelayResponseBody{Reader: strings.NewReader(`{"error":{"message":"synthetic error"},"error_description":"synthetic-private-description"}`)}
+					opts := []option.RequestOption{
+						option.WithMaxRetries(1),
+						option.WithMaxRetryDelay(time.Duration(math.MaxInt64)),
+						option.WithHTTPClient(&http.Client{Transport: retryDelayRoundTripperFunc(func(req *http.Request) (*http.Response, error) {
+							attempts++
+							return &http.Response{StatusCode: status, Header: http.Header{"Retry-After": {hint}}, Body: body, Request: req}, nil
+						})}),
+					}
+					if issuer {
+						provider := &mockSubjectTokenProvider{token: "synthetic-subject", tokenType: auth.SubjectTokenTypeJWT}
+						opts = append(opts, option.WithWorkloadIdentity(testWorkloadIdentity(provider)))
+					} else {
+						opts = append(opts, option.WithAPIKey("synthetic-key"))
+					}
+					client := openai.NewClient(opts...)
+					completed := make(chan error, 1)
+					go func() {
+						completed <- client.Get(ctx, "/models/test", nil, nil)
+					}()
+					// Observe whether the request returned its original error or is
+					// blocked on a saturated centuries-long timer, without advancing it.
+					synctest.Wait()
+					var err error
+					select {
+					case err = <-completed:
+					default:
+						cancel()
+						err = <-completed
+						t.Errorf("Get(Retry-After: %s) waited for cancellation; want immediate original error", hint)
+					}
+					if issuer {
+						if err == nil || err.Error() != fmt.Sprintf("token exchange failed with status %d", status) {
+							t.Errorf("Get() issuer error=%v, want original sanitized status %d", err, status)
+						}
+						if body.closes != 1 {
+							t.Errorf("issuer body closes=%d, want 1", body.closes)
+						}
+					} else {
+						var apiErr *openai.Error
+						if !errors.As(err, &apiErr) || apiErr.StatusCode != status {
+							t.Errorf("Get() error=%v, want original API status %d", err, status)
+						} else if apiErr.Response.Header.Get("Retry-After") != hint {
+							t.Error("Get() changed the original retry header")
+						}
+					}
+					if attempts != 1 {
+						t.Errorf("Get() attempts=%d, want 1", attempts)
+					}
+				})
+			})
+		}
 	}
 }

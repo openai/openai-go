@@ -20,16 +20,25 @@ type requestRetryScopeFactory struct {
 // ordinary SDK request attempts, and a single unauthorized-response replay.
 // This is internal API and may change without notice.
 type RequestRetryScope struct {
-	mu                         sync.Mutex
-	maximum                    int
-	maximumDelay               time.Duration
-	outerRetries               int
-	internalRetries            int
-	attempts                   int
-	replayUsed                 bool
-	allowBodyReplay            bool
-	onInternalRetry            func(int)
-	authenticationRetryRefusal error
+	mu                  sync.Mutex
+	maximum             int
+	outerRetries        int
+	internalRetries     int
+	attempts            int
+	replayUsed          bool
+	allowBodyReplay     bool
+	onInternalRetry     func(int)
+	authenticationRetry *AuthenticationRetryState
+}
+
+// AuthenticationRetryState preserves only an issuer minimum for one logical request.
+// Background refreshes may retain it without retaining request payloads or retry callbacks.
+// This is internal API and may change without notice.
+type AuthenticationRetryState struct {
+	mu           sync.Mutex
+	maximumDelay time.Duration
+	refusal      error
+	until        time.Time
 }
 
 // NewRequestRetryScope creates the retry scope for one logical SDK request.
@@ -38,10 +47,10 @@ func NewRequestRetryScope(maximum int, maximumDelay time.Duration, allowBodyRepl
 		maximumDelay = DefaultMaxServerDelay
 	}
 	return &RequestRetryScope{
-		maximum:         max(0, maximum),
-		maximumDelay:    maximumDelay,
-		allowBodyReplay: allowBodyReplay,
-		onInternalRetry: onInternalRetry,
+		maximum:             max(0, maximum),
+		allowBodyReplay:     allowBodyReplay,
+		onInternalRetry:     onInternalRetry,
+		authenticationRetry: &AuthenticationRetryState{maximumDelay: maximumDelay},
 	}
 }
 
@@ -93,21 +102,46 @@ func RequestRetryScopeFromContext(ctx context.Context) *RequestRetryScope {
 	return scope
 }
 
+// AuthenticationRetryState returns the request's lightweight issuer-refusal storage.
+func (scope *RequestRetryScope) AuthenticationRetryState() *AuthenticationRetryState {
+	return scope.authenticationRetry
+}
+
 // RefuseAuthenticationRetry preserves an issuer refusal for this logical request.
-// Subsequent attempts may reuse a usable cached token, but must not contact the issuer.
-func (scope *RequestRetryScope) RefuseAuthenticationRetry(err error) {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-	if scope.authenticationRetryRefusal == nil {
-		scope.authenticationRetryRefusal = err
+// A zero notBefore preserves the refusal until this logical request ends.
+func (scope *RequestRetryScope) RefuseAuthenticationRetry(err error, notBefore time.Time) {
+	scope.authenticationRetry.RefuseAuthenticationRetry(err, notBefore)
+}
+
+// AuthenticationRetryRefusal returns the original issuer refusal until its minimum elapses.
+func (scope *RequestRetryScope) AuthenticationRetryRefusal() error {
+	return scope.authenticationRetry.AuthenticationRetryRefusal()
+}
+
+// RefuseAuthenticationRetry records the first issuer refusal and its minimum.
+func (state *AuthenticationRetryState) RefuseAuthenticationRetry(err error, notBefore time.Time) {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+	if state.refusal == nil {
+		state.refusal = err
+		state.until = notBefore
 	}
 }
 
-// AuthenticationRetryRefusal returns the original issuer refusal, if any.
-func (scope *RequestRetryScope) AuthenticationRetryRefusal() error {
-	scope.mu.Lock()
-	defer scope.mu.Unlock()
-	return scope.authenticationRetryRefusal
+// AuthenticationRetryRefusal returns the original refusal until its minimum elapses.
+func (state *AuthenticationRetryState) AuthenticationRetryRefusal() error {
+	state.mu.Lock()
+	defer state.mu.Unlock()
+	if !state.until.IsZero() && !time.Now().Before(state.until) {
+		state.refusal = nil
+		state.until = time.Time{}
+	}
+	return state.refusal
+}
+
+// MaxRetryDelay reports the logical request's configured server-delay cap.
+func (state *AuthenticationRetryState) MaxRetryDelay() time.Duration {
+	return state.maximumDelay
 }
 
 // BeginAttempt records the first dispatch or one ordinary SDK retry attempt.
@@ -152,7 +186,7 @@ func (scope *RequestRetryScope) AllowBodyReplay() bool {
 // MaxRetryDelay bounds issuer-directed and SDK-selected retry waits for this
 // logical request.
 func (scope *RequestRetryScope) MaxRetryDelay() time.Duration {
-	return scope.maximumDelay
+	return scope.authenticationRetry.MaxRetryDelay()
 }
 
 func (scope *RequestRetryScope) tryInternalRetry() bool {
@@ -164,4 +198,12 @@ func (scope *RequestRetryScope) tryInternalRetry() bool {
 		scope.onInternalRetry(scope.internalRetries)
 	}
 	return true
+}
+
+// AuthenticationRetryDelay shares ordinary response hint parsing with auth replay.
+// A missing or invalid hint permits immediate auth recovery; an excessive valid
+// hint refuses the replay instead of shortening the server's minimum.
+func AuthenticationRetryDelay(response *http.Response, maximumDelay time.Duration) (delay time.Duration, hasHint, allowed bool) {
+	delay, hasHint, exceeds := parseRetryAfterHeader(response, maximumDelay)
+	return delay, hasHint, !exceeds
 }

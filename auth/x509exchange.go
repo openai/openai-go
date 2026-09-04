@@ -33,13 +33,25 @@ type x509ExchangedToken struct {
 
 type x509ExchangeHTTPError struct {
 	statusCode        int
+	oauthError        *OAuthError
 	retryAfter        time.Duration
+	retryNotBefore    time.Time
 	hasRetryAfter     bool
 	retryAfterTooLong bool
 }
 
 func (err *x509ExchangeHTTPError) Error() string {
+	if err.oauthError != nil {
+		return err.oauthError.Error()
+	}
 	return fmt.Sprintf("X.509 token exchange failed with HTTP status %d", err.statusCode)
+}
+
+func (err *x509ExchangeHTTPError) Unwrap() error {
+	if err.oauthError != nil {
+		return err.oauthError
+	}
+	return nil
 }
 
 func (err *x509ExchangeHTTPError) retryable() bool {
@@ -194,12 +206,14 @@ func x509DecodeExchangedToken(ctx context.Context, body []byte, started time.Tim
 }
 
 func x509ExchangeStatusError(ctx context.Context, response *http.Response) (result error) {
-	var status *x509ExchangeHTTPError
-	if response.StatusCode != http.StatusBadRequest && response.StatusCode != http.StatusUnauthorized &&
-		response.StatusCode != http.StatusForbidden {
-		status = &x509ExchangeHTTPError{statusCode: response.StatusCode}
-		if status.retryable() {
-			status.retryAfter, status.hasRetryAfter, status.retryAfterTooLong = x509ParseRetryAfter(response.Header, time.Now())
+	oauthStatus := response.StatusCode == http.StatusBadRequest || response.StatusCode == http.StatusUnauthorized ||
+		response.StatusCode == http.StatusForbidden
+	status := &x509ExchangeHTTPError{statusCode: response.StatusCode}
+	if oauthStatus || status.retryable() {
+		now := time.Now()
+		status.retryAfter, status.hasRetryAfter, status.retryAfterTooLong = x509ParseRetryAfter(response.Header, now)
+		if status.hasRetryAfter && status.retryAfter > 0 {
+			status.retryNotBefore = now.Add(status.retryAfter)
 		}
 	}
 	defer func() {
@@ -214,7 +228,7 @@ func x509ExchangeStatusError(ctx context.Context, response *http.Response) (resu
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if status != nil {
+	if !oauthStatus {
 		if status.retryable() {
 			if x509RetryAfterExceedsMaximum(status, requestconfig.RequestRetryScopeFromContext(ctx)) {
 				return status
@@ -253,6 +267,10 @@ func x509ExchangeStatusError(ctx context.Context, response *http.Response) (resu
 	case "invalid_request", "invalid_client", "invalid_grant", "invalid_scope", "invalid_target", "unauthorized_client",
 		"unsupported_grant_type", "invalid_subject_token", "access_denied", "temporarily_unavailable", "server_error":
 		oauthError.ErrorCode = shared.OAuthErrorCode(code)
+	}
+	if status.hasRetryAfter && retryableX509ExchangeError(oauthError) {
+		status.oauthError = oauthError
+		return status
 	}
 	return oauthError
 }

@@ -61,58 +61,91 @@ func TestX509WorkloadIdentitySharesConcurrentRefreshes(t *testing.T) {
 }
 
 func TestX509WorkloadIdentityRecoversAfterCanceledRefreshLeader(t *testing.T) {
-	var exchanges atomic.Int32
-	firstReached := make(chan struct{})
-	releaseFirst := make(chan struct{})
-	defer close(releaseFirst)
-	fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		if exchanges.Add(1) == 1 {
-			close(firstReached)
-			<-releaseFirst
-			return
+	for _, hint := range []time.Duration{0, 100 * time.Millisecond} {
+		for _, retries := range []int{-1, 0, 1} {
+			t.Run(hint.String()+"/retries="+strconv.Itoa(retries), func(t *testing.T) {
+				var exchanges, consumed atomic.Int32
+				var firstAt atomic.Int64
+				firstReached := make(chan struct{})
+				releaseFirst := make(chan struct{})
+				defer close(releaseFirst)
+				fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+					if exchanges.Add(1) == 1 {
+						firstAt.Store(time.Now().UnixNano())
+						if hint > 0 {
+							w.Header().Set("Retry-After-Ms", strconv.FormatInt(hint.Milliseconds(), 10))
+							w.WriteHeader(http.StatusServiceUnavailable)
+							w.(http.Flusher).Flush()
+						}
+						close(firstReached)
+						<-releaseFirst
+						return
+					}
+					if elapsed := time.Since(time.Unix(0, firstAt.Load())); elapsed < hint {
+						t.Errorf("healthy follower retried after %s, before %s", elapsed, hint)
+					}
+					_, _ = io.WriteString(w, x509ValidExchangeResponse())
+				}))
+				identity := newX509LifecycleIdentity(t, fixture)
+				leaderContext, cancelLeader := context.WithCancel(t.Context())
+				defer cancelLeader()
+				leaderResult := make(chan error, 1)
+				go func() {
+					_, err := identity.GetToken(leaderContext, fixture.capability)
+					leaderResult <- err
+				}()
+				select {
+				case <-firstReached:
+				case <-time.After(5 * time.Second):
+					t.Fatal("initial refresh leader never reached the issuer")
+				}
+				followerResult := make(chan error, 1)
+				followerContext := t.Context()
+				if retries >= 0 {
+					followerContext = requestconfig.WithRequestRetryScope(followerContext, requestconfig.NewRequestRetryScope(retries, time.Second, true, func(n int) { consumed.Store(int32(n)) }))
+				}
+				waiting := make(chan struct{})
+				followerContext = &x509ObservedDoneContext{Context: followerContext, observed: waiting}
+				go func() {
+					token, err := identity.GetToken(followerContext, fixture.capability)
+					if err == nil && token != x509ExchangeSyntheticToken {
+						err = errors.New("healthy refresh follower received an unexpected token")
+					}
+					followerResult <- err
+				}()
+				select {
+				case <-waiting:
+				case <-time.After(5 * time.Second):
+					t.Fatal("healthy follower did not start waiting")
+				}
+				// Let the follower enter the shared-refresh wait before canceling its owner.
+				time.Sleep(10 * time.Millisecond)
+				cancelLeader()
+				select {
+				case err := <-leaderResult:
+					if !errors.Is(err, context.Canceled) {
+						t.Errorf("canceled leader error = %v", err)
+					}
+				case <-time.After(5 * time.Second):
+					t.Fatal("canceled refresh leader did not finish")
+				}
+				select {
+				case err := <-followerResult:
+					if err != nil {
+						t.Errorf("healthy follower did not recover after leader cancellation: %v", err)
+					}
+				case <-time.After(5 * time.Second):
+					t.Fatal("healthy refresh follower was poisoned by the canceled leader")
+				}
+				if got := exchanges.Load(); got != 2 {
+					t.Errorf("canceled leader and healthy follower made %d exchanges, want exactly two", got)
+				}
+				if consumed.Load() != 0 {
+					t.Errorf("leader cancellation consumed %d follower retries", consumed.Load())
+				}
+
+			})
 		}
-		_, _ = io.WriteString(w, x509ValidExchangeResponse())
-	}))
-	identity := newX509LifecycleIdentity(t, fixture)
-	leaderContext, cancelLeader := context.WithCancel(t.Context())
-	defer cancelLeader()
-	leaderResult := make(chan error, 1)
-	go func() {
-		_, err := identity.GetToken(leaderContext, fixture.capability)
-		leaderResult <- err
-	}()
-	select {
-	case <-firstReached:
-	case <-time.After(5 * time.Second):
-		t.Fatal("initial refresh leader never reached the issuer")
-	}
-	followerResult := make(chan error, 1)
-	go func() {
-		token, err := identity.GetToken(t.Context(), fixture.capability)
-		if err == nil && token != x509ExchangeSyntheticToken {
-			err = errors.New("healthy refresh follower received an unexpected token")
-		}
-		followerResult <- err
-	}()
-	cancelLeader()
-	select {
-	case err := <-leaderResult:
-		if !errors.Is(err, context.Canceled) {
-			t.Errorf("canceled leader error = %v", err)
-		}
-	case <-time.After(5 * time.Second):
-		t.Fatal("canceled refresh leader did not finish")
-	}
-	select {
-	case err := <-followerResult:
-		if err != nil {
-			t.Errorf("healthy follower did not recover after leader cancellation: %v", err)
-		}
-	case <-time.After(5 * time.Second):
-		t.Fatal("healthy refresh follower was poisoned by the canceled leader")
-	}
-	if got := exchanges.Load(); got != 2 {
-		t.Errorf("canceled leader and healthy follower made %d exchanges, want exactly two", got)
 	}
 }
 
@@ -863,4 +896,115 @@ func newX509LifecycleIdentity(t *testing.T, fixture *x509ExchangeFixture) *X509W
 		t.Fatalf("construct ephemeral X.509 lifecycle identity: %v", err)
 	}
 	return identity
+}
+
+func TestX509WorkloadIdentityFollowerKeepsOriginalIssuerMinimum(t *testing.T) {
+	for _, test := range []struct {
+		name        string
+		hint        time.Duration
+		bodyDelay   time.Duration
+		maximum     time.Duration
+		retries     int
+		wantSuccess bool
+	}{
+		{name: "elapsed minimum", hint: 100 * time.Millisecond, bodyDelay: 200 * time.Millisecond, maximum: time.Second, retries: 1, wantSuccess: true},
+		{name: "remaining minimum", hint: 600 * time.Millisecond, bodyDelay: 400 * time.Millisecond, maximum: time.Second, retries: 1, wantSuccess: true},
+		{name: "no hint control", bodyDelay: 200 * time.Millisecond, maximum: time.Second, retries: 1, wantSuccess: true},
+		{name: "zero budget control", hint: 100 * time.Millisecond, bodyDelay: 200 * time.Millisecond, maximum: time.Second},
+		{name: "over cap control", hint: 100 * time.Millisecond, bodyDelay: 200 * time.Millisecond, maximum: 50 * time.Millisecond, retries: 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var exchanges, consumed atomic.Int32
+			var failedAt atomic.Int64
+			reached := make(chan struct{})
+			release := make(chan struct{})
+			var releaseOnce sync.Once
+			defer releaseOnce.Do(func() { close(release) })
+			fixture := newX509ExchangeFixture(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				if exchanges.Add(1) == 1 {
+					failedAt.Store(time.Now().UnixNano())
+					if test.hint > 0 {
+						w.Header().Set("Retry-After-Ms", strconv.FormatInt(test.hint.Milliseconds(), 10))
+					}
+					w.WriteHeader(http.StatusServiceUnavailable)
+					w.(http.Flusher).Flush()
+					close(reached)
+					<-release
+					return
+				}
+				if elapsed := time.Since(time.Unix(0, failedAt.Load())); elapsed < test.hint {
+					t.Errorf("follower issuer retry after %s, want at least %s", elapsed, test.hint)
+				}
+				_, _ = io.WriteString(w, x509ValidExchangeResponse())
+			}))
+			identity := newX509LifecycleIdentity(t, fixture)
+			leaderScope := requestconfig.NewRequestRetryScope(0, time.Second, true, nil)
+			leaderContext := requestconfig.WithRequestRetryScope(t.Context(), leaderScope)
+			leaderResult := make(chan error, 1)
+			go func() {
+				_, err := identity.GetToken(leaderContext, fixture.capability)
+				leaderResult <- err
+			}()
+			select {
+			case <-reached:
+			case <-time.After(5 * time.Second):
+				t.Fatal("issuer did not send leader response headers")
+			}
+			followerScope := requestconfig.NewRequestRetryScope(test.retries, test.maximum, true, func(n int) { consumed.Store(int32(n)) })
+			parent := requestconfig.WithRequestRetryScope(t.Context(), followerScope)
+			// A renewed 600ms minimum after the 400ms body drain exceeds this deadline.
+			parent, cancel := context.WithTimeout(parent, 850*time.Millisecond)
+			defer cancel()
+			if !followerScope.BeginAttempt() {
+				t.Fatal("follower initial attempt was rejected")
+			}
+			waiting := make(chan struct{})
+			followerContext := &x509ObservedDoneContext{Context: parent, observed: waiting}
+			followerResult := make(chan error, 1)
+			go func() {
+				token, err := identity.GetToken(followerContext, fixture.capability)
+				if err == nil && token != x509ExchangeSyntheticToken {
+					err = errors.New("follower received an unexpected bearer")
+				}
+				followerResult <- err
+			}()
+			select {
+			case <-waiting:
+			case <-time.After(5 * time.Second):
+				t.Fatal("follower did not join the shared refresh")
+			}
+			time.Sleep(test.bodyDelay)
+			releaseOnce.Do(func() { close(release) })
+			select {
+			case err := <-leaderResult:
+				if err == nil {
+					t.Error("zero-budget leader returned no error, want original issuer failure")
+				}
+			case <-time.After(5 * time.Second):
+				t.Fatal("leader did not finish after the issuer response")
+			}
+			select {
+			case err := <-followerResult:
+				if (err == nil) != test.wantSuccess {
+					t.Errorf("GetToken follower error = %v, want success %t", err, test.wantSuccess)
+				}
+				if !test.wantSuccess {
+					var status *x509ExchangeHTTPError
+					if !errors.As(err, &status) || status.statusCode != http.StatusServiceUnavailable {
+						t.Errorf("GetToken refused follower error = %v, want original issuer 503", err)
+					}
+				}
+			case <-time.After(5 * time.Second):
+				t.Fatal("follower did not finish after the issuer response")
+			}
+			wantExchanges, wantConsumed := int32(1), int32(0)
+			if test.wantSuccess {
+				wantExchanges, wantConsumed = 2, 1
+			}
+			if exchanges.Load() != wantExchanges || consumed.Load() != wantConsumed {
+				t.Errorf("follower issuer attempts/retries consumed = %d/%d, want %d/%d",
+					exchanges.Load(), consumed.Load(), wantExchanges, wantConsumed)
+			}
+		})
+	}
 }

@@ -1,12 +1,15 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/openai/openai-go/v3/internal/requestconfig"
 )
+
+type workloadIssuerRefusalContextKey struct{}
 
 func WorkloadIdentityMiddleware(
 	wia *WorkloadIdentityAuth,
@@ -18,7 +21,14 @@ func WorkloadIdentityMiddleware(
 		return nil, errors.New("workload identity requires a non-nil request, header map, and handler")
 	}
 	hadBody := req.Body != nil && req.Body != http.NoBody
-	token, err := wia.GetToken(req.Context(), httpClient)
+	tokenContext := req.Context()
+	if requestconfig.RequestRetryScopeFromContext(tokenContext) == nil {
+		// Standalone calls share refusal storage across their one replay, without
+		// installing an SDK retry budget.
+		tokenContext = context.WithValue(tokenContext, workloadIssuerRefusalContextKey{},
+			requestconfig.NewRequestRetryScope(0, 0, false, nil))
+	}
+	token, err := wia.GetToken(tokenContext, httpClient)
 	if err != nil {
 		return nil, err
 	}
@@ -50,9 +60,14 @@ func WorkloadIdentityMiddleware(
 		return resp, nil
 	}
 
+	if retry, waitErr := waitForUnauthorizedReplay(req.Context(), resp); waitErr != nil {
+		return nil, waitErr
+	} else if !retry {
+		return resp, nil
+	}
 	retryReq := req.Clone(req.Context())
 
-	token, err = wia.GetToken(req.Context(), httpClient)
+	token, err = wia.GetToken(tokenContext, httpClient)
 	if err != nil {
 		if resp.Body != nil {
 			_ = resp.Body.Close()

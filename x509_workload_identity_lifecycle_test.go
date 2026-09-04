@@ -851,3 +851,86 @@ func TestX509WorkloadIdentityKeepsIssuerRefusalAcrossCachedBearerRetries(t *test
 		})
 	}
 }
+
+func TestX509WorkloadIdentityRecoversAfterFiniteIssuerMinimum(t *testing.T) {
+	for _, test := range []struct {
+		name     string
+		apiDelay string
+		stop     string
+		wantErr  error
+	}{
+		{name: "elapsed minimum", apiDelay: "200"},
+		{name: "immediate replay waits remaining minimum", apiDelay: "0"},
+		{name: "cancel remaining wait", apiDelay: "0", stop: "cancel", wantErr: context.Canceled},
+		{name: "deadline during remaining wait", apiDelay: "0", stop: "deadline", wantErr: context.DeadlineExceeded},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv("OPENAI_BASE_URL", "https://mtls.api.openai.com/v1/")
+			config, issuer, api := newX509WorkloadIdentityIntegration(t)
+			var exchanges, requests, attempts atomic.Int32
+			var finalFailure atomic.Int64
+			issuer.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				switch exchanges.Add(1) {
+				case 1:
+					_, _ = io.WriteString(w, strings.Replace(x509IntegrationTokenResponse("synthetic-short-bearer"), `"expires_in":60`, `"expires_in":2`, 1))
+				case 2, 3:
+					w.WriteHeader(http.StatusServiceUnavailable)
+				case 4:
+					finalFailure.Store(time.Now().UnixNano())
+					w.Header().Set("Retry-After-Ms", "150")
+					w.WriteHeader(http.StatusServiceUnavailable)
+				default:
+					if elapsed := time.Since(time.Unix(0, finalFailure.Load())); elapsed < 150*time.Millisecond {
+						t.Errorf("issuer retry after %s, want at least 150ms", elapsed)
+					}
+					_, _ = io.WriteString(w, x509IntegrationTokenResponse("synthetic-fresh-bearer"))
+				}
+			})
+			api.server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if requests.Add(1) == 2 {
+					w.Header().Set("Retry-After-Ms", test.apiDelay)
+					w.WriteHeader(http.StatusUnauthorized)
+					_, _ = io.WriteString(w, `{"error":{"message":"synthetic rejected bearer"}}`)
+					return
+				}
+				_, _ = io.WriteString(w, `{"data":[]}`)
+			})
+			client := openai.NewClient(option.WithX509WorkloadIdentity(config), option.WithMaxRetries(3),
+				option.WithMaxRetryDelay(500*time.Millisecond),
+				option.WithMiddleware(func(request *http.Request, next option.MiddlewareNext) (*http.Response, error) {
+					if attempts.Add(1) != 3 || test.stop == "" {
+						return next(request)
+					}
+					var ctx context.Context
+					var cancel context.CancelFunc
+					if test.stop == "deadline" {
+						ctx, cancel = context.WithTimeout(request.Context(), 20*time.Millisecond)
+					} else {
+						ctx, cancel = context.WithCancel(request.Context())
+						timer := time.AfterFunc(20*time.Millisecond, cancel)
+						defer timer.Stop()
+					}
+					defer cancel()
+					return next(request.WithContext(ctx))
+				}),
+			)
+			if _, err := client.Models.List(t.Context()); err != nil {
+				t.Fatalf("prime bearer: %v", err)
+			}
+			time.Sleep(1100 * time.Millisecond)
+			_, err := client.Models.List(t.Context())
+			wantIssuer, wantAPI := int32(5), int32(3)
+			if test.wantErr != nil {
+				wantIssuer, wantAPI = 4, 2
+			}
+			if !errors.Is(err, test.wantErr) {
+				t.Errorf("Models.List recovery error = %v, want %v", err, test.wantErr)
+			}
+			if exchanges.Load() != wantIssuer || requests.Load() != wantAPI || attempts.Load() != 3 {
+				t.Errorf("recovery issuer/API/SDK attempts = %d/%d/%d, want %d/%d/3",
+					exchanges.Load(), requests.Load(), attempts.Load(), wantIssuer, wantAPI)
+			}
+		})
+	}
+}
