@@ -39,6 +39,8 @@ type BatchExpired string                                     // Always "batch.ex
 type BatchFailed string                                      // Always "batch.failed"
 type Bucket string                                           // Always "bucket"
 type C2PA string                                             // Always "c2pa"
+type CacheHit string                                         // Always "cache_hit"
+type CacheMiss string                                        // Always "cache_miss"
 type CertificateDeleted string                               // Always "certificate.deleted"
 type ChatCompletion string                                   // Always "chat.completion"
 type ChatCompletionChunk string                              // Always "chat.completion.chunk"
@@ -61,6 +63,7 @@ type CodeInterpreter string                                  // Always "code_int
 type CodeInterpreterCall string                              // Always "code_interpreter_call"
 type Compaction string                                       // Always "compaction"
 type CompactionTrigger string                                // Always "compaction_trigger"
+type ComparisonResponseNotFound string                       // Always "comparison_response_not_found"
 type Computer string                                         // Always "computer"
 type ComputerCallOutput string                               // Always "computer_call_output"
 type ComputerScreenshot string                               // Always "computer_screenshot"
@@ -418,6 +421,7 @@ type TranscriptionSessionUpdate string                       // Always "transcri
 type TranscriptionSessionUpdated string                      // Always "transcription_session.updated"
 type Translation string                                      // Always "translation"
 type Type string                                             // Always "type"
+type Unavailable string                                      // Always "unavailable"
 type UpdateFile string                                       // Always "update_file"
 type Upload string                                           // Always "upload"
 type UploadPart string                                       // Always "upload.part"
@@ -459,6 +463,8 @@ func (c BatchExpired) Default() BatchExpired                   { return "batch.e
 func (c BatchFailed) Default() BatchFailed                     { return "batch.failed" }
 func (c Bucket) Default() Bucket                               { return "bucket" }
 func (c C2PA) Default() C2PA                                   { return "c2pa" }
+func (c CacheHit) Default() CacheHit                           { return "cache_hit" }
+func (c CacheMiss) Default() CacheMiss                         { return "cache_miss" }
 func (c CertificateDeleted) Default() CertificateDeleted       { return "certificate.deleted" }
 func (c ChatCompletion) Default() ChatCompletion               { return "chat.completion" }
 func (c ChatCompletionChunk) Default() ChatCompletionChunk     { return "chat.completion.chunk" }
@@ -466,23 +472,26 @@ func (c ChatCompletionDeleted) Default() ChatCompletionDeleted { return "chat.co
 func (c ChatKitAssistantMessage) Default() ChatKitAssistantMessage {
 	return "chatkit.assistant_message"
 }
-func (c ChatKitClientToolCall) Default() ChatKitClientToolCall   { return "chatkit.client_tool_call" }
-func (c ChatKitSession) Default() ChatKitSession                 { return "chatkit.session" }
-func (c ChatKitTask) Default() ChatKitTask                       { return "chatkit.task" }
-func (c ChatKitTaskGroup) Default() ChatKitTaskGroup             { return "chatkit.task_group" }
-func (c ChatKitThread) Default() ChatKitThread                   { return "chatkit.thread" }
-func (c ChatKitThreadItem) Default() ChatKitThreadItem           { return "chatkit.thread_item" }
-func (c ChatKitThreadDeleted) Default() ChatKitThreadDeleted     { return "chatkit.thread.deleted" }
-func (c ChatKitUserMessage) Default() ChatKitUserMessage         { return "chatkit.user_message" }
-func (c ChatKitWidget) Default() ChatKitWidget                   { return "chatkit.widget" }
-func (c CheckpointPermission) Default() CheckpointPermission     { return "checkpoint.permission" }
-func (c Click) Default() Click                                   { return "click" }
-func (c Client) Default() Client                                 { return "client" }
-func (c Closed) Default() Closed                                 { return "closed" }
-func (c CodeInterpreter) Default() CodeInterpreter               { return "code_interpreter" }
-func (c CodeInterpreterCall) Default() CodeInterpreterCall       { return "code_interpreter_call" }
-func (c Compaction) Default() Compaction                         { return "compaction" }
-func (c CompactionTrigger) Default() CompactionTrigger           { return "compaction_trigger" }
+func (c ChatKitClientToolCall) Default() ChatKitClientToolCall { return "chatkit.client_tool_call" }
+func (c ChatKitSession) Default() ChatKitSession               { return "chatkit.session" }
+func (c ChatKitTask) Default() ChatKitTask                     { return "chatkit.task" }
+func (c ChatKitTaskGroup) Default() ChatKitTaskGroup           { return "chatkit.task_group" }
+func (c ChatKitThread) Default() ChatKitThread                 { return "chatkit.thread" }
+func (c ChatKitThreadItem) Default() ChatKitThreadItem         { return "chatkit.thread_item" }
+func (c ChatKitThreadDeleted) Default() ChatKitThreadDeleted   { return "chatkit.thread.deleted" }
+func (c ChatKitUserMessage) Default() ChatKitUserMessage       { return "chatkit.user_message" }
+func (c ChatKitWidget) Default() ChatKitWidget                 { return "chatkit.widget" }
+func (c CheckpointPermission) Default() CheckpointPermission   { return "checkpoint.permission" }
+func (c Click) Default() Click                                 { return "click" }
+func (c Client) Default() Client                               { return "client" }
+func (c Closed) Default() Closed                               { return "closed" }
+func (c CodeInterpreter) Default() CodeInterpreter             { return "code_interpreter" }
+func (c CodeInterpreterCall) Default() CodeInterpreterCall     { return "code_interpreter_call" }
+func (c Compaction) Default() Compaction                       { return "compaction" }
+func (c CompactionTrigger) Default() CompactionTrigger         { return "compaction_trigger" }
+func (c ComparisonResponseNotFound) Default() ComparisonResponseNotFound {
+	return "comparison_response_not_found"
+}
 func (c Computer) Default() Computer                             { return "computer" }
 func (c ComputerCallOutput) Default() ComputerCallOutput         { return "computer_call_output" }
 func (c ComputerScreenshot) Default() ComputerScreenshot         { return "computer_screenshot" }
@@ -1070,6 +1079,7 @@ func (c TranscriptionSessionUpdated) Default() TranscriptionSessionUpdated {
 }
 func (c Translation) Default() Translation               { return "translation" }
 func (c Type) Default() Type                             { return "type" }
+func (c Unavailable) Default() Unavailable               { return "unavailable" }
 func (c UpdateFile) Default() UpdateFile                 { return "update_file" }
 func (c Upload) Default() Upload                         { return "upload" }
 func (c UploadPart) Default() UploadPart                 { return "upload.part" }
@@ -1094,68 +1104,71 @@ func (c Wait) Default() Wait                   { return "wait" }
 func (c Wandb) Default() Wandb                 { return "wandb" }
 func (c WebSearchCall) Default() WebSearchCall { return "web_search_call" }
 
-func (c Active) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
-func (c AdditionalTools) MarshalJSON() ([]byte, error)         { return marshalString(c) }
-func (c AgentMessage) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c AllowedTools) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c Allowlist) MarshalJSON() ([]byte, error)               { return marshalString(c) }
-func (c ApplicationZip) MarshalJSON() ([]byte, error)          { return marshalString(c) }
-func (c ApplyPatch) MarshalJSON() ([]byte, error)              { return marshalString(c) }
-func (c ApplyPatchCall) MarshalJSON() ([]byte, error)          { return marshalString(c) }
-func (c ApplyPatchCallOutput) MarshalJSON() ([]byte, error)    { return marshalString(c) }
-func (c Approximate) MarshalJSON() ([]byte, error)             { return marshalString(c) }
-func (c Assistant) MarshalJSON() ([]byte, error)               { return marshalString(c) }
-func (c AssistantDeleted) MarshalJSON() ([]byte, error)        { return marshalString(c) }
-func (c Auto) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
-func (c Base64) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
-func (c Batch) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
-func (c BatchCancelled) MarshalJSON() ([]byte, error)          { return marshalString(c) }
-func (c BatchCompleted) MarshalJSON() ([]byte, error)          { return marshalString(c) }
-func (c BatchExpired) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c BatchFailed) MarshalJSON() ([]byte, error)             { return marshalString(c) }
-func (c Bucket) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
-func (c C2PA) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
-func (c CertificateDeleted) MarshalJSON() ([]byte, error)      { return marshalString(c) }
-func (c ChatCompletion) MarshalJSON() ([]byte, error)          { return marshalString(c) }
-func (c ChatCompletionChunk) MarshalJSON() ([]byte, error)     { return marshalString(c) }
-func (c ChatCompletionDeleted) MarshalJSON() ([]byte, error)   { return marshalString(c) }
-func (c ChatKitAssistantMessage) MarshalJSON() ([]byte, error) { return marshalString(c) }
-func (c ChatKitClientToolCall) MarshalJSON() ([]byte, error)   { return marshalString(c) }
-func (c ChatKitSession) MarshalJSON() ([]byte, error)          { return marshalString(c) }
-func (c ChatKitTask) MarshalJSON() ([]byte, error)             { return marshalString(c) }
-func (c ChatKitTaskGroup) MarshalJSON() ([]byte, error)        { return marshalString(c) }
-func (c ChatKitThread) MarshalJSON() ([]byte, error)           { return marshalString(c) }
-func (c ChatKitThreadItem) MarshalJSON() ([]byte, error)       { return marshalString(c) }
-func (c ChatKitThreadDeleted) MarshalJSON() ([]byte, error)    { return marshalString(c) }
-func (c ChatKitUserMessage) MarshalJSON() ([]byte, error)      { return marshalString(c) }
-func (c ChatKitWidget) MarshalJSON() ([]byte, error)           { return marshalString(c) }
-func (c CheckpointPermission) MarshalJSON() ([]byte, error)    { return marshalString(c) }
-func (c Click) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
-func (c Client) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
-func (c Closed) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
-func (c CodeInterpreter) MarshalJSON() ([]byte, error)         { return marshalString(c) }
-func (c CodeInterpreterCall) MarshalJSON() ([]byte, error)     { return marshalString(c) }
-func (c Compaction) MarshalJSON() ([]byte, error)              { return marshalString(c) }
-func (c CompactionTrigger) MarshalJSON() ([]byte, error)       { return marshalString(c) }
-func (c Computer) MarshalJSON() ([]byte, error)                { return marshalString(c) }
-func (c ComputerCallOutput) MarshalJSON() ([]byte, error)      { return marshalString(c) }
-func (c ComputerScreenshot) MarshalJSON() ([]byte, error)      { return marshalString(c) }
-func (c ComputerUsePreview) MarshalJSON() ([]byte, error)      { return marshalString(c) }
-func (c ConfigurationUpdate) MarshalJSON() ([]byte, error)     { return marshalString(c) }
-func (c ContainerAuto) MarshalJSON() ([]byte, error)           { return marshalString(c) }
-func (c ContainerFileCitation) MarshalJSON() ([]byte, error)   { return marshalString(c) }
-func (c ContainerReference) MarshalJSON() ([]byte, error)      { return marshalString(c) }
-func (c ContainerFile) MarshalJSON() ([]byte, error)           { return marshalString(c) }
-func (c Content) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
-func (c Conversation) MarshalJSON() ([]byte, error)            { return marshalString(c) }
-func (c ConversationCreated) MarshalJSON() ([]byte, error)     { return marshalString(c) }
-func (c ConversationDeleted) MarshalJSON() ([]byte, error)     { return marshalString(c) }
-func (c ConversationItemAdded) MarshalJSON() ([]byte, error)   { return marshalString(c) }
-func (c ConversationItemCreate) MarshalJSON() ([]byte, error)  { return marshalString(c) }
-func (c ConversationItemCreated) MarshalJSON() ([]byte, error) { return marshalString(c) }
-func (c ConversationItemDelete) MarshalJSON() ([]byte, error)  { return marshalString(c) }
-func (c ConversationItemDeleted) MarshalJSON() ([]byte, error) { return marshalString(c) }
-func (c ConversationItemDone) MarshalJSON() ([]byte, error)    { return marshalString(c) }
+func (c Active) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c AdditionalTools) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c AgentMessage) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c AllowedTools) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c Allowlist) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c ApplicationZip) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ApplyPatch) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c ApplyPatchCall) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ApplyPatchCallOutput) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c Approximate) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c Assistant) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c AssistantDeleted) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c Auto) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c Base64) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c Batch) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c BatchCancelled) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c BatchCompleted) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c BatchExpired) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c BatchFailed) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c Bucket) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c C2PA) MarshalJSON() ([]byte, error)                       { return marshalString(c) }
+func (c CacheHit) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c CacheMiss) MarshalJSON() ([]byte, error)                  { return marshalString(c) }
+func (c CertificateDeleted) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c ChatCompletion) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ChatCompletionChunk) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c ChatCompletionDeleted) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c ChatKitAssistantMessage) MarshalJSON() ([]byte, error)    { return marshalString(c) }
+func (c ChatKitClientToolCall) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c ChatKitSession) MarshalJSON() ([]byte, error)             { return marshalString(c) }
+func (c ChatKitTask) MarshalJSON() ([]byte, error)                { return marshalString(c) }
+func (c ChatKitTaskGroup) MarshalJSON() ([]byte, error)           { return marshalString(c) }
+func (c ChatKitThread) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c ChatKitThreadItem) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c ChatKitThreadDeleted) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c ChatKitUserMessage) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c ChatKitWidget) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c CheckpointPermission) MarshalJSON() ([]byte, error)       { return marshalString(c) }
+func (c Click) MarshalJSON() ([]byte, error)                      { return marshalString(c) }
+func (c Client) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c Closed) MarshalJSON() ([]byte, error)                     { return marshalString(c) }
+func (c CodeInterpreter) MarshalJSON() ([]byte, error)            { return marshalString(c) }
+func (c CodeInterpreterCall) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c Compaction) MarshalJSON() ([]byte, error)                 { return marshalString(c) }
+func (c CompactionTrigger) MarshalJSON() ([]byte, error)          { return marshalString(c) }
+func (c ComparisonResponseNotFound) MarshalJSON() ([]byte, error) { return marshalString(c) }
+func (c Computer) MarshalJSON() ([]byte, error)                   { return marshalString(c) }
+func (c ComputerCallOutput) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c ComputerScreenshot) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c ComputerUsePreview) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c ConfigurationUpdate) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c ContainerAuto) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c ContainerFileCitation) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c ContainerReference) MarshalJSON() ([]byte, error)         { return marshalString(c) }
+func (c ContainerFile) MarshalJSON() ([]byte, error)              { return marshalString(c) }
+func (c Content) MarshalJSON() ([]byte, error)                    { return marshalString(c) }
+func (c Conversation) MarshalJSON() ([]byte, error)               { return marshalString(c) }
+func (c ConversationCreated) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c ConversationDeleted) MarshalJSON() ([]byte, error)        { return marshalString(c) }
+func (c ConversationItemAdded) MarshalJSON() ([]byte, error)      { return marshalString(c) }
+func (c ConversationItemCreate) MarshalJSON() ([]byte, error)     { return marshalString(c) }
+func (c ConversationItemCreated) MarshalJSON() ([]byte, error)    { return marshalString(c) }
+func (c ConversationItemDelete) MarshalJSON() ([]byte, error)     { return marshalString(c) }
+func (c ConversationItemDeleted) MarshalJSON() ([]byte, error)    { return marshalString(c) }
+func (c ConversationItemDone) MarshalJSON() ([]byte, error)       { return marshalString(c) }
 func (c ConversationItemInputAudioTranscriptionCompleted) MarshalJSON() ([]byte, error) {
 	return marshalString(c)
 }
@@ -1518,6 +1531,7 @@ func (c TranscriptionSessionUpdate) MarshalJSON() ([]byte, error)          { ret
 func (c TranscriptionSessionUpdated) MarshalJSON() ([]byte, error)         { return marshalString(c) }
 func (c Translation) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c Type) MarshalJSON() ([]byte, error)                                { return marshalString(c) }
+func (c Unavailable) MarshalJSON() ([]byte, error)                         { return marshalString(c) }
 func (c UpdateFile) MarshalJSON() ([]byte, error)                          { return marshalString(c) }
 func (c Upload) MarshalJSON() ([]byte, error)                              { return marshalString(c) }
 func (c UploadPart) MarshalJSON() ([]byte, error)                          { return marshalString(c) }

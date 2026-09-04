@@ -4504,6 +4504,8 @@ type BetaResponse struct {
 	// Reference to a prompt template and its variables.
 	// [Learn more](https://platform.openai.com/docs/guides/text?api-mode=responses#reusable-prompts).
 	Prompt BetaResponsePrompt `json:"prompt" api:"nullable"`
+	// Prompt cache diagnostics requested for this response.
+	PromptCacheDiagnostics BetaResponsePromptCacheDiagnosticsUnion `json:"prompt_cache_diagnostics"`
 	// Used by OpenAI to cache responses for similar requests to optimize your cache
 	// hit rates. Replaces the `user` field.
 	// [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
@@ -4609,42 +4611,43 @@ type BetaResponse struct {
 	User string `json:"user"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		ID                   respjson.Field
-		CreatedAt            respjson.Field
-		Error                respjson.Field
-		IncompleteDetails    respjson.Field
-		Instructions         respjson.Field
-		Metadata             respjson.Field
-		Model                respjson.Field
-		Object               respjson.Field
-		Output               respjson.Field
-		ParallelToolCalls    respjson.Field
-		Temperature          respjson.Field
-		ToolChoice           respjson.Field
-		Tools                respjson.Field
-		TopP                 respjson.Field
-		Background           respjson.Field
-		CompletedAt          respjson.Field
-		Conversation         respjson.Field
-		MaxOutputTokens      respjson.Field
-		MaxToolCalls         respjson.Field
-		Moderation           respjson.Field
-		PreviousResponseID   respjson.Field
-		Prompt               respjson.Field
-		PromptCacheKey       respjson.Field
-		PromptCacheOptions   respjson.Field
-		PromptCacheRetention respjson.Field
-		Reasoning            respjson.Field
-		SafetyIdentifier     respjson.Field
-		ServiceTier          respjson.Field
-		Status               respjson.Field
-		Text                 respjson.Field
-		TopLogprobs          respjson.Field
-		Truncation           respjson.Field
-		Usage                respjson.Field
-		User                 respjson.Field
-		ExtraFields          map[string]respjson.Field
-		raw                  string
+		ID                     respjson.Field
+		CreatedAt              respjson.Field
+		Error                  respjson.Field
+		IncompleteDetails      respjson.Field
+		Instructions           respjson.Field
+		Metadata               respjson.Field
+		Model                  respjson.Field
+		Object                 respjson.Field
+		Output                 respjson.Field
+		ParallelToolCalls      respjson.Field
+		Temperature            respjson.Field
+		ToolChoice             respjson.Field
+		Tools                  respjson.Field
+		TopP                   respjson.Field
+		Background             respjson.Field
+		CompletedAt            respjson.Field
+		Conversation           respjson.Field
+		MaxOutputTokens        respjson.Field
+		MaxToolCalls           respjson.Field
+		Moderation             respjson.Field
+		PreviousResponseID     respjson.Field
+		Prompt                 respjson.Field
+		PromptCacheDiagnostics respjson.Field
+		PromptCacheKey         respjson.Field
+		PromptCacheOptions     respjson.Field
+		PromptCacheRetention   respjson.Field
+		Reasoning              respjson.Field
+		SafetyIdentifier       respjson.Field
+		ServiceTier            respjson.Field
+		Status                 respjson.Field
+		Text                   respjson.Field
+		TopLogprobs            respjson.Field
+		Truncation             respjson.Field
+		Usage                  respjson.Field
+		User                   respjson.Field
+		ExtraFields            map[string]respjson.Field
+		raw                    string
 	} `json:"-"`
 }
 
@@ -5255,6 +5258,179 @@ func (r *BetaResponseModerationOutputError) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
+// BetaResponsePromptCacheDiagnosticsUnion contains all possible properties and
+// values from [BetaResponsePromptCacheDiagnosticsCacheMiss],
+// [BetaResponsePromptCacheDiagnosticsCacheHit],
+// [BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound],
+// [BetaResponsePromptCacheDiagnosticsUnavailable].
+//
+// Use the [BetaResponsePromptCacheDiagnosticsUnion.AsAny] method to switch on the
+// variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type BetaResponsePromptCacheDiagnosticsUnion struct {
+	// This field is from variant [BetaResponsePromptCacheDiagnosticsCacheMiss].
+	CacheMissedTokens int64 `json:"cache_missed_tokens"`
+	// This field is from variant [BetaResponsePromptCacheDiagnosticsCacheMiss].
+	Reason string `json:"reason"`
+	// Any of "cache_miss", "cache_hit", "comparison_response_not_found",
+	// "unavailable".
+	Type string `json:"type"`
+	// This field is from variant [BetaResponsePromptCacheDiagnosticsCacheMiss].
+	ComparisonReusableTokens int64 `json:"comparison_reusable_tokens"`
+	JSON                     struct {
+		CacheMissedTokens        respjson.Field
+		Reason                   respjson.Field
+		Type                     respjson.Field
+		ComparisonReusableTokens respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+// anyBetaResponsePromptCacheDiagnostics is implemented by each variant of
+// [BetaResponsePromptCacheDiagnosticsUnion] to add type safety for the return type
+// of [BetaResponsePromptCacheDiagnosticsUnion.AsAny]
+type anyBetaResponsePromptCacheDiagnostics interface {
+	implBetaResponsePromptCacheDiagnosticsUnion()
+}
+
+func (BetaResponsePromptCacheDiagnosticsCacheMiss) implBetaResponsePromptCacheDiagnosticsUnion() {}
+func (BetaResponsePromptCacheDiagnosticsCacheHit) implBetaResponsePromptCacheDiagnosticsUnion()  {}
+func (BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound) implBetaResponsePromptCacheDiagnosticsUnion() {
+}
+func (BetaResponsePromptCacheDiagnosticsUnavailable) implBetaResponsePromptCacheDiagnosticsUnion() {}
+
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := BetaResponsePromptCacheDiagnosticsUnion.AsAny().(type) {
+//	case openai.BetaResponsePromptCacheDiagnosticsCacheMiss:
+//	case openai.BetaResponsePromptCacheDiagnosticsCacheHit:
+//	case openai.BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound:
+//	case openai.BetaResponsePromptCacheDiagnosticsUnavailable:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u BetaResponsePromptCacheDiagnosticsUnion) AsAny() anyBetaResponsePromptCacheDiagnostics {
+	switch u.Type {
+	case "cache_miss":
+		return u.AsCacheMiss()
+	case "cache_hit":
+		return u.AsCacheHit()
+	case "comparison_response_not_found":
+		return u.AsComparisonResponseNotFound()
+	case "unavailable":
+		return u.AsUnavailable()
+	}
+	return nil
+}
+
+func (u BetaResponsePromptCacheDiagnosticsUnion) AsCacheMiss() (v BetaResponsePromptCacheDiagnosticsCacheMiss) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsePromptCacheDiagnosticsUnion) AsCacheHit() (v BetaResponsePromptCacheDiagnosticsCacheHit) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsePromptCacheDiagnosticsUnion) AsComparisonResponseNotFound() (v BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u BetaResponsePromptCacheDiagnosticsUnion) AsUnavailable() (v BetaResponsePromptCacheDiagnosticsUnavailable) {
+	_ = apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u BetaResponsePromptCacheDiagnosticsUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *BetaResponsePromptCacheDiagnosticsUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponsePromptCacheDiagnosticsCacheMiss struct {
+	// The estimated number of input tokens affected after the first detected
+	// divergence.
+	CacheMissedTokens int64 `json:"cache_missed_tokens" api:"required"`
+	// The reason prompt cache reuse did not occur.
+	//
+	// Any of "model_changed", "prompt_cache_key_changed", "tools_changed",
+	// "text_format_changed", "reasoning_effort_changed", "verbosity_changed",
+	// "context_compacted", "input_changed", "service_tier_changed".
+	Reason string             `json:"reason" api:"required"`
+	Type   constant.CacheMiss `json:"type" default:"cache_miss"`
+	// The raw token count of the reusable prefix in the compared response.
+	ComparisonReusableTokens int64 `json:"comparison_reusable_tokens"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		CacheMissedTokens        respjson.Field
+		Reason                   respjson.Field
+		Type                     respjson.Field
+		ComparisonReusableTokens respjson.Field
+		ExtraFields              map[string]respjson.Field
+		raw                      string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsePromptCacheDiagnosticsCacheMiss) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsePromptCacheDiagnosticsCacheMiss) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponsePromptCacheDiagnosticsCacheHit struct {
+	Type constant.CacheHit `json:"type" default:"cache_hit"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsePromptCacheDiagnosticsCacheHit) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsePromptCacheDiagnosticsCacheHit) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound struct {
+	Type constant.ComparisonResponseNotFound `json:"type" default:"comparison_response_not_found"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *BetaResponsePromptCacheDiagnosticsComparisonResponseNotFound) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type BetaResponsePromptCacheDiagnosticsUnavailable struct {
+	Type constant.Unavailable `json:"type" default:"unavailable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r BetaResponsePromptCacheDiagnosticsUnavailable) RawJSON() string { return r.JSON.raw }
+func (r *BetaResponsePromptCacheDiagnosticsUnavailable) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
 // The prompt-caching options that were applied to the response. Supported for
 // `gpt-5.6` and later models.
 type BetaResponsePromptCacheOptions struct {
@@ -5266,12 +5442,15 @@ type BetaResponsePromptCacheOptions struct {
 	//
 	// Any of "30m".
 	Ttl string `json:"ttl" api:"required"`
+	// The response ID supplied as the prompt cache diagnostics comparison.
+	ComparisonResponseID string `json:"comparison_response_id" api:"nullable"`
 	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
 	JSON struct {
-		Mode        respjson.Field
-		Ttl         respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
+		Mode                 respjson.Field
+		Ttl                  respjson.Field
+		ComparisonResponseID respjson.Field
+		ExtraFields          map[string]respjson.Field
+		raw                  string
 	} `json:"-"`
 }
 
@@ -33428,6 +33607,9 @@ func (r *BetaResponseNewParamsMultiAgent) UnmarshalJSON(data []byte) error {
 // [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching)
 // for current details.
 type BetaResponseNewParamsPromptCacheOptions struct {
+	// The ID of a response to compare when diagnosing prompt cache reuse. Supplying
+	// this field requests prompt cache diagnostics when the feature is enabled.
+	ComparisonResponseID param.Opt[string] `json:"comparison_response_id,omitzero"`
 	// Controls whether OpenAI automatically creates an implicit cache breakpoint.
 	// Defaults to `implicit`. With `implicit`, OpenAI creates one implicit breakpoint
 	// and writes up to the latest three explicit breakpoints in the request. With
@@ -33821,12 +34003,13 @@ type BetaResponseCompactParams struct {
 	// request will be processed with the Flex Processing service tier. - To opt-in to
 	// [Fast mode](/api/docs/guides/fast-mode) at the request level, include the
 	// `service_tier=fast` or `service_tier=priority` parameter for Responses or Chat
-	// Completions. The response will show `service_tier=priority` regardless of if you
-	// specify `service_tier=fast` or `priority` in your request. - When not set, the
-	// default behavior is 'auto'. When the `service_tier` parameter is set, the
-	// response body will include the `service_tier` value based on the processing mode
-	// actually used to serve the request. This response value may be different from
-	// the value set in the parameter.
+	// Completions. For models with a dedicated Fast tier, either value resolves to
+	// `service_tier=fast`; for other models, either value resolves to
+	// `service_tier=priority`. - When not set, the default behavior is 'auto'. When
+	// the `service_tier` parameter is set, the response body will include the
+	// `service_tier` value based on the processing mode actually used to serve the
+	// request. This response value may be different from the value set in the
+	// parameter.
 	//
 	// Any of "auto", "default", "fast", "flex", "priority".
 	ServiceTier BetaResponseCompactParamsServiceTier `json:"service_tier,omitzero"`
@@ -34034,12 +34217,13 @@ const (
 // request will be processed with the Flex Processing service tier. - To opt-in to
 // [Fast mode](/api/docs/guides/fast-mode) at the request level, include the
 // `service_tier=fast` or `service_tier=priority` parameter for Responses or Chat
-// Completions. The response will show `service_tier=priority` regardless of if you
-// specify `service_tier=fast` or `priority` in your request. - When not set, the
-// default behavior is 'auto'. When the `service_tier` parameter is set, the
-// response body will include the `service_tier` value based on the processing mode
-// actually used to serve the request. This response value may be different from
-// the value set in the parameter.
+// Completions. For models with a dedicated Fast tier, either value resolves to
+// `service_tier=fast`; for other models, either value resolves to
+// `service_tier=priority`. - When not set, the default behavior is 'auto'. When
+// the `service_tier` parameter is set, the response body will include the
+// `service_tier` value based on the processing mode actually used to serve the
+// request. This response value may be different from the value set in the
+// parameter.
 type BetaResponseCompactParamsServiceTier string
 
 const (
