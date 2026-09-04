@@ -80,3 +80,45 @@ func TestPaginationPreservesCustomHTTPClient(t *testing.T) {
 		t.Fatalf("fallback HTTP client calls = %d, want 0", fallbackCalls)
 	}
 }
+
+func TestNextCursorPaginationContinuesAfterEmptyPage(t *testing.T) {
+	customClient := paginationHTTPDoerFunc(func(req *http.Request) (*http.Response, error) {
+		var body string
+		switch req.URL.Query().Get("after") {
+		case "":
+			body = `{"data":[],"has_more":true,"next":"cursor-1"}`
+		case "cursor-1":
+			body = `{"data":[{"id":"job-1"}],"has_more":false,"next":""}`
+		default:
+			return nil, errors.New("unexpected pagination cursor")
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{"Content-Type": {"application/json"}},
+			Body:       io.NopCloser(strings.NewReader(body)),
+			Request:    req,
+		}, nil
+	})
+
+	client := openai.NewClient(
+		option.WithBaseURL("https://example.com/v1"),
+		option.WithAPIKey("test-key"),
+		option.WithAdminAPIKey("admin-test-key"),
+		option.WithMaxRetries(0),
+		option.WithHTTPClient(customClient),
+	)
+	pager := client.Admin.Organization.Groups.ListAutoPaging(context.Background(), openai.AdminOrganizationGroupListParams{})
+
+	if !pager.Next() {
+		t.Fatalf("pager stopped before the page after the empty page: %v", pager.Err())
+	}
+	if got, want := pager.Current().ID, "job-1"; got != want {
+		t.Fatalf("group ID = %q, want %q", got, want)
+	}
+	if pager.Next() {
+		t.Fatal("pager returned an unexpected additional job")
+	}
+	if err := pager.Err(); err != nil {
+		t.Fatal(err)
+	}
+}
