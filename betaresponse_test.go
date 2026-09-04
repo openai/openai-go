@@ -74,8 +74,9 @@ func TestBetaResponseNewWithOptionalParams(t *testing.T) {
 		},
 		PromptCacheKey: openai.String("prompt-cache-key-1234"),
 		PromptCacheOptions: openai.BetaResponseNewParamsPromptCacheOptions{
-			Mode: "implicit",
-			Ttl:  "30m",
+			ComparisonResponseID: openai.String("resp_123"),
+			Mode:                 "implicit",
+			Ttl:                  "30m",
 		},
 		PromptCacheRetention: openai.BetaResponseNewParamsPromptCacheRetentionInMemory,
 		Reasoning: openai.BetaResponseNewParamsReasoning{
