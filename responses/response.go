@@ -10586,7 +10586,7 @@ type ResponseFunctionWebSearch struct {
 	Action ResponseFunctionWebSearchActionUnion `json:"action" api:"required"`
 	// The status of the web search tool call.
 	//
-	// Any of "in_progress", "searching", "completed", "failed".
+	// Any of "in_progress", "searching", "completed", "failed", "incomplete".
 	Status ResponseFunctionWebSearchStatus `json:"status" api:"required"`
 	// The type of the web search tool call. Always `web_search_call`.
 	Type constant.WebSearchCall `json:"type" default:"web_search_call"`
@@ -10808,6 +10808,7 @@ const (
 	ResponseFunctionWebSearchStatusSearching  ResponseFunctionWebSearchStatus = "searching"
 	ResponseFunctionWebSearchStatusCompleted  ResponseFunctionWebSearchStatus = "completed"
 	ResponseFunctionWebSearchStatusFailed     ResponseFunctionWebSearchStatus = "failed"
+	ResponseFunctionWebSearchStatusIncomplete ResponseFunctionWebSearchStatus = "incomplete"
 )
 
 // The results of a web search tool call. See the
@@ -10823,7 +10824,7 @@ type ResponseFunctionWebSearchParam struct {
 	Action ResponseFunctionWebSearchActionUnionParam `json:"action,omitzero" api:"required"`
 	// The status of the web search tool call.
 	//
-	// Any of "in_progress", "searching", "completed", "failed".
+	// Any of "in_progress", "searching", "completed", "failed", "incomplete".
 	Status ResponseFunctionWebSearchStatus `json:"status,omitzero" api:"required"`
 	// The type of the web search tool call. Always `web_search_call`.
 	//
